@@ -31,25 +31,30 @@ const defaultUser: UserProfile = {
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export function UserProvider({ children }: { children: ReactNode }) {
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Initialize state from localStorage
+  const getInitialUser = () => {
+    if (typeof window === 'undefined') return null;
+    const storedUser = localStorage.getItem('wardrobe_user');
+    return storedUser ? JSON.parse(storedUser) : defaultUser;
+  };
+  
+  const getInitialPreferences = () => {
+    if (typeof window === 'undefined') return {};
+    const storedPreferences = localStorage.getItem('wardrobe_preferences');
+    return storedPreferences ? JSON.parse(storedPreferences) : {};
+  };
+
   const [user, setUser] = useState<UserProfile | null>(null);
   const [preferences, setPreferences] = useState<UserPreferences>({});
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Load user from localStorage on mount
-    const storedUser = localStorage.getItem('wardrobe_user');
-    const storedPreferences = localStorage.getItem('wardrobe_preferences');
-    
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    } else {
-      setUser(defaultUser);
-    }
-    
-    if (storedPreferences) {
-      setPreferences(JSON.parse(storedPreferences));
-    }
-    
+    // Hydrate from localStorage on client side
+    // This is intentional - we need to sync state with localStorage on mount
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setUser(getInitialUser());
+    setPreferences(getInitialPreferences());
     setIsLoading(false);
   }, []);
 

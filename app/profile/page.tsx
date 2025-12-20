@@ -6,7 +6,6 @@
 
 import { Card, Button } from '@/components';
 import { useUser } from '@/store';
-import { SubscriptionTier } from '@/types';
 
 export default function ProfilePage() {
   const { user, isPremium, upgradeToPremiun, setUser } = useUser();
