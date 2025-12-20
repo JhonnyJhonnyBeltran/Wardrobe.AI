@@ -1,11 +1,14 @@
 'use client';
 
 /**
- * Chat Page - AI Fashion Assistant
+ * Chat Page - AI Fashion Assistant with Quick Actions
  */
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Send, Sparkles, TrendingUp, Users } from 'lucide-react';
 import { Card } from '@/components';
+import { chatQuickActions, aiResponses } from '@/data/mockOutfits';
 
 interface Message {
   id: string;
@@ -17,7 +20,7 @@ interface Message {
 const initialMessages: Message[] = [
   {
     id: '1',
-    text: 'Hello! 👋 I\'m your personal fashion assistant. How can I help you today?',
+    text: '¡Hola, babe! 👋✨ Soy tu asistente de moda personal. Estoy aquí para ayudarte a crear looks increíbles y mantenerte al día con las tendencias. ¿En qué puedo ayudarte hoy?',
     sender: 'ai',
     timestamp: new Date(),
   },
@@ -27,32 +30,59 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const handleSend = () => {
-    if (!inputValue.trim()) return;
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const getAIResponse = (userMessage: string): string => {
+    const lowerMessage = userMessage.toLowerCase();
+
+    if (lowerMessage.includes('tendencia') || lowerMessage.includes('trend')) {
+      return aiResponses.trends;
+    }
+    if (lowerMessage.includes('influencer') || lowerMessage.includes('it-girl')) {
+      return aiResponses.influencers;
+    }
+
+    return aiResponses.default;
+  };
+
+  const handleSend = (text?: string) => {
+    const messageText = text || inputValue.trim();
+    if (!messageText) return;
 
     const newMessage: Message = {
       id: Date.now().toString(),
-      text: inputValue,
+      text: messageText,
       sender: 'user',
       timestamp: new Date(),
     };
 
-    setMessages([...messages, newMessage]);
+    setMessages((prev) => [...prev, newMessage]);
     setInputValue('');
     setIsTyping(true);
 
-    // Simulate AI response
+    // Simulate AI typing delay
     setTimeout(() => {
-      const aiResponse: Message = {
+      const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: 'That\'s a great question! As an AI fashion assistant, I can help you create outfits, manage your wardrobe, and provide style advice. (This is a demo response)',
+        text: getAIResponse(messageText),
         sender: 'ai',
         timestamp: new Date(),
       };
-      setMessages((prev) => [...prev, aiResponse]);
+      setMessages((prev) => [...prev, aiMessage]);
       setIsTyping(false);
     }, 1500);
+  };
+
+  const handleQuickAction = (action: typeof chatQuickActions[0]) => {
+    handleSend(action.prompt);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -63,71 +93,131 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="space-y-6 h-[calc(100vh-12rem)]">
+    <div className="flex flex-col h-[calc(100vh-8rem)] md:h-[calc(100vh-6rem)]">
       {/* Header */}
-      <div className="text-center md:text-left">
-        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-4"
+      >
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg gradient-primary flex items-center justify-center">
+            <Sparkles className="w-4 h-4 text-white" />
+          </div>
           Fashion Assistant
         </h1>
-        <p className="text-gray-600">
-          Get personalized style advice and outfit recommendations
+        <p className="text-gray-600 text-sm">
+          Tu asistente de moda personal con IA
         </p>
-      </div>
+      </motion.div>
 
       {/* Chat Container */}
-      <Card className="flex flex-col h-[calc(100%-8rem)]">
-        {/* Messages Area */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4">
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
-              <div
-                className={`max-w-[80%] md:max-w-[60%] rounded-3xl px-4 py-3 ${
-                  message.sender === 'user'
-                    ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white'
-                    : 'bg-gray-100 text-gray-900'
-                }`}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="flex-1 flex flex-col bg-white rounded-3xl shadow-md overflow-hidden"
+      >
+        {/* Quick Actions */}
+        <div className="p-4 border-b border-gray-100 bg-gradient-to-r from-pink-50 to-violet-50">
+          <p className="text-xs font-medium text-gray-500 mb-2">Acciones rápidas</p>
+          <div className="flex gap-2 flex-wrap">
+            {chatQuickActions.map((action) => (
+              <motion.button
+                key={action.id}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => handleQuickAction(action)}
+                className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-pink-100 text-sm font-medium text-gray-700 hover:border-pink-300 hover:bg-pink-50 transition-all shadow-sm"
               >
-                <p className="text-sm">{message.text}</p>
-              </div>
-            </div>
-          ))}
-          {isTyping && (
-            <div className="flex justify-start">
-              <div className="bg-gray-100 rounded-3xl px-4 py-3">
-                <div className="flex gap-1">
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-100"></div>
-                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-200"></div>
+                {action.id === 'trends' && <TrendingUp className="w-4 h-4 text-pink-500" />}
+                {action.id === 'influencers' && <Users className="w-4 h-4 text-violet-500" />}
+                {action.label}
+              </motion.button>
+            ))}
+          </div>
+        </div>
+
+        {/* Messages Area */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 hide-scrollbar">
+          <AnimatePresence initial={false}>
+            {messages.map((message) => (
+              <motion.div
+                key={message.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+              >
+                <div
+                  className={`max-w-[85%] md:max-w-[70%] rounded-3xl px-4 py-3 ${message.sender === 'user'
+                    ? 'gradient-primary text-white rounded-br-lg'
+                    : 'bg-gray-100 text-gray-900 rounded-bl-lg'
+                    }`}
+                >
+                  <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.text}</p>
                 </div>
-              </div>
-            </div>
-          )}
+              </motion.div>
+            ))}
+          </AnimatePresence>
+
+          {/* Typing Indicator */}
+          <AnimatePresence>
+            {isTyping && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="flex justify-start"
+              >
+                <div className="bg-gray-100 rounded-3xl rounded-bl-lg px-4 py-3">
+                  <div className="flex gap-1.5">
+                    <motion.div
+                      animate={{ y: [0, -6, 0] }}
+                      transition={{ duration: 0.6, repeat: Infinity, delay: 0 }}
+                      className="w-2 h-2 bg-gray-400 rounded-full"
+                    />
+                    <motion.div
+                      animate={{ y: [0, -6, 0] }}
+                      transition={{ duration: 0.6, repeat: Infinity, delay: 0.15 }}
+                      className="w-2 h-2 bg-gray-400 rounded-full"
+                    />
+                    <motion.div
+                      animate={{ y: [0, -6, 0] }}
+                      transition={{ duration: 0.6, repeat: Infinity, delay: 0.3 }}
+                      className="w-2 h-2 bg-gray-400 rounded-full"
+                    />
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+          <div ref={messagesEndRef} />
         </div>
 
         {/* Input Area */}
-        <div className="border-t border-gray-100 p-4">
-          <div className="flex gap-2">
+        <div className="border-t border-gray-100 p-4 bg-white">
+          <div className="flex gap-3">
             <input
               type="text"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Ask me anything about fashion..."
-              className="flex-1 px-4 py-3 rounded-full border border-gray-200 focus:outline-none focus:border-pink-500 focus:ring-2 focus:ring-pink-200"
+              placeholder="Pregúntame sobre moda..."
+              className="flex-1 px-5 py-3 rounded-full bg-gray-100 border-0 focus:outline-none focus:ring-2 focus:ring-pink-200 text-sm"
             />
-            <button
-              onClick={handleSend}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => handleSend()}
               disabled={!inputValue.trim()}
-              className="bg-gradient-to-r from-pink-500 to-purple-500 text-white px-6 py-3 rounded-full font-medium hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-12 h-12 rounded-full gradient-primary text-white flex items-center justify-center shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Send
-            </button>
+              <Send className="w-5 h-5" />
+            </motion.button>
           </div>
         </div>
-      </Card>
+      </motion.div>
     </div>
   );
 }

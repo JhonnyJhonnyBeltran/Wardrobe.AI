@@ -1,18 +1,18 @@
 'use client';
 
 /**
- * Button - Reusable button component with Clean Girl aesthetic
+ * Button - iOS-style button with gradient and scale animations
  */
 
 import React, { ReactNode } from 'react';
+import { motion, HTMLMotionProps } from 'framer-motion';
 
-interface ButtonProps {
+interface ButtonProps extends Omit<HTMLMotionProps<'button'>, 'children'> {
   children: ReactNode;
-  variant?: 'primary' | 'secondary' | 'outline';
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
   size?: 'sm' | 'md' | 'lg';
   fullWidth?: boolean;
-  onClick?: () => void;
-  disabled?: boolean;
+  glow?: boolean;
   className?: string;
 }
 
@@ -21,33 +21,43 @@ export default function Button({
   variant = 'primary',
   size = 'md',
   fullWidth = false,
-  onClick,
-  disabled = false,
+  glow = false,
   className = '',
+  disabled,
+  ...props
 }: ButtonProps) {
-  const baseStyles = 'rounded-full font-medium transition-all focus:outline-none focus:ring-2 focus:ring-offset-2';
-  
-  const variantStyles = {
-    primary: 'bg-gradient-to-r from-pink-500 to-purple-500 text-white hover:shadow-lg focus:ring-pink-500 disabled:opacity-50',
-    secondary: 'bg-pink-50 text-pink-600 hover:bg-pink-100 focus:ring-pink-500 disabled:opacity-50',
-    outline: 'border-2 border-pink-300 text-pink-600 hover:bg-pink-50 focus:ring-pink-500 disabled:opacity-50',
+  const baseStyles = 'inline-flex items-center justify-center font-medium rounded-full transition-all';
+
+  const variants = {
+    primary: 'gradient-primary text-white',
+    secondary: 'bg-gray-100 text-gray-900 hover:bg-gray-200',
+    outline: 'border-2 border-gray-200 text-gray-700 hover:border-pink-300 hover:bg-pink-50',
+    ghost: 'text-gray-600 hover:text-gray-900 hover:bg-gray-100',
   };
-  
-  const sizeStyles = {
+
+  const sizes = {
     sm: 'px-4 py-2 text-sm',
-    md: 'px-6 py-3 text-base',
-    lg: 'px-8 py-4 text-lg',
+    md: 'px-6 py-3 text-sm',
+    lg: 'px-8 py-4 text-base',
   };
-  
-  const widthStyle = fullWidth ? 'w-full' : '';
 
   return (
-    <button
-      onClick={onClick}
+    <motion.button
+      whileHover={!disabled ? { scale: 1.02 } : {}}
+      whileTap={!disabled ? { scale: 0.98 } : {}}
+      className={`
+        ${baseStyles}
+        ${variants[variant]}
+        ${sizes[size]}
+        ${fullWidth ? 'w-full' : ''}
+        ${glow && variant === 'primary' ? 'glow-effect' : ''}
+        ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
+        ${className}
+      `}
       disabled={disabled}
-      className={`${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${widthStyle} ${className}`}
+      {...props}
     >
       {children}
-    </button>
+    </motion.button>
   );
 }

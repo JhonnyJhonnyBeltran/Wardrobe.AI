@@ -4,14 +4,15 @@ import { UserProvider } from "@/store";
 import AppLayout from "@/components/AppLayout";
 
 export const metadata: Metadata = {
-  title: "Wardrobe.AI - Your Personal Fashion Assistant",
-  description: "AI-powered outfit generator and wardrobe manager",
+  title: "Wardrobe.AI - Tu Asistente de Moda IA",
+  description: "Genera outfits perfectos con inteligencia artificial. Tu estilista personal disponible 24/7.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: "Wardrobe.AI",
   },
+  keywords: ["moda", "IA", "outfits", "estilista", "armario virtual", "fashion"],
 };
 
 export const viewport: Viewport = {
@@ -19,6 +20,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   themeColor: "#ec4899",
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -27,7 +29,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="es">
       <body className="antialiased">
         <UserProvider>
           <AppLayout>{children}</AppLayout>
