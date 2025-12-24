@@ -1,0 +1,556 @@
+{
+    "trends": [
+        {
+            "id": "trend-cherry-red",
+            "name": "Cherry Red",
+            "category": "color",
+            "description": "El rojo cereza domina desde abrigos hasta accesorios. Color statement de la temporada.",
+            "season": "Winter 2025",
+            "source": "ELLE",
+            "sourceUrl": "https://www.elle.com/fashion/trends",
+            "imageUrl": "https://images.unsplash.com/photo-1551803091-e20673f15770?w=400",
+            "popularity": 9,
+            "relatedItems": [
+                "item-1"
+            ],
+            "createdAt": "2024-12-22T00:00:00Z",
+            "updatedAt": "2024-12-22T00:00:00Z"
+        },
+        {
+            "id": "trend-quiet-luxury",
+            "name": "Quiet Luxury",
+            "category": "style",
+            "description": "Minimalismo con tejidos premium. Menos logos, más calidad. The Row como referente.",
+            "season": "Winter 2025",
+            "source": "WhoWhatWear",
+            "sourceUrl": "https://www.whowhatwear.com",
+            "imageUrl": "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=400",
+            "popularity": 10,
+            "relatedItems": [
+                "item-2",
+                "item-3",
+                "item-4"
+            ],
+            "createdAt": "2024-12-22T00:00:00Z",
+            "updatedAt": "2024-12-22T00:00:00Z"
+        },
+        {
+            "id": "trend-oversized-leather",
+            "name": "Oversized Leather Jacket",
+            "category": "garment",
+            "description": "Cazadoras de cuero XXL. Bombers, aviadores y biker en siluetas amplias.",
+            "season": "Winter 2025",
+            "source": "WhoWhatWear",
+            "sourceUrl": "https://www.whowhatwear.com",
+            "imageUrl": "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=400",
+            "popularity": 8,
+            "relatedItems": [
+                "item-5"
+            ],
+            "createdAt": "2024-12-22T00:00:00Z",
+            "updatedAt": "2024-12-22T00:00:00Z"
+        },
+        {
+            "id": "trend-baggy-jeans",
+            "name": "Baggy Jeans",
+            "category": "garment",
+            "description": "Pantalones vaqueros oversized. Barrel jeans, wide leg y vintage fits.",
+            "season": "Winter 2025",
+            "source": "ELLE",
+            "sourceUrl": "https://www.elle.com/fashion",
+            "imageUrl": "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=400",
+            "popularity": 8,
+            "relatedItems": [
+                "item-6",
+                "item-7"
+            ],
+            "createdAt": "2024-12-22T00:00:00Z",
+            "updatedAt": "2024-12-22T00:00:00Z"
+        },
+        {
+            "id": "trend-chunky-boots",
+            "name": "Chunky Boots",
+            "category": "accessory",
+            "description": "Botas con plataforma y suelas gruesas. Chelsea, combat y hiking styles.",
+            "season": "Winter 2025",
+            "source": "Harper's Bazaar",
+            "sourceUrl": "https://www.harpersbazaar.com",
+            "imageUrl": "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=400",
+            "popularity": 7,
+            "relatedItems": [
+                "item-8"
+            ],
+            "createdAt": "2024-12-22T00:00:00Z",
+            "updatedAt": "2024-12-22T00:00:00Z"
+        },
+        {
+            "id": "trend-layering",
+            "name": "Layering",
+            "category": "style",
+            "description": "El arte de las capas. Combinar texturas, longitudes y proporciones.",
+            "season": "Winter 2025",
+            "source": "WhoWhatWear",
+            "sourceUrl": "https://www.whowhatwear.com",
+            "imageUrl": "https://images.unsplash.com/photo-1509631179647-0177331693ae?w=400",
+            "popularity": 7,
+            "relatedItems": [],
+            "createdAt": "2024-12-22T00:00:00Z",
+            "updatedAt": "2024-12-22T00:00:00Z"
+        },
+        {
+            "id": "trend-burgundy",
+            "name": "Burgundy",
+            "category": "color",
+            "description": "El burdeos como alternativa elegante al negro. Perfecto para looks formales.",
+            "season": "Winter 2025",
+            "source": "ELLE",
+            "sourceUrl": "https://www.elle.com/fashion",
+            "imageUrl": "https://images.unsplash.com/photo-1558171813-4c088753af8f?w=400",
+            "popularity": 6,
+            "relatedItems": [],
+            "createdAt": "2024-12-22T00:00:00Z",
+            "updatedAt": "2024-12-22T00:00:00Z"
+        },
+        {
+            "id": "trend-ballet-flats",
+            "name": "Ballet Flats",
+            "category": "accessory",
+            "description": "Las bailarinas vuelven con fuerza. Desde Chanel hasta versiones asequibles.",
+            "season": "Winter 2025",
+            "source": "WhoWhatWear",
+            "sourceUrl": "https://www.whowhatwear.com",
+            "imageUrl": "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=400",
+            "popularity": 6,
+            "relatedItems": [
+                "item-9"
+            ],
+            "createdAt": "2024-12-22T00:00:00Z",
+            "updatedAt": "2024-12-22T00:00:00Z"
+        }
+    ],
+    "items": [
+        {
+            "id": "item-1",
+            "name": "Abrigo Rojo Cereza",
+            "brand": "Mango",
+            "type": "outerwear",
+            "description": "Abrigo largo en rojo cereza, corte recto con solapas anchas",
+            "color": "Cherry Red",
+            "colorHex": "#C41E3A",
+            "priceRange": "mid",
+            "price": "149.99€",
+            "imageUrl": "https://images.unsplash.com/photo-1539533018447-63fcce2678e3?w=400&h=400&fit=crop",
+            "buyLink": "https://shop.mango.com/es/mujer/abrigos",
+            "trending": true,
+            "trendIds": [
+                "trend-cherry-red"
+            ],
+            "source": "ELLE",
+            "createdAt": "2024-12-22T00:00:00Z"
+        },
+        {
+            "id": "item-2",
+            "name": "Jersey Cashmere Oversized",
+            "brand": "COS",
+            "type": "top",
+            "description": "Jersey oversized de lana y cachemira, cuello redondo",
+            "color": "Oatmeal",
+            "colorHex": "#D4C4B0",
+            "priceRange": "mid",
+            "price": "175€",
+            "imageUrl": "https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=400&h=400&fit=crop",
+            "buyLink": "https://www.cos.com/es-es/women/knitwear/cashmere",
+            "trending": true,
+            "trendIds": [
+                "trend-quiet-luxury"
+            ],
+            "source": "WhoWhatWear",
+            "createdAt": "2024-12-22T00:00:00Z"
+        },
+        {
+            "id": "item-3",
+            "name": "Pantalón Tailored",
+            "brand": "Massimo Dutti",
+            "type": "bottom",
+            "description": "Pantalón de vestir con pinzas, corte recto relajado",
+            "color": "Taupe",
+            "colorHex": "#8B7355",
+            "priceRange": "mid",
+            "price": "89.95€",
+            "imageUrl": "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=400&h=400&fit=crop",
+            "buyLink": "https://www.massimodutti.com/es/mujer/pantalones",
+            "trending": true,
+            "trendIds": [
+                "trend-quiet-luxury"
+            ],
+            "source": "WhoWhatWear",
+            "createdAt": "2024-12-22T00:00:00Z"
+        },
+        {
+            "id": "item-4",
+            "name": "Bolso Shopper Piel",
+            "brand": "Zara",
+            "type": "bag",
+            "description": "Bolso shopper de piel con asas, minimalista",
+            "color": "Black",
+            "colorHex": "#1A1A1A",
+            "priceRange": "budget",
+            "price": "49.95€",
+            "imageUrl": "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=400&h=400&fit=crop",
+            "buyLink": "https://www.zara.com/es/es/bolsos-mujer",
+            "trending": true,
+            "trendIds": [
+                "trend-quiet-luxury"
+            ],
+            "source": "WhoWhatWear",
+            "createdAt": "2024-12-22T00:00:00Z"
+        },
+        {
+            "id": "item-5",
+            "name": "Cazadora Cuero Oversize",
+            "brand": "Mango",
+            "type": "outerwear",
+            "description": "Bomber de cuero oversize, cremallera frontal",
+            "color": "Black",
+            "colorHex": "#2D2D2D",
+            "priceRange": "mid",
+            "price": "199.99€",
+            "imageUrl": "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=400&h=400&fit=crop",
+            "buyLink": "https://shop.mango.com/es/mujer/cazadoras-cuero",
+            "trending": true,
+            "trendIds": [
+                "trend-oversized-leather"
+            ],
+            "source": "WhoWhatWear",
+            "createdAt": "2024-12-22T00:00:00Z"
+        },
+        {
+            "id": "item-6",
+            "name": "Wide Leg Jeans",
+            "brand": "Zara",
+            "type": "bottom",
+            "description": "Jeans wide leg, tiro alto, lavado medio",
+            "color": "Medium Blue",
+            "colorHex": "#6B8FAD",
+            "priceRange": "budget",
+            "price": "35.95€",
+            "imageUrl": "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=400&h=400&fit=crop",
+            "buyLink": "https://www.zara.com/es/es/jeans-mujer",
+            "trending": true,
+            "trendIds": [
+                "trend-baggy-jeans"
+            ],
+            "source": "WhoWhatWear",
+            "createdAt": "2024-12-22T00:00:00Z"
+        },
+        {
+            "id": "item-7",
+            "name": "501 Original Jeans",
+            "brand": "Levi's",
+            "type": "bottom",
+            "description": "Jeans clásicos straight leg, cintura alta",
+            "color": "Indigo",
+            "colorHex": "#3D5C8C",
+            "priceRange": "mid",
+            "price": "110€",
+            "imageUrl": "https://images.unsplash.com/photo-1542272604-787c3835535d?w=400&h=400&fit=crop",
+            "buyLink": "https://www.levi.com/ES/es_ES/ropa/mujer/jeans/501-original",
+            "trending": true,
+            "trendIds": [
+                "trend-baggy-jeans"
+            ],
+            "source": "WhoWhatWear",
+            "createdAt": "2024-12-22T00:00:00Z"
+        },
+        {
+            "id": "item-8",
+            "name": "Botas Plataforma Chelsea",
+            "brand": "Dr. Martens",
+            "type": "shoes",
+            "description": "Botas Chelsea con plataforma chunky, piel negra",
+            "color": "Black",
+            "colorHex": "#1A1A1A",
+            "priceRange": "mid",
+            "price": "219€",
+            "imageUrl": "https://images.unsplash.com/photo-1605733160314-4fc7dac4bb16?w=400&h=400&fit=crop",
+            "buyLink": "https://www.drmartens.com/es/2976-quad-platform-chelsea-boots",
+            "trending": true,
+            "trendIds": [
+                "trend-chunky-boots"
+            ],
+            "source": "Harper's Bazaar",
+            "createdAt": "2024-12-22T00:00:00Z"
+        },
+        {
+            "id": "item-9",
+            "name": "Bailarinas Lazo",
+            "brand": "Massimo Dutti",
+            "type": "shoes",
+            "description": "Bailarinas de piel con lazo, punta cuadrada",
+            "color": "Nude",
+            "colorHex": "#E8C4A8",
+            "priceRange": "mid",
+            "price": "79.95€",
+            "imageUrl": "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=400&h=400&fit=crop",
+            "buyLink": "https://www.massimodutti.com/es/mujer/zapatos/bailarinas",
+            "trending": true,
+            "trendIds": [
+                "trend-ballet-flats"
+            ],
+            "source": "WhoWhatWear",
+            "createdAt": "2024-12-22T00:00:00Z"
+        },
+        {
+            "id": "item-10",
+            "name": "Puzzle Bag Small",
+            "brand": "Loewe",
+            "type": "bag",
+            "description": "Bolso icónico de piel con paneles geométricos",
+            "color": "Tan",
+            "colorHex": "#C4A775",
+            "priceRange": "luxury",
+            "price": "2.650€",
+            "imageUrl": "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&h=400&fit=crop",
+            "buyLink": "https://www.loewe.com/eur/es/women/bags/puzzle",
+            "trending": true,
+            "trendIds": [],
+            "source": "ELLE",
+            "createdAt": "2024-12-22T00:00:00Z"
+        },
+        {
+            "id": "item-11",
+            "name": "Abrigo Camel Lana",
+            "brand": "Massimo Dutti",
+            "type": "outerwear",
+            "description": "Abrigo recto de lana con cinturón",
+            "color": "Camel",
+            "colorHex": "#C4A35A",
+            "priceRange": "premium",
+            "price": "299€",
+            "imageUrl": "https://images.unsplash.com/photo-1544923246-77307dd628b9?w=400&h=400&fit=crop",
+            "buyLink": "https://www.massimodutti.com/es/mujer/abrigos",
+            "trending": true,
+            "trendIds": [
+                "trend-quiet-luxury"
+            ],
+            "source": "Harper's Bazaar",
+            "createdAt": "2024-12-22T00:00:00Z"
+        },
+        {
+            "id": "item-12",
+            "name": "Top Punto Calado",
+            "brand": "Sandro",
+            "type": "top",
+            "description": "Top de punto semi-transparente, manga larga",
+            "color": "White",
+            "colorHex": "#FFFAF0",
+            "priceRange": "premium",
+            "price": "195€",
+            "imageUrl": "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=400&h=400&fit=crop",
+            "buyLink": "https://eu.sandro-paris.com/es-es/mujer/jerseis-y-tops",
+            "trending": true,
+            "trendIds": [],
+            "source": "ELLE",
+            "createdAt": "2024-12-22T00:00:00Z"
+        },
+        {
+            "id": "item-13",
+            "name": "Vestido Midi Satén",
+            "brand": "Reformation",
+            "type": "dress",
+            "description": "Vestido midi de satén con escote en V",
+            "color": "Burgundy",
+            "colorHex": "#722F37",
+            "priceRange": "premium",
+            "price": "285€",
+            "imageUrl": "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400&h=400&fit=crop",
+            "buyLink": "https://www.thereformation.com/categories/dresses",
+            "trending": true,
+            "trendIds": [
+                "trend-burgundy"
+            ],
+            "source": "ELLE",
+            "createdAt": "2024-12-22T00:00:00Z"
+        },
+        {
+            "id": "item-14",
+            "name": "Blazer Oversize",
+            "brand": "Zara",
+            "type": "outerwear",
+            "description": "Blazer oversize con hombreras, botonadura simple",
+            "color": "Black",
+            "colorHex": "#1A1A1A",
+            "priceRange": "budget",
+            "price": "69.95€",
+            "imageUrl": "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=400&h=400&fit=crop",
+            "buyLink": "https://www.zara.com/es/es/blazers-mujer",
+            "trending": true,
+            "trendIds": [
+                "trend-quiet-luxury"
+            ],
+            "source": "WhoWhatWear",
+            "createdAt": "2024-12-22T00:00:00Z"
+        },
+        {
+            "id": "item-15",
+            "name": "Sneakers Blancos",
+            "brand": "Veja",
+            "type": "shoes",
+            "description": "Zapatillas sostenibles de piel blanca",
+            "color": "White",
+            "colorHex": "#FFFFFF",
+            "priceRange": "mid",
+            "price": "135€",
+            "imageUrl": "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=400&h=400&fit=crop",
+            "buyLink": "https://www.veja-store.com/es/",
+            "trending": true,
+            "trendIds": [],
+            "source": "WhoWhatWear",
+            "createdAt": "2024-12-22T00:00:00Z"
+        },
+        {
+            "id": "item-16",
+            "name": "Camisa Popelín",
+            "brand": "COS",
+            "type": "top",
+            "description": "Camisa de popelín de algodón, corte oversize",
+            "color": "White",
+            "colorHex": "#FFFFFF",
+            "priceRange": "mid",
+            "price": "89€",
+            "imageUrl": "https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=400&h=400&fit=crop",
+            "buyLink": "https://www.cos.com/es-es/women/shirts",
+            "trending": true,
+            "trendIds": [
+                "trend-quiet-luxury"
+            ],
+            "source": "WhoWhatWear",
+            "createdAt": "2024-12-22T00:00:00Z"
+        },
+        {
+            "id": "item-17",
+            "name": "Falda Midi Plisada",
+            "brand": "H&M",
+            "type": "bottom",
+            "description": "Falda midi plisada con cintura elástica",
+            "color": "Sage Green",
+            "colorHex": "#9CAF88",
+            "priceRange": "budget",
+            "price": "29.99€",
+            "imageUrl": "https://images.unsplash.com/photo-1583496661160-fb5886a0aaaa?w=400&h=400&fit=crop",
+            "buyLink": "https://www2.hm.com/es_es/mujer/faldas.html",
+            "trending": true,
+            "trendIds": [],
+            "source": "ELLE",
+            "createdAt": "2024-12-22T00:00:00Z"
+        },
+        {
+            "id": "item-18",
+            "name": "Bolso Bandolera",
+            "brand": "Mango",
+            "type": "bag",
+            "description": "Bandolera de piel con cadena dorada",
+            "color": "Black",
+            "colorHex": "#1A1A1A",
+            "priceRange": "budget",
+            "price": "39.99€",
+            "imageUrl": "https://images.unsplash.com/photo-1566150905458-1bf1fc113f0d?w=400&h=400&fit=crop",
+            "buyLink": "https://shop.mango.com/es/mujer/bolsos",
+            "trending": true,
+            "trendIds": [],
+            "source": "WhoWhatWear",
+            "createdAt": "2024-12-22T00:00:00Z"
+        }
+    ],
+    "brands": [
+        {
+            "id": "loewe",
+            "name": "Loewe",
+            "tier": "luxury",
+            "trendingScore": 95,
+            "website": "https://www.loewe.com",
+            "logoUrl": "https://logo.clearbit.com/loewe.com"
+        },
+        {
+            "id": "mango",
+            "name": "Mango",
+            "tier": "fast-fashion",
+            "trendingScore": 85,
+            "website": "https://shop.mango.com",
+            "logoUrl": "https://logo.clearbit.com/mango.com"
+        },
+        {
+            "id": "zara",
+            "name": "Zara",
+            "tier": "fast-fashion",
+            "trendingScore": 82,
+            "website": "https://www.zara.com",
+            "logoUrl": "https://logo.clearbit.com/zara.com"
+        },
+        {
+            "id": "massimo-dutti",
+            "name": "Massimo Dutti",
+            "tier": "contemporary",
+            "trendingScore": 78,
+            "website": "https://www.massimodutti.com",
+            "logoUrl": "https://logo.clearbit.com/massimodutti.com"
+        },
+        {
+            "id": "cos",
+            "name": "COS",
+            "tier": "contemporary",
+            "trendingScore": 75,
+            "website": "https://www.cos.com",
+            "logoUrl": "https://logo.clearbit.com/cos.com"
+        },
+        {
+            "id": "levis",
+            "name": "Levi's",
+            "tier": "contemporary",
+            "trendingScore": 72,
+            "website": "https://www.levi.com",
+            "logoUrl": "https://logo.clearbit.com/levi.com"
+        },
+        {
+            "id": "dr-martens",
+            "name": "Dr. Martens",
+            "tier": "contemporary",
+            "trendingScore": 70,
+            "website": "https://www.drmartens.com",
+            "logoUrl": "https://logo.clearbit.com/drmartens.com"
+        },
+        {
+            "id": "sandro",
+            "name": "Sandro",
+            "tier": "premium",
+            "trendingScore": 68,
+            "website": "https://eu.sandro-paris.com",
+            "logoUrl": "https://logo.clearbit.com/sandro-paris.com"
+        },
+        {
+            "id": "reformation",
+            "name": "Reformation",
+            "tier": "premium",
+            "trendingScore": 65,
+            "website": "https://www.thereformation.com",
+            "logoUrl": "https://logo.clearbit.com/thereformation.com"
+        },
+        {
+            "id": "veja",
+            "name": "Veja",
+            "tier": "contemporary",
+            "trendingScore": 60,
+            "website": "https://www.veja-store.com",
+            "logoUrl": "https://logo.clearbit.com/veja-store.com"
+        },
+        {
+            "id": "hm",
+            "name": "H&M",
+            "tier": "fast-fashion",
+            "trendingScore": 55,
+            "website": "https://www2.hm.com",
+            "logoUrl": "https://logo.clearbit.com/hm.com"
+        }
+    ],
+    "lastUpdated": "2024-12-24T14:50:00.000Z"
+}

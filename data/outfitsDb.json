@@ -1,0 +1,166 @@
+{
+  "outfits": [
+    {
+      "id": "outfit-1766584397480-i5k9lgdr",
+      "name": "It-Girl Approved - Cherry Red",
+      "style": "trending",
+      "occasion": "everyday",
+      "season": "winter",
+      "description": "Lo más actual según las tendencias del momento",
+      "items": [
+        {
+          "id": "item-2",
+          "name": "Jersey Cashmere Oversized",
+          "brand": "COS",
+          "type": "top",
+          "color": "Oatmeal",
+          "colorHex": "#D4C4B0",
+          "imageUrl": "https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=400&h=400&fit=crop",
+          "buyLink": "https://www.cos.com/es-es/women/knitwear/cashmere",
+          "price": "175€",
+          "priceRange": "mid",
+          "source": "WhoWhatWear",
+          "trending": true,
+          "matchScore": 85
+        },
+        {
+          "id": "item-3",
+          "name": "Pantalón Tailored",
+          "brand": "Massimo Dutti",
+          "type": "bottom",
+          "color": "Taupe",
+          "colorHex": "#8B7355",
+          "imageUrl": "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=400&h=400&fit=crop",
+          "buyLink": "https://www.massimodutti.com/es/mujer/pantalones",
+          "price": "89.95€",
+          "priceRange": "mid",
+          "source": "WhoWhatWear",
+          "trending": true,
+          "matchScore": 81.40800140855252
+        },
+        {
+          "id": "item-9",
+          "name": "Bailarinas Lazo",
+          "brand": "Massimo Dutti",
+          "type": "shoes",
+          "color": "Nude",
+          "colorHex": "#E8C4A8",
+          "imageUrl": "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=400&h=400&fit=crop",
+          "buyLink": "https://www.massimodutti.com/es/mujer/zapatos/bailarinas",
+          "price": "79.95€",
+          "priceRange": "mid",
+          "source": "WhoWhatWear",
+          "trending": true,
+          "matchScore": 79.26898215287767
+        },
+        {
+          "id": "item-18",
+          "name": "Bolso Bandolera",
+          "brand": "Mango",
+          "type": "bag",
+          "color": "Black",
+          "colorHex": "#1A1A1A",
+          "imageUrl": "https://images.unsplash.com/photo-1566150905458-1bf1fc113f0d?w=400&h=400&fit=crop",
+          "buyLink": "https://shop.mango.com/es/mujer/bolsos",
+          "price": "39.99€",
+          "priceRange": "budget",
+          "source": "WhoWhatWear",
+          "trending": true,
+          "matchScore": 80
+        }
+      ],
+      "totalItems": 4,
+      "trendingScore": 100,
+      "estimatedPrice": "150-400€",
+      "priceRange": "Mid-Range",
+      "matchedTrends": [
+        "Cherry Red",
+        "Quiet Luxury",
+        "Oversized Leather Jacket"
+      ],
+      "createdAt": "2025-12-24T13:53:17.480Z",
+      "aiGenerated": true,
+      "savedAt": "2025-12-24T13:53:17.481Z",
+      "favorite": false,
+      "views": 0,
+      "shares": 0
+    },
+    {
+      "id": "outfit-1766584583723-yi3kqdn8",
+      "name": "Must-Have Look - Cherry Red",
+      "style": "trending",
+      "occasion": "everyday",
+      "season": "spring",
+      "description": "Lo más actual según las tendencias del momento",
+      "items": [
+        {
+          "id": "item-2",
+          "name": "Jersey Cashmere Oversized",
+          "brand": "COS",
+          "type": "top",
+          "color": "Oatmeal",
+          "colorHex": "#D4C4B0",
+          "imageUrl": "https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=400&h=400&fit=crop",
+          "buyLink": "https://www.cos.com/es-es/women/knitwear/cashmere",
+          "price": "175€",
+          "priceRange": "mid",
+          "source": "WhoWhatWear",
+          "trending": true,
+          "matchScore": 85
+        },
+        {
+          "id": "item-6",
+          "name": "Wide Leg Jeans",
+          "brand": "Zara",
+          "type": "bottom",
+          "color": "Medium Blue",
+          "colorHex": "#6B8FAD",
+          "imageUrl": "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=400&h=400&fit=crop",
+          "buyLink": "https://www.zara.com/es/es/jeans-mujer",
+          "price": "35.95€",
+          "priceRange": "budget",
+          "source": "WhoWhatWear",
+          "trending": true,
+          "matchScore": 81.00713985122869
+        },
+        {
+          "id": "item-8",
+          "name": "Botas Plataforma Chelsea",
+          "brand": "Dr. Martens",
+          "type": "shoes",
+          "color": "Black",
+          "colorHex": "#1A1A1A",
+          "imageUrl": "https://images.unsplash.com/photo-1605733160314-4fc7dac4bb16?w=400&h=400&fit=crop",
+          "buyLink": "https://www.drmartens.com/es/2976-quad-platform-chelsea-boots",
+          "price": "219€",
+          "priceRange": "mid",
+          "source": "Harper's Bazaar",
+          "trending": true,
+          "matchScore": 85
+        }
+      ],
+      "totalItems": 3,
+      "trendingScore": 100,
+      "estimatedPrice": "150-400€",
+      "priceRange": "Mid-Range",
+      "matchedTrends": [
+        "Cherry Red",
+        "Quiet Luxury",
+        "Oversized Leather Jacket"
+      ],
+      "createdAt": "2025-12-24T13:56:23.723Z",
+      "aiGenerated": true,
+      "savedAt": "2025-12-24T13:56:23.723Z",
+      "favorite": false,
+      "views": 0,
+      "shares": 0
+    }
+  ],
+  "history": [],
+  "stats": {
+    "totalGenerated": 2,
+    "totalSaved": 2,
+    "totalShared": 0,
+    "lastUpdated": "2025-12-24T13:56:23.723Z"
+  }
+}

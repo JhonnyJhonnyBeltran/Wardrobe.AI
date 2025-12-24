@@ -32,7 +32,7 @@ export default function TabBar() {
         initial={{ y: 100 }}
         animate={{ y: 0 }}
         transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-        className="glass-strong rounded-full shadow-lg px-2 py-2"
+        className="glass-strong rounded-full shadow-xl px-2 py-2 border border-white/50 dark:border-gray-700/50"
       >
         <div className="flex justify-around items-center">
           {tabs.map((tab) => {
@@ -44,21 +44,29 @@ export default function TabBar() {
                 className="relative flex flex-col items-center justify-center flex-1 py-2"
               >
                 <motion.div
-                  className={`flex flex-col items-center gap-1 px-4 py-2 rounded-full transition-colors ${isActive ? 'text-pink-600' : 'text-gray-500'
+                  className={`flex flex-col items-center gap-1 px-4 py-2 rounded-full transition-colors ${isActive ? 'text-white' : 'text-gray-500 dark:text-gray-400'
                     }`}
                   whileTap={{ scale: 0.95 }}
+                  whileHover={{ scale: 1.05 }}
                 >
                   {/* Active Background */}
                   {isActive && (
                     <motion.div
                       layoutId="activeTab"
-                      className="absolute inset-0 bg-pink-100 rounded-full"
+                      className="absolute inset-0 gradient-primary rounded-full shadow-lg"
                       initial={false}
                       transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                     />
                   )}
-                  <span className="relative z-10">{tab.icon}</span>
-                  <span className="relative z-10 text-xs font-medium">{tab.label}</span>
+                  <motion.span
+                    className="relative z-10"
+                    animate={{ scale: isActive ? 1.1 : 1 }}
+                  >
+                    {tab.icon}
+                  </motion.span>
+                  <span className={`relative z-10 text-xs font-medium ${isActive ? 'text-white' : ''}`}>
+                    {tab.label}
+                  </span>
                 </motion.div>
               </Link>
             );

@@ -1,18 +1,19 @@
 'use client';
 
 /**
- * Profile Page - User Settings with Premium Toggle for Testing
+ * Profile Page - User Settings with Premium Toggle
  */
 
 import { motion } from 'framer-motion';
-import { Crown, Mail, Lock, Moon, LogOut, ChevronRight, Palette, Sparkles } from 'lucide-react';
+import { Crown, Mail, Lock, Moon, Sun, LogOut, ChevronRight, Palette, Sparkles, Check, X, Settings } from 'lucide-react';
 import { Card, Button } from '@/components';
-import { useUser } from '@/store';
+import { useUser, useTheme } from '@/store';
 import { SubscriptionTier } from '@/types';
 import { styleOptions } from '@/data/mockOutfits';
 
 export default function ProfilePage() {
   const { user, isPremium, setUser } = useUser();
+  const { isDark, toggleTheme } = useTheme();
 
   const handleTogglePremium = () => {
     if (user) {
@@ -31,17 +32,17 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="space-y-6 pb-8">
+    <div className="space-y-5 pb-8">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="text-center md:text-left"
       >
-        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-1">
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-1">
           Mi Perfil
         </h1>
-        <p className="text-gray-600">Gestiona tu cuenta y preferencias</p>
+        <p className="text-gray-500 dark:text-gray-400 text-sm">Gestiona tu cuenta</p>
       </motion.div>
 
       {/* User Info Card */}
@@ -50,12 +51,12 @@ export default function ProfilePage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
       >
-        <Card className="p-6">
-          <div className="flex flex-col md:flex-row items-center gap-6">
+        <Card className="p-5 gradient-card">
+          <div className="flex flex-col md:flex-row items-center gap-5">
             {/* Avatar */}
             <motion.div
-              whileHover={{ scale: 1.05 }}
-              className="w-24 h-24 gradient-primary rounded-full flex items-center justify-center text-4xl text-white font-bold shadow-lg cursor-pointer"
+              whileHover={{ scale: 1.05, rotate: 2 }}
+              className="w-20 h-20 gradient-primary rounded-2xl flex items-center justify-center text-3xl text-white font-bold shadow-lg cursor-pointer"
               onClick={handleNameChange}
             >
               {user?.name.charAt(0).toUpperCase()}
@@ -63,25 +64,25 @@ export default function ProfilePage() {
 
             {/* Info */}
             <div className="flex-1 text-center md:text-left">
-              <h2 className="text-2xl font-semibold text-gray-900 mb-1">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-0.5">
                 {user?.name}
               </h2>
-              <p className="text-gray-600 mb-3">{user?.email}</p>
+              <p className="text-gray-500 dark:text-gray-400 text-sm mb-2">{user?.email}</p>
               <motion.span
                 whileHover={{ scale: 1.05 }}
-                className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium ${isPremium()
-                    ? 'gradient-primary text-white shadow-md'
-                    : 'bg-gray-100 text-gray-600'
+                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${isPremium()
+                  ? 'gradient-primary text-white shadow-md'
+                  : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300'
                   }`}
               >
                 {isPremium() ? (
                   <>
-                    <Crown className="w-4 h-4" />
+                    <Crown className="w-3.5 h-3.5" />
                     Premium
                   </>
                 ) : (
                   <>
-                    <Sparkles className="w-4 h-4" />
+                    <Sparkles className="w-3.5 h-3.5" />
                     Free
                   </>
                 )}
@@ -89,44 +90,78 @@ export default function ProfilePage() {
             </div>
 
             {/* Edit Button */}
-            <Button variant="outline" onClick={handleNameChange}>
-              Editar perfil
+            <Button variant="outline" size="sm" onClick={handleNameChange} className="hover:border-pink-300 dark:hover:border-pink-500 hover:bg-pink-50 dark:hover:bg-pink-950/30">
+              Editar
             </Button>
           </div>
         </Card>
       </motion.div>
 
-      {/* Dev Toggle - Premium Simulation */}
+      {/* Theme Toggle */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.12 }}
+      >
+        <Card className="p-4 border-2 border-pink-200/50 dark:border-pink-800/30 bg-gradient-to-r from-pink-50/50 to-violet-50/50 dark:from-pink-950/30 dark:to-violet-950/30">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-pink-100 to-violet-100 dark:from-pink-900/50 dark:to-violet-900/50 flex items-center justify-center">
+                {isDark ? <Moon className="w-4 h-4 text-pink-500" /> : <Sun className="w-4 h-4 text-pink-500" />}
+              </div>
+              <div>
+                <h3 className="font-medium text-gray-900 dark:text-white text-sm">Modo Oscuro</h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{isDark ? 'Activado' : 'Desactivado'}</p>
+              </div>
+            </div>
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={toggleTheme}
+              className={`relative w-12 h-6 rounded-full transition-all ${isDark
+                ? 'bg-gradient-to-r from-pink-500 to-violet-500'
+                : 'bg-gray-300 dark:bg-gray-600'
+                }`}
+            >
+              <motion.div
+                layout
+                className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md"
+                style={{ left: isDark ? 'calc(100% - 22px)' : '2px' }}
+                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+              />
+            </motion.button>
+          </div>
+        </Card>
+      </motion.div>
+
+      {/* Dev Toggle */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.15 }}
       >
-        <Card className="p-5 border-2 border-dashed border-pink-200 bg-pink-50/50">
+        <Card className="p-4 border-2 border-dashed border-pink-200/50 dark:border-pink-800/30 bg-gradient-to-r from-pink-50/50 to-violet-50/50 dark:from-pink-950/30 dark:to-violet-950/30">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center">
-                <span className="text-lg">🔧</span>
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-pink-100 to-violet-100 dark:from-pink-900/50 dark:to-violet-900/50 flex items-center justify-center">
+                <Settings className="w-4 h-4 text-pink-500" />
               </div>
               <div>
-                <h3 className="font-semibold text-gray-900 text-sm">
-                  Modo Desarrollador
-                </h3>
-                <p className="text-xs text-gray-600">
-                  Simula el estado Premium/Free
-                </p>
+                <h3 className="font-medium text-gray-900 dark:text-white text-sm">Dev Mode</h3>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Simula Premium/Free</p>
               </div>
             </div>
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={handleTogglePremium}
-              className={`relative w-14 h-8 rounded-full transition-colors ${isPremium() ? 'bg-pink-500' : 'bg-gray-300'
+              className={`relative w-12 h-6 rounded-full transition-all ${isPremium()
+                ? 'bg-gradient-to-r from-pink-500 to-violet-500'
+                : 'bg-gray-300 dark:bg-gray-600'
                 }`}
             >
               <motion.div
                 layout
-                className="absolute top-1 w-6 h-6 rounded-full bg-white shadow-md"
-                style={{ left: isPremium() ? 'calc(100% - 28px)' : '4px' }}
+                className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md"
+                style={{ left: isPremium() ? 'calc(100% - 22px)' : '2px' }}
                 transition={{ type: 'spring', stiffness: 500, damping: 30 }}
               />
             </motion.button>
@@ -140,56 +175,51 @@ export default function ProfilePage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
       >
-        <Card className="p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <Crown className="w-5 h-5 text-pink-500" />
+        <Card className="p-5">
+          <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+            <Crown className="w-4 h-4 text-pink-500" />
             Suscripción
           </h2>
 
           {isPremium() ? (
-            <div className="bg-gradient-to-br from-pink-50 to-violet-50 rounded-2xl p-5 border border-pink-100">
-              <div className="flex items-center justify-between mb-4">
+            <div className="bg-gradient-to-br from-pink-50 to-violet-50 dark:from-pink-950/30 dark:to-violet-950/30 rounded-2xl p-4 border border-pink-100/50 dark:border-pink-800/30">
+              <div className="flex items-center justify-between mb-3">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                    <span>Plan Premium</span>
-                    <span className="text-xl">👑</span>
+                  <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                    Plan Premium
+                    <Crown className="w-4 h-4 text-pink-500" />
                   </h3>
-                  <p className="text-sm text-gray-600">
-                    Todas las funciones desbloqueadas
-                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Todo desbloqueado</p>
                 </div>
               </div>
-              <ul className="space-y-2 text-sm text-gray-700">
-                {['Historial ilimitado de outfits', 'Recomendaciones IA avanzadas', 'Soporte prioritario'].map((feature) => (
-                  <li key={feature} className="flex items-center gap-2">
-                    <span className="text-green-500">✓</span>
+              <ul className="space-y-1.5 text-sm">
+                {['Historial ilimitado', 'IA avanzada', 'Soporte prioritario'].map((feature) => (
+                  <li key={feature} className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                    <Check className="w-4 h-4 text-emerald-500" />
                     {feature}
                   </li>
                 ))}
               </ul>
             </div>
           ) : (
-            <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-5">
-              <div className="flex items-center justify-between mb-4">
+            <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-2xl p-4">
+              <div className="flex items-center justify-between mb-3">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Plan Free</h3>
-                  <p className="text-sm text-gray-600">
-                    Funciones básicas activas
-                  </p>
+                  <h3 className="font-semibold text-gray-900 dark:text-white">Plan Free</h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Funciones básicas</p>
                 </div>
-                <span className="text-3xl">🆓</span>
               </div>
-              <ul className="space-y-2 text-sm mb-5">
-                <li className="flex items-center gap-2 text-gray-700">
-                  <span className="text-green-500">✓</span>
+              <ul className="space-y-1.5 text-sm mb-4">
+                <li className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                  <Check className="w-4 h-4 text-emerald-500" />
                   Últimos 3 outfits
                 </li>
                 <li className="flex items-center gap-2 text-gray-400">
-                  <span>✗</span>
+                  <X className="w-4 h-4" />
                   Historial ilimitado
                 </li>
                 <li className="flex items-center gap-2 text-gray-400">
-                  <span>✗</span>
+                  <X className="w-4 h-4" />
                   IA avanzada
                 </li>
               </ul>
@@ -207,24 +237,23 @@ export default function ProfilePage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.25 }}
       >
-        <Card className="p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <Palette className="w-5 h-5 text-pink-500" />
-            Preferencias de estilo
+        <Card className="p-5">
+          <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+            <Palette className="w-4 h-4 text-pink-500" />
+            Preferencias
           </h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
             {styleOptions.map((style) => (
               <motion.button
                 key={style.value}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="flex items-center gap-3 p-4 rounded-2xl border-2 border-gray-100 hover:border-pink-200 hover:bg-pink-50 transition-all text-left"
+                whileHover={{ scale: 1.05, y: -2 }}
+                whileTap={{ scale: 0.97 }}
+                className="flex flex-col items-center gap-1.5 p-3 rounded-2xl border border-gray-100 dark:border-gray-700 hover:border-pink-200 dark:hover:border-pink-500 hover:bg-pink-50/50 dark:hover:bg-pink-950/30 transition-all"
               >
-                <span className="text-2xl">{style.icon}</span>
-                <div>
-                  <p className="font-medium text-gray-900 text-sm">{style.label}</p>
-                  <p className="text-xs text-gray-500">{style.description}</p>
+                <div className={`w-8 h-8 rounded-xl bg-gradient-to-br ${style.gradient} flex items-center justify-center`}>
+                  <div className="w-3 h-3 rounded-full bg-white/80" />
                 </div>
+                <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{style.label}</span>
               </motion.button>
             ))}
           </div>
@@ -237,44 +266,36 @@ export default function ProfilePage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
       >
-        <Card className="p-4">
-          <h2 className="text-lg font-semibold text-gray-900 mb-2 px-2">
+        <Card className="p-3">
+          <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-1 px-2">
             Cuenta
           </h2>
-          <div className="space-y-1">
+          <div className="space-y-0.5">
             {[
-              { icon: <Mail className="w-5 h-5" />, label: 'Cambiar email' },
-              { icon: <Lock className="w-5 h-5" />, label: 'Cambiar contraseña' },
-              { icon: <Moon className="w-5 h-5" />, label: 'Modo oscuro', badge: 'Próximamente' },
+              { icon: <Mail className="w-4 h-4" />, label: 'Cambiar email' },
+              { icon: <Lock className="w-4 h-4" />, label: 'Contraseña' },
             ].map((item) => (
               <motion.button
                 key={item.label}
-                whileHover={{ x: 4 }}
-                className="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-gray-50 transition-all"
+                whileHover={{ x: 4, backgroundColor: isDark ? 'rgba(31, 41, 55, 1)' : 'rgba(249, 250, 251, 1)' }}
+                className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all"
               >
-                <div className="flex items-center gap-3 text-gray-700">
+                <div className="flex items-center gap-3 text-gray-600 dark:text-gray-400">
                   {item.icon}
-                  <span>{item.label}</span>
+                  <span className="text-sm">{item.label}</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  {item.badge && (
-                    <span className="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded-full">
-                      {item.badge}
-                    </span>
-                  )}
-                  <ChevronRight className="w-5 h-5 text-gray-400" />
-                </div>
+                <ChevronRight className="w-4 h-4 text-gray-400" />
               </motion.button>
             ))}
             <motion.button
-              whileHover={{ x: 4 }}
-              className="w-full flex items-center justify-between px-4 py-3 rounded-2xl hover:bg-red-50 transition-all text-red-500"
+              whileHover={{ x: 4, backgroundColor: isDark ? 'rgba(127, 29, 29, 0.3)' : 'rgba(254, 242, 242, 1)' }}
+              className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all text-red-500"
             >
               <div className="flex items-center gap-3">
-                <LogOut className="w-5 h-5" />
-                <span>Cerrar sesión</span>
+                <LogOut className="w-4 h-4" />
+                <span className="text-sm">Cerrar sesión</span>
               </div>
-              <ChevronRight className="w-5 h-5" />
+              <ChevronRight className="w-4 h-4" />
             </motion.button>
           </div>
         </Card>

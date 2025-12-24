@@ -16,9 +16,13 @@ interface CardProps extends Omit<HTMLMotionProps<'div'>, 'children'> {
 export default function Card({ children, className = '', hover = false, ...props }: CardProps) {
   return (
     <motion.div
-      whileHover={hover ? { y: -4, boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)' } : {}}
-      transition={{ duration: 0.2 }}
-      className={`bg-white rounded-3xl shadow-md overflow-hidden ${className}`}
+      whileHover={hover ? {
+        y: -6,
+        boxShadow: '0 20px 40px -12px rgba(0, 0, 0, 0.15)',
+        transition: { duration: 0.3, ease: [0.4, 0, 0.2, 1] }
+      } : {}}
+      transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+      className={`bg-white dark:bg-gray-900 rounded-3xl shadow-md dark:shadow-gray-950/50 overflow-hidden ${className}`}
       {...props}
     >
       {children}

@@ -29,22 +29,23 @@ export default function Button({
   const baseStyles = 'inline-flex items-center justify-center font-medium rounded-full transition-all';
 
   const variants = {
-    primary: 'gradient-primary text-white',
-    secondary: 'bg-gray-100 text-gray-900 hover:bg-gray-200',
-    outline: 'border-2 border-gray-200 text-gray-700 hover:border-pink-300 hover:bg-pink-50',
-    ghost: 'text-gray-600 hover:text-gray-900 hover:bg-gray-100',
+    primary: 'gradient-primary text-white shadow-md hover:shadow-lg',
+    secondary: 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700',
+    outline: 'border-2 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-pink-300 dark:hover:border-pink-500 hover:bg-pink-50 dark:hover:bg-pink-950/30 hover:text-pink-600 dark:hover:text-pink-400',
+    ghost: 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800',
   };
 
   const sizes = {
     sm: 'px-4 py-2 text-sm',
-    md: 'px-6 py-3 text-sm',
-    lg: 'px-8 py-4 text-base',
+    md: 'px-5 py-2.5 text-sm',
+    lg: 'px-8 py-3.5 text-base',
   };
 
   return (
     <motion.button
-      whileHover={!disabled ? { scale: 1.02 } : {}}
-      whileTap={!disabled ? { scale: 0.98 } : {}}
+      whileHover={!disabled ? { scale: 1.03, y: -1 } : {}}
+      whileTap={!disabled ? { scale: 0.97 } : {}}
+      transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
       className={`
         ${baseStyles}
         ${variants[variant]}

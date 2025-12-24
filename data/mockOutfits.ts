@@ -1,13 +1,18 @@
 /**
- * Mock data for Wardrobe.AI - Outfit history following PRD structure
+ * Mock data for Klozet - Integrated with real fashion data including images and shop links
  */
 
+import fashionData from './fashionData.json';
+
 export interface OutfitItem {
-  type: 'top' | 'bottom' | 'shoes' | 'accessory';
+  type: 'top' | 'bottom' | 'shoes' | 'accessory' | 'outerwear' | 'bag';
   name: string;
   brand: string;
   ref: string;
-  imageEmoji: string;
+  color: string;
+  imageUrl?: string;
+  buyLink?: string;
+  price?: string;
 }
 
 export interface MockOutfit {
@@ -18,148 +23,164 @@ export interface MockOutfit {
   items: OutfitItem[];
 }
 
-export const mockOutfits: MockOutfit[] = [
-  {
-    id: '1',
-    date: '2024-12-20',
-    style: 'Casual Chic',
-    description: 'Look perfecto para un brunch de fin de semana. Los tonos neutros combinan armoniosamente.',
-    items: [
-      { type: 'top', name: 'Camisa Blanca Oversize', brand: 'Zara', ref: 'https://zara.com/ref1', imageEmoji: '👔' },
-      { type: 'bottom', name: 'Jeans Mom Fit', brand: "Levi's", ref: 'https://levis.com/ref1', imageEmoji: '👖' },
-      { type: 'shoes', name: 'Sneakers Blancas', brand: 'Adidas', ref: 'https://adidas.com/ref1', imageEmoji: '👟' },
-      { type: 'accessory', name: 'Bolso Shopper Beige', brand: 'Mango', ref: 'https://mango.com/ref1', imageEmoji: '👜' },
-    ],
-  },
-  {
-    id: '2',
-    date: '2024-12-19',
-    style: 'Business Elegante',
-    description: 'Outfit sofisticado para reuniones importantes. Transmite profesionalidad y confianza.',
-    items: [
-      { type: 'top', name: 'Blazer Negro Entallado', brand: 'Massimo Dutti', ref: 'https://massimodutti.com/ref2', imageEmoji: '🧥' },
-      { type: 'bottom', name: 'Pantalón de Vestir Crema', brand: 'COS', ref: 'https://cos.com/ref2', imageEmoji: '👖' },
-      { type: 'shoes', name: 'Mocasines Negros', brand: 'Massimo Dutti', ref: 'https://massimodutti.com/ref3', imageEmoji: '👞' },
-      { type: 'accessory', name: 'Reloj Dorado Minimalista', brand: 'Daniel Wellington', ref: 'https://dw.com/ref1', imageEmoji: '⌚' },
-    ],
-  },
-  {
-    id: '3',
-    date: '2024-12-18',
-    style: 'Date Night',
-    description: 'Look romántico y elegante. Los detalles sutiles marcan la diferencia. ✨',
-    items: [
-      { type: 'top', name: 'Top Satinado Rosa Empolvado', brand: 'Reformation', ref: 'https://reformation.com/ref1', imageEmoji: '👚' },
-      { type: 'bottom', name: 'Falda Midi Plisada', brand: 'Sandro', ref: 'https://sandro.com/ref1', imageEmoji: '👗' },
-      { type: 'shoes', name: 'Sandalias de Tacón Nude', brand: 'Steve Madden', ref: 'https://stevemadden.com/ref1', imageEmoji: '👠' },
-      { type: 'accessory', name: 'Pendientes de Perlas', brand: 'Mejuri', ref: 'https://mejuri.com/ref1', imageEmoji: '💎' },
-    ],
-  },
-  {
-    id: '4',
-    date: '2024-12-17',
-    style: 'Sporty Chic',
-    description: 'Comodidad sin sacrificar el estilo. Ideal para un día activo.',
-    items: [
-      { type: 'top', name: 'Sudadera Cropped Gris', brand: 'Nike', ref: 'https://nike.com/ref1', imageEmoji: '🧥' },
-      { type: 'bottom', name: 'Leggings Negros', brand: 'Lululemon', ref: 'https://lululemon.com/ref1', imageEmoji: '🩳' },
-      { type: 'shoes', name: 'Air Force 1', brand: 'Nike', ref: 'https://nike.com/ref2', imageEmoji: '👟' },
-      { type: 'accessory', name: 'Gorra Baseball Blanca', brand: 'New Era', ref: 'https://newera.com/ref1', imageEmoji: '🧢' },
-    ],
-  },
-  {
-    id: '5',
-    date: '2024-12-16',
-    style: 'Boho Weekend',
-    description: 'Vibes relajadas con toques bohemios. Perfecto para un festival o mercadillo.',
-    items: [
-      { type: 'top', name: 'Blusa Bordada Blanca', brand: 'Free People', ref: 'https://freepeople.com/ref1', imageEmoji: '👚' },
-      { type: 'bottom', name: 'Shorts Denim Vintage', brand: "Levi's", ref: 'https://levis.com/ref2', imageEmoji: '🩳' },
-      { type: 'shoes', name: 'Sandalias de Cuero', brand: 'Birkenstock', ref: 'https://birkenstock.com/ref1', imageEmoji: '🩴' },
-      { type: 'accessory', name: 'Sombrero de Paja', brand: 'Lack of Color', ref: 'https://lackofcolor.com/ref1', imageEmoji: '👒' },
-    ],
-  },
-  {
-    id: '6',
-    date: '2024-12-15',
-    style: 'Party Ready',
-    description: '¡Lista para brillar! Look statement para una noche especial. 🎉',
-    items: [
-      { type: 'top', name: 'Top de Lentejuelas Plateado', brand: 'Zara', ref: 'https://zara.com/ref2', imageEmoji: '✨' },
-      { type: 'bottom', name: 'Pantalón Wide Leg Negro', brand: 'Mango', ref: 'https://mango.com/ref2', imageEmoji: '👖' },
-      { type: 'shoes', name: 'Tacones Strappy Plateados', brand: 'Aldo', ref: 'https://aldo.com/ref1', imageEmoji: '👠' },
-      { type: 'accessory', name: 'Clutch Plateado', brand: 'Parfois', ref: 'https://parfois.com/ref1', imageEmoji: '👛' },
-    ],
-  },
-  {
-    id: '7',
-    date: '2024-12-14',
-    style: 'Minimal Everyday',
-    description: 'Menos es más. Un clásico atemporal que nunca falla.',
-    items: [
-      { type: 'top', name: 'Camiseta Básica Negra', brand: 'COS', ref: 'https://cos.com/ref3', imageEmoji: '👕' },
-      { type: 'bottom', name: 'Pantalón Tailored Beige', brand: 'Arket', ref: 'https://arket.com/ref1', imageEmoji: '👖' },
-      { type: 'shoes', name: 'Mocasines Loafer Marrones', brand: 'G.H. Bass', ref: 'https://ghbass.com/ref1', imageEmoji: '👞' },
-      { type: 'accessory', name: 'Bolso Crossbody Negro', brand: 'A.P.C.', ref: 'https://apc.com/ref1', imageEmoji: '👜' },
-    ],
-  },
-  {
-    id: '8',
-    date: '2024-12-13',
-    style: 'Winter Cozy',
-    description: 'Calidez y estilo para los días fríos. Capas que combinan perfectamente.',
-    items: [
-      { type: 'top', name: 'Jersey de Punto Oversized', brand: 'H&M', ref: 'https://hm.com/ref1', imageEmoji: '🧶' },
-      { type: 'bottom', name: 'Jeans Rectos Oscuros', brand: 'Everlane', ref: 'https://everlane.com/ref1', imageEmoji: '👖' },
-      { type: 'shoes', name: 'Botas Chelsea Negras', brand: 'Dr. Martens', ref: 'https://drmartens.com/ref1', imageEmoji: '👢' },
-      { type: 'accessory', name: 'Bufanda de Lana Gris', brand: 'Acne Studios', ref: 'https://acnestudios.com/ref1', imageEmoji: '🧣' },
-    ],
-  },
-];
+// Convert fashion data items to outfit format with images and links
+const mapItemToOutfitItem = (item: typeof fashionData.items[0]): OutfitItem => ({
+  type: item.type as OutfitItem['type'],
+  name: item.name,
+  brand: item.brand,
+  ref: item.buyLink || item.source || '#',
+  color: item.colorHex || '#CCCCCC',
+  imageUrl: item.imageUrl,
+  buyLink: item.buyLink,
+  price: item.price,
+});
 
+// Get item by type or fallback
+const getItemByType = (items: typeof fashionData.items, type: string, fallbackIndex: number = 0) => {
+  return items.find(i => i.type === type) || items[fallbackIndex];
+};
+
+// Get item containing keyword in name
+const getItemByKeyword = (items: typeof fashionData.items, keyword: string, fallback: typeof fashionData.items[0]) => {
+  return items.find(i => i.name.toLowerCase().includes(keyword.toLowerCase())) || fallback;
+};
+
+// Generate outfits from real fashion data with images
+const generateOutfitsFromData = (): MockOutfit[] => {
+  const items = fashionData.items;
+  const trends = fashionData.trends;
+
+  // Group items by type
+  const tops = items.filter(i => i.type === 'top');
+  const bottoms = items.filter(i => i.type === 'bottom');
+  const shoes = items.filter(i => i.type === 'shoes');
+  const bags = items.filter(i => i.type === 'bag');
+  const outerwear = items.filter(i => i.type === 'outerwear');
+
+  const outfits: MockOutfit[] = [
+    {
+      id: '1',
+      date: '2024-12-22',
+      style: 'Quiet Luxury',
+      description: trends.find(t => t.name === 'Quiet Luxury')?.description || 'Minimalismo con tejidos premium.',
+      items: [
+        mapItemToOutfitItem(tops[0] || items[1]),
+        mapItemToOutfitItem(bottoms[0] || items[2]),
+        mapItemToOutfitItem(shoes[0] || items[7]),
+        mapItemToOutfitItem(bags[0] || items[3]),
+      ],
+    },
+    {
+      id: '2',
+      date: '2024-12-21',
+      style: 'Cherry Red Statement',
+      description: trends.find(t => t.name === 'Cherry Red')?.description || 'El rojo cereza como protagonista.',
+      items: [
+        mapItemToOutfitItem(getItemByKeyword(items, 'rojo', outerwear[0])),
+        mapItemToOutfitItem(bottoms[1] || bottoms[0]),
+        mapItemToOutfitItem(shoes[1] || shoes[0]),
+        mapItemToOutfitItem(bags[1] || bags[0]),
+      ],
+    },
+    {
+      id: '3',
+      date: '2024-12-20',
+      style: 'Street Chic',
+      description: 'Estilo urbano con piezas de diseñador. Oversized leather jacket como estrella.',
+      items: [
+        mapItemToOutfitItem(getItemByKeyword(items, 'cuero', outerwear[1])),
+        mapItemToOutfitItem(getItemByKeyword(items, 'jeans', bottoms[0])),
+        mapItemToOutfitItem(shoes[0]),
+        mapItemToOutfitItem(bags[0]),
+      ],
+    },
+    {
+      id: '4',
+      date: '2024-12-19',
+      style: 'Business Minimal',
+      description: 'Elegancia corporativa con cortes limpios. Quiet Luxury como inspiración.',
+      items: [
+        mapItemToOutfitItem(tops[0]),
+        mapItemToOutfitItem(getItemByKeyword(items, 'tailored', bottoms[0])),
+        mapItemToOutfitItem(getItemByKeyword(items, 'bailarina', shoes[0])),
+        mapItemToOutfitItem(bags[1] || bags[0]),
+      ],
+    },
+    {
+      id: '5',
+      date: '2024-12-18',
+      style: 'Weekend Casual',
+      description: 'Comodidad con estilo para el fin de semana. Denim protagonista.',
+      items: [
+        mapItemToOutfitItem(tops[1] || tops[0]),
+        mapItemToOutfitItem(getItemByKeyword(items, '501', bottoms[0])),
+        mapItemToOutfitItem(shoes[0]),
+        mapItemToOutfitItem(bags[0]),
+      ],
+    },
+    {
+      id: '6',
+      date: '2024-12-17',
+      style: 'Date Night',
+      description: 'Look romántico para una cena. Siluetas fluidas y colores sofisticados.',
+      items: [
+        mapItemToOutfitItem(getItemByKeyword(items, 'punto', tops[0])),
+        mapItemToOutfitItem(bottoms[0]),
+        mapItemToOutfitItem(shoes[1] || shoes[0]),
+        mapItemToOutfitItem(getItemByKeyword(items, 'puzzle', bags[0])),
+      ],
+    },
+    {
+      id: '7',
+      date: '2024-12-16',
+      style: 'It-Girl Approved',
+      description: 'Lo que llevan las influencers. Loewe, Massimo Dutti y piezas statement.',
+      items: [
+        mapItemToOutfitItem(outerwear[2] || outerwear[0]),
+        mapItemToOutfitItem(bottoms[0]),
+        mapItemToOutfitItem(shoes[0]),
+        mapItemToOutfitItem(getItemByKeyword(items, 'loewe', bags[0])),
+      ],
+    },
+    {
+      id: '8',
+      date: '2024-12-15',
+      style: 'Winter Layers',
+      description: trends.find(t => t.name === 'Layering')?.description || 'El arte de las capas perfectas.',
+      items: [
+        mapItemToOutfitItem(tops[0]),
+        mapItemToOutfitItem(getItemByKeyword(items, 'camel', outerwear[0])),
+        mapItemToOutfitItem(bottoms[1] || bottoms[0]),
+        mapItemToOutfitItem(getItemByKeyword(items, 'plataforma', shoes[0])),
+      ],
+    },
+  ];
+
+  return outfits;
+};
+
+export const mockOutfits: MockOutfit[] = generateOutfitsFromData();
+
+// Style options with gradients - matching current trends
 export const styleOptions = [
-  { value: 'casual', label: 'Casual', icon: '👕', description: 'Día a día relajado' },
-  { value: 'chic', label: 'Chic', icon: '✨', description: 'Elegante y sofisticado' },
-  { value: 'boho', label: 'Boho', icon: '🌸', description: 'Libre y bohemio' },
-  { value: 'streetwear', label: 'Streetwear', icon: '🔥', description: 'Urbano y moderno' },
-  { value: 'minimal', label: 'Minimal', icon: '⚪', description: 'Menos es más' },
-  { value: 'romantic', label: 'Romántico', icon: '💕', description: 'Dulce y femenino' },
+  { value: 'quietluxury', label: 'Quiet Luxury', gradient: 'from-stone-400 to-stone-600' },
+  { value: 'cherryred', label: 'Cherry Red', gradient: 'from-red-400 to-rose-600' },
+  { value: 'minimal', label: 'Minimal', gradient: 'from-gray-400 to-slate-500' },
+  { value: 'streetwear', label: 'Street', gradient: 'from-violet-400 to-purple-500' },
+  { value: 'romantic', label: 'Romántico', gradient: 'from-rose-400 to-pink-500' },
+  { value: 'boho', label: 'Boho', gradient: 'from-amber-400 to-yellow-500' },
 ];
 
+// Quick actions for chat
 export const chatQuickActions = [
-  { id: 'trends', label: 'Cuéntame tendencias 🔥', prompt: '¿Cuáles son las tendencias de moda actuales?' },
-  { id: 'influencers', label: 'Ponte al día con influencers 💅', prompt: '¿Qué están usando las influencers ahora?' },
+  { id: 'trends', label: 'Tendencias', prompt: '¿Cuáles son las tendencias de moda actuales?' },
+  { id: 'influencers', label: 'Influencers', prompt: '¿Qué están usando las influencers ahora?' },
+  { id: 'brands', label: 'Marcas', prompt: '¿Cuáles son las marcas más trending?' },
 ];
 
+// AI responses using real data
 export const aiResponses: Record<string, string> = {
-  trends: `¡Hola, babe! 🌟 Te cuento las tendencias más hot de esta temporada:
-
-• **Cherry Red** - El rojo cereza está EN TODAS PARTES. Desde abrigos hasta accesorios 🍒
-• **Quiet Luxury** - Looks minimalistas con tejidos premium. Menos logo, más calidad ✨
-• **Baggy Jeans** - Los pantalones oversized siguen reinando 👖
-• **Botas Chunky** - Plataformas y suelas gruesas para el invierno 👢
-• **Capas y más capas** - El layering es tu mejor amigo ahora
-
-¿Quieres que te arme un outfit con alguna de estas tendencias?`,
-
-  influencers: `¡Aquí tienes el tea de las it-girls! ☕💅
-
-• **Hailey Bieber** sigue con su estética "clean girl" - moños bajos, jeans rectos, y blazers oversized
-• **Zendaya** está apostando por looks vintage y power suits con colores bold
-• **Rosalía** mezcla streetwear con toques haute couture de manera increíble
-• **Kendall Jenner** está muy The Row - minimalismo elevado al máximo
-
-Lo que más se repite: **menos es más**, pero con piezas de calidad que hablen por sí solas 👑
-
-¿Te inspiras en alguna de ellas?`,
-
-  default: `¡Qué buena pregunta, babe! 💕 
-
-Como tu asistente de moda personal, puedo ayudarte con:
-• Crear outfits personalizados para cualquier ocasión
-• Combinar colores y estilos que te favorezcan
-• Darte las últimas tendencias y tips de influencers
-• Organizar tu armario virtual
-
-¿En qué puedo ayudarte hoy? ✨`,
+  trends: `Las tendencias actuales incluyen: ${fashionData.trends.slice(0, 3).map(t => t.name).join(', ')}`,
+  influencers: `Las it-girls apuestan por: ${fashionData.brands.slice(0, 3).map(b => b.name).join(', ')}`,
+  default: `Estoy al día con las tendencias de ${fashionData.trends[0]?.season || 'esta temporada'}.`,
 };

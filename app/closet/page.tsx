@@ -6,7 +6,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Crown, Grid, List, Plus } from 'lucide-react';
+import { Crown, Sparkles, Shirt, Plus } from 'lucide-react';
 import { Card, Button, OutfitCard, ItemDetailModal } from '@/components';
 import { useUser } from '@/store';
 import { mockOutfits, MockOutfit } from '@/data/mockOutfits';
@@ -32,18 +32,18 @@ export default function ClosetPage() {
         className="flex items-center justify-between"
       >
         <div>
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-1">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-1">
             Mi Armario
           </h1>
-          <p className="text-gray-600">
+          <p className="text-gray-500 dark:text-gray-400 text-sm">
             {isPremium()
-              ? 'Todo tu historial disponible'
-              : `Últimos ${freeLimit} looks visibles`}
+              ? 'Historial completo disponible'
+              : `Últimos ${freeLimit} looks`}
           </p>
         </div>
         <div className="hidden md:flex items-center gap-2">
           {!isPremium() && (
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+            <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
               <Button onClick={upgradeToPremiun} glow>
                 <Crown className="w-4 h-4 mr-2" />
                 Upgrade
@@ -63,15 +63,16 @@ export default function ClosetPage() {
         {(['outfits', 'items'] as const).map((tab) => (
           <motion.button
             key={tab}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            whileHover={{ scale: 1.03, y: -2 }}
+            whileTap={{ scale: 0.97 }}
             onClick={() => setActiveTab(tab)}
-            className={`px-6 py-3 font-medium rounded-full transition-all ${activeTab === tab
+            className={`flex items-center gap-2 px-5 py-2.5 font-medium rounded-full transition-all ${activeTab === tab
               ? 'gradient-primary text-white shadow-md'
-              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:border-pink-200 dark:hover:border-pink-500 hover:text-gray-900 dark:hover:text-white'
               }`}
           >
-            {tab === 'outfits' ? '✨ Outfits' : '👕 Prendas'}
+            {tab === 'outfits' ? <Sparkles className="w-4 h-4" /> : <Shirt className="w-4 h-4" />}
+            {tab === 'outfits' ? 'Outfits' : 'Prendas'}
           </motion.button>
         ))}
       </motion.div>
@@ -83,18 +84,18 @@ export default function ClosetPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <Card className="p-5 bg-gradient-to-r from-pink-50 via-white to-violet-50 border border-pink-100">
+          <Card className="p-4 bg-gradient-to-r from-pink-50 via-white to-violet-50 dark:from-pink-950/30 dark:via-gray-900 dark:to-violet-950/30 border border-pink-100/50 dark:border-pink-800/30 hover-lift">
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full gradient-primary flex items-center justify-center">
-                  <Crown className="w-6 h-6 text-white" />
+                <div className="w-11 h-11 rounded-2xl gradient-primary flex items-center justify-center shadow-lg">
+                  <Crown className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-gray-900">
-                    Desbloquea tu historial completo 🔓
+                  <h3 className="font-semibold text-gray-900 dark:text-white text-sm">
+                    Desbloquea historial completo
                   </h3>
-                  <p className="text-sm text-gray-600">
-                    Solo puedes ver los últimos {freeLimit} outfits. ¡Pásate a Premium!
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Solo ves los últimos {freeLimit} outfits
                   </p>
                 </div>
               </div>
@@ -112,7 +113,7 @@ export default function ClosetPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+          className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3"
         >
           {mockOutfits.map((outfit, index) => {
             const isLocked = !isPremium() && index >= freeLimit;
@@ -135,19 +136,19 @@ export default function ClosetPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <Card className="p-12 text-center">
+          <Card className="p-10 text-center gradient-card">
             <motion.div
               animate={{ y: [0, -8, 0] }}
-              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-              className="text-6xl mb-4"
+              transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+              className="w-20 h-20 mx-auto mb-4 rounded-3xl gradient-primary flex items-center justify-center shadow-lg"
             >
-              👚
+              <Shirt className="w-10 h-10 text-white" />
             </motion.div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
               Tu armario está vacío
             </h3>
-            <p className="text-gray-600 mb-6 max-w-sm mx-auto">
-              Añade prendas para que la IA pueda crear outfits personalizados con tu ropa
+            <p className="text-gray-500 dark:text-gray-400 text-sm mb-6 max-w-xs mx-auto">
+              Añade prendas para outfits personalizados
             </p>
             <Button glow>
               <Plus className="w-5 h-5 mr-2" />
