@@ -1,19 +1,58 @@
 'use client';
 
 /**
- * Home Page - Outfit Generator with real fashion data and product images
- * Uses scraped data from fashion magazines and retailers
+ * Home Page - Outfit Generator with AI Microservice Integration
+ * Connects to fashion-bot for AI-powered outfit generation
+ * Falls back to local generation if microservice is unavailable
  */
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Sparkles, Sun, Cloud, Snowflake, Leaf, Wand2, Heart, Share2,
-  ShoppingBag, TrendingUp, ExternalLink, RefreshCw
+  ShoppingBag, TrendingUp, ExternalLink, RefreshCw, Cpu, Wifi, WifiOff
 } from 'lucide-react';
 import { Card, Button } from '@/components';
 import ProductModal from '@/components/ProductModal';
-import { OutfitItem, GeneratedOutfit, OutfitStyle } from '@/lib/fashion/outfitGenerator';
+import { OutfitItem } from '@/lib/fashion/outfitGenerator';
+
+// Types
+interface BotOutfitItem {
+  id: string;
+  name: string;
+  brand: string;
+  type: string;
+  color?: string;
+  colorHex?: string;
+  imageUrl?: string;
+  buyLink?: string;
+  price?: string;
+  priceRange?: string;
+  source: string;
+  trending: boolean;
+  matchScore: number;
+}
+
+interface BotGeneratedOutfit {
+  id: string;
+  name: string;
+  style: string;
+  occasion: string;
+  season: string;
+  description: string;
+  items: BotOutfitItem[];
+  totalItems: number;
+  trendingScore: number;
+  estimatedPrice?: string;
+  priceRange?: string;
+  matchedTrends: string[];
+  createdAt: string;
+  aiGenerated: boolean;
+  aiReasoning?: string;
+  favorite?: boolean;
+}
+
+type OutfitStyle = 'quietluxury' | 'trending' | 'casual' | 'streetwear' | 'romantic' | 'business';
 
 // Style options with gradients
 const styleOptions: { value: OutfitStyle; label: string; gradient: string }[] = [
@@ -32,25 +71,25 @@ const seasons = [
   { value: 'winter', label: 'Invierno', icon: <Snowflake className="w-5 h-5" />, gradient: 'from-sky-400 to-blue-500' },
 ];
 
-// Saved outfit interface (from database)
-interface SavedOutfit extends GeneratedOutfit {
-  savedAt: string;
-  favorite: boolean;
-  views: number;
-  shares: number;
-}
+// Fashion Bot URL
+const BOT_URL = process.env.NEXT_PUBLIC_FASHION_BOT_URL || 'http://localhost:3001';
 
 export default function Home() {
   const [selectedStyle, setSelectedStyle] = useState<OutfitStyle | null>(null);
   const [selectedSeason, setSelectedSeason] = useState<string>('winter');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedOutfit, setGeneratedOutfit] = useState<SavedOutfit | null>(null);
+  const [generatedOutfit, setGeneratedOutfit] = useState<BotGeneratedOutfit | null>(null);
   const [selectedItem, setSelectedItem] = useState<OutfitItem | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [botConnected, setBotConnected] = useState<boolean | null>(null);
+  const [usingAI, setUsingAI] = useState(false);
 
-  // Get current season on load
+  // Check bot connection on load
   useEffect(() => {
+    checkBotConnection();
+
+    // Get current season
     const month = new Date().getMonth();
     if (month >= 2 && month <= 4) setSelectedSeason('spring');
     else if (month >= 5 && month <= 7) setSelectedSeason('summer');
@@ -58,13 +97,55 @@ export default function Home() {
     else setSelectedSeason('winter');
   }, []);
 
+  const checkBotConnection = async () => {
+    try {
+      const response = await fetch(`${BOT_URL}/health`, {
+        method: 'GET',
+        signal: AbortSignal.timeout(3000),
+      });
+      const data = await response.json();
+      setBotConnected(data.status === 'healthy');
+    } catch {
+      setBotConnected(false);
+    }
+  };
+
   const handleGenerate = async () => {
     if (!selectedStyle) return;
 
     setIsGenerating(true);
     setGeneratedOutfit(null);
     setError(null);
+    setUsingAI(false);
 
+    // Try bot first, then fallback to local
+    if (botConnected) {
+      try {
+        const response = await fetch(`${BOT_URL}/api/generate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            style: selectedStyle,
+            occasion: 'everyday',
+            season: selectedSeason,
+          }),
+          signal: AbortSignal.timeout(15000),
+        });
+
+        const result = await response.json();
+
+        if (result.success && result.outfit) {
+          setGeneratedOutfit(result.outfit);
+          setUsingAI(result.outfit.aiGenerated);
+          setIsGenerating(false);
+          return;
+        }
+      } catch (err) {
+        console.warn('Bot generation failed, falling back to local:', err);
+      }
+    }
+
+    // Fallback to local generation
     try {
       const response = await fetch('/api/outfits', {
         method: 'POST',
@@ -96,8 +177,8 @@ export default function Home() {
     }
   };
 
-  const handleItemClick = (item: OutfitItem) => {
-    setSelectedItem(item);
+  const handleItemClick = (item: BotOutfitItem) => {
+    setSelectedItem(item as OutfitItem);
     setIsModalOpen(true);
   };
 
@@ -120,6 +201,41 @@ export default function Home() {
 
   return (
     <div className="space-y-6 pb-8">
+      {/* Connection Status Bar */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className={`flex items-center justify-between px-4 py-2 rounded-2xl text-sm ${botConnected
+            ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+            : botConnected === false
+              ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
+              : 'bg-gray-50 dark:bg-gray-800 text-gray-500'
+          }`}
+      >
+        <div className="flex items-center gap-2">
+          {botConnected ? (
+            <>
+              <Wifi className="w-4 h-4" />
+              <span>Fashion Bot conectado</span>
+              <Cpu className="w-3.5 h-3.5 ml-1 opacity-60" />
+            </>
+          ) : botConnected === false ? (
+            <>
+              <WifiOff className="w-4 h-4" />
+              <span>Usando generación local</span>
+            </>
+          ) : (
+            <span>Verificando conexión...</span>
+          )}
+        </div>
+        <button
+          onClick={checkBotConnection}
+          className="text-xs underline opacity-70 hover:opacity-100"
+        >
+          Reconectar
+        </button>
+      </motion.div>
+
       {/* Hero Section */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -137,15 +253,20 @@ export default function Home() {
             className="flex items-center gap-2 mb-3"
           >
             <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur-sm">
-              <Sparkles className="w-4 h-4" />
+              {botConnected ? <Cpu className="w-4 h-4" /> : <Sparkles className="w-4 h-4" />}
             </div>
-            <span className="text-sm font-medium text-white/90">Datos reales de moda</span>
+            <span className="text-sm font-medium text-white/90">
+              {botConnected ? 'Generación con IA' : 'Datos reales de moda'}
+            </span>
           </motion.div>
           <h1 className="text-3xl md:text-4xl font-bold mb-2">
             Crea tu look
           </h1>
           <p className="text-white/80 max-w-sm text-sm md:text-base">
-            Outfits generados con prendas reales de ELLE, Vogue, Zara, Mango y más
+            {botConnected
+              ? 'Outfits generados dinámicamente por nuestro bot de IA'
+              : 'Outfits generados con prendas reales de ELLE, Vogue, Zara, Mango y más'
+            }
           </p>
         </div>
       </motion.div>
@@ -269,13 +390,13 @@ export default function Home() {
                   animate={{ rotate: 360 }}
                   transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
                 >
-                  <Wand2 className="w-5 h-5" />
+                  {botConnected ? <Cpu className="w-5 h-5" /> : <Wand2 className="w-5 h-5" />}
                 </motion.span>
-                Creando...
+                {botConnected ? 'Bot procesando...' : 'Creando...'}
               </span>
             ) : (
               <span className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5" />
+                {botConnected ? <Cpu className="w-5 h-5" /> : <Sparkles className="w-5 h-5" />}
                 GENERAR
               </span>
             )}
@@ -313,7 +434,15 @@ export default function Home() {
                 <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48Y2lyY2xlIGN4PSIzMCIgY3k9IjMwIiByPSIyIi8+PC9nPjwvZz48L3N2Zz4=')] opacity-30" />
                 <div className="relative z-10 flex items-center justify-between">
                   <div>
-                    <h3 className="text-lg font-bold">{generatedOutfit.name}</h3>
+                    <h3 className="text-lg font-bold flex items-center gap-2">
+                      {generatedOutfit.name}
+                      {generatedOutfit.aiGenerated && (
+                        <span className="ml-2 px-2 py-0.5 text-xs bg-white/20 rounded-full flex items-center gap-1">
+                          <Cpu className="w-3 h-3" />
+                          IA
+                        </span>
+                      )}
+                    </h3>
                     <div className="flex items-center gap-2 mt-1">
                       <span className="text-sm text-white/80">
                         {generatedOutfit.totalItems} prendas
@@ -351,6 +480,14 @@ export default function Home() {
                 <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed mb-3">
                   {generatedOutfit.description}
                 </p>
+                {generatedOutfit.aiReasoning && (
+                  <div className="mb-3 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-xl border border-blue-100 dark:border-blue-800">
+                    <p className="text-xs text-blue-600 dark:text-blue-400 flex items-start gap-2">
+                      <Cpu className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                      <span>{generatedOutfit.aiReasoning}</span>
+                    </p>
+                  </div>
+                )}
                 {generatedOutfit.matchedTrends.length > 0 && (
                   <div className="flex flex-wrap gap-2">
                     {generatedOutfit.matchedTrends.map((trend, i) => (
@@ -504,11 +641,13 @@ export default function Home() {
                   transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
                   className="w-20 h-20 rounded-3xl gradient-primary flex items-center justify-center mb-4 shadow-lg"
                 >
-                  <Sparkles className="w-10 h-10 text-white" />
+                  {botConnected ? <Cpu className="w-10 h-10 text-white" /> : <Sparkles className="w-10 h-10 text-white" />}
                 </motion.div>
                 <p className="text-gray-500 dark:text-gray-400 text-center text-sm px-4">
                   {selectedStyle
-                    ? 'Pulsa generar para crear tu outfit con prendas reales'
+                    ? (botConnected
+                      ? 'Pulsa generar para que el bot de IA cree tu outfit'
+                      : 'Pulsa generar para crear tu outfit con prendas reales')
                     : 'Selecciona un estilo para empezar'}
                 </p>
               </div>

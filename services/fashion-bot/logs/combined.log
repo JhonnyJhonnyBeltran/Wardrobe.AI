@@ -1,0 +1,8 @@
+2025-12-24 15:14:21 [warn]: ⚠️ OpenAI API key not found, using fallback generation
+2025-12-24 15:14:21 [info]: ✅ API routes configured
+2025-12-24 15:14:21 [info]: 🚀 Fashion Bot running on port 3001
+2025-12-24 15:14:21 [info]: 📡 Main app URL: http://localhost:3000
+2025-12-24 15:14:21 [info]: 🤖 AI Service: Not configured
+2025-12-24 15:14:21 [info]: Loaded 8 trends, 18 items, 11 brands
+2025-12-24 15:14:21 [info]: No existing outfits found
+2025-12-24 15:14:21 [info]: 📦 Data store loaded
