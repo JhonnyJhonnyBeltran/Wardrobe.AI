@@ -1,7 +1,8 @@
 'use client';
 
 /**
- * Card - iOS-style card with rounded corners and subtle shadow
+ * Card Component - Floating Design (Apple/Revolut Style)
+ * Ultra-rounded with subtle depth, no harsh borders
  */
 
 import React, { ReactNode } from 'react';
@@ -11,21 +12,41 @@ interface CardProps extends Omit<HTMLMotionProps<'div'>, 'children'> {
   children: ReactNode;
   className?: string;
   hover?: boolean;
+  variant?: 'default' | 'glass' | 'gradient';
 }
 
-export default function Card({ children, className = '', hover = false, ...props }: CardProps) {
+export default function Card({
+  children,
+  className = '',
+  hover = false,
+  variant = 'default',
+  ...props
+}: CardProps) {
+  const variantClasses = {
+    default: 'floating-card',
+    glass: 'glass',
+    gradient: 'gradient-card',
+  };
+
   return (
     <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
       whileHover={hover ? {
-        y: -6,
-        boxShadow: '0 20px 40px -12px rgba(0, 0, 0, 0.15)',
+        y: -4,
+        scale: 1.01,
         transition: { duration: 0.3, ease: [0.4, 0, 0.2, 1] }
       } : {}}
-      transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
-      className={`bg-white dark:bg-gray-900 rounded-3xl shadow-md dark:shadow-gray-950/50 overflow-hidden ${className}`}
+      transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+      className={`
+        ${variantClasses[variant]}
+        overflow-hidden
+        ${className}
+      `.trim().replace(/\s+/g, ' ')}
       {...props}
     >
       {children}
     </motion.div>
   );
 }
+

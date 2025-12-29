@@ -1,14 +1,14 @@
 'use client';
 
 /**
- * TabBar - Mobile navigation with floating iOS-style design
+ * TabBar - Mobile Navigation (Minimal)
  */
 
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Sparkles, ShoppingBag, MessageCircle, User } from 'lucide-react';
+import { Home, ShoppingBag, MessageCircle, User } from 'lucide-react';
 
 interface TabItem {
   href: string;
@@ -17,45 +17,38 @@ interface TabItem {
 }
 
 const tabs: TabItem[] = [
-  { href: '/', label: 'Home', icon: <Sparkles className="w-5 h-5" /> },
-  { href: '/closet', label: 'Armario', icon: <ShoppingBag className="w-5 h-5" /> },
-  { href: '/chat', label: 'Chat', icon: <MessageCircle className="w-5 h-5" /> },
-  { href: '/profile', label: 'Perfil', icon: <User className="w-5 h-5" /> },
+  { href: '/', label: 'Inicio', icon: <Home className="w-6 h-6" /> },
+  { href: '/closet', label: 'Armario', icon: <ShoppingBag className="w-6 h-6" /> },
+  { href: '/chat', label: 'Chat', icon: <MessageCircle className="w-6 h-6" /> },
+  { href: '/profile', label: 'Perfil', icon: <User className="w-6 h-6" /> },
 ];
 
 export default function TabBar() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed bottom-4 left-4 right-4 md:hidden z-50">
+    <nav className="fixed bottom-0 left-0 right-0 md:hidden z-50 pb-safe">
       <motion.div
         initial={{ y: 100 }}
         animate={{ y: 0 }}
-        transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-        className="glass-strong rounded-full shadow-xl px-2 py-2 border border-white/50 dark:border-gray-700/50"
+        transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+        className="mx-3 mb-3 glass-strong rounded-3xl shadow-[var(--shadow-float-strong)] border border-[var(--border-color)]"
       >
-        <div className="flex justify-around items-center">
+        <div className="flex justify-around items-center px-2 py-2">
           {tabs.map((tab) => {
             const isActive = pathname === tab.href;
             return (
-              <Link
-                key={tab.href}
-                href={tab.href}
-                className="relative flex flex-col items-center justify-center flex-1 py-2"
-              >
+              <Link key={tab.href} href={tab.href} className="relative flex-1">
                 <motion.div
-                  className={`flex flex-col items-center gap-1 px-4 py-2 rounded-full transition-colors ${isActive ? 'text-white' : 'text-gray-500 dark:text-gray-400'
+                  className={`flex flex-col items-center gap-1 px-2 py-2 rounded-2xl transition-all ${isActive ? 'text-white' : 'text-[var(--foreground-tertiary)]'
                     }`}
-                  whileTap={{ scale: 0.95 }}
-                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.92 }}
                 >
-                  {/* Active Background */}
                   {isActive && (
                     <motion.div
                       layoutId="activeTab"
-                      className="absolute inset-0 gradient-primary rounded-full shadow-lg"
-                      initial={false}
-                      transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                      className="absolute inset-0 bg-gradient-to-br from-[var(--brand-pink)] to-[var(--brand-pink-dark)] rounded-2xl"
+                      transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                     />
                   )}
                   <motion.span
@@ -64,9 +57,7 @@ export default function TabBar() {
                   >
                     {tab.icon}
                   </motion.span>
-                  <span className={`relative z-10 text-xs font-medium ${isActive ? 'text-white' : ''}`}>
-                    {tab.label}
-                  </span>
+                  <span className="relative z-10 text-[10px] font-semibold">{tab.label}</span>
                 </motion.div>
               </Link>
             );

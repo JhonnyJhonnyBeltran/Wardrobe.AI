@@ -1,18 +1,21 @@
 'use client';
 
 /**
- * Button - iOS-style button with gradient and scale animations
+ * Button Component - Apple/Revolut Premium Style
+ * Ultra-rounded with elastic animations and subtle depth
  */
 
 import React, { ReactNode } from 'react';
 import { motion, HTMLMotionProps } from 'framer-motion';
+import { Loader2 } from 'lucide-react';
 
 interface ButtonProps extends Omit<HTMLMotionProps<'button'>, 'children'> {
   children: ReactNode;
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
-  size?: 'sm' | 'md' | 'lg';
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'glass';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
   fullWidth?: boolean;
   glow?: boolean;
+  loading?: boolean;
   className?: string;
 }
 
@@ -22,42 +25,80 @@ export default function Button({
   size = 'md',
   fullWidth = false,
   glow = false,
+  loading = false,
   className = '',
   disabled,
   ...props
 }: ButtonProps) {
-  const baseStyles = 'inline-flex items-center justify-center font-medium rounded-full transition-all';
+  const baseStyles = `
+    inline-flex items-center justify-center gap-2 font-semibold 
+    rounded-full transition-all duration-300
+    focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)] focus:ring-offset-2
+  `;
 
   const variants = {
-    primary: 'gradient-primary text-white shadow-md hover:shadow-lg',
-    secondary: 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700',
-    outline: 'border-2 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-pink-300 dark:hover:border-pink-500 hover:bg-pink-50 dark:hover:bg-pink-950/30 hover:text-pink-600 dark:hover:text-pink-400',
-    ghost: 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800',
+    primary: `
+      bg-[var(--brand-pink)] text-white
+      shadow-[var(--shadow-float)]
+      hover:bg-[var(--brand-pink-dark)]
+      hover:shadow-[var(--shadow-float-hover)]
+      active:shadow-[var(--shadow-float)]
+    `,
+    secondary: `
+      bg-[var(--background-secondary)] text-[var(--foreground)]
+      border border-[var(--border-color)]
+      hover:bg-[var(--background-tertiary)]
+      hover:border-[var(--border-hover)]
+    `,
+    outline: `
+      border-2 border-[var(--brand-pink)]
+      text-[var(--brand-pink)]
+      hover:bg-[var(--brand-pink)]
+      hover:text-white
+    `,
+    ghost: `
+      text-[var(--foreground-secondary)]
+      hover:text-[var(--foreground)]
+      hover:bg-[var(--background-secondary)]
+    `,
+    glass: `
+      glass text-[var(--foreground)]
+      hover:backdrop-blur-[60px]
+    `,
   };
 
   const sizes = {
     sm: 'px-4 py-2 text-sm',
-    md: 'px-5 py-2.5 text-sm',
-    lg: 'px-8 py-3.5 text-base',
+    md: 'px-6 py-3 text-sm',
+    lg: 'px-8 py-4 text-base',
+    xl: 'px-10 py-5 text-lg',
   };
+
+  const isDisabled = disabled || loading;
 
   return (
     <motion.button
-      whileHover={!disabled ? { scale: 1.03, y: -1 } : {}}
-      whileTap={!disabled ? { scale: 0.97 } : {}}
-      transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+      whileHover={!isDisabled ? { scale: 1.02, y: -2 } : {}}
+      whileTap={!isDisabled ? { scale: 0.98 } : {}}
+      transition={{
+        duration: 0.3,
+        ease: [0.4, 0, 0.2, 1],
+      }}
       className={`
         ${baseStyles}
         ${variants[variant]}
         ${sizes[size]}
         ${fullWidth ? 'w-full' : ''}
-        ${glow && variant === 'primary' ? 'glow-effect' : ''}
-        ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
+        ${glow && variant === 'primary' ? 'animate-pulse-glow' : ''}
+        ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
         ${className}
-      `}
-      disabled={disabled}
+      `.trim().replace(/\s+/g, ' ')}
+      disabled={isDisabled}
       {...props}
     >
+      {loading && (
+        <Loader2 className="w-4 h-4 animate-spin" />
+      )}
       {children}
     </motion.button>
   );

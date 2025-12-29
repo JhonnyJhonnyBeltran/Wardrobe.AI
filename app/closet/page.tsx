@@ -1,168 +1,308 @@
 'use client';
 
 /**
- * Closet Page - Wardrobe with Freemium Logic
+ * Closet - Your Wardrobe (Mobile Optimized)
+ * Search expands, buttons icon-only on mobile
  */
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Crown, Sparkles, Shirt, Plus } from 'lucide-react';
-import { Card, Button, OutfitCard, ItemDetailModal } from '@/components';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Heart, Grid3x3, List, Search, Filter, Plus, Wand2, X
+} from 'lucide-react';
+import { Card, Button, ClothingItem } from '@/components';
+import AddItemModal from '@/components/AddItemModal';
 import { useUser } from '@/store';
-import { mockOutfits, MockOutfit } from '@/data/mockOutfits';
+import { myWardrobe, type ClothingItemData } from '@/data/mockData';
+import Link from 'next/link';
 
 export default function ClosetPage() {
-  const { isPremium, upgradeToPremiun } = useUser();
-  const [activeTab, setActiveTab] = useState<'outfits' | 'items'>('outfits');
-  const [selectedOutfit, setSelectedOutfit] = useState<MockOutfit | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const freeLimit = 3;
+  const { isPremium } = useUser();
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [showFilters, setShowFilters] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchExpanded, setSearchExpanded] = useState(false);
+  const [filterType, setFilterType] = useState<string | null>(null);
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [favorites, setFavorites] = useState<Set<string>>(new Set(['1', '2', '5', '6', '9', '10']));
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [items, setItems] = useState<ClothingItemData[]>(myWardrobe);
 
-  const handleOutfitClick = (outfit: MockOutfit) => {
-    setSelectedOutfit(outfit);
-    setIsModalOpen(true);
+  const handleFavoriteToggle = (id: string) => {
+    setFavorites(prev => {
+      const newFavorites = new Set(prev);
+      if (newFavorites.has(id)) {
+        newFavorites.delete(id);
+      } else {
+        newFavorites.add(id);
+      }
+      return newFavorites;
+    });
   };
 
+  // Filter clothing items
+  const filteredItems = items.filter(item => {
+    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.brand.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesType = !filterType || item.type === filterType;
+    const matchesFavorites = !showFavoritesOnly || favorites.has(item.id);
+
+    return matchesSearch && matchesType && matchesFavorites;
+  });
+
+  const itemTypes = ['top', 'bottom', 'dress', 'outerwear'];
+
   return (
-    <div className="space-y-6 pb-8">
+    <div className="min-h-screen bg-[var(--background)] pb-24 md:pb-8">
       {/* Header */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between"
+        className="flex items-center justify-between px-4 py-4"
       >
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-1">
-            Mi Armario
-          </h1>
-          <p className="text-gray-500 dark:text-gray-400 text-sm">
-            {isPremium()
-              ? 'Historial completo disponible'
-              : `Últimos ${freeLimit} looks`}
-          </p>
-        </div>
-        <div className="hidden md:flex items-center gap-2">
-          {!isPremium() && (
-            <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-              <Button onClick={upgradeToPremiun} glow>
-                <Crown className="w-4 h-4 mr-2" />
-                Upgrade
-              </Button>
-            </motion.div>
-          )}
+          <h1 className="text-2xl font-bold text-[var(--foreground)]">Mi Armario</h1>
+          <p className="text-xs text-[var(--foreground-tertiary)]">{items.length} prendas</p>
         </div>
       </motion.div>
 
-      {/* Tabs */}
+      {/* Toolbar - Mobile Optimized */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="flex gap-2"
+        className="px-4 mb-4"
       >
-        {(['outfits', 'items'] as const).map((tab) => (
-          <motion.button
-            key={tab}
-            whileHover={{ scale: 1.03, y: -2 }}
-            whileTap={{ scale: 0.97 }}
-            onClick={() => setActiveTab(tab)}
-            className={`flex items-center gap-2 px-5 py-2.5 font-medium rounded-full transition-all ${activeTab === tab
-              ? 'gradient-primary text-white shadow-md'
-              : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:border-pink-200 dark:hover:border-pink-500 hover:text-gray-900 dark:hover:text-white'
-              }`}
-          >
-            {tab === 'outfits' ? <Sparkles className="w-4 h-4" /> : <Shirt className="w-4 h-4" />}
-            {tab === 'outfits' ? 'Outfits' : 'Prendas'}
-          </motion.button>
-        ))}
+        <Card className="p-3">
+          <div className="flex gap-2">
+            {/* Search - Expands on mobile */}
+            <AnimatePresence mode="wait">
+              {searchExpanded ? (
+                <motion.div
+                  key="expanded"
+                  initial={{ width: 0, opacity: 0 }}
+                  animate={{ width: '100%', opacity: 1 }}
+                  exit={{ width: 0, opacity: 0 }}
+                  className="flex-1 relative"
+                >
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--foreground-tertiary)]" />
+                  <input
+                    type="text"
+                    placeholder="Buscar..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    autoFocus
+                    className="w-full pl-9 pr-9 py-2 rounded-full bg-[var(--background-secondary)] border border-[var(--border-color)] text-sm text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)]"
+                  />
+                  <button
+                    onClick={() => {
+                      setSearchExpanded(false);
+                      setSearchQuery('');
+                    }}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-[var(--background-tertiary)] flex items-center justify-center"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="buttons"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="flex gap-2 flex-1"
+                >
+                  {/* Search Icon - Mobile */}
+                  <Button
+                    variant="secondary"
+                    onClick={() => setSearchExpanded(true)}
+                    className="px-3 md:hidden"
+                  >
+                    <Search className="w-4 h-4" />
+                  </Button>
+
+                  {/* Search Full - Desktop */}
+                  <div className="hidden md:flex flex-1 relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--foreground-tertiary)]" />
+                    <input
+                      type="text"
+                      placeholder="Buscar..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full pl-9 pr-3 py-2 rounded-full bg-[var(--background-secondary)] border border-[var(--border-color)] text-sm text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)]"
+                    />
+                  </div>
+
+                  {/* Filters - Icon only on mobile */}
+                  <Button
+                    variant="secondary"
+                    onClick={() => setShowFilters(!showFilters)}
+                    className="px-3"
+                  >
+                    <Filter className="w-4 h-4" />
+                  </Button>
+
+                  {/* Favorites - Icon only on mobile */}
+                  <Button
+                    variant={showFavoritesOnly ? 'primary' : 'secondary'}
+                    onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+                    className="px-3"
+                  >
+                    <Heart className={`w-4 h-4 ${showFavoritesOnly ? 'fill-current' : ''}`} />
+                  </Button>
+
+                  {/* View Mode - Icon only on mobile */}
+                  <Button
+                    variant={viewMode === 'grid' ? 'primary' : 'secondary'}
+                    onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+                    className="px-3"
+                  >
+                    {viewMode === 'grid' ? <Grid3x3 className="w-4 h-4" /> : <List className="w-4 h-4" />}
+                  </Button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Filter Panel */}
+          <AnimatePresence>
+            {showFilters && !searchExpanded && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="pt-3 border-t border-[var(--border-color)] mt-3">
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => setFilterType(null)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-semibold ${!filterType
+                          ? 'bg-[var(--brand-pink)] text-white'
+                          : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)]'
+                        }`}
+                    >
+                      Todo
+                    </button>
+                    {itemTypes.map((type) => (
+                      <button
+                        key={type}
+                        onClick={() => setFilterType(type)}
+                        className={`px-3 py-1.5 rounded-full text-xs font-semibold capitalize ${filterType === type
+                            ? 'bg-[var(--brand-pink)] text-white'
+                            : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)]'
+                          }`}
+                      >
+                        {type}
+                      </button>
+                    ))}
+                  </div>
+
+                  {(filterType || showFavoritesOnly) && (
+                    <button
+                      onClick={() => {
+                        setFilterType(null);
+                        setShowFavoritesOnly(false);
+                      }}
+                      className="mt-2 text-xs text-[var(--brand-pink)] font-semibold flex items-center gap-1"
+                    >
+                      <X className="w-3 h-3" />
+                      Limpiar
+                    </button>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </Card>
       </motion.div>
 
-      {/* Freemium Banner */}
-      {!isPremium() && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <Card className="p-4 bg-gradient-to-r from-pink-50 via-white to-violet-50 dark:from-pink-950/30 dark:via-gray-900 dark:to-violet-950/30 border border-pink-100/50 dark:border-pink-800/30 hover-lift">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className="w-11 h-11 rounded-2xl gradient-primary flex items-center justify-center shadow-lg">
-                  <Crown className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900 dark:text-white text-sm">
-                    Desbloquea historial completo
-                  </h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Solo ves los últimos {freeLimit} outfits
-                  </p>
-                </div>
-              </div>
-              <Button onClick={upgradeToPremiun} glow className="whitespace-nowrap">
-                Ir a Premium
-              </Button>
-            </div>
-          </Card>
-        </motion.div>
-      )}
-
-      {/* Outfits Grid */}
-      {activeTab === 'outfits' && (
+      {/* Items Grid */}
+      {filteredItems.length > 0 ? (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3"
+          transition={{ delay: 0.2 }}
+          className={`px-4 ${viewMode === 'grid'
+              ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'
+              : 'space-y-3'
+            }`}
         >
-          {mockOutfits.map((outfit, index) => {
-            const isLocked = !isPremium() && index >= freeLimit;
-            return (
-              <OutfitCard
-                key={outfit.id}
-                outfit={outfit}
-                isLocked={isLocked}
-                index={index}
-                onClick={() => handleOutfitClick(outfit)}
-              />
-            );
-          })}
-        </motion.div>
-      )}
-
-      {/* Items Tab - Empty State */}
-      {activeTab === 'items' && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-        >
-          <Card className="p-10 text-center gradient-card">
+          {filteredItems.map((item, index) => (
             <motion.div
-              animate={{ y: [0, -8, 0] }}
-              transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
-              className="w-20 h-20 mx-auto mb-4 rounded-3xl gradient-primary flex items-center justify-center shadow-lg"
+              key={item.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.05 * index }}
             >
-              <Shirt className="w-10 h-10 text-white" />
+              <ClothingItem
+                {...item}
+                isFavorite={favorites.has(item.id)}
+                onFavoriteToggle={handleFavoriteToggle}
+              />
             </motion.div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              Tu armario está vacío
-            </h3>
-            <p className="text-gray-500 dark:text-gray-400 text-sm mb-6 max-w-xs mx-auto">
-              Añade prendas para outfits personalizados
-            </p>
-            <Button glow>
-              <Plus className="w-5 h-5 mr-2" />
-              Añadir prenda
-            </Button>
-          </Card>
+          ))}
         </motion.div>
+      ) : (
+        <Card className="mx-4 p-8 text-center">
+          <Search className="w-12 h-12 text-[var(--foreground-tertiary)] mx-auto mb-3" />
+          <p className="text-sm font-bold text-[var(--foreground)] mb-1">Sin resultados</p>
+          <p className="text-xs text-[var(--foreground-tertiary)]">Prueba otra búsqueda</p>
+        </Card>
       )}
 
-      {/* Item Detail Modal */}
-      <ItemDetailModal
-        outfit={selectedOutfit}
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+      {/* Stats */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="px-4 mt-6 grid grid-cols-2 gap-3"
+      >
+        <Card className="p-3 text-center">
+          <p className="text-2xl font-bold text-[var(--foreground)]">{items.length}</p>
+          <p className="text-[10px] text-[var(--foreground-tertiary)]">Total</p>
+        </Card>
+        <Card className="p-3 text-center">
+          <p className="text-2xl font-bold text-[var(--brand-pink)]">{favorites.size}</p>
+          <p className="text-[10px] text-[var(--foreground-tertiary)]">Favoritos</p>
+        </Card>
+      </motion.div>
+
+      {/* Floating Create Outfit Button */}
+      <Link href="/create">
+        <motion.button
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: 0.5, type: 'spring', stiffness: 260, damping: 20 }}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+          className="fixed bottom-20 md:bottom-8 right-4 px-6 py-4 rounded-full bg-gradient-to-br from-[var(--brand-pink)] to-[var(--brand-pink-dark)] text-white font-bold text-sm shadow-[var(--shadow-float-strong)] z-50 flex items-center gap-2"
+        >
+          <Wand2 className="w-5 h-5" />
+          <span className="hidden md:inline">Crear Look</span>
+        </motion.button>
+      </Link>
+
+      {/* Add Item Button */}
+      <motion.button
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={{ delay: 0.6, type: 'spring', stiffness: 260, damping: 20 }}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={() => setShowAddModal(true)}
+        className="fixed bottom-20 md:bottom-8 left-4 w-14 h-14 rounded-full bg-[var(--card-bg)] border-2 border-[var(--brand-pink)] flex items-center justify-center shadow-[var(--shadow-float)] z-50"
+      >
+        <Plus className="w-6 h-6 text-[var(--brand-pink)]" />
+      </motion.button>
+
+      {/* Add Item Modal */}
+      <AddItemModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onAdd={(newItem) => {
+          setItems([...items, newItem as ClothingItemData]);
+        }}
       />
     </div>
   );

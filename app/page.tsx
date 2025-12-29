@@ -1,670 +1,208 @@
 'use client';
 
 /**
- * Home Page - Outfit Generator with AI Microservice Integration
- * Connects to fashion-bot for AI-powered outfit generation
- * Falls back to local generation if microservice is unavailable
+ * Home - Social Feed (Friends' Outfits)
+ * Now with 2 images per post (swipeable)
  */
 
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Sparkles, Sun, Cloud, Snowflake, Leaf, Wand2, Heart, Share2,
-  ShoppingBag, TrendingUp, ExternalLink, RefreshCw, Cpu, Wifi, WifiOff
-} from 'lucide-react';
-import { Card, Button } from '@/components';
-import ProductModal from '@/components/ProductModal';
-import { OutfitItem } from '@/lib/fashion/outfitGenerator';
-
-// Types
-interface BotOutfitItem {
-  id: string;
-  name: string;
-  brand: string;
-  type: string;
-  color?: string;
-  colorHex?: string;
-  imageUrl?: string;
-  buyLink?: string;
-  price?: string;
-  priceRange?: string;
-  source: string;
-  trending: boolean;
-  matchScore: number;
-}
-
-interface BotGeneratedOutfit {
-  id: string;
-  name: string;
-  style: string;
-  occasion: string;
-  season: string;
-  description: string;
-  items: BotOutfitItem[];
-  totalItems: number;
-  trendingScore: number;
-  estimatedPrice?: string;
-  priceRange?: string;
-  matchedTrends: string[];
-  createdAt: string;
-  aiGenerated: boolean;
-  aiReasoning?: string;
-  favorite?: boolean;
-}
-
-type OutfitStyle = 'quietluxury' | 'trending' | 'casual' | 'streetwear' | 'romantic' | 'business';
-
-// Style options with gradients
-const styleOptions: { value: OutfitStyle; label: string; gradient: string }[] = [
-  { value: 'quietluxury', label: 'Quiet Luxury', gradient: 'from-stone-400 to-stone-600' },
-  { value: 'trending', label: 'Trending', gradient: 'from-pink-500 to-fuchsia-500' },
-  { value: 'casual', label: 'Casual', gradient: 'from-blue-400 to-indigo-500' },
-  { value: 'streetwear', label: 'Street', gradient: 'from-violet-400 to-purple-500' },
-  { value: 'romantic', label: 'Romántico', gradient: 'from-rose-400 to-pink-500' },
-  { value: 'business', label: 'Business', gradient: 'from-slate-500 to-gray-700' },
-];
-
-const seasons = [
-  { value: 'spring', label: 'Primavera', icon: <Leaf className="w-5 h-5" />, gradient: 'from-emerald-400 to-green-500' },
-  { value: 'summer', label: 'Verano', icon: <Sun className="w-5 h-5" />, gradient: 'from-amber-400 to-orange-500' },
-  { value: 'fall', label: 'Otoño', icon: <Cloud className="w-5 h-5" />, gradient: 'from-orange-400 to-red-500' },
-  { value: 'winter', label: 'Invierno', icon: <Snowflake className="w-5 h-5" />, gradient: 'from-sky-400 to-blue-500' },
-];
-
-// Fashion Bot URL
-const BOT_URL = process.env.NEXT_PUBLIC_FASHION_BOT_URL || 'http://localhost:3001';
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+import { Heart, MessageCircle, Bookmark, Plus } from 'lucide-react';
+import { mockSocialPosts, type SocialPost } from '@/data/mockData';
+import Link from 'next/link';
+import { Logo } from '@/components';
 
 export default function Home() {
-  const [selectedStyle, setSelectedStyle] = useState<OutfitStyle | null>(null);
-  const [selectedSeason, setSelectedSeason] = useState<string>('winter');
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedOutfit, setGeneratedOutfit] = useState<BotGeneratedOutfit | null>(null);
-  const [selectedItem, setSelectedItem] = useState<OutfitItem | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [botConnected, setBotConnected] = useState<boolean | null>(null);
-  const [usingAI, setUsingAI] = useState(false);
+  const [posts, setPosts] = useState<SocialPost[]>(mockSocialPosts);
+  const [currentImages, setCurrentImages] = useState<Record<string, number>>({}); //Track which image is showing per post
 
-  // Check bot connection on load
-  useEffect(() => {
-    checkBotConnection();
-
-    // Get current season
-    const month = new Date().getMonth();
-    if (month >= 2 && month <= 4) setSelectedSeason('spring');
-    else if (month >= 5 && month <= 7) setSelectedSeason('summer');
-    else if (month >= 8 && month <= 10) setSelectedSeason('fall');
-    else setSelectedSeason('winter');
-  }, []);
-
-  const checkBotConnection = async () => {
-    try {
-      const response = await fetch(`${BOT_URL}/health`, {
-        method: 'GET',
-        signal: AbortSignal.timeout(3000),
-      });
-      const data = await response.json();
-      setBotConnected(data.status === 'healthy');
-    } catch {
-      setBotConnected(false);
-    }
+  const handleLike = (postId: string) => {
+    setPosts(posts.map(post =>
+      post.id === postId
+        ? { ...post, isLiked: !post.isLiked, likes: post.isLiked ? post.likes - 1 : post.likes + 1 }
+        : post
+    ));
   };
 
-  const handleGenerate = async () => {
-    if (!selectedStyle) return;
-
-    setIsGenerating(true);
-    setGeneratedOutfit(null);
-    setError(null);
-    setUsingAI(false);
-
-    // Try bot first, then fallback to local
-    if (botConnected) {
-      try {
-        const response = await fetch(`${BOT_URL}/api/generate`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            style: selectedStyle,
-            occasion: 'everyday',
-            season: selectedSeason,
-          }),
-          signal: AbortSignal.timeout(15000),
-        });
-
-        const result = await response.json();
-
-        if (result.success && result.outfit) {
-          setGeneratedOutfit(result.outfit);
-          setUsingAI(result.outfit.aiGenerated);
-          setIsGenerating(false);
-          return;
-        }
-      } catch (err) {
-        console.warn('Bot generation failed, falling back to local:', err);
-      }
-    }
-
-    // Fallback to local generation
-    try {
-      const response = await fetch('/api/outfits', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'generate',
-          options: {
-            style: selectedStyle,
-            occasion: 'everyday',
-            season: selectedSeason,
-            numberOfOutfits: 1,
-            mustIncludeTrends: true,
-          },
-        }),
-      });
-
-      const result = await response.json();
-
-      if (result.success && result.data?.[0]) {
-        setGeneratedOutfit(result.data[0]);
-      } else {
-        setError(result.error || 'Error al generar el outfit');
-      }
-    } catch (err) {
-      console.error('Error generating outfit:', err);
-      setError('Error de conexión. Inténtalo de nuevo.');
-    } finally {
-      setIsGenerating(false);
-    }
+  const handleSave = (postId: string) => {
+    setPosts(posts.map(post =>
+      post.id === postId
+        ? { ...post, isSaved: !post.isSaved }
+        : post
+    ));
   };
 
-  const handleItemClick = (item: BotOutfitItem) => {
-    setSelectedItem(item as OutfitItem);
-    setIsModalOpen(true);
-  };
-
-  const handleFavorite = async () => {
-    if (!generatedOutfit) return;
-
-    try {
-      await fetch('/api/outfits/actions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'favorite',
-          outfitId: generatedOutfit.id,
-        }),
-      });
-    } catch (err) {
-      console.error('Error toggling favorite:', err);
-    }
+  const toggleImage = (postId: string) => {
+    setCurrentImages(prev => ({
+      ...prev,
+      [postId]: prev[postId] === 1 ? 0 : 1,
+    }));
   };
 
   return (
-    <div className="space-y-6 pb-8">
-      {/* Connection Status Bar */}
+    <div className="min-h-screen bg-[var(--background)] pb-24 md:pb-8">
+      {/* Header */}
       <motion.div
-        initial={{ opacity: 0, y: -10 }}
+        initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className={`flex items-center justify-between px-4 py-2 rounded-2xl text-sm ${botConnected
-            ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400'
-            : botConnected === false
-              ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
-              : 'bg-gray-50 dark:bg-gray-800 text-gray-500'
-          }`}
+        className="sticky top-0 z-40 glass-strong border-b border-[var(--border-color)] px-4 py-3"
       >
-        <div className="flex items-center gap-2">
-          {botConnected ? (
-            <>
-              <Wifi className="w-4 h-4" />
-              <span>Fashion Bot conectado</span>
-              <Cpu className="w-3.5 h-3.5 ml-1 opacity-60" />
-            </>
-          ) : botConnected === false ? (
-            <>
-              <WifiOff className="w-4 h-4" />
-              <span>Usando generación local</span>
-            </>
-          ) : (
-            <span>Verificando conexión...</span>
-          )}
-        </div>
-        <button
-          onClick={checkBotConnection}
-          className="text-xs underline opacity-70 hover:opacity-100"
-        >
-          Reconectar
-        </button>
-      </motion.div>
-
-      {/* Hero Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-pink-500 via-fuchsia-500 to-violet-600 p-6 md:p-8 text-white"
-      >
-        <div className="absolute top-0 right-0 w-72 h-72 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
-        <div className="absolute bottom-0 left-0 w-56 h-56 bg-pink-300/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/3" />
-
-        <div className="relative z-10">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.1 }}
-            className="flex items-center gap-2 mb-3"
-          >
-            <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center backdrop-blur-sm">
-              {botConnected ? <Cpu className="w-4 h-4" /> : <Sparkles className="w-4 h-4" />}
-            </div>
-            <span className="text-sm font-medium text-white/90">
-              {botConnected ? 'Generación con IA' : 'Datos reales de moda'}
-            </span>
-          </motion.div>
-          <h1 className="text-3xl md:text-4xl font-bold mb-2">
-            Crea tu look
-          </h1>
-          <p className="text-white/80 max-w-sm text-sm md:text-base">
-            {botConnected
-              ? 'Outfits generados dinámicamente por nuestro bot de IA'
-              : 'Outfits generados con prendas reales de ELLE, Vogue, Zara, Mango y más'
-            }
-          </p>
+        <div className="flex items-center justify-center max-w-2xl mx-auto">
+          <Logo size="md" />
         </div>
       </motion.div>
 
-      {/* Style Selection */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-      >
-        <Card className="p-5 gradient-card">
-          <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg gradient-primary flex items-center justify-center">
-              <Sparkles className="w-3.5 h-3.5 text-white" />
-            </div>
-            Estilo
-          </h2>
-          <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
-            {styleOptions.map((style, index) => (
-              <motion.button
-                key={style.value}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.03 * index }}
-                whileHover={{ scale: 1.04, y: -3 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={() => setSelectedStyle(style.value)}
-                className={`relative flex flex-col items-center gap-2 p-3 rounded-2xl transition-all overflow-hidden ${selectedStyle === style.value
-                  ? `bg-gradient-to-br ${style.gradient} text-white shadow-lg`
-                  : 'bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 hover:border-pink-200 dark:hover:border-pink-500 hover:shadow-md'
-                  }`}
-              >
-                <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${selectedStyle === style.value
-                  ? 'bg-white/20 backdrop-blur-sm'
-                  : `bg-gradient-to-br ${style.gradient}`
-                  }`}>
-                  <div className="w-3 h-3 rounded-full bg-white" />
+      {/* Feed */}
+      <div className="max-w-2xl mx-auto px-4 pt-4 space-y-8">
+        {posts.map((post, index) => {
+          const currentImageIndex = currentImages[post.id] || 0;
+          const images = [post.images.outfit, post.images.items];
+
+          return (
+            <motion.article
+              key={post.id}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              className="space-y-3"
+            >
+              {/* User Info */}
+              <div className="flex items-center gap-3">
+                <img
+                  src={post.user.avatar}
+                  alt={post.user.name}
+                  className="w-10 h-10 rounded-full border-2 border-[var(--brand-pink)]"
+                />
+                <div className="flex-1">
+                  <p className="font-bold text-sm text-[var(--foreground)]">{post.user.name}</p>
+                  <p className="text-xs text-[var(--foreground-tertiary)]">{post.user.username}</p>
                 </div>
-                <span className={`text-xs font-medium ${selectedStyle === style.value ? 'text-white' : 'text-gray-700 dark:text-gray-200'}`}>
-                  {style.label}
-                </span>
-              </motion.button>
-            ))}
-          </div>
-        </Card>
-      </motion.div>
-
-      {/* Season Selection */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-      >
-        <Card className="p-5 gradient-card">
-          <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
-              <Sun className="w-3.5 h-3.5 text-white" />
-            </div>
-            Temporada
-          </h2>
-          <div className="grid grid-cols-4 gap-2">
-            {seasons.map((season, index) => (
-              <motion.button
-                key={season.value}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.05 * index }}
-                whileHover={{ scale: 1.05, y: -3 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={() => setSelectedSeason(season.value)}
-                className={`relative flex flex-col items-center gap-2 p-3 rounded-2xl transition-all ${selectedSeason === season.value
-                  ? `bg-gradient-to-br ${season.gradient} text-white shadow-lg`
-                  : 'bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 hover:border-gray-200 dark:hover:border-gray-600 hover:shadow-md'
-                  }`}
-              >
-                <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${selectedSeason === season.value
-                  ? 'bg-white/20 backdrop-blur-sm'
-                  : `bg-gradient-to-br ${season.gradient} text-white`
-                  }`}>
-                  {season.icon}
-                </div>
-                <span className="text-xs font-medium dark:text-gray-200">{season.label}</span>
-              </motion.button>
-            ))}
-          </div>
-        </Card>
-      </motion.div>
-
-      {/* Generate Button */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.3 }}
-        className="flex justify-center py-4"
-      >
-        <div className="relative">
-          {selectedStyle && !isGenerating && (
-            <>
-              <motion.div
-                animate={{ scale: [1, 1.15, 1], opacity: [0.4, 0, 0.4] }}
-                transition={{ duration: 2.5, repeat: Infinity }}
-                className="absolute inset-0 rounded-full bg-gradient-to-r from-pink-500 via-fuchsia-500 to-violet-500 blur-xl"
-              />
-              <motion.div
-                animate={{ scale: [1, 1.25, 1], opacity: [0.2, 0, 0.2] }}
-                transition={{ duration: 2.5, repeat: Infinity, delay: 0.4 }}
-                className="absolute inset-0 rounded-full bg-gradient-to-r from-violet-500 to-pink-500 blur-2xl"
-              />
-            </>
-          )}
-          <Button
-            onClick={handleGenerate}
-            disabled={!selectedStyle || isGenerating}
-            size="lg"
-            glow
-            className={`relative min-w-[240px] text-base py-4 ${selectedStyle && !isGenerating ? 'animate-pulse-glow' : ''}`}
-          >
-            {isGenerating ? (
-              <span className="flex items-center gap-2">
-                <motion.span
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                >
-                  {botConnected ? <Cpu className="w-5 h-5" /> : <Wand2 className="w-5 h-5" />}
-                </motion.span>
-                {botConnected ? 'Bot procesando...' : 'Creando...'}
-              </span>
-            ) : (
-              <span className="flex items-center gap-2">
-                {botConnected ? <Cpu className="w-5 h-5" /> : <Sparkles className="w-5 h-5" />}
-                GENERAR
-              </span>
-            )}
-          </Button>
-        </div>
-      </motion.div>
-
-      {/* Error Message */}
-      <AnimatePresence>
-        {error && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-2xl p-4 text-center"
-          >
-            <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Generated Outfit Preview */}
-      <AnimatePresence mode="wait">
-        {generatedOutfit ? (
-          <motion.div
-            key="outfit"
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ type: 'spring', damping: 20 }}
-          >
-            <Card className="overflow-hidden shadow-xl hover-lift">
-              {/* Header */}
-              <div className="relative bg-gradient-to-r from-pink-500 via-fuchsia-500 to-violet-600 p-5 text-white">
-                <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4xIj48Y2lyY2xlIGN4PSIzMCIgY3k9IjMwIiByPSIyIi8+PC9nPjwvZz48L3N2Zz4=')] opacity-30" />
-                <div className="relative z-10 flex items-center justify-between">
-                  <div>
-                    <h3 className="text-lg font-bold flex items-center gap-2">
-                      {generatedOutfit.name}
-                      {generatedOutfit.aiGenerated && (
-                        <span className="ml-2 px-2 py-0.5 text-xs bg-white/20 rounded-full flex items-center gap-1">
-                          <Cpu className="w-3 h-3" />
-                          IA
-                        </span>
-                      )}
-                    </h3>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-sm text-white/80">
-                        {generatedOutfit.totalItems} prendas
-                      </span>
-                      {generatedOutfit.trendingScore >= 80 && (
-                        <span className="flex items-center gap-1 text-xs bg-white/20 px-2 py-0.5 rounded-full">
-                          <TrendingUp className="w-3 h-3" />
-                          Top Trending
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <motion.button
-                      whileHover={{ scale: 1.1, rotate: 5 }}
-                      whileTap={{ scale: 0.9 }}
-                      onClick={handleFavorite}
-                      className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/30 transition-colors"
-                    >
-                      <Heart className={`w-5 h-5 ${generatedOutfit.favorite ? 'fill-current' : ''}`} />
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.1, rotate: -5 }}
-                      whileTap={{ scale: 0.9 }}
-                      className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/30 transition-colors"
-                    >
-                      <Share2 className="w-5 h-5" />
-                    </motion.button>
-                  </div>
-                </div>
+                {!post.user.isFriend && (
+                  <span className="text-[10px] px-2 py-1 rounded-full bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] font-semibold">
+                    Amiga de amiga
+                  </span>
+                )}
               </div>
 
-              {/* Description & Trends */}
-              <div className="p-4 bg-gradient-to-br from-pink-50 via-white to-violet-50 dark:from-pink-950/30 dark:via-gray-900 dark:to-violet-950/30">
-                <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed mb-3">
-                  {generatedOutfit.description}
-                </p>
-                {generatedOutfit.aiReasoning && (
-                  <div className="mb-3 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-xl border border-blue-100 dark:border-blue-800">
-                    <p className="text-xs text-blue-600 dark:text-blue-400 flex items-start gap-2">
-                      <Cpu className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                      <span>{generatedOutfit.aiReasoning}</span>
-                    </p>
-                  </div>
-                )}
-                {generatedOutfit.matchedTrends.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {generatedOutfit.matchedTrends.map((trend, i) => (
-                      <span
-                        key={i}
-                        className="text-xs bg-pink-100 dark:bg-pink-900/50 text-pink-600 dark:text-pink-400 px-2 py-1 rounded-full font-medium"
-                      >
-                        #{trend}
-                      </span>
+              {/* Outfit Images (Swipeable) */}
+              <div className="relative">
+                <div className="relative aspect-[3/4] rounded-3xl overflow-hidden bg-[var(--background-secondary)] cursor-pointer group">
+                  <motion.div
+                    key={currentImageIndex}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                    onClick={() => toggleImage(post.id)}
+                    className="w-full h-full"
+                  >
+                    <img
+                      src={images[currentImageIndex]}
+                      alt={currentImageIndex === 0 ? post.outfit.name : 'Prendas del outfit'}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      loading="lazy"
+                    />
+                  </motion.div>
+
+                  {/* Image indicator dots */}
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                    {images.map((_, idx) => (
+                      <button
+                        key={idx}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setCurrentImages(prev => ({ ...prev, [post.id]: idx }));
+                        }}
+                        className={`w-2 h-2 rounded-full transition-all ${idx === currentImageIndex
+                          ? 'bg-white w-6'
+                          : 'bg-white/50'
+                          }`}
+                      />
                     ))}
                   </div>
-                )}
-              </div>
 
-              {/* Items Grid - With Images */}
-              <div className="p-4 dark:bg-gray-900">
-                <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center justify-between">
-                  <span className="flex items-center gap-2">
-                    <div className="w-5 h-5 rounded-md gradient-primary flex items-center justify-center">
-                      <ShoppingBag className="w-3 h-3 text-white" />
-                    </div>
-                    Prendas
-                  </span>
-                  <span className="text-xs text-gray-500 dark:text-gray-400 font-normal">
-                    Pulsa para ver detalles
-                  </span>
-                </h4>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {generatedOutfit.items.map((item, index) => (
+                  {/* Image label */}
+                  <div className="absolute top-4 right-4 px-3 py-1.5 rounded-full glass-strong">
+                    <span className="text-xs font-bold text-[var(--foreground)]">
+                      {currentImageIndex === 0 ? 'Outfit' : 'Prendas'}
+                    </span>
+                  </div>
+
+                  {/* Tap instruction (first time) */}
+                  {!currentImages[post.id] && index === 0 && (
                     <motion.div
-                      key={item.id || index}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.08 * (index + 1) }}
-                      whileHover={{ y: -6, scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => handleItemClick(item)}
-                      className="group bg-white dark:bg-gray-800 rounded-2xl overflow-hidden border border-gray-100 dark:border-gray-700 cursor-pointer hover:shadow-xl hover:border-pink-300 dark:hover:border-pink-500 transition-all"
+                      initial={{ opacity: 1 }}
+                      animate={{ opacity: 0 }}
+                      transition={{ delay: 2, duration: 0.5 }}
+                      className="absolute inset-0 flex items-center justify-center bg-black/30 pointer-events-none"
                     >
-                      {/* Image Container */}
-                      <div className="relative aspect-square bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 overflow-hidden">
-                        {item.imageUrl ? (
-                          <img
-                            src={item.imageUrl}
-                            alt={item.name}
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                            loading="lazy"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.style.display = 'none';
-                              const fallback = target.parentElement?.querySelector('.fallback-color');
-                              if (fallback) (fallback as HTMLElement).style.display = 'flex';
-                            }}
-                          />
-                        ) : null}
-
-                        {/* Fallback Color */}
-                        <div
-                          className={`fallback-color absolute inset-0 flex items-center justify-center ${item.imageUrl ? 'hidden' : ''}`}
-                          style={{ backgroundColor: item.colorHex || '#f0f0f0' }}
-                        >
-                          <ShoppingBag className="w-8 h-8 text-white/50" />
-                        </div>
-
-                        {/* Trending Badge */}
-                        {item.trending && (
-                          <div className="absolute top-2 left-2 w-6 h-6 rounded-full bg-gradient-to-r from-pink-500 to-fuchsia-500 flex items-center justify-center shadow-lg">
-                            <Sparkles className="w-3 h-3 text-white" />
-                          </div>
-                        )}
-
-                        {/* Price Badge */}
-                        {item.price && (
-                          <div className="absolute bottom-2 right-2 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm px-2 py-1 rounded-lg shadow-sm">
-                            <span className="text-xs font-semibold text-gray-900 dark:text-white">{item.price}</span>
-                          </div>
-                        )}
-
-                        {/* Hover Overlay */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-3">
-                          <span className="text-xs text-white font-medium flex items-center gap-1">
-                            <ExternalLink className="w-3 h-3" />
-                            Ver más
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Item Info */}
-                      <div className="p-3">
-                        <p className="text-xs font-medium text-gray-900 dark:text-white truncate mb-0.5">
-                          {item.name}
-                        </p>
-                        <p className="text-xs text-pink-500 dark:text-pink-400 font-medium truncate">
-                          {item.brand}
-                        </p>
+                      <div className="px-4 py-2 rounded-full bg-white/90 text-black text-sm font-semibold">
+                        Toca para ver las prendas
                       </div>
                     </motion.div>
-                  ))}
+                  )}
                 </div>
               </div>
 
-              {/* Price & Actions */}
-              <div className="p-4 bg-gradient-to-r from-pink-50/50 to-violet-50/50 dark:from-pink-950/30 dark:to-violet-950/30 border-t border-gray-100 dark:border-gray-800">
-                {/* Price Estimate */}
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Precio estimado</p>
-                    <p className="text-lg font-bold text-gray-900 dark:text-white">{generatedOutfit.estimatedPrice}</p>
-                  </div>
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${generatedOutfit.priceRange === 'Budget' ? 'bg-green-100 text-green-600 dark:bg-green-900/50 dark:text-green-400' :
-                      generatedOutfit.priceRange === 'Mid-Range' ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-400' :
-                        generatedOutfit.priceRange === 'Premium' ? 'bg-purple-100 text-purple-600 dark:bg-purple-900/50 dark:text-purple-400' :
-                          'bg-amber-100 text-amber-600 dark:bg-amber-900/50 dark:text-amber-400'
-                    }`}>
-                    {generatedOutfit.priceRange}
-                  </span>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex gap-3">
-                  <Button
-                    variant="outline"
-                    className="flex-1 border-gray-200 hover:border-pink-300 hover:bg-pink-50 dark:border-gray-700 dark:hover:border-pink-500"
-                    onClick={handleGenerate}
-                  >
-                    <RefreshCw className="w-4 h-4 mr-2" />
-                    Regenerar
-                  </Button>
-                  <Button className="flex-1" glow>
-                    <Heart className="w-4 h-4 mr-2" />
-                    Guardar look
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          </motion.div>
-        ) : (
-          <motion.div
-            key="placeholder"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-          >
-            <Card className="p-8 md:p-10 gradient-card">
-              <div className="aspect-square max-w-xs mx-auto bg-gradient-to-br from-pink-100/50 via-white to-violet-100/50 dark:from-pink-900/30 dark:via-gray-900 dark:to-violet-900/30 rounded-3xl flex flex-col items-center justify-center border border-pink-100/50 dark:border-pink-800/30">
-                <motion.div
-                  animate={{
-                    y: [0, -10, 0],
-                    scale: [1, 1.05, 1]
-                  }}
-                  transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                  className="w-20 h-20 rounded-3xl gradient-primary flex items-center justify-center mb-4 shadow-lg"
+              {/* Actions */}
+              <div className="flex items-center gap-4">
+                <motion.button
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => handleLike(post.id)}
+                  className="flex items-center gap-1.5"
                 >
-                  {botConnected ? <Cpu className="w-10 h-10 text-white" /> : <Sparkles className="w-10 h-10 text-white" />}
-                </motion.div>
-                <p className="text-gray-500 dark:text-gray-400 text-center text-sm px-4">
-                  {selectedStyle
-                    ? (botConnected
-                      ? 'Pulsa generar para que el bot de IA cree tu outfit'
-                      : 'Pulsa generar para crear tu outfit con prendas reales')
-                    : 'Selecciona un estilo para empezar'}
-                </p>
-              </div>
-            </Card>
-          </motion.div>
-        )}
-      </AnimatePresence>
+                  <Heart
+                    className={`w-6 h-6 transition-colors ${post.isLiked
+                      ? 'fill-[var(--brand-pink)] stroke-[var(--brand-pink)]'
+                      : 'stroke-[var(--foreground)]'
+                      }`}
+                  />
+                  <span className="text-sm font-semibold text-[var(--foreground)]">{post.likes}</span>
+                </motion.button>
 
-      {/* Product Modal */}
-      <ProductModal
-        item={selectedItem}
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setTimeout(() => setSelectedItem(null), 300);
-        }}
-      />
+                <Link href={`/post/${post.id}`} className="flex items-center gap-1.5">
+                  <MessageCircle className="w-6 h-6 stroke-[var(--foreground)]" />
+                  <span className="text-sm font-semibold text-[var(--foreground)]">{post.comments}</span>
+                </Link>
+
+                <motion.button
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => handleSave(post.id)}
+                  className="ml-auto"
+                >
+                  <Bookmark
+                    className={`w-6 h-6 transition-colors ${post.isSaved
+                      ? 'fill-[var(--brand-pink)] stroke-[var(--brand-pink)]'
+                      : 'stroke-[var(--foreground)]'
+                      }`}
+                  />
+                </motion.button>
+              </div>
+
+              {/* Caption */}
+              {post.caption && (
+                <p className="text-sm text-[var(--foreground)]">
+                  <span className="font-bold">{post.user.username}</span>{' '}
+                  {post.caption}
+                </p>
+              )}
+            </motion.article>
+          );
+        })}
+      </div>
+
+      {/* Floating Create Button */}
+      <Link href="/create">
+        <motion.button
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: 0.5, type: 'spring', stiffness: 260, damping: 20 }}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+          className="fixed bottom-20 md:bottom-8 right-4 w-16 h-16 rounded-full bg-gradient-to-br from-[var(--brand-pink)] to-[var(--brand-pink-dark)] flex items-center justify-center shadow-[var(--shadow-float-strong)] z-50"
+        >
+          <Plus className="w-8 h-8 text-white" strokeWidth={3} />
+        </motion.button>
+      </Link>
     </div>
   );
 }

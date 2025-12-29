@@ -1,305 +1,327 @@
 'use client';
 
-/**
- * Profile Page - User Settings with Premium Toggle
- */
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Settings, Grid3x3, Bookmark, Camera, Heart, MessageCircle, Plus, FolderPlus } from 'lucide-react';
+import { currentUser, mockSocialPosts, type SocialPost } from '@/data/mockData';
+import Link from 'next/link';
 
-import { motion } from 'framer-motion';
-import { Crown, Mail, Lock, Moon, Sun, LogOut, ChevronRight, Palette, Sparkles, Check, X, Settings } from 'lucide-react';
-import { Card, Button } from '@/components';
-import { useUser, useTheme } from '@/store';
-import { SubscriptionTier } from '@/types';
-import { styleOptions } from '@/data/mockOutfits';
+type Tab = 'posts' | 'saved';
+
+interface Folder {
+  id: string;
+  name: string;
+  posts: SocialPost[];
+  isPrivate: boolean;
+}
 
 export default function ProfilePage() {
-  const { user, isPremium, setUser } = useUser();
-  const { isDark, toggleTheme } = useTheme();
+  const [activeTab, setActiveTab] = useState<Tab>('posts');
+  const [showSettings, setShowSettings] = useState(false);
+  const [showNewFolder, setShowNewFolder] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
+  const [folders, setFolders] = useState<Folder[]>([
+    {
+      id: '1',
+      name: 'Favoritos',
+      posts: mockSocialPosts.filter(p => p.isSaved),
+      isPrivate: false,
+    },
+  ]);
 
-  const handleTogglePremium = () => {
-    if (user) {
-      setUser({
-        ...user,
-        subscriptionTier: isPremium() ? SubscriptionTier.FREE : SubscriptionTier.PREMIUM,
-      });
-    }
-  };
+  const myPosts = mockSocialPosts.slice(0, 3);
 
-  const handleNameChange = () => {
-    const newName = prompt('Introduce tu nuevo nombre:', user?.name);
-    if (newName && user) {
-      setUser({ ...user, name: newName });
-    }
+  const createFolder = () => {
+    if (!newFolderName.trim()) return;
+    const newFolder: Folder = {
+      id: Date.now().toString(),
+      name: newFolderName,
+      posts: [],
+      isPrivate: true,
+    };
+    setFolders([...folders, newFolder]);
+    setNewFolderName('');
+    setShowNewFolder(false);
   };
 
   return (
-    <div className="space-y-5 pb-8">
+    <div className="min-h-screen bg-[var(--background)] pb-24 md:pb-8">
       {/* Header */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center md:text-left"
+        className="relative px-4 pt-4"
       >
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-1">
-          Mi Perfil
-        </h1>
-        <p className="text-gray-500 dark:text-gray-400 text-sm">Gestiona tu cuenta</p>
+        {/* Cover */}
+        <div className="relative h-32 rounded-3xl overflow-hidden bg-gradient-to-br from-[var(--brand-pink)]/20 to-[var(--brand-pink-dark)]/20 mb-4">
+          <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1487222477894-8943e31ef7b2?w=800&h=400&fit=crop')] bg-cover bg-center opacity-30" />
+        </div>
+
+        {/* Settings */}
+        <button
+          onClick={() => setShowSettings(!showSettings)}
+          className="absolute top-8 right-8 w-10 h-10 rounded-full glass-strong flex items-center justify-center shadow-lg z-10"
+        >
+          <Settings className="w-5 h-5" />
+        </button>
+
+        {/* Avatar */}
+        <div className="relative -mt-16 mb-4 flex justify-center">
+          <div className="relative">
+            <img
+              src={currentUser.avatar}
+              alt={currentUser.name}
+              className="w-28 h-28 rounded-full border-4 border-[var(--background)] shadow-[var(--shadow-float-strong)]"
+            />
+            <button className="absolute bottom-0 right-0 w-9 h-9 rounded-full bg-[var(--brand-pink)] flex items-center justify-center shadow-lg">
+              <Camera className="w-4 h-4 text-white" />
+            </button>
+          </div>
+        </div>
+
+        {/* Info */}
+        <div className="text-center mb-4">
+          <h1 className="text-2xl font-bold text-[var(--foreground)] mb-1">{currentUser.name}</h1>
+          <p className="text-sm text-[var(--foreground-tertiary)] mb-3">{currentUser.username}</p>
+
+          <div className="flex justify-center gap-6 mb-4">
+            <div>
+              <p className="text-xl font-bold">{myPosts.length}</p>
+              <p className="text-xs text-[var(--foreground-tertiary)]">Posts</p>
+            </div>
+            <div>
+              <p className="text-xl font-bold">234</p>
+              <p className="text-xs text-[var(--foreground-tertiary)]">Seguidores</p>
+            </div>
+            <div>
+              <p className="text-xl font-bold">180</p>
+              <p className="text-xs text-[var(--foreground-tertiary)]">Siguiendo</p>
+            </div>
+          </div>
+
+          <button className="px-6 py-2 rounded-full bg-[var(--background-secondary)] border border-[var(--border-color)] text-sm font-semibold">
+            Editar Perfil
+          </button>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex border-b border-[var(--border-color)]">
+          <button
+            onClick={() => setActiveTab('posts')}
+            className={`flex-1 flex items-center justify-center gap-2 py-3 border-b-2 transition-colors ${activeTab === 'posts'
+                ? 'border-[var(--brand-pink)] text-[var(--foreground)]'
+                : 'border-transparent text-[var(--foreground-tertiary)]'
+              }`}
+          >
+            <Grid3x3 className="w-5 h-5" />
+            <span className="text-sm font-semibold">Posts</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('saved')}
+            className={`flex-1 flex items-center justify-center gap-2 py-3 border-b-2 transition-colors ${activeTab === 'saved'
+                ? 'border-[var(--brand-pink)] text-[var(--foreground)]'
+                : 'border-transparent text-[var(--foreground-tertiary)]'
+              }`}
+          >
+            <Bookmark className="w-5 h-5" />
+            <span className="text-sm font-semibold">Guardados</span>
+          </button>
+        </div>
       </motion.div>
 
-      {/* User Info Card */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-      >
-        <Card className="p-5 gradient-card">
-          <div className="flex flex-col md:flex-row items-center gap-5">
-            {/* Avatar */}
+      {/* Content */}
+      <div className="px-4 pt-4">
+        <AnimatePresence mode="wait">
+          {activeTab === 'posts' ? (
             <motion.div
-              whileHover={{ scale: 1.05, rotate: 2 }}
-              className="w-20 h-20 gradient-primary rounded-2xl flex items-center justify-center text-3xl text-white font-bold shadow-lg cursor-pointer"
-              onClick={handleNameChange}
+              key="posts"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="grid grid-cols-3 gap-2"
             >
-              {user?.name.charAt(0).toUpperCase()}
+              {myPosts.map((post, index) => (
+                <Link key={post.id} href={`/post/${post.id}`}>
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="aspect-square rounded-2xl overflow-hidden bg-[var(--background-secondary)] relative group cursor-pointer"
+                  >
+                    <img
+                      src={post.images.outfit}
+                      alt={post.outfit.name}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                    />
+                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                      <div className="flex gap-4 text-white">
+                        <div className="flex items-center gap-1">
+                          <Heart className="w-5 h-5 fill-white" />
+                          <span className="text-sm font-bold">{post.likes}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <MessageCircle className="w-5 h-5 fill-white" />
+                          <span className="text-sm font-bold">{post.comments}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                </Link>
+              ))}
             </motion.div>
-
-            {/* Info */}
-            <div className="flex-1 text-center md:text-left">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-0.5">
-                {user?.name}
-              </h2>
-              <p className="text-gray-500 dark:text-gray-400 text-sm mb-2">{user?.email}</p>
-              <motion.span
-                whileHover={{ scale: 1.05 }}
-                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${isPremium()
-                  ? 'gradient-primary text-white shadow-md'
-                  : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300'
-                  }`}
-              >
-                {isPremium() ? (
-                  <>
-                    <Crown className="w-3.5 h-3.5" />
-                    Premium
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-3.5 h-3.5" />
-                    Free
-                  </>
-                )}
-              </motion.span>
-            </div>
-
-            {/* Edit Button */}
-            <Button variant="outline" size="sm" onClick={handleNameChange} className="hover:border-pink-300 dark:hover:border-pink-500 hover:bg-pink-50 dark:hover:bg-pink-950/30">
-              Editar
-            </Button>
-          </div>
-        </Card>
-      </motion.div>
-
-      {/* Theme Toggle */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.12 }}
-      >
-        <Card className="p-4 border-2 border-pink-200/50 dark:border-pink-800/30 bg-gradient-to-r from-pink-50/50 to-violet-50/50 dark:from-pink-950/30 dark:to-violet-950/30">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-pink-100 to-violet-100 dark:from-pink-900/50 dark:to-violet-900/50 flex items-center justify-center">
-                {isDark ? <Moon className="w-4 h-4 text-pink-500" /> : <Sun className="w-4 h-4 text-pink-500" />}
-              </div>
-              <div>
-                <h3 className="font-medium text-gray-900 dark:text-white text-sm">Modo Oscuro</h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400">{isDark ? 'Activado' : 'Desactivado'}</p>
-              </div>
-            </div>
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={toggleTheme}
-              className={`relative w-12 h-6 rounded-full transition-all ${isDark
-                ? 'bg-gradient-to-r from-pink-500 to-violet-500'
-                : 'bg-gray-300 dark:bg-gray-600'
-                }`}
-            >
-              <motion.div
-                layout
-                className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md"
-                style={{ left: isDark ? 'calc(100% - 22px)' : '2px' }}
-                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-              />
-            </motion.button>
-          </div>
-        </Card>
-      </motion.div>
-
-      {/* Dev Toggle */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.15 }}
-      >
-        <Card className="p-4 border-2 border-dashed border-pink-200/50 dark:border-pink-800/30 bg-gradient-to-r from-pink-50/50 to-violet-50/50 dark:from-pink-950/30 dark:to-violet-950/30">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-pink-100 to-violet-100 dark:from-pink-900/50 dark:to-violet-900/50 flex items-center justify-center">
-                <Settings className="w-4 h-4 text-pink-500" />
-              </div>
-              <div>
-                <h3 className="font-medium text-gray-900 dark:text-white text-sm">Dev Mode</h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Simula Premium/Free</p>
-              </div>
-            </div>
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              onClick={handleTogglePremium}
-              className={`relative w-12 h-6 rounded-full transition-all ${isPremium()
-                ? 'bg-gradient-to-r from-pink-500 to-violet-500'
-                : 'bg-gray-300 dark:bg-gray-600'
-                }`}
-            >
-              <motion.div
-                layout
-                className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md"
-                style={{ left: isPremium() ? 'calc(100% - 22px)' : '2px' }}
-                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-              />
-            </motion.button>
-          </div>
-        </Card>
-      </motion.div>
-
-      {/* Subscription Card */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-      >
-        <Card className="p-5">
-          <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-            <Crown className="w-4 h-4 text-pink-500" />
-            Suscripción
-          </h2>
-
-          {isPremium() ? (
-            <div className="bg-gradient-to-br from-pink-50 to-violet-50 dark:from-pink-950/30 dark:to-violet-950/30 rounded-2xl p-4 border border-pink-100/50 dark:border-pink-800/30">
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                    Plan Premium
-                    <Crown className="w-4 h-4 text-pink-500" />
-                  </h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Todo desbloqueado</p>
-                </div>
-              </div>
-              <ul className="space-y-1.5 text-sm">
-                {['Historial ilimitado', 'IA avanzada', 'Soporte prioritario'].map((feature) => (
-                  <li key={feature} className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-                    <Check className="w-4 h-4 text-emerald-500" />
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-            </div>
           ) : (
-            <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-2xl p-4">
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <h3 className="font-semibold text-gray-900 dark:text-white">Plan Free</h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Funciones básicas</p>
-                </div>
-              </div>
-              <ul className="space-y-1.5 text-sm mb-4">
-                <li className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-                  <Check className="w-4 h-4 text-emerald-500" />
-                  Últimos 3 outfits
-                </li>
-                <li className="flex items-center gap-2 text-gray-400">
-                  <X className="w-4 h-4" />
-                  Historial ilimitado
-                </li>
-                <li className="flex items-center gap-2 text-gray-400">
-                  <X className="w-4 h-4" />
-                  IA avanzada
-                </li>
-              </ul>
-              <Button fullWidth glow onClick={handleTogglePremium}>
-                Pásate a Premium
-              </Button>
-            </div>
-          )}
-        </Card>
-      </motion.div>
-
-      {/* Style Preferences */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.25 }}
-      >
-        <Card className="p-5">
-          <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-            <Palette className="w-4 h-4 text-pink-500" />
-            Preferencias
-          </h2>
-          <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
-            {styleOptions.map((style) => (
-              <motion.button
-                key={style.value}
-                whileHover={{ scale: 1.05, y: -2 }}
-                whileTap={{ scale: 0.97 }}
-                className="flex flex-col items-center gap-1.5 p-3 rounded-2xl border border-gray-100 dark:border-gray-700 hover:border-pink-200 dark:hover:border-pink-500 hover:bg-pink-50/50 dark:hover:bg-pink-950/30 transition-all"
-              >
-                <div className={`w-8 h-8 rounded-xl bg-gradient-to-br ${style.gradient} flex items-center justify-center`}>
-                  <div className="w-3 h-3 rounded-full bg-white/80" />
-                </div>
-                <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{style.label}</span>
-              </motion.button>
-            ))}
-          </div>
-        </Card>
-      </motion.div>
-
-      {/* Account Actions */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-      >
-        <Card className="p-3">
-          <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-1 px-2">
-            Cuenta
-          </h2>
-          <div className="space-y-0.5">
-            {[
-              { icon: <Mail className="w-4 h-4" />, label: 'Cambiar email' },
-              { icon: <Lock className="w-4 h-4" />, label: 'Contraseña' },
-            ].map((item) => (
-              <motion.button
-                key={item.label}
-                whileHover={{ x: 4, backgroundColor: isDark ? 'rgba(31, 41, 55, 1)' : 'rgba(249, 250, 251, 1)' }}
-                className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all"
-              >
-                <div className="flex items-center gap-3 text-gray-600 dark:text-gray-400">
-                  {item.icon}
-                  <span className="text-sm">{item.label}</span>
-                </div>
-                <ChevronRight className="w-4 h-4 text-gray-400" />
-              </motion.button>
-            ))}
-            <motion.button
-              whileHover={{ x: 4, backgroundColor: isDark ? 'rgba(127, 29, 29, 0.3)' : 'rgba(254, 242, 242, 1)' }}
-              className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all text-red-500"
+            <motion.div
+              key="saved"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
             >
-              <div className="flex items-center gap-3">
-                <LogOut className="w-4 h-4" />
-                <span className="text-sm">Cerrar sesión</span>
+              {/* Folders */}
+              <div className="mb-6">
+                <h3 className="text-sm font-bold mb-3">Carpetas</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  {/* New Folder */}
+                  {showNewFolder ? (
+                    <motion.div
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      className="aspect-square rounded-2xl bg-[var(--background-secondary)] p-3 flex flex-col gap-2"
+                    >
+                      <input
+                        type="text"
+                        value={newFolderName}
+                        onChange={(e) => setNewFolderName(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && createFolder()}
+                        placeholder="Nombre"
+                        autoFocus
+                        className="flex-1 px-3 py-2 rounded-xl bg-[var(--background)] border border-[var(--border-color)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)]"
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          onClick={createFolder}
+                          className="flex-1 py-2 rounded-xl bg-[var(--brand-pink)] text-white text-xs font-semibold"
+                        >
+                          Crear
+                        </button>
+                        <button
+                          onClick={() => {
+                            setShowNewFolder(false);
+                            setNewFolderName('');
+                          }}
+                          className="px-3 py-2 rounded-xl bg-[var(--background-tertiary)] text-xs"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </motion.div>
+                  ) : (
+                    <button
+                      onClick={() => setShowNewFolder(true)}
+                      className="aspect-square rounded-2xl bg-[var(--background-secondary)] border-2 border-dashed border-[var(--border-color)] flex flex-col items-center justify-center gap-2 hover:border-[var(--brand-pink)] transition-colors"
+                    >
+                      <FolderPlus className="w-8 h-8 text-[var(--brand-pink)]" />
+                      <p className="text-xs font-semibold">Nueva</p>
+                    </button>
+                  )}
+
+                  {folders.map((folder) => (
+                    <Link key={folder.id} href={`/folder/${folder.id}`}>
+                      <div className="aspect-square rounded-2xl overflow-hidden bg-[var(--background-secondary)] relative cursor-pointer group">
+                        {folder.posts.length > 0 ? (
+                          <>
+                            <div className="grid grid-cols-2 gap-0.5 w-full h-full">
+                              {folder.posts.slice(0, 4).map((post, i) => (
+                                <img
+                                  key={i}
+                                  src={post.images.outfit}
+                                  alt=""
+                                  className="w-full h-full object-cover"
+                                />
+                              ))}
+                            </div>
+                            <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center">
+                              <p className="text-sm font-bold text-white">{folder.name}</p>
+                              <p className="text-xs text-white/80">{folder.posts.length} posts</p>
+                              {folder.isPrivate && <p className="text-[10px] text-white/60 mt-1">🔒 Privado</p>}
+                            </div>
+                          </>
+                        ) : (
+                          <div className="w-full h-full flex flex-col items-center justify-center">
+                            <Bookmark className="w-8 h-8 text-[var(--foreground-tertiary)] mb-2" />
+                            <p className="text-sm font-bold">{folder.name}</p>
+                            <p className="text-xs text-[var(--foreground-tertiary)]">Vacía</p>
+                            {folder.isPrivate && <p className="text-[10px] text-[var(--foreground-tertiary)] mt-1">🔒</p>}
+                          </div>
+                        )}
+                      </div>
+                    </Link>
+                  ))}
+                </div>
               </div>
-              <ChevronRight className="w-4 h-4" />
-            </motion.button>
-          </div>
-        </Card>
-      </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Settings Panel */}
+      <AnimatePresence>
+        {showSettings && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowSettings(false)}
+              className="fixed inset-0 bg-black/50 z-40"
+            />
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 25 }}
+              className="fixed right-0 top-0 bottom-0 w-80 bg-[var(--background)] z-50 shadow-2xl p-6 overflow-y-auto"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold">Settings</h2>
+                <button
+                  onClick={() => setShowSettings(false)}
+                  className="w-8 h-8 rounded-full bg-[var(--background-secondary)] flex items-center justify-center"
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <button className="w-full text-left px-4 py-3 rounded-2xl bg-[var(--background-secondary)] hover:bg-[var(--background-tertiary)] transition-colors">
+                  <p className="font-semibold text-sm">Smart Profile</p>
+                  <p className="text-xs text-[var(--foreground-tertiary)]">Morfología y colorimetría</p>
+                </button>
+
+                <button className="w-full text-left px-4 py-3 rounded-2xl bg-[var(--background-secondary)] hover:bg-[var(--background-tertiary)] transition-colors">
+                  <p className="font-semibold text-sm">Privacidad</p>
+                  <p className="text-xs text-[var(--foreground-tertiary)]">Control de cuenta</p>
+                </button>
+
+                <button className="w-full text-left px-4 py-3 rounded-2xl bg-[var(--background-secondary)] hover:bg-[var(--background-tertiary)] transition-colors">
+                  <p className="font-semibold text-sm">Notificaciones</p>
+                  <p className="text-xs text-[var(--foreground-tertiary)]">Alertas</p>
+                </button>
+
+                <button className="w-full text-left px-4 py-3 rounded-2xl bg-[var(--background-secondary)] hover:bg-[var(--background-tertiary)] transition-colors">
+                  <p className="font-semibold text-sm">Premium</p>
+                  <p className="text-xs text-[var(--brand-pink)]">Desbloquea todo</p>
+                </button>
+
+                <div className="border-t border-[var(--border-color)] my-4" />
+
+                <button className="w-full text-left px-4 py-3 rounded-2xl hover:bg-red-500/10 transition-colors">
+                  <p className="font-semibold text-sm text-red-500">Cerrar sesión</p>
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
