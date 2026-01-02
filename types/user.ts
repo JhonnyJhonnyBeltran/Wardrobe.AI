@@ -16,6 +16,16 @@ export interface UserProfile {
   createdAt: Date;
   morphology?: string; // e.g., 'triangle', 'hourglass'
   colorimetry?: string; // e.g., 'winter', 'summer'
+
+  // Style Questionnaire Fields
+  ageRange?: '18-24' | '25-34' | '35-44' | '45-54' | '55+';
+  gender?: 'woman' | 'man' | 'other';
+  height?: number; // in cm
+  heightRange?: 'short' | 'medium' | 'tall';
+  preferredStyles?: string[]; // e.g., ['casual', 'sporty', 'elegant']
+  usesAccessories?: boolean;
+  visualStylePreferences?: string[]; // IDs of selected images from visual quiz
+  styleCompleted?: boolean; // Has completed the style questionnaire
 }
 
 export interface UserPreferences {
@@ -26,4 +36,12 @@ export interface UserPreferences {
     bottom?: string;
     shoe?: string;
   };
+}
+
+// Style Quiz Image Option
+export interface StyleImageOption {
+  id: string;
+  imageUrl: string;
+  styleTag: string; // e.g., 'minimalist', 'boho', 'street', 'classic'
+  category?: string;
 }

@@ -29,7 +29,7 @@ export default function ClosetPage() {
   const [favorites, setFavorites] = useState<Set<string>>(new Set(['1', '2', '5', '6', '9', '10']));
   const [showAddModal, setShowAddModal] = useState(false);
   const [items, setItems] = useState<ClothingItemData[]>(myWardrobe);
-  
+
   // Product Modal State
   const [selectedProduct, setSelectedProduct] = useState<OutfitItem | null>(null);
   const [showProductModal, setShowProductModal] = useState(false);
@@ -49,17 +49,20 @@ export default function ClosetPage() {
   const handleItemClick = (item: ClothingItemData) => {
     // Convert ClothingItemData to OutfitItem for the modal
     const productItem: OutfitItem = {
+      id: item.id,
       type: item.type as any,
       name: item.name,
       brand: item.brand,
-      ref: item.reference || '#',
       color: item.colorHex,
       imageUrl: item.imageUrl,
       price: item.price,
-      buyLink: '#', // In a real app, this would be the actual link
-      colorHex: item.colorHex
+      buyLink: '#',
+      colorHex: item.colorHex,
+      source: 'wardrobe',
+      trending: false,
+      matchScore: 100
     };
-    
+
     setSelectedProduct(productItem);
     setShowProductModal(true);
   };
@@ -202,8 +205,8 @@ export default function ClosetPage() {
                     <button
                       onClick={() => setFilterType(null)}
                       className={`px-3 py-1.5 rounded-full text-xs font-semibold ${!filterType
-                          ? 'bg-[var(--brand-pink)] text-white'
-                          : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)]'
+                        ? 'bg-[var(--brand-pink)] text-white'
+                        : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)]'
                         }`}
                     >
                       Todo
@@ -213,8 +216,8 @@ export default function ClosetPage() {
                         key={type}
                         onClick={() => setFilterType(type)}
                         className={`px-3 py-1.5 rounded-full text-xs font-semibold capitalize ${filterType === type
-                            ? 'bg-[var(--brand-pink)] text-white'
-                            : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)]'
+                          ? 'bg-[var(--brand-pink)] text-white'
+                          : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)]'
                           }`}
                       >
                         {type}
@@ -241,15 +244,71 @@ export default function ClosetPage() {
         </Card>
       </motion.div>
 
-      {/* Items Grid */}
+      {/* Quick Actions - Integrated in main content */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15 }}
+        className="px-4 mb-6"
+      >
+        <h2 className="text-sm font-bold text-[var(--foreground-secondary)] mb-3">Acciones Rápidas</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {/* Create Outfit Card */}
+          <Link href="/create">
+            <Card className="p-6 hover-lift cursor-pointer group bg-gradient-to-br from-[var(--brand-pink)]/5 to-[var(--brand-pink-dark)]/5 border-2 border-[var(--brand-pink)]/20 hover:border-[var(--brand-pink)]">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[var(--brand-pink)] to-[var(--brand-pink-dark)] flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                  <Wand2 className="w-6 h-6 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-[var(--foreground)] mb-1">
+                    Crear Outfit
+                  </h3>
+                  <p className="text-sm text-[var(--foreground-tertiary)]">
+                    Genera looks con IA basados en tu armario
+                  </p>
+                </div>
+              </div>
+            </Card>
+          </Link>
+
+          {/* Add Item Card */}
+          <Card
+            onClick={() => setShowAddModal(true)}
+            className="p-6 hover-lift cursor-pointer group border-2 border-[var(--border-color)] hover:border-[var(--brand-pink)]"
+          >
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-[var(--background-secondary)] border-2 border-[var(--brand-pink)] flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                <Plus className="w-6 h-6 text-[var(--brand-pink)]" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-[var(--foreground)] mb-1">
+                  Añadir Prenda
+                </h3>
+                <p className="text-sm text-[var(--foreground-tertiary)]">
+                  Sube fotos o escanea URLs de tiendas
+                </p>
+              </div>
+            </div>
+          </Card>
+        </div>
+      </motion.div>
+
+      {/* Items Section Header */}
+      <div className="px-4 mb-3">
+        <h2 className="text-sm font-bold text-[var(--foreground-secondary)]">
+          Mis Prendas {filteredItems.length > 0 && `(${filteredItems.length})`}
+        </h2>
+      </div>
+
       {filteredItems.length > 0 ? (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
           className={`px-4 ${viewMode === 'grid'
-              ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'
-              : 'space-y-3'
+            ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'
+            : 'space-y-3'
             }`}
         >
           {filteredItems.map((item, index) => (
@@ -275,51 +334,6 @@ export default function ClosetPage() {
           <p className="text-xs text-[var(--foreground-tertiary)]">Prueba otra búsqueda</p>
         </Card>
       )}
-
-      {/* Stats */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        className="px-4 mt-6 grid grid-cols-2 gap-3"
-      >
-        <Card className="p-3 text-center">
-          <p className="text-2xl font-bold text-[var(--foreground)]">{items.length}</p>
-          <p className="text-[10px] text-[var(--foreground-tertiary)]">Total</p>
-        </Card>
-        <Card className="p-3 text-center">
-          <p className="text-2xl font-bold text-[var(--brand-pink)]">{favorites.size}</p>
-          <p className="text-[10px] text-[var(--foreground-tertiary)]">Favoritos</p>
-        </Card>
-      </motion.div>
-
-      {/* Floating Create Outfit Button */}
-      <Link href="/create">
-        <motion.button
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.5, type: 'spring', stiffness: 260, damping: 20 }}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.95 }}
-          className="fixed bottom-20 md:bottom-8 right-4 px-6 py-4 rounded-full bg-gradient-to-br from-[var(--brand-pink)] to-[var(--brand-pink-dark)] text-white font-bold text-sm shadow-[var(--shadow-float-strong)] z-50 flex items-center gap-2"
-        >
-          <Wand2 className="w-5 h-5" />
-          <span className="hidden md:inline">Crear Look</span>
-        </motion.button>
-      </Link>
-
-      {/* Add Item Button */}
-      <motion.button
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ delay: 0.6, type: 'spring', stiffness: 260, damping: 20 }}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={() => setShowAddModal(true)}
-        className="fixed bottom-20 md:bottom-8 left-4 w-14 h-14 rounded-full bg-[var(--card-bg)] border-2 border-[var(--brand-pink)] flex items-center justify-center shadow-[var(--shadow-float)] z-50"
-      >
-        <Plus className="w-6 h-6 text-[var(--brand-pink)]" />
-      </motion.button>
 
       {/* Add Item Modal */}
       <AddItemModal

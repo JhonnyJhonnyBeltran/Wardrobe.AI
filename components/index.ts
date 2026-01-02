@@ -12,3 +12,5 @@ export { default as SlotMachineGenerator, MultiSlotMachineGenerator } from './Sl
 export { default as AddItemModal } from './AddItemModal';
 export { default as ThemeToggle } from './ThemeToggle';
 export { default as Logo } from './Logo';
+export { default as StyleQuizModal } from './StyleQuizModal';
+export { default as SavedFolders } from './SavedFolders';

@@ -1,238 +1,314 @@
 'use client';
 
-import { useState, useRef } from 'react';
+/**
+ * Create Outfit with Inspiration
+ * Generates outfit collages based on saved posts and user preferences
+ */
+
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, ChevronLeft, ChevronRight, Wand2, Plus, X } from 'lucide-react';
-import { myWardrobe, currentUser } from '@/data/mockData';
-import { useRouter } from 'next/navigation';
-import AddItemModal from '@/components/AddItemModal';
+import { Sparkles, RefreshCw, Settings, Save, Share2, Image as ImageIcon } from 'lucide-react';
+import { Button, Card } from '@/components';
 
-type OutfitStyle = 'casual' | 'romantic' | 'business' | 'streetwear' | 'quietluxury' | 'trending';
+interface OutfitPiece {
+    id: string;
+    type: 'top' | 'bottom' | 'shoes' | 'accessories' | 'outerwear';
+    imageUrl: string;
+    name: string;
+}
 
-const styles: { value: OutfitStyle; label: string; emoji: string }[] = [
-    { value: 'casual', label: 'Casual', emoji: '👖' },
-    { value: 'romantic', label: 'Romántico', emoji: '💕' },
-    { value: 'business', label: 'Oficina', emoji: '💼' },
-    { value: 'streetwear', label: 'Street', emoji: '🔥' },
-    { value: 'quietluxury', label: 'Elegante', emoji: '✨' },
-    { value: 'trending', label: 'Trending', emoji: '📈' },
-];
+interface OutfitInspirationQuiz {
+    occasion?: string;
+    weather?: string;
+    mood?: string;
+    colors?: string[];
+}
 
-export default function CreatePage() {
-    const router = useRouter();
-    const [selectedStyle, setSelectedStyle] = useState<OutfitStyle | null>(null);
+export default function CreateOutfitPage() {
+    const [showQuiz, setShowQuiz] = useState(false);
+    const [quizAnswers, setQuizAnswers] = useState<OutfitInspirationQuiz>({});
+    const [generatedOutfit, setGeneratedOutfit] = useState<OutfitPiece[]>([]);
     const [isGenerating, setIsGenerating] = useState(false);
-    const [showAddModal, setShowAddModal] = useState(false);
-    const carouselRef = useRef<HTMLDivElement>(null);
-    const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+    const [editMode, setEditMode] = useState(false);
 
-    const handleGenerate = async () => {
-        if (!selectedStyle) return;
+    // Sample data
+    const occasions = ['Casual', 'Trabajo', 'Fiesta', 'Deportivo', 'Formal'];
+    const weathers = ['Calor ☀️', 'Frío ❄️', 'Lluvia 🌧️', 'Templado 🌤️'];
+    const moods = ['Cómodo', 'Elegante', 'Atrevido', 'Minimalista', 'Colorido'];
+
+    const handleGenerateOutfit = async () => {
         setIsGenerating(true);
+
+        // Simulate API call to generate outfit
         setTimeout(() => {
-            router.push('/closet');
+            // Mock generated outfit
+            const mockOutfit: OutfitPiece[] = [
+                { id: '1', type: 'top', imageUrl: '', name: 'Blusa Blanca' },
+                { id: '2', type: 'bottom', imageUrl: '', name: 'Jeans Azules' },
+                { id: '3', type: 'shoes', imageUrl: '', name: 'Zapatillas Blancas' },
+                { id: '4', type: 'accessories', imageUrl: '', name: 'Bolso Beige' },
+            ];
+            setGeneratedOutfit(mockOutfit);
+            setIsGenerating(false);
+            setShowQuiz(false);
         }, 2000);
     };
 
-    const scroll = (direction: 'left' | 'right') => {
-        if (carouselRef.current) {
-            carouselRef.current.scrollBy({
-                left: direction === 'right' ? 300 : -300,
-                behavior: 'smooth',
-            });
-        }
+    const handleChangeItem = (type: string) => {
+        // Logic to change a specific item in the outfit
+        console.log('Changing item:', type);
     };
 
-    const toggleItem = (itemId: string) => {
-        const newSelected = new Set(selectedItems);
-        if (newSelected.has(itemId)) {
-            newSelected.delete(itemId);
-        } else {
-            newSelected.add(itemId);
-        }
-        setSelectedItems(newSelected);
+    const handleSaveOutfit = () => {
+        console.log('Saving outfit...');
     };
 
     return (
-        <div className="min-h-screen bg-[var(--background)] flex flex-col">
-            {/* Avatar & Header */}
-            <motion.div
-                initial={{ opacity: 0, y: -30 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="pt-8 pb-6 px-4 text-center relative"
-            >
-                <button onClick={() => router.back()} className="absolute left-4 top-8">
-                    <X className="w-6 h-6" />
-                </button>
+        <div className="min-h-screen bg-[var(--background)] p-4 md:p-8">
+            <div className="max-w-6xl mx-auto">
+                {/* Header */}
+                <div className="mb-8">
+                    <h1 className="text-3xl md:text-4xl font-bold gradient-text mb-2">
+                        Crear Outfit con Inspiración
+                    </h1>
+                    <p className="text-[var(--foreground-tertiary)]">
+                        Genera collages de looks basados en tus posts guardados y preferencias
+                    </p>
+                </div>
 
-                <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-                    className="w-20 h-20 mx-auto mb-3 relative"
-                >
-                    <img
-                        src={currentUser.avatar}
-                        alt="Avatar"
-                        className="w-full h-full rounded-full border-4 border-[var(--brand-pink)] shadow-[var(--shadow-float-strong)]"
-                    />
-                    <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-gradient-to-br from-[var(--brand-pink)] to-[var(--brand-pink-dark)] flex items-center justify-center shadow-lg">
-                        <Sparkles className="w-3.5 h-3.5 text-white" />
-                    </div>
-                </motion.div>
-                <h1 className="text-xl font-bold text-[var(--foreground)]">Crear Look</h1>
-            </motion.div>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Left Column - Controls */}
+                    <div className="lg:col-span-1 space-y-4">
+                        <Card className="p-6">
+                            <h2 className="text-lg font-bold text-[var(--foreground)] mb-4 flex items-center gap-2">
+                                <Settings className="w-5 h-5" />
+                                Personalizar
+                            </h2>
 
-            {/* Carousel */}
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.2 }}
-                className="flex-1 px-4 mb-4"
-            >
-                <div className="relative">
-                    <button
-                        onClick={() => scroll('left')}
-                        className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full glass-strong flex items-center justify-center shadow-lg"
-                    >
-                        <ChevronLeft className="w-5 h-5" />
-                    </button>
-                    <button
-                        onClick={() => scroll('right')}
-                        className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full glass-strong flex items-center justify-center shadow-lg"
-                    >
-                        <ChevronRight className="w-5 h-5" />
-                    </button>
+                            <div className="space-y-6">
+                                {/* Occasion */}
+                                <div>
+                                    <label className="block text-sm font-medium text-[var(--foreground-secondary)] mb-3">
+                                        Ocasión
+                                    </label>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {occasions.map((occasion) => (
+                                            <button
+                                                key={occasion}
+                                                onClick={() => setQuizAnswers({ ...quizAnswers, occasion })}
+                                                className={`px-4 py-3 rounded-xl text-sm font-medium transition-all ${quizAnswers.occasion === occasion
+                                                        ? 'bg-[var(--brand-pink)] text-white shadow-[var(--shadow-float)]'
+                                                        : 'bg-[var(--background-secondary)] text-[var(--foreground)] hover:bg-[var(--background-tertiary)]'
+                                                    }`}
+                                            >
+                                                {occasion}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
 
-                    <div
-                        ref={carouselRef}
-                        className="flex gap-4 overflow-x-auto hide-scrollbar snap-x snap-mandatory py-4"
-                    >
-                        {myWardrobe.map((item, index) => (
-                            <motion.button
-                                key={item.id}
-                                initial={{ opacity: 0, scale: 0.8 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ delay: 0.1 * index }}
-                                onClick={() => toggleItem(item.id)}
-                                className={`flex-shrink-0 w-40 snap-center ${selectedItems.has(item.id) ? 'ring-4 ring-[var(--brand-pink)]' : ''
-                                    } rounded-2xl overflow-hidden bg-white`}
-                            >
-                                <div className="aspect-[3/4] relative group">
-                                    <img
-                                        src={item.imageUrl}
-                                        alt={item.name}
-                                        className="w-full h-full object-contain p-4 group-hover:scale-110 transition-transform duration-300"
-                                        style={{ mixBlendMode: 'darken' }}
-                                    />
+                                {/* Weather */}
+                                <div>
+                                    <label className="block text-sm font-medium text-[var(--foreground-secondary)] mb-3">
+                                        Clima
+                                    </label>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {weathers.map((weather) => (
+                                            <button
+                                                key={weather}
+                                                onClick={() => setQuizAnswers({ ...quizAnswers, weather })}
+                                                className={`px-4 py-3 rounded-xl text-sm font-medium transition-all ${quizAnswers.weather === weather
+                                                        ? 'bg-[var(--brand-pink)] text-white shadow-[var(--shadow-float)]'
+                                                        : 'bg-[var(--background-secondary)] text-[var(--foreground)] hover:bg-[var(--background-tertiary)]'
+                                                    }`}
+                                            >
+                                                {weather}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
 
-                                    {selectedItems.has(item.id) && (
-                                        <motion.div
-                                            initial={{ scale: 0 }}
-                                            animate={{ scale: 1 }}
-                                            className="absolute top-2 right-2 w-6 h-6 rounded-full bg-[var(--brand-pink)] flex items-center justify-center"
-                                        >
-                                            <Sparkles className="w-3 h-3 text-white" />
-                                        </motion.div>
+                                {/* Mood */}
+                                <div>
+                                    <label className="block text-sm font-medium text-[var(--foreground-secondary)] mb-3">
+                                        Estado de ánimo
+                                    </label>
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {moods.map((mood) => (
+                                            <button
+                                                key={mood}
+                                                onClick={() => setQuizAnswers({ ...quizAnswers, mood })}
+                                                className={`px-4 py-3 rounded-xl text-sm font-medium transition-all ${quizAnswers.mood === mood
+                                                        ? 'bg-[var(--brand-pink)] text-white shadow-[var(--shadow-float)]'
+                                                        : 'bg-[var(--background-secondary)] text-[var(--foreground)] hover:bg-[var(--background-tertiary)]'
+                                                    }`}
+                                            >
+                                                {mood}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                {/* Generate Button */}
+                                <Button
+                                    onClick={handleGenerateOutfit}
+                                    className="w-full"
+                                    glow
+                                    disabled={!quizAnswers.occasion || !quizAnswers.weather || !quizAnswers.mood}
+                                >
+                                    {isGenerating ? (
+                                        <>
+                                            <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
+                                            Generando...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Sparkles className="w-5 h-5 mr-2" />
+                                            Generar Outfit
+                                        </>
                                     )}
-                                </div>
-                                <div className="p-2 text-center bg-[var(--background)]">
-                                    <p className="text-xs font-bold text-[var(--foreground)] truncate">{item.name}</p>
-                                    <p className="text-[10px] text-[var(--foreground-tertiary)]">{item.brand}</p>
-                                </div>
-                            </motion.button>
-                        ))}
-
-                        {/* Add Item Card */}
-                        <motion.button
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ delay: 0.1 * myWardrobe.length }}
-                            onClick={() => setShowAddModal(true)}
-                            className="flex-shrink-0 w-40 snap-center rounded-2xl bg-[var(--background-secondary)] border-2 border-dashed border-[var(--border-color)] hover:border-[var(--brand-pink)] transition-colors"
-                        >
-                            <div className="aspect-[3/4] flex flex-col items-center justify-center gap-2">
-                                <div className="w-14 h-14 rounded-full bg-[var(--brand-pink)]/10 flex items-center justify-center">
-                                    <Plus className="w-7 h-7 text-[var(--brand-pink)]" />
-                                </div>
-                                <p className="text-xs font-semibold text-[var(--foreground-secondary)]">Añadir</p>
+                                </Button>
                             </div>
-                        </motion.button>
+                        </Card>
+
+                        {/* Inspiration Sources */}
+                        <Card className="p-6">
+                            <h3 className="text-sm font-bold text-[var(--foreground)] mb-3 flex items-center gap-2">
+                                <ImageIcon className="w-4 h-4" />
+                                Fuentes de Inspiración
+                            </h3>
+                            <div className="space-y-2 text-sm text-[var(--foreground-tertiary)]">
+                                <div className="flex items-center justify-between">
+                                    <span>Posts guardados</span>
+                                    <span className="font-semibold text-[var(--brand-pink)]">32</span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <span>Tu armario</span>
+                                    <span className="font-semibold text-[var(--brand-pink)]">48 prendas</span>
+                                </div>
+                            </div>
+                        </Card>
+                    </div>
+
+                    {/* Right Column - Outfit Preview */}
+                    <div className="lg:col-span-2">
+                        <Card className="p-8 min-h-[600px]">
+                            <AnimatePresence mode="wait">
+                                {generatedOutfit.length === 0 ? (
+                                    <motion.div
+                                        key="empty"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        exit={{ opacity: 0 }}
+                                        className="flex flex-col items-center justify-center h-full text-center py-12"
+                                    >
+                                        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[var(--brand-pink)] to-[var(--brand-pink-dark)] flex items-center justify-center mb-6">
+                                            <Sparkles className="w-12 h-12 text-white" />
+                                        </div>
+                                        <h3 className="text-2xl font-bold text-[var(--foreground)] mb-2">
+                                            Crea tu Outfit Perfecto
+                                        </h3>
+                                        <p className="text-[var(--foreground-tertiary)] max-w-md">
+                                            Selecciona la ocasión, clima y estado de ánimo para generar un collage de prendas
+                                            personalizado de tu armario
+                                        </p>
+                                    </motion.div>
+                                ) : (
+                                    <motion.div
+                                        key="outfit"
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -20 }}
+                                    >
+                                        {/* Outfit Header */}
+                                        <div className="flex items-center justify-between mb-6">
+                                            <h2 className="text-xl font-bold text-[var(--foreground)]">
+                                                Tu Outfit Generado
+                                            </h2>
+                                            <div className="flex gap-2">
+                                                <Button variant="secondary" onClick={handleGenerateOutfit}>
+                                                    <RefreshCw className="w-5 h-5" />
+                                                </Button>
+                                                <Button variant="secondary" onClick={handleSaveOutfit}>
+                                                    <Save className="w-5 h-5" />
+                                                </Button>
+                                                <Button variant="secondary">
+                                                    <Share2 className="w-5 h-5" />
+                                                </Button>
+                                            </div>
+                                        </div>
+
+                                        {/* Outfit Collage */}
+                                        <div className="grid grid-cols-2 gap-4 mb-6">
+                                            {generatedOutfit.map((piece) => (
+                                                <motion.div
+                                                    key={piece.id}
+                                                    initial={{ opacity: 0, scale: 0.8 }}
+                                                    animate={{ opacity: 1, scale: 1 }}
+                                                    transition={{ duration: 0.3 }}
+                                                    className="group relative"
+                                                >
+                                                    <div className="aspect-square rounded-2xl bg-gradient-to-br from-[var(--background-secondary)] to-[var(--background-tertiary)] flex items-center justify-center overflow-hidden border-2 border-[var(--border-color)] hover:border-[var(--brand-pink)] transition-all">
+                                                        {piece.imageUrl ? (
+                                                            <img
+                                                                src={piece.imageUrl}
+                                                                alt={piece.name}
+                                                                className="w-full h-full object-cover"
+                                                            />
+                                                        ) : (
+                                                            <div className="text-6xl">👗</div>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Item Info */}
+                                                    <div className="mt-3">
+                                                        <p className="font-medium text-[var(--foreground)] text-sm">
+                                                            {piece.name}
+                                                        </p>
+                                                        <p className="text-xs text-[var(--foreground-tertiary)] capitalize">
+                                                            {piece.type}
+                                                        </p>
+                                                    </div>
+
+                                                    {/* Change Button */}
+                                                    <button
+                                                        onClick={() => handleChangeItem(piece.type)}
+                                                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity px-3 py-1.5 rounded-full bg-black/70 backdrop-blur-sm text-white text-xs font-medium hover:bg-black/90"
+                                                    >
+                                                        Cambiar
+                                                    </button>
+                                                </motion.div>
+                                            ))}
+                                        </div>
+
+                                        {/* Quick Actions */}
+                                        <div className="flex flex-wrap gap-2">
+                                            <button
+                                                onClick={() => handleChangeItem('top')}
+                                                className="px-4 py-2 rounded-full bg-[var(--background-secondary)] text-sm font-medium text-[var(--foreground)] hover:bg-[var(--background-tertiary)] transition-colors"
+                                            >
+                                                Cambiar parte superior
+                                            </button>
+                                            <button
+                                                onClick={() => handleChangeItem('bottom')}
+                                                className="px-4 py-2 rounded-full bg-[var(--background-secondary)] text-sm font-medium text-[var(--foreground)] hover:bg-[var(--background-tertiary)] transition-colors"
+                                            >
+                                                Cambiar parte inferior
+                                            </button>
+                                            <button
+                                                onClick={() => handleChangeItem('shoes')}
+                                                className="px-4 py-2 rounded-full bg-[var(--background-secondary)] text-sm font-medium text-[var(--foreground)] hover:bg-[var(--background-tertiary)] transition-colors"
+                                            >
+                                                Cambiar zapatos
+                                            </button>
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </Card>
                     </div>
                 </div>
-            </motion.div>
-
-            {/* Style Selector */}
-            <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="px-4 mb-4"
-            >
-                <p className="text-xs font-bold text-[var(--foreground)] mb-3">Estilo</p>
-                <div className="grid grid-cols-3 gap-2">
-                    {styles.map((style) => (
-                        <motion.button
-                            key={style.value}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => setSelectedStyle(style.value)}
-                            className={`p-3 rounded-2xl transition-all ${selectedStyle === style.value
-                                    ? 'bg-gradient-to-br from-[var(--brand-pink)] to-[var(--brand-pink-dark)] text-white shadow-[var(--shadow-float-hover)]'
-                                    : 'bg-[var(--card-bg)] border border-[var(--border-color)] text-[var(--foreground)]'
-                                }`}
-                        >
-                            <div className="text-2xl mb-1">{style.emoji}</div>
-                            <div className="text-xs font-semibold">{style.label}</div>
-                        </motion.button>
-                    ))}
-                </div>
-            </motion.div>
-
-            {/* Create Button */}
-            <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                className="px-4 pb-safe pb-24 md:pb-8"
-            >
-                <AnimatePresence>
-                    {selectedStyle && (
-                        <motion.button
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            exit={{ scale: 0 }}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={handleGenerate}
-                            disabled={isGenerating}
-                            className="w-full py-5 rounded-full bg-gradient-to-r from-[var(--brand-pink)] to-[var(--brand-pink-dark)] text-white font-bold text-lg shadow-[var(--shadow-float-strong)] flex items-center justify-center gap-3"
-                        >
-                            {isGenerating ? (
-                                <>
-                                    <motion.div
-                                        animate={{ rotate: 360 }}
-                                        transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                                    >
-                                        <Sparkles className="w-6 h-6" />
-                                    </motion.div>
-                                    Creando...
-                                </>
-                            ) : (
-                                <>
-                                    <Wand2 className="w-6 h-6" />
-                                    Crear Outfit
-                                </>
-                            )}
-                        </motion.button>
-                    )}
-                </AnimatePresence>
-            </motion.div>
-
-            <AddItemModal
-                isOpen={showAddModal}
-                onClose={() => setShowAddModal(false)}
-                onAdd={() => { }}
-            />
+            </div>
         </div>
     );
 }

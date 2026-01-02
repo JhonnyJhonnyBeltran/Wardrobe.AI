@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Klozet - Nuevas Funcionalidades</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 60px;
+            color: white;
+        }
+        
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 900;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #FF69B4 0%, #E84D95 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+        
+        .feature-card {
+            background: white;
+            border-radius: 24px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+        }
+        
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #FF69B4 0%, #E84D95 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+        
+        .feature-card h2 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: #1a1a1a;
+        }
+        
+        .feature-card p {
+            color: #666;
+            margin-bottom: 15px;
+        }
+        
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .feature-list li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+            color: #555;
+        }
+        
+        .feature-list li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #FF69B4;
+            font-weight: bold;
+        }
+        
+        .tech-stack {
+            background: white;
+            border-radius: 24px;
+            padding: 40px;
+            margin-top: 40px;
+        }
+        
+        .tech-stack h2 {
+            font-size: 2rem;
+            margin-bottom: 30px;
+            text-align: center;
+            color: #1a1a1a;
+        }
+        
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .tech-item {
+            text-align: center;
+            padding: 20px;
+            border-radius: 16px;
+            background: #f8f9fa;
+            transition: background 0.3s ease;
+        }
+        
+        .tech-item:hover {
+            background: #FF69B4;
+            color: white;
+        }
+        
+        .tech-item strong {
+            display: block;
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+        }
+        
+        .cta {
+            background: linear-gradient(135deg, #FF69B4 0%, #E84D95 100%);
+            color: white;
+            text-align: center;
+            padding: 60px 40px;
+            border-radius: 24px;
+            margin-top: 60px;
+        }
+        
+        .cta h2 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+        }
+        
+        .cta p {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 15px 40px;
+            background: white;
+            color: #FF69B4;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .demo-flow {
+            background: white;
+            border-radius: 24px;
+            padding: 40px;
+            margin-top: 40px;
+        }
+        
+        .demo-flow h2 {
+            font-size: 2rem;
+            margin-bottom: 30px;
+            text-align: center;
+            color: #1a1a1a;
+        }
+        
+        .flow-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .flow-step {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 16px;
+        }
+        
+        .flow-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FF69B4 0%, #E84D95 100%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+        
+        .flow-content {
+            flex: 1;
+        }
+        
+        .flow-content strong {
+            display: block;
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+            color: #1a1a1a;
+        }
+        
+        .flow-content p {
+            color: #666;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎨 Klozet - Nuevas Funcionalidades</h1>
+            <p>Sistema completo de análisis de estilo y organización de inspiración</p>
+        </div>
+        
+        <div class="features">
+            <div class="feature-card">
+                <div class="feature-icon">🔐</div>
+                <h2>Autenticación Mejorada</h2>
+                <p>Sistema de login premium con múltiples opciones</p>
+                <ul class="feature-list">
+                    <li>Inicio de sesión con Google</li>
+                    <li>Inicio de sesión con Apple</li>
+                    <li>Email/Password tradicional</li>
+                    <li>Recuperación de contraseña</li>
+                    <li>Dark mode completo</li>
+                </ul>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">📋</div>
+                <h2>Cuestionario de Estilo</h2>
+                <p>6 pasos para conocer tu estilo personal</p>
+                <ul class="feature-list">
+                    <li>Edad y demografía</li>
+                    <li>Género personalizado</li>
+                    <li>Altura interactiva</li>
+                    <li>Estilos preferidos (multi-selección)</li>
+                    <li>Preferencias de accesorios</li>
+                    <li>Quiz visual de inspiración</li>
+                </ul>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">✨</div>
+                <h2>Crear Outfit con IA</h2>
+                <p>Generación inteligente basada en contexto</p>
+                <ul class="feature-list">
+                    <li>Selección de ocasión</li>
+                    <li>Adaptación al clima</li>
+                    <li>Estado de ánimo</li>
+                    <li>Collage de prendas</li>
+                    <li>Cambio individual de items</li>
+                    <li>Uso de posts guardados como inspiración</li>
+                </ul>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">📁</div>
+                <h2>Carpetas de Guardados</h2>
+                <p>Organiza tu inspiración de moda</p>
+                <ul class="feature-list">
+                    <li>Crear carpetas personalizadas</li>
+                    <li>Privadas o públicas</li>
+                    <li>Renombrar y eliminar</li>
+                    <li>Cover image automático</li>
+                    <li>Contador de posts/outfits</li>
+                    <li>Grid responsive</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="demo-flow">
+            <h2>🚀 Flujo de Usuario</h2>
+            <div class="flow-steps">
+                <div class="flow-step">
+                    <div class="flow-number">1</div>
+                    <div class="flow-content">
+                        <strong>Registro/Login</strong>
+                        <p>El usuario se registra con Google, Apple o Email</p>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-number">2</div>
+                    <div class="flow-content">
+                        <strong>Cuestionario de Estilo</strong>
+                        <p>Completa el quiz de 6 pasos para personalizar la experiencia</p>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-number">3</div>
+                    <div class="flow-content">
+                        <strong>Explorar Feed Social</strong>
+                        <p>Ve outfits de amigos y guarda inspiración en carpetas</p>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-number">4</div>
+                    <div class="flow-content">
+                        <strong>Crear Outfits</strong>
+                        <p>Genera collages basados en ocasión, clima y posts guardados</p>
+                    </div>
+                </div>
+                <div class="flow-step">
+                    <div class="flow-number">5</div>
+                    <div class="flow-content">
+                        <strong>Organizar en Carpetas</strong>
+                        <p>Clasifica tus outfits y posts favoritos por temas</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="tech-stack">
+            <h2>💻 Stack Tecnológico</h2>
+            <div class="tech-grid">
+                <div class="tech-item">
+                    <strong>Next.js 16</strong>
+                    <span>App Router</span>
+                </div>
+                <div class="tech-item">
+                    <strong>TypeScript 5</strong>
+                    <span>Tipado fuerte</span>
+                </div>
+                <div class="tech-item">
+                    <strong>Framer Motion</strong>
+                    <span>Animaciones fluidas</span>
+                </div>
+                <div class="tech-item">
+                    <strong>Tailwind CSS 4</strong>
+                    <span>Estilos utility-first</span>
+                </div>
+                <div class="tech-item">
+                    <strong>React 19</strong>
+                    <span>UI Components</span>
+                </div>
+                <div class="tech-item">
+                    <strong>Lucide Icons</strong>
+                    <span>Iconografía moderna</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="cta">
+            <h2>¡Listo para Probar!</h2>
+            <p>Todas las funcionalidades están implementadas y listas para usar</p>
+            <a href="http://localhost:3000" class="btn">Abrir Aplicación</a>
+        </div>
+    </div>
+</body>
+</html>

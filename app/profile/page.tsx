@@ -26,7 +26,7 @@ export default function ProfilePage() {
   const [showSettings, setShowSettings] = useState(false);
   const [showNewFolder, setShowNewFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
-  
+
   // Quiz states
   const [activeQuiz, setActiveQuiz] = useState<'morphology' | 'colorimetry' | null>(null);
 
@@ -99,7 +99,7 @@ export default function ProfilePage() {
 
         {/* Avatar */}
         <div className="relative -mt-16 mb-4 flex justify-center">
-           <AvatarUploader currentAvatar={user.avatar} onSave={handleAvatarSave} />
+          <AvatarUploader currentAvatar={user.avatar} onSave={handleAvatarSave} />
         </div>
 
         {/* Info */}
@@ -128,8 +128,8 @@ export default function ProfilePage() {
           <button
             onClick={() => setActiveTab('posts')}
             className={`flex-1 flex items-center justify-center gap-2 py-3 border-b-2 transition-colors ${activeTab === 'posts'
-                ? 'border-[var(--brand-pink)] text-[var(--foreground)]'
-                : 'border-transparent text-[var(--foreground-tertiary)]'
+              ? 'border-[var(--brand-pink)] text-[var(--foreground)]'
+              : 'border-transparent text-[var(--foreground-tertiary)]'
               }`}
           >
             <Grid3x3 className="w-5 h-5" />
@@ -138,8 +138,8 @@ export default function ProfilePage() {
           <button
             onClick={() => setActiveTab('smart-profile')}
             className={`flex-1 flex items-center justify-center gap-2 py-3 border-b-2 transition-colors ${activeTab === 'smart-profile'
-                ? 'border-[var(--brand-pink)] text-[var(--foreground)]'
-                : 'border-transparent text-[var(--foreground-tertiary)]'
+              ? 'border-[var(--brand-pink)] text-[var(--foreground)]'
+              : 'border-transparent text-[var(--foreground-tertiary)]'
               }`}
           >
             <Sparkles className="w-5 h-5" />
@@ -148,8 +148,8 @@ export default function ProfilePage() {
           <button
             onClick={() => setActiveTab('saved')}
             className={`flex-1 flex items-center justify-center gap-2 py-3 border-b-2 transition-colors ${activeTab === 'saved'
-                ? 'border-[var(--brand-pink)] text-[var(--foreground)]'
-                : 'border-transparent text-[var(--foreground-tertiary)]'
+              ? 'border-[var(--brand-pink)] text-[var(--foreground)]'
+              : 'border-transparent text-[var(--foreground-tertiary)]'
               }`}
           >
             <Bookmark className="w-5 h-5" />
@@ -198,17 +198,17 @@ export default function ProfilePage() {
             >
               {/* Paper Doll Preview (Placeholder) */}
               <Card className="p-6 flex flex-col items-center text-center relative overflow-hidden">
-                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[var(--brand-pink)] to-[var(--brand-pink-dark)]" />
-                 <h3 className="text-lg font-bold mb-2">Tu Avatar Digital</h3>
-                 <p className="text-sm text-[var(--foreground-tertiary)] mb-4">
-                   Visualiza tus outfits en tu modelo virtual personalizado.
-                 </p>
-                 <div className="w-32 h-48 bg-[var(--surface-secondary)] rounded-2xl flex items-center justify-center mb-4 border-2 border-dashed border-[var(--border-color)]">
-                    <span className="text-xs text-[var(--foreground-tertiary)]">Paper Doll<br/>Coming Soon</span>
-                 </div>
-                 <button className="text-xs font-semibold text-[var(--brand-pink)]">
-                   Personalizar medidas
-                 </button>
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[var(--brand-pink)] to-[var(--brand-pink-dark)]" />
+                <h3 className="text-lg font-bold mb-2">Tu Avatar Digital</h3>
+                <p className="text-sm text-[var(--foreground-tertiary)] mb-4">
+                  Visualiza tus outfits en tu modelo virtual personalizado.
+                </p>
+                <div className="w-32 h-48 bg-[var(--surface-secondary)] rounded-2xl flex items-center justify-center mb-4 border-2 border-dashed border-[var(--border-color)]">
+                  <span className="text-xs text-[var(--foreground-tertiary)]">Paper Doll<br />Coming Soon</span>
+                </div>
+                <button className="text-xs font-semibold text-[var(--brand-pink)]">
+                  Personalizar medidas
+                </button>
               </Card>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -226,11 +226,11 @@ export default function ProfilePage() {
                   </div>
                   <h3 className="text-lg font-bold mb-1">Morfología</h3>
                   <p className="text-sm text-[var(--foreground-tertiary)] mb-4">
-                    {user.morphology 
+                    {user.morphology
                       ? `Tu tipo de cuerpo es: ${user.morphology}`
                       : "Descubre tu tipo de cuerpo y qué cortes te favorecen."}
                   </p>
-                  <button 
+                  <button
                     onClick={() => setActiveQuiz('morphology')}
                     className="w-full py-2 rounded-xl bg-[var(--surface-secondary)] text-sm font-semibold hover:bg-[var(--surface-tertiary)] transition-colors"
                   >
@@ -252,11 +252,11 @@ export default function ProfilePage() {
                   </div>
                   <h3 className="text-lg font-bold mb-1">Colorimetría</h3>
                   <p className="text-sm text-[var(--foreground-tertiary)] mb-4">
-                    {user.colorimetry 
+                    {user.colorimetry
                       ? `Tu estación es: ${user.colorimetry}`
                       : "Encuentra tu paleta de colores ideal."}
                   </p>
-                  <button 
+                  <button
                     onClick={() => setActiveQuiz('colorimetry')}
                     className="w-full py-2 rounded-xl bg-[var(--surface-secondary)] text-sm font-semibold hover:bg-[var(--surface-tertiary)] transition-colors"
                   >
@@ -274,7 +274,7 @@ export default function ProfilePage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-               {/* Folders */}
+              {/* Folders */}
               <div className="mb-6">
                 <h3 className="text-sm font-bold mb-3">Carpetas</h3>
                 <div className="grid grid-cols-2 gap-3">
@@ -371,13 +371,13 @@ export default function ProfilePage() {
             className="fixed inset-0 bg-[var(--background)] z-50 overflow-y-auto"
           >
             <div className="p-4">
-              <button 
+              <button
                 onClick={() => setActiveQuiz(null)}
                 className="absolute top-4 right-4 p-2 rounded-full bg-[var(--surface-secondary)] hover:bg-[var(--surface-tertiary)] transition-colors z-10"
               >
                 <X className="w-6 h-6" />
               </button>
-              
+
               <div className="mt-8 max-w-2xl mx-auto">
                 {activeQuiz === 'morphology' && (
                   <MorphologyQuiz onComplete={handleMorphologyComplete} />
@@ -419,12 +419,159 @@ export default function ProfilePage() {
                 </button>
               </div>
 
-              <div className="space-y-4">
-                <button className="w-full text-left px-4 py-3 rounded-2xl bg-[var(--background-secondary)] hover:bg-[var(--background-tertiary)] transition-colors">
-                  <p className="font-semibold text-sm">Smart Profile</p>
-                  <p className="text-xs text-[var(--foreground-tertiary)]">Morfología y colorimetría</p>
+              <div className="space-y-6">
+                {/* Account Section */}
+                <div>
+                  <h3 className="text-xs font-bold text-[var(--foreground-tertiary)] mb-3 uppercase tracking-wider">Cuenta</h3>
+                  <div className="space-y-2">
+                    <button className="w-full text-left px-4 py-3 rounded-2xl bg-[var(--background-secondary)] hover:bg-[var(--background-tertiary)] transition-colors">
+                      <p className="font-semibold text-sm">Editar perfil</p>
+                      <p className="text-xs text-[var(--foreground-tertiary)]">Nombre, bio, avatar</p>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowSettings(false);
+                        setActiveTab('smart-profile');
+                      }}
+                      className="w-full text-left px-4 py-3 rounded-2xl bg-[var(--background-secondary)] hover:bg-[var(--background-tertiary)] transition-colors"
+                    >
+                      <p className="font-semibold text-sm">Smart Profile</p>
+                      <p className="text-xs text-[var(--foreground-tertiary)]">Morfología y colorimetría</p>
+                    </button>
+                    <button className="w-full text-left px-4 py-3 rounded-2xl bg-[var(--background-secondary)] hover:bg-[var(--background-tertiary)] transition-colors">
+                      <p className="font-semibold text-sm">Preferencias de estilo</p>
+                      <p className="text-xs text-[var(--foreground-tertiary)]">Actualizar cuestionario</p>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Subscription Section */}
+                <div>
+                  <h3 className="text-xs font-bold text-[var(--foreground-tertiary)] mb-3 uppercase tracking-wider">Suscripción</h3>
+                  <div className="space-y-2">
+                    <div className="px-4 py-3 rounded-2xl bg-gradient-to-br from-[var(--brand-pink)]/10 to-[var(--brand-pink-dark)]/10 border-2 border-[var(--brand-pink)]/20">
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="font-bold text-sm">Plan {user.subscriptionTier === 'premium' ? 'Premium' : 'Free'}</p>
+                        {user.subscriptionTier === 'premium' && (
+                          <span className="px-2 py-1 rounded-full bg-[var(--brand-pink)] text-white text-xs font-bold">PRO</span>
+                        )}
+                      </div>
+                      <p className="text-xs text-[var(--foreground-tertiary)] mb-3">
+                        {user.subscriptionTier === 'premium'
+                          ? 'Acceso ilimitado a todas las funciones'
+                          : 'Últimos 3 outfits guardados'}
+                      </p>
+                      {user.subscriptionTier !== 'premium' && (
+                        <button className="w-full py-2 rounded-xl bg-gradient-to-r from-[var(--brand-pink)] to-[var(--brand-pink-dark)] text-white text-xs font-bold">
+                          Actualizar a Premium
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Privacy Section */}
+                <div>
+                  <h3 className="text-xs font-bold text-[var(--foreground-tertiary)] mb-3 uppercase tracking-wider">Privacidad</h3>
+                  <div className="space-y-2">
+                    <button className="w-full text-left px-4 py-3 rounded-2xl bg-[var(--background-secondary)] hover:bg-[var(--background-tertiary)] transition-colors">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-semibold text-sm">Cuenta privada</p>
+                          <p className="text-xs text-[var(--foreground-tertiary)]">Solo seguidores aprobados</p>
+                        </div>
+                        <div className="w-10 h-6 rounded-full bg-[var(--background-tertiary)] relative">
+                          <div className="w-4 h-4 rounded-full bg-white absolute top-1 left-1"></div>
+                        </div>
+                      </div>
+                    </button>
+                    <button className="w-full text-left px-4 py-3 rounded-2xl bg-[var(--background-secondary)] hover:bg-[var(--background-tertiary)] transition-colors">
+                      <p className="font-semibold text-sm">Armario privado</p>
+                      <p className="text-xs text-[var(--foreground-tertiary)]">Ocultar tus prendas</p>
+                    </button>
+                    <button className="w-full text-left px-4 py-3 rounded-2xl bg-[var(--background-secondary)] hover:bg-[var(--background-tertiary)] transition-colors">
+                      <p className="font-semibold text-sm">Carpetas privadas</p>
+                      <p className="text-xs text-[var(--foreground-tertiary)]">Gestionar visibilidad</p>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Notifications Section */}
+                <div>
+                  <h3 className="text-xs font-bold text-[var(--foreground-tertiary)] mb-3 uppercase tracking-wider">Notificaciones</h3>
+                  <div className="space-y-2">
+                    <button className="w-full text-left px-4 py-3 rounded-2xl bg-[var(--background-secondary)] hover:bg-[var(--background-tertiary)] transition-colors">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-semibold text-sm">Push notifications</p>
+                          <p className="text-xs text-[var(--foreground-tertiary)]">Nuevos likes y comentarios</p>
+                        </div>
+                        <div className="w-10 h-6 rounded-full bg-[var(--brand-pink)] relative">
+                          <div className="w-4 h-4 rounded-full bg-white absolute top-1 right-1"></div>
+                        </div>
+                      </div>
+                    </button>
+                    <button className="w-full text-left px-4 py-3 rounded-2xl bg-[var(--background-secondary)] hover:bg-[var(--background-tertiary)] transition-colors">
+                      <p className="font-semibold text-sm">Email notifications</p>
+                      <p className="text-xs text-[var(--foreground-tertiary)]">Resumen semanal</p>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Preferences Section */}
+                <div>
+                  <h3 className="text-xs font-bold text-[var(--foreground-tertiary)] mb-3 uppercase tracking-wider">Preferencias</h3>
+                  <div className="space-y-2">
+                    <button className="w-full text-left px-4 py-3 rounded-2xl bg-[var(--background-secondary)] hover:bg-[var(--background-tertiary)] transition-colors">
+                      <p className="font-semibold text-sm">Idioma</p>
+                      <p className="text-xs text-[var(--foreground-tertiary)]">Español</p>
+                    </button>
+                    <button className="w-full text-left px-4 py-3 rounded-2xl bg-[var(--background-secondary)] hover:bg-[var(--background-tertiary)] transition-colors">
+                      <p className="font-semibold text-sm">Unidades</p>
+                      <p className="text-xs text-[var(--foreground-tertiary)]">Métrico (cm, kg)</p>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Data Section */}
+                <div>
+                  <h3 className="text-xs font-bold text-[var(--foreground-tertiary)] mb-3 uppercase tracking-wider">Datos</h3>
+                  <div className="space-y-2">
+                    <button className="w-full text-left px-4 py-3 rounded-2xl bg-[var(--background-secondary)] hover:bg-[var(--background-tertiary)] transition-colors">
+                      <p className="font-semibold text-sm">Descargar mis datos</p>
+                      <p className="text-xs text-[var(--foreground-tertiary)]">Exportar información</p>
+                    </button>
+                    <button className="w-full text-left px-4 py-3 rounded-2xl bg-[var(--background-secondary)] hover:bg-[var(--background-tertiary)] transition-colors">
+                      <p className="font-semibold text-sm">Eliminar caché</p>
+                      <p className="text-xs text-[var(--foreground-tertiary)]">Liberar espacio</p>
+                    </button>
+                  </div>
+                </div>
+
+                {/* About Section */}
+                <div>
+                  <h3 className="text-xs font-bold text-[var(--foreground-tertiary)] mb-3 uppercase tracking-wider">Información</h3>
+                  <div className="space-y-2">
+                    <button className="w-full text-left px-4 py-3 rounded-2xl bg-[var(--background-secondary)] hover:bg-[var(--background-tertiary)] transition-colors">
+                      <p className="font-semibold text-sm">Términos y condiciones</p>
+                    </button>
+                    <button className="w-full text-left px-4 py-3 rounded-2xl bg-[var(--background-secondary)] hover:bg-[var(--background-tertiary)] transition-colors">
+                      <p className="font-semibold text-sm">Política de privacidad</p>
+                    </button>
+                    <button className="w-full text-left px-4 py-3 rounded-2xl bg-[var(--background-secondary)] hover:bg-[var(--background-tertiary)] transition-colors">
+                      <p className="font-semibold text-sm">Ayuda y soporte</p>
+                    </button>
+                    <div className="px-4 py-3 text-center">
+                      <p className="text-xs text-[var(--foreground-tertiary)]">Versión 1.0.0</p>
+                      <p className="text-xs text-[var(--foreground-tertiary)] mt-1">Hecho con 💖 por Klozet</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Logout Button */}
+                <button className="w-full px-4 py-3 rounded-2xl bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 font-semibold text-sm hover:bg-red-100 dark:hover:bg-red-950/30 transition-colors">
+                  Cerrar sesión
                 </button>
-                {/* ... other settings ... */}
               </div>
             </motion.div>
           </>
