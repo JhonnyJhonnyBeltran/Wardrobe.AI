@@ -2,11 +2,16 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Settings, Grid3x3, Bookmark, Camera, Heart, MessageCircle, Plus, FolderPlus } from 'lucide-react';
-import { currentUser, mockSocialPosts, type SocialPost } from '@/data/mockData';
+import { Settings, Grid3x3, Bookmark, Camera, Heart, MessageCircle, Plus, FolderPlus, Sparkles, Ruler, Palette, X } from 'lucide-react';
+import { mockSocialPosts, type SocialPost } from '@/data/mockData';
 import Link from 'next/link';
+import { useUser } from '@/store/userStore';
+import AvatarUploader from '@/components/SmartProfile/AvatarUploader';
+import MorphologyQuiz, { BodyType } from '@/components/SmartProfile/MorphologyQuiz';
+import ColorimetryAnalyzer, { Season } from '@/components/SmartProfile/ColorimetryAnalyzer';
+import { Card } from '@/components';
 
-type Tab = 'posts' | 'saved';
+type Tab = 'posts' | 'saved' | 'smart-profile';
 
 interface Folder {
   id: string;
@@ -16,10 +21,15 @@ interface Folder {
 }
 
 export default function ProfilePage() {
+  const { user, setUser } = useUser();
   const [activeTab, setActiveTab] = useState<Tab>('posts');
   const [showSettings, setShowSettings] = useState(false);
   const [showNewFolder, setShowNewFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
+  
+  // Quiz states
+  const [activeQuiz, setActiveQuiz] = useState<'morphology' | 'colorimetry' | null>(null);
+
   const [folders, setFolders] = useState<Folder[]>([
     {
       id: '1',
@@ -44,6 +54,28 @@ export default function ProfilePage() {
     setShowNewFolder(false);
   };
 
+  const handleAvatarSave = (url: string) => {
+    if (user) {
+      setUser({ ...user, avatar: url });
+    }
+  };
+
+  const handleMorphologyComplete = (bodyType: BodyType) => {
+    if (user) {
+      setUser({ ...user, morphology: bodyType });
+    }
+    setActiveQuiz(null);
+  };
+
+  const handleColorimetryComplete = (season: Season) => {
+    if (user) {
+      setUser({ ...user, colorimetry: season });
+    }
+    setActiveQuiz(null);
+  };
+
+  if (!user) return null; // Or loading state
+
   return (
     <div className="min-h-screen bg-[var(--background)] pb-24 md:pb-8">
       {/* Header */}
@@ -67,22 +99,13 @@ export default function ProfilePage() {
 
         {/* Avatar */}
         <div className="relative -mt-16 mb-4 flex justify-center">
-          <div className="relative">
-            <img
-              src={currentUser.avatar}
-              alt={currentUser.name}
-              className="w-28 h-28 rounded-full border-4 border-[var(--background)] shadow-[var(--shadow-float-strong)]"
-            />
-            <button className="absolute bottom-0 right-0 w-9 h-9 rounded-full bg-[var(--brand-pink)] flex items-center justify-center shadow-lg">
-              <Camera className="w-4 h-4 text-white" />
-            </button>
-          </div>
+           <AvatarUploader currentAvatar={user.avatar} onSave={handleAvatarSave} />
         </div>
 
         {/* Info */}
         <div className="text-center mb-4">
-          <h1 className="text-2xl font-bold text-[var(--foreground)] mb-1">{currentUser.name}</h1>
-          <p className="text-sm text-[var(--foreground-tertiary)] mb-3">{currentUser.username}</p>
+          <h1 className="text-2xl font-bold text-[var(--foreground)] mb-1">{user.name}</h1>
+          <p className="text-sm text-[var(--foreground-tertiary)] mb-3">@{user.name.toLowerCase().replace(/\s/g, '')}</p>
 
           <div className="flex justify-center gap-6 mb-4">
             <div>
@@ -98,14 +121,10 @@ export default function ProfilePage() {
               <p className="text-xs text-[var(--foreground-tertiary)]">Siguiendo</p>
             </div>
           </div>
-
-          <button className="px-6 py-2 rounded-full bg-[var(--background-secondary)] border border-[var(--border-color)] text-sm font-semibold">
-            Editar Perfil
-          </button>
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-[var(--border-color)]">
+        <div className="flex border-b border-[var(--border-color)] mb-4">
           <button
             onClick={() => setActiveTab('posts')}
             className={`flex-1 flex items-center justify-center gap-2 py-3 border-b-2 transition-colors ${activeTab === 'posts'
@@ -114,7 +133,17 @@ export default function ProfilePage() {
               }`}
           >
             <Grid3x3 className="w-5 h-5" />
-            <span className="text-sm font-semibold">Posts</span>
+            <span className="text-sm font-semibold hidden md:inline">Posts</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('smart-profile')}
+            className={`flex-1 flex items-center justify-center gap-2 py-3 border-b-2 transition-colors ${activeTab === 'smart-profile'
+                ? 'border-[var(--brand-pink)] text-[var(--foreground)]'
+                : 'border-transparent text-[var(--foreground-tertiary)]'
+              }`}
+          >
+            <Sparkles className="w-5 h-5" />
+            <span className="text-sm font-semibold hidden md:inline">Smart Profile</span>
           </button>
           <button
             onClick={() => setActiveTab('saved')}
@@ -124,15 +153,15 @@ export default function ProfilePage() {
               }`}
           >
             <Bookmark className="w-5 h-5" />
-            <span className="text-sm font-semibold">Guardados</span>
+            <span className="text-sm font-semibold hidden md:inline">Guardados</span>
           </button>
         </div>
       </motion.div>
 
       {/* Content */}
-      <div className="px-4 pt-4">
+      <div className="px-4">
         <AnimatePresence mode="wait">
-          {activeTab === 'posts' ? (
+          {activeTab === 'posts' && (
             <motion.div
               key="posts"
               initial={{ opacity: 0 }}
@@ -153,30 +182,99 @@ export default function ProfilePage() {
                       alt={post.outfit.name}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                     />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                      <div className="flex gap-4 text-white">
-                        <div className="flex items-center gap-1">
-                          <Heart className="w-5 h-5 fill-white" />
-                          <span className="text-sm font-bold">{post.likes}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <MessageCircle className="w-5 h-5 fill-white" />
-                          <span className="text-sm font-bold">{post.comments}</span>
-                        </div>
-                      </div>
-                    </div>
                   </motion.div>
                 </Link>
               ))}
             </motion.div>
-          ) : (
+          )}
+
+          {activeTab === 'smart-profile' && (
+            <motion.div
+              key="smart-profile"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-4"
+            >
+              {/* Paper Doll Preview (Placeholder) */}
+              <Card className="p-6 flex flex-col items-center text-center relative overflow-hidden">
+                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[var(--brand-pink)] to-[var(--brand-pink-dark)]" />
+                 <h3 className="text-lg font-bold mb-2">Tu Avatar Digital</h3>
+                 <p className="text-sm text-[var(--foreground-tertiary)] mb-4">
+                   Visualiza tus outfits en tu modelo virtual personalizado.
+                 </p>
+                 <div className="w-32 h-48 bg-[var(--surface-secondary)] rounded-2xl flex items-center justify-center mb-4 border-2 border-dashed border-[var(--border-color)]">
+                    <span className="text-xs text-[var(--foreground-tertiary)]">Paper Doll<br/>Coming Soon</span>
+                 </div>
+                 <button className="text-xs font-semibold text-[var(--brand-pink)]">
+                   Personalizar medidas
+                 </button>
+              </Card>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Morphology Card */}
+                <Card className="p-6 relative overflow-hidden">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                      <Ruler className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    {user.morphology && (
+                      <span className="px-2 py-1 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-xs font-bold">
+                        Completado
+                      </span>
+                    )}
+                  </div>
+                  <h3 className="text-lg font-bold mb-1">Morfología</h3>
+                  <p className="text-sm text-[var(--foreground-tertiary)] mb-4">
+                    {user.morphology 
+                      ? `Tu tipo de cuerpo es: ${user.morphology}`
+                      : "Descubre tu tipo de cuerpo y qué cortes te favorecen."}
+                  </p>
+                  <button 
+                    onClick={() => setActiveQuiz('morphology')}
+                    className="w-full py-2 rounded-xl bg-[var(--surface-secondary)] text-sm font-semibold hover:bg-[var(--surface-tertiary)] transition-colors"
+                  >
+                    {user.morphology ? 'Ver análisis' : 'Iniciar test'}
+                  </button>
+                </Card>
+
+                {/* Colorimetry Card */}
+                <Card className="p-6 relative overflow-hidden">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                      <Palette className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                    </div>
+                    {user.colorimetry && (
+                      <span className="px-2 py-1 rounded-full bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-xs font-bold">
+                        Completado
+                      </span>
+                    )}
+                  </div>
+                  <h3 className="text-lg font-bold mb-1">Colorimetría</h3>
+                  <p className="text-sm text-[var(--foreground-tertiary)] mb-4">
+                    {user.colorimetry 
+                      ? `Tu estación es: ${user.colorimetry}`
+                      : "Encuentra tu paleta de colores ideal."}
+                  </p>
+                  <button 
+                    onClick={() => setActiveQuiz('colorimetry')}
+                    className="w-full py-2 rounded-xl bg-[var(--surface-secondary)] text-sm font-semibold hover:bg-[var(--surface-tertiary)] transition-colors"
+                  >
+                    {user.colorimetry ? 'Ver paleta' : 'Iniciar análisis'}
+                  </button>
+                </Card>
+              </div>
+            </motion.div>
+          )}
+
+          {activeTab === 'saved' && (
             <motion.div
               key="saved"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              {/* Folders */}
+               {/* Folders */}
               <div className="mb-6">
                 <h3 className="text-sm font-bold mb-3">Carpetas</h3>
                 <div className="grid grid-cols-2 gap-3">
@@ -263,6 +361,36 @@ export default function ProfilePage() {
         </AnimatePresence>
       </div>
 
+      {/* Quiz Modal */}
+      <AnimatePresence>
+        {activeQuiz && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-[var(--background)] z-50 overflow-y-auto"
+          >
+            <div className="p-4">
+              <button 
+                onClick={() => setActiveQuiz(null)}
+                className="absolute top-4 right-4 p-2 rounded-full bg-[var(--surface-secondary)] hover:bg-[var(--surface-tertiary)] transition-colors z-10"
+              >
+                <X className="w-6 h-6" />
+              </button>
+              
+              <div className="mt-8 max-w-2xl mx-auto">
+                {activeQuiz === 'morphology' && (
+                  <MorphologyQuiz onComplete={handleMorphologyComplete} />
+                )}
+                {activeQuiz === 'colorimetry' && (
+                  <ColorimetryAnalyzer onComplete={handleColorimetryComplete} />
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Settings Panel */}
       <AnimatePresence>
         {showSettings && (
@@ -296,27 +424,7 @@ export default function ProfilePage() {
                   <p className="font-semibold text-sm">Smart Profile</p>
                   <p className="text-xs text-[var(--foreground-tertiary)]">Morfología y colorimetría</p>
                 </button>
-
-                <button className="w-full text-left px-4 py-3 rounded-2xl bg-[var(--background-secondary)] hover:bg-[var(--background-tertiary)] transition-colors">
-                  <p className="font-semibold text-sm">Privacidad</p>
-                  <p className="text-xs text-[var(--foreground-tertiary)]">Control de cuenta</p>
-                </button>
-
-                <button className="w-full text-left px-4 py-3 rounded-2xl bg-[var(--background-secondary)] hover:bg-[var(--background-tertiary)] transition-colors">
-                  <p className="font-semibold text-sm">Notificaciones</p>
-                  <p className="text-xs text-[var(--foreground-tertiary)]">Alertas</p>
-                </button>
-
-                <button className="w-full text-left px-4 py-3 rounded-2xl bg-[var(--background-secondary)] hover:bg-[var(--background-tertiary)] transition-colors">
-                  <p className="font-semibold text-sm">Premium</p>
-                  <p className="text-xs text-[var(--brand-pink)]">Desbloquea todo</p>
-                </button>
-
-                <div className="border-t border-[var(--border-color)] my-4" />
-
-                <button className="w-full text-left px-4 py-3 rounded-2xl hover:bg-red-500/10 transition-colors">
-                  <p className="font-semibold text-sm text-red-500">Cerrar sesión</p>
-                </button>
+                {/* ... other settings ... */}
               </div>
             </motion.div>
           </>

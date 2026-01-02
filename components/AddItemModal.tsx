@@ -7,7 +7,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Upload, Camera, Link as LinkIcon, Check } from 'lucide-react';
+import { X, Upload, Camera, Link as LinkIcon, Check, ArrowRight, Loader2 } from 'lucide-react';
 import { Button, Card } from '@/components';
 import type { ClothingItemData } from '@/data/mockData';
 import { removeBackgroundRembg } from '@/services/backgroundRemoval';
@@ -20,7 +20,9 @@ interface AddItemModalProps {
 
 export default function AddItemModal({ isOpen, onClose, onAdd }: AddItemModalProps) {
     const [mode, setMode] = useState<'quick' | 'complete'>('quick');
+    const [inputMethod, setInputMethod] = useState<'upload' | 'url'>('upload');
     const [image, setImage] = useState<string | null>(null);
+    const [url, setUrl] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
@@ -68,6 +70,53 @@ export default function AddItemModal({ isOpen, onClose, onAdd }: AddItemModalPro
         }
     };
 
+    const handleUrlImport = async () => {
+        if (!url) return;
+        setIsProcessing(true);
+
+        try {
+            const response = await fetch('/api/scrape-product', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url }),
+            });
+
+            let data;
+            const contentType = response.headers.get("content-type");
+            if (contentType && contentType.indexOf("application/json") !== -1) {
+                data = await response.json();
+            } else {
+                const text = await response.text();
+                console.error('Server returned non-JSON response:', text);
+                throw new Error('Server returned non-JSON response. Check server logs.');
+            }
+
+            console.log('Scraping result:', data);
+
+            if (data.success) {
+                const { name, imageUrl, price, type, brand } = data.data;
+                
+                if (imageUrl) setImage(imageUrl);
+                
+                setFormData(prev => ({
+                    ...prev,
+                    name: name || prev.name,
+                    price: price || prev.price,
+                    type: type || prev.type,
+                    brand: brand || prev.brand,
+                }));
+                setMode('complete'); // Switch to complete mode to review details
+            } else {
+                console.error('Scraping failed:', data.error);
+                // Handle error (maybe show a toast)
+            }
+        } catch (error) {
+            console.error('Import failed:', error);
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
     const handleSubmit = () => {
         const newItem: Partial<ClothingItemData> = {
             id: Date.now().toString(),
@@ -79,6 +128,7 @@ export default function AddItemModal({ isOpen, onClose, onAdd }: AddItemModalPro
         onClose();
         // Reset form
         setImage(null);
+        setUrl('');
         setFormData({
             name: '',
             brand: '',
@@ -101,7 +151,7 @@ export default function AddItemModal({ isOpen, onClose, onAdd }: AddItemModalPro
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-black/50 z-50 flex items-end md:items-center justify-center p-0 md:p-4"
+                className="fixed inset-0 bg-black/50 z-[60] flex items-end md:items-center justify-center p-0 md:p-4"
                 onClick={onClose}
             >
                 <motion.div
@@ -113,7 +163,7 @@ export default function AddItemModal({ isOpen, onClose, onAdd }: AddItemModalPro
                     className="w-full md:max-w-lg bg-[var(--background)] rounded-t-3xl md:rounded-3xl max-h-[90vh] overflow-y-auto"
                 >
                     {/* Header */}
-                    <div className="sticky top-0 bg-[var(--background)] border-b border-[var(--border-color)] p-4 flex items-center justify-between">
+                    <div className="sticky top-0 bg-[var(--background)] border-b border-[var(--border-color)] p-4 flex items-center justify-between z-10">
                         <h2 className="text-lg font-bold text-[var(--foreground)]">Añadir Prenda</h2>
                         <button
                             onClick={onClose}
@@ -146,46 +196,105 @@ export default function AddItemModal({ isOpen, onClose, onAdd }: AddItemModalPro
                             </button>
                         </div>
 
-                        {/* Image Upload */}
-                        <div>
-                            <label className="block text-xs font-bold text-[var(--foreground)] mb-2">
-                                Foto de la prenda
-                            </label>
-                            <div className="flex gap-2">
-                                <label className="flex-1">
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={handleImageUpload}
-                                        className="hidden"
-                                    />
-                                    <div className="aspect-square rounded-2xl border-2 border-dashed border-[var(--border-color)] hover:border-[var(--brand-pink)] transition-colors cursor-pointer flex flex-col items-center justify-center gap-2 bg-[var(--background-secondary)]">
-                                        {isProcessing ? (
-                                            <>
-                                                <Upload className="w-8 h-8 text-[var(--brand-pink)] animate-pulse" />
-                                                <span className="text-xs text-[var(--brand-pink)] font-semibold">Procesando...</span>
-                                            </>
-                                        ) : image ? (
-                                            <img src={image} alt="Preview" className="w-full h-full object-contain rounded-2xl p-2 bg-white" />
+                        {/* Input Method Tabs */}
+                        <div className="flex border-b border-[var(--border-color)]">
+                            <button
+                                onClick={() => setInputMethod('upload')}
+                                className={`flex-1 py-2 text-sm font-medium border-b-2 transition-colors ${inputMethod === 'upload'
+                                    ? 'border-[var(--brand-pink)] text-[var(--foreground)]'
+                                    : 'border-transparent text-[var(--foreground-tertiary)]'
+                                    }`}
+                            >
+                                Subir Foto
+                            </button>
+                            <button
+                                onClick={() => setInputMethod('url')}
+                                className={`flex-1 py-2 text-sm font-medium border-b-2 transition-colors ${inputMethod === 'url'
+                                    ? 'border-[var(--brand-pink)] text-[var(--foreground)]'
+                                    : 'border-transparent text-[var(--foreground-tertiary)]'
+                                    }`}
+                            >
+                                Importar URL
+                            </button>
+                        </div>
+
+                        {/* Image Input Area */}
+                        <div className="min-h-[150px]">
+                            {inputMethod === 'upload' ? (
+                                <div>
+                                    <label className="block text-xs font-bold text-[var(--foreground)] mb-2">
+                                        Foto de la prenda
+                                    </label>
+                                    <div className="flex gap-2">
+                                        <label className="flex-1">
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={handleImageUpload}
+                                                className="hidden"
+                                            />
+                                            <div className="aspect-square rounded-2xl border-2 border-dashed border-[var(--border-color)] hover:border-[var(--brand-pink)] transition-colors cursor-pointer flex flex-col items-center justify-center gap-2 bg-[var(--background-secondary)] relative overflow-hidden">
+                                                {isProcessing ? (
+                                                    <>
+                                                        <Loader2 className="w-8 h-8 text-[var(--brand-pink)] animate-spin" />
+                                                        <span className="text-xs text-[var(--brand-pink)] font-semibold">Procesando...</span>
+                                                    </>
+                                                ) : image ? (
+                                                    <img src={image} alt="Preview" className="w-full h-full object-contain p-2 bg-white" />
+                                                ) : (
+                                                    <>
+                                                        <Upload className="w-8 h-8 text-[var(--foreground-tertiary)]" />
+                                                        <span className="text-xs text-[var(--foreground-tertiary)]">Subir foto</span>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </label>
+
+                                        <div className="flex flex-col gap-2">
+                                            <button className="w-20 aspect-square rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] flex flex-col items-center justify-center gap-1 hover:bg-[var(--background-tertiary)] transition-colors">
+                                                <Camera className="w-6 h-6 text-[var(--foreground-tertiary)]" />
+                                                <span className="text-[9px] text-[var(--foreground-tertiary)]">Cámara</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="space-y-3">
+                                    <label className="block text-xs font-bold text-[var(--foreground)]">
+                                        Enlace del producto
+                                    </label>
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="url"
+                                            value={url}
+                                            onChange={(e) => setUrl(e.target.value)}
+                                            placeholder="https://zara.com/..."
+                                            className="flex-1 px-4 py-2.5 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)] text-sm"
+                                        />
+                                        <button
+                                            onClick={handleUrlImport}
+                                            disabled={!url || isProcessing}
+                                            className="px-4 rounded-2xl bg-[var(--brand-pink)] text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                                        >
+                                            {isProcessing ? <Loader2 className="w-5 h-5 animate-spin" /> : <ArrowRight className="w-5 h-5" />}
+                                        </button>
+                                    </div>
+                                    
+                                    {/* Preview Area for URL */}
+                                    <div className="aspect-video rounded-2xl border border-[var(--border-color)] bg-[var(--background-secondary)] flex items-center justify-center overflow-hidden relative">
+                                        {image ? (
+                                            <img src={image} alt="Preview" className="w-full h-full object-contain bg-white" />
                                         ) : (
-                                            <>
-                                                <Upload className="w-8 h-8 text-[var(--foreground-tertiary)]" />
-                                                <span className="text-xs text-[var(--foreground-tertiary)]">Subir foto</span>
-                                            </>
+                                            <div className="text-center p-4">
+                                                <LinkIcon className="w-8 h-8 text-[var(--foreground-tertiary)] mx-auto mb-2" />
+                                                <p className="text-xs text-[var(--foreground-tertiary)]">
+                                                    Pega una URL para previsualizar
+                                                </p>
+                                            </div>
                                         )}
                                     </div>
-                                </label>
-
-                                <button className="w-20 aspect-square rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] flex flex-col items-center justify-center gap-1">
-                                    <Camera className="w-6 h-6 text-[var(--foreground-tertiary)]" />
-                                    <span className="text-[9px] text-[var(--foreground-tertiary)]">Cámara</span>
-                                </button>
-
-                                <button className="w-20 aspect-square rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] flex flex-col items-center justify-center gap-1">
-                                    <LinkIcon className="w-6 h-6 text-[var(--foreground-tertiary)]" />
-                                    <span className="text-[9px] text-[var(--foreground-tertiary)]">URL</span>
-                                </button>
-                            </div>
+                                </div>
+                            )}
                         </div>
 
                         {/* Basic Info (Always shown) */}

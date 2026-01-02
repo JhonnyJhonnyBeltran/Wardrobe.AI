@@ -12,9 +12,11 @@ import {
 } from 'lucide-react';
 import { Card, Button, ClothingItem } from '@/components';
 import AddItemModal from '@/components/AddItemModal';
+import ProductModal from '@/components/ProductModal';
 import { useUser } from '@/store';
 import { myWardrobe, type ClothingItemData } from '@/data/mockData';
 import Link from 'next/link';
+import { OutfitItem } from '@/lib/fashion/outfitGenerator';
 
 export default function ClosetPage() {
   const { isPremium } = useUser();
@@ -27,6 +29,10 @@ export default function ClosetPage() {
   const [favorites, setFavorites] = useState<Set<string>>(new Set(['1', '2', '5', '6', '9', '10']));
   const [showAddModal, setShowAddModal] = useState(false);
   const [items, setItems] = useState<ClothingItemData[]>(myWardrobe);
+  
+  // Product Modal State
+  const [selectedProduct, setSelectedProduct] = useState<OutfitItem | null>(null);
+  const [showProductModal, setShowProductModal] = useState(false);
 
   const handleFavoriteToggle = (id: string) => {
     setFavorites(prev => {
@@ -38,6 +44,24 @@ export default function ClosetPage() {
       }
       return newFavorites;
     });
+  };
+
+  const handleItemClick = (item: ClothingItemData) => {
+    // Convert ClothingItemData to OutfitItem for the modal
+    const productItem: OutfitItem = {
+      type: item.type as any,
+      name: item.name,
+      brand: item.brand,
+      ref: item.reference || '#',
+      color: item.colorHex,
+      imageUrl: item.imageUrl,
+      price: item.price,
+      buyLink: '#', // In a real app, this would be the actual link
+      colorHex: item.colorHex
+    };
+    
+    setSelectedProduct(productItem);
+    setShowProductModal(true);
   };
 
   // Filter clothing items
@@ -239,6 +263,7 @@ export default function ClosetPage() {
                 {...item}
                 isFavorite={favorites.has(item.id)}
                 onFavoriteToggle={handleFavoriteToggle}
+                onClick={() => handleItemClick(item)}
               />
             </motion.div>
           ))}
@@ -303,6 +328,13 @@ export default function ClosetPage() {
         onAdd={(newItem) => {
           setItems([...items, newItem as ClothingItemData]);
         }}
+      />
+
+      {/* Product Detail Modal */}
+      <ProductModal
+        item={selectedProduct}
+        isOpen={showProductModal}
+        onClose={() => setShowProductModal(false)}
       />
     </div>
   );

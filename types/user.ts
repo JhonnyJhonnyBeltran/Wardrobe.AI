@@ -14,6 +14,8 @@ export interface UserProfile {
   subscriptionTier: SubscriptionTier;
   avatar?: string;
   createdAt: Date;
+  morphology?: string; // e.g., 'triangle', 'hourglass'
+  colorimetry?: string; // e.g., 'winter', 'summer'
 }
 
 export interface UserPreferences {

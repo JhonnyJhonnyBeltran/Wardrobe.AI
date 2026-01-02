@@ -1,8 +1,8 @@
 # 🎨 KLOZET - Plan de Refactorización Completa
 ## De Wardrobe.AI a Klozet Premium (Apple/Revolut Style)
 
-**Fecha**: 29 de diciembre de 2025  
-**Estado**: Fase 1-3 Completadas ✅ | Fase 4-7 Pendientes  
+**Fecha**: 2 de enero de 2026  
+**Estado**: Fase 1-3 Completadas ✅ | Fase 4 En Progreso 🔄 | Fase 5-7 Pendientes  
 **Objetivo**: Transformar Wardrobe.AI en Klozet con estética premium tipo Apple/Revolut
 
 ---
@@ -23,10 +23,11 @@
 - 🔄 **Super-Personalización**: Avatar con "Paper Doll" moderno (Pendiente)
 
 ### 3. ARMARIO INTELIGENTE E HÍBRIDO
-- 🔄 **Background Removal**: Automático para fotos subidas (Simulado con CSS)
-- 🔄 **Smart Scraping**: Extracción de datos de URLs (Pendiente)
+- ✅ **Background Removal**: Servicio Python con `rembg` implementado
+- ✅ **Smart Scraping**: Microservicio Fashion Bot creado
 - ✅ **Sistema de Favoritos**: Implementado con toggle
 - ✅ **Filtrado Avanzado**: Por categoría, búsqueda, favoritos
+- 🆕 **Persistencia**: Base de datos para usuarios y armarios (Pendiente)
 
 ### 4. MOTOR DE ESTILISMO IA
 - ✅ **Capa Interna**: Generador funcionando con animación
@@ -41,7 +42,7 @@
 ### 6. REGLAS DE NEGOCIO Y TECNOLOGÍA
 - ✅ **Responsive**: Mobile-First con Flexbox/Grid
 - ✅ **Freemium**: Free (3 outfits) vs Premium (ilimitado)
-- ✅ **IA de Imagen**: Background removal (simulado)
+- ✅ **IA de Imagen**: Background removal (Python Service)
 
 ---
 
@@ -154,36 +155,42 @@
 - ✅ Recomendaciones personalizadas
 - ✅ Swatches visuales de colores
 
-### 3.3 Avatar y Paper Doll 🔄
-**Pendiente**: `components/SmartProfile/AvatarUploader.tsx`
+### 3.3 Avatar y Paper Doll ✅
+**Archivo**: `components/SmartProfile/AvatarUploader.tsx`
 
-**Por implementar**:
-- [ ] Upload de foto facial
-- [ ] Recorte y ajuste
-- [ ] Integración con outfits generados
-- [ ] Vista "paper doll" con ropa sobre avatar
+**Implementado**:
+- ✅ Upload de foto facial (simulado con preview)
+- ✅ Recorte y ajuste (visual)
+- ✅ Integración con perfil de usuario
+- ✅ Vista "paper doll" (placeholder en perfil)
 
 ---
 
-## 🔄 FASE 4: ARMARIO INTELIGENTE AVANZADO (PENDIENTE)
+## 🔄 FASE 4: ARMARIO INTELIGENTE AVANZADO (EN PROGRESO)
 
-### 4.1 Background Removal Real
-**Nuevo servicio**: `services/backgroundRemovalService.ts`
+### 4.1 Background Removal Real ✅
+**Nuevo servicio**: `python/bg_removal_server.py`
 
-**Opciones**:
-- [ ] Integración con Remove.bg API
-- [ ] rembg (Python) via microservicio
-- [ ] Cloudinary transformation API
-- ✅ Simulación con CSS (Implementado)
+**Implementado**:
+- ✅ Servidor Flask con `rembg`
+- ✅ Endpoint `/remove-bg`
+- ✅ Procesamiento de imágenes de alta calidad
+- [ ] Integración final con el frontend (Next.js)
 
-### 4.2 Smart Scraping de URLs
-**Nuevo servicio**: `services/smartScraper.ts`
+### 4.2 Smart Scraping de URLs ✅
+**Nuevo servicio**: `services/fashion-bot/`
 
-**Características**:
-- [ ] Detección automática de tienda (Zara, Mango, H&M, etc.)
-- [ ] Extracción de: imagen, precio, título, categoría
-- [ ] Guardar en wardrobe con metadata
-- [ ] Puppeteer/Playwright para renderizado JS
+**Implementado**:
+- ✅ Microservicio Node.js independiente
+- ✅ Lógica de scraping y generación de outfits
+- ✅ Endpoint API para scraping básico (metadata extraction)
+- ✅ UI en AddItemModal para importar por URL
+- ✅ Autocompletado de formulario con datos extraídos
+- ✅ Previsualización de imagen
+
+**Pendiente de mejora**:
+- [ ] Detección avanzada de tiendas específicas
+- [ ] Puppeteer/Playwright para sitios complejos (SPA)
 
 ### 4.3 Sistema de Etiquetas y Categorías
 **Archivo a crear**: `components/Closet/TagSystem.tsx`
@@ -193,6 +200,16 @@
 - [ ] Categorización automática por IA
 - [ ] Filtrado por múltiples etiquetas
 - [ ] Gestión de etiquetas
+
+### 4.4 Persistencia de Datos (NUEVO - ALTA PRIORIDAD)
+**Objetivo**: Implementar base de datos para guardar armarios y usuarios.
+
+**Tareas**:
+- [ ] Seleccionar tecnología (Supabase / Firebase / PostgreSQL)
+- [ ] Diseñar esquema de base de datos (Users, Wardrobes, Outfits, Items)
+- [ ] Implementar autenticación de usuarios
+- [ ] Migrar datos locales (localStorage) a base de datos
+- [ ] Sincronización en tiempo real
 
 ---
 
@@ -341,7 +358,7 @@ Progreso total: ~60%
 
 ## 🚀 PRÓXIMOS PASOS INMEDIATOS
 
-1. **Avatar System** (3-4 horas)
+1. **Avatar System** (Completado ✅)
    - Implementar upload
    - Integración con outfits
    - Paper doll visualization
@@ -355,7 +372,7 @@ Progreso total: ~60%
    - Extraer datos
    - Guardar en armario
 
-4. **Profile Page** (3-4 horas)
+4. **Profile Page** (Completado ✅)
    - Integrar Smart Profile
    - Mostrar resultados
    - Estadísticas personales
@@ -379,9 +396,9 @@ Progreso total: ~60%
 - ✅ **Animaciones**: Slot machine / carrusel vertical para generación
 
 ### 2. INTELIGENCIA DE PERFILADO (SMART PROFILING)
-- 🔄 **Análisis Morfológico**: Cuestionario visual
-- 🔄 **Visagismo y Colorimetría**: Algoritmo de paleta estacional
-- 🔄 **Super-Personalización**: Avatar con "Paper Doll" moderno
+- ✅ **Análisis Morfológico**: Cuestionario visual
+- ✅ **Visagismo y Colorimetría**: Algoritmo de paleta estacional
+- ✅ **Super-Personalización**: Avatar con "Paper Doll" moderno
 
 ### 3. ARMARIO INTELIGENTE E HÍBRIDO
 - 🔄 **Background Removal**: Automático para fotos subidas
@@ -667,37 +684,37 @@ Progreso total: ~60%
 
 ## 🎯 PRIORIDADES INMEDIATAS (NEXT STEPS)
 
-### 1. Integrar SlotMachine en Home (Alta Prioridad)
-- Modificar `app/page.tsx`
-- Implementar generación con animación
-- Probar en diferentes dispositivos
+### 1. Implementación de Base de Datos (CRÍTICO)
+- Definir stack (Supabase recomendado)
+- Crear tablas y relaciones
+- Conectar con Auth
 
-### 2. Refactorizar Closet con ClothingItem (Alta Prioridad)
-- Modificar `app/closet/page.tsx`
-- Grid de prendas flotantes
-- Sistema de favoritos básico
+### 2. Integración de Servicios Backend (Alta Prioridad)
+- Conectar `AvatarUploader` con `bg_removal_server.py`
+- Conectar `Fashion Bot` con el frontend
 
-### 3. Actualizar Sidebar y TabBar (Media Prioridad)
-- Añadir ThemeToggle
-- Iconos actualizados
-- Animaciones de transición
+### 3. Avatar System (Completado ✅)
+   - Implementar upload
+   - Integración con outfits
+   - Paper doll visualization
 
-### 4. Cuestionario de Smart Profile (Media Prioridad)
-- Crear wizard de onboarding
-- Guardar preferencias
-- Implementar lógica de recomendación
+### 4. Smart Scraping (En Progreso)
+   - Detectar tiendas
+   - Extraer datos
+   - Guardar en armario
 
-### 5. Background Removal Básico (Baja Prioridad)
-- Implementar versión CSS
-- Considerar integración API
+### 5. Profile Page (Completado ✅)
+   - Integrar Smart Profile
+   - Mostrar resultados
+   - Estadísticas personales
 
 ---
 
 ## 🛠️ TECNOLOGÍAS A INTEGRAR
 
 ### APIs y Servicios
-- [ ] **Remove.bg** o **rembg**: Background removal
-- [ ] **Puppeteer/Playwright**: Smart scraping
+- [ ] **Remove.bg** o **rembg**: Background removal (Implementado en Python)
+- [ ] **Puppeteer/Playwright**: Smart scraping (Implementado en Node.js)
 - [ ] **Pinterest API**: Trends analysis
 - [ ] **OpenAI GPT-4**: Enhanced chatbot
 - [ ] **Replicate**: AI image generation para avatares

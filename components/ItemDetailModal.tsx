@@ -38,7 +38,7 @@ export default function ItemDetailModal({ outfit, isOpen, onClose }: ItemDetailM
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={onClose}
-                        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+                        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60]"
                     />
 
                     {/* Modal */}
@@ -47,7 +47,7 @@ export default function ItemDetailModal({ outfit, isOpen, onClose }: ItemDetailM
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: '100%' }}
                         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                        className="fixed inset-x-0 bottom-0 z-50 max-h-[90vh] overflow-hidden rounded-t-3xl bg-white dark:bg-gray-900 md:inset-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:max-w-lg md:rounded-3xl md:max-h-[85vh]"
+                        className="fixed inset-x-0 bottom-0 z-[60] max-h-[90vh] overflow-hidden rounded-t-3xl bg-white dark:bg-gray-900 md:inset-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:max-w-lg md:rounded-3xl md:max-h-[85vh]"
                     >
                         {/* Header */}
                         <div className="sticky top-0 z-10 flex items-center justify-between p-4 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800">
