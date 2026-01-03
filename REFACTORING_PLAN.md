@@ -1,4 +1,7 @@
+# OBSOLETO
+
 # 🎨 KLOZET - Plan de Refactorización Completa
+
 ## De Wardrobe.AI a Klozet Premium (Apple/Revolut Style)
 
 **Fecha**: 2 de enero de 2026  
@@ -10,6 +13,7 @@
 ## 📋 RESUMEN DE ESPECIFICACIONES
 
 ### 1. ADN VISUAL Y DISEÑO (SISTEMA DE DISEÑO)
+
 - ✅ **Estética**: Minimalismo extremo, limpieza y sofisticación
 - ✅ **Paleta**: Blanco Puro, Negro Profundo, Rosa de marca
 - ✅ **Modos**: Dark mode nativo con transiciones suaves
@@ -18,11 +22,13 @@
 - ✅ **Animaciones**: Slot machine / carrusel vertical para generación
 
 ### 2. INTELIGENCIA DE PERFILADO (SMART PROFILING)
+
 - ✅ **Análisis Morfológico**: Cuestionario visual completado
 - ✅ **Visagismo y Colorimetría**: Algoritmo de paleta estacional implementado
 - 🔄 **Super-Personalización**: Avatar con "Paper Doll" moderno (Pendiente)
 
 ### 3. ARMARIO INTELIGENTE E HÍBRIDO
+
 - ✅ **Background Removal**: Servicio Python con `rembg` implementado
 - ✅ **Smart Scraping**: Microservicio Fashion Bot creado
 - ✅ **Sistema de Favoritos**: Implementado con toggle
@@ -30,16 +36,19 @@
 - 🆕 **Persistencia**: Base de datos para usuarios y armarios (Pendiente)
 
 ### 4. MOTOR DE ESTILISMO IA
+
 - ✅ **Capa Interna**: Generador funcionando con animación
 - 🔄 **Gap Analysis**: Sugerencias de compra (Pendiente)
 
 ### 5. ESTRUCTURA DE PANTALLAS (UX)
+
 - 🔄 **HOME**: Social Feed con carpetas (Pendiente)
 - ✅ **CREATE OUTFIT**: SlotMachine y diseño premium
 - 🔄 **CHATBOT**: Fashion-only mejorado (Pendiente)
 - 🔄 **PERFIL**: Avatar, portada completa (Pendiente)
 
 ### 6. REGLAS DE NEGOCIO Y TECNOLOGÍA
+
 - ✅ **Responsive**: Mobile-First con Flexbox/Grid
 - ✅ **Freemium**: Free (3 outfits) vs Premium (ilimitado)
 - ✅ **IA de Imagen**: Background removal (Python Service)
@@ -49,9 +58,11 @@
 ## ✅ FASE 1: SISTEMA DE DISEÑO PREMIUM (COMPLETADA)
 
 ### 1.1 CSS Global Refactorizado ✅
+
 **Archivo**: `app/globals.css`
 
 **Implementado**:
+
 - CSS Variables para todo el sistema de colores
 - Paleta minimalista (Blanco puro, Negro profundo, Rosa de marca)
 - Dark mode completo con transiciones suaves
@@ -65,18 +76,21 @@
 ### 1.2 Componentes Base Creados ✅
 
 #### Button.tsx ✅
+
 - Ultra-rounded con animaciones elásticas
 - Variantes: primary, secondary, outline, ghost, glass
 - Tamaños: sm, md, lg, xl
 - Estados: loading, disabled, glow
 
 #### Card.tsx ✅
+
 - Diseño flotante sin bordes duros
 - Variantes: default (floating-card), glass, gradient
 - Animación de entrada (fade + slide up)
 - Hover lift effect opcional
 
 #### ClothingItem.tsx ✅
+
 - Elemento de prenda flotante SIN fondo
 - Hover con glow radial gradient
 - Botón de favoritos con animación
@@ -84,6 +98,7 @@
 - Mix-blend-mode para simular background removal
 
 #### SlotMachineGenerator.tsx ✅
+
 - Animación de carrusel vertical ultra-rápido
 - Desaceleración gradual hasta revelar outfit
 - MultiSlotMachineGenerator para múltiples categorías
@@ -91,6 +106,7 @@
 - Sparkle effect al completar
 
 #### ThemeToggle.tsx ✅
+
 - Switch animado tipo Apple
 - Spring animation para sliding indicator
 - Iconos Sun/Moon con transiciones
@@ -100,9 +116,11 @@
 ## ✅ FASE 2: ANIMACIONES Y PRENDAS FLOTANTES (COMPLETADA)
 
 ### 2.1 SlotMachine Integrado en Home ✅
+
 **Archivo**: `app/page.tsx`
 
 **Completado**:
+
 - ✅ SlotMachineGenerator integrado
 - ✅ Animación al generar outfit
 - ✅ Revelar outfit final con elastic-appear
@@ -110,9 +128,11 @@
 - ✅ Diseño completamente refactorizado
 
 ### 2.2 Closet Refactorizado ✅
+
 **Archivo**: `app/closet/page.tsx`
 
 **Completado**:
+
 - ✅ ClothingItem para mostrar prendas
 - ✅ Grid responsive con gap generoso
 - ✅ Sistema de filtros visuales (categoría, búsqueda)
@@ -122,9 +142,11 @@
 - ✅ ThemeToggle integrado
 
 ### 2.3 Navegación Actualizada ✅
+
 **Archivos**: `components/Sidebar.tsx`, `components/TabBar.tsx`
 
 **Completado**:
+
 - ✅ Sidebar con nuevo diseño y ThemeToggle
 - ✅ TabBar móvil refactorizado
 - ✅ Animaciones mejoradas
@@ -135,9 +157,11 @@
 ## ✅ FASE 3: SMART PROFILING (COMPLETADA)
 
 ### 3.1 Cuestionario de Análisis Morfológico ✅
+
 **Archivo**: `components/SmartProfile/MorphologyQuiz.tsx`
 
 **Implementado**:
+
 - ✅ Visual quiz con progreso
 - ✅ 5 tipos de cuerpo: Triángulo, Triángulo invertido, Rectángulo, Reloj de arena, Óvalo
 - ✅ Recomendaciones detalladas de cortes y siluetas
@@ -145,9 +169,11 @@
 - ✅ Animaciones fluidas entre preguntas
 
 ### 3.2 Colorimetría y Visagismo ✅
+
 **Archivo**: `components/SmartProfile/ColorimetryAnalyzer.tsx`
 
 **Implementado**:
+
 - ✅ Wizard de 4 pasos (Tono de piel, Subtono, Cabello, Ojos)
 - ✅ Algoritmo de determinación de paleta estacional
 - ✅ 4 estaciones: Primavera, Verano, Otoño, Invierno
@@ -156,9 +182,11 @@
 - ✅ Swatches visuales de colores
 
 ### 3.3 Avatar y Paper Doll ✅
+
 **Archivo**: `components/SmartProfile/AvatarUploader.tsx`
 
 **Implementado**:
+
 - ✅ Upload de foto facial (simulado con preview)
 - ✅ Recorte y ajuste (visual)
 - ✅ Integración con perfil de usuario
@@ -169,18 +197,22 @@
 ## 🔄 FASE 4: ARMARIO INTELIGENTE AVANZADO (EN PROGRESO)
 
 ### 4.1 Background Removal Real ✅
+
 **Nuevo servicio**: `python/bg_removal_server.py`
 
 **Implementado**:
+
 - ✅ Servidor Flask con `rembg`
 - ✅ Endpoint `/remove-bg`
 - ✅ Procesamiento de imágenes de alta calidad
 - [ ] Integración final con el frontend (Next.js)
 
 ### 4.2 Smart Scraping de URLs ✅
+
 **Nuevo servicio**: `services/fashion-bot/`
 
 **Implementado**:
+
 - ✅ Microservicio Node.js independiente
 - ✅ Lógica de scraping y generación de outfits
 - ✅ Endpoint API para scraping básico (metadata extraction)
@@ -189,22 +221,27 @@
 - ✅ Previsualización de imagen
 
 **Pendiente de mejora**:
+
 - [ ] Detección avanzada de tiendas específicas
 - [ ] Puppeteer/Playwright para sitios complejos (SPA)
 
 ### 4.3 Sistema de Etiquetas y Categorías
+
 **Archivo a crear**: `components/Closet/TagSystem.tsx`
 
 **Tareas**:
+
 - [ ] Sistema de etiquetas personalizadas
 - [ ] Categorización automática por IA
 - [ ] Filtrado por múltiples etiquetas
 - [ ] Gestión de etiquetas
 
 ### 4.4 Persistencia de Datos (NUEVO - ALTA PRIORIDAD)
+
 **Objetivo**: Implementar base de datos para guardar armarios y usuarios.
 
 **Tareas**:
+
 - [ ] Seleccionar tecnología (Supabase / Firebase / PostgreSQL)
 - [ ] Diseñar esquema de base de datos (Users, Wardrobes, Outfits, Items)
 - [ ] Implementar autenticación de usuarios
@@ -216,9 +253,11 @@
 ## 🔄 FASE 5: ESTRUCTURA DE PANTALLAS AVANZADAS (PENDIENTE)
 
 ### 5.1 HOME - Social Feed
+
 **Archivo a crear**: `app/feed/page.tsx`
 
 **Características**:
+
 - [ ] Grid de outfits de amigos e influencers
 - [ ] Carpetas de inspiración personalizables
 - [ ] Infinite scroll
@@ -226,18 +265,22 @@
 - [ ] Compartir outfits
 
 ### 5.2 CREATE OUTFIT - Swipe System
+
 **Archivo a mejorar**: `app/page.tsx`
 
 **Pendiente**:
+
 - [ ] Swipe horizontal en cada prenda para cambiar
 - [ ] Preview en tiempo real
 - [ ] Integración con avatar del usuario
 - [ ] Guardar outfit con nombre personalizado
 
 ### 5.3 CHATBOT - Fashion Expert
+
 **Archivo a mejorar**: `app/chat/page.tsx`
 
 **Características**:
+
 - [ ] Micro-scraping de Vogue, Elle, Who What Wear
 - [ ] Personalidad fashion-focused mejorada
 - [ ] Quick actions contextuales
@@ -245,9 +288,11 @@
 - [ ] Sugerencias basadas en perfil
 
 ### 5.4 PERFIL - Completo
+
 **Archivo a mejorar**: `app/profile/page.tsx`
 
 **Características**:
+
 - [ ] Avatar + portada personalizada
 - [ ] Integración de Smart Profile results
 - [ ] Tabs: Outfits, Carpetas, Inventario, Análisis
@@ -259,9 +304,11 @@
 ## 🔄 FASE 6: MOTOR DE ESTILISMO IA AVANZADO (PENDIENTE)
 
 ### 6.1 Mejorar Generador con Smart Profile
+
 **Archivo a modificar**: `lib/fashion/outfitGenerator.ts`
 
 **Mejoras**:
+
 - [ ] Integrar resultado de análisis morfológico
 - [ ] Considerar paleta de colorimetría
 - [ ] Ponderación de favoritos (+40%)
@@ -269,18 +316,22 @@
 - [ ] Reglas de estilo mejoradas
 
 ### 6.2 Gap Analysis
+
 **Nuevo servicio**: `services/gapAnalysis.ts`
 
 **Características**:
+
 - [ ] Detectar prendas faltantes
 - [ ] Sugerir opciones de compra
 - [ ] Enlaces de afiliación
 - [ ] Integración con APIs de tiendas
 
 ### 6.3 Fashion Trends API
+
 **Nuevo servicio**: `services/fashionTrendsService.ts`
 
 **Fuentes**:
+
 - [ ] Scraping de Vogue, Elle, Who What Wear
 - [ ] Pinterest trends API
 - [ ] Google Trends fashion
@@ -291,16 +342,20 @@
 ## 📱 FASE 7: RESPONSIVE & PWA (OPTIMIZACIÓN)
 
 ### 7.1 Mobile-First Optimización
+
 **Tareas**:
+
 - [ ] Gesture support (swipe, pinch to zoom)
 - [ ] Bottom sheet para modales
 - [ ] Touch interactions optimizadas
 - [ ] Haptic feedback
 
 ### 7.2 PWA Enhancements
+
 **Archivo a actualizar**: `public/manifest.json`
 
 **Tareas**:
+
 - [ ] Service Worker para offline
 - [ ] Caché inteligente
 - [ ] Notificaciones push
@@ -312,13 +367,16 @@
 ## 🎯 PROGRESO ACTUAL
 
 ### ✅ Completado (Fases 1-3)
+
 1. **Sistema de Diseño Premium**
+
    - CSS Variables completo
    - Todos los componentes base
    - Dark mode nativo
    - Animaciones elásticas
 
 2. **Páginas Principales Refactorizadas**
+
    - Home con SlotMachine
    - Closet con ClothingItem y filtros
    - Navegación (Sidebar + TabBar)
@@ -329,11 +387,13 @@
    - Algoritmos de determinación
 
 ### 🔄 En Progreso
+
 - Avatar upload y Paper Doll
 - Background removal real
 - Smart scraping
 
 ### 📋 Pendiente (Fases 4-7)
+
 - Social feed
 - Swipe system en outfits
 - Chat mejorado
@@ -359,15 +419,18 @@ Progreso total: ~60%
 ## 🚀 PRÓXIMOS PASOS INMEDIATOS
 
 1. **Avatar System** (Completado ✅)
+
    - Implementar upload
    - Integración con outfits
    - Paper doll visualization
 
 2. **Background Removal API** (2-3 horas)
+
    - Integrar Remove.bg
    - Fallback a CSS
 
 3. **Smart Scraping** (4-5 horas)
+
    - Detectar tiendas
    - Extraer datos
    - Guardar en armario
@@ -379,15 +442,15 @@ Progreso total: ~60%
 
 ---
 
-*Última actualización: 29 de diciembre de 2025, 16:00*
-*Estado: Fases 1-3 completadas exitosamente ✅*
-
+_Última actualización: 29 de diciembre de 2025, 16:00_
+_Estado: Fases 1-3 completadas exitosamente ✅_
 
 ---
 
 ## 📋 RESUMEN DE ESPECIFICACIONES
 
 ### 1. ADN VISUAL Y DISEÑO (SISTEMA DE DISEÑO)
+
 - ✅ **Estética**: Minimalismo extremo, limpieza y sofisticación
 - ✅ **Paleta**: Blanco Puro, Negro Profundo, Rosa de marca
 - ✅ **Modos**: Dark mode nativo con transiciones suaves
@@ -396,27 +459,32 @@ Progreso total: ~60%
 - ✅ **Animaciones**: Slot machine / carrusel vertical para generación
 
 ### 2. INTELIGENCIA DE PERFILADO (SMART PROFILING)
+
 - ✅ **Análisis Morfológico**: Cuestionario visual
 - ✅ **Visagismo y Colorimetría**: Algoritmo de paleta estacional
 - ✅ **Super-Personalización**: Avatar con "Paper Doll" moderno
 
 ### 3. ARMARIO INTELIGENTE E HÍBRIDO
+
 - 🔄 **Background Removal**: Automático para fotos subidas
 - 🔄 **Smart Scraping**: Extracción de datos de URLs (Zara, Mango, etc.)
 - 🔄 **Sistema de Favoritos**: Ponderación 40% en generación IA
 - 🔄 **Filtrado Avanzado**: Por estación, tejido, color, tienda
 
 ### 4. MOTOR DE ESTILISMO IA
+
 - 🔄 **Capa Interna**: Maximizar uso del armario actual
 - 🔄 **Gap Analysis**: Sugerencias de compra con afiliación
 
 ### 5. ESTRUCTURA DE PANTALLAS (UX)
+
 - 🔄 **HOME**: Social Feed con carpetas de inspiración
 - 🔄 **CREATE OUTFIT**: Swipe horizontal en prendas del outfit
 - 🔄 **CHATBOT**: Fashion-only con micro-scraping de portales
 - 🔄 **PERFIL**: Avatar, portada, outfits, carpetas, inventario
 
 ### 6. REGLAS DE NEGOCIO Y TECNOLOGÍA
+
 - ✅ **Responsive**: Mobile-First con Flexbox/Grid
 - ✅ **Freemium**: Free (3 outfits) vs Premium (ilimitado)
 - 🔄 **IA de Imagen**: Background removal implementado
@@ -426,9 +494,11 @@ Progreso total: ~60%
 ## ✅ FASE 1: SISTEMA DE DISEÑO PREMIUM (COMPLETADA)
 
 ### 1.1 CSS Global Refactorizado
+
 **Archivo**: `app/globals.css`
 
 ✅ **Implementado**:
+
 - CSS Variables para todo el sistema de colores
 - Paleta minimalista (Blanco puro, Negro profundo, Rosa de marca)
 - Dark mode completo con transiciones suaves
@@ -442,6 +512,7 @@ Progreso total: ~60%
 ### 1.2 Componentes Base Creados
 
 #### Button.tsx ✅
+
 - Ultra-rounded con animaciones elásticas
 - Variantes: primary, secondary, outline, ghost, glass
 - Tamaños: sm, md, lg, xl
@@ -449,12 +520,14 @@ Progreso total: ~60%
 - Focus ring con ring-offset
 
 #### Card.tsx ✅
+
 - Diseño flotante sin bordes duros
 - Variantes: default (floating-card), glass, gradient
 - Animación de entrada (fade + slide up)
 - Hover lift effect opcional
 
 #### ClothingItem.tsx ✅ (NUEVO)
+
 - Elemento de prenda flotante SIN fondo
 - Hover con glow radial gradient
 - Botón de favoritos con animación
@@ -463,6 +536,7 @@ Progreso total: ~60%
 - Info mínima y limpia (tipo, nombre, marca, color)
 
 #### SlotMachineGenerator.tsx ✅ (NUEVO)
+
 - Animación de carrusel vertical ultra-rápido
 - Desaceleración gradual hasta revelar outfit
 - MultiSlotMachineGenerator para múltiples categorías
@@ -471,13 +545,16 @@ Progreso total: ~60%
 - Overlays gradient para efecto slot machine
 
 #### ThemeToggle.tsx ✅ (NUEVO)
+
 - Switch animado tipo Apple
 - Spring animation para sliding indicator
 - Iconos Sun/Moon con transiciones
 - Focus ring accesible
 
 ### 1.3 Exports Actualizados ✅
+
 **Archivo**: `components/index.ts`
+
 - Exportados todos los nuevos componentes
 
 ---
@@ -485,9 +562,11 @@ Progreso total: ~60%
 ## 🔄 FASE 2: ANIMACIONES Y PRENDAS FLOTANTES (EN PROGRESO)
 
 ### 2.1 Integrar SlotMachine en Generador de Outfits
+
 **Archivo a modificar**: `app/page.tsx`
 
 **Tareas**:
+
 - [ ] Reemplazar generación estática por SlotMachineGenerator
 - [ ] Implementar lógica de selección de prendas aleatorias
 - [ ] Mostrar MultiSlotMachineGenerator al generar outfit
@@ -495,9 +574,11 @@ Progreso total: ~60%
 - [ ] Agregar swipe horizontal para cambiar prendas individuales
 
 ### 2.2 Mejorar Visualización de Armario
+
 **Archivo a modificar**: `app/closet/page.tsx`
 
 **Tareas**:
+
 - [ ] Usar ClothingItem para mostrar prendas
 - [ ] Implementar grid responsive con gap generoso
 - [ ] Añadir animación staggered en carga
@@ -505,7 +586,9 @@ Progreso total: ~60%
 - [ ] Vista de favoritos
 
 ### 2.3 Background Removal Simulation
+
 **Nuevos archivos**:
+
 - [ ] `lib/imageProcessing/backgroundRemoval.ts`
 - [ ] Integrar con ClothingItem
 - [ ] Aplicar filtros CSS avanzados
@@ -516,27 +599,33 @@ Progreso total: ~60%
 ## 🔄 FASE 3: SMART PROFILING (PENDIENTE)
 
 ### 3.1 Cuestionario de Análisis Morfológico
+
 **Nuevo componente**: `components/SmartProfile/MorphologyQuiz.tsx`
 
 **Características**:
+
 - Visual quiz con ilustraciones
 - Tipos de cuerpo: Triángulo, Triángulo invertido, Rectángulo, Reloj de arena, Óvalo
 - Recomendaciones de cortes y siluetas
 - Guardar preferencias en userStore
 
 ### 3.2 Colorimetría y Visagismo
+
 **Nuevo componente**: `components/SmartProfile/ColorimetryAnalyzer.tsx`
 
 **Características**:
+
 - Selector de tono de piel (frío, cálido, neutro)
 - Color de ojos y cabello
 - Cálculo de paleta estacional (Primavera, Verano, Otoño, Invierno)
 - Priorización automática en generación de outfits
 
 ### 3.3 Avatar y Paper Doll
+
 **Nuevo componente**: `components/SmartProfile/AvatarUploader.tsx`
 
 **Características**:
+
 - Upload de foto facial
 - Recorte y ajuste
 - Integración con outfits generados
@@ -547,35 +636,43 @@ Progreso total: ~60%
 ## 🔄 FASE 4: ARMARIO INTELIGENTE (PENDIENTE)
 
 ### 4.1 Background Removal Real
+
 **Nuevo servicio**: `services/backgroundRemovalService.ts`
 
 **Opciones**:
+
 - Integración con Remove.bg API
 - rembg (Python) via microservicio
 - Simulación con CSS avanzado (actual)
 
 ### 4.2 Smart Scraping de URLs
+
 **Nuevo servicio**: `services/smartScraper.ts`
 
 **Características**:
+
 - Detección automática de tienda (Zara, Mango, H&M, etc.)
 - Extracción de: imagen, precio, título, categoría
 - Guardar en wardrobe con metadata
 - Puppeteer/Playwright para renderizado JS
 
 ### 4.3 Sistema de Favoritos
+
 **Archivo a modificar**: `store/userStore.tsx`
 
 **Tareas**:
+
 - [ ] Añadir campo `isFavorite` a clothing items
 - [ ] Toggle de favoritos
 - [ ] Lógica de ponderación +40% en generador IA
 - [ ] Vista filtrada de favoritos
 
 ### 4.4 Filtros Avanzados
+
 **Nuevo componente**: `components/Closet/AdvancedFilters.tsx`
 
 **Filtros**:
+
 - Categoría (top, bottom, shoes, accessories)
 - Estación (spring, summer, fall, winter)
 - Tejido (algodón, lino, lana, etc.)
@@ -588,9 +685,11 @@ Progreso total: ~60%
 ## 🔄 FASE 5: ESTRUCTURA DE PANTALLAS (PENDIENTE)
 
 ### 5.1 HOME - Social Feed
+
 **Archivo a crear**: `app/feed/page.tsx`
 
 **Características**:
+
 - Grid de outfits de amigos e influencers
 - Botón de "Save to Inspo Folder"
 - Carpetas personalizables
@@ -598,9 +697,11 @@ Progreso total: ~60%
 - Like y comentarios
 
 ### 5.2 CREATE OUTFIT - Mejorado
+
 **Archivo a modificar**: `app/page.tsx`
 
 **Características**:
+
 - ✅ Animación slot machine (Completado)
 - [ ] Avatar del usuario con outfit
 - [ ] Swipe horizontal en cada prenda para cambiar
@@ -608,9 +709,11 @@ Progreso total: ~60%
 - [ ] Guardar outfit
 
 ### 5.3 CHATBOT - Fashion Only
+
 **Archivo a crear**: `app/chat/page.tsx` (Mejorado)
 
 **Características**:
+
 - Micro-scraping de Vogue, Elle, Who What Wear
 - Personalidad fashion-focused
 - Redirección elegante si pregunta off-topic
@@ -618,9 +721,11 @@ Progreso total: ~60%
 - Historial de conversaciones
 
 ### 5.4 PERFIL - Completo
+
 **Archivo a modificar**: `app/profile/page.tsx`
 
 **Características**:
+
 - Avatar + portada personalizada
 - Tabs: Outfits guardados, Carpetas, Inventario
 - Filtros pro en inventario
@@ -632,9 +737,11 @@ Progreso total: ~60%
 ## 🔄 FASE 6: MOTOR DE ESTILISMO IA (PENDIENTE)
 
 ### 6.1 Mejorar Generador Local
+
 **Archivo a modificar**: `lib/fashion/outfitGenerator.ts`
 
 **Mejoras**:
+
 - Algoritmo de color harmony (complementary, analogous, triadic)
 - Reglas de estilo (casual, formal, boho, etc.)
 - Ponderación de favoritos (+40%)
@@ -642,18 +749,22 @@ Progreso total: ~60%
 - Consideración de morfología del usuario
 
 ### 6.2 Gap Analysis
+
 **Nuevo servicio**: `services/gapAnalysis.ts`
 
 **Características**:
+
 - Detectar prendas faltantes para completar looks de tendencia
 - Sugerir 3 opciones de tiendas externas
 - Enlaces de afiliación
 - Integración con fashion trends API
 
 ### 6.3 Fashion Trends API
+
 **Nuevo servicio**: `services/fashionTrendsService.ts`
 
 **Fuentes**:
+
 - Scraping de Vogue, Elle, Who What Wear
 - Pinterest trends API
 - Google Trends (fashion keywords)
@@ -664,16 +775,20 @@ Progreso total: ~60%
 ## 📱 FASE 7: RESPONSIVE & PWA (OPTIMIZACIÓN)
 
 ### 7.1 Mobile-First Completo
+
 **Tareas**:
+
 - [ ] Revisar breakpoints (sm, md, lg, xl)
 - [ ] Touch interactions optimizadas
 - [ ] Gesture support (swipe, pinch to zoom)
 - [ ] Bottom sheet para modales en móvil
 
 ### 7.2 PWA Enhancements
+
 **Archivo a actualizar**: `public/manifest.json`
 
 **Tareas**:
+
 - [ ] Service Worker para offline
 - [ ] Caché inteligente de prendas
 - [ ] Notificaciones push (nuevas tendencias, outfit del día)
@@ -685,34 +800,40 @@ Progreso total: ~60%
 ## 🎯 PRIORIDADES INMEDIATAS (NEXT STEPS)
 
 ### 1. Implementación de Base de Datos (CRÍTICO)
+
 - Definir stack (Supabase recomendado)
 - Crear tablas y relaciones
 - Conectar con Auth
 
 ### 2. Integración de Servicios Backend (Alta Prioridad)
+
 - Conectar `AvatarUploader` con `bg_removal_server.py`
 - Conectar `Fashion Bot` con el frontend
 
 ### 3. Avatar System (Completado ✅)
-   - Implementar upload
-   - Integración con outfits
-   - Paper doll visualization
+
+- Implementar upload
+- Integración con outfits
+- Paper doll visualization
 
 ### 4. Smart Scraping (En Progreso)
-   - Detectar tiendas
-   - Extraer datos
-   - Guardar en armario
+
+- Detectar tiendas
+- Extraer datos
+- Guardar en armario
 
 ### 5. Profile Page (Completado ✅)
-   - Integrar Smart Profile
-   - Mostrar resultados
-   - Estadísticas personales
+
+- Integrar Smart Profile
+- Mostrar resultados
+- Estadísticas personales
 
 ---
 
 ## 🛠️ TECNOLOGÍAS A INTEGRAR
 
 ### APIs y Servicios
+
 - [ ] **Remove.bg** o **rembg**: Background removal (Implementado en Python)
 - [ ] **Puppeteer/Playwright**: Smart scraping (Implementado en Node.js)
 - [ ] **Pinterest API**: Trends analysis
@@ -720,6 +841,7 @@ Progreso total: ~60%
 - [ ] **Replicate**: AI image generation para avatares
 
 ### Librerías Adicionales
+
 - [ ] **react-spring**: Animaciones avanzadas
 - [ ] **swiper**: Carousel para swipe de prendas
 - [ ] **react-dropzone**: Upload de fotos
@@ -727,6 +849,7 @@ Progreso total: ~60%
 - [ ] **cheerio**: Web scraping
 
 ### Infraestructura
+
 - [ ] **Supabase**: Base de datos + Auth + Storage
 - [ ] **Vercel Edge Functions**: APIs serverless
 - [ ] **Cloudinary**: CDN para imágenes
@@ -737,17 +860,20 @@ Progreso total: ~60%
 ## 📊 MÉTRICAS DE ÉXITO
 
 ### UX/UI
+
 - ✅ Tiempo de carga < 3s (FCP)
 - ✅ Animaciones a 60fps
 - ✅ Lighthouse Score > 90
 - 🔄 Mobile usability 100/100
 
 ### Engagement
+
 - 🔄 Tiempo en app > 5min/sesión
 - 🔄 Outfits generados/usuario > 3/semana
 - 🔄 Tasa de conversión a Premium > 5%
 
 ### Técnicas
+
 - ✅ TypeScript 100% typed
 - ✅ Zero runtime errors
 - 🔄 Test coverage > 80%
@@ -758,6 +884,7 @@ Progreso total: ~60%
 ## 📝 NOTAS DE IMPLEMENTACIÓN
 
 ### Cambios Visuales Clave Aplicados
+
 1. **Sistema de Colores**: Ahora usa CSS variables en lugar de TailwindCSS hardcoded
 2. **Tipografía**: Cambiada de Outfit a Inter (más Apple-like)
 3. **Border Radius**: Incrementado a valores ultra-redondeados (20px-32px)
@@ -766,12 +893,14 @@ Progreso total: ~60%
 6. **Dark Mode**: Implementado con clase `.dark` y transiciones suaves
 
 ### Decisiones de Arquitectura
+
 - **CSS Variables**: Mayor control y consistencia cross-component
 - **Framer Motion**: Animaciones declarativas y performantes
 - **Component Composition**: Componentes pequeños y reutilizables
 - **TypeScript Strict**: Type safety completo
 
 ### Próximas Decisiones Técnicas Requeridas
+
 - **Background Removal**: ¿API externa o procesamiento local?
 - **Smart Scraping**: ¿Serverless function o microservicio dedicado?
 - **Avatar System**: ¿Upload + crop o AI generation?
@@ -804,4 +933,4 @@ Progreso total: ~60%
 
 ---
 
-*Última actualización: 29 de diciembre de 2025, 15:45*
+_Última actualización: 29 de diciembre de 2025, 15:45_
