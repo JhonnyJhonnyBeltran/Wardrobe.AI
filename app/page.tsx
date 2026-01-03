@@ -1,43 +1,42 @@
 'use client';
 
 /**
- * Home - Social Feed (Friends' Outfits)
- * Now with 2 images per post (swipeable)
+ * Home - Dashboard Principal
+ * Punto de entrada principal de la aplicación
  */
 
-import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Heart, MessageCircle, Bookmark, Plus } from 'lucide-react';
-import { mockSocialPosts, type SocialPost } from '@/data/mockData';
+import { Shirt, MessageSquare, Sparkles } from 'lucide-react';
 import Link from 'next/link';
-import { Logo } from '@/components';
+import { Logo, Card, Button } from '@/components';
+import { useUser } from '@/store/userStore';
 
 export default function Home() {
-  const [posts, setPosts] = useState<SocialPost[]>(mockSocialPosts);
-  const [currentImages, setCurrentImages] = useState<Record<string, number>>({}); //Track which image is showing per post
+  const { user } = useUser();
 
-  const handleLike = (postId: string) => {
-    setPosts(posts.map(post =>
-      post.id === postId
-        ? { ...post, isLiked: !post.isLiked, likes: post.isLiked ? post.likes - 1 : post.likes + 1 }
-        : post
-    ));
-  };
-
-  const handleSave = (postId: string) => {
-    setPosts(posts.map(post =>
-      post.id === postId
-        ? { ...post, isSaved: !post.isSaved }
-        : post
-    ));
-  };
-
-  const toggleImage = (postId: string) => {
-    setCurrentImages(prev => ({
-      ...prev,
-      [postId]: prev[postId] === 1 ? 0 : 1,
-    }));
-  };
+  const quickActions = [
+    {
+      title: 'Mi Armario',
+      description: 'Gestiona tu ropa y añade nuevas prendas',
+      icon: Shirt,
+      href: '/closet',
+      color: 'from-purple-500 to-pink-500',
+    },
+    {
+      title: 'Chat IA',
+      description: 'Habla con tu asistente de moda personal',
+      icon: MessageSquare,
+      href: '/chat',
+      color: 'from-blue-500 to-cyan-500',
+    },
+    {
+      title: 'Generar Outfit',
+      description: 'Crea combinaciones instantáneas',
+      icon: Sparkles,
+      href: '/create',
+      color: 'from-amber-500 to-orange-500',
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-[var(--background)] pb-24 md:pb-8">
@@ -47,162 +46,123 @@ export default function Home() {
         animate={{ opacity: 1, y: 0 }}
         className="sticky top-0 z-40 glass-strong border-b border-[var(--border-color)] px-4 py-3"
       >
-        <div className="flex items-center justify-center max-w-2xl mx-auto">
-          <Logo size="md" />
+        <div className="flex items-center justify-between max-w-6xl mx-auto">
+          <Logo />
+          <Link href="/profile">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-semibold cursor-pointer hover-lift">
+              {user?.name?.[0] || 'U'}
+            </div>
+          </Link>
         </div>
       </motion.div>
 
-      {/* Feed */}
-      <div className="max-w-2xl mx-auto px-4 pt-4 space-y-8">
-        {posts.map((post, index) => {
-          const currentImageIndex = currentImages[post.id] || 0;
-          const images = [post.images.outfit, post.images.items];
-
-          return (
-            <motion.article
-              key={post.id}
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="space-y-3"
-            >
-              {/* User Info */}
-              <div className="flex items-center gap-3">
-                <img
-                  src={post.user.avatar}
-                  alt={post.user.name}
-                  className="w-10 h-10 rounded-full border-2 border-[var(--brand-pink)]"
-                />
-                <div className="flex-1">
-                  <p className="font-bold text-sm text-[var(--foreground)]">{post.user.name}</p>
-                  <p className="text-xs text-[var(--foreground-tertiary)]">{post.user.username}</p>
-                </div>
-                {!post.user.isFriend && (
-                  <span className="text-[10px] px-2 py-1 rounded-full bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] font-semibold">
-                    Amiga de amiga
-                  </span>
-                )}
-              </div>
-
-              {/* Outfit Images (Swipeable) */}
-              <div className="relative">
-                <div className="relative aspect-[3/4] rounded-3xl overflow-hidden bg-[var(--background-secondary)] cursor-pointer group">
-                  <motion.div
-                    key={currentImageIndex}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.3 }}
-                    onClick={() => toggleImage(post.id)}
-                    className="w-full h-full"
-                  >
-                    <img
-                      src={images[currentImageIndex]}
-                      alt={currentImageIndex === 0 ? post.outfit.name : 'Prendas del outfit'}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      loading="lazy"
-                    />
-                  </motion.div>
-
-                  {/* Image indicator dots */}
-                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-                    {images.map((_, idx) => (
-                      <button
-                        key={idx}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setCurrentImages(prev => ({ ...prev, [post.id]: idx }));
-                        }}
-                        className={`w-2 h-2 rounded-full transition-all ${idx === currentImageIndex
-                          ? 'bg-white w-6'
-                          : 'bg-white/50'
-                          }`}
-                      />
-                    ))}
-                  </div>
-
-                  {/* Image label */}
-                  <div className="absolute top-4 right-4 px-3 py-1.5 rounded-full glass-strong">
-                    <span className="text-xs font-bold text-[var(--foreground)]">
-                      {currentImageIndex === 0 ? 'Outfit' : 'Prendas'}
-                    </span>
-                  </div>
-
-                  {/* Tap instruction (first time) */}
-                  {!currentImages[post.id] && index === 0 && (
-                    <motion.div
-                      initial={{ opacity: 1 }}
-                      animate={{ opacity: 0 }}
-                      transition={{ delay: 2, duration: 0.5 }}
-                      className="absolute inset-0 flex items-center justify-center bg-black/30 pointer-events-none"
-                    >
-                      <div className="px-4 py-2 rounded-full bg-white/90 text-black text-sm font-semibold">
-                        Toca para ver las prendas
-                      </div>
-                    </motion.div>
-                  )}
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="flex items-center gap-4">
-                <motion.button
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => handleLike(post.id)}
-                  className="flex items-center gap-1.5"
-                >
-                  <Heart
-                    className={`w-6 h-6 transition-colors ${post.isLiked
-                      ? 'fill-[var(--brand-pink)] stroke-[var(--brand-pink)]'
-                      : 'stroke-[var(--foreground)]'
-                      }`}
-                  />
-                  <span className="text-sm font-semibold text-[var(--foreground)]">{post.likes}</span>
-                </motion.button>
-
-                <Link href={`/post/${post.id}`} className="flex items-center gap-1.5">
-                  <MessageCircle className="w-6 h-6 stroke-[var(--foreground)]" />
-                  <span className="text-sm font-semibold text-[var(--foreground)]">{post.comments}</span>
-                </Link>
-
-                <motion.button
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => handleSave(post.id)}
-                  className="ml-auto"
-                >
-                  <Bookmark
-                    className={`w-6 h-6 transition-colors ${post.isSaved
-                      ? 'fill-[var(--brand-pink)] stroke-[var(--brand-pink)]'
-                      : 'stroke-[var(--foreground)]'
-                      }`}
-                  />
-                </motion.button>
-              </div>
-
-              {/* Caption */}
-              {post.caption && (
-                <p className="text-sm text-[var(--foreground)]">
-                  <span className="font-bold">{post.user.username}</span>{' '}
-                  {post.caption}
-                </p>
-              )}
-            </motion.article>
-          );
-        })}
-      </div>
-
-      {/* Floating Create Button */}
-      <Link href="/create">
-        <motion.button
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.5, type: 'spring', stiffness: 260, damping: 20 }}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.95 }}
-          className="fixed bottom-20 md:bottom-8 right-4 w-16 h-16 rounded-full bg-gradient-to-br from-[var(--brand-pink)] to-[var(--brand-pink-dark)] flex items-center justify-center shadow-[var(--shadow-float-strong)] z-50"
+      {/* Main Content */}
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        {/* Welcome Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="mb-8"
         >
-          <Plus className="w-8 h-8 text-white" strokeWidth={3} />
-        </motion.button>
-      </Link>
+          <h1 className="text-3xl md:text-4xl font-bold text-[var(--foreground)] mb-2">
+            ¡Hola, {user?.name || 'Usuario'}! 👋
+          </h1>
+          <p className="text-[var(--foreground-secondary)]">
+            ¿Qué quieres hacer hoy?
+          </p>
+        </motion.div>
+
+        {/* Quick Actions Grid */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+          className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12"
+        >
+          {quickActions.map((action, index) => (
+            <motion.div
+              key={action.title}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 * (index + 1) }}
+            >
+              <Link href={action.href}>
+                <Card className="p-6 hover-lift cursor-pointer group h-full">
+                  <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${action.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+                    <action.icon className="w-7 h-7 text-white" />
+                  </div>
+                  <h3 className="text-xl font-bold text-[var(--foreground)] mb-2">
+                    {action.title}
+                  </h3>
+                  <p className="text-[var(--foreground-secondary)]">
+                    {action.description}
+                  </p>
+                </Card>
+              </Link>
+            </motion.div>
+          ))}
+        </motion.div>
+
+        {/* Stats Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <h2 className="text-2xl font-bold text-[var(--foreground)] mb-4">
+            Tu actividad
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Card className="p-4 text-center">
+              <div className="text-3xl font-bold text-purple-500 mb-1">12</div>
+              <div className="text-sm text-[var(--foreground-secondary)]">Prendas</div>
+            </Card>
+            <Card className="p-4 text-center">
+              <div className="text-3xl font-bold text-blue-500 mb-1">8</div>
+              <div className="text-sm text-[var(--foreground-secondary)]">Outfits</div>
+            </Card>
+            <Card className="p-4 text-center">
+              <div className="text-3xl font-bold text-amber-500 mb-1">24</div>
+              <div className="text-sm text-[var(--foreground-secondary)]">Generados</div>
+            </Card>
+            <Card className="p-4 text-center">
+              <div className="text-3xl font-bold text-green-500 mb-1">5</div>
+              <div className="text-sm text-[var(--foreground-secondary)]">Esta semana</div>
+            </Card>
+          </div>
+        </motion.div>
+
+        {/* CTA Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="mt-12"
+        >
+          <Card className="p-8 bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-500/20">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+                <Sparkles className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-[var(--foreground)]">
+                  ¿Necesitas inspiración?
+                </h3>
+                <p className="text-[var(--foreground-secondary)]">
+                  Deja que la IA te ayude a encontrar el outfit perfecto
+                </p>
+              </div>
+            </div>
+            <Link href="/chat">
+              <Button className="w-full md:w-auto">
+                <MessageSquare className="w-5 h-5 mr-2" />
+                Hablar con el asistente
+              </Button>
+            </Link>
+          </Card>
+        </motion.div>
+      </div>
     </div>
   );
 }
