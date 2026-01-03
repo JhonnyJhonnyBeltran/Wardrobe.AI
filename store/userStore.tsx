@@ -37,7 +37,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const getInitialUser = () => {
     if (typeof window === 'undefined') return null;
     const storedUser = localStorage.getItem('wardrobe_user');
-    return storedUser ? JSON.parse(storedUser) : defaultUser;
+    return storedUser ? JSON.parse(storedUser) : null;
   };
   
   const getInitialPreferences = () => {
@@ -62,6 +62,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
     // Save user to localStorage whenever it changes
     if (user) {
       localStorage.setItem('wardrobe_user', JSON.stringify(user));
+    } else {
+      // Limpiar localStorage cuando no hay usuario
+      localStorage.removeItem('wardrobe_user');
     }
   }, [user]);
 

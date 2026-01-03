@@ -187,13 +187,13 @@ export default function OnboardingPage() {
 
                 {/* Botones de auth */}
                 <div className="space-y-3">
-                  <Link href="/auth">
+                  <Link href="/auth?mode=signup">
                     <Button size="lg" glow className="w-full">
                       Crear cuenta gratis
                       <ChevronRight className="w-5 h-5 ml-2" />
                     </Button>
                   </Link>
-                  <Link href="/auth">
+                  <Link href="/auth?mode=login">
                     <Button size="lg" variant="secondary" className="w-full">
                       Ya tengo cuenta
                     </Button>

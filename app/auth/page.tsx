@@ -9,23 +9,27 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Lock, Eye, EyeOff, Sparkles } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Sparkles, MailCheck } from 'lucide-react';
 import { Button, Card, StyleQuizModal } from '@/components';
 import type { StyleQuizResponses } from '@/components/StyleQuizModal';
 import { useUser } from '@/store/userStore';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { useSearchParams } from 'next/navigation';
 
 export default function AuthPage() {
     const router = useRouter();
     const { setUser } = useUser();
     const { signIn, signUp, signInWithGoogle } = useAuth();
-    const [isLogin, setIsLogin] = useState(true);
+    const searchParams = useSearchParams();
+    const mode = searchParams?.get('mode');
+    const [isLogin, setIsLogin] = useState(mode === 'login');
     const [showPassword, setShowPassword] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [name, setName] = useState('');
     const [showResetPassword, setShowResetPassword] = useState(false);
     const [showQuiz, setShowQuiz] = useState(false);
+    const [waitingVerification, setWaitingVerification] = useState(false);
 
     const handleGoogleLogin = async () => {
         try {
@@ -59,7 +63,8 @@ export default function AuthPage() {
         } else {
             const res = await signUp(email, password, name);
             if (res.success) {
-                setShowQuiz(true);
+                // Mostrar pantalla de verificación en lugar del quiz
+                setWaitingVerification(true);
             } else {
                 alert(res.error || 'Error al crear cuenta');
             }
@@ -76,7 +81,70 @@ export default function AuthPage() {
 
     return (
         <>
-            <div className="min-h-screen bg-[var(--background)] flex flex-col items-center justify-center p-4">{/* Logo */}
+            <div className="min-h-screen bg-[var(--background)] flex flex-col items-center justify-center p-4">
+                {waitingVerification ? (
+                    /* Pantalla de verificación */
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="w-full max-w-md"
+                    >
+                        <Card className="p-8 text-center">
+                            <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
+                                className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-[var(--brand-pink)] to-[var(--brand-pink-dark)] flex items-center justify-center shadow-[var(--shadow-float-strong)]"
+                            >
+                                <MailCheck className="w-10 h-10 text-white" />
+                            </motion.div>
+
+                            <h2 className="text-2xl font-bold text-[var(--foreground)] mb-3">
+                                Revisa tu correo
+                            </h2>
+                            
+                            <p className="text-[var(--foreground-secondary)] mb-2">
+                                Te hemos enviado un email a
+                            </p>
+                            <p className="text-[var(--brand-pink)] font-semibold mb-6">
+                                {email}
+                            </p>
+
+                            <div className="bg-[var(--background-secondary)] rounded-2xl p-4 mb-6">
+                                <p className="text-sm text-[var(--foreground-secondary)] leading-relaxed">
+                                    Haz clic en el enlace de verificación para activar tu cuenta y comenzar a usar KLOZET
+                                </p>
+                            </div>
+
+                            <motion.div
+                                animate={{ opacity: [0.5, 1, 0.5] }}
+                                transition={{ duration: 2, repeat: Infinity }}
+                                className="text-sm text-[var(--foreground-tertiary)] mb-6"
+                            >
+                                Esperando verificación...
+                            </motion.div>
+
+                            <Button
+                                variant="secondary"
+                                onClick={() => {
+                                    setWaitingVerification(false);
+                                    setEmail('');
+                                    setPassword('');
+                                    setName('');
+                                }}
+                                className="w-full"
+                            >
+                                Usar otro email
+                            </Button>
+
+                            <p className="text-xs text-[var(--foreground-tertiary)] mt-4">
+                                ¿No recibiste el email? Revisa tu carpeta de spam
+                            </p>
+                        </Card>
+                    </motion.div>
+                ) : (
+                    <>
+                {/* Logo */}
                 <motion.div
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -259,7 +327,7 @@ export default function AuthPage() {
                                             onClick={() => setIsLogin(!isLogin)}
                                             className="text-sm text-[var(--foreground-secondary)]"
                                         >
-                                            {isLogin ? '¿No tienes cuenta? ' : '¿Ya tienes cuenta? '}
+                                            {isLogin ? '¿No tienes cuenta? ' : '¿Tienes cuenta? '}
                                             <span className="text-[var(--brand-pink)] font-semibold">
                                                 {isLogin ? 'Regístrate' : 'Inicia sesión'}
                                             </span>
@@ -274,6 +342,8 @@ export default function AuthPage() {
                 <p className="mt-6 text-xs text-[var(--foreground-tertiary)] text-center max-w-md">
                     Al continuar, aceptas nuestros Términos de Servicio y Política de Privacidad
                 </p>
+                </>
+                )}
             </div>
 
             {/* Style Quiz Modal - Shows after registration */}

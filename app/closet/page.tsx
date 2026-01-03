@@ -5,21 +5,23 @@
  * Search expands, buttons icon-only on mobile
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Heart, Grid3x3, List, Search, Filter, Plus, Wand2, X
 } from 'lucide-react';
-import { Card, Button, ClothingItem } from '@/components';
+import { Card, Button, ClothingItem, StyleQuizModal } from '@/components';
 import AddItemModal from '@/components/AddItemModal';
 import ProductModal from '@/components/ProductModal';
+import type { StyleQuizResponses } from '@/components/StyleQuizModal';
 import { useUser } from '@/store';
 import { useWardrobe } from '@/lib/hooks/useWardrobe';
 import Link from 'next/link';
 import { OutfitItem } from '@/lib/fashion/outfitGenerator';
+import { supabase } from '@/lib/supabase/client';
 
 export default function ClosetPage() {
-  const { isPremium } = useUser();
+  const { isPremium, user, setUser } = useUser();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -29,6 +31,16 @@ export default function ClosetPage() {
   const [favorites, setFavorites] = useState<Set<string>>(new Set(['1', '2', '5', '6', '9', '10']));
   const [showAddModal, setShowAddModal] = useState(false);
   const { items, loading, addItem, refresh } = useWardrobe();
+
+  // Style Quiz State - Mostrar si no está completado
+  const [showStyleQuiz, setShowStyleQuiz] = useState(false);
+
+  useEffect(() => {
+    // Si el usuario no ha completado el cuestionario, mostrarlo automáticamente
+    if (user && !user.styleCompleted) {
+      setShowStyleQuiz(true);
+    }
+  }, [user]);
 
   // Product Modal State
   const [selectedProduct, setSelectedProduct] = useState<OutfitItem | null>(null);
@@ -369,6 +381,55 @@ export default function ClosetPage() {
         onAdd={async (partial) => {
           // delegate persistence to the hook
           await addItem(partial as any);
+        }}
+      />
+
+      {/* Style Quiz Modal - Obligatorio para nuevos usuarios */}
+      <StyleQuizModal
+        isOpen={showStyleQuiz}
+        required={true}
+        onClose={() => {
+          // No se puede cerrar si es obligatorio
+        }}
+        onComplete={async (responses: StyleQuizResponses) => {
+          // Guardar preferencias del usuario en Supabase
+          if (user) {
+            // Actualizar en la base de datos
+            const { error } = await supabase
+              .from('users')
+              .update({
+                age_range: responses.ageRange,
+                gender: responses.gender,
+                height: responses.height,
+                height_range: responses.heightRange,
+                preferred_styles: responses.preferredStyles,
+                uses_accessories: responses.usesAccessories,
+                visual_style_preferences: responses.visualStylePreferences,
+                style_completed: true,
+                updated_at: new Date().toISOString(),
+              })
+              .eq('id', user.id);
+
+            if (error) {
+              console.error('Error guardando preferencias:', error);
+              alert('Hubo un error guardando tus preferencias. Inténtalo de nuevo.');
+              return;
+            }
+
+            // Actualizar en el store local
+            setUser({
+              ...user,
+              ageRange: responses.ageRange as any,
+              gender: responses.gender as any,
+              height: responses.height,
+              heightRange: responses.heightRange as any,
+              preferredStyles: responses.preferredStyles,
+              usesAccessories: responses.usesAccessories,
+              visualStylePreferences: responses.visualStylePreferences,
+              styleCompleted: true,
+            });
+          }
+          setShowStyleQuiz(false);
         }}
       />
 

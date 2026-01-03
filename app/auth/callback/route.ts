@@ -30,6 +30,6 @@ export async function GET(request: NextRequest) {
     await supabase.auth.exchangeCodeForSession(code);
   }
 
-  // Redirigir a /closet después de confirmar email
+  // Redirigir a /closet - el quiz se mostrará automáticamente si no está completado
   return NextResponse.redirect(new URL('/closet', requestUrl.origin));
 }

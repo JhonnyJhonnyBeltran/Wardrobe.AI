@@ -66,6 +66,15 @@ export function useAuth(): UseAuthReturn {
       email: authUser.email!,
       name: profile?.name || authUser.user_metadata?.name || authUser.email!.split('@')[0],
       avatar: profile?.avatar || authUser.user_metadata?.avatar_url,
+      // Perfil de estilo
+      ageRange: profile.age_range,
+      gender: profile.gender,
+      height: profile.height,
+      heightRange: profile.height_range,
+      preferredStyles: profile.preferred_styles,
+      usesAccessories: profile.uses_accessories,
+      visualStylePreferences: profile.visual_style_preferences,
+      styleCompleted: profile.style_completed || false,
     });
   };
 

@@ -15,6 +15,7 @@ interface StyleQuizModalProps {
     isOpen: boolean;
     onClose: () => void;
     onComplete: (responses: StyleQuizResponses) => void;
+    required?: boolean; // Si es obligatorio, no se puede cerrar
 }
 
 export interface StyleQuizResponses {
@@ -44,7 +45,7 @@ const GENDER_OPTIONS = [
     { value: 'other', label: 'Otro', icon: '✨' },
 ];
 
-export default function StyleQuizModal({ isOpen, onClose, onComplete }: StyleQuizModalProps) {
+export default function StyleQuizModal({ isOpen, onClose, onComplete, required = false }: StyleQuizModalProps) {
     const [step, setStep] = useState(0);
     const [ageRange, setAgeRange] = useState('');
     const [gender, setGender] = useState('');
@@ -129,12 +130,14 @@ export default function StyleQuizModal({ isOpen, onClose, onComplete }: StyleQui
                                     </p>
                                 </div>
                             </div>
-                            <button
-                                onClick={onClose}
-                                className="w-8 h-8 rounded-full hover:bg-[var(--background-secondary)] flex items-center justify-center transition-colors"
-                            >
-                                <X className="w-5 h-5 text-[var(--foreground-secondary)]" />
-                            </button>
+                            {!required && (
+                                <button
+                                    onClick={onClose}
+                                    className="w-8 h-8 rounded-full hover:bg-[var(--background-secondary)] flex items-center justify-center transition-colors"
+                                >
+                                    <X className="w-5 h-5 text-[var(--foreground-secondary)]" />
+                                </button>
+                            )}
                         </div>
 
                         {/* Progress Bar */}

@@ -5,17 +5,19 @@
  * Shows how to integrate the StyleQuizModal
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { StyleQuizModal, type StyleQuizResponses } from '@/components/StyleQuizModal';
 import { useUser } from '@/store/userStore';
 import { Sparkles } from 'lucide-react';
 
 export default function OnboardingPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { user, setUser } = useUser();
-    const [showQuiz, setShowQuiz] = useState(true);
+    const step = searchParams?.get('step');
+    const [showQuiz, setShowQuiz] = useState(step === 'quiz');
 
     const handleQuizComplete = (responses: StyleQuizResponses) => {
         // Save user preferences
@@ -33,8 +35,8 @@ export default function OnboardingPage() {
             });
         }
 
-        // Navigate to home
-        router.push('/');
+        // Navigate to closet after completing quiz
+        router.push('/closet');
     };
 
     return (
@@ -67,7 +69,7 @@ export default function OnboardingPage() {
             {/* Style Quiz Modal */}
             <StyleQuizModal
                 isOpen={showQuiz}
-                onClose={() => router.push('/')}
+                onClose={() => router.push('/closet')}
                 onComplete={handleQuizComplete}
             />
         </div>

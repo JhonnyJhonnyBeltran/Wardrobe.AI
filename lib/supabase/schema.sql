@@ -17,9 +17,33 @@ CREATE TABLE public.users (
     email TEXT NOT NULL UNIQUE,
     name TEXT,
     avatar TEXT,
+    
+    -- Perfil de estilo
+    age_range TEXT,
+    gender TEXT,
+    height INTEGER,
+    height_range TEXT,
+    preferred_styles TEXT[],
+    uses_accessories BOOLEAN DEFAULT false,
+    visual_style_preferences TEXT[],
+    style_completed BOOLEAN DEFAULT false,
+    
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Índice para búsquedas por estilo completado
+CREATE INDEX idx_users_style_completed ON public.users(style_completed);
+
+-- Comentarios para documentación
+COMMENT ON COLUMN public.users.age_range IS 'Rango de edad del usuario (18-24, 25-34, 35-44, 45-54, 55+)';
+COMMENT ON COLUMN public.users.gender IS 'Género (hombre, mujer, no-binario, prefiero no decir)';
+COMMENT ON COLUMN public.users.height IS 'Altura en centímetros';
+COMMENT ON COLUMN public.users.height_range IS 'Rango de altura (bajo, medio, alto)';
+COMMENT ON COLUMN public.users.preferred_styles IS 'Estilos preferidos (casual, elegante, deportivo, etc)';
+COMMENT ON COLUMN public.users.uses_accessories IS 'Si le gustan los accesorios';
+COMMENT ON COLUMN public.users.visual_style_preferences IS 'Preferencias visuales (minimalista, colorido, etc)';
+COMMENT ON COLUMN public.users.style_completed IS 'Si completó el cuestionario de estilo';
 
 -- RLS (Row Level Security) para users
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;

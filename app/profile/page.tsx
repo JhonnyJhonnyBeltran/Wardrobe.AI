@@ -162,6 +162,95 @@ export default function ProfilePage() {
           </div>
         </motion.div>
 
+        {/* Style Preferences */}
+        {user.styleCompleted && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.35 }}
+            className="mt-6"
+          >
+            <h3 className="text-xl font-bold text-[var(--foreground)] mb-4">Tu Perfil de Estilo</h3>
+            <Card className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Gender & Age */}
+                <div>
+                  <div className="text-sm text-[var(--foreground-secondary)] mb-1">Género</div>
+                  <div className="font-semibold text-[var(--foreground)] capitalize">
+                    {user.gender || 'No especificado'}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-sm text-[var(--foreground-secondary)] mb-1">Rango de edad</div>
+                  <div className="font-semibold text-[var(--foreground)]">
+                    {user.ageRange || 'No especificado'}
+                  </div>
+                </div>
+
+                {/* Height */}
+                {user.height && (
+                  <div>
+                    <div className="text-sm text-[var(--foreground-secondary)] mb-1">Altura</div>
+                    <div className="font-semibold text-[var(--foreground)]">
+                      {user.height} cm
+                    </div>
+                  </div>
+                )}
+                {user.heightRange && (
+                  <div>
+                    <div className="text-sm text-[var(--foreground-secondary)] mb-1">Rango de altura</div>
+                    <div className="font-semibold text-[var(--foreground)]">
+                      {user.heightRange}
+                    </div>
+                  </div>
+                )}
+
+                {/* Preferred Styles */}
+                {user.preferredStyles && user.preferredStyles.length > 0 && (
+                  <div className="md:col-span-2">
+                    <div className="text-sm text-[var(--foreground-secondary)] mb-2">Estilos preferidos</div>
+                    <div className="flex flex-wrap gap-2">
+                      {user.preferredStyles.map((style, idx) => (
+                        <span
+                          key={idx}
+                          className="px-3 py-1 rounded-full bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] text-sm font-semibold"
+                        >
+                          {style}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Visual Preferences */}
+                {user.visualStylePreferences && user.visualStylePreferences.length > 0 && (
+                  <div className="md:col-span-2">
+                    <div className="text-sm text-[var(--foreground-secondary)] mb-2">Preferencias visuales</div>
+                    <div className="flex flex-wrap gap-2">
+                      {user.visualStylePreferences.map((pref, idx) => (
+                        <span
+                          key={idx}
+                          className="px-3 py-1 rounded-full bg-purple-500/10 text-purple-500 text-sm font-semibold"
+                        >
+                          {pref}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Accessories */}
+                <div className="md:col-span-2">
+                  <div className="text-sm text-[var(--foreground-secondary)] mb-1">Uso de accesorios</div>
+                  <div className="font-semibold text-[var(--foreground)]">
+                    {user.usesAccessories ? '✨ Me gustan los accesorios' : '🎯 Prefiero looks minimalistas'}
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </motion.div>
+        )}
+
         {/* Logout Button */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
