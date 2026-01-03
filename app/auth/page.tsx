@@ -13,10 +13,12 @@ import { Mail, Lock, Eye, EyeOff, Sparkles } from 'lucide-react';
 import { Button, Card, StyleQuizModal } from '@/components';
 import type { StyleQuizResponses } from '@/components/StyleQuizModal';
 import { useUser } from '@/store/userStore';
+import { useAuth } from '@/lib/hooks/useAuth';
 
 export default function AuthPage() {
     const router = useRouter();
     const { setUser } = useUser();
+    const { signIn, signUp, signInWithGoogle } = useAuth();
     const [isLogin, setIsLogin] = useState(true);
     const [showPassword, setShowPassword] = useState(false);
     const [email, setEmail] = useState('');
@@ -25,67 +27,51 @@ export default function AuthPage() {
     const [showResetPassword, setShowResetPassword] = useState(false);
     const [showQuiz, setShowQuiz] = useState(false);
 
-    const handleGoogleLogin = () => {
-        // TODO: Implement Google OAuth
-        console.log('Google login');
-        // Simulate login and redirect
-        simulateLogin('google');
+    const handleGoogleLogin = async () => {
+        try {
+            await signInWithGoogle();
+        } catch (err) {
+            console.error('Google login error', err);
+        }
     };
 
     const handleAppleLogin = () => {
-        // TODO: Implement Apple Sign In
-        console.log('Apple login');
-        // Simulate login and redirect
-        simulateLogin('apple');
+        // Apple sign-in not configured in Supabase settings here
+        console.log('Apple login - not configured');
     };
 
-    const handleEmailAuth = (e: React.FormEvent) => {
+    const handleEmailAuth = async (e: React.FormEvent) => {
         e.preventDefault();
         if (showResetPassword) {
             // TODO: Send reset email
             console.log('Reset password for:', email);
             setShowResetPassword(false);
-        } else if (isLogin) {
-            // Login flow
-            simulateLogin('email');
+            return;
+        }
+
+        if (isLogin) {
+            const res = await signIn(email, password);
+            if (res.success) {
+                router.push('/closet');
+            } else {
+                alert(res.error || 'Error al iniciar sesión');
+            }
         } else {
-            // Register flow - show questionnaire
-            setShowQuiz(true);
+            const res = await signUp(email, password, name);
+            if (res.success) {
+                setShowQuiz(true);
+            } else {
+                alert(res.error || 'Error al crear cuenta');
+            }
         }
     };
 
-    const simulateLogin = (method: string) => {
-        // Mock user data for demo
-        setUser({
-            id: '1',
-            name: name || 'Usuario Demo',
-            email: email || 'demo@klozet.app',
-            subscriptionTier: 'free' as any,
-            createdAt: new Date(),
-        });
-        router.push('/');
-    };
+    // Authentication handled by `useAuth`; simulateLogin removed
 
     const handleQuizComplete = (responses: StyleQuizResponses) => {
-        // Save user with questionnaire responses
-        setUser({
-            id: '1',
-            name: name || 'Usuario Demo',
-            email: email,
-            subscriptionTier: 'free' as any,
-            createdAt: new Date(),
-            // Style questionnaire data
-            ageRange: responses.ageRange as any,
-            gender: responses.gender as any,
-            height: responses.height,
-            heightRange: responses.heightRange as any,
-            preferredStyles: responses.preferredStyles,
-            usesAccessories: responses.usesAccessories,
-            visualStylePreferences: responses.visualStylePreferences,
-            styleCompleted: true,
-        });
+        // After signup, style quiz completes — useAuth already updated the store
         setShowQuiz(false);
-        router.push('/');
+        router.push('/closet');
     };
 
     return (

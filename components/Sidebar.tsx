@@ -19,7 +19,7 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { href: '/', label: 'Inicio', icon: <Home className="w-5 h-5" /> },
+  { href: '/feed', label: 'Feed', icon: <Home className="w-5 h-5" /> },
   { href: '/closet', label: 'Armario', icon: <ShoppingBag className="w-5 h-5" /> },
   { href: '/chat', label: 'Chat', icon: <MessageCircle className="w-5 h-5" /> },
   { href: '/profile', label: 'Perfil', icon: <User className="w-5 h-5" /> },

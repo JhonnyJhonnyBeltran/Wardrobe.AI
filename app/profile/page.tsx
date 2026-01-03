@@ -5,43 +5,28 @@
  * MVP Version - Sin funciones sociales ni análisis avanzados
  */
 
-import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Settings, User, Mail, Calendar, Shirt, Sparkles, LogOut } from 'lucide-react';
+import { User, Mail, Calendar, Shirt, Sparkles, LogOut } from 'lucide-react';
 import { useUser } from '@/store/userStore';
+import { useAuth } from '@/lib/hooks/useAuth';
 import { Card, Button } from '@/components';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function ProfilePage() {
   const { user, setUser } = useUser();
-  const [showSettings, setShowSettings] = useState(false);
+  const { signOut } = useAuth();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    await signOut();
+    router.push('/');
+  };
 
   if (!user) return null;
 
   return (
     <div className="min-h-screen bg-[var(--background)] pb-24 md:pb-8">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="sticky top-0 z-40 glass-strong border-b border-[var(--border-color)] px-4 py-3"
-      >
-        <div className="flex items-center justify-between max-w-4xl mx-auto">
-          <Link href="/">
-            <Button variant="ghost" size="sm">
-              ← Volver
-            </Button>
-          </Link>
-          <h1 className="text-lg font-bold text-[var(--foreground)]">Mi Perfil</h1>
-          <button
-            onClick={() => setShowSettings(!showSettings)}
-            className="w-10 h-10 rounded-full hover:bg-[var(--background-secondary)] flex items-center justify-center transition-colors"
-          >
-            <Settings className="w-5 h-5" />
-          </button>
-        </div>
-      </motion.div>
-
       {/* Main Content */}
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Profile Header */}
@@ -177,50 +162,25 @@ export default function ProfilePage() {
           </div>
         </motion.div>
 
-        {/* Settings Panel */}
-        {showSettings && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="mt-6"
-          >
-            <Card className="p-6">
-              <h3 className="text-xl font-bold text-[var(--foreground)] mb-4">Configuración</h3>
-              <div className="space-y-4">
-                <button className="w-full p-4 rounded-xl hover:bg-[var(--background-secondary)] text-left transition-colors">
-                  <div className="flex items-center gap-3">
-                    <User className="w-5 h-5 text-[var(--foreground-secondary)]" />
-                    <div>
-                      <div className="font-semibold text-[var(--foreground)]">Editar Información Personal</div>
-                      <div className="text-sm text-[var(--foreground-secondary)]">Nombre, email, etc.</div>
-                    </div>
-                  </div>
-                </button>
-
-                <button className="w-full p-4 rounded-xl hover:bg-[var(--background-secondary)] text-left transition-colors">
-                  <div className="flex items-center gap-3">
-                    <Settings className="w-5 h-5 text-[var(--foreground-secondary)]" />
-                    <div>
-                      <div className="font-semibold text-[var(--foreground)]">Preferencias</div>
-                      <div className="text-sm text-[var(--foreground-secondary)]">Tema, notificaciones, etc.</div>
-                    </div>
-                  </div>
-                </button>
-
-                <button className="w-full p-4 rounded-xl hover:bg-red-500/10 text-left transition-colors group">
-                  <div className="flex items-center gap-3">
-                    <LogOut className="w-5 h-5 text-red-500" />
-                    <div>
-                      <div className="font-semibold text-red-500">Cerrar Sesión</div>
-                      <div className="text-sm text-[var(--foreground-secondary)]">Salir de tu cuenta</div>
-                    </div>
-                  </div>
-                </button>
+        {/* Logout Button */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="mt-6"
+        >
+          <Card className="p-6">
+            <button
+              onClick={handleLogout}
+              className="w-full p-4 rounded-xl hover:bg-red-500/10 transition-colors group"
+            >
+              <div className="flex items-center justify-center gap-3">
+                <LogOut className="w-5 h-5 text-red-500" />
+                <div className="font-semibold text-red-500">Cerrar Sesión</div>
               </div>
-            </Card>
-          </motion.div>
-        )}
+            </button>
+          </Card>
+        </motion.div>
       </div>
     </div>
   );

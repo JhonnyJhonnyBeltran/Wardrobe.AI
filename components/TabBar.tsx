@@ -17,7 +17,7 @@ interface TabItem {
 }
 
 const tabs: TabItem[] = [
-  { href: '/', label: 'Inicio', icon: <Home className="w-6 h-6" /> },
+  { href: '/feed', label: 'Feed', icon: <Home className="w-6 h-6" /> },
   { href: '/closet', label: 'Armario', icon: <ShoppingBag className="w-6 h-6" /> },
   { href: '/chat', label: 'Chat', icon: <MessageCircle className="w-6 h-6" /> },
   { href: '/profile', label: 'Perfil', icon: <User className="w-6 h-6" /> },

@@ -7,6 +7,7 @@
 import React, { ReactNode } from 'react';
 import TabBar from './TabBar';
 import Sidebar from './Sidebar';
+import AuthGuard from './AuthGuard';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -21,7 +22,9 @@ export default function AppLayout({ children }: AppLayoutProps) {
       {/* Main Content */}
       <main className="flex-1 pb-28 md:pb-0">
         <div className="max-w-7xl mx-auto px-4 py-6 md:py-8">
-          {children}
+          <AuthGuard>
+            {children}
+          </AuthGuard>
         </div>
       </main>
 

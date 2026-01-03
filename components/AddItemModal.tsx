@@ -9,13 +9,13 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Upload, Camera, Link as LinkIcon, Check, ArrowRight, Loader2 } from 'lucide-react';
 import { Button, Card } from '@/components';
-import type { ClothingItemData } from '@/data/mockData';
+import type { ClothingItem } from '@/types/clothing';
 import { removeBackgroundRembg } from '@/services/backgroundRemoval';
 
 interface AddItemModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onAdd: (item: Partial<ClothingItemData>) => void;
+    onAdd: (item: Partial<ClothingItem>) => void | Promise<void>;
 }
 
 export default function AddItemModal({ isOpen, onClose, onAdd }: AddItemModalProps) {
@@ -117,14 +117,18 @@ export default function AddItemModal({ isOpen, onClose, onAdd }: AddItemModalPro
         }
     };
 
-    const handleSubmit = () => {
-        const newItem: Partial<ClothingItemData> = {
-            id: Date.now().toString(),
-            imageUrl: image || '',
-            isFavorite: false,
-            ...formData,
+    const handleSubmit = async () => {
+        const payload: Partial<ClothingItem> = {
+            name: formData.name || 'Nueva prenda',
+            category: (formData.type as any) || 'top',
+            color: formData.color || 'white',
+            imageUrl: image || undefined,
+            brand: formData.brand || undefined,
+            season: [formData.season as any] || [],
+            // tags, price, size, fabric can be stored in tags or extended later
         };
-        onAdd(newItem);
+
+        await onAdd(payload);
         onClose();
         // Reset form
         setImage(null);

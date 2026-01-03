@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { UserProvider, ThemeProvider } from "@/store";
 import AppLayout from "@/components/AppLayout";
+import ConditionalLayout from "@/components/ConditionalLayout";
 
 export const metadata: Metadata = {
   title: "Klozet - Tu Asistente de Moda IA",
@@ -33,7 +34,7 @@ export default function RootLayout({
       <body className="antialiased">
         <ThemeProvider>
           <UserProvider>
-            <AppLayout>{children}</AppLayout>
+            <ConditionalLayout>{children}</ConditionalLayout>
           </UserProvider>
         </ThemeProvider>
       </body>

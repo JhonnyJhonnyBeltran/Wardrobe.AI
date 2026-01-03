@@ -14,7 +14,7 @@ import { Card, Button, ClothingItem } from '@/components';
 import AddItemModal from '@/components/AddItemModal';
 import ProductModal from '@/components/ProductModal';
 import { useUser } from '@/store';
-import { myWardrobe, type ClothingItemData } from '@/data/mockData';
+import { useWardrobe } from '@/lib/hooks/useWardrobe';
 import Link from 'next/link';
 import { OutfitItem } from '@/lib/fashion/outfitGenerator';
 
@@ -28,7 +28,7 @@ export default function ClosetPage() {
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [favorites, setFavorites] = useState<Set<string>>(new Set(['1', '2', '5', '6', '9', '10']));
   const [showAddModal, setShowAddModal] = useState(false);
-  const [items, setItems] = useState<ClothingItemData[]>(myWardrobe);
+  const { items, loading, addItem, refresh } = useWardrobe();
 
   // Product Modal State
   const [selectedProduct, setSelectedProduct] = useState<OutfitItem | null>(null);
@@ -50,14 +50,14 @@ export default function ClosetPage() {
     // Convert ClothingItemData to OutfitItem for the modal
     const productItem: OutfitItem = {
       id: item.id,
-      type: item.type as any,
+      type: (item.category as any) || 'top',
       name: item.name,
       brand: item.brand,
-      color: item.colorHex,
-      imageUrl: item.imageUrl,
-      price: item.price,
+      color: (item.color as any) || 'white',
+      imageUrl: item.imageUrl || '',
+      price: (item as any).price || undefined,
       buyLink: '#',
-      colorHex: item.colorHex,
+      colorHex: (item as any).colorHex || undefined,
       source: 'wardrobe',
       trending: false,
       matchScore: 100
@@ -68,16 +68,31 @@ export default function ClosetPage() {
   };
 
   // Filter clothing items
-  const filteredItems = items.filter(item => {
+  const filteredItems = (items || []).filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.brand.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesType = !filterType || item.type === filterType;
+      (item.brand || '').toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesType = !filterType || item.category === filterType;
     const matchesFavorites = !showFavoritesOnly || favorites.has(item.id);
 
     return matchesSearch && matchesType && matchesFavorites;
   });
 
   const itemTypes = ['top', 'bottom', 'dress', 'outerwear'];
+
+  const colorMap: Record<string, string> = {
+    white: '#FFFFFF',
+    black: '#000000',
+    gray: '#9CA3AF',
+    beige: '#F5F5DC',
+    brown: '#8B4513',
+    blue: '#3B82F6',
+    red: '#EF4444',
+    green: '#10B981',
+    pink: '#EC4899',
+    yellow: '#F59E0B',
+    purple: '#8B5CF6',
+    orange: '#FB923C',
+  };
 
   return (
     <div className="min-h-screen bg-[var(--background)] pb-24 md:pb-8">
@@ -319,7 +334,14 @@ export default function ClosetPage() {
               transition={{ delay: 0.05 * index }}
             >
               <ClothingItem
-                {...item}
+                id={item.id}
+                name={item.name}
+                brand={item.brand}
+                type={item.category as any}
+                color={item.color as any}
+                colorHex={(item as any).colorHex || colorMap[(item.color as any) as string] || '#EEEEEE'}
+                imageUrl={item.imageUrl || ''}
+                price={(item as any).price}
                 isFavorite={favorites.has(item.id)}
                 onFavoriteToggle={handleFavoriteToggle}
                 onClick={() => handleItemClick(item)}
@@ -329,9 +351,14 @@ export default function ClosetPage() {
         </motion.div>
       ) : (
         <Card className="mx-4 p-8 text-center">
-          <Search className="w-12 h-12 text-[var(--foreground-tertiary)] mx-auto mb-3" />
-          <p className="text-sm font-bold text-[var(--foreground)] mb-1">Sin resultados</p>
-          <p className="text-xs text-[var(--foreground-tertiary)]">Prueba otra búsqueda</p>
+          <Plus className="w-12 h-12 text-[var(--brand-pink)] mx-auto mb-3" />
+          <p className="text-sm font-bold text-[var(--foreground)] mb-1">Añade una prenda</p>
+          <p className="text-xs text-[var(--foreground-tertiary)]">Tu armario te está esperando</p>
+          <div className="mt-4">
+            <Button onClick={() => setShowAddModal(true)} className="px-4">
+              Añadir prenda
+            </Button>
+          </div>
         </Card>
       )}
 
@@ -339,8 +366,9 @@ export default function ClosetPage() {
       <AddItemModal
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
-        onAdd={(newItem) => {
-          setItems([...items, newItem as ClothingItemData]);
+        onAdd={async (partial) => {
+          // delegate persistence to the hook
+          await addItem(partial as any);
         }}
       />
 
