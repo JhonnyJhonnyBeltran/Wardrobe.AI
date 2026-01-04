@@ -14,6 +14,7 @@ import { Card, Button, ClothingItem, StyleQuizModal } from '@/components';
 import AddItemModal from '@/components/AddItemModal';
 import ProductModal from '@/components/ProductModal';
 import type { StyleQuizResponses } from '@/components/StyleQuizModal';
+import type { ClothingItem as ClothingItemType } from '@/types/clothing';
 import { useUser } from '@/store';
 import { useWardrobe } from '@/lib/hooks/useWardrobe';
 import Link from 'next/link';
@@ -30,7 +31,8 @@ export default function ClosetPage() {
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [favorites, setFavorites] = useState<Set<string>>(new Set(['1', '2', '5', '6', '9', '10']));
   const [showAddModal, setShowAddModal] = useState(false);
-  const { items, loading, addItem, refresh } = useWardrobe();
+  const [editingItem, setEditingItem] = useState<ClothingItemType | null>(null);
+  const { items, loading, addItem, updateItem, refresh } = useWardrobe();
 
   // Style Quiz State - Mostrar si no está completado
   const [showStyleQuiz, setShowStyleQuiz] = useState(false);
@@ -58,17 +60,26 @@ export default function ClosetPage() {
     });
   };
 
-  const handleItemClick = (item: ClothingItemData) => {
+  const handleEditItem = (id: string) => {
+    const itemToEdit = items.find(i => i.id === id);
+    if (itemToEdit) {
+      setEditingItem(itemToEdit);
+      setShowProductModal(false);
+      setShowAddModal(true);
+    }
+  };
+
+  const handleItemClick = (item: ClothingItemType) => {
     // Convert ClothingItemData to OutfitItem for the modal
     const productItem: OutfitItem = {
       id: item.id,
       type: (item.category as any) || 'top',
       name: item.name,
-      brand: item.brand,
+      brand: item.brand || '',
       color: (item.color as any) || 'white',
       imageUrl: item.imageUrl || '',
       price: (item as any).price || undefined,
-      buyLink: '#',
+      buyLink: (item as any).buyLink || '#',
       colorHex: (item as any).colorHex || undefined,
       source: 'wardrobe',
       trending: false,
@@ -78,6 +89,39 @@ export default function ClosetPage() {
     setSelectedProduct(productItem);
     setShowProductModal(true);
   };
+
+  // ... (filtro de items)
+
+  // ... (render)
+
+  // Update ProductModal props
+  /*
+  <ProductModal
+    ...
+    onEdit={handleEditItem}
+  />
+  */
+
+  // Update AddItemModal props
+  /*
+  <AddItemModal
+    isOpen={showAddModal}
+    onClose={() => {
+      setShowAddModal(false);
+      setEditingItem(null);
+    }}
+    initialData={editingItem || undefined}
+    isEditing={!!editingItem}
+    onAdd={async (partial) => {
+      if (editingItem) {
+         await updateItem(editingItem.id, partial);
+      } else {
+         await addItem(partial);
+      }
+      setEditingItem(null);
+    }}
+  />
+  */
 
   // Filter clothing items
   const filteredItems = (items || []).filter(item => {
@@ -377,10 +421,19 @@ export default function ClosetPage() {
       {/* Add Item Modal */}
       <AddItemModal
         isOpen={showAddModal}
-        onClose={() => setShowAddModal(false)}
+        onClose={() => {
+          setShowAddModal(false);
+          setEditingItem(null);
+        }}
+        initialData={editingItem || undefined}
+        isEditing={!!editingItem}
         onAdd={async (partial) => {
-          // delegate persistence to the hook
-          await addItem(partial as any);
+          if (editingItem && editingItem.id) {
+            await updateItem(editingItem.id, partial as any);
+          } else {
+            await addItem(partial as any);
+          }
+          setEditingItem(null); // Reset after save
         }}
       />
 
@@ -440,6 +493,7 @@ export default function ClosetPage() {
         onClose={() => setShowProductModal(false)}
         isFavorite={selectedProduct ? favorites.has(selectedProduct.id) : false}
         onFavoriteToggle={handleFavoriteToggle}
+        onEdit={handleEditItem}
       />
     </div>
   );

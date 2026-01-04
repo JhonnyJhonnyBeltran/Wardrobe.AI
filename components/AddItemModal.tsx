@@ -5,7 +5,7 @@
  * Allows full details OR just quick add
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Upload, Camera, Link as LinkIcon, Check, ArrowRight, Loader2 } from 'lucide-react';
 import { Button, Card } from '@/components';
@@ -16,9 +16,11 @@ interface AddItemModalProps {
     isOpen: boolean;
     onClose: () => void;
     onAdd: (item: Partial<ClothingItem>) => void | Promise<void>;
+    initialData?: ClothingItem;
+    isEditing?: boolean;
 }
 
-export default function AddItemModal({ isOpen, onClose, onAdd }: AddItemModalProps) {
+export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEditing = false }: AddItemModalProps) {
     const [mode, setMode] = useState<'quick' | 'complete'>('quick');
     const [inputMethod, setInputMethod] = useState<'upload' | 'url'>('upload');
     const [image, setImage] = useState<string | null>(null);
@@ -36,6 +38,44 @@ export default function AddItemModal({ isOpen, onClose, onAdd }: AddItemModalPro
         fabric: '',
         season: 'spring' as const,
     });
+
+    useEffect(() => {
+        if (isOpen) {
+            if (initialData) {
+                // Editing mode setup
+                setMode('complete');
+                setImage(initialData.imageUrl || null);
+                setFormData({
+                    name: initialData.name,
+                    brand: initialData.brand || '',
+                    type: (initialData.category as any) || 'top',
+                    color: initialData.color || '',
+                    colorHex: (initialData as any).colorHex || '#000000',
+                    price: (initialData as any).price || '',
+                    size: (initialData as any).size || '',
+                    reference: (initialData as any).reference || '',
+                    fabric: (initialData as any).fabric || '',
+                    season: (initialData.season?.[0] as any) || 'spring',
+                });
+            } else {
+                // Add mode reset
+                setMode('quick');
+                setImage(null);
+                setFormData({
+                    name: '',
+                    brand: '',
+                    type: 'top',
+                    color: '',
+                    colorHex: '#000000',
+                    price: '',
+                    size: '',
+                    reference: '',
+                    fabric: '',
+                    season: 'spring',
+                });
+            }
+        }
+    }, [isOpen, initialData]);
 
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -95,9 +135,9 @@ export default function AddItemModal({ isOpen, onClose, onAdd }: AddItemModalPro
 
             if (data.success) {
                 const { name, imageUrl, price, type, brand } = data.data;
-                
+
                 if (imageUrl) setImage(imageUrl);
-                
+
                 setFormData(prev => ({
                     ...prev,
                     name: name || prev.name,
@@ -119,32 +159,30 @@ export default function AddItemModal({ isOpen, onClose, onAdd }: AddItemModalPro
 
     const handleSubmit = async () => {
         const payload: Partial<ClothingItem> = {
+            id: initialData?.id, // Preserve ID if editing
             name: formData.name || 'Nueva prenda',
             category: (formData.type as any) || 'top',
             color: formData.color || 'white',
             imageUrl: image || undefined,
             brand: formData.brand || undefined,
             season: [formData.season as any] || [],
-            // tags, price, size, fabric can be stored in tags or extended later
+            // cast properties that might not be in ClothingItem interface but we want to save
+            ...({
+                colorHex: formData.colorHex,
+                price: formData.price,
+                size: formData.size,
+                reference: formData.reference,
+                fabric: formData.fabric,
+            } as any)
         };
 
         await onAdd(payload);
         onClose();
-        // Reset form
-        setImage(null);
-        setUrl('');
-        setFormData({
-            name: '',
-            brand: '',
-            type: 'top',
-            color: '',
-            colorHex: '#000000',
-            price: '',
-            size: '',
-            reference: '',
-            fabric: '',
-            season: 'spring',
-        });
+        // Reset handled by useEffect on next open, but nice to clean up:
+        if (!initialData) {
+            setImage(null);
+            setUrl('');
+        }
     };
 
     if (!isOpen) return null;
@@ -168,7 +206,9 @@ export default function AddItemModal({ isOpen, onClose, onAdd }: AddItemModalPro
                 >
                     {/* Header */}
                     <div className="sticky top-0 bg-[var(--background)] border-b border-[var(--border-color)] p-4 flex items-center justify-between z-10">
-                        <h2 className="text-lg font-bold text-[var(--foreground)]">Añadir Prenda</h2>
+                        <h2 className="text-lg font-bold text-[var(--foreground)]">
+                            {isEditing ? 'Editar Prenda' : 'Añadir Prenda'}
+                        </h2>
                         <button
                             onClick={onClose}
                             className="w-8 h-8 rounded-full bg-[var(--background-secondary)] flex items-center justify-center"
@@ -200,31 +240,33 @@ export default function AddItemModal({ isOpen, onClose, onAdd }: AddItemModalPro
                             </button>
                         </div>
 
-                        {/* Input Method Tabs */}
-                        <div className="flex border-b border-[var(--border-color)]">
-                            <button
-                                onClick={() => setInputMethod('upload')}
-                                className={`flex-1 py-2 text-sm font-medium border-b-2 transition-colors ${inputMethod === 'upload'
-                                    ? 'border-[var(--brand-pink)] text-[var(--foreground)]'
-                                    : 'border-transparent text-[var(--foreground-tertiary)]'
-                                    }`}
-                            >
-                                Subir Foto
-                            </button>
-                            <button
-                                onClick={() => setInputMethod('url')}
-                                className={`flex-1 py-2 text-sm font-medium border-b-2 transition-colors ${inputMethod === 'url'
-                                    ? 'border-[var(--brand-pink)] text-[var(--foreground)]'
-                                    : 'border-transparent text-[var(--foreground-tertiary)]'
-                                    }`}
-                            >
-                                Importar URL
-                            </button>
-                        </div>
+                        {/* Input Method Tabs - Hide when editing as we already have image */}
+                        {!isEditing && (
+                            <div className="flex border-b border-[var(--border-color)]">
+                                <button
+                                    onClick={() => setInputMethod('upload')}
+                                    className={`flex-1 py-2 text-sm font-medium border-b-2 transition-colors ${inputMethod === 'upload'
+                                        ? 'border-[var(--brand-pink)] text-[var(--foreground)]'
+                                        : 'border-transparent text-[var(--foreground-tertiary)]'
+                                        }`}
+                                >
+                                    Subir Foto
+                                </button>
+                                <button
+                                    onClick={() => setInputMethod('url')}
+                                    className={`flex-1 py-2 text-sm font-medium border-b-2 transition-colors ${inputMethod === 'url'
+                                        ? 'border-[var(--brand-pink)] text-[var(--foreground)]'
+                                        : 'border-transparent text-[var(--foreground-tertiary)]'
+                                        }`}
+                                >
+                                    Importar URL
+                                </button>
+                            </div>
+                        )}
 
                         {/* Image Input Area */}
                         <div className="min-h-[150px]">
-                            {inputMethod === 'upload' ? (
+                            {inputMethod === 'upload' || isEditing ? (
                                 <div>
                                     <label className="block text-xs font-bold text-[var(--foreground)] mb-2">
                                         Foto de la prenda
@@ -283,7 +325,7 @@ export default function AddItemModal({ isOpen, onClose, onAdd }: AddItemModalPro
                                             {isProcessing ? <Loader2 className="w-5 h-5 animate-spin" /> : <ArrowRight className="w-5 h-5" />}
                                         </button>
                                     </div>
-                                    
+
                                     {/* Preview Area for URL */}
                                     <div className="aspect-video rounded-2xl border border-[var(--border-color)] bg-[var(--background-secondary)] flex items-center justify-center overflow-hidden relative">
                                         {image ? (
@@ -457,7 +499,7 @@ export default function AddItemModal({ isOpen, onClose, onAdd }: AddItemModalPro
                             glow={!!image}
                         >
                             <Check className="w-5 h-5 mr-2" />
-                            Añadir Prenda
+                            {isEditing ? 'Guardar Cambios' : 'Añadir Prenda'}
                         </Button>
                     </div>
                 </motion.div>

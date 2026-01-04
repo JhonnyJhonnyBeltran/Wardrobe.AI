@@ -5,7 +5,7 @@
  * Shows product image, buy link, source, and price
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ExternalLink, ShoppingBag, Tag, Store, Sparkles, Heart } from 'lucide-react';
 import { OutfitItem } from '@/lib/fashion/outfitGenerator';
@@ -16,9 +16,48 @@ interface ProductModalProps {
     onClose: () => void;
     isFavorite?: boolean;
     onFavoriteToggle?: (id: string) => void;
+    onEdit?: (id: string) => void;
 }
 
-export default function ProductModal({ item, isOpen, onClose, isFavorite = false, onFavoriteToggle }: ProductModalProps) {
+// Fancy Button Component adapted for Modal (onClick support)
+interface FancyButtonProps {
+    onClick?: () => void;
+    variant: 'pink' | 'amber';
+    title: string;
+    subtitle: string;
+    className?: string;
+}
+
+function FancyButton({ onClick, variant, title, subtitle, className = '' }: FancyButtonProps) {
+    const [isActive, setIsActive] = useState(false);
+
+    const handleClick = () => {
+        setIsActive(true);
+        // Reset animation state after it plays, but trigger action immediately or with delay if needed
+        setTimeout(() => {
+            onClick?.();
+            setIsActive(false); // Reset so it can be clicked again if modal doesn't close
+        }, 450);
+    };
+
+    return (
+        <button
+            onClick={handleClick}
+            className={`fancy-btn fancy-btn--${variant} ${isActive ? 'active' : ''} ${className}`}
+        >
+            <div className="fancy-btn__line"></div>
+            <div className="fancy-btn__line"></div>
+            <span className="fancy-btn__text">
+                <span className="fancy-btn__text-main">{title}</span>
+                <span className="fancy-btn__text-sub">{subtitle}</span>
+            </span>
+            <div className="fancy-btn__drow1"></div>
+            <div className="fancy-btn__drow2"></div>
+        </button>
+    );
+}
+
+export default function ProductModal({ item, isOpen, onClose, isFavorite = false, onFavoriteToggle, onEdit }: ProductModalProps) {
     if (!item) return null;
 
     return (
@@ -176,12 +215,12 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
                                 </div>
 
                                 {/* Action Buttons */}
-                                <div className="flex gap-3">
+                                <div className="flex gap-3 items-center">
                                     <motion.button
                                         whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}
                                         onClick={() => onFavoriteToggle?.(item.id)}
-                                        className={`flex-1 flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl font-medium transition-all duration-300 border-2 min-w-[130px] ${isFavorite
+                                        className={`flex-1 flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl font-medium transition-all duration-300 border-2 min-w-[130px] h-[56px] ${isFavorite
                                             ? 'bg-gradient-to-r from-pink-500/20 to-fuchsia-500/20 text-pink-500 border-pink-500/50'
                                             : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 border-transparent'
                                             }`}
@@ -190,20 +229,14 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
                                         <span className="min-w-[60px] text-center">{isFavorite ? 'Favorito' : 'Guardar'}</span>
                                     </motion.button>
 
-                                    {item.buyLink && (
-                                        <motion.a
-                                            href={item.buyLink}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            whileHover={{ scale: 1.02 }}
-                                            whileTap={{ scale: 0.98 }}
-                                            className="flex-1 flex items-center justify-center gap-2 py-3.5 px-4 bg-gradient-to-r from-pink-500 to-fuchsia-500 rounded-2xl text-white font-semibold shadow-lg hover:shadow-xl transition-shadow"
-                                        >
-                                            <ShoppingBag className="w-5 h-5" />
-                                            Comprar
-                                            <ExternalLink className="w-4 h-4" />
-                                        </motion.a>
-                                    )}
+                                    <div className="flex-1">
+                                        <FancyButton
+                                            variant="amber"
+                                            title="EDITAR"
+                                            subtitle="Modificar detalles"
+                                            onClick={() => onEdit?.(item.id)}
+                                        />
+                                    </div>
                                 </div>
                             </motion.div>
                         </motion.div>
