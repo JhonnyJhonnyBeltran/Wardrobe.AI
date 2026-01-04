@@ -7,7 +7,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ExternalLink, ShoppingBag, Tag, Store, Sparkles, Heart } from 'lucide-react';
+import { X, ExternalLink, ShoppingBag, Tag, Store, Sparkles, Heart, Edit2 } from 'lucide-react';
 import { OutfitItem } from '@/lib/fashion/outfitGenerator';
 
 interface ProductModalProps {
@@ -19,43 +19,7 @@ interface ProductModalProps {
     onEdit?: (id: string) => void;
 }
 
-// Fancy Button Component adapted for Modal (onClick support)
-interface FancyButtonProps {
-    onClick?: () => void;
-    variant: 'pink' | 'amber';
-    title: string;
-    subtitle: string;
-    className?: string;
-}
 
-function FancyButton({ onClick, variant, title, subtitle, className = '' }: FancyButtonProps) {
-    const [isActive, setIsActive] = useState(false);
-
-    const handleClick = () => {
-        setIsActive(true);
-        // Reset animation state after it plays, but trigger action immediately or with delay if needed
-        setTimeout(() => {
-            onClick?.();
-            setIsActive(false); // Reset so it can be clicked again if modal doesn't close
-        }, 450);
-    };
-
-    return (
-        <button
-            onClick={handleClick}
-            className={`fancy-btn fancy-btn--${variant} ${isActive ? 'active' : ''} ${className}`}
-        >
-            <div className="fancy-btn__line"></div>
-            <div className="fancy-btn__line"></div>
-            <span className="fancy-btn__text">
-                <span className="fancy-btn__text-main">{title}</span>
-                <span className="fancy-btn__text-sub">{subtitle}</span>
-            </span>
-            <div className="fancy-btn__drow1"></div>
-            <div className="fancy-btn__drow2"></div>
-        </button>
-    );
-}
 
 export default function ProductModal({ item, isOpen, onClose, isFavorite = false, onFavoriteToggle, onEdit }: ProductModalProps) {
     if (!item) return null;
@@ -229,14 +193,15 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
                                         <span className="min-w-[60px] text-center">{isFavorite ? 'Favorito' : 'Guardar'}</span>
                                     </motion.button>
 
-                                    <div className="flex-1">
-                                        <FancyButton
-                                            variant="amber"
-                                            title="EDITAR"
-                                            subtitle="Modificar detalles"
-                                            onClick={() => onEdit?.(item.id)}
-                                        />
-                                    </div>
+                                    <motion.button
+                                        whileHover={{ scale: 1.02 }}
+                                        whileTap={{ scale: 0.98 }}
+                                        onClick={() => onEdit?.(item.id)}
+                                        className="flex-1 flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl font-medium transition-all duration-300 border-2 border-transparent bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 min-w-[130px] h-[56px]"
+                                    >
+                                        <Edit2 className="w-5 h-5" />
+                                        <span className="min-w-[60px] text-center">Editar</span>
+                                    </motion.button>
                                 </div>
                             </motion.div>
                         </motion.div>
