@@ -14,9 +14,11 @@ interface ProductModalProps {
     item: OutfitItem | null;
     isOpen: boolean;
     onClose: () => void;
+    isFavorite?: boolean;
+    onFavoriteToggle?: (id: string) => void;
 }
 
-export default function ProductModal({ item, isOpen, onClose }: ProductModalProps) {
+export default function ProductModal({ item, isOpen, onClose, isFavorite = false, onFavoriteToggle }: ProductModalProps) {
     if (!item) return null;
 
     return (
@@ -178,10 +180,14 @@ export default function ProductModal({ item, isOpen, onClose }: ProductModalProp
                                     <motion.button
                                         whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}
-                                        className="flex-1 flex items-center justify-center gap-2 py-3.5 px-4 bg-gray-100 dark:bg-gray-800 rounded-2xl text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                                        onClick={() => onFavoriteToggle?.(item.id)}
+                                        className={`flex-1 flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl font-medium transition-all duration-300 border-2 min-w-[130px] ${isFavorite
+                                            ? 'bg-gradient-to-r from-pink-500/20 to-fuchsia-500/20 text-pink-500 border-pink-500/50'
+                                            : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 border-transparent'
+                                            }`}
                                     >
-                                        <Heart className="w-5 h-5" />
-                                        Guardar
+                                        <Heart className={`w-5 h-5 transition-all ${isFavorite ? 'fill-pink-500 text-pink-500' : ''}`} />
+                                        <span className="min-w-[60px] text-center">{isFavorite ? 'Favorito' : 'Guardar'}</span>
                                     </motion.button>
 
                                     {item.buyLink && (

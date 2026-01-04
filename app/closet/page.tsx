@@ -438,6 +438,8 @@ export default function ClosetPage() {
         item={selectedProduct}
         isOpen={showProductModal}
         onClose={() => setShowProductModal(false)}
+        isFavorite={selectedProduct ? favorites.has(selectedProduct.id) : false}
+        onFavoriteToggle={handleFavoriteToggle}
       />
     </div>
   );

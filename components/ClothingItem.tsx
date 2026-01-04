@@ -39,10 +39,18 @@ export const ClothingItem: React.FC<ClothingItemProps> = ({
   className = '',
 }) => {
   const [imageError, setImageError] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  const handleFavoriteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsAnimating(true);
+    onFavoriteToggle?.(id);
+    // Reset animation after it completes
+    setTimeout(() => setIsAnimating(false), 400);
+  };
 
   return (
     <motion.div
-      layout
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       whileHover={{ y: -8 }}
@@ -52,56 +60,63 @@ export const ClothingItem: React.FC<ClothingItemProps> = ({
       style={{ WebkitTapHighlightColor: 'transparent' }}
     >
       {/* Card Container */}
-      <div className="relative aspect-square overflow-hidden rounded-3xl bg-[var(--card-bg)] border border-[var(--border-color)] shadow-sm group-hover:shadow-[var(--shadow-float)] transition-all duration-500">
-        
+      <div className="relative aspect-square overflow-hidden rounded-3xl bg-[var(--card-bg)] border border-[var(--border-color)] transition-all duration-500">
+
         {/* Background Gradient/Color - Subtle tint based on item color */}
-        <div 
-            className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-500"
-            style={{ 
-                background: colorHex ? `linear-gradient(135deg, ${colorHex}, transparent)` : 'var(--gradient-primary)' 
-            }} 
+        <div
+          className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-500"
+          style={{
+            background: colorHex ? `linear-gradient(135deg, ${colorHex}, transparent)` : 'var(--gradient-primary)'
+          }}
         />
 
         {/* Image or Placeholder */}
-        <div className="w-full h-full p-4 flex items-center justify-center relative z-10">
-            {!imageError && imageUrl ? (
-                <motion.img
-                    src={imageUrl}
-                    alt={name}
-                    className="w-full h-full object-contain drop-shadow-sm"
-                    loading="lazy"
-                    onError={() => setImageError(true)}
-                    whileHover={{ scale: 1.1, rotate: 2 }}
-                    transition={{ type: 'spring', stiffness: 300 }}
-                />
-            ) : (
-                <div className="flex flex-col items-center justify-center text-[var(--foreground-tertiary)] animate-pulse">
-                    <div className="w-16 h-16 rounded-2xl bg-[var(--background-secondary)] flex items-center justify-center mb-2 shadow-inner">
-                        <ShoppingBag className="w-8 h-8 opacity-30" />
-                    </div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider opacity-50">Sin imagen</span>
-                </div>
-            )}
+        <div className="w-full h-full flex items-center justify-center relative z-10">
+          {!imageError && imageUrl ? (
+            <motion.img
+              src={imageUrl}
+              alt={name}
+              className="w-full h-full object-cover"
+              loading="lazy"
+              onError={() => setImageError(true)}
+              whileHover={{ scale: 1.05 }}
+              transition={{ type: 'spring', stiffness: 300 }}
+            />
+          ) : (
+            <div className="flex flex-col items-center justify-center text-[var(--foreground-tertiary)] animate-pulse">
+              <div className="w-16 h-16 rounded-2xl bg-[var(--background-secondary)] flex items-center justify-center mb-2 shadow-inner">
+                <ShoppingBag className="w-8 h-8 opacity-30" />
+              </div>
+              <span className="text-[10px] font-bold uppercase tracking-wider opacity-50">Sin imagen</span>
+            </div>
+          )}
         </div>
 
-        {/* Favorite button - Always visible on mobile, hover on desktop */}
+        {/* Favorite button - Always visible */}
         <motion.button
-          whileTap={{ scale: 0.8 }}
-          onClick={(e) => {
-            e.stopPropagation();
-            onFavoriteToggle?.(id);
-          }}
+          whileTap={{ scale: 0.9 }}
+          onClick={handleFavoriteClick}
           style={{ WebkitTapHighlightColor: 'transparent' }}
-          className={`absolute top-3 right-3 z-20 p-2 rounded-full glass transition-all duration-300 focus:outline-none focus:ring-0
-                     ${isFavorite ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+          className={`absolute top-3 right-3 z-20 p-2 rounded-full bg-black/20 dark:bg-white/20 backdrop-blur-sm transition-all duration-300 focus:outline-none focus:ring-0
+                     ${isFavorite ? 'opacity-100' : 'opacity-60 hover:opacity-100'}`}
         >
-          <Heart
-            className={`w-5 h-5 transition-colors ${
-              isFavorite
+          <motion.div
+            animate={isAnimating ? {
+              scale: [1, 1.4, 0.9, 1.2, 1],
+            } : { scale: 1 }}
+            transition={{
+              duration: 0.4,
+              ease: [0.25, 0.1, 0.25, 1],
+              times: [0, 0.2, 0.4, 0.7, 1]
+            }}
+          >
+            <Heart
+              className={`w-5 h-5 transition-colors ${isFavorite
                 ? 'fill-[var(--brand-pink)] stroke-[var(--brand-pink)]'
-                : 'stroke-[var(--foreground-secondary)] hover:stroke-[var(--brand-pink)]'
-            }`}
-          />
+                : 'stroke-white hover:stroke-[var(--brand-pink)]'
+                }`}
+            />
+          </motion.div>
         </motion.button>
 
         {/* Price tag */}
@@ -118,34 +133,34 @@ export const ClothingItem: React.FC<ClothingItemProps> = ({
       {/* Info section */}
       <div className="mt-3 px-2">
         <div className="flex items-start justify-between gap-2">
-            <div className="flex-1 min-w-0">
-                <h3 className="font-bold text-sm text-[var(--foreground)] truncate leading-tight group-hover:text-[var(--brand-pink)] transition-colors">
-                  {name}
-                </h3>
-                {brand && (
-                <p className="text-xs text-[var(--foreground-tertiary)] truncate mt-0.5 font-medium">
-                  {brand}
-                </p>
-                )}
-            </div>
-            {/* Color Dot */}
-            {colorHex && (
-                <div 
-                    className="w-3 h-3 rounded-full border border-[var(--border-color)] shadow-sm flex-shrink-0 mt-1 ring-2 ring-transparent group-hover:ring-[var(--brand-pink)]/20 transition-all"
-                    style={{ backgroundColor: colorHex }}
-                    title={color}
-                />
+          <div className="flex-1 min-w-0">
+            <h3 className="font-bold text-sm text-[var(--foreground)] truncate leading-tight group-hover:text-[var(--brand-pink)] transition-colors">
+              {name}
+            </h3>
+            {brand && (
+              <p className="text-xs text-[var(--foreground-tertiary)] truncate mt-0.5 font-medium">
+                {brand}
+              </p>
             )}
+          </div>
+          {/* Color Dot */}
+          {colorHex && (
+            <div
+              className="w-3 h-3 rounded-full border border-[var(--border-color)] shadow-sm flex-shrink-0 mt-1 ring-2 ring-transparent group-hover:ring-[var(--brand-pink)]/20 transition-all"
+              style={{ backgroundColor: colorHex }}
+              title={color}
+            />
+          )}
         </div>
-        
+
         {/* Type Badge */}
         {type && (
-            <div className="mt-2 flex flex-wrap gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
-                <span className="inline-block px-2 py-0.5 text-[10px] font-bold rounded-md
+          <div className="mt-2 flex flex-wrap gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
+            <span className="inline-block px-2 py-0.5 text-[10px] font-bold rounded-md
                                 bg-[var(--background-secondary)] text-[var(--foreground-secondary)] uppercase tracking-wider">
-                    {type}
-                </span>
-            </div>
+              {type}
+            </span>
+          </div>
         )}
       </div>
     </motion.div>
