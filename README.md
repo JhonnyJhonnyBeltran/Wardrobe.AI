@@ -4,6 +4,8 @@
 
 Una aplicación móvil inteligente que combina un armario digital con un asistente de IA para gestionar tu vestuario y generar outfits personalizados.
 
+> 🎨 **Nueva funcionalidad**: Procesamiento de imágenes 100% en el navegador con IA (remoción de fondo, enderezamiento automático, normalización). Sin servidores, totalmente privado y gratuito. Ver [docs/IMAGE_PROCESSING_FRONTEND.md](docs/IMAGE_PROCESSING_FRONTEND.md)
+
 ---
 
 ## 🎯 MVP - Funcionalidades Principales
@@ -151,15 +153,13 @@ AWS_BUCKET_NAME=...
 ### Ejecutar en Desarrollo
 
 ```bash
-# Terminal 1: Next.js
+# Solo necesitas esto - todo funciona en el navegador
 npm run dev
-
-# Terminal 2: Python background removal server
-cd python
-python bg_removal_server.py
 ```
 
 La aplicación estará disponible en `http://localhost:3000`
+
+**Nota**: El procesamiento de imágenes (remoción de fondo, enderezamiento, etc.) ahora funciona 100% en el navegador usando IA con WebAssembly. No se requiere servidor Python.
 
 ---
 

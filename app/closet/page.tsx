@@ -32,7 +32,7 @@ export default function ClosetPage() {
   const [favorites, setFavorites] = useState<Set<string>>(new Set(['1', '2', '5', '6', '9', '10']));
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingItem, setEditingItem] = useState<ClothingItemType | null>(null);
-  const { items, loading, addItem, updateItem, refresh } = useWardrobe();
+  const { items, loading, addItem, updateItem, deleteItem, refresh } = useWardrobe();
 
   // Style Quiz State - Mostrar si no está completado
   const [showStyleQuiz, setShowStyleQuiz] = useState(false);
@@ -67,6 +67,16 @@ export default function ClosetPage() {
       setShowProductModal(false);
       setShowAddModal(true);
     }
+  };
+
+  const handleDeleteItem = async (id: string) => {
+    await deleteItem(id);
+    // Limpiar de favoritos si estaba
+    setFavorites(prev => {
+      const newFavorites = new Set(prev);
+      newFavorites.delete(id);
+      return newFavorites;
+    });
   };
 
   const handleItemClick = (item: ClothingItemType) => {
@@ -400,6 +410,7 @@ export default function ClosetPage() {
                 price={(item as any).price}
                 isFavorite={favorites.has(item.id)}
                 onFavoriteToggle={handleFavoriteToggle}
+                onDelete={handleDeleteItem}
                 onClick={() => handleItemClick(item)}
               />
             </motion.div>

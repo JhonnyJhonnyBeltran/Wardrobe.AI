@@ -6,7 +6,7 @@
  */
 
 import React, { useState } from 'react';
-import { Heart, ShoppingBag } from 'lucide-react';
+import { Heart, ShoppingBag, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export interface ClothingItemProps {
@@ -21,6 +21,7 @@ export interface ClothingItemProps {
   isFavorite?: boolean;
   onClick?: () => void;
   onFavoriteToggle?: (id: string) => void;
+  onDelete?: (id: string) => void;
   className?: string;
 }
 
@@ -36,6 +37,7 @@ export const ClothingItem: React.FC<ClothingItemProps> = ({
   isFavorite = false,
   onClick,
   onFavoriteToggle,
+  onDelete,
   className = '',
 }) => {
   const [imageError, setImageError] = useState(false);
@@ -47,6 +49,13 @@ export const ClothingItem: React.FC<ClothingItemProps> = ({
     onFavoriteToggle?.(id);
     // Reset animation after it completes
     setTimeout(() => setIsAnimating(false), 400);
+  };
+
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (confirm('¿Seguro que quieres eliminar esta prenda?')) {
+      onDelete?.(id);
+    }
   };
 
   return (
@@ -118,6 +127,18 @@ export const ClothingItem: React.FC<ClothingItemProps> = ({
             />
           </motion.div>
         </motion.button>
+
+        {/* Delete button */}
+        {onDelete && (
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            onClick={handleDeleteClick}
+            style={{ WebkitTapHighlightColor: 'transparent' }}
+            className="absolute top-3 left-3 z-20 p-2 rounded-full bg-red-500 backdrop-blur-sm opacity-90 group-hover:opacity-100 transition-all duration-300 focus:outline-none focus:ring-0 hover:bg-red-600 shadow-lg"
+          >
+            <Trash2 className="w-5 h-5 stroke-white" />
+          </motion.button>
+        )}
 
         {/* Price tag */}
         {price && (

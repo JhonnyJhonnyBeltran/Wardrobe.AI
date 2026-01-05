@@ -7,10 +7,10 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Upload, Camera, Link as LinkIcon, Check, ArrowRight, Loader2 } from 'lucide-react';
+import { X, Upload, Camera, Link as LinkIcon, Check, ArrowRight, Loader2, RotateCw, RotateCcw } from 'lucide-react';
 import { Button, Card } from '@/components';
 import type { ClothingItem } from '@/types/clothing';
-import { removeBackgroundRembg } from '@/services/backgroundRemoval';
+import { processClothingImage } from '@/lib/imageProcessing';
 
 interface AddItemModalProps {
     isOpen: boolean;
@@ -84,13 +84,18 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
         setIsProcessing(true);
 
         try {
-            // Try to remove background using rembg service
-            const result = await removeBackgroundRembg(file);
+            // Process image in browser (remove background + normalize)
+            const result = await processClothingImage(file, {
+                normalize: true,
+                canvasWidth: 800,
+                canvasHeight: 1000,
+                quality: 'medium',
+            });
 
-            if (result.success) {
+            if (result.success && result.imageUrl) {
                 setImage(result.imageUrl);
             } else {
-                // Fallback to original image if rembg fails
+                // Fallback to original image if processing fails
                 const reader = new FileReader();
                 reader.onloadend = () => {
                     setImage(reader.result as string);
@@ -98,7 +103,7 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
                 reader.readAsDataURL(file);
             }
         } catch (error) {
-            console.error('Background removal failed:', error);
+            console.error('Image processing failed:', error);
             // Fallback to original
             const reader = new FileReader();
             reader.onloadend = () => {
@@ -108,6 +113,49 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
         } finally {
             setIsProcessing(false);
         }
+    };
+
+    const rotateImage = (degrees: number) => {
+        if (!image) return;
+        
+        // Crear un canvas para rotar la imagen realmente
+        const img = new Image();
+        img.src = image;
+        
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return;
+            
+            // Calcular nuevas dimensiones según la rotación
+            const radians = (degrees * Math.PI) / 180;
+            const sin = Math.abs(Math.sin(radians));
+            const cos = Math.abs(Math.cos(radians));
+            
+            canvas.width = img.width * cos + img.height * sin;
+            canvas.height = img.width * sin + img.height * cos;
+            
+            // Mover el origen al centro del canvas
+            ctx.translate(canvas.width / 2, canvas.height / 2);
+            
+            // Rotar
+            ctx.rotate(radians);
+            
+            // Dibujar la imagen centrada
+            ctx.drawImage(img, -img.width / 2, -img.height / 2);
+            
+            // Convertir a blob y actualizar la imagen
+            canvas.toBlob((blob) => {
+                if (blob) {
+                    const newImageUrl = URL.createObjectURL(blob);
+                    // Liberar la URL anterior
+                    if (image.startsWith('blob:')) {
+                        URL.revokeObjectURL(image);
+                    }
+                    setImage(newImageUrl);
+                }
+            }, 'image/png');
+        };
     };
 
     const handleUrlImport = async () => {
@@ -286,7 +334,11 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
                                                         <span className="text-xs text-[var(--brand-pink)] font-semibold">Procesando...</span>
                                                     </>
                                                 ) : image ? (
-                                                    <img src={image} alt="Preview" className="w-full h-full object-contain p-2 bg-white" />
+                                                    <img 
+                                                        src={image} 
+                                                        alt="Preview" 
+                                                        className="w-full h-full object-contain p-2 bg-white"
+                                                    />
                                                 ) : (
                                                     <>
                                                         <Upload className="w-8 h-8 text-[var(--foreground-tertiary)]" />
@@ -297,10 +349,34 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
                                         </label>
 
                                         <div className="flex flex-col gap-2">
-                                            <button className="w-20 aspect-square rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] flex flex-col items-center justify-center gap-1 hover:bg-[var(--background-tertiary)] transition-colors">
+                                            <button 
+                                                type="button"
+                                                className="w-20 aspect-square rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] flex flex-col items-center justify-center gap-1 hover:bg-[var(--background-tertiary)] transition-colors"
+                                            >
                                                 <Camera className="w-6 h-6 text-[var(--foreground-tertiary)]" />
                                                 <span className="text-[9px] text-[var(--foreground-tertiary)]">Cámara</span>
                                             </button>
+                                            
+                                            {image && (
+                                                <>
+                                                    <button 
+                                                        type="button"
+                                                        onClick={() => rotateImage(90)}
+                                                        className="w-20 aspect-square rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] flex flex-col items-center justify-center gap-1 hover:bg-[var(--background-tertiary)] transition-colors"
+                                                    >
+                                                        <RotateCw className="w-6 h-6 text-[var(--foreground-tertiary)]" />
+                                                        <span className="text-[9px] text-[var(--foreground-tertiary)]">Girar →</span>
+                                                    </button>
+                                                    <button 
+                                                        type="button"
+                                                        onClick={() => rotateImage(-90)}
+                                                        className="w-20 aspect-square rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] flex flex-col items-center justify-center gap-1 hover:bg-[var(--background-tertiary)] transition-colors"
+                                                    >
+                                                        <RotateCcw className="w-6 h-6 text-[var(--foreground-tertiary)]" />
+                                                        <span className="text-[9px] text-[var(--foreground-tertiary)]">Girar ←</span>
+                                                    </button>
+                                                </>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
