@@ -16,6 +16,7 @@ import ProductModal from '@/components/ProductModal';
 import type { StyleQuizResponses } from '@/components/StyleQuizModal';
 import type { ClothingItem as ClothingItemType } from '@/types/clothing';
 import { useUser } from '@/store';
+import { useUiStore } from '@/store/uiStore';
 import { useWardrobe } from '@/lib/hooks/useWardrobe';
 import Link from 'next/link';
 import { OutfitItem } from '@/lib/fashion/outfitGenerator';
@@ -69,13 +70,46 @@ export default function ClosetPage() {
     }
   };
 
-  const handleDeleteItem = async (id: string) => {
-    await deleteItem(id);
-    // Limpiar de favoritos si estaba
-    setFavorites(prev => {
-      const newFavorites = new Set(prev);
-      newFavorites.delete(id);
-      return newFavorites;
+  // Store for system messages
+  const { showModal } = useUiStore();
+
+  const handleDeleteItem = (id: string) => {
+    // Buscar el item para obtener el nombre
+    const itemToDelete = items.find(i => i.id === id);
+    const itemName = itemToDelete ? itemToDelete.name : 'esta prenda';
+
+    showModal({
+      title: '¿Eliminar prenda?',
+      message: `¿Estás seguro de que quieres eliminar "${itemName}" de tu armario? Esta acción no se puede deshacer.`,
+      type: 'confirm',
+      confirmText: 'Eliminar',
+      cancelText: 'Cancelar',
+      onConfirm: async () => {
+        const success = await deleteItem(id);
+
+        if (success) {
+          // Limpiar de favoritos si estaba
+          setFavorites(prev => {
+            const newFavorites = new Set(prev);
+            newFavorites.delete(id);
+            return newFavorites;
+          });
+
+          showModal({
+            title: 'Prenda eliminada',
+            message: 'La prenda se ha eliminado correctamente de tu armario.',
+            type: 'success',
+            confirmText: 'Entendido'
+          });
+        } else {
+          showModal({
+            title: 'Error',
+            message: 'No se pudo eliminar la prenda. Inténtalo de nuevo.',
+            type: 'error',
+            confirmText: 'Cerrar'
+          });
+        }
+      }
     });
   };
 

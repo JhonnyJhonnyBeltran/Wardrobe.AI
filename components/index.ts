@@ -15,3 +15,5 @@ export { default as Logo } from './Logo';
 export { default as StyleQuizModal } from './StyleQuizModal';
 export { default as ImageProcessor } from './ImageProcessor';
 export { default as AdvisorModal } from './AdvisorModal';
+export { default as ProductModal } from './ProductModal';
+export { default as SystemModal } from './SystemModal';

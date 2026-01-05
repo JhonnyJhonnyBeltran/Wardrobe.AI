@@ -3,6 +3,7 @@ import "./globals.css";
 import { UserProvider, ThemeProvider } from "@/store";
 import AppLayout from "@/components/AppLayout";
 import ConditionalLayout from "@/components/ConditionalLayout";
+import SystemModal from "@/components/SystemModal";
 
 export const metadata: Metadata = {
   title: "Klozet - Tu Asistente de Moda IA",
@@ -34,7 +35,10 @@ export default function RootLayout({
       <body className="antialiased">
         <ThemeProvider>
           <UserProvider>
-            <ConditionalLayout>{children}</ConditionalLayout>
+            <ConditionalLayout>
+              {children}
+            </ConditionalLayout>
+            <SystemModal />
           </UserProvider>
         </ThemeProvider>
       </body>

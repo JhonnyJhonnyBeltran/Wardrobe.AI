@@ -53,9 +53,8 @@ export const ClothingItem: React.FC<ClothingItemProps> = ({
 
   const handleDeleteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (confirm('¿Seguro que quieres eliminar esta prenda?')) {
-      onDelete?.(id);
-    }
+    // La confirmación ya la maneja el componente padre (ClosetPage) con el modal del sistema
+    onDelete?.(id);
   };
 
   return (
