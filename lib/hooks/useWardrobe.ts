@@ -32,7 +32,7 @@ export function useWardrobe(): UseWardrobeReturn {
       setError(null);
 
       const { data: { user: authUser } } = await supabase.auth.getUser();
-      
+
       if (!authUser) {
         setItems([]);
         return;
@@ -58,6 +58,16 @@ export function useWardrobe(): UseWardrobeReturn {
         tags: item.tags || undefined,
         favorite: item.favorite,
         createdAt: new Date(item.created_at),
+        isAiProcessed: item.is_ai_processed,
+        originalImageUrl: item.original_image_url,
+        // Campos adicionales
+        ...({
+          colorHex: item.color_hex,
+          price: item.price,
+          size: item.size,
+          reference: item.reference,
+          fabric: item.fabric,
+        } as any)
       }));
 
       setItems(formattedItems);
@@ -73,25 +83,34 @@ export function useWardrobe(): UseWardrobeReturn {
   const addItem = async (item: Omit<ClothingItem, 'id' | 'createdAt'>): Promise<ClothingItem | null> => {
     try {
       const { data: { user: authUser } } = await supabase.auth.getUser();
-      
+
       if (!authUser) {
         setError('Usuario no autenticado');
         return null;
       }
 
+      const itemData: any = {
+        user_id: authUser.id,
+        name: item.name,
+        category: item.category,
+        color: item.color,
+        image_url: item.imageUrl || null,
+        season: item.season,
+        brand: item.brand || null,
+        tags: item.tags || null,
+        favorite: item.favorite || false,
+        is_ai_processed: item.isAiProcessed || false,
+        original_image_url: item.originalImageUrl || null,
+        color_hex: (item as any).colorHex || null,
+        price: (item as any).price || null,
+        size: (item as any).size || null,
+        reference: (item as any).reference || null,
+        fabric: (item as any).fabric || null,
+      };
+
       const { data, error: insertError } = await supabase
         .from('clothing_items')
-        .insert({
-          user_id: authUser.id,
-          name: item.name,
-          category: item.category,
-          color: item.color,
-          image_url: item.imageUrl || null,
-          season: item.season,
-          brand: item.brand || null,
-          tags: item.tags || null,
-          favorite: item.favorite || false,
-        })
+        .insert(itemData)
         .select()
         .single();
 
@@ -108,6 +127,15 @@ export function useWardrobe(): UseWardrobeReturn {
         tags: data.tags || undefined,
         favorite: data.favorite,
         createdAt: new Date(data.created_at),
+        isAiProcessed: data.is_ai_processed,
+        originalImageUrl: data.original_image_url,
+        ...({
+          colorHex: data.color_hex,
+          price: data.price,
+          size: data.size,
+          reference: data.reference,
+          fabric: data.fabric,
+        } as any)
       };
 
       setItems(prev => [newItem, ...prev]);
@@ -121,9 +149,8 @@ export function useWardrobe(): UseWardrobeReturn {
 
   // Update item
   const updateItem = async (id: string, updates: Partial<ClothingItem>): Promise<boolean> => {
+    let dbUpdates: any = {};
     try {
-      const dbUpdates: any = {};
-      
       if (updates.name !== undefined) dbUpdates.name = updates.name;
       if (updates.category !== undefined) dbUpdates.category = updates.category;
       if (updates.color !== undefined) dbUpdates.color = updates.color;
@@ -132,6 +159,20 @@ export function useWardrobe(): UseWardrobeReturn {
       if (updates.brand !== undefined) dbUpdates.brand = updates.brand;
       if (updates.tags !== undefined) dbUpdates.tags = updates.tags;
       if (updates.favorite !== undefined) dbUpdates.favorite = updates.favorite;
+      if (updates.isAiProcessed !== undefined) dbUpdates.is_ai_processed = updates.isAiProcessed;
+      if (updates.originalImageUrl !== undefined) dbUpdates.original_image_url = updates.originalImageUrl;
+
+      if ((updates as any).colorHex !== undefined) dbUpdates.color_hex = (updates as any).colorHex;
+
+      // Sanitize price: convert empty string to null to avoid "invalid input syntax for type numeric"
+      if ((updates as any).price !== undefined) {
+        const p = (updates as any).price;
+        dbUpdates.price = p === '' ? null : p;
+      }
+
+      if ((updates as any).size !== undefined) dbUpdates.size = (updates as any).size;
+      if ((updates as any).reference !== undefined) dbUpdates.reference = (updates as any).reference;
+      if ((updates as any).fabric !== undefined) dbUpdates.fabric = (updates as any).fabric;
 
       const { error: updateError } = await supabase
         .from('clothing_items')
@@ -148,7 +189,7 @@ export function useWardrobe(): UseWardrobeReturn {
 
       return true;
     } catch (err) {
-      console.error('Error updating item:', err);
+      console.error('Error updating item:', JSON.stringify(err, null, 2), err, 'Updates:', dbUpdates);
       setError(err instanceof Error ? err.message : 'Error al actualizar prenda');
       return false;
     }

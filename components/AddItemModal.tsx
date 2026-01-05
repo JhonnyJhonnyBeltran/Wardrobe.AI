@@ -7,8 +7,8 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Upload, Camera, Link as LinkIcon, Check, ArrowRight, Loader2, RotateCw, RotateCcw } from 'lucide-react';
-import { Button, Card } from '@/components';
+import { X, Upload, Camera, Link as LinkIcon, Check, ArrowRight, Loader2, RotateCw, RotateCcw, Wand2 } from 'lucide-react';
+import { Button, Card, AdvisorModal } from '@/components';
 import type { ClothingItem } from '@/types/clothing';
 import { processClothingImage } from '@/lib/imageProcessing';
 
@@ -26,6 +26,14 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
     const [image, setImage] = useState<string | null>(null);
     const [url, setUrl] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [originalImage, setOriginalImage] = useState<string | null>(null);
+    const [processedImage, setProcessedImage] = useState<string | null>(null);
+    const [showAdvisor, setShowAdvisor] = useState(false);
+
+    // Check local storage on mount
+
+
     const [formData, setFormData] = useState({
         name: '',
         brand: '',
@@ -44,7 +52,19 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
             if (initialData) {
                 // Editing mode setup
                 setMode('complete');
+                setMode('complete');
                 setImage(initialData.imageUrl || null);
+
+                // If it was AI processed, the current imageUrl is the processed one
+                if (initialData.isAiProcessed) {
+                    setProcessedImage(initialData.imageUrl || null);
+                    // Use stored original or fallback to current (though logic implies original is different)
+                    setOriginalImage(initialData.originalImageUrl || initialData.imageUrl || null);
+                } else {
+                    setProcessedImage(null);
+                    setOriginalImage(initialData.imageUrl || initialData.originalImageUrl || null);
+                }
+
                 setFormData({
                     name: initialData.name,
                     brand: initialData.brand || '',
@@ -60,7 +80,11 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
             } else {
                 // Add mode reset
                 setMode('quick');
+                setMode('quick');
                 setImage(null);
+                setOriginalImage(null);
+                setProcessedImage(null);
+                setSelectedFile(null);
                 setFormData({
                     name: '',
                     brand: '',
@@ -81,11 +105,52 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
         const file = e.target.files?.[0];
         if (!file) return;
 
+        setSelectedFile(file);
         setIsProcessing(true);
 
         try {
+            // Normal upload without AI - Just show preview
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const result = reader.result as string;
+                setImage(result);
+                setOriginalImage(result);
+                setProcessedImage(null);
+                setIsProcessing(false);
+            };
+            reader.readAsDataURL(file);
+        } catch (error) {
+            console.error('Image loading failed:', error);
+            setIsProcessing(false);
+        }
+    };
+
+    const handleManualProcess = async () => {
+        // If we have a processed image and we are currently showing it, revert to original
+        if (processedImage && image === processedImage) {
+            if (originalImage) setImage(originalImage);
+            return;
+        }
+
+        // If we have a processed image but showing original, switch to processed
+        if (processedImage && image === originalImage) {
+            setImage(processedImage);
+            return;
+        }
+
+        if (!selectedFile && !image) return;
+
+        setIsProcessing(true);
+        try {
             // Process image in browser (remove background + normalize)
-            const result = await processClothingImage(file, {
+            const source = selectedFile || image; // Use file if available, otherwise image URL (from import)
+
+            if (!source) {
+                setIsProcessing(false);
+                return;
+            }
+
+            const result = await processClothingImage(source, {
                 normalize: true,
                 canvasWidth: 800,
                 canvasHeight: 1000,
@@ -93,69 +158,76 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
             });
 
             if (result.success && result.imageUrl) {
+                setProcessedImage(result.imageUrl);
                 setImage(result.imageUrl);
-            } else {
-                // Fallback to original image if processing fails
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                    setImage(reader.result as string);
-                };
-                reader.readAsDataURL(file);
+                // We don't update selectedFile here, so the user could potentially re-process the original if we kept it? 
+                // But generally we just update the view. 
+                // If we want to allow 'undo', we might need to store originalImage separately.
             }
         } catch (error) {
-            console.error('Image processing failed:', error);
-            // Fallback to original
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setImage(reader.result as string);
-            };
-            reader.readAsDataURL(file);
+            console.error('Manual processing failed:', error);
         } finally {
             setIsProcessing(false);
         }
     };
 
+
     const rotateImage = (degrees: number) => {
         if (!image) return;
-        
+
         // Crear un canvas para rotar la imagen realmente
         const img = new Image();
         img.src = image;
-        
+
         img.onload = () => {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             if (!ctx) return;
-            
+
             // Calcular nuevas dimensiones según la rotación
             const radians = (degrees * Math.PI) / 180;
             const sin = Math.abs(Math.sin(radians));
             const cos = Math.abs(Math.cos(radians));
-            
+
             canvas.width = img.width * cos + img.height * sin;
             canvas.height = img.width * sin + img.height * cos;
-            
+
             // Mover el origen al centro del canvas
             ctx.translate(canvas.width / 2, canvas.height / 2);
-            
+
             // Rotar
             ctx.rotate(radians);
-            
+
             // Dibujar la imagen centrada
             ctx.drawImage(img, -img.width / 2, -img.height / 2);
-            
+
             // Convertir a blob y actualizar la imagen
             canvas.toBlob((blob) => {
                 if (blob) {
                     const newImageUrl = URL.createObjectURL(blob);
-                    // Liberar la URL anterior
-                    if (image.startsWith('blob:')) {
-                        URL.revokeObjectURL(image);
+
+                    // Update whichever state is currently active
+                    if (processedImage && image === processedImage) {
+                        setProcessedImage(newImageUrl);
+                        setImage(newImageUrl);
+                    } else {
+                        // Assume it's the original image
+                        setOriginalImage(newImageUrl);
+                        setImage(newImageUrl);
                     }
-                    setImage(newImageUrl);
+
+                    // Clean up old blob if needed - be careful not to revoke if it's still being used by the other state
+                    // logic here is simplified: we just create new blobs. Browser cleans up eventually or we can track strictly.
                 }
             }, 'image/png');
         };
+    };
+
+
+
+    const handleAdvisorConfirm = () => {
+        handleManualProcess();
+        setShowAdvisor(false);
     };
 
     const handleUrlImport = async () => {
@@ -184,7 +256,12 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
             if (data.success) {
                 const { name, imageUrl, price, type, brand } = data.data;
 
-                if (imageUrl) setImage(imageUrl);
+                if (imageUrl) {
+                    setImage(imageUrl);
+                    setOriginalImage(imageUrl);
+                    setProcessedImage(null);
+                    setSelectedFile(null); // Clear any previous file
+                }
 
                 setFormData(prev => ({
                     ...prev,
@@ -206,14 +283,22 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
     };
 
     const handleSubmit = async () => {
+        // Optimize payload: only send images if they have changed or did not exist
+        const shouldUpdateImage = !initialData || image !== initialData.imageUrl;
+        const shouldUpdateOriginalImage = !initialData || originalImage !== initialData.originalImageUrl;
+
         const payload: Partial<ClothingItem> = {
             id: initialData?.id, // Preserve ID if editing
             name: formData.name || 'Nueva prenda',
             category: (formData.type as any) || 'top',
             color: formData.color || 'white',
-            imageUrl: image || undefined,
+            // Only send if changed
+            imageUrl: shouldUpdateImage ? (image || undefined) : undefined,
             brand: formData.brand || undefined,
             season: [formData.season as any] || [],
+            isAiProcessed: !!processedImage && image === processedImage,
+            // Only send if changed
+            originalImageUrl: shouldUpdateOriginalImage ? (originalImage || undefined) : undefined,
             // cast properties that might not be in ClothingItem interface but we want to save
             ...({
                 colorHex: formData.colorHex,
@@ -229,6 +314,9 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
         // Reset handled by useEffect on next open, but nice to clean up:
         if (!initialData) {
             setImage(null);
+            setOriginalImage(null);
+            setProcessedImage(null);
+            setSelectedFile(null);
             setUrl('');
         }
     };
@@ -334,9 +422,9 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
                                                         <span className="text-xs text-[var(--brand-pink)] font-semibold">Procesando...</span>
                                                     </>
                                                 ) : image ? (
-                                                    <img 
-                                                        src={image} 
-                                                        alt="Preview" 
+                                                    <img
+                                                        src={image}
+                                                        alt="Preview"
                                                         className="w-full h-full object-contain p-2 bg-white"
                                                     />
                                                 ) : (
@@ -349,17 +437,17 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
                                         </label>
 
                                         <div className="flex flex-col gap-2">
-                                            <button 
+                                            <button
                                                 type="button"
                                                 className="w-20 aspect-square rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] flex flex-col items-center justify-center gap-1 hover:bg-[var(--background-tertiary)] transition-colors"
                                             >
                                                 <Camera className="w-6 h-6 text-[var(--foreground-tertiary)]" />
                                                 <span className="text-[9px] text-[var(--foreground-tertiary)]">Cámara</span>
                                             </button>
-                                            
+
                                             {image && (
                                                 <>
-                                                    <button 
+                                                    <button
                                                         type="button"
                                                         onClick={() => rotateImage(90)}
                                                         className="w-20 aspect-square rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] flex flex-col items-center justify-center gap-1 hover:bg-[var(--background-tertiary)] transition-colors"
@@ -367,7 +455,7 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
                                                         <RotateCw className="w-6 h-6 text-[var(--foreground-tertiary)]" />
                                                         <span className="text-[9px] text-[var(--foreground-tertiary)]">Girar →</span>
                                                     </button>
-                                                    <button 
+                                                    <button
                                                         type="button"
                                                         onClick={() => rotateImage(-90)}
                                                         className="w-20 aspect-square rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] flex flex-col items-center justify-center gap-1 hover:bg-[var(--background-tertiary)] transition-colors"
@@ -378,6 +466,39 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
                                                 </>
                                             )}
                                         </div>
+                                    </div>
+
+
+                                    {/* AI Process Button */}
+                                    <div className="mt-4 flex items-center justify-center gap-2 px-1">
+                                        <button
+                                            type="button"
+                                            onClick={handleManualProcess}
+                                            disabled={isProcessing || (!selectedFile && !image)}
+                                            className={`flex items-center gap-2 px-4 py-2 rounded-xl border text-xs font-semibold transition-all w-full justify-center
+                                                ${image === processedImage && processedImage
+                                                    ? 'bg-[var(--background-secondary)] text-[var(--foreground)] border-[var(--border-color)] hover:bg-[var(--background-tertiary)]'
+                                                    : 'bg-[var(--brand-pink)] text-white border-[var(--brand-pink)] hover:opacity-90'
+                                                }
+                                                disabled:opacity-50 disabled:cursor-not-allowed`}
+                                        >
+                                            {isProcessing ? (
+                                                <>
+                                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                                    <span>Procesando...</span>
+                                                </>
+                                            ) : image === processedImage && processedImage ? (
+                                                <>
+                                                    <RotateCcw className="w-4 h-4" />
+                                                    <span>Deshacer cambios</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Wand2 className="w-4 h-4" />
+                                                    <span>Procesar con IA</span>
+                                                </>
+                                            )}
+                                        </button>
                                     </div>
                                 </div>
                             ) : (
@@ -580,6 +701,14 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
                     </div>
                 </motion.div>
             </motion.div>
-        </AnimatePresence>
+
+
+            <AdvisorModal
+                key="advisor-modal"
+                isOpen={showAdvisor}
+                onClose={() => setShowAdvisor(false)}
+                onConfirm={handleAdvisorConfirm}
+            />
+        </AnimatePresence >
     );
 }
