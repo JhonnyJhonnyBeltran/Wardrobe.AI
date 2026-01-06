@@ -875,7 +875,43 @@ body {
     width: 80px;
   }
 }
+/* ============================================
+   PROCESSING MESSAGE ANIMATIONS
+   Smooth fade transitions for loading messages
+   ============================================ */
 
+@keyframes fadeInOut {
+  0% {
+    opacity: 0.4;
+    transform: translateY(-2px);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0.4;
+    transform: translateY(2px);
+  }
+}
+
+@keyframes textPulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* Apply to processing messages */
+.processing-message {
+  animation: fadeInOut 1.5s ease-in-out infinite;
+}
+
+.processing-text-pulse {
+  animation: textPulse 2s ease-in-out infinite;
+}
 @keyframes fancy-drow4 {
   0% {
     height: 0;

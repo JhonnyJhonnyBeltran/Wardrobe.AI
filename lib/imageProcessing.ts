@@ -213,7 +213,7 @@ function normalizeImage(
                 
                 ctx.restore();
                 
-                // Convertir a blob
+                // Convertir a blob con máxima calidad
                 canvas.toBlob((blob) => {
                     if (blob) {
                         URL.revokeObjectURL(url);
@@ -222,7 +222,7 @@ function normalizeImage(
                     } else {
                         reject(new Error('No se pudo crear el blob'));
                     }
-                }, 'image/png', 0.95);
+                }, 'image/png'); // PNG sin compresión para máxima calidad
                 
             } catch (error) {
                 reject(error);
@@ -267,8 +267,12 @@ export async function processClothingImage(
         // 2. Remover el fondo usando IA en el navegador
         console.log('Removiendo fondo...');
         const removedBgBlob = await removeBackground(inputBlob, {
-            model: quality === 'high' ? 'medium' : 'small',
-            output: { format: 'image/png', quality: 0.9 }
+            model: quality === 'high' ? 'medium' : 'medium', // Usar medium por defecto para mejor calidad
+            output: { 
+                format: 'image/png', 
+                quality: 1.0, // Máxima calidad
+                type: 'image/png'
+            }
         });
         
         // 3. Normalizar si se solicita

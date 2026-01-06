@@ -12,6 +12,329 @@ import { Button, Card, AdvisorModal } from '@/components';
 import type { ClothingItem } from '@/types/clothing';
 import { processClothingImage } from '@/lib/imageProcessing';
 
+const PROCESSING_MESSAGES = [
+    'Analizando imagen...',
+    'Quitando fondo...',
+    'Detectando bordes...',
+    'Recortando imagen...',
+    'Enderezando prenda...',
+    'Centrando objeto...',
+    'Optimizando resultado...',
+];
+
+/**
+ * Extrae el color dominante de una imagen
+ */
+const extractDominantColor = (imageUrl: string): Promise<{ hex: string; name: string }> => {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = 'Anonymous';
+        img.src = imageUrl;
+
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+                resolve({ hex: '#000000', name: 'Negro' });
+                return;
+            }
+
+            // Reducir tamaño para análisis más rápido
+            const size = 100;
+            canvas.width = size;
+            canvas.height = size;
+            ctx.drawImage(img, 0, 0, size, size);
+
+            const imageData = ctx.getImageData(0, 0, size, size);
+            const data = imageData.data;
+            const colorCount: { [key: string]: number } = {};
+            
+            // Contar colores (ignorando píxeles transparentes y muy oscuros/claros)
+            for (let i = 0; i < data.length; i += 4) {
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+                const a = data[i + 3];
+                
+                // Ignorar píxeles transparentes o casi transparentes
+                if (a < 50) continue;
+                
+                // Ignorar blancos puros y negros puros (probablemente fondo)
+                const brightness = (r + g + b) / 3;
+                if (brightness > 240 || brightness < 15) continue;
+                
+                // Reducir precisión para agrupar colores similares
+                const rr = Math.round(r / 10) * 10;
+                const gg = Math.round(g / 10) * 10;
+                const bb = Math.round(b / 10) * 10;
+                
+                const key = `${rr},${gg},${bb}`;
+                colorCount[key] = (colorCount[key] || 0) + 1;
+            }
+
+            // Encontrar el color más común
+            let dominantColor = { r: 0, g: 0, b: 0 };
+            let maxCount = 0;
+
+            for (const [color, count] of Object.entries(colorCount)) {
+                if (count > maxCount) {
+                    maxCount = count;
+                    const [r, g, b] = color.split(',').map(Number);
+                    dominantColor = { r, g, b };
+                }
+            }
+
+            // Convertir a hex
+            const hex = `#${dominantColor.r.toString(16).padStart(2, '0')}${dominantColor.g.toString(16).padStart(2, '0')}${dominantColor.b.toString(16).padStart(2, '0')}`;
+            const name = rgbToColorName(dominantColor.r, dominantColor.g, dominantColor.b);
+
+            resolve({ hex, name });
+        };
+
+        img.onerror = () => {
+            resolve({ hex: '#000000', name: 'Negro' });
+        };
+    });
+};
+
+/**
+ * Convierte RGB a nombre de color aproximado (mejorado)
+ */
+const rgbToColorName = (r: number, g: number, b: number): string => {
+    const hsl = rgbToHsl(r, g, b);
+    const h = hsl.h;
+    const s = hsl.s;
+    const l = hsl.l;
+
+    // Colores acromáticos (baja saturación)
+    if (s < 10) {
+        if (l < 15) return 'Negro';
+        if (l < 30) return 'Gris oscuro';
+        if (l < 50) return 'Gris';
+        if (l < 70) return 'Gris claro';
+        if (l < 90) return 'Blanco roto';
+        return 'Blanco';
+    }
+
+    // Colores marrones y tierra (baja saturación + matiz cálido)
+    if (s < 30) {
+        if (h >= 20 && h < 60) {
+            if (l < 30) return 'Marrón oscuro';
+            if (l < 50) return 'Marrón';
+            if (l < 65) return 'Beige';
+            if (l < 80) return 'Crema';
+            return 'Arena';
+        }
+    }
+
+    // Colores beige/tierra con más saturación
+    if (h >= 20 && h < 50 && s >= 30 && s < 50) {
+        if (l < 40) return 'Marrón';
+        if (l < 60) return 'Beige';
+        if (l < 75) return 'Arena';
+        return 'Crema';
+    }
+
+    // Colores cromáticos (saturación media-alta)
+    // Rojos
+    if ((h >= 345 || h < 15) && s >= 30) {
+        if (l < 35) return 'Rojo oscuro';
+        if (l < 65) return 'Rojo';
+        if (l < 85) return 'Rosa';
+        return 'Rosa claro';
+    }
+
+    // Naranjas y tierras
+    if (h >= 15 && h < 45 && s >= 50) {
+        if (l < 40) return 'Naranja oscuro';
+        if (l < 70) return 'Naranja';
+        return 'Durazno';
+    }
+
+    // Amarillos
+    if (h >= 45 && h < 70) {
+        if (s < 40) {
+            if (l < 60) return 'Beige';
+            return 'Crema';
+        }
+        if (l < 35) return 'Amarillo oscuro';
+        if (l < 70) return 'Amarillo';
+        return 'Amarillo claro';
+    }
+
+    // Verdes
+    if (h >= 70 && h < 170) {
+        if (l < 25) return 'Verde oscuro';
+        if (h < 85 && s < 50) return 'Verde oliva';
+        if (l < 50) return 'Verde';
+        if (l < 75) return 'Verde claro';
+        return 'Verde menta';
+    }
+
+    // Cianes y turquesas
+    if (h >= 170 && h < 200) {
+        if (l < 40) return 'Turquesa oscuro';
+        if (l < 70) return 'Turquesa';
+        return 'Aguamarina';
+    }
+
+    // Azules
+    if (h >= 200 && h < 260) {
+        if (l < 30) return 'Azul marino';
+        if (l < 50) return 'Azul';
+        if (l < 70) return 'Azul claro';
+        return 'Celeste';
+    }
+
+    // Violetas y púrpuras
+    if (h >= 260 && h < 290) {
+        if (l < 40) return 'Morado oscuro';
+        if (l < 65) return 'Morado';
+        if (l < 80) return 'Violeta';
+        return 'Lila';
+    }
+
+    // Magentas y fucsia
+    if (h >= 290 && h < 330) {
+        if (l < 40) return 'Magenta oscuro';
+        if (l < 70) return 'Fucsia';
+        return 'Rosa';
+    }
+
+    // Rosas
+    if (h >= 330 && h < 345) {
+        if (l < 50) return 'Rosa oscuro';
+        if (l < 75) return 'Rosa';
+        return 'Rosa claro';
+    }
+
+    return 'Multicolor';
+};
+
+/**
+ * Convierte RGB a HSL
+ */
+const rgbToHsl = (r: number, g: number, b: number) => {
+    r /= 255;
+    g /= 255;
+    b /= 255;
+
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    let h = 0;
+    let s = 0;
+    const l = (max + min) / 2;
+
+    if (max !== min) {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+
+        switch (max) {
+            case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+            case g: h = ((b - r) / d + 2) / 6; break;
+            case b: h = ((r - g) / d + 4) / 6; break;
+        }
+    }
+
+    return { h: h * 360, s: s * 100, l: l * 100 };
+};
+
+/**
+ * Convierte Hex a RGB
+ */
+const hexToRgb = (hex: string): { r: number; g: number; b: number } | null => {
+    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+    } : null;
+};
+
+/**
+ * Convierte nombre de color a hex aproximado
+ */
+const colorNameToHex = (colorName: string): string => {
+    const name = colorName.toLowerCase().trim();
+    
+    const colorMap: { [key: string]: string } = {
+        // Negros y grises
+        'negro': '#000000',
+        'gris oscuro': '#404040',
+        'gris': '#808080',
+        'gris claro': '#C0C0C0',
+        'blanco roto': '#F5F5DC',
+        'blanco': '#FFFFFF',
+        
+        // Marrones y tierra
+        'marrón oscuro': '#3E2723',
+        'marrón': '#795548',
+        'beige': '#D4C4B0',
+        'crema': '#FFFDD0',
+        'arena': '#C2B280',
+        
+        // Rojos
+        'rojo oscuro': '#8B0000',
+        'rojo': '#FF0000',
+        'rosa oscuro': '#C71585',
+        'rosa': '#FFC0CB',
+        'rosa claro': '#FFB6C1',
+        
+        // Naranjas
+        'naranja oscuro': '#FF8C00',
+        'naranja': '#FF6B35',
+        'durazno': '#FFE5B4',
+        
+        // Amarillos
+        'amarillo oscuro': '#B8860B',
+        'amarillo': '#FFEB3B',
+        'amarillo claro': '#FFFF99',
+        
+        // Verdes
+        'verde oscuro': '#006400',
+        'verde oliva': '#808000',
+        'verde': '#4CAF50',
+        'verde claro': '#90EE90',
+        'verde menta': '#98FF98',
+        
+        // Azules y cianes
+        'turquesa oscuro': '#008B8B',
+        'turquesa': '#40E0D0',
+        'aguamarina': '#7FFFD4',
+        'azul marino': '#000080',
+        'azul': '#2196F3',
+        'azul claro': '#ADD8E6',
+        'celeste': '#87CEEB',
+        'cian': '#00BCD4',
+        
+        // Morados
+        'morado oscuro': '#4A148C',
+        'morado': '#9C27B0',
+        'violeta': '#8A2BE2',
+        'lila': '#C8A2C8',
+        
+        // Magentas
+        'magenta oscuro': '#8B008B',
+        'magenta': '#FF00FF',
+        'fucsia': '#FF00FF',
+    };
+    
+    // Buscar coincidencia exacta
+    if (colorMap[name]) {
+        return colorMap[name];
+    }
+    
+    // Buscar coincidencia parcial
+    for (const [key, value] of Object.entries(colorMap)) {
+        if (name.includes(key) || key.includes(name)) {
+            return value;
+        }
+    }
+    
+    // Si no encuentra, mantener el hex actual
+    return '';
+};
+
 interface AddItemModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -26,6 +349,7 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
     const [image, setImage] = useState<string | null>(null);
     const [url, setUrl] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
+    const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [originalImage, setOriginalImage] = useState<string | null>(null);
     const [processedImage, setProcessedImage] = useState<string | null>(null);
@@ -46,6 +370,20 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
         fabric: '',
         season: 'spring' as const,
     });
+
+    // Efecto para rotar mensajes durante el procesamiento
+    useEffect(() => {
+        if (!isProcessing) {
+            setCurrentMessageIndex(0);
+            return;
+        }
+
+        const interval = setInterval(() => {
+            setCurrentMessageIndex((prev) => (prev + 1) % PROCESSING_MESSAGES.length);
+        }, 1500); // Cambia el mensaje cada 1.5 segundos
+
+        return () => clearInterval(interval);
+    }, [isProcessing]);
 
     useEffect(() => {
         if (isOpen) {
@@ -107,20 +445,50 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
 
         setSelectedFile(file);
         setIsProcessing(true);
+        setCurrentMessageIndex(0);
 
         try {
-            // Normal upload without AI - Just show preview
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                const result = reader.result as string;
-                setImage(result);
-                setOriginalImage(result);
-                setProcessedImage(null);
-                setIsProcessing(false);
-            };
-            reader.readAsDataURL(file);
+            // Cargar imagen original primero
+            const originalDataUrl = await new Promise<string>((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result as string);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+
+            setOriginalImage(originalDataUrl);
+            setImage(originalDataUrl);
+
+            // Procesar automáticamente con IA
+            const processResult = await processClothingImage(file, {
+                normalize: true,
+                canvasWidth: 800,
+                canvasHeight: 1000,
+                quality: 'medium',
+            });
+
+            if (processResult.success && processResult.imageUrl) {
+                setProcessedImage(processResult.imageUrl);
+                setImage(processResult.imageUrl);
+
+                // Detectar color dominante de la imagen procesada
+                try {
+                    const dominantColor = await extractDominantColor(processResult.imageUrl);
+                    setFormData(prev => ({
+                        ...prev,
+                        color: dominantColor.name,
+                        colorHex: dominantColor.hex
+                    }));
+                } catch (colorError) {
+                    console.warn('Failed to extract dominant color:', colorError);
+                }
+            } else {
+                console.warn('Processing failed, keeping original:', processResult.error);
+            }
         } catch (error) {
-            console.error('Image loading failed:', error);
+            console.error('Image processing failed:', error);
+            // Si falla, mantener la imagen original
+        } finally {
             setIsProcessing(false);
         }
     };
@@ -171,6 +539,25 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
         }
     };
 
+
+    const handleColorPickerChange = (hex: string) => {
+        const rgb = hexToRgb(hex);
+        if (rgb) {
+            const colorName = rgbToColorName(rgb.r, rgb.g, rgb.b);
+            setFormData({ ...formData, colorHex: hex, color: colorName });
+        } else {
+            setFormData({ ...formData, colorHex: hex });
+        }
+    };
+
+    const handleColorNameChange = (name: string) => {
+        const hex = colorNameToHex(name);
+        if (hex) {
+            setFormData({ ...formData, color: name, colorHex: hex });
+        } else {
+            setFormData({ ...formData, color: name });
+        }
+    };
 
     const rotateImage = (degrees: number) => {
         if (!image) return;
@@ -283,7 +670,13 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
     };
 
     const handleSubmit = async () => {
-        // Optimize payload: only send images if they have changed or did not exist
+        // No permitir guardar mientras se procesa
+        if (isProcessing) {
+            console.log('Aún procesando imagen, espera...');
+            return;
+        }
+
+        // Build payload: only include images if they have changed or did not exist
         const shouldUpdateImage = !initialData || image !== initialData.imageUrl;
         const shouldUpdateOriginalImage = !initialData || originalImage !== initialData.originalImageUrl;
 
@@ -291,23 +684,27 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
             id: initialData?.id, // Preserve ID if editing
             name: formData.name || 'Nueva prenda',
             category: (formData.type as any) || 'top',
-            color: formData.color || 'white',
-            // Only send if changed
-            imageUrl: shouldUpdateImage ? (image || undefined) : undefined,
+            color: formData.color || 'Por definir',
             brand: formData.brand || undefined,
             season: [formData.season as any] || [],
             isAiProcessed: !!processedImage && image === processedImage,
-            // Only send if changed
-            originalImageUrl: shouldUpdateOriginalImage ? (originalImage || undefined) : undefined,
             // cast properties that might not be in ClothingItem interface but we want to save
             ...({
-                colorHex: formData.colorHex,
+                colorHex: formData.colorHex || '#808080',
                 price: formData.price,
                 size: formData.size,
                 reference: formData.reference,
                 fabric: formData.fabric,
             } as any)
         };
+
+        // Only include image fields if they changed (don't send undefined to avoid overwriting)
+        if (shouldUpdateImage && image) {
+            payload.imageUrl = image;
+        }
+        if (shouldUpdateOriginalImage && originalImage) {
+            payload.originalImageUrl = originalImage;
+        }
 
         await onAdd(payload);
         onClose();
@@ -419,7 +816,9 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
                                                 {isProcessing ? (
                                                     <>
                                                         <Loader2 className="w-8 h-8 text-[var(--brand-pink)] animate-spin" />
-                                                        <span className="text-xs text-[var(--brand-pink)] font-semibold">Procesando...</span>
+                                                        <span className="text-xs text-[var(--brand-pink)] font-semibold animate-pulse">
+                                                            {PROCESSING_MESSAGES[currentMessageIndex]}
+                                                        </span>
                                                     </>
                                                 ) : image ? (
                                                     <img
@@ -466,39 +865,6 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
                                                 </>
                                             )}
                                         </div>
-                                    </div>
-
-
-                                    {/* AI Process Button */}
-                                    <div className="mt-4 flex items-center justify-center gap-2 px-1">
-                                        <button
-                                            type="button"
-                                            onClick={handleManualProcess}
-                                            disabled={isProcessing || (!selectedFile && !image)}
-                                            className={`flex items-center gap-2 px-4 py-2 rounded-xl border text-xs font-semibold transition-all w-full justify-center
-                                                ${image === processedImage && processedImage
-                                                    ? 'bg-[var(--background-secondary)] text-[var(--foreground)] border-[var(--border-color)] hover:bg-[var(--background-tertiary)]'
-                                                    : 'bg-[var(--brand-pink)] text-white border-[var(--brand-pink)] hover:opacity-90'
-                                                }
-                                                disabled:opacity-50 disabled:cursor-not-allowed`}
-                                        >
-                                            {isProcessing ? (
-                                                <>
-                                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                                    <span>Procesando...</span>
-                                                </>
-                                            ) : image === processedImage && processedImage ? (
-                                                <>
-                                                    <RotateCcw className="w-4 h-4" />
-                                                    <span>Deshacer cambios</span>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <Wand2 className="w-4 h-4" />
-                                                    <span>Procesar con IA</span>
-                                                </>
-                                            )}
-                                        </button>
                                     </div>
                                 </div>
                             ) : (
@@ -644,14 +1010,14 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
                                         <input
                                             type="text"
                                             value={formData.color}
-                                            onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+                                            onChange={(e) => handleColorNameChange(e.target.value)}
                                             placeholder="ej: Beige"
                                             className="flex-1 px-4 py-2.5 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)]"
                                         />
                                         <input
                                             type="color"
                                             value={formData.colorHex}
-                                            onChange={(e) => setFormData({ ...formData, colorHex: e.target.value })}
+                                            onChange={(e) => handleColorPickerChange(e.target.value)}
                                             className="w-16 h-11 rounded-2xl border border-[var(--border-color)] cursor-pointer"
                                         />
                                     </div>
@@ -691,12 +1057,21 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
                         {/* Submit Button */}
                         <Button
                             onClick={handleSubmit}
-                            disabled={!image}
+                            disabled={!image || isProcessing}
                             className="w-full"
-                            glow={!!image}
+                            glow={!!image && !isProcessing}
                         >
-                            <Check className="w-5 h-5 mr-2" />
-                            {isEditing ? 'Guardar Cambios' : 'Añadir Prenda'}
+                            {isProcessing ? (
+                                <>
+                                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                                    Procesando imagen...
+                                </>
+                            ) : (
+                                <>
+                                    <Check className="w-5 h-5 mr-2" />
+                                    {isEditing ? 'Guardar Cambios' : 'Añadir Prenda'}
+                                </>
+                            )}
                         </Button>
                     </div>
                 </motion.div>

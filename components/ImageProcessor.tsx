@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { processClothingImage, ProcessingResult } from '@/lib/imageProcessing';
 import { Upload, Download, Loader2, CheckCircle2, XCircle } from 'lucide-react';
 
@@ -8,13 +8,39 @@ interface ImageProcessorProps {
     onImageProcessed?: (result: ProcessingResult) => void;
 }
 
+const PROCESSING_MESSAGES = [
+    'Analizando imagen...',
+    'Quitando fondo...',
+    'Detectando bordes...',
+    'Recortando imagen...',
+    'Enderezando prenda...',
+    'Centrando objeto...',
+    'Optimizando resultado...',
+    'Aplicando ajustes finales...',
+];
+
 export default function ImageProcessor({ onImageProcessed }: ImageProcessorProps) {
     const [originalImage, setOriginalImage] = useState<string>('');
     const [processedImage, setProcessedImage] = useState<string>('');
     const [processing, setProcessing] = useState(false);
     const [progress, setProgress] = useState('');
+    const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
     const [error, setError] = useState('');
     const [processingTime, setProcessingTime] = useState<number>(0);
+
+    // Efecto para rotar mensajes durante el procesamiento
+    useEffect(() => {
+        if (!processing) {
+            setCurrentMessageIndex(0);
+            return;
+        }
+
+        const interval = setInterval(() => {
+            setCurrentMessageIndex((prev) => (prev + 1) % PROCESSING_MESSAGES.length);
+        }, 1500); // Cambia el mensaje cada 1.5 segundos
+
+        return () => clearInterval(interval);
+    }, [processing]);
 
     const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -43,12 +69,10 @@ export default function ImageProcessor({ onImageProcessed }: ImageProcessorProps
 
     const processImage = async (file: File) => {
         setProcessing(true);
-        setProgress('Preparando...');
+        setCurrentMessageIndex(0);
         const startTime = Date.now();
 
-        try {
-            setProgress('Removiendo fondo con IA...');
-            
+        try {            
             const result = await processClothingImage(file, {
                 normalize: true,
                 canvasWidth: 800,
@@ -119,7 +143,13 @@ export default function ImageProcessor({ onImageProcessed }: ImageProcessorProps
                     )}
                     <div>
                         <p className="text-lg font-medium">
-                            {processing ? progress : 'Haz click para subir una imagen'}
+                            {processing ? (
+                                <span className="inline-flex items-center gap-2">
+                                    <span className="animate-pulse">{PROCESSING_MESSAGES[currentMessageIndex]}</span>
+                                </span>
+                            ) : (
+                                'Haz click para subir una imagen'
+                            )}
                         </p>
                         <p className="text-sm text-gray-500 mt-1">
                             JPG, PNG o WebP • Máximo 10MB
