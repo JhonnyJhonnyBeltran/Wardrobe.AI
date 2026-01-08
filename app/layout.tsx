@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { UserProvider, ThemeProvider } from "@/store";
-import AppLayout from "@/components/AppLayout";
 import ConditionalLayout from "@/components/ConditionalLayout";
 import SystemModal from "@/components/SystemModal";
 

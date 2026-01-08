@@ -6,7 +6,7 @@
  */
 
 import { motion } from 'framer-motion';
-import { Sparkles } from 'lucide-react';
+import { LogoMark } from '@/components';
 
 export default function FeedPage() {
   return (
@@ -16,12 +16,9 @@ export default function FeedPage() {
         animate={{ opacity: 1, y: 0 }}
         className="text-center max-w-md"
       >
-        <div className="w-20 h-20 mx-auto mb-6 rounded-3xl bg-gradient-to-br from-[var(--brand-pink)] to-[var(--brand-pink-dark)] flex items-center justify-center shadow-[var(--shadow-float-strong)]">
-          <Sparkles className="w-10 h-10 text-white" />
+        <div className="w-20 h-20 mx-auto mb-6 rounded-3xl bg-[var(--background)] shadow-[var(--shadow-float-strong)] flex items-center justify-center overflow-hidden">
+          <LogoMark size="xl" />
         </div>
-        <h1 className="text-3xl font-bold text-[var(--foreground)] mb-4">
-          Feed
-        </h1>
         <p className="text-lg text-[var(--foreground-secondary)] mb-2">
           Próximamente...
         </p>

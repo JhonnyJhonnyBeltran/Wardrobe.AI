@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Heart, Grid3x3, List, Search, Filter, Plus, Wand2, X
 } from 'lucide-react';
-import { Card, Button, ClothingItem, StyleQuizModal } from '@/components';
+import { Card, Button, ClothingItem, StyleQuizModal, LogoMark } from '@/components';
 import AddItemModal from '@/components/AddItemModal';
 import ProductModal from '@/components/ProductModal';
 import type { StyleQuizResponses } from '@/components/StyleQuizModal';
@@ -134,38 +134,6 @@ export default function ClosetPage() {
     setShowProductModal(true);
   };
 
-  // ... (filtro de items)
-
-  // ... (render)
-
-  // Update ProductModal props
-  /*
-  <ProductModal
-    ...
-    onEdit={handleEditItem}
-  />
-  */
-
-  // Update AddItemModal props
-  /*
-  <AddItemModal
-    isOpen={showAddModal}
-    onClose={() => {
-      setShowAddModal(false);
-      setEditingItem(null);
-    }}
-    initialData={editingItem || undefined}
-    isEditing={!!editingItem}
-    onAdd={async (partial) => {
-      if (editingItem) {
-         await updateItem(editingItem.id, partial);
-      } else {
-         await addItem(partial);
-      }
-      setEditingItem(null);
-    }}
-  />
-  */
 
   // Filter clothing items
   const filteredItems = (items || []).filter(item => {
@@ -195,18 +163,7 @@ export default function ClosetPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--background)] pb-24 md:pb-8">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between px-4 py-4"
-      >
-        <div>
-          <h1 className="text-2xl font-bold text-[var(--foreground)]">Mi Armario</h1>
-          <p className="text-xs text-[var(--foreground-tertiary)]">{items.length} prendas</p>
-        </div>
-      </motion.div>
+    <div className="min-h-screen bg-[var(--background)] pb-24 md:pb-8 pt-4">
 
       {/* Toolbar - Mobile Optimized */}
       <motion.div
@@ -372,8 +329,8 @@ export default function ClosetPage() {
           <Link href="/create">
             <Card className="p-6 hover-lift cursor-pointer group bg-gradient-to-br from-[var(--brand-pink)]/5 to-[var(--brand-pink-dark)]/5 border-2 border-[var(--brand-pink)]/20 hover:border-[var(--brand-pink)]">
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[var(--brand-pink)] to-[var(--brand-pink-dark)] flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                  <Wand2 className="w-6 h-6 text-white" />
+                <div className="w-12 h-12 rounded-2xl bg-[var(--background)] shadow-md flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform overflow-hidden">
+                  <LogoMark size="md" />
                 </div>
                 <div className="flex-1">
                   <h3 className="text-lg font-bold text-[var(--foreground)] mb-1">

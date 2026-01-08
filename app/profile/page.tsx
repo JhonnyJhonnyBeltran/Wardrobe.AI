@@ -114,8 +114,8 @@ export default function ProfilePage() {
           </motion.div>
 
           {/* Nombre */}
-          <h1 className="text-2xl font-bold text-[var(--foreground)] mb-1">
-            {user.name}
+          <h1 className="page-title">
+            <span className="page-title-secondary">{user.name.toUpperCase()}</span>
           </h1>
 
           {/* Email - Sutil */}

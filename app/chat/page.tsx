@@ -6,7 +6,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Sparkles, TrendingUp, Users, RefreshCw } from 'lucide-react';
+import { Send, Sparkles, TrendingUp, Users } from 'lucide-react';
 import { Card } from '@/components';
 import fashionData from '@/data/fashionData.json';
 
@@ -175,32 +175,7 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)] md:h-[calc(100vh-6rem)]">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-4"
-      >
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl gradient-primary flex items-center justify-center shadow-md">
-                <Sparkles className="w-4 h-4 text-white" />
-              </div>
-              Fashion Assistant
-            </h1>
-            <p className="text-gray-500 dark:text-gray-400 text-xs mt-1">
-              Datos de ELLE, WhoWhatWear, Harper's Bazaar
-            </p>
-          </div>
-          <div className="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1">
-            <RefreshCw className="w-3 h-3" />
-            {new Date(fashionData.lastUpdated).toLocaleDateString()}
-          </div>
-        </div>
-      </motion.div>
-
+    <div className="flex flex-col h-[calc(100vh-8rem)] md:h-[calc(100vh-6rem)] pt-4">
       {/* Chat Container */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}

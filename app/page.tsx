@@ -130,21 +130,13 @@ export default function OnboardingPage() {
                 }}
                 className="text-center"
               >
-                {(() => {
-                  const Icon = slides[currentSlide].icon;
-                  return (
-                    <>
-                      {/* Icono */}
-                      <div className="mb-8 flex justify-center">
-                        <div className={`w-24 h-24 md:w-32 md:h-32 rounded-3xl bg-gradient-to-br ${slides[currentSlide].color} flex items-center justify-center shadow-[var(--shadow-float-strong)]`}>
-                          <Icon className="w-12 h-12 md:w-16 md:h-16 text-white" />
-                        </div>
-                      </div>
-
-                      {/* Título */}
-                    </>
-                  );
-                })()}
+                {/* Icono */}
+                <div className={`w-24 h-24 md:w-32 md:h-32 mx-auto mb-8 rounded-3xl bg-gradient-to-br ${slides[currentSlide].color} flex items-center justify-center shadow-[var(--shadow-float-strong)]`}>
+                  {(() => {
+                    const Icon = slides[currentSlide].icon;
+                    return <Icon className="w-12 h-12 md:w-16 md:h-16 text-white" />;
+                  })()}
+                </div>
                 <h2 className="text-3xl md:text-4xl font-bold text-[var(--foreground)] mb-4">
                   {slides[currentSlide].title}
                 </h2>
@@ -214,11 +206,10 @@ export default function OnboardingPage() {
               <button
                 key={index}
                 onClick={() => goToSlide(index)}
-                className={`h-2 rounded-full transition-all ${
-                  index === currentSlide
+                className={`h-2 rounded-full transition-all ${index === currentSlide
                     ? 'w-8 bg-[var(--brand-pink)]'
                     : 'w-2 bg-[var(--foreground-tertiary)] opacity-30'
-                }`}
+                  }`}
                 aria-label={`Ir a slide ${index + 1}`}
               />
             ))}

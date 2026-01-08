@@ -15,17 +15,15 @@ interface AppLayoutProps {
 
 export default function AppLayout({ children }: AppLayoutProps) {
   return (
-    <div className="flex min-h-screen bg-gray-50 dark:bg-gray-950">
+    <div className="flex min-h-screen bg-[var(--background)]">
       {/* Desktop Sidebar */}
       <Sidebar />
 
       {/* Main Content */}
       <main className="flex-1 pb-28 md:pb-0">
-        <div className="max-w-7xl mx-auto px-4 py-6 md:py-8">
-          <AuthGuard>
-            {children}
-          </AuthGuard>
-        </div>
+        <AuthGuard>
+          {children}
+        </AuthGuard>
       </main>
 
       {/* Mobile TabBar */}

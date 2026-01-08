@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@700;800;900&display=swap');
 @import "tailwindcss";
 
 /* ============================================
@@ -300,25 +300,25 @@ body {
    ============================================ */
 
 .glass {
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.55);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .dark .glass {
-  background: rgba(15, 15, 15, 0.7);
+  background: rgba(15, 15, 15, 0.55);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .glass-strong {
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.55);
   backdrop-filter: blur(40px) saturate(200%);
   -webkit-backdrop-filter: blur(40px) saturate(200%);
 }
 
 .dark .glass-strong {
-  background: rgba(15, 15, 15, 0.95);
+  background: rgba(15, 15, 15, 0.55);
 }
 
 /* ============================================
@@ -366,6 +366,35 @@ body {
 .dark .gradient-subtle {
   background: linear-gradient(135deg, rgba(255, 105, 180, 0.1) 0%, rgba(232, 77, 149, 0.1) 100%);
 }
+
+/* ============================================
+   PAGE TITLES (Logo-style typography)
+   Bubble font, uppercase, dual-color
+   ============================================ */
+
+.page-title {
+  font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 1.75rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.page-title-primary {
+  color: var(--foreground);
+}
+
+.page-title-secondary {
+  color: var(--brand-pink);
+}
+
+/* Responsive size adjustments */
+@media (min-width: 768px) {
+  .page-title {
+    font-size: 2rem;
+  }
+}
+
 
 /* ============================================
    BUTTONS (iOS/Revolut Style)
@@ -875,6 +904,7 @@ body {
     width: 80px;
   }
 }
+
 /* ============================================
    PROCESSING MESSAGE ANIMATIONS
    Smooth fade transitions for loading messages
@@ -885,10 +915,12 @@ body {
     opacity: 0.4;
     transform: translateY(-2px);
   }
+
   50% {
     opacity: 1;
     transform: translateY(0);
   }
+
   100% {
     opacity: 0.4;
     transform: translateY(2px);
@@ -896,9 +928,12 @@ body {
 }
 
 @keyframes textPulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.6;
   }
@@ -912,6 +947,7 @@ body {
 .processing-text-pulse {
   animation: textPulse 2s ease-in-out infinite;
 }
+
 @keyframes fancy-drow4 {
   0% {
     height: 0;

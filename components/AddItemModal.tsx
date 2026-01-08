@@ -48,26 +48,26 @@ const extractDominantColor = (imageUrl: string): Promise<{ hex: string; name: st
             const imageData = ctx.getImageData(0, 0, size, size);
             const data = imageData.data;
             const colorCount: { [key: string]: number } = {};
-            
+
             // Contar colores (ignorando píxeles transparentes y muy oscuros/claros)
             for (let i = 0; i < data.length; i += 4) {
                 const r = data[i];
                 const g = data[i + 1];
                 const b = data[i + 2];
                 const a = data[i + 3];
-                
+
                 // Ignorar píxeles transparentes o casi transparentes
                 if (a < 50) continue;
-                
+
                 // Ignorar blancos puros y negros puros (probablemente fondo)
                 const brightness = (r + g + b) / 3;
                 if (brightness > 240 || brightness < 15) continue;
-                
+
                 // Reducir precisión para agrupar colores similares
                 const rr = Math.round(r / 10) * 10;
                 const gg = Math.round(g / 10) * 10;
                 const bb = Math.round(b / 10) * 10;
-                
+
                 const key = `${rr},${gg},${bb}`;
                 colorCount[key] = (colorCount[key] || 0) + 1;
             }
@@ -256,7 +256,7 @@ const hexToRgb = (hex: string): { r: number; g: number; b: number } | null => {
  */
 const colorNameToHex = (colorName: string): string => {
     const name = colorName.toLowerCase().trim();
-    
+
     const colorMap: { [key: string]: string } = {
         // Negros y grises
         'negro': '#000000',
@@ -265,38 +265,38 @@ const colorNameToHex = (colorName: string): string => {
         'gris claro': '#C0C0C0',
         'blanco roto': '#F5F5DC',
         'blanco': '#FFFFFF',
-        
+
         // Marrones y tierra
         'marrón oscuro': '#3E2723',
         'marrón': '#795548',
         'beige': '#D4C4B0',
         'crema': '#FFFDD0',
         'arena': '#C2B280',
-        
+
         // Rojos
         'rojo oscuro': '#8B0000',
         'rojo': '#FF0000',
         'rosa oscuro': '#C71585',
         'rosa': '#FFC0CB',
         'rosa claro': '#FFB6C1',
-        
+
         // Naranjas
         'naranja oscuro': '#FF8C00',
         'naranja': '#FF6B35',
         'durazno': '#FFE5B4',
-        
+
         // Amarillos
         'amarillo oscuro': '#B8860B',
         'amarillo': '#FFEB3B',
         'amarillo claro': '#FFFF99',
-        
+
         // Verdes
         'verde oscuro': '#006400',
         'verde oliva': '#808000',
         'verde': '#4CAF50',
         'verde claro': '#90EE90',
         'verde menta': '#98FF98',
-        
+
         // Azules y cianes
         'turquesa oscuro': '#008B8B',
         'turquesa': '#40E0D0',
@@ -306,31 +306,31 @@ const colorNameToHex = (colorName: string): string => {
         'azul claro': '#ADD8E6',
         'celeste': '#87CEEB',
         'cian': '#00BCD4',
-        
+
         // Morados
         'morado oscuro': '#4A148C',
         'morado': '#9C27B0',
         'violeta': '#8A2BE2',
         'lila': '#C8A2C8',
-        
+
         // Magentas
         'magenta oscuro': '#8B008B',
         'magenta': '#FF00FF',
         'fucsia': '#FF00FF',
     };
-    
+
     // Buscar coincidencia exacta
     if (colorMap[name]) {
         return colorMap[name];
     }
-    
+
     // Buscar coincidencia parcial
     for (const [key, value] of Object.entries(colorMap)) {
         if (name.includes(key) || key.includes(name)) {
             return value;
         }
     }
-    
+
     // Si no encuentra, mantener el hex actual
     return '';
 };
@@ -390,7 +390,6 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
             if (initialData) {
                 // Editing mode setup
                 setMode('complete');
-                setMode('complete');
                 setImage(initialData.imageUrl || null);
 
                 // If it was AI processed, the current imageUrl is the processed one
@@ -417,7 +416,6 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
                 });
             } else {
                 // Add mode reset
-                setMode('quick');
                 setMode('quick');
                 setImage(null);
                 setOriginalImage(null);

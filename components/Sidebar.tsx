@@ -8,19 +8,22 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Home, ShoppingBag, MessageCircle, User, Crown } from 'lucide-react';
+import { Home, ShoppingBag, Wand2, MessageCircle, User, Crown } from 'lucide-react';
 import { useUser } from '@/store';
-import { Logo } from '@/components';
+import LogoExtended from './LogoExtended';
+import LogoMark from './LogoMark';
 
 interface NavItem {
   href: string;
   label: string;
   icon: React.ReactNode;
+  isLogoMark?: boolean;
 }
 
 const navItems: NavItem[] = [
   { href: '/feed', label: 'Feed', icon: <Home className="w-5 h-5" /> },
   { href: '/closet', label: 'Armario', icon: <ShoppingBag className="w-5 h-5" /> },
+  { href: '/create', label: 'Crear Outfit', icon: null, isLogoMark: true },
   { href: '/chat', label: 'Chat', icon: <MessageCircle className="w-5 h-5" /> },
   { href: '/profile', label: 'Perfil', icon: <User className="w-5 h-5" /> },
 ];
@@ -30,10 +33,10 @@ export default function Sidebar() {
   const { isPremium, upgradeToPremiun } = useUser();
 
   return (
-    <aside className="hidden md:flex flex-col w-64 bg-[var(--background)] border-r border-[var(--border-color)] min-h-screen">
+    <aside className="hidden md:flex flex-col w-64 glass border-r border-[var(--border-color)] min-h-screen">
       {/* Logo */}
       <div className="p-4 border-b border-[var(--border-color)]">
-        <Logo size="md" className="mb-2" />
+        <LogoExtended size="md" className="mb-2" />
         <p className="text-[10px] text-[var(--foreground-tertiary)]">Tu estilista personal</p>
       </div>
 
@@ -51,18 +54,24 @@ export default function Sidebar() {
               <Link
                 href={item.href}
                 className={`relative flex items-center gap-3 px-3 py-3 rounded-2xl transition-all ${isActive
-                  ? 'bg-gradient-to-r from-[var(--brand-pink)]/10 to-[var(--brand-pink-dark)]/10 text-[var(--brand-pink)]'
-                  : 'text-[var(--foreground-secondary)] hover:bg-[var(--background-secondary)]'
+                  ? 'bg-[rgba(255,105,180,0.85)] text-white backdrop-blur-md'
+                  : 'text-[var(--foreground-secondary)] hover:bg-[rgba(255,255,255,0.25)] dark:hover:bg-[rgba(255,255,255,0.1)]'
                   }`}
               >
                 {isActive && (
                   <motion.div
                     layoutId="activeSidebarItem"
-                    className="absolute left-0 w-1 h-6 bg-gradient-to-b from-[var(--brand-pink)] to-[var(--brand-pink-dark)] rounded-r-full"
+                    className="absolute left-0 w-1 h-6 bg-white/80 rounded-r-full"
                     transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                   />
                 )}
-                <span className="relative z-10">{item.icon}</span>
+                <span className="relative z-10">
+                  {item.isLogoMark ? (
+                    <LogoMark size="sm" inverted={isActive} />
+                  ) : (
+                    item.icon
+                  )}
+                </span>
                 <span className={`relative z-10 text-sm font-semibold`}>{item.label}</span>
               </Link>
             </motion.div>

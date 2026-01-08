@@ -9,16 +9,19 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Home, ShoppingBag, MessageCircle, User } from 'lucide-react';
+import LogoMark from './LogoMark';
 
 interface TabItem {
   href: string;
   label: string;
   icon: React.ReactNode;
+  isLogoMark?: boolean;
 }
 
 const tabs: TabItem[] = [
   { href: '/feed', label: 'Feed', icon: <Home className="w-6 h-6" /> },
   { href: '/closet', label: 'Armario', icon: <ShoppingBag className="w-6 h-6" /> },
+  { href: '/create', label: 'Crear', icon: null, isLogoMark: true },
   { href: '/chat', label: 'Chat', icon: <MessageCircle className="w-6 h-6" /> },
   { href: '/profile', label: 'Perfil', icon: <User className="w-6 h-6" /> },
 ];
@@ -47,7 +50,7 @@ export default function TabBar() {
                   {isActive && (
                     <motion.div
                       layoutId="activeTab"
-                      className="absolute inset-0 bg-gradient-to-br from-[var(--brand-pink)] to-[var(--brand-pink-dark)] rounded-2xl"
+                      className="absolute inset-0 bg-[rgba(255,105,180,0.85)] rounded-2xl backdrop-blur-md"
                       transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                     />
                   )}
@@ -55,7 +58,11 @@ export default function TabBar() {
                     className="relative z-10"
                     animate={{ scale: isActive ? 1.1 : 1 }}
                   >
-                    {tab.icon}
+                    {tab.isLogoMark ? (
+                      <LogoMark size="sm" inverted={isActive} />
+                    ) : (
+                      tab.icon
+                    )}
                   </motion.span>
                   <span className="relative z-10 text-[10px] font-semibold">{tab.label}</span>
                 </motion.div>

@@ -8,9 +8,9 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { StyleQuizModal, type StyleQuizResponses } from '@/components/StyleQuizModal';
+import StyleQuizModal, { type StyleQuizResponses } from '@/components/StyleQuizModal';
+import { PageTitle, LogoMark } from '@/components';
 import { useUser } from '@/store/userStore';
-import { Sparkles } from 'lucide-react';
 
 export default function OnboardingPage() {
     const router = useRouter();
@@ -48,12 +48,15 @@ export default function OnboardingPage() {
                     animate={{ opacity: 1, y: 0 }}
                     className="text-center max-w-md"
                 >
-                    <div className="w-24 h-24 mx-auto mb-6 rounded-3xl bg-gradient-to-br from-[var(--brand-pink)] to-[var(--brand-pink-dark)] flex items-center justify-center shadow-[var(--shadow-float-strong)]">
-                        <Sparkles className="w-12 h-12 text-white" />
+                    <div className="w-24 h-24 mx-auto mb-6 rounded-3xl bg-[var(--background)] shadow-[var(--shadow-float-strong)] flex items-center justify-center overflow-hidden">
+                        <LogoMark size="xl" />
                     </div>
-                    <h1 className="text-4xl font-bold gradient-text mb-4">
-                        ¡Bienvenido a Klozet!
-                    </h1>
+                    <PageTitle
+                        primary="BIENVENIDO A"
+                        secondary="KLOZET"
+                        className="mb-4"
+                        centered
+                    />
                     <p className="text-lg text-[var(--foreground-tertiary)] mb-8">
                         Vamos a conocer tu estilo para personalizar tu experiencia
                     </p>

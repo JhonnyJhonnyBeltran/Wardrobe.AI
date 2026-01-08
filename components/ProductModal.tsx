@@ -19,8 +19,6 @@ interface ProductModalProps {
     onEdit?: (id: string) => void;
 }
 
-
-
 export default function ProductModal({ item, isOpen, onClose, isFavorite = false, onFavoriteToggle, onEdit }: ProductModalProps) {
     if (!item) return null;
 
