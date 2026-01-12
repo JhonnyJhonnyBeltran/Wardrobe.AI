@@ -98,6 +98,240 @@
   --shadow-glow-pink: 0 0 32px rgba(255, 105, 180, 0.4);
 }
 
+/* ============================================
+   CLOSET DOOR ANIMATION
+   Wardrobe opening effect with curtain reveal
+   ============================================ */
+
+.closet-door-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: calc(100% - 80px); /* Leave space for bottom TabBar */
+  z-index: 40; /* Below navigation (z-50) but above content */
+  pointer-events: none;
+  perspective: 2000px;
+}
+
+/* On desktop, account for sidebar */
+@media (min-width: 768px) {
+  .closet-door-container {
+    left: 240px; /* Sidebar width */
+    width: calc(100% - 240px);
+    height: 100%;
+  }
+}
+
+.closet-door {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 50%;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}
+
+.closet-door-left {
+  left: 0;
+  transform-origin: left center;
+  background: linear-gradient(
+    135deg,
+    var(--pure-white) 0%,
+    var(--gray-100) 25%,
+    var(--brand-pink-light) 50%,
+    var(--gray-100) 75%,
+    var(--pure-white) 100%
+  );
+  border-right: 1px solid var(--gray-200);
+}
+
+.closet-door-right {
+  right: 0;
+  transform-origin: right center;
+  background: linear-gradient(
+    225deg,
+    var(--pure-white) 0%,
+    var(--gray-100) 25%,
+    var(--brand-pink-light) 50%,
+    var(--gray-100) 75%,
+    var(--pure-white) 100%
+  );
+  border-left: 1px solid var(--gray-200);
+}
+
+/* Door inner styling - minimalist frame */
+.closet-door-inner {
+  position: absolute;
+  top: 5%;
+  width: 85%;
+  height: 90%;
+  border: 2px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.closet-door-left .closet-door-inner {
+  left: 8%;
+  background: linear-gradient(180deg, 
+    rgba(255, 255, 255, 0.9) 0%,
+    rgba(255, 182, 213, 0.15) 50%,
+    rgba(255, 255, 255, 0.9) 100%
+  );
+  box-shadow: inset 2px 2px 10px rgba(0, 0, 0, 0.03);
+}
+
+.closet-door-right .closet-door-inner {
+  right: 8%;
+  background: linear-gradient(180deg, 
+    rgba(255, 255, 255, 0.9) 0%,
+    rgba(255, 182, 213, 0.15) 50%,
+    rgba(255, 255, 255, 0.9) 100%
+  );
+  box-shadow: inset -2px 2px 10px rgba(0, 0, 0, 0.03);
+}
+
+/* Door handles - modern minimalist style */
+.closet-door-handle {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 80px;
+  background: linear-gradient(180deg, 
+    var(--gray-800) 0%,
+    var(--pure-black) 50%,
+    var(--gray-800) 100%
+  );
+  border-radius: var(--radius-full);
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.closet-door-left .closet-door-handle {
+  right: 12%;
+}
+
+.closet-door-right .closet-door-handle {
+  left: 12%;
+}
+
+/* Decorative line details on doors */
+.closet-door-detail {
+  position: absolute;
+  background: var(--gray-200);
+}
+
+.closet-door-detail-horizontal {
+  width: 60%;
+  height: 1px;
+}
+
+.closet-door-detail-top {
+  top: 20%;
+}
+
+.closet-door-detail-bottom {
+  bottom: 20%;
+}
+
+.closet-door-left .closet-door-detail-horizontal {
+  left: 15%;
+}
+
+.closet-door-right .closet-door-detail-horizontal {
+  right: 15%;
+}
+
+/* Logo on door */
+.closet-door-logo {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 1.5rem;
+  letter-spacing: -0.02em;
+  color: var(--gray-400);
+}
+
+/* Subtle pink accent line */
+.closet-door-accent {
+  width: 40px;
+  height: 3px;
+  background: linear-gradient(90deg, 
+    transparent 0%,
+    var(--brand-pink) 50%,
+    transparent 100%
+  );
+  border-radius: var(--radius-full);
+}
+
+/* Dark mode door styles */
+.dark .closet-door-left {
+  background: linear-gradient(
+    135deg,
+    var(--gray-900) 0%,
+    var(--gray-800) 25%,
+    rgba(255, 105, 180, 0.15) 50%,
+    var(--gray-800) 75%,
+    var(--gray-900) 100%
+  );
+  border-right: 1px solid var(--gray-700);
+}
+
+.dark .closet-door-right {
+  background: linear-gradient(
+    225deg,
+    var(--gray-900) 0%,
+    var(--gray-800) 25%,
+    rgba(255, 105, 180, 0.15) 50%,
+    var(--gray-800) 75%,
+    var(--gray-900) 100%
+  );
+  border-left: 1px solid var(--gray-700);
+}
+
+.dark .closet-door-inner {
+  border-color: var(--gray-700);
+}
+
+.dark .closet-door-left .closet-door-inner {
+  background: linear-gradient(180deg, 
+    rgba(26, 26, 26, 0.95) 0%,
+    rgba(255, 105, 180, 0.08) 50%,
+    rgba(26, 26, 26, 0.95) 100%
+  );
+  box-shadow: inset 2px 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.dark .closet-door-right .closet-door-inner {
+  background: linear-gradient(180deg, 
+    rgba(26, 26, 26, 0.95) 0%,
+    rgba(255, 105, 180, 0.08) 50%,
+    rgba(26, 26, 26, 0.95) 100%
+  );
+  box-shadow: inset -2px 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.dark .closet-door-handle {
+  background: linear-gradient(180deg, 
+    var(--gray-300) 0%,
+    var(--pure-white) 50%,
+    var(--gray-300) 100%
+  );
+}
+
+.dark .closet-door-detail {
+  background: var(--gray-700);
+}
+
+.dark .closet-door-logo {
+  color: var(--gray-500);
+}
+
 /* ===== SMOOTH DARK MODE TRANSITION ===== */
 html {
   transition: background-color 0.3s var(--ease-smooth), color 0.3s var(--ease-smooth);
