@@ -210,7 +210,6 @@ export default function ClosetPage() {
       brand: item.brand || '',
       color: (item.color as any) || 'white',
       imageUrl: item.imageUrl || '',
-      price: (item as any).price || undefined,
       buyLink: (item as any).buyLink || '#',
       colorHex: (item as any).colorHex || undefined,
       source: 'wardrobe',
@@ -501,7 +500,6 @@ export default function ClosetPage() {
                   color={item.color as any}
                   colorHex={(item as any).colorHex || colorMap[(item.color as any) as string] || '#EEEEEE'}
                   imageUrl={item.imageUrl || ''}
-                  price={(item as any).price}
                   isFavorite={favorites.has(item.id)}
                   onFavoriteToggle={handleFavoriteToggle}
                   onDelete={handleDeleteItem}

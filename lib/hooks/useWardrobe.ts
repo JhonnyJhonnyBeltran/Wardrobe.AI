@@ -63,7 +63,6 @@ export function useWardrobe(): UseWardrobeReturn {
         // Campos adicionales
         ...({
           colorHex: item.color_hex,
-          price: item.price,
           size: item.size,
           reference: item.reference,
           fabric: item.fabric,
@@ -102,7 +101,6 @@ export function useWardrobe(): UseWardrobeReturn {
         is_ai_processed: item.isAiProcessed || false,
         original_image_url: item.originalImageUrl || null,
         color_hex: (item as any).colorHex || null,
-        price: (item as any).price || null,
         size: (item as any).size || null,
         reference: (item as any).reference || null,
         fabric: (item as any).fabric || null,
@@ -131,7 +129,6 @@ export function useWardrobe(): UseWardrobeReturn {
         originalImageUrl: data.original_image_url,
         ...({
           colorHex: data.color_hex,
-          price: data.price,
           size: data.size,
           reference: data.reference,
           fabric: data.fabric,
@@ -163,13 +160,6 @@ export function useWardrobe(): UseWardrobeReturn {
       if (updates.originalImageUrl !== undefined) dbUpdates.original_image_url = updates.originalImageUrl;
 
       if ((updates as any).colorHex !== undefined) dbUpdates.color_hex = (updates as any).colorHex;
-
-      // Sanitize price: convert empty string to null to avoid "invalid input syntax for type numeric"
-      if ((updates as any).price !== undefined) {
-        const p = (updates as any).price;
-        dbUpdates.price = p === '' ? null : p;
-      }
-
       if ((updates as any).size !== undefined) dbUpdates.size = (updates as any).size;
       if ((updates as any).reference !== undefined) dbUpdates.reference = (updates as any).reference;
       if ((updates as any).fabric !== undefined) dbUpdates.fabric = (updates as any).fabric;

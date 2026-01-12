@@ -49,7 +49,6 @@ export interface ClothingItem {
   originalImageUrl?: string;
   // Extended details
   colorHex?: string;
-  price?: number | string;
   size?: string;
   reference?: string;
   fabric?: string;

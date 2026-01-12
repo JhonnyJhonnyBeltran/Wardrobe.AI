@@ -17,7 +17,6 @@ export interface ClothingItemProps {
   color?: string;
   colorHex?: string;
   imageUrl: string;
-  price?: string;
   isFavorite?: boolean;
   onClick?: () => void;
   onFavoriteToggle?: (id: string) => void;
@@ -33,7 +32,6 @@ export const ClothingItem: React.FC<ClothingItemProps> = ({
   color,
   colorHex,
   imageUrl,
-  price,
   isFavorite = false,
   onClick,
   onFavoriteToggle,
@@ -137,16 +135,6 @@ export const ClothingItem: React.FC<ClothingItemProps> = ({
           >
             <Trash2 className="w-5 h-5 stroke-white" />
           </motion.button>
-        )}
-
-        {/* Price tag */}
-        {price && (
-          <div className="absolute bottom-3 left-3 z-20 px-3 py-1.5 rounded-full glass-strong
-                          opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0">
-            <span className="text-xs font-bold bg-gradient-to-r from-[var(--brand-pink)] to-[var(--brand-pink-dark)] bg-clip-text text-transparent">
-              {price}
-            </span>
-          </div>
         )}
       </div>
 

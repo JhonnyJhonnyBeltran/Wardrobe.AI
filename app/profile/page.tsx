@@ -3,53 +3,99 @@
 /**
  * Profile Page - Diseño Premium estilo Apple/Revolut
  * Minimalista, elegante y profesional
+ * Enfocado en configuración y gestión de cuenta
  */
 
-import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useUser } from '@/store/userStore';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { Card } from '@/components';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import {
+  User,
+  Palette,
+  Settings,
+  Bell,
+  Shield,
+  Key,
+  ChevronRight,
+  LogOut
+} from 'lucide-react';
 
-// Fancy Button Component with click animation
-interface FancyButtonProps {
+// Menu Item Component
+interface MenuItemProps {
   href: string;
-  variant: 'pink' | 'amber';
-  title: string;
-  subtitle: string;
+  icon: React.ReactNode;
+  label: string;
+  subtitle?: string;
+  variant?: 'default' | 'danger';
 }
 
-function FancyButton({ href, variant, title, subtitle }: FancyButtonProps) {
-  const [isActive, setIsActive] = useState(false);
-  const router = useRouter();
-
-  const handleClick = () => {
-    setIsActive(true);
-    // Navigate after animation plays
-    setTimeout(() => {
-      router.push(href);
-    }, 450);
-  };
-
+function MenuItem({ href, icon, label, subtitle, variant = 'default' }: MenuItemProps) {
   return (
-    <button
-      onClick={handleClick}
-      className={`fancy-btn fancy-btn--${variant} ${isActive ? 'active' : ''}`}
-    >
-      <div className="fancy-btn__line"></div>
-      <div className="fancy-btn__line"></div>
-      <span className="fancy-btn__text">
-        <span className="fancy-btn__text-main">{title}</span>
-        <span className="fancy-btn__text-sub">{subtitle}</span>
-      </span>
-      <div className="fancy-btn__drow1"></div>
-      <div className="fancy-btn__drow2"></div>
-    </button>
+    <Link href={href}>
+      <motion.div
+        className={`flex items-center gap-4 p-4 border-b border-[var(--border-color)] last:border-b-0 cursor-pointer ${variant === 'danger' ? 'hover:bg-red-500/5' : ''
+          }`}
+        whileHover={{ backgroundColor: variant === 'danger' ? 'rgba(239, 68, 68, 0.05)' : 'var(--card-hover)' }}
+        transition={{ duration: 0.15 }}
+      >
+        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${variant === 'danger'
+            ? 'bg-red-500/10'
+            : 'bg-[var(--brand-pink)]/10'
+          }`}>
+          {icon}
+        </div>
+        <div className="flex-1">
+          <span className={`font-medium block ${variant === 'danger' ? 'text-red-500' : 'text-[var(--foreground)]'
+            }`}>
+            {label}
+          </span>
+          {subtitle && (
+            <span className="text-xs text-[var(--foreground-tertiary)]">
+              {subtitle}
+            </span>
+          )}
+        </div>
+        <ChevronRight className={`w-5 h-5 ${variant === 'danger' ? 'text-red-400' : 'text-[var(--foreground-tertiary)]'
+          }`} />
+      </motion.div>
+    </Link>
   );
 }
 
+// Button Item Component (for actions like logout)
+interface ButtonItemProps {
+  onClick: () => void;
+  icon: React.ReactNode;
+  label: string;
+  variant?: 'default' | 'danger';
+}
+
+function ButtonItem({ onClick, icon, label, variant = 'default' }: ButtonItemProps) {
+  return (
+    <motion.button
+      onClick={onClick}
+      className="w-full flex items-center gap-4 p-4 cursor-pointer"
+      whileHover={{ backgroundColor: variant === 'danger' ? 'rgba(239, 68, 68, 0.05)' : 'var(--card-hover)' }}
+      transition={{ duration: 0.15 }}
+    >
+      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${variant === 'danger'
+          ? 'bg-red-500/10'
+          : 'bg-[var(--brand-pink)]/10'
+        }`}>
+        {icon}
+      </div>
+      <span className={`font-medium flex-1 text-left ${variant === 'danger' ? 'text-red-500' : 'text-[var(--foreground)]'
+        }`}>
+        {label}
+      </span>
+      <ChevronRight className={`w-5 h-5 ${variant === 'danger' ? 'text-red-400' : 'text-[var(--foreground-tertiary)]'
+        }`} />
+    </motion.button>
+  );
+}
 
 export default function ProfilePage() {
   const { user } = useUser();
@@ -126,47 +172,63 @@ export default function ProfilePage() {
           )}
         </motion.div>
 
-        {/* Stats Row - Minimalista */}
-        <motion.div variants={itemVariants} className="mb-8">
-          <Card className="p-6">
-            <div className="grid grid-cols-3 divide-x divide-[var(--border-color)]">
-              <div className="text-center px-4">
-                <div className="text-2xl font-bold text-[var(--foreground)]">12</div>
-                <div className="text-xs text-[var(--foreground-tertiary)] mt-1">Prendas</div>
-              </div>
-              <div className="text-center px-4">
-                <div className="text-2xl font-bold text-[var(--foreground)]">8</div>
-                <div className="text-xs text-[var(--foreground-tertiary)] mt-1">Outfits</div>
-              </div>
-              <div className="text-center px-4">
-                <div className="text-2xl font-bold text-[var(--foreground)]">24</div>
-                <div className="text-xs text-[var(--foreground-tertiary)] mt-1">Días activo</div>
-              </div>
-            </div>
+        {/* Perfil y Personalización */}
+        <motion.div variants={itemVariants} className="mb-6">
+          <h2 className="text-sm font-semibold text-[var(--foreground-secondary)] uppercase tracking-wider mb-4">
+            Perfil
+          </h2>
+          <Card className="overflow-hidden">
+            <MenuItem
+              href="/profile/edit"
+              icon={<User className="w-5 h-5 text-[var(--brand-pink)]" />}
+              label="Editar perfil"
+              subtitle="Nombre, foto y datos personales"
+            />
+            <MenuItem
+              href="/profile/preferences"
+              icon={<Palette className="w-5 h-5 text-[var(--brand-pink)]" />}
+              label="Preferencias de estilo"
+              subtitle="Colores, tallas y estilo favorito"
+            />
           </Card>
         </motion.div>
 
-        {/* Quick Actions - Fancy Buttons */}
-        <motion.div variants={itemVariants} className="mb-8">
-          <div className="flex flex-col gap-4">
-            <FancyButton
-              href="/closet"
-              variant="pink"
-              title="MI ARMARIO"
-              subtitle="Gestiona tus prendas"
+        {/* Configuración */}
+        <motion.div variants={itemVariants} className="mb-6">
+          <h2 className="text-sm font-semibold text-[var(--foreground-secondary)] uppercase tracking-wider mb-4">
+            Configuración
+          </h2>
+          <Card className="overflow-hidden">
+            <MenuItem
+              href="/profile/settings"
+              icon={<Settings className="w-5 h-5 text-[var(--brand-pink)]" />}
+              label="Ajustes generales"
+              subtitle="Tema, idioma y más"
             />
-            <FancyButton
-              href="/create"
-              variant="amber"
-              title="CREAR OUTFIT"
-              subtitle="Nuevas combinaciones"
+            <MenuItem
+              href="/profile/settings/notifications"
+              icon={<Bell className="w-5 h-5 text-[var(--brand-pink)]" />}
+              label="Notificaciones"
+              subtitle="Gestiona tus alertas"
             />
-          </div>
+            <MenuItem
+              href="/profile/settings/security"
+              icon={<Key className="w-5 h-5 text-[var(--brand-pink)]" />}
+              label="Seguridad"
+              subtitle="Contraseña y autenticación"
+            />
+            <MenuItem
+              href="/profile/settings/privacy"
+              icon={<Shield className="w-5 h-5 text-[var(--brand-pink)]" />}
+              label="Privacidad"
+              subtitle="Datos y permisos"
+            />
+          </Card>
         </motion.div>
 
         {/* Style Profile - Si existe */}
         {user.styleCompleted && (
-          <motion.div variants={itemVariants} className="mb-8">
+          <motion.div variants={itemVariants} className="mb-6">
             <h2 className="text-sm font-semibold text-[var(--foreground-secondary)] uppercase tracking-wider mb-4">
               Tu Estilo
             </h2>
@@ -240,34 +302,18 @@ export default function ProfilePage() {
           </motion.div>
         )}
 
-        {/* Account Section */}
+        {/* Cuenta */}
         <motion.div variants={itemVariants}>
           <h2 className="text-sm font-semibold text-[var(--foreground-secondary)] uppercase tracking-wider mb-4">
             Cuenta
           </h2>
           <Card className="overflow-hidden">
-            {/* Edit Profile */}
-            <Link href="/profile/edit">
-              <motion.div
-                className="flex items-center justify-between p-4 border-b border-[var(--border-color)] cursor-pointer"
-                whileHover={{ backgroundColor: 'var(--card-hover)' }}
-                transition={{ duration: 0.15 }}
-              >
-                <span className="font-medium text-[var(--foreground)]">Editar perfil</span>
-                <span className="text-[var(--foreground-tertiary)]">→</span>
-              </motion.div>
-            </Link>
-
-            {/* Logout */}
-            <motion.button
+            <ButtonItem
               onClick={handleLogout}
-              className="w-full flex items-center justify-between p-4 cursor-pointer"
-              whileHover={{ backgroundColor: 'rgba(239, 68, 68, 0.05)' }}
-              transition={{ duration: 0.15 }}
-            >
-              <span className="font-medium text-red-500">Cerrar sesión</span>
-              <span className="text-red-400">→</span>
-            </motion.button>
+              icon={<LogOut className="w-5 h-5 text-red-500" />}
+              label="Cerrar sesión"
+              variant="danger"
+            />
           </Card>
         </motion.div>
 

@@ -2,15 +2,24 @@
 
 /**
  * Add Item Modal - Complete form for adding clothing items
- * Allows full details OR just quick add
+ * Features:
+ * - Quick add with just an image
+ * - Complete mode with all details
+ * - Dropdowns with predefined options + custom input
+ * - AI-powered image processing
+ * - Color detection from images
  */
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Upload, Camera, Link as LinkIcon, Check, ArrowRight, Loader2, RotateCw, RotateCcw, Wand2 } from 'lucide-react';
+import { X, Upload, Camera, Link as LinkIcon, Check, ArrowRight, Loader2, RotateCw, RotateCcw, Wand2, ChevronDown } from 'lucide-react';
 import { Button, Card, AdvisorModal } from '@/components';
 import type { ClothingItem } from '@/types/clothing';
 import { processClothingImage } from '@/lib/imageProcessing';
+
+// ============================================================================
+// CONSTANTS - Predefined options for dropdowns
+// ============================================================================
 
 const PROCESSING_MESSAGES = [
     'Analizando imagen...',
@@ -21,6 +30,209 @@ const PROCESSING_MESSAGES = [
     'Centrando objeto...',
     'Optimizando resultado...',
 ];
+
+// Marcas populares predefinidas
+const BRAND_OPTIONS = [
+    'Zara',
+    'Mango',
+    'H&M',
+    'Pull&Bear',
+    'Bershka',
+    'Stradivarius',
+    'Massimo Dutti',
+    'COS',
+    'Uniqlo',
+    'Nike',
+    'Adidas',
+    'Levi\'s',
+    'Tommy Hilfiger',
+    'Calvin Klein',
+    'Primark',
+    'ASOS',
+    'Shein',
+    'Otra marca',
+];
+
+// Tallas predefinidas
+const SIZE_OPTIONS = [
+    'XXS',
+    'XS',
+    'S',
+    'M',
+    'L',
+    'XL',
+    'XXL',
+    'XXXL',
+    '34',
+    '36',
+    '38',
+    '40',
+    '42',
+    '44',
+    '46',
+    'Única',
+    'Otra talla',
+];
+
+// Tejidos comunes
+const FABRIC_OPTIONS = [
+    'Algodón',
+    'Poliéster',
+    'Lana',
+    'Seda',
+    'Lino',
+    'Denim',
+    'Cuero',
+    'Piel sintética',
+    'Viscosa',
+    'Nylon',
+    'Terciopelo',
+    'Punto',
+    'Tweed',
+    'Pana',
+    'Lycra/Elastano',
+    'Cashmere',
+    'Otro tejido',
+];
+
+// Colores predefinidos
+const COLOR_OPTIONS = [
+    { name: 'Negro', hex: '#000000' },
+    { name: 'Blanco', hex: '#FFFFFF' },
+    { name: 'Gris', hex: '#808080' },
+    { name: 'Beige', hex: '#D4C4B0' },
+    { name: 'Marrón', hex: '#795548' },
+    { name: 'Azul marino', hex: '#000080' },
+    { name: 'Azul', hex: '#2196F3' },
+    { name: 'Celeste', hex: '#87CEEB' },
+    { name: 'Rojo', hex: '#FF0000' },
+    { name: 'Rosa', hex: '#FFC0CB' },
+    { name: 'Verde', hex: '#4CAF50' },
+    { name: 'Amarillo', hex: '#FFEB3B' },
+    { name: 'Naranja', hex: '#FF6B35' },
+    { name: 'Morado', hex: '#9C27B0' },
+    { name: 'Crema', hex: '#FFFDD0' },
+];
+
+// Tipos de prenda
+const TYPE_OPTIONS = [
+    { value: 'top', label: 'Top / Camiseta' },
+    { value: 'bottom', label: 'Pantalón / Falda' },
+    { value: 'dress', label: 'Vestido / Mono' },
+    { value: 'outerwear', label: 'Abrigo / Chaqueta' },
+    { value: 'shoes', label: 'Zapatos / Calzado' },
+    { value: 'accessories', label: 'Accesorios' },
+    { value: 'swimwear', label: 'Bañador / Bikini' },
+    { value: 'sportswear', label: 'Ropa deportiva' },
+];
+
+// Temporadas
+const SEASON_OPTIONS = [
+    { value: 'spring', label: '🌸 Primavera' },
+    { value: 'summer', label: '☀️ Verano' },
+    { value: 'autumn', label: '🍂 Otoño' },
+    { value: 'winter', label: '❄️ Invierno' },
+    { value: 'all-season', label: '📅 Todo el año' },
+];
+
+// ============================================================================
+// DROPDOWN COMPONENT with custom input option
+// ============================================================================
+
+interface DropdownWithCustomProps {
+    label: string;
+    value: string;
+    onChange: (value: string) => void;
+    options: string[];
+    placeholder?: string;
+    customOptionLabel?: string;
+}
+
+function DropdownWithCustom({
+    label,
+    value,
+    onChange,
+    options,
+    placeholder = 'Seleccionar...',
+    customOptionLabel = 'Otro...'
+}: DropdownWithCustomProps) {
+    const [isCustom, setIsCustom] = useState(false);
+    const [customValue, setCustomValue] = useState('');
+
+    // Check if current value is custom (not in options)
+    useEffect(() => {
+        if (value && !options.includes(value) && value !== customOptionLabel) {
+            setIsCustom(true);
+            setCustomValue(value);
+        }
+    }, [value, options, customOptionLabel]);
+
+    const handleSelectChange = (selectedValue: string) => {
+        if (selectedValue === customOptionLabel || selectedValue === 'Otra marca' || selectedValue === 'Otra talla' || selectedValue === 'Otro tejido') {
+            setIsCustom(true);
+            setCustomValue('');
+            onChange('');
+        } else {
+            setIsCustom(false);
+            onChange(selectedValue);
+        }
+    };
+
+    const handleCustomChange = (customVal: string) => {
+        setCustomValue(customVal);
+        onChange(customVal);
+    };
+
+    return (
+        <div>
+            <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
+                {label}
+            </label>
+            {isCustom ? (
+                <div className="flex gap-2">
+                    <input
+                        type="text"
+                        value={customValue}
+                        onChange={(e) => handleCustomChange(e.target.value)}
+                        placeholder={`Introducir ${label.toLowerCase()}...`}
+                        className="flex-1 px-4 py-2.5 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)]"
+                    />
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setIsCustom(false);
+                            setCustomValue('');
+                            onChange('');
+                        }}
+                        className="px-3 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground-secondary)] hover:bg-[var(--background-tertiary)]"
+                    >
+                        ✕
+                    </button>
+                </div>
+            ) : (
+                <div className="relative">
+                    <select
+                        value={value}
+                        onChange={(e) => handleSelectChange(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)] appearance-none cursor-pointer"
+                    >
+                        <option value="">{placeholder}</option>
+                        {options.map((option) => (
+                            <option key={option} value={option}>
+                                {option}
+                            </option>
+                        ))}
+                    </select>
+                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--foreground-tertiary)] pointer-events-none" />
+                </div>
+            )}
+        </div>
+    );
+}
+
+// ============================================================================
+// COLOR UTILITY FUNCTIONS
+// ============================================================================
 
 /**
  * Extrae el color dominante de una imagen
@@ -251,89 +463,9 @@ const hexToRgb = (hex: string): { r: number; g: number; b: number } | null => {
     } : null;
 };
 
-/**
- * Convierte nombre de color a hex aproximado
- */
-const colorNameToHex = (colorName: string): string => {
-    const name = colorName.toLowerCase().trim();
-
-    const colorMap: { [key: string]: string } = {
-        // Negros y grises
-        'negro': '#000000',
-        'gris oscuro': '#404040',
-        'gris': '#808080',
-        'gris claro': '#C0C0C0',
-        'blanco roto': '#F5F5DC',
-        'blanco': '#FFFFFF',
-
-        // Marrones y tierra
-        'marrón oscuro': '#3E2723',
-        'marrón': '#795548',
-        'beige': '#D4C4B0',
-        'crema': '#FFFDD0',
-        'arena': '#C2B280',
-
-        // Rojos
-        'rojo oscuro': '#8B0000',
-        'rojo': '#FF0000',
-        'rosa oscuro': '#C71585',
-        'rosa': '#FFC0CB',
-        'rosa claro': '#FFB6C1',
-
-        // Naranjas
-        'naranja oscuro': '#FF8C00',
-        'naranja': '#FF6B35',
-        'durazno': '#FFE5B4',
-
-        // Amarillos
-        'amarillo oscuro': '#B8860B',
-        'amarillo': '#FFEB3B',
-        'amarillo claro': '#FFFF99',
-
-        // Verdes
-        'verde oscuro': '#006400',
-        'verde oliva': '#808000',
-        'verde': '#4CAF50',
-        'verde claro': '#90EE90',
-        'verde menta': '#98FF98',
-
-        // Azules y cianes
-        'turquesa oscuro': '#008B8B',
-        'turquesa': '#40E0D0',
-        'aguamarina': '#7FFFD4',
-        'azul marino': '#000080',
-        'azul': '#2196F3',
-        'azul claro': '#ADD8E6',
-        'celeste': '#87CEEB',
-        'cian': '#00BCD4',
-
-        // Morados
-        'morado oscuro': '#4A148C',
-        'morado': '#9C27B0',
-        'violeta': '#8A2BE2',
-        'lila': '#C8A2C8',
-
-        // Magentas
-        'magenta oscuro': '#8B008B',
-        'magenta': '#FF00FF',
-        'fucsia': '#FF00FF',
-    };
-
-    // Buscar coincidencia exacta
-    if (colorMap[name]) {
-        return colorMap[name];
-    }
-
-    // Buscar coincidencia parcial
-    for (const [key, value] of Object.entries(colorMap)) {
-        if (name.includes(key) || key.includes(name)) {
-            return value;
-        }
-    }
-
-    // Si no encuentra, mantener el hex actual
-    return '';
-};
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
 
 interface AddItemModalProps {
     isOpen: boolean;
@@ -355,20 +487,20 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
     const [processedImage, setProcessedImage] = useState<string | null>(null);
     const [showAdvisor, setShowAdvisor] = useState(false);
 
-    // Check local storage on mount
-
+    // Estado para múltiples imágenes de scraping
+    const [availableImages, setAvailableImages] = useState<string[]>([]);
+    const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
 
     const [formData, setFormData] = useState({
         name: '',
         brand: '',
-        type: 'top' as const,
+        type: 'top' as string,
         color: '',
         colorHex: '#000000',
-        price: '',
         size: '',
         reference: '',
         fabric: '',
-        season: 'spring' as const,
+        season: 'spring' as string,
     });
 
     // Efecto para rotar mensajes durante el procesamiento
@@ -380,7 +512,7 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
 
         const interval = setInterval(() => {
             setCurrentMessageIndex((prev) => (prev + 1) % PROCESSING_MESSAGES.length);
-        }, 1500); // Cambia el mensaje cada 1.5 segundos
+        }, 1500);
 
         return () => clearInterval(interval);
     }, [isProcessing]);
@@ -392,10 +524,8 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
                 setMode('complete');
                 setImage(initialData.imageUrl || null);
 
-                // If it was AI processed, the current imageUrl is the processed one
                 if (initialData.isAiProcessed) {
                     setProcessedImage(initialData.imageUrl || null);
-                    // Use stored original or fallback to current (though logic implies original is different)
                     setOriginalImage(initialData.originalImageUrl || initialData.imageUrl || null);
                 } else {
                     setProcessedImage(null);
@@ -408,7 +538,6 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
                     type: (initialData.category as any) || 'top',
                     color: initialData.color || '',
                     colorHex: (initialData as any).colorHex || '#000000',
-                    price: (initialData as any).price || '',
                     size: (initialData as any).size || '',
                     reference: (initialData as any).reference || '',
                     fabric: (initialData as any).fabric || '',
@@ -421,13 +550,14 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
                 setOriginalImage(null);
                 setProcessedImage(null);
                 setSelectedFile(null);
+                setAvailableImages([]);
+                setSelectedImageIndex(null);
                 setFormData({
                     name: '',
                     brand: '',
                     type: 'top',
                     color: '',
                     colorHex: '#000000',
-                    price: '',
                     size: '',
                     reference: '',
                     fabric: '',
@@ -485,20 +615,17 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
             }
         } catch (error) {
             console.error('Image processing failed:', error);
-            // Si falla, mantener la imagen original
         } finally {
             setIsProcessing(false);
         }
     };
 
     const handleManualProcess = async () => {
-        // If we have a processed image and we are currently showing it, revert to original
         if (processedImage && image === processedImage) {
             if (originalImage) setImage(originalImage);
             return;
         }
 
-        // If we have a processed image but showing original, switch to processed
         if (processedImage && image === originalImage) {
             setImage(processedImage);
             return;
@@ -508,8 +635,7 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
 
         setIsProcessing(true);
         try {
-            // Process image in browser (remove background + normalize)
-            const source = selectedFile || image; // Use file if available, otherwise image URL (from import)
+            const source = selectedFile || image;
 
             if (!source) {
                 setIsProcessing(false);
@@ -526,9 +652,6 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
             if (result.success && result.imageUrl) {
                 setProcessedImage(result.imageUrl);
                 setImage(result.imageUrl);
-                // We don't update selectedFile here, so the user could potentially re-process the original if we kept it? 
-                // But generally we just update the view. 
-                // If we want to allow 'undo', we might need to store originalImage separately.
             }
         } catch (error) {
             console.error('Manual processing failed:', error);
@@ -537,6 +660,9 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
         }
     };
 
+    const handleColorSelect = (colorOption: { name: string; hex: string }) => {
+        setFormData({ ...formData, color: colorOption.name, colorHex: colorOption.hex });
+    };
 
     const handleColorPickerChange = (hex: string) => {
         const rgb = hexToRgb(hex);
@@ -548,19 +674,9 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
         }
     };
 
-    const handleColorNameChange = (name: string) => {
-        const hex = colorNameToHex(name);
-        if (hex) {
-            setFormData({ ...formData, color: name, colorHex: hex });
-        } else {
-            setFormData({ ...formData, color: name });
-        }
-    };
-
     const rotateImage = (degrees: number) => {
         if (!image) return;
 
-        // Crear un canvas para rotar la imagen realmente
         const img = new Image();
         img.src = image;
 
@@ -569,7 +685,6 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
             const ctx = canvas.getContext('2d');
             if (!ctx) return;
 
-            // Calcular nuevas dimensiones según la rotación
             const radians = (degrees * Math.PI) / 180;
             const sin = Math.abs(Math.sin(radians));
             const cos = Math.abs(Math.cos(radians));
@@ -577,38 +692,25 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
             canvas.width = img.width * cos + img.height * sin;
             canvas.height = img.width * sin + img.height * cos;
 
-            // Mover el origen al centro del canvas
             ctx.translate(canvas.width / 2, canvas.height / 2);
-
-            // Rotar
             ctx.rotate(radians);
-
-            // Dibujar la imagen centrada
             ctx.drawImage(img, -img.width / 2, -img.height / 2);
 
-            // Convertir a blob y actualizar la imagen
             canvas.toBlob((blob) => {
                 if (blob) {
                     const newImageUrl = URL.createObjectURL(blob);
 
-                    // Update whichever state is currently active
                     if (processedImage && image === processedImage) {
                         setProcessedImage(newImageUrl);
                         setImage(newImageUrl);
                     } else {
-                        // Assume it's the original image
                         setOriginalImage(newImageUrl);
                         setImage(newImageUrl);
                     }
-
-                    // Clean up old blob if needed - be careful not to revoke if it's still being used by the other state
-                    // logic here is simplified: we just create new blobs. Browser cleans up eventually or we can track strictly.
                 }
             }, 'image/png');
         };
     };
-
-
 
     const handleAdvisorConfirm = () => {
         handleManualProcess();
@@ -618,6 +720,8 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
     const handleUrlImport = async () => {
         if (!url) return;
         setIsProcessing(true);
+        setAvailableImages([]);
+        setSelectedImageIndex(null);
 
         try {
             const response = await fetch('/api/scrape-product', {
@@ -639,26 +743,23 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
             console.log('Scraping result:', data);
 
             if (data.success) {
-                const { name, imageUrl, price, type, brand } = data.data;
+                const { name, images, type, brand } = data.data;
 
-                if (imageUrl) {
-                    setImage(imageUrl);
-                    setOriginalImage(imageUrl);
-                    setProcessedImage(null);
-                    setSelectedFile(null); // Clear any previous file
+                // Guardar todas las imágenes disponibles
+                if (images && images.length > 0) {
+                    setAvailableImages(images);
+                    // No seleccionar automáticamente, dejar que el usuario elija
                 }
 
                 setFormData(prev => ({
                     ...prev,
                     name: name || prev.name,
-                    price: price || prev.price,
                     type: type || prev.type,
                     brand: brand || prev.brand,
                 }));
-                setMode('complete'); // Switch to complete mode to review details
+                setMode('complete');
             } else {
                 console.error('Scraping failed:', data.error);
-                // Handle error (maybe show a toast)
             }
         } catch (error) {
             console.error('Import failed:', error);
@@ -667,36 +768,75 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
         }
     };
 
+    // Función para seleccionar una imagen y procesarla automáticamente
+    const handleImageSelection = async (imageUrl: string, index: number) => {
+        setSelectedImageIndex(index);
+        setOriginalImage(imageUrl);
+        setIsProcessing(true);
+        setCurrentMessageIndex(0);
+
+        try {
+            // Aplicar borrado de fondo automáticamente
+            const result = await processClothingImage(imageUrl, {
+                normalize: true,
+                canvasWidth: 800,
+                canvasHeight: 1000,
+                quality: 'medium',
+            });
+
+            if (result.success && result.imageUrl) {
+                setProcessedImage(result.imageUrl);
+                setImage(result.imageUrl);
+
+                // Detectar color dominante
+                try {
+                    const dominantColor = await extractDominantColor(result.imageUrl);
+                    setFormData(prev => ({
+                        ...prev,
+                        color: dominantColor.name,
+                        colorHex: dominantColor.hex
+                    }));
+                } catch (colorError) {
+                    console.warn('Failed to extract dominant color:', colorError);
+                }
+            } else {
+                // Si falla el procesamiento, usar la imagen original
+                console.warn('Processing failed, keeping original:', result.error);
+                setImage(imageUrl);
+            }
+        } catch (error) {
+            console.error('Image processing failed:', error);
+            setImage(imageUrl);
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
     const handleSubmit = async () => {
-        // No permitir guardar mientras se procesa
         if (isProcessing) {
             console.log('Aún procesando imagen, espera...');
             return;
         }
 
-        // Build payload: only include images if they have changed or did not exist
         const shouldUpdateImage = !initialData || image !== initialData.imageUrl;
         const shouldUpdateOriginalImage = !initialData || originalImage !== initialData.originalImageUrl;
 
         const payload: Partial<ClothingItem> = {
-            id: initialData?.id, // Preserve ID if editing
+            id: initialData?.id,
             name: formData.name || 'Nueva prenda',
             category: (formData.type as any) || 'top',
             color: formData.color || 'Por definir',
             brand: formData.brand || undefined,
             season: [formData.season as any] || [],
             isAiProcessed: !!processedImage && image === processedImage,
-            // cast properties that might not be in ClothingItem interface but we want to save
             ...({
                 colorHex: formData.colorHex || '#808080',
-                price: formData.price,
                 size: formData.size,
                 reference: formData.reference,
                 fabric: formData.fabric,
             } as any)
         };
 
-        // Only include image fields if they changed (don't send undefined to avoid overwriting)
         if (shouldUpdateImage && image) {
             payload.imageUrl = image;
         }
@@ -706,7 +846,7 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
 
         await onAdd(payload);
         onClose();
-        // Reset handled by useEffect on next open, but nice to clean up:
+
         if (!initialData) {
             setImage(null);
             setOriginalImage(null);
@@ -771,7 +911,7 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
                             </button>
                         </div>
 
-                        {/* Input Method Tabs - Hide when editing as we already have image */}
+                        {/* Input Method Tabs */}
                         {!isEditing && (
                             <div className="flex border-b border-[var(--border-color)]">
                                 <button
@@ -887,41 +1027,118 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
                                         </button>
                                     </div>
 
-                                    {/* Preview Area for URL */}
-                                    <div className="aspect-video rounded-2xl border border-[var(--border-color)] bg-[var(--background-secondary)] flex items-center justify-center overflow-hidden relative">
-                                        {image ? (
-                                            <img src={image} alt="Preview" className="w-full h-full object-contain bg-white" />
-                                        ) : (
-                                            <div className="text-center p-4">
-                                                <LinkIcon className="w-8 h-8 text-[var(--foreground-tertiary)] mx-auto mb-2" />
-                                                <p className="text-xs text-[var(--foreground-tertiary)]">
-                                                    Pega una URL para previsualizar
-                                                </p>
+                                    {/* Selector de imágenes múltiples */}
+                                    {availableImages.length > 0 ? (
+                                        <div className="space-y-2">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-xs font-bold text-[var(--foreground)]">
+                                                    Selecciona una imagen ({availableImages.length} disponibles)
+                                                </span>
+                                                {selectedImageIndex !== null && (
+                                                    <span className="text-xs text-[var(--brand-pink)] font-semibold">
+                                                        ✓ Imagen {selectedImageIndex + 1} seleccionada
+                                                    </span>
+                                                )}
                                             </div>
-                                        )}
-                                    </div>
+
+                                            {/* Grid de imágenes para seleccionar */}
+                                            <div className="grid grid-cols-3 gap-2 max-h-[200px] overflow-y-auto p-1">
+                                                {availableImages.map((imgUrl, index) => (
+                                                    <motion.button
+                                                        key={index}
+                                                        type="button"
+                                                        onClick={() => handleImageSelection(imgUrl, index)}
+                                                        whileHover={{ scale: 1.02 }}
+                                                        whileTap={{ scale: 0.98 }}
+                                                        className={`relative aspect-square rounded-xl overflow-hidden border-2 transition-all ${selectedImageIndex === index
+                                                                ? 'border-[var(--brand-pink)] ring-2 ring-[var(--brand-pink)]/30'
+                                                                : 'border-[var(--border-color)] hover:border-[var(--brand-pink)]/50'
+                                                            }`}
+                                                    >
+                                                        <img
+                                                            src={imgUrl}
+                                                            alt={`Imagen ${index + 1}`}
+                                                            className="w-full h-full object-cover bg-white"
+                                                            onError={(e) => {
+                                                                (e.target as HTMLImageElement).style.display = 'none';
+                                                            }}
+                                                        />
+                                                        {selectedImageIndex === index && (
+                                                            <div className="absolute inset-0 bg-[var(--brand-pink)]/20 flex items-center justify-center">
+                                                                <div className="w-6 h-6 rounded-full bg-[var(--brand-pink)] flex items-center justify-center">
+                                                                    <Check className="w-4 h-4 text-white" />
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </motion.button>
+                                                ))}
+                                            </div>
+
+                                            {/* Vista previa de imagen procesada */}
+                                            {image && (
+                                                <div className="mt-3">
+                                                    <span className="text-xs font-bold text-[var(--foreground)] mb-2 block">
+                                                        Vista previa (fondo eliminado)
+                                                    </span>
+                                                    <div className="aspect-square max-w-[200px] mx-auto rounded-2xl border border-[var(--border-color)] bg-white overflow-hidden relative">
+                                                        {isProcessing ? (
+                                                            <div className="w-full h-full flex flex-col items-center justify-center gap-2">
+                                                                <Loader2 className="w-8 h-8 text-[var(--brand-pink)] animate-spin" />
+                                                                <span className="text-xs text-[var(--brand-pink)] font-semibold animate-pulse">
+                                                                    {PROCESSING_MESSAGES[currentMessageIndex]}
+                                                                </span>
+                                                            </div>
+                                                        ) : (
+                                                            <img src={image} alt="Preview" className="w-full h-full object-contain p-2" />
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        /* Estado vacío cuando no hay imágenes */
+                                        <div className="aspect-video rounded-2xl border border-[var(--border-color)] bg-[var(--background-secondary)] flex items-center justify-center overflow-hidden relative">
+                                            {isProcessing ? (
+                                                <div className="flex flex-col items-center justify-center gap-2">
+                                                    <Loader2 className="w-8 h-8 text-[var(--brand-pink)] animate-spin" />
+                                                    <span className="text-xs text-[var(--brand-pink)] font-semibold">
+                                                        Buscando imágenes...
+                                                    </span>
+                                                </div>
+                                            ) : (
+                                                <div className="text-center p-4">
+                                                    <LinkIcon className="w-8 h-8 text-[var(--foreground-tertiary)] mx-auto mb-2" />
+                                                    <p className="text-xs text-[var(--foreground-tertiary)]">
+                                                        Pega una URL para ver las imágenes disponibles
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>
 
-                        {/* Basic Info (Always shown) */}
+                        {/* Basic Info - Type Selector */}
                         <div className="space-y-3">
                             <div>
                                 <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
-                                    Tipo
+                                    Tipo de prenda
                                 </label>
-                                <select
-                                    value={formData.type}
-                                    onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
-                                    className="w-full px-4 py-2.5 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)]"
-                                >
-                                    <option value="top">Top</option>
-                                    <option value="bottom">Bottom</option>
-                                    <option value="dress">Vestido</option>
-                                    <option value="outerwear">Abrigo</option>
-                                    <option value="shoes">Zapatos</option>
-                                    <option value="accessories">Accesorios</option>
-                                </select>
+                                <div className="relative">
+                                    <select
+                                        value={formData.type}
+                                        onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                                        className="w-full px-4 py-2.5 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)] appearance-none cursor-pointer"
+                                    >
+                                        {TYPE_OPTIONS.map((option) => (
+                                            <option key={option.value} value={option.value}>
+                                                {option.label}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--foreground-tertiary)] pointer-events-none" />
+                                </div>
                             </div>
                         </div>
 
@@ -931,8 +1148,9 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
                                 initial={{ opacity: 0, height: 0 }}
                                 animate={{ opacity: 1, height: 'auto' }}
                                 exit={{ opacity: 0, height: 0 }}
-                                className="space-y-3"
+                                className="space-y-4"
                             >
+                                {/* Nombre */}
                                 <div>
                                     <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
                                         Nombre
@@ -946,108 +1164,101 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
                                     />
                                 </div>
 
-                                <div>
-                                    <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
-                                        Marca
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={formData.brand}
-                                        onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
-                                        placeholder="ej: Zara"
-                                        className="w-full px-4 py-2.5 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)]"
-                                    />
-                                </div>
+                                {/* Marca - Dropdown with custom */}
+                                <DropdownWithCustom
+                                    label="Marca"
+                                    value={formData.brand}
+                                    onChange={(value) => setFormData({ ...formData, brand: value })}
+                                    options={BRAND_OPTIONS}
+                                    placeholder="Seleccionar marca..."
+                                />
 
+                                {/* Talla y Referencia en grid */}
                                 <div className="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
-                                            Precio
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={formData.price}
-                                            onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                                            placeholder="ej: 49.99€"
-                                            className="w-full px-4 py-2.5 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)]"
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
-                                            Talla
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={formData.size}
-                                            onChange={(e) => setFormData({ ...formData, size: e.target.value })}
-                                            placeholder="ej: M"
-                                            className="w-full px-4 py-2.5 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)]"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
-                                        Referencia
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={formData.reference}
-                                        onChange={(e) => setFormData({ ...formData, reference: e.target.value })}
-                                        placeholder="ej: 1234567890"
-                                        className="w-full px-4 py-2.5 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)]"
+                                    <DropdownWithCustom
+                                        label="Talla"
+                                        value={formData.size}
+                                        onChange={(value) => setFormData({ ...formData, size: value })}
+                                        options={SIZE_OPTIONS}
+                                        placeholder="Seleccionar..."
                                     />
+
+                                    <div>
+                                        <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
+                                            Referencia
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={formData.reference}
+                                            onChange={(e) => setFormData({ ...formData, reference: e.target.value })}
+                                            placeholder="Opcional"
+                                            className="w-full px-4 py-2.5 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)]"
+                                        />
+                                    </div>
                                 </div>
 
+                                {/* Color - Visual selector */}
                                 <div>
-                                    <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
+                                    <label className="block text-xs font-bold text-[var(--foreground)] mb-2">
                                         Color
                                     </label>
-                                    <div className="flex gap-2">
-                                        <input
-                                            type="text"
-                                            value={formData.color}
-                                            onChange={(e) => handleColorNameChange(e.target.value)}
-                                            placeholder="ej: Beige"
-                                            className="flex-1 px-4 py-2.5 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)]"
-                                        />
+                                    <div className="flex flex-wrap gap-2 mb-2">
+                                        {COLOR_OPTIONS.map((colorOption) => (
+                                            <button
+                                                key={colorOption.name}
+                                                type="button"
+                                                onClick={() => handleColorSelect(colorOption)}
+                                                className={`w-8 h-8 rounded-full border-2 transition-all ${formData.color === colorOption.name
+                                                    ? 'border-[var(--brand-pink)] scale-110 ring-2 ring-[var(--brand-pink)]/30'
+                                                    : 'border-[var(--border-color)] hover:scale-105'
+                                                    }`}
+                                                style={{ backgroundColor: colorOption.hex }}
+                                                title={colorOption.name}
+                                            />
+                                        ))}
                                         <input
                                             type="color"
                                             value={formData.colorHex}
                                             onChange={(e) => handleColorPickerChange(e.target.value)}
-                                            className="w-16 h-11 rounded-2xl border border-[var(--border-color)] cursor-pointer"
+                                            className="w-8 h-8 rounded-full border border-[var(--border-color)] cursor-pointer"
+                                            title="Color personalizado"
                                         />
                                     </div>
+                                    {formData.color && (
+                                        <p className="text-xs text-[var(--foreground-secondary)]">
+                                            Color seleccionado: <strong>{formData.color}</strong>
+                                        </p>
+                                    )}
                                 </div>
 
-                                <div>
-                                    <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
-                                        Tejido
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={formData.fabric}
-                                        onChange={(e) => setFormData({ ...formData, fabric: e.target.value })}
-                                        placeholder="ej: Algodón"
-                                        className="w-full px-4 py-2.5 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)]"
-                                    />
-                                </div>
+                                {/* Tejido - Dropdown with custom */}
+                                <DropdownWithCustom
+                                    label="Tejido"
+                                    value={formData.fabric}
+                                    onChange={(value) => setFormData({ ...formData, fabric: value })}
+                                    options={FABRIC_OPTIONS}
+                                    placeholder="Seleccionar tejido..."
+                                />
 
+                                {/* Temporada */}
                                 <div>
                                     <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
                                         Temporada
                                     </label>
-                                    <select
-                                        value={formData.season}
-                                        onChange={(e) => setFormData({ ...formData, season: e.target.value as any })}
-                                        className="w-full px-4 py-2.5 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)]"
-                                    >
-                                        <option value="spring">Primavera</option>
-                                        <option value="summer">Verano</option>
-                                        <option value="autumn">Otoño</option>
-                                        <option value="winter">Invierno</option>
-                                    </select>
+                                    <div className="relative">
+                                        <select
+                                            value={formData.season}
+                                            onChange={(e) => setFormData({ ...formData, season: e.target.value })}
+                                            className="w-full px-4 py-2.5 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)] appearance-none cursor-pointer"
+                                        >
+                                            {SEASON_OPTIONS.map((option) => (
+                                                <option key={option.value} value={option.value}>
+                                                    {option.label}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--foreground-tertiary)] pointer-events-none" />
+                                    </div>
                                 </div>
                             </motion.div>
                         )}
