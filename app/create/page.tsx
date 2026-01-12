@@ -5,10 +5,11 @@
  * Generates outfit collages based on saved posts and user preferences
  */
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, RefreshCw, Settings, Save, Share2, Image as ImageIcon } from 'lucide-react';
-import { Button, Card, LogoMark } from '@/components';
+import { Button, Card, LogoMark, OutfitLoadingCarousel } from '@/components';
+import { useWardrobe } from '@/lib/hooks/useWardrobe';
 
 interface OutfitPiece {
     id: string;
@@ -30,6 +31,20 @@ export default function CreateOutfitPage() {
     const [generatedOutfit, setGeneratedOutfit] = useState<OutfitPiece[]>([]);
     const [isGenerating, setIsGenerating] = useState(false);
     const [editMode, setEditMode] = useState(false);
+    const [carouselSeed, setCarouselSeed] = useState(0);
+
+    // Referencia al contenedor del outfit generado para scroll
+    const outfitPreviewRef = useRef<HTMLDivElement>(null);
+
+    // Obtener items del armario para el carrusel
+    const { items: wardrobeItems } = useWardrobe();
+
+    // Preparar items para el carrusel
+    const carouselItems = wardrobeItems.map(item => ({
+        id: item.id,
+        imageUrl: item.imageUrl || '',
+        name: item.name,
+    }));
 
     // Sample data
     const occasions = ['Casual', 'Trabajo', 'Fiesta', 'Deportivo', 'Formal'];
@@ -37,6 +52,8 @@ export default function CreateOutfitPage() {
     const moods = ['Cómodo', 'Elegante', 'Atrevido', 'Minimalista', 'Colorido'];
 
     const handleGenerateOutfit = async () => {
+        // Cambiar seed para mezclar items cada vez que se genera
+        setCarouselSeed(prev => prev + 1);
         setIsGenerating(true);
 
         // Simulate API call to generate outfit
@@ -63,20 +80,40 @@ export default function CreateOutfitPage() {
         console.log('Saving outfit...');
     };
 
-    return (
-        <div className="min-h-screen bg-[var(--background)] p-4 md:p-8 max-w-6xl mx-auto">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Left Column - Controls */}
-                <div className="lg:col-span-1 space-y-4">
-                    <Card className="p-6">
-                        <h2 className="text-lg font-bold text-[var(--foreground)] mb-4 flex items-center gap-2">
-                            <Settings className="w-5 h-5" />
-                            Personalizar
-                        </h2>
+    // Función que se ejecuta cuando termina la animación del carrusel
+    const handleCarouselExitComplete = () => {
+        // Scroll suave hacia el outfit generado
+        if (outfitPreviewRef.current) {
+            outfitPreviewRef.current.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start',
+            });
+        }
+    };
 
-                        <div className="space-y-6">
-                            {/* Occasion */}
-                            <div>
+    return (
+        <>
+            {/* Loading Carousel - Se muestra mientras se genera el outfit */}
+            <OutfitLoadingCarousel
+                items={carouselItems}
+                isVisible={isGenerating}
+                shuffleSeed={carouselSeed}
+                onExitComplete={handleCarouselExitComplete}
+            />
+
+            <div className="min-h-screen bg-[var(--background)] p-4 md:p-8 max-w-6xl mx-auto">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Left Column - Controls */}
+                    <div className="lg:col-span-1 space-y-4">
+                        <Card className="p-6">
+                            <h2 className="text-lg font-bold text-[var(--foreground)] mb-4 flex items-center gap-2">
+                                <Settings className="w-5 h-5" />
+                                Personalizar
+                            </h2>
+
+                            <div className="space-y-6">
+                                {/* Occasion */}
+                                <div>
                                 <label className="block text-sm font-medium text-[var(--foreground-secondary)] mb-3">
                                     Ocasión
                                 </label>
@@ -180,7 +217,7 @@ export default function CreateOutfitPage() {
                 </div>
 
                 {/* Right Column - Outfit Preview */}
-                <div className="lg:col-span-2">
+                <div ref={outfitPreviewRef} className="lg:col-span-2 scroll-mt-4">
                     <Card className="p-8 min-h-[600px]">
                         <AnimatePresence mode="wait">
                             {generatedOutfit.length === 0 ? (
@@ -298,5 +335,6 @@ export default function CreateOutfitPage() {
                 </div>
             </div>
         </div>
+        </>
     );
 }

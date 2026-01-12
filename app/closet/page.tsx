@@ -219,6 +219,7 @@ export default function ClosetPage() {
     };
 
     setSelectedProduct(productItem);
+    // Small delay handled by ClothingItem drawer animation
     setShowProductModal(true);
   };
 

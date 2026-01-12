@@ -332,6 +332,90 @@
   color: var(--gray-500);
 }
 
+/* ============================================
+   DRAWER ITEM STYLING
+   Wardrobe drawer appearance for clothing items
+   ============================================ */
+
+.drawer-item {
+  position: relative;
+}
+
+/* Drawer handle - minimalist pill shape */
+.drawer-handle {
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 6px;
+  background: linear-gradient(180deg,
+    var(--gray-300) 0%,
+    var(--gray-400) 50%,
+    var(--gray-300) 100%
+  );
+  border-radius: var(--radius-full);
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  z-index: 15;
+  transition: all 0.3s var(--ease-smooth);
+}
+
+.drawer-item:hover .drawer-handle {
+  background: linear-gradient(180deg,
+    var(--brand-pink-light) 0%,
+    var(--brand-pink) 50%,
+    var(--brand-pink-light) 100%
+  );
+  box-shadow: 
+    0 2px 8px rgba(255, 105, 180, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  height: 7px;
+}
+
+/* Dark mode drawer handle */
+.dark .drawer-handle {
+  background: linear-gradient(180deg,
+    var(--gray-600) 0%,
+    var(--gray-500) 50%,
+    var(--gray-600) 100%
+  );
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.dark .drawer-item:hover .drawer-handle {
+  background: linear-gradient(180deg,
+    var(--brand-pink-dark) 0%,
+    var(--brand-pink) 50%,
+    var(--brand-pink-dark) 100%
+  );
+}
+
+/* Drawer bottom edge - subtle 3D effect */
+.drawer-edge {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(180deg,
+    transparent 0%,
+    rgba(0, 0, 0, 0.05) 100%
+  );
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  pointer-events: none;
+}
+
+.dark .drawer-edge {
+  background: linear-gradient(180deg,
+    transparent 0%,
+    rgba(0, 0, 0, 0.2) 100%
+  );
+}
+
 /* ===== SMOOTH DARK MODE TRANSITION ===== */
 html {
   transition: background-color 0.3s var(--ease-smooth), color 0.3s var(--ease-smooth);
@@ -1199,5 +1283,112 @@ body {
 
   100% {
     width: 124px;
+  }
+}
+
+/* ============================================
+   OUTFIT LOADING CAROUSEL - 3D Rotating Effect
+   ============================================ */
+
+.carousel-wrapper {
+  width: 100%;
+  height: 300px;
+  position: relative;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+}
+
+.carousel-inner {
+  --w: 120px;
+  --h: 160px;
+  --translateZ: calc((var(--w) + var(--h)) + 50px);
+  --rotateX: -12deg;
+  --perspective: 1200px;
+  position: absolute;
+  width: var(--w);
+  height: var(--h);
+  z-index: 2;
+  transform-style: preserve-3d;
+  transform: perspective(var(--perspective));
+  animation: carousel-rotate 15s linear infinite;
+}
+
+@keyframes carousel-rotate {
+  from {
+    transform: perspective(var(--perspective)) rotateX(var(--rotateX)) rotateY(0);
+  }
+  to {
+    transform: perspective(var(--perspective)) rotateX(var(--rotateX)) rotateY(1turn);
+  }
+}
+
+.carousel-card {
+  position: absolute;
+  border: 2px solid rgba(var(--color-card), 0.6);
+  border-radius: 16px;
+  overflow: hidden;
+  inset: 0;
+  transform: rotateY(calc((360deg / var(--quantity)) * var(--index))) translateZ(var(--translateZ));
+  box-shadow: 0 4px 20px rgba(var(--color-card), 0.3);
+  transition: box-shadow 0.3s ease;
+}
+
+.carousel-card-content {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  object-fit: cover;
+  background: linear-gradient(
+    135deg,
+    rgba(var(--color-card), 0.1) 0%,
+    rgba(var(--color-card), 0.05) 50%,
+    rgba(var(--color-card), 0.15) 100%
+  );
+  backdrop-filter: blur(4px);
+}
+
+.carousel-card-content img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.carousel-card-placeholder {
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(
+    circle,
+    rgba(var(--color-card), 0.2) 0%,
+    rgba(var(--color-card), 0.5) 60%,
+    rgba(var(--color-card), 0.8) 100%
+  );
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .carousel-wrapper {
+    height: 250px;
+  }
+  
+  .carousel-inner {
+    --w: 90px;
+    --h: 120px;
+    --translateZ: calc((var(--w) + var(--h)) + 30px);
+  }
+}
+
+@media (min-width: 1024px) {
+  .carousel-wrapper {
+    height: 350px;
+  }
+  
+  .carousel-inner {
+    --w: 140px;
+    --h: 180px;
+    --translateZ: calc((var(--w) + var(--h)) + 80px);
   }
 }

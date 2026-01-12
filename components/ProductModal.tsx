@@ -56,7 +56,7 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
                                 duration: 0.4
                             }}
                             onClick={(e) => e.stopPropagation()}
-                            className="relative w-full max-w-md bg-white dark:bg-gray-900 rounded-3xl overflow-hidden shadow-2xl"
+                            className="relative w-full max-w-md max-h-[90vh] bg-white dark:bg-gray-900 rounded-3xl overflow-hidden shadow-2xl flex flex-col"
                         >
                             {/* Close Button */}
                             <motion.button
@@ -70,7 +70,7 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
                             </motion.button>
 
                             {/* Product Image */}
-                            <div className="relative aspect-square bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 overflow-hidden">
+                            <div className="relative aspect-[4/3] sm:aspect-square max-h-[40vh] bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 overflow-hidden flex-shrink-0">
                                 {item.imageUrl ? (
                                     <motion.img
                                         initial={{ scale: 1.1, opacity: 0 }}
@@ -124,7 +124,7 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
                                 initial={{ y: 20, opacity: 0 }}
                                 animate={{ y: 0, opacity: 1 }}
                                 transition={{ delay: 0.2 }}
-                                className="p-6"
+                                className="p-6 overflow-y-auto flex-1"
                             >
                                 {/* Brand & Name */}
                                 <div className="mb-4">
