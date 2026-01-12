@@ -82,7 +82,7 @@ export const ClothingItem: React.FC<ClothingItemProps> = ({
             <motion.img
               src={imageUrl}
               alt={name}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-contain p-1"
               loading="lazy"
               onError={() => setImageError(true)}
               whileHover={{ scale: 1.05 }}

@@ -1051,8 +1051,8 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
                                                         whileHover={{ scale: 1.02 }}
                                                         whileTap={{ scale: 0.98 }}
                                                         className={`relative aspect-square rounded-xl overflow-hidden border-2 transition-all ${selectedImageIndex === index
-                                                                ? 'border-[var(--brand-pink)] ring-2 ring-[var(--brand-pink)]/30'
-                                                                : 'border-[var(--border-color)] hover:border-[var(--brand-pink)]/50'
+                                                            ? 'border-[var(--brand-pink)] ring-2 ring-[var(--brand-pink)]/30'
+                                                            : 'border-[var(--border-color)] hover:border-[var(--brand-pink)]/50'
                                                             }`}
                                                     >
                                                         <img
@@ -1091,6 +1091,27 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
                                                         ) : (
                                                             <img src={image} alt="Preview" className="w-full h-full object-contain p-2" />
                                                         )}
+                                                    </div>
+                                                    {/* Botones de rotación para modo URL */}
+                                                    <div className="flex justify-center gap-2 mt-2">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => rotateImage(-90)}
+                                                            disabled={isProcessing}
+                                                            className="px-3 py-2 rounded-xl bg-[var(--background-secondary)] border border-[var(--border-color)] flex items-center gap-1 hover:bg-[var(--background-tertiary)] transition-colors disabled:opacity-50"
+                                                        >
+                                                            <RotateCcw className="w-4 h-4 text-[var(--foreground-tertiary)]" />
+                                                            <span className="text-xs text-[var(--foreground-secondary)]">Girar ←</span>
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => rotateImage(90)}
+                                                            disabled={isProcessing}
+                                                            className="px-3 py-2 rounded-xl bg-[var(--background-secondary)] border border-[var(--border-color)] flex items-center gap-1 hover:bg-[var(--background-tertiary)] transition-colors disabled:opacity-50"
+                                                        >
+                                                            <RotateCw className="w-4 h-4 text-[var(--foreground-tertiary)]" />
+                                                            <span className="text-xs text-[var(--foreground-secondary)]">Girar →</span>
+                                                        </button>
                                                     </div>
                                                 </div>
                                             )}

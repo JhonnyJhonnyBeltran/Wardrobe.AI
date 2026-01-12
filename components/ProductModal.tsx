@@ -78,7 +78,7 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
                                         transition={{ duration: 0.5 }}
                                         src={item.imageUrl}
                                         alt={item.name}
-                                        className="w-full h-full object-cover"
+                                        className="w-full h-full object-contain"
                                         onError={(e) => {
                                             const target = e.target as HTMLImageElement;
                                             target.style.display = 'none';

@@ -24,16 +24,16 @@ export interface ProcessingResult {
  */
 function getContentBoundingBox(imageData: ImageData): { minX: number; minY: number; maxX: number; maxY: number } | null {
     const { data, width, height } = imageData;
-    
+
     let minX = width, minY = height;
     let maxX = 0, maxY = 0;
     let hasContent = false;
-    
+
     for (let y = 0; y < height; y++) {
         for (let x = 0; x < width; x++) {
             const idx = (y * width + x) * 4;
             const alpha = data[idx + 3];
-            
+
             // Umbral más estricto para mejor detección
             if (alpha > 20) {
                 minX = Math.min(minX, x);
@@ -44,9 +44,9 @@ function getContentBoundingBox(imageData: ImageData): { minX: number; minY: numb
             }
         }
     }
-    
+
     if (!hasContent) return null;
-    
+
     // Añadir un pequeño margen para no cortar bordes
     const margin = 2;
     return {
@@ -62,32 +62,32 @@ function getContentBoundingBox(imageData: ImageData): { minX: number; minY: numb
  */
 function detectRotationAngle(imageData: ImageData): number {
     const { data, width, height } = imageData;
-    
+
     // Encontrar todos los píxeles no transparentes
     const points: { x: number; y: number }[] = [];
-    
+
     for (let y = 0; y < height; y++) {
         for (let x = 0; x < width; x++) {
             const idx = (y * width + x) * 4;
             const alpha = data[idx + 3];
-            
+
             // Si el píxel tiene algo de opacidad
             if (alpha > 50) {
                 points.push({ x, y });
             }
         }
     }
-    
+
     if (points.length < 100) return 0; // No hay suficientes puntos
-    
+
     // Calcular el ángulo usando PCA simplificado
     // Encontrar el centro de masa
     const centerX = points.reduce((sum, p) => sum + p.x, 0) / points.length;
     const centerY = points.reduce((sum, p) => sum + p.y, 0) / points.length;
-    
+
     // Calcular covarianza
     let sxx = 0, syy = 0, sxy = 0;
-    
+
     points.forEach(p => {
         const dx = p.x - centerX;
         const dy = p.y - centerY;
@@ -95,10 +95,10 @@ function detectRotationAngle(imageData: ImageData): number {
         syy += dy * dy;
         sxy += dx * dy;
     });
-    
+
     // Calcular el ángulo principal
     const angle = 0.5 * Math.atan2(2 * sxy, sxx - syy) * (180 / Math.PI);
-    
+
     // Solo retornar si el ángulo es significativo (> 5 grados)
     return Math.abs(angle) > 5 ? angle : 0;
 }
@@ -114,7 +114,7 @@ function normalizeImage(
     return new Promise((resolve, reject) => {
         const img = new Image();
         const url = URL.createObjectURL(imageBlob);
-        
+
         img.onload = () => {
             try {
                 // Canvas temporal para extraer datos de imagen
@@ -122,86 +122,89 @@ function normalizeImage(
                 tempCanvas.width = img.width;
                 tempCanvas.height = img.height;
                 const tempCtx = tempCanvas.getContext('2d', { willReadFrequently: true });
-                
+
                 if (!tempCtx) {
                     reject(new Error('No se pudo crear el contexto del canvas'));
                     return;
                 }
-                
+
                 tempCtx.drawImage(img, 0, 0);
                 const imageData = tempCtx.getImageData(0, 0, img.width, img.height);
-                
+
                 // 1. Obtener el bounding box preciso del contenido
                 const bbox = getContentBoundingBox(imageData);
-                
+
                 if (!bbox) {
                     reject(new Error('No se detectó contenido en la imagen'));
                     return;
                 }
-                
+
                 // 2. Recortar al bounding box
                 const contentWidth = bbox.maxX - bbox.minX;
                 const contentHeight = bbox.maxY - bbox.minY;
-                
+
                 // Canvas para la imagen recortada
                 const croppedCanvas = document.createElement('canvas');
                 croppedCanvas.width = contentWidth;
                 croppedCanvas.height = contentHeight;
                 const croppedCtx = croppedCanvas.getContext('2d', { willReadFrequently: true });
-                
+
                 if (!croppedCtx) {
                     reject(new Error('No se pudo crear el contexto del canvas'));
                     return;
                 }
-                
+
                 // Dibujar solo el contenido recortado
                 croppedCtx.drawImage(
                     img,
                     bbox.minX, bbox.minY, contentWidth, contentHeight,
                     0, 0, contentWidth, contentHeight
                 );
-                
+
                 // 3. Detectar ángulo de la imagen recortada
+                // NOTA: Rotación automática desactivada - causaba giros incorrectos en productos
+                // El usuario puede rotar manualmente usando los botones de la interfaz
                 const croppedImageData = croppedCtx.getImageData(0, 0, contentWidth, contentHeight);
-                const angle = detectRotationAngle(croppedImageData);
-                
+                // const angle = detectRotationAngle(croppedImageData);
+                const angle = 0; // Sin rotación automática
+
                 // 4. Crear canvas final con el tamaño deseado
                 const canvas = document.createElement('canvas');
                 canvas.width = canvasWidth;
                 canvas.height = canvasHeight;
                 const ctx = canvas.getContext('2d');
-                
+
                 if (!ctx) {
                     reject(new Error('No se pudo crear el contexto del canvas'));
                     return;
                 }
-                
+
                 // Fondo blanco
                 ctx.fillStyle = 'white';
                 ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-                
+
                 // 5. Calcular escala para ajustar al canvas con padding
                 const padding = 40;
                 const maxWidth = canvasWidth - padding * 2;
                 const maxHeight = canvasHeight - padding * 2;
-                
+
                 const scale = Math.min(
                     maxWidth / contentWidth,
                     maxHeight / contentHeight,
                     1.2 // No agrandar demasiado imágenes pequeñas
                 );
-                
+
                 const scaledWidth = contentWidth * scale;
                 const scaledHeight = contentHeight * scale;
-                
+
                 // 6. Aplicar rotación si es necesario y centrar
                 ctx.save();
                 ctx.translate(canvasWidth / 2, canvasHeight / 2);
-                
+
                 if (Math.abs(angle) > 0) {
                     ctx.rotate(angle * Math.PI / 180);
                 }
-                
+
                 // Dibujar centrado
                 ctx.drawImage(
                     croppedCanvas,
@@ -210,29 +213,34 @@ function normalizeImage(
                     scaledWidth,
                     scaledHeight
                 );
-                
+
                 ctx.restore();
-                
-                // Convertir a blob con máxima calidad
-                canvas.toBlob((blob) => {
-                    if (blob) {
-                        URL.revokeObjectURL(url);
-                        const finalUrl = URL.createObjectURL(blob);
-                        resolve({ blob, url: finalUrl });
-                    } else {
-                        reject(new Error('No se pudo crear el blob'));
-                    }
-                }, 'image/png'); // PNG sin compresión para máxima calidad
-                
+
+                // Convertir a Data URL (Base64) para persistencia
+                // Blob URLs se pierden al recargar, Base64 se guarda en la DB
+                try {
+                    const dataUrl = canvas.toDataURL('image/png', 0.9);
+
+                    canvas.toBlob((blob) => {
+                        if (blob) {
+                            resolve({ blob, url: dataUrl }); // Usar DataURL en lugar de blob URL
+                        } else {
+                            resolve({ blob: undefined as any, url: dataUrl });
+                        }
+                    }, 'image/png');
+                } catch (e) {
+                    reject(e);
+                }
+
             } catch (error) {
                 reject(error);
             }
         };
-        
+
         img.onerror = () => {
             reject(new Error('Error al cargar la imagen'));
         };
-        
+
         img.src = url;
     });
 }
@@ -251,34 +259,33 @@ export async function processClothingImage(
         canvasHeight = 1000,
         quality = 'medium',
     } = options;
-    
+
     try {
         // 1. Convertir a Blob si es necesario
         let inputBlob: Blob;
-        
+
         if (typeof imageFile === 'string') {
-            // Si es URL, descargar
+            // Si es URL con data: o http, descargar
             const response = await fetch(imageFile);
             inputBlob = await response.blob();
         } else {
             inputBlob = imageFile;
         }
-        
+
         // 2. Remover el fondo usando IA en el navegador
         console.log('Removiendo fondo...');
         const removedBgBlob = await removeBackground(inputBlob, {
-            model: quality === 'high' ? 'medium' : 'medium', // Usar medium por defecto para mejor calidad
-            output: { 
-                format: 'image/png', 
-                quality: 1.0, // Máxima calidad
-                type: 'image/png'
+            model: 'isnet_fp16',
+            output: {
+                format: 'image/png',
+                quality: 1.0
             }
         });
-        
+
         // 3. Normalizar si se solicita
         let finalBlob: Blob;
         let finalUrl: string;
-        
+
         if (normalize) {
             console.log('Normalizando imagen...');
             const result = await normalizeImage(
@@ -289,16 +296,21 @@ export async function processClothingImage(
             finalBlob = result.blob;
             finalUrl = result.url;
         } else {
+            // Si no normalizamos, convertimos el resultado a Base64 también
             finalBlob = removedBgBlob;
-            finalUrl = URL.createObjectURL(removedBgBlob);
+            finalUrl = await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result as string);
+                reader.readAsDataURL(removedBgBlob);
+            });
         }
-        
+
         return {
             success: true,
             imageUrl: finalUrl,
             blob: finalBlob,
         };
-        
+
     } catch (error) {
         console.error('Error procesando imagen:', error);
         return {

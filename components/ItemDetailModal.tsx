@@ -110,7 +110,7 @@ export default function ItemDetailModal({ outfit, isOpen, onClose }: ItemDetailM
                                                 <img
                                                     src={(item as any).imageUrl}
                                                     alt={item.name}
-                                                    className="w-full h-full object-cover"
+                                                    className="w-full h-full object-contain p-0.5"
                                                     onError={(e) => {
                                                         // Fallback to color swatch if image fails
                                                         (e.target as HTMLImageElement).style.display = 'none';
