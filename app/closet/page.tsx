@@ -134,7 +134,7 @@ export default function ClosetPage() {
   }, [user]);
 
   // Product Modal State
-  const [selectedProduct, setSelectedProduct] = useState<OutfitItem | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<(OutfitItem & { sourceUrl?: string }) | null>(null);
   const [showProductModal, setShowProductModal] = useState(false);
 
   const handleFavoriteToggle = (id: string) => {
@@ -203,18 +203,19 @@ export default function ClosetPage() {
 
   const handleItemClick = (item: ClothingItemType) => {
     // Convert ClothingItemData to OutfitItem for the modal
-    const productItem: OutfitItem = {
+    const productItem: OutfitItem & { sourceUrl?: string } = {
       id: item.id,
       type: (item.category as any) || 'top',
       name: item.name,
       brand: item.brand || '',
       color: (item.color as any) || 'white',
       imageUrl: item.imageUrl || '',
-      buyLink: (item as any).buyLink || '#',
+      buyLink: (item as any).buyLink || undefined,
       colorHex: (item as any).colorHex || undefined,
       source: 'wardrobe',
       trending: false,
-      matchScore: 100
+      matchScore: 100,
+      sourceUrl: (item as any).sourceUrl || undefined, // Include source URL for scraped products
     };
 
     setSelectedProduct(productItem);

@@ -52,4 +52,6 @@ export interface ClothingItem {
   size?: string;
   reference?: string;
   fabric?: string;
+  // Source URL for scraped products
+  sourceUrl?: string;
 }

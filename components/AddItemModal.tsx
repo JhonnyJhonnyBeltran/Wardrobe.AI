@@ -10,7 +10,7 @@
  * - Color detection from images
  */
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Upload, Camera, Link as LinkIcon, Check, ArrowRight, Loader2, RotateCw, RotateCcw, Wand2, ChevronDown } from 'lucide-react';
 import { Button, Card, AdvisorModal } from '@/components';
@@ -136,7 +136,7 @@ const SEASON_OPTIONS = [
 ];
 
 // ============================================================================
-// DROPDOWN COMPONENT with custom input option
+// CUSTOM DROPDOWN COMPONENT - Fully styled, no native select
 // ============================================================================
 
 interface DropdownWithCustomProps {
@@ -156,8 +156,10 @@ function DropdownWithCustom({
     placeholder = 'Seleccionar...',
     customOptionLabel = 'Otro...'
 }: DropdownWithCustomProps) {
+    const [isOpen, setIsOpen] = useState(false);
     const [isCustom, setIsCustom] = useState(false);
     const [customValue, setCustomValue] = useState('');
+    const dropdownRef = useRef<HTMLDivElement>(null);
 
     // Check if current value is custom (not in options)
     useEffect(() => {
@@ -167,7 +169,23 @@ function DropdownWithCustom({
         }
     }, [value, options, customOptionLabel]);
 
-    const handleSelectChange = (selectedValue: string) => {
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+                setIsOpen(false);
+            }
+        };
+
+        if (isOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isOpen]);
+
+    const handleSelectOption = (selectedValue: string) => {
         if (selectedValue === customOptionLabel || selectedValue === 'Otra marca' || selectedValue === 'Otra talla' || selectedValue === 'Otro tejido') {
             setIsCustom(true);
             setCustomValue('');
@@ -176,6 +194,7 @@ function DropdownWithCustom({
             setIsCustom(false);
             onChange(selectedValue);
         }
+        setIsOpen(false);
     };
 
     const handleCustomChange = (customVal: string) => {
@@ -183,8 +202,10 @@ function DropdownWithCustom({
         onChange(customVal);
     };
 
+    const displayValue = value || placeholder;
+
     return (
-        <div>
+        <div ref={dropdownRef} className="relative">
             <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
                 {label}
             </label>
@@ -195,7 +216,7 @@ function DropdownWithCustom({
                         value={customValue}
                         onChange={(e) => handleCustomChange(e.target.value)}
                         placeholder={`Introducir ${label.toLowerCase()}...`}
-                        className="flex-1 px-4 py-2.5 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)]"
+                        className="flex-1 px-4 py-2.5 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)] text-sm"
                     />
                     <button
                         type="button"
@@ -204,28 +225,183 @@ function DropdownWithCustom({
                             setCustomValue('');
                             onChange('');
                         }}
-                        className="px-3 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground-secondary)] hover:bg-[var(--background-tertiary)]"
+                        className="px-3 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground-secondary)] hover:bg-[var(--background-tertiary)] transition-colors"
                     >
                         ✕
                     </button>
                 </div>
             ) : (
-                <div className="relative">
-                    <select
-                        value={value}
-                        onChange={(e) => handleSelectChange(e.target.value)}
-                        className="w-full px-4 py-2.5 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)] appearance-none cursor-pointer"
+                <>
+                    {/* Dropdown Trigger */}
+                    <button
+                        type="button"
+                        onClick={() => setIsOpen(!isOpen)}
+                        className={`w-full px-4 py-2.5 rounded-2xl bg-[var(--background-secondary)] border text-left flex items-center justify-between cursor-pointer transition-all text-sm ${isOpen
+                            ? 'border-[var(--brand-pink)] ring-2 ring-[var(--brand-pink)]/20'
+                            : 'border-[var(--border-color)] hover:border-[var(--brand-pink)]/50'
+                            }`}
                     >
-                        <option value="">{placeholder}</option>
-                        {options.map((option) => (
-                            <option key={option} value={option}>
-                                {option}
-                            </option>
-                        ))}
-                    </select>
-                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--foreground-tertiary)] pointer-events-none" />
-                </div>
+                        <span className={value ? 'text-[var(--foreground)]' : 'text-[var(--foreground-tertiary)]'}>
+                            {displayValue}
+                        </span>
+                        <motion.div
+                            animate={{ rotate: isOpen ? 180 : 0 }}
+                            transition={{ duration: 0.2 }}
+                        >
+                            <ChevronDown className="w-5 h-5 text-[var(--foreground-tertiary)]" />
+                        </motion.div>
+                    </button>
+
+                    {/* Dropdown Menu */}
+                    <AnimatePresence>
+                        {isOpen && (
+                            <motion.div
+                                initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                                transition={{ duration: 0.15, ease: 'easeOut' }}
+                                className="absolute z-50 w-full mt-2 py-2 rounded-2xl bg-[var(--background)] border border-[var(--border-color)] shadow-xl shadow-black/20 max-h-[200px] overflow-y-auto"
+                                style={{
+                                    backdropFilter: 'blur(20px)',
+                                    WebkitBackdropFilter: 'blur(20px)',
+                                }}
+                            >
+                                {/* Placeholder option */}
+                                <button
+                                    type="button"
+                                    onClick={() => handleSelectOption('')}
+                                    className={`w-full px-4 py-2.5 text-left text-sm transition-colors ${!value
+                                        ? 'bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] font-medium'
+                                        : 'text-[var(--foreground-tertiary)] hover:bg-[var(--background-tertiary)]'
+                                        }`}
+                                >
+                                    {placeholder}
+                                </button>
+
+                                {/* Options */}
+                                {options.map((option, index) => (
+                                    <button
+                                        key={option}
+                                        type="button"
+                                        onClick={() => handleSelectOption(option)}
+                                        className={`w-full px-4 py-2.5 text-left text-sm transition-colors ${value === option
+                                            ? 'bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] font-medium'
+                                            : 'text-[var(--foreground)] hover:bg-[var(--background-tertiary)]'
+                                            }`}
+                                    >
+                                        {option}
+                                    </button>
+                                ))}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </>
             )}
+        </div>
+    );
+}
+
+// ============================================================================
+// CUSTOM SELECT COMPONENT - For value/label options (Type, Season, etc.)
+// ============================================================================
+
+interface SelectOption {
+    value: string;
+    label: string;
+}
+
+interface CustomSelectProps {
+    label: string;
+    value: string;
+    onChange: (value: string) => void;
+    options: SelectOption[];
+}
+
+function CustomSelect({ label, value, onChange, options }: CustomSelectProps) {
+    const [isOpen, setIsOpen] = useState(false);
+    const selectRef = useRef<HTMLDivElement>(null);
+
+    // Get current display label
+    const currentOption = options.find(opt => opt.value === value);
+    const displayLabel = currentOption?.label || 'Seleccionar...';
+
+    // Close when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (selectRef.current && !selectRef.current.contains(event.target as Node)) {
+                setIsOpen(false);
+            }
+        };
+
+        if (isOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isOpen]);
+
+    const handleSelect = (optionValue: string) => {
+        onChange(optionValue);
+        setIsOpen(false);
+    };
+
+    return (
+        <div ref={selectRef} className="relative">
+            <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
+                {label}
+            </label>
+
+            {/* Trigger Button */}
+            <button
+                type="button"
+                onClick={() => setIsOpen(!isOpen)}
+                className={`w-full px-4 py-2.5 rounded-2xl bg-[var(--background-secondary)] border text-left flex items-center justify-between cursor-pointer transition-all text-sm ${isOpen
+                    ? 'border-[var(--brand-pink)] ring-2 ring-[var(--brand-pink)]/20'
+                    : 'border-[var(--border-color)] hover:border-[var(--brand-pink)]/50'
+                    }`}
+            >
+                <span className="text-[var(--foreground)]">
+                    {displayLabel}
+                </span>
+                <motion.div
+                    animate={{ rotate: isOpen ? 180 : 0 }}
+                    transition={{ duration: 0.2 }}
+                >
+                    <ChevronDown className="w-5 h-5 text-[var(--foreground-tertiary)]" />
+                </motion.div>
+            </button>
+
+            {/* Dropdown Menu */}
+            <AnimatePresence>
+                {isOpen && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                        transition={{ duration: 0.15, ease: 'easeOut' }}
+                        className="absolute z-50 w-full mt-2 py-2 rounded-2xl bg-[var(--background)] border border-[var(--border-color)] shadow-xl shadow-black/20 max-h-[200px] overflow-y-auto"
+                        style={{
+                            backdropFilter: 'blur(20px)',
+                            WebkitBackdropFilter: 'blur(20px)',
+                        }}
+                    >
+                        {options.map((option) => (
+                            <button
+                                key={option.value}
+                                type="button"
+                                onClick={() => handleSelect(option.value)}
+                                className={`w-full px-4 py-2.5 text-left text-sm transition-colors ${value === option.value
+                                    ? 'bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] font-medium'
+                                    : 'text-[var(--foreground)] hover:bg-[var(--background-tertiary)]'
+                                    }`}
+                            >
+                                {option.label}
+                            </button>
+                        ))}
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }
@@ -501,6 +677,7 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
         reference: '',
         fabric: '',
         season: 'spring' as string,
+        sourceUrl: '' as string,
     });
 
     // Efecto para rotar mensajes durante el procesamiento
@@ -542,6 +719,7 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
                     reference: (initialData as any).reference || '',
                     fabric: (initialData as any).fabric || '',
                     season: (initialData.season?.[0] as any) || 'spring',
+                    sourceUrl: (initialData as any).sourceUrl || '',
                 });
             } else {
                 // Add mode reset
@@ -562,6 +740,7 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
                     reference: '',
                     fabric: '',
                     season: 'spring',
+                    sourceUrl: '',
                 });
             }
         }
@@ -743,7 +922,7 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
             console.log('Scraping result:', data);
 
             if (data.success) {
-                const { name, images, type, brand } = data.data;
+                const { name, images, type, brand, url: productUrl } = data.data;
 
                 // Guardar todas las imágenes disponibles
                 if (images && images.length > 0) {
@@ -756,6 +935,7 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
                     name: name || prev.name,
                     type: type || prev.type,
                     brand: brand || prev.brand,
+                    sourceUrl: productUrl || url, // Guardar la URL del producto original
                 }));
                 setMode('complete');
             } else {
@@ -834,6 +1014,7 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
                 size: formData.size,
                 reference: formData.reference,
                 fabric: formData.fabric,
+                sourceUrl: formData.sourceUrl || undefined,
             } as any)
         };
 
@@ -1142,25 +1323,12 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
 
                         {/* Basic Info - Type Selector */}
                         <div className="space-y-3">
-                            <div>
-                                <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
-                                    Tipo de prenda
-                                </label>
-                                <div className="relative">
-                                    <select
-                                        value={formData.type}
-                                        onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                                        className="w-full px-4 py-2.5 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)] appearance-none cursor-pointer"
-                                    >
-                                        {TYPE_OPTIONS.map((option) => (
-                                            <option key={option.value} value={option.value}>
-                                                {option.label}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--foreground-tertiary)] pointer-events-none" />
-                                </div>
-                            </div>
+                            <CustomSelect
+                                label="Tipo de prenda"
+                                value={formData.type}
+                                onChange={(value) => setFormData({ ...formData, type: value })}
+                                options={TYPE_OPTIONS}
+                            />
                         </div>
 
                         {/* Complete Mode Fields */}
@@ -1262,25 +1430,12 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
                                 />
 
                                 {/* Temporada */}
-                                <div>
-                                    <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
-                                        Temporada
-                                    </label>
-                                    <div className="relative">
-                                        <select
-                                            value={formData.season}
-                                            onChange={(e) => setFormData({ ...formData, season: e.target.value })}
-                                            className="w-full px-4 py-2.5 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)] appearance-none cursor-pointer"
-                                        >
-                                            {SEASON_OPTIONS.map((option) => (
-                                                <option key={option.value} value={option.value}>
-                                                    {option.label}
-                                                </option>
-                                            ))}
-                                        </select>
-                                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--foreground-tertiary)] pointer-events-none" />
-                                    </div>
-                                </div>
+                                <CustomSelect
+                                    label="Temporada"
+                                    value={formData.season}
+                                    onChange={(value) => setFormData({ ...formData, season: value })}
+                                    options={SEASON_OPTIONS}
+                                />
                             </motion.div>
                         )}
 
