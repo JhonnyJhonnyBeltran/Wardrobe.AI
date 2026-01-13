@@ -260,38 +260,40 @@ function DropdownWithCustom({
                                 animate={{ opacity: 1, y: 0, scale: 1 }}
                                 exit={{ opacity: 0, y: -8, scale: 0.95 }}
                                 transition={{ duration: 0.15, ease: 'easeOut' }}
-                                className="absolute z-50 w-full mt-2 py-2 rounded-2xl bg-[var(--background)] border border-[var(--border-color)] shadow-xl shadow-black/20 max-h-[200px] overflow-y-auto"
+                                className="absolute z-50 w-full mt-2 p-1 rounded-2xl bg-[var(--background)] border border-[var(--border-color)] shadow-xl shadow-black/20 overflow-hidden"
                                 style={{
                                     backdropFilter: 'blur(20px)',
                                     WebkitBackdropFilter: 'blur(20px)',
                                 }}
                             >
-                                {/* Placeholder option */}
-                                <button
-                                    type="button"
-                                    onClick={() => handleSelectOption('')}
-                                    className={`w-full px-4 py-2.5 text-left text-sm transition-colors ${!value
-                                        ? 'bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] font-medium'
-                                        : 'text-[var(--foreground-tertiary)] hover:bg-[var(--background-tertiary)]'
-                                        }`}
-                                >
-                                    {placeholder}
-                                </button>
-
-                                {/* Options */}
-                                {options.map((option, index) => (
+                                <div className="max-h-[200px] overflow-y-auto rounded-xl hide-scrollbar">
+                                    {/* Placeholder option */}
                                     <button
-                                        key={option}
                                         type="button"
-                                        onClick={() => handleSelectOption(option)}
-                                        className={`w-full px-4 py-2.5 text-left text-sm transition-colors ${value === option
+                                        onClick={() => handleSelectOption('')}
+                                        className={`w-full px-3 py-2 text-left text-sm rounded-lg transition-colors mb-0.5 ${!value
                                             ? 'bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] font-medium'
-                                            : 'text-[var(--foreground)] hover:bg-[var(--background-tertiary)]'
+                                            : 'text-[var(--foreground-tertiary)] hover:bg-[var(--background-tertiary)]'
                                             }`}
                                     >
-                                        {option}
+                                        {placeholder}
                                     </button>
-                                ))}
+
+                                    {/* Options */}
+                                    {options.map((option, index) => (
+                                        <button
+                                            key={option}
+                                            type="button"
+                                            onClick={() => handleSelectOption(option)}
+                                            className={`w-full px-3 py-2 text-left text-sm rounded-lg transition-colors mb-0.5 last:mb-0 ${value === option
+                                                ? 'bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] font-medium'
+                                                : 'text-[var(--foreground)] hover:bg-[var(--background-tertiary)]'
+                                                }`}
+                                        >
+                                            {option}
+                                        </button>
+                                    ))}
+                                </div>
                             </motion.div>
                         )}
                     </AnimatePresence>
@@ -380,25 +382,27 @@ function CustomSelect({ label, value, onChange, options }: CustomSelectProps) {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -8, scale: 0.95 }}
                         transition={{ duration: 0.15, ease: 'easeOut' }}
-                        className="absolute z-50 w-full mt-2 py-2 rounded-2xl bg-[var(--background)] border border-[var(--border-color)] shadow-xl shadow-black/20 max-h-[200px] overflow-y-auto"
+                        className="absolute z-50 w-full mt-2 p-1 rounded-2xl bg-[var(--background)] border border-[var(--border-color)] shadow-xl shadow-black/20 overflow-hidden"
                         style={{
                             backdropFilter: 'blur(20px)',
                             WebkitBackdropFilter: 'blur(20px)',
                         }}
                     >
-                        {options.map((option) => (
-                            <button
-                                key={option.value}
-                                type="button"
-                                onClick={() => handleSelect(option.value)}
-                                className={`w-full px-4 py-2.5 text-left text-sm transition-colors ${value === option.value
-                                    ? 'bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] font-medium'
-                                    : 'text-[var(--foreground)] hover:bg-[var(--background-tertiary)]'
-                                    }`}
-                            >
-                                {option.label}
-                            </button>
-                        ))}
+                        <div className="max-h-[200px] overflow-y-auto rounded-xl hide-scrollbar">
+                            {options.map((option) => (
+                                <button
+                                    key={option.value}
+                                    type="button"
+                                    onClick={() => handleSelect(option.value)}
+                                    className={`w-full px-3 py-2 text-left text-sm rounded-lg transition-colors mb-0.5 last:mb-0 ${value === option.value
+                                        ? 'bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] font-medium'
+                                        : 'text-[var(--foreground)] hover:bg-[var(--background-tertiary)]'
+                                        }`}
+                                >
+                                    {option.label}
+                                </button>
+                            ))}
+                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -1054,19 +1058,29 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
                     exit={{ y: '100%' }}
                     transition={{ type: 'spring', damping: 25 }}
                     onClick={(e) => e.stopPropagation()}
-                    className="w-full md:max-w-lg bg-[var(--background)] rounded-t-3xl md:rounded-3xl max-h-[90vh] overflow-y-auto"
+                    className="w-full md:max-w-lg bg-[var(--background)] rounded-t-3xl md:rounded-3xl max-h-[90vh] overflow-y-auto hide-scrollbar"
                 >
                     {/* Header */}
-                    <div className="sticky top-0 bg-[var(--background)] border-b border-[var(--border-color)] p-4 flex items-center justify-between z-10">
-                        <h2 className="text-lg font-bold text-[var(--foreground)]">
-                            {isEditing ? 'Editar Prenda' : 'Añadir Prenda'}
-                        </h2>
-                        <button
+                    {/* Floating Close Button */}
+                    <div className="sticky top-4 z-50 flex justify-end px-4">
+                        <motion.button
                             onClick={onClose}
-                            className="w-8 h-8 rounded-full bg-[var(--background-secondary)] flex items-center justify-center"
+                            initial={{ opacity: 0, scale: 0 }}
+                            animate={{
+                                opacity: 1,
+                                scale: 1,
+                                transition: { delay: 0.4, type: 'spring', stiffness: 300, damping: 25 }
+                            }}
+                            whileHover={{
+                                scale: 1.1,
+                                rotate: 90,
+                                transition: { duration: 0.15, ease: 'easeOut' }
+                            }}
+                            whileTap={{ scale: 0.9 }}
+                            className="w-10 h-10 rounded-full bg-[var(--background)]/80 backdrop-blur-md border border-[var(--border-color)] shadow-sm flex items-center justify-center text-[var(--foreground)] hover:bg-[var(--foreground)] hover:text-[var(--background)] transition-colors duration-75 ease-out"
                         >
                             <X className="w-5 h-5" />
-                        </button>
+                        </motion.button>
                     </div>
 
                     <div className="p-4 space-y-4">
@@ -1223,7 +1237,7 @@ export default function AddItemModal({ isOpen, onClose, onAdd, initialData, isEd
                                             </div>
 
                                             {/* Grid de imágenes para seleccionar */}
-                                            <div className="grid grid-cols-3 gap-2 max-h-[200px] overflow-y-auto p-1">
+                                            <div className="grid grid-cols-3 gap-2 max-h-[200px] overflow-y-auto p-1 hide-scrollbar">
                                                 {availableImages.map((imgUrl, index) => (
                                                     <motion.button
                                                         key={index}

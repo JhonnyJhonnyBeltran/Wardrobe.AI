@@ -59,22 +59,14 @@ export const ClothingItem: React.FC<ClothingItemProps> = ({
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
-      whileHover={{ y: -8 }}
+      whileHover={{ y: -2 }}
       transition={{ type: 'spring', stiffness: 300, damping: 25 }}
       className={`clothing-item group relative cursor-pointer focus:outline-none ${className}`}
       onClick={onClick}
       style={{ WebkitTapHighlightColor: 'transparent' }}
     >
       {/* Card Container */}
-      <div className="relative aspect-square overflow-hidden rounded-3xl bg-[var(--card-bg)] border border-[var(--border-color)] transition-all duration-500">
-
-        {/* Background Gradient/Color - Subtle tint based on item color */}
-        <div
-          className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-500"
-          style={{
-            background: colorHex ? `linear-gradient(135deg, ${colorHex}, transparent)` : 'var(--gradient-primary)'
-          }}
-        />
+      <div className="relative aspect-square overflow-hidden rounded-3xl bg-white border border-[var(--border-color)] transition-all duration-500 shadow-sm hover:shadow-md">
 
         {/* Image or Placeholder */}
         <div className="w-full h-full flex items-center justify-center relative z-10">
@@ -82,11 +74,11 @@ export const ClothingItem: React.FC<ClothingItemProps> = ({
             <motion.img
               src={imageUrl}
               alt={name}
-              className="w-full h-full object-contain p-1"
+              className="w-full h-full object-contain p-2"
               loading="lazy"
               onError={() => setImageError(true)}
-              whileHover={{ scale: 1.05 }}
-              transition={{ type: 'spring', stiffness: 300 }}
+              whileHover={{ scale: 1.02 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
             />
           ) : (
             <div className="flex flex-col items-center justify-center text-[var(--foreground-tertiary)] animate-pulse">
@@ -125,15 +117,67 @@ export const ClothingItem: React.FC<ClothingItemProps> = ({
           </motion.div>
         </motion.button>
 
-        {/* Delete button */}
+        {/* Delete button (Custom Animated) */}
         {onDelete && (
           <motion.button
-            whileTap={{ scale: 0.9 }}
             onClick={handleDeleteClick}
+            initial="idle"
+            whileHover="hover"
+            whileTap="active"
             style={{ WebkitTapHighlightColor: 'transparent' }}
-            className="absolute top-3 left-3 z-20 p-2 rounded-full bg-red-500 backdrop-blur-sm opacity-90 group-hover:opacity-100 transition-all duration-300 focus:outline-none focus:ring-0 hover:bg-red-600 shadow-lg"
+            className="absolute top-3 left-3 z-20 w-10 h-10 flex items-center justify-center rounded-full bg-white/80 dark:bg-black/50 backdrop-blur-md shadow-sm opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-300 hover:bg-white dark:hover:bg-black/70 hover:shadow-md border border-white/20"
           >
-            <Trash2 className="w-5 h-5 stroke-white" />
+            <motion.svg
+              viewBox="0 -10 64 74"
+              className="w-6 h-6 overflow-visible"
+              variants={{
+                idle: { rotate: 0, scale: 1 },
+                hover: { rotate: 3, scale: 1.08, filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))" },
+                active: { rotate: -1, scale: 0.96 }
+              }}
+              transition={{ duration: 0.3, ease: [0.34, 1.56, 0.64, 1] }} // Custom bezier from request
+            >
+              <g id="trash-can">
+                <rect
+                  x="16"
+                  y="24"
+                  width="32"
+                  height="30"
+                  rx="3"
+                  ry="3"
+                  fill="#ff4d4f"
+                />
+
+                <motion.g
+                  style={{ originX: "12px", originY: "18px" }} // Explicit origin from request
+                  variants={{
+                    idle: { rotate: 0, y: 0, scale: 1 },
+                    hover: { rotate: -28, y: 2 },
+                    active: { rotate: -12, scale: 0.98, y: 0 }
+                  }}
+                  transition={{ duration: 0.3, ease: [0.34, 1.56, 0.64, 1] }}
+                >
+                  <rect
+                    x="12"
+                    y="12"
+                    width="40"
+                    height="6"
+                    rx="2"
+                    ry="2"
+                    fill="#e03e3e"
+                  />
+                  <rect
+                    x="26"
+                    y="8"
+                    width="12"
+                    height="4"
+                    rx="2"
+                    ry="2"
+                    fill="#e03e3e"
+                  />
+                </motion.g>
+              </g>
+            </motion.svg>
           </motion.button>
         )}
       </div>

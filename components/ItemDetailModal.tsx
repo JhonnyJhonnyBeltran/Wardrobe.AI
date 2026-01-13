@@ -82,7 +82,7 @@ export default function ItemDetailModal({ outfit, isOpen, onClose }: ItemDetailM
                         </div>
 
                         {/* Content */}
-                        <div className="overflow-y-auto p-4 space-y-4 max-h-[calc(85vh-120px)]">
+                        <div className="overflow-y-auto p-4 space-y-4 max-h-[calc(85vh-120px)] hide-scrollbar">
                             {/* AI Description */}
                             <div className="bg-gradient-to-br from-pink-50 to-violet-50 dark:from-pink-950/30 dark:to-violet-950/30 rounded-2xl p-4">
                                 <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
@@ -105,7 +105,7 @@ export default function ItemDetailModal({ outfit, isOpen, onClose }: ItemDetailM
                                         className="flex items-center gap-3 p-3 rounded-2xl bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all group"
                                     >
                                         {/* Item Image or Color Swatch */}
-                                        <div className="relative w-16 h-16 rounded-xl overflow-hidden bg-white dark:bg-gray-700 shadow-sm flex-shrink-0">
+                                        <div className="relative w-16 h-16 rounded-xl overflow-hidden bg-white shadow-sm flex-shrink-0">
                                             {(item as any).imageUrl ? (
                                                 <img
                                                     src={(item as any).imageUrl}
