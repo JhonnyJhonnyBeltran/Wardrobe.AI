@@ -100,24 +100,24 @@ export const COLOR_OPTIONS = [
 
 // Clothing type/category options
 export const TYPE_OPTIONS = [
-    { value: 'top', label: '👕 Top / Camiseta' },
-    { value: 'shirt', label: '👔 Camisa' },
-    { value: 'sweater', label: '🧥 Jersey / Suéter' },
-    { value: 'bottom', label: '👖 Pantalón' },
-    { value: 'skirt', label: '👗 Falda' },
-    { value: 'dress', label: '👗 Vestido' },
-    { value: 'outerwear', label: '🧥 Abrigo / Chaqueta' },
-    { value: 'shoes', label: '👟 Calzado' },
-    { value: 'accessories', label: '👜 Accesorio' },
+    { value: 'top', label: 'Top / Camiseta' },
+    { value: 'shirt', label: 'Camisa' },
+    { value: 'sweater', label: 'Jersey / Suéter' },
+    { value: 'bottom', label: 'Pantalón' },
+    { value: 'skirt', label: 'Falda' },
+    { value: 'dress', label: 'Vestido' },
+    { value: 'outerwear', label: 'Abrigo / Chaqueta' },
+    { value: 'shoes', label: 'Calzado' },
+    { value: 'accessories', label: 'Accesorio' },
 ];
 
 // Season options
 export const SEASON_OPTIONS = [
-    { value: 'spring', label: '🌸 Primavera' },
-    { value: 'summer', label: '☀️ Verano' },
-    { value: 'autumn', label: '🍂 Otoño' },
-    { value: 'winter', label: '❄️ Invierno' },
-    { value: 'all-season', label: '📅 Todo el año' },
+    { value: 'spring', label: 'Primavera' },
+    { value: 'summer', label: 'Verano' },
+    { value: 'autumn', label: 'Otoño' },
+    { value: 'winter', label: 'Invierno' },
+    { value: 'all-season', label: 'Todo el año' },
 ];
 
 // Default form values

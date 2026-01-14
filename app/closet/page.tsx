@@ -25,12 +25,14 @@ import { supabase } from '@/lib/supabase/client';
 import Image from 'next/image';
 
 // Wardrobe Door Animation Component
-const WardrobeDoorAnimation = ({ onComplete }: { onComplete: () => void }) => {
+const WardrobeDoorAnimation = ({ onComplete, isOpen }: { onComplete: () => void; isOpen: boolean }) => {
   useEffect(() => {
+    if (!isOpen) return;
+
     // Complete animation after doors fully open
     const timer = setTimeout(onComplete, 2300);
     return () => clearTimeout(timer);
-  }, [onComplete]);
+  }, [onComplete, isOpen]);
 
   return (
     <div className="closet-door-container">
@@ -38,10 +40,10 @@ const WardrobeDoorAnimation = ({ onComplete }: { onComplete: () => void }) => {
       <motion.div
         className="closet-door closet-door-left"
         initial={{ rotateY: 0 }}
-        animate={{ rotateY: -105 }}
+        animate={{ rotateY: isOpen ? -105 : 0 }}
         transition={{
           duration: 1.7,
-          delay: 0.3,
+          delay: isOpen ? 0.3 : 0,
           ease: [0.4, 0, 0.2, 1],
         }}
       >
@@ -64,8 +66,8 @@ const WardrobeDoorAnimation = ({ onComplete }: { onComplete: () => void }) => {
         <motion.div
           className="closet-door-handle"
           initial={{ opacity: 1 }}
-          animate={{ opacity: 0 }}
-          transition={{ duration: 0.4, delay: 0.6 }}
+          animate={{ opacity: isOpen ? 0 : 1 }}
+          transition={{ duration: 0.4, delay: isOpen ? 0.6 : 0 }}
         />
       </motion.div>
 
@@ -73,10 +75,10 @@ const WardrobeDoorAnimation = ({ onComplete }: { onComplete: () => void }) => {
       <motion.div
         className="closet-door closet-door-right"
         initial={{ rotateY: 0 }}
-        animate={{ rotateY: 105 }}
+        animate={{ rotateY: isOpen ? 105 : 0 }}
         transition={{
           duration: 1.7,
-          delay: 0.3,
+          delay: isOpen ? 0.3 : 0,
           ease: [0.4, 0, 0.2, 1],
         }}
       >
@@ -99,8 +101,8 @@ const WardrobeDoorAnimation = ({ onComplete }: { onComplete: () => void }) => {
         <motion.div
           className="closet-door-handle"
           initial={{ opacity: 1 }}
-          animate={{ opacity: 0 }}
-          transition={{ duration: 0.4, delay: 0.6 }}
+          animate={{ opacity: isOpen ? 0 : 1 }}
+          transition={{ duration: 0.4, delay: isOpen ? 0.6 : 0 }}
         />
       </motion.div>
     </div>
@@ -262,7 +264,10 @@ export default function ClosetPage() {
       {/* Wardrobe Door Opening Animation */}
       <AnimatePresence>
         {showDoorAnimation && (
-          <WardrobeDoorAnimation onComplete={handleDoorAnimationComplete} />
+          <WardrobeDoorAnimation
+            onComplete={handleDoorAnimationComplete}
+            isOpen={!loading}
+          />
         )}
       </AnimatePresence>
 
