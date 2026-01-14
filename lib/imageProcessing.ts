@@ -265,22 +265,64 @@ export async function processClothingImage(
         let inputBlob: Blob;
 
         if (typeof imageFile === 'string') {
-            // Si es URL con data: o http, descargar
-            const response = await fetch(imageFile);
-            inputBlob = await response.blob();
+            // Check if it's an external URL (http/https) vs data URL
+            if (imageFile.startsWith('http://') || imageFile.startsWith('https://')) {
+                // Use server-side proxy to avoid CORS issues with external images
+                console.log('[Processing] Fetching image via proxy...');
+                const proxyResponse = await fetch('/api/proxy-image', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: imageFile }),
+                });
+
+                if (!proxyResponse.ok) {
+                    const errorData = await proxyResponse.json().catch(() => ({}));
+                    throw new Error(errorData.error || `Proxy failed with status ${proxyResponse.status}`);
+                }
+
+                const proxyData = await proxyResponse.json();
+
+                if (!proxyData.success || !proxyData.dataUrl) {
+                    throw new Error(proxyData.error || 'Proxy returned no image data');
+                }
+
+                // Convert data URL to Blob
+                const dataUrlResponse = await fetch(proxyData.dataUrl);
+                inputBlob = await dataUrlResponse.blob();
+                console.log('[Processing] Image fetched via proxy successfully');
+            } else {
+                // Data URL - fetch directly
+                const response = await fetch(imageFile);
+                inputBlob = await response.blob();
+            }
         } else {
             inputBlob = imageFile;
         }
 
         // 2. Remover el fondo usando IA en el navegador
         console.log('Removiendo fondo...');
-        const removedBgBlob = await removeBackground(inputBlob, {
-            model: 'isnet_fp16',
-            output: {
-                format: 'image/png',
-                quality: 1.0
-            }
-        });
+        let removedBgBlob: Blob;
+        try {
+            removedBgBlob = await removeBackground(inputBlob, {
+                model: 'isnet_fp16',
+                // Official IMG.LY CDN - the only one with 1.7.0 model data
+                publicPath: 'https://staticimgly.com/@imgly/background-removal-data/1.7.0/dist/',
+                debug: true,
+                progress: (key: string, current: number, total: number) => {
+                    if (key.startsWith('fetch')) {
+                        console.log(`[Processing] Fetching model resource ${key}: ${Math.round(current / total * 100)}%`);
+                    }
+                },
+                output: {
+                    format: 'image/png',
+                    quality: 1.0
+                }
+            });
+            console.log('[Processing] Background removed successfully');
+        } catch (bgError) {
+            console.error('[Processing] Background removal failed:', bgError);
+            throw new Error(`Fallo al eliminar fondo: ${(bgError as Error).message}.`);
+        }
 
         // 3. Normalizar si se solicita
         let finalBlob: Blob;

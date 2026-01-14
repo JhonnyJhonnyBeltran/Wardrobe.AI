@@ -66,7 +66,8 @@ export function useWardrobe(): UseWardrobeReturn {
           size: item.size,
           reference: item.reference,
           fabric: item.fabric,
-          sourceUrl: item.source_url,
+          // TODO: Descomentar cuando se añada columna source_url en Supabase
+          // sourceUrl: item.source_url,
         } as any)
       }));
 
@@ -105,7 +106,8 @@ export function useWardrobe(): UseWardrobeReturn {
         size: (item as any).size || null,
         reference: (item as any).reference || null,
         fabric: (item as any).fabric || null,
-        source_url: (item as any).sourceUrl || null,
+        // TODO: Descomentar cuando se añada columna source_url en Supabase
+        // source_url: (item as any).sourceUrl || null,
       };
 
       const { data, error: insertError } = await supabase
@@ -134,7 +136,8 @@ export function useWardrobe(): UseWardrobeReturn {
           size: data.size,
           reference: data.reference,
           fabric: data.fabric,
-          sourceUrl: data.source_url,
+          // TODO: Descomentar cuando se añada columna source_url en Supabase
+          // sourceUrl: data.source_url,
         } as any)
       };
 
@@ -166,7 +169,8 @@ export function useWardrobe(): UseWardrobeReturn {
       if ((updates as any).size !== undefined) dbUpdates.size = (updates as any).size;
       if ((updates as any).reference !== undefined) dbUpdates.reference = (updates as any).reference;
       if ((updates as any).fabric !== undefined) dbUpdates.fabric = (updates as any).fabric;
-      if ((updates as any).sourceUrl !== undefined) dbUpdates.source_url = (updates as any).sourceUrl;
+      // TODO: Descomentar cuando se añada columna source_url en Supabase
+      // if ((updates as any).sourceUrl !== undefined) dbUpdates.source_url = (updates as any).sourceUrl;
 
       const { error: updateError } = await supabase
         .from('clothing_items')

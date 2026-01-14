@@ -33,7 +33,7 @@ export default function Sidebar() {
   const { isPremium, upgradeToPremiun } = useUser();
 
   return (
-    <aside className="hidden md:flex flex-col w-64 glass border-r border-[var(--border-color)] min-h-screen">
+    <aside className="hidden md:flex flex-col w-64 glass border-r border-[var(--border-color)] h-screen sticky top-0 overflow-hidden z-50">
       {/* Logo */}
       <div className="p-4 border-b border-[var(--border-color)]">
         <LogoExtended size="md" className="mb-2" />

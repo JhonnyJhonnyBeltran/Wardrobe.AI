@@ -116,13 +116,15 @@
   perspective: 2000px;
 }
 
-/* On desktop, account for sidebar */
+/* On desktop, account for sidebar (w-64 = 256px) */
 @media (min-width: 768px) {
   .closet-door-container {
-    left: 240px;
-    /* Sidebar width */
-    width: calc(100% - 240px);
+    left: 256px;
+    /* Sidebar width: w-64 = 16rem = 256px */
+    width: calc(100% - 256px);
     height: 100%;
+    /* Ensure it stays behind sidebar */
+    z-index: 35;
   }
 }
 
@@ -432,6 +434,23 @@ body {
   font-optical-sizing: auto;
   text-rendering: optimizeLegibility;
   overflow-x: hidden;
+  /* Hide scrollbars globally for cleaner look */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+body::-webkit-scrollbar {
+  display: none;
+}
+
+/* Also hide on html for full coverage */
+html {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+html::-webkit-scrollbar {
+  display: none;
 }
 
 /* iOS-style safe areas */
