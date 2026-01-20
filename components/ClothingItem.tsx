@@ -8,6 +8,7 @@
 import React, { useState } from 'react';
 import { Heart, ShoppingBag, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useTranslation } from '@/lib/i18n';
 
 export interface ClothingItemProps {
   id: string;
@@ -38,6 +39,7 @@ export const ClothingItem: React.FC<ClothingItemProps> = ({
   onDelete,
   className = '',
 }) => {
+  const { t } = useTranslation();
   const [imageError, setImageError] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
 
@@ -85,7 +87,7 @@ export const ClothingItem: React.FC<ClothingItemProps> = ({
               <div className="w-16 h-16 rounded-2xl bg-[var(--background-secondary)] flex items-center justify-center mb-2 shadow-inner">
                 <ShoppingBag className="w-8 h-8 opacity-30" />
               </div>
-              <span className="text-[10px] font-bold uppercase tracking-wider opacity-50">Sin imagen</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider opacity-50">{t.common.noImage}</span>
             </div>
           )}
         </div>

@@ -1,111 +1,110 @@
 'use client';
 
 /**
- * Profile Page - Diseño Premium estilo Apple/Revolut
- * Minimalista, elegante y profesional
- * Enfocado en configuración y gestión de cuenta
+ * Profile Page - Instagram Style (Social Only)
+ * Perfil social limpio con avatar, estadísticas y pestañas
  */
 
 import { motion } from 'framer-motion';
 import { useUser } from '@/store/userStore';
-import { useAuth } from '@/lib/hooks/useAuth';
 import { Card } from '@/components';
+import { useTranslation } from '@/lib/i18n';
+import { supabase } from '@/lib/supabase/client';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import {
-  User,
-  Palette,
   Settings,
-  Bell,
-  Shield,
-  Key,
-  ChevronRight,
-  LogOut
+  Grid3x3,
+  Shirt,
+  Heart,
+  MessageCircle
 } from 'lucide-react';
 
-// Menu Item Component
-interface MenuItemProps {
-  href: string;
-  icon: React.ReactNode;
-  label: string;
-  subtitle?: string;
-  variant?: 'default' | 'danger';
-}
-
-function MenuItem({ href, icon, label, subtitle, variant = 'default' }: MenuItemProps) {
-  return (
-    <Link href={href}>
-      <motion.div
-        className={`flex items-center gap-4 p-4 border-b border-[var(--border-color)] last:border-b-0 cursor-pointer ${variant === 'danger' ? 'hover:bg-red-500/5' : ''
-          }`}
-        whileHover={{ backgroundColor: variant === 'danger' ? 'rgba(239, 68, 68, 0.05)' : 'var(--card-hover)' }}
-        transition={{ duration: 0.15 }}
-      >
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${variant === 'danger'
-            ? 'bg-red-500/10'
-            : 'bg-[var(--brand-pink)]/10'
-          }`}>
-          {icon}
-        </div>
-        <div className="flex-1">
-          <span className={`font-medium block ${variant === 'danger' ? 'text-red-500' : 'text-[var(--foreground)]'
-            }`}>
-            {label}
-          </span>
-          {subtitle && (
-            <span className="text-xs text-[var(--foreground-tertiary)]">
-              {subtitle}
-            </span>
-          )}
-        </div>
-        <ChevronRight className={`w-5 h-5 ${variant === 'danger' ? 'text-red-400' : 'text-[var(--foreground-tertiary)]'
-          }`} />
-      </motion.div>
-    </Link>
-  );
-}
-
-// Button Item Component (for actions like logout)
-interface ButtonItemProps {
-  onClick: () => void;
-  icon: React.ReactNode;
-  label: string;
-  variant?: 'default' | 'danger';
-}
-
-function ButtonItem({ onClick, icon, label, variant = 'default' }: ButtonItemProps) {
-  return (
-    <motion.button
-      onClick={onClick}
-      className="w-full flex items-center gap-4 p-4 cursor-pointer"
-      whileHover={{ backgroundColor: variant === 'danger' ? 'rgba(239, 68, 68, 0.05)' : 'var(--card-hover)' }}
-      transition={{ duration: 0.15 }}
-    >
-      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${variant === 'danger'
-          ? 'bg-red-500/10'
-          : 'bg-[var(--brand-pink)]/10'
-        }`}>
-        {icon}
-      </div>
-      <span className={`font-medium flex-1 text-left ${variant === 'danger' ? 'text-red-500' : 'text-[var(--foreground)]'
-        }`}>
-        {label}
-      </span>
-      <ChevronRight className={`w-5 h-5 ${variant === 'danger' ? 'text-red-400' : 'text-[var(--foreground-tertiary)]'
-        }`} />
-    </motion.button>
-  );
-}
+type TabType = 'posts' | 'outfits';
 
 export default function ProfilePage() {
   const { user } = useUser();
-  const { signOut } = useAuth();
-  const router = useRouter();
+  const { t } = useTranslation();
+  const [activeTab, setActiveTab] = useState<TabType>('posts');
 
-  const handleLogout = async () => {
-    await signOut();
-    router.push('/');
-  };
+  // Real data state
+  const [profileStats, setProfileStats] = useState({
+    outfits: 0,
+    followers: 0,
+    following: 0
+  });
+  const [posts, setPosts] = useState<any[]>([]);
+  const [outfits, setOutfits] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      if (!user) return;
+
+      try {
+        setIsLoading(true);
+        // Only fetch if we have a valid UUID (skip for default '1' guest user if it causes issues, 
+        // but for now let's try. Supabase will error on invalid UUID syntax)
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(user.id);
+        if (!isUuid) {
+          // Fallback for guest/mock user ID
+          setProfileStats({ outfits: 0, followers: 0, following: 0 });
+          setPosts([]);
+          setOutfits([]);
+          setIsLoading(false);
+          return;
+        }
+
+        // 1. Fetch Stats
+        const { count: outfitCount } = await supabase
+          .from('outfits')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id);
+
+        const { count: followersCount } = await supabase
+          .from('follows')
+          .select('*', { count: 'exact', head: true })
+          .eq('following_id', user.id);
+
+        const { count: followingCount } = await supabase
+          .from('follows')
+          .select('*', { count: 'exact', head: true })
+          .eq('follower_id', user.id);
+
+        setProfileStats({
+          outfits: outfitCount || 0,
+          followers: followersCount || 0,
+          following: followingCount || 0
+        });
+
+        // 2. Fetch Posts
+        const { data: postsData } = await supabase
+          .from('posts')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        // TODO: Fetch like/comment counts for each post if needed
+        setPosts(postsData || []);
+
+        // 3. Fetch Outfits
+        const { data: outfitsData } = await supabase
+          .from('outfits')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        setOutfits(outfitsData || []);
+
+      } catch (error) {
+        console.error('Error fetching profile data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProfileData();
+  }, [user]);
 
   if (!user) return null;
 
@@ -126,205 +125,232 @@ export default function ProfilePage() {
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.5, ease: [0.4, 0, 0.2, 1] as [number, number, number, number] }
+      transition: {
+        duration: 0.5,
+        ease: [0.4, 0, 0.2, 1] as [number, number, number, number]
+      }
     }
   };
 
   return (
     <div className="min-h-screen bg-[var(--background)] pb-24 md:pb-8">
       <motion.div
-        className="max-w-2xl mx-auto px-4 py-8"
+        className="max-w-4xl mx-auto px-4 py-8"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
-        {/* Profile Header - Centrado y Premium */}
-        <motion.div variants={itemVariants} className="text-center mb-10">
-          {/* Avatar con glow sutil */}
-          <motion.div
-            className="relative inline-block mb-6"
-            whileHover={{ scale: 1.02 }}
-            transition={{ duration: 0.3 }}
-          >
-            <div className="w-28 h-28 rounded-full bg-gradient-to-br from-[var(--brand-pink)] to-[var(--brand-pink-dark)] p-[3px] shadow-lg">
-              <div className="w-full h-full rounded-full bg-[var(--card-bg)] flex items-center justify-center overflow-hidden">
-                {user.avatar ? (
-                  <img src={user.avatar} alt={user.name} className="w-full h-full rounded-full object-cover" />
-                ) : (
-                  <span className="text-4xl font-bold bg-gradient-to-br from-[var(--brand-pink)] to-[var(--brand-pink-dark)] bg-clip-text text-transparent">
-                    {user.name[0].toUpperCase()}
-                  </span>
-                )}
-              </div>
+        {/* Profile Header - Instagram Style */}
+        <motion.div variants={itemVariants} className="mb-8">
+          <div className="flex items-center gap-6 mb-6">
+            {/* Avatar */}
+            <div className="relative flex-shrink-0">
+              <motion.div
+                className="relative"
+                whileHover={{ scale: 1.02 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="w-20 h-20 md:w-28 md:h-28 rounded-full bg-gradient-to-br from-[var(--brand-pink)] to-[var(--brand-pink-dark)] p-[3px] shadow-lg">
+                  <div className="w-full h-full rounded-full bg-[var(--card-bg)] flex items-center justify-center overflow-hidden">
+                    {user.avatar ? (
+                      <img
+                        src={user.avatar}
+                        alt={user.name}
+                        className="w-full h-full rounded-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-3xl md:text-4xl font-bold bg-gradient-to-br from-[var(--brand-pink)] to-[var(--brand-pink-dark)] bg-clip-text text-transparent">
+                        {user.name[0].toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
             </div>
-          </motion.div>
 
-          {/* Nombre */}
-          <h1 className="page-title">
-            <span className="page-title-secondary">{user.name.toUpperCase()}</span>
-          </h1>
+            {/* Stats & Username */}
+            <div className="flex-1 min-w-0">
+              {/* Username & Settings Row */}
+              <div className="flex items-center justify-between mb-2">
+                <h1 className="text-xl md:text-2xl font-bold text-[var(--foreground)] truncate mr-2">
+                  {user.name.toUpperCase()}
+                </h1>
+                <Link href="/profile/settings">
+                  <button className="p-2 -mr-2 rounded-full hover:bg-[var(--background-secondary)] transition-colors text-[var(--foreground-secondary)]">
+                    <Settings className="w-5 h-5" />
+                  </button>
+                </Link>
+              </div>
 
-          {/* Email - Sutil */}
-          {user.email && (
-            <p className="text-sm text-[var(--foreground-tertiary)]">
-              {user.email}
-            </p>
+              {/* Stats */}
+              <div className="flex gap-6 mb-4">
+                <div className="text-center">
+                  <div className="text-lg md:text-xl font-bold text-[var(--foreground)]">
+                    {profileStats.outfits}
+                  </div>
+                  <div className="text-xs md:text-sm text-[var(--foreground-tertiary)]">
+                    {t.profile.outfits}
+                  </div>
+                </div>
+                <button className="text-center hover:opacity-80 transition-opacity">
+                  <div className="text-lg md:text-xl font-bold text-[var(--foreground)]">
+                    {profileStats.followers}
+                  </div>
+                  <div className="text-xs md:text-sm text-[var(--foreground-tertiary)]">
+                    {t.profile.followers}
+                  </div>
+                </button>
+                <button className="text-center hover:opacity-80 transition-opacity">
+                  <div className="text-lg md:text-xl font-bold text-[var(--foreground)]">
+                    {profileStats.following}
+                  </div>
+                  <div className="text-xs md:text-sm text-[var(--foreground-tertiary)]">
+                    {t.profile.following}
+                  </div>
+                </button>
+              </div>
+
+              {/* Action Button */}
+              <Link href="/profile/edit" className="block">
+                <button className="w-full px-4 py-2 rounded-lg bg-[var(--background-secondary)] hover:bg-[var(--background-tertiary)] text-sm font-semibold text-[var(--foreground)] transition-colors">
+                  {t.profile.editProfile}
+                </button>
+              </Link>
+            </div>
+          </div>
+
+          {/* Style Tags - If completed */}
+          {user.styleCompleted && user.preferredStyles && user.preferredStyles.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {user.preferredStyles.slice(0, 3).map((style, idx) => (
+                <span
+                  key={idx}
+                  className="px-3 py-1.5 rounded-full bg-[var(--brand-pink)]/8 text-[var(--brand-pink)] text-xs font-medium"
+                >
+                  {style}
+                </span>
+              ))}
+            </div>
           )}
         </motion.div>
 
-        {/* Perfil y Personalización */}
-        <motion.div variants={itemVariants} className="mb-6">
-          <h2 className="text-sm font-semibold text-[var(--foreground-secondary)] uppercase tracking-wider mb-4">
-            Perfil
-          </h2>
-          <Card className="overflow-hidden">
-            <MenuItem
-              href="/profile/edit"
-              icon={<User className="w-5 h-5 text-[var(--brand-pink)]" />}
-              label="Editar perfil"
-              subtitle="Nombre, foto y datos personales"
-            />
-            <MenuItem
-              href="/profile/preferences"
-              icon={<Palette className="w-5 h-5 text-[var(--brand-pink)]" />}
-              label="Preferencias de estilo"
-              subtitle="Colores, tallas y estilo favorito"
-            />
-          </Card>
+        {/* Tabs */}
+        <motion.div variants={itemVariants} className="border-t border-[var(--border-color)] mb-6">
+          <div className="flex">
+            <button
+              onClick={() => setActiveTab('posts')}
+              className={`flex-1 flex items-center justify-center gap-2 py-4 border-t-2 transition-colors ${activeTab === 'posts'
+                ? 'border-[var(--brand-pink)] text-[var(--foreground)]'
+                : 'border-transparent text-[var(--foreground-tertiary)]'
+                }`}
+            >
+              <Grid3x3 className="w-5 h-5" />
+              <span className="text-sm font-semibold uppercase tracking-wide">{t.profile.posts}</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('outfits')}
+              className={`flex-1 flex items-center justify-center gap-2 py-4 border-t-2 transition-colors ${activeTab === 'outfits'
+                ? 'border-[var(--brand-pink)] text-[var(--foreground)]'
+                : 'border-transparent text-[var(--foreground-tertiary)]'
+                }`}
+            >
+              <Shirt className="w-5 h-5" />
+              <span className="text-sm font-semibold uppercase tracking-wide">{t.profile.outfits}</span>
+            </button>
+          </div>
         </motion.div>
 
-        {/* Configuración */}
-        <motion.div variants={itemVariants} className="mb-6">
-          <h2 className="text-sm font-semibold text-[var(--foreground-secondary)] uppercase tracking-wider mb-4">
-            Configuración
-          </h2>
-          <Card className="overflow-hidden">
-            <MenuItem
-              href="/profile/settings"
-              icon={<Settings className="w-5 h-5 text-[var(--brand-pink)]" />}
-              label="Ajustes generales"
-              subtitle="Tema, idioma y más"
-            />
-            <MenuItem
-              href="/profile/settings/notifications"
-              icon={<Bell className="w-5 h-5 text-[var(--brand-pink)]" />}
-              label="Notificaciones"
-              subtitle="Gestiona tus alertas"
-            />
-            <MenuItem
-              href="/profile/settings/security"
-              icon={<Key className="w-5 h-5 text-[var(--brand-pink)]" />}
-              label="Seguridad"
-              subtitle="Contraseña y autenticación"
-            />
-            <MenuItem
-              href="/profile/settings/privacy"
-              icon={<Shield className="w-5 h-5 text-[var(--brand-pink)]" />}
-              label="Privacidad"
-              subtitle="Datos y permisos"
-            />
-          </Card>
-        </motion.div>
-
-        {/* Style Profile - Si existe */}
-        {user.styleCompleted && (
-          <motion.div variants={itemVariants} className="mb-6">
-            <h2 className="text-sm font-semibold text-[var(--foreground-secondary)] uppercase tracking-wider mb-4">
-              Tu Estilo
-            </h2>
-            <Card className="p-5">
-              <div className="space-y-5">
-                {/* Info básica en grid */}
-                <div className="grid grid-cols-2 gap-4">
-                  {user.gender && (
-                    <div>
-                      <div className="text-xs text-[var(--foreground-tertiary)] mb-1">Género</div>
-                      <div className="font-medium text-[var(--foreground)] capitalize">{user.gender}</div>
-                    </div>
-                  )}
-                  {user.ageRange && (
-                    <div>
-                      <div className="text-xs text-[var(--foreground-tertiary)] mb-1">Edad</div>
-                      <div className="font-medium text-[var(--foreground)]">{user.ageRange}</div>
-                    </div>
-                  )}
-                  {(user.height || user.heightRange) && (
-                    <div>
-                      <div className="text-xs text-[var(--foreground-tertiary)] mb-1">Altura</div>
-                      <div className="font-medium text-[var(--foreground)]">
-                        {user.height ? `${user.height} cm` : user.heightRange}
+        {/* Content Grid */}
+        <motion.div variants={itemVariants}>
+          {activeTab === 'posts' ? (
+            // Posts Grid
+            <div className="grid grid-cols-3 gap-1 md:gap-2">
+              {posts.length === 0 ? (
+                <div className="col-span-3 text-center py-16">
+                  <Grid3x3 className="w-12 h-12 mx-auto mb-4 text-[var(--foreground-tertiary)]" />
+                  <p className="text-[var(--foreground-secondary)] font-medium mb-2">
+                    {t.profile.noPostsYet}
+                  </p>
+                  <p className="text-sm text-[var(--foreground-tertiary)]">
+                    {t.profile.shareOutfits}
+                  </p>
+                </div>
+              ) : (
+                posts.map((post) => (
+                  <motion.div
+                    key={post.id}
+                    whileHover={{ scale: 1.02 }}
+                    className="relative aspect-square bg-gradient-to-br from-[var(--background-secondary)] to-[var(--background-tertiary)] rounded-lg overflow-hidden cursor-pointer group"
+                  >
+                    {post.image_url ? (
+                      <img src={post.image_url} alt="Post" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-4xl">
+                        👗
+                      </div>
+                    )}
+                    {/* Hover Overlay */}
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
+                      <div className="flex items-center gap-1 text-white">
+                        <Heart className="w-5 h-5 fill-white" />
+                        <span className="font-semibold">{post.likes}</span>
+                      </div>
+                      <div className="flex items-center gap-1 text-white">
+                        <MessageCircle className="w-5 h-5 fill-white" />
+                        <span className="font-semibold">{post.comments}</span>
                       </div>
                     </div>
-                  )}
-                  <div>
-                    <div className="text-xs text-[var(--foreground-tertiary)] mb-1">Accesorios</div>
-                    <div className="font-medium text-[var(--foreground)]">
-                      {user.usesAccessories ? 'Sí' : 'Minimalista'}
-                    </div>
-                  </div>
+                  </motion.div>
+                ))
+              )}
+            </div>
+          ) : (
+            // Outfits Grid
+            <div className="grid grid-cols-3 gap-1 md:gap-2">
+              {outfits.length === 0 ? (
+                <div className="col-span-3 text-center py-16">
+                  <Shirt className="w-12 h-12 mx-auto mb-4 text-[var(--foreground-tertiary)]" />
+                  <p className="text-[var(--foreground-secondary)] font-medium mb-2">
+                    {t.profile.noPublicOutfits}
+                  </p>
+                  <p className="text-sm text-[var(--foreground-tertiary)] mb-4">
+                    {t.profile.markOutfitsPublic}
+                  </p>
+                  <Link href="/closet">
+                    <button className="px-6 py-2 rounded-full bg-[var(--brand-pink)] text-white font-semibold hover:opacity-90 transition-opacity">
+                      {t.profile.goToCloset}
+                    </button>
+                  </Link>
                 </div>
-
-                {/* Estilos preferidos */}
-                {user.preferredStyles && user.preferredStyles.length > 0 && (
-                  <div>
-                    <div className="text-xs text-[var(--foreground-tertiary)] mb-2">Estilos preferidos</div>
-                    <div className="flex flex-wrap gap-2">
-                      {user.preferredStyles.map((style, idx) => (
-                        <span
-                          key={idx}
-                          className="px-3 py-1.5 rounded-full bg-[var(--brand-pink)]/8 text-[var(--brand-pink)] text-xs font-medium"
-                        >
-                          {style}
-                        </span>
-                      ))}
+              ) : (
+                outfits.map((outfit) => (
+                  <motion.div
+                    key={outfit.id}
+                    whileHover={{ scale: 1.02 }}
+                    className="relative aspect-square bg-gradient-to-br from-[var(--background-secondary)] to-[var(--background-tertiary)] rounded-lg overflow-hidden cursor-pointer group"
+                  >
+                    {outfit.image_url ? (
+                      <img
+                        src={outfit.image_url}
+                        alt={outfit.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-4xl">
+                        👔
+                      </div>
+                    )}
+                    {/* Hover Overlay */}
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <p className="text-white font-semibold text-sm px-2 text-center">
+                        {outfit.name}
+                      </p>
                     </div>
-                  </div>
-                )}
-
-                {/* Preferencias visuales */}
-                {user.visualStylePreferences && user.visualStylePreferences.length > 0 && (
-                  <div>
-                    <div className="text-xs text-[var(--foreground-tertiary)] mb-2">Preferencias</div>
-                    <div className="flex flex-wrap gap-2">
-                      {user.visualStylePreferences.map((pref, idx) => (
-                        <span
-                          key={idx}
-                          className="px-3 py-1.5 rounded-full bg-[var(--background-tertiary)] text-[var(--foreground-secondary)] text-xs font-medium"
-                        >
-                          {pref}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </Card>
-          </motion.div>
-        )}
-
-        {/* Cuenta */}
-        <motion.div variants={itemVariants}>
-          <h2 className="text-sm font-semibold text-[var(--foreground-secondary)] uppercase tracking-wider mb-4">
-            Cuenta
-          </h2>
-          <Card className="overflow-hidden">
-            <ButtonItem
-              onClick={handleLogout}
-              icon={<LogOut className="w-5 h-5 text-red-500" />}
-              label="Cerrar sesión"
-              variant="danger"
-            />
-          </Card>
-        </motion.div>
-
-        {/* Version Footer */}
-        <motion.div
-          variants={itemVariants}
-          className="text-center mt-10"
-        >
-          <p className="text-xs text-[var(--foreground-tertiary)]">
-            Klozet v1.0.0
-          </p>
+                  </motion.div>
+                ))
+              )}
+            </div>
+          )}
         </motion.div>
       </motion.div>
     </div>

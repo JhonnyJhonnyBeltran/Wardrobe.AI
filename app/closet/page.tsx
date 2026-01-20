@@ -19,6 +19,7 @@ import type { ClothingItem as ClothingItemType } from '@/types/clothing';
 import { useUser } from '@/store';
 import { useUiStore } from '@/store/uiStore';
 import { useWardrobe } from '@/lib/hooks/useWardrobe';
+import { useTranslation } from '@/lib/i18n';
 import Link from 'next/link';
 import { OutfitItem } from '@/lib/fashion/outfitGenerator';
 import { supabase } from '@/lib/supabase/client';
@@ -111,6 +112,7 @@ const WardrobeDoorAnimation = ({ onComplete, isOpen }: { onComplete: () => void;
 
 export default function ClosetPage() {
   const { isPremium, user, setUser } = useUser();
+  const { t } = useTranslation();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -122,8 +124,15 @@ export default function ClosetPage() {
   const [editingItem, setEditingItem] = useState<ClothingItemType | null>(null);
   const { items, loading, addItem, updateItem, deleteItem, refresh } = useWardrobe();
 
-  // Wardrobe Door Animation State
-  const [showDoorAnimation, setShowDoorAnimation] = useState(true);
+  // Wardrobe Door Animation State - Solo mostrar la primera vez
+  const [showDoorAnimation, setShowDoorAnimation] = useState(() => {
+    // Verificar si es la primera visita al armario
+    if (typeof window !== 'undefined') {
+      const hasSeenAnimation = localStorage.getItem('hasSeenClosetAnimation');
+      return !hasSeenAnimation; // Mostrar solo si NO se ha visto antes
+    }
+    return true;
+  });
 
   // Style Quiz State - Mostrar si no está completado
   const [showStyleQuiz, setShowStyleQuiz] = useState(false);
@@ -166,14 +175,14 @@ export default function ClosetPage() {
   const handleDeleteItem = (id: string) => {
     // Buscar el item para obtener el nombre
     const itemToDelete = items.find(i => i.id === id);
-    const itemName = itemToDelete ? itemToDelete.name : 'esta prenda';
+    const itemName = itemToDelete ? itemToDelete.name : t.closet.thisItem;
 
     showModal({
-      title: '¿Eliminar prenda?',
-      message: `¿Estás seguro de que quieres eliminar "${itemName}" de tu armario? Esta acción no se puede deshacer.`,
+      title: t.closet.deleteConfirm,
+      message: `${t.closet.deleteMessage.replace('{name}', itemName)}`,
       type: 'confirm',
-      confirmText: 'Eliminar',
-      cancelText: 'Cancelar',
+      confirmText: t.closet.delete,
+      cancelText: t.closet.cancel,
       onConfirm: async () => {
         const success = await deleteItem(id);
 
@@ -186,17 +195,17 @@ export default function ClosetPage() {
           });
 
           showModal({
-            title: 'Prenda eliminada',
-            message: 'La prenda se ha eliminado correctamente de tu armario.',
+            title: t.closet.itemDeleted,
+            message: t.closet.itemDeletedMessage,
             type: 'success',
-            confirmText: 'Entendido'
+            confirmText: t.closet.understood
           });
         } else {
           showModal({
-            title: 'Error',
-            message: 'No se pudo eliminar la prenda. Inténtalo de nuevo.',
+            title: t.closet.error,
+            message: t.closet.deleteError,
             type: 'error',
-            confirmText: 'Cerrar'
+            confirmText: t.closet.close
           });
         }
       }
@@ -256,6 +265,10 @@ export default function ClosetPage() {
   // Handle door animation completion
   const handleDoorAnimationComplete = () => {
     setShowDoorAnimation(false);
+    // Guardar en localStorage que ya se ha visto la animación
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('hasSeenClosetAnimation', 'true');
+    }
   };
 
   return (
@@ -333,7 +346,7 @@ export default function ClosetPage() {
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--foreground-tertiary)]" />
                       <input
                         type="text"
-                        placeholder="Buscar..."
+                        placeholder={t.closet.search}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="w-full pl-9 pr-3 py-2 rounded-full bg-[var(--background-secondary)] border border-[var(--border-color)] text-sm text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)]"
@@ -389,7 +402,7 @@ export default function ClosetPage() {
                           : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)]'
                           }`}
                       >
-                        Todo
+                        {t.closet.all}
                       </button>
                       {itemTypes.map((type) => (
                         <button
@@ -400,7 +413,7 @@ export default function ClosetPage() {
                             : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)]'
                             }`}
                         >
-                          {type}
+                          {t.itemTypes[type as keyof typeof t.itemTypes]}
                         </button>
                       ))}
                     </div>
@@ -414,7 +427,7 @@ export default function ClosetPage() {
                         className="mt-2 text-xs text-[var(--brand-pink)] font-semibold flex items-center gap-1"
                       >
                         <X className="w-3 h-3" />
-                        Limpiar
+                        {t.closet.clear}
                       </button>
                     )}
                   </div>
@@ -431,7 +444,7 @@ export default function ClosetPage() {
           transition={{ delay: 0.15 }}
           className="px-4 mb-6"
         >
-          <h2 className="text-sm font-bold text-[var(--foreground-secondary)] mb-3">Acciones Rápidas</h2>
+          <h2 className="text-sm font-bold text-[var(--foreground-secondary)] mb-3">{t.closet.quickActions}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {/* Create Outfit Card */}
             <Link href="/create">
@@ -442,10 +455,10 @@ export default function ClosetPage() {
                   </div>
                   <div className="flex-1">
                     <h3 className="text-lg font-bold text-[var(--foreground)] mb-1">
-                      Crear Outfit
+                      {t.closet.createOutfit}
                     </h3>
                     <p className="text-sm text-[var(--foreground-tertiary)]">
-                      Genera looks con IA basados en tu armario
+                      {t.closet.createOutfitDesc}
                     </p>
                   </div>
                 </div>
@@ -463,10 +476,10 @@ export default function ClosetPage() {
                 </div>
                 <div className="flex-1">
                   <h3 className="text-lg font-bold text-[var(--foreground)] mb-1">
-                    Añadir Prenda
+                    {t.closet.addItem}
                   </h3>
                   <p className="text-sm text-[var(--foreground-tertiary)]">
-                    Sube fotos o escanea URLs de tiendas
+                    {t.closet.addItemDesc}
                   </p>
                 </div>
               </div>
@@ -477,7 +490,7 @@ export default function ClosetPage() {
         {/* Items Section Header */}
         <div className="px-4 mb-3">
           <h2 className="text-sm font-bold text-[var(--foreground-secondary)]">
-            Mis Prendas {filteredItems.length > 0 && `(${filteredItems.length})`}
+            {t.closet.myItems} {filteredItems.length > 0 && `(${filteredItems.length})`}
           </h2>
         </div>
 
@@ -502,8 +515,8 @@ export default function ClosetPage() {
                   id={item.id}
                   name={item.name}
                   brand={item.brand}
-                  type={item.category as any}
-                  color={item.color as any}
+                  type={t.itemTypes[item.category as keyof typeof t.itemTypes] || item.category}
+                  color={t.colors[(item.color as any) as keyof typeof t.colors] || item.color}
                   colorHex={(item as any).colorHex || colorMap[(item.color as any) as string] || '#EEEEEE'}
                   imageUrl={item.imageUrl || ''}
                   isFavorite={favorites.has(item.id)}
@@ -517,11 +530,11 @@ export default function ClosetPage() {
         ) : (
           <Card className="mx-4 p-8 text-center">
             <Plus className="w-12 h-12 text-[var(--brand-pink)] mx-auto mb-3" />
-            <p className="text-sm font-bold text-[var(--foreground)] mb-1">Añade una prenda</p>
-            <p className="text-xs text-[var(--foreground-tertiary)]">Tu armario te está esperando</p>
+            <p className="text-sm font-bold text-[var(--foreground)] mb-1">{t.closet.addFirstItem}</p>
+            <p className="text-xs text-[var(--foreground-tertiary)]">{t.closet.wardrobeWaiting}</p>
             <div className="mt-4">
               <Button onClick={() => setShowAddModal(true)} className="px-4">
-                Añadir prenda
+                {t.closet.addItemButton}
               </Button>
             </div>
           </Card>

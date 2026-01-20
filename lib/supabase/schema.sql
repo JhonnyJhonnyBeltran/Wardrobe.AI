@@ -111,6 +111,7 @@ CREATE TABLE public.outfits (
     season TEXT,
     occasion TEXT,
     favorite BOOLEAN DEFAULT false,
+    is_public BOOLEAN DEFAULT false, -- Si el outfit es público para el feed social
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );

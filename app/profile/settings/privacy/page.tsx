@@ -9,6 +9,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Shield, Eye, Database, Share2, Download, FileText } from 'lucide-react';
 import { Card, Button } from '@/components';
 import { useRouter } from 'next/navigation';
+import { useTranslation } from '@/lib/i18n';
 
 interface ToggleSwitchProps {
     enabled: boolean;
@@ -58,6 +59,7 @@ function PrivacyOption({ icon, title, description, enabled, onChange }: PrivacyO
 
 export default function PrivacyPage() {
     const router = useRouter();
+    const { t } = useTranslation();
 
     // Privacy settings
     const [privacy, setPrivacy] = useState({
@@ -91,9 +93,9 @@ export default function PrivacyPage() {
                         className="flex items-center gap-2 text-[var(--foreground-secondary)] hover:text-[var(--foreground)] transition-colors"
                     >
                         <ArrowLeft className="w-5 h-5" />
-                        Volver
+                        {t.privacyPage.back}
                     </button>
-                    <h1 className="text-lg font-bold text-[var(--foreground)]">Privacidad</h1>
+                    <h1 className="text-lg font-bold text-[var(--foreground)]">{t.privacyPage.title}</h1>
                     <div className="w-20" />
                 </div>
             </motion.div>
@@ -107,20 +109,20 @@ export default function PrivacyPage() {
                     transition={{ delay: 0.1 }}
                 >
                     <h2 className="text-sm font-semibold text-[var(--foreground-secondary)] uppercase tracking-wider mb-4">
-                        Visibilidad
+                        {t.privacyPage.visibility}
                     </h2>
                     <Card className="px-5">
                         <PrivacyOption
                             icon={<Eye className="w-5 h-5 text-[var(--brand-pink)]" />}
-                            title="Perfil público"
-                            description="Permite que otros vean tu perfil"
+                            title={t.privacyPage.publicProfile}
+                            description={t.privacyPage.publicProfileDesc}
                             enabled={privacy.publicProfile}
                             onChange={updatePrivacy('publicProfile')}
                         />
                         <PrivacyOption
                             icon={<Share2 className="w-5 h-5 text-[var(--brand-pink)]" />}
-                            title="Compartir analíticas"
-                            description="Ayúdanos a mejorar compartiendo datos anónimos"
+                            title={t.privacyPage.shareAnalytics}
+                            description={t.privacyPage.shareAnalyticsDesc}
                             enabled={privacy.shareAnalytics}
                             onChange={updatePrivacy('shareAnalytics')}
                         />
@@ -134,20 +136,20 @@ export default function PrivacyPage() {
                     transition={{ delay: 0.15 }}
                 >
                     <h2 className="text-sm font-semibold text-[var(--foreground-secondary)] uppercase tracking-wider mb-4">
-                        Datos y Personalización
+                        {t.privacyPage.dataAndPersonalization}
                     </h2>
                     <Card className="px-5">
                         <PrivacyOption
                             icon={<Shield className="w-5 h-5 text-[var(--brand-pink)]" />}
-                            title="Recomendaciones personalizadas"
-                            description="Usa tu historial para mejorar sugerencias"
+                            title={t.privacyPage.personalizedRecommendations}
+                            description={t.privacyPage.personalizedRecommendationsDesc}
                             enabled={privacy.personalizedRecommendations}
                             onChange={updatePrivacy('personalizedRecommendations')}
                         />
                         <PrivacyOption
                             icon={<Database className="w-5 h-5 text-[var(--brand-pink)]" />}
-                            title="Guardar historial"
-                            description="Mantén un registro de tus outfits generados"
+                            title={t.privacyPage.saveHistory}
+                            description={t.privacyPage.saveHistoryDesc}
                             enabled={privacy.saveHistory}
                             onChange={updatePrivacy('saveHistory')}
                         />
@@ -161,7 +163,7 @@ export default function PrivacyPage() {
                     transition={{ delay: 0.2 }}
                 >
                     <h2 className="text-sm font-semibold text-[var(--foreground-secondary)] uppercase tracking-wider mb-4">
-                        Tus Datos
+                        {t.privacyPage.yourData}
                     </h2>
                     <Card className="p-5">
                         <div className="flex items-center justify-between">
@@ -170,14 +172,14 @@ export default function PrivacyPage() {
                                     <Download className="w-5 h-5 text-[var(--brand-pink)]" />
                                 </div>
                                 <div>
-                                    <div className="font-medium text-[var(--foreground)]">Descargar mis datos</div>
+                                    <div className="font-medium text-[var(--foreground)]">{t.privacyPage.downloadData}</div>
                                     <div className="text-xs text-[var(--foreground-tertiary)]">
-                                        Obtén una copia de toda tu información
+                                        {t.privacyPage.downloadDataDesc}
                                     </div>
                                 </div>
                             </div>
                             <Button onClick={handleDownloadData}>
-                                Descargar
+                                {t.privacyPage.download}
                             </Button>
                         </div>
                     </Card>
@@ -190,7 +192,7 @@ export default function PrivacyPage() {
                     transition={{ delay: 0.25 }}
                 >
                     <h2 className="text-sm font-semibold text-[var(--foreground-secondary)] uppercase tracking-wider mb-4">
-                        Legal
+                        {t.privacyPage.legal}
                     </h2>
                     <Card className="overflow-hidden">
                         <a
@@ -198,14 +200,14 @@ export default function PrivacyPage() {
                             className="flex items-center gap-3 p-4 border-b border-[var(--border-color)] hover:bg-[var(--card-hover)] transition-colors"
                         >
                             <FileText className="w-5 h-5 text-[var(--brand-pink)]" />
-                            <span className="font-medium text-[var(--foreground)]">Política de Privacidad</span>
+                            <span className="font-medium text-[var(--foreground)]">{t.privacyPage.privacyPolicy}</span>
                         </a>
                         <a
                             href="/terms"
                             className="flex items-center gap-3 p-4 hover:bg-[var(--card-hover)] transition-colors"
                         >
                             <FileText className="w-5 h-5 text-[var(--brand-pink)]" />
-                            <span className="font-medium text-[var(--foreground)]">Términos y Condiciones</span>
+                            <span className="font-medium text-[var(--foreground)]">{t.privacyPage.termsConditions}</span>
                         </a>
                     </Card>
                 </motion.div>
@@ -218,7 +220,7 @@ export default function PrivacyPage() {
                 >
                     <Card className="p-4 bg-blue-500/5 border-blue-500/20">
                         <p className="text-sm text-[var(--foreground-secondary)]">
-                            🔒 <strong>Tu privacidad es importante.</strong> Cumplimos con GDPR y otras regulaciones de protección de datos. Tus datos nunca se venden a terceros.
+                            {t.privacyPage.gdprMessage}
                         </p>
                     </Card>
                 </motion.div>

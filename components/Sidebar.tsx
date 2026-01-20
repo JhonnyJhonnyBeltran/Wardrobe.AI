@@ -10,34 +10,36 @@ import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Home, ShoppingBag, Wand2, MessageCircle, User, Crown } from 'lucide-react';
 import { useUser } from '@/store';
+import { useTranslation } from '@/lib/i18n';
 import LogoExtended from './LogoExtended';
 import LogoMark from './LogoMark';
 
 interface NavItem {
   href: string;
-  label: string;
+  labelKey: 'home' | 'closet' | 'create' | 'social' | 'profile';
   icon: React.ReactNode;
   isLogoMark?: boolean;
 }
 
-const navItems: NavItem[] = [
-  { href: '/feed', label: 'Feed', icon: <Home className="w-5 h-5" /> },
-  { href: '/closet', label: 'Armario', icon: <ShoppingBag className="w-5 h-5" /> },
-  { href: '/create', label: 'Crear Outfit', icon: null, isLogoMark: true },
-  { href: '/chat', label: 'Chat', icon: <MessageCircle className="w-5 h-5" /> },
-  { href: '/profile', label: 'Perfil', icon: <User className="w-5 h-5" /> },
-];
-
 export default function Sidebar() {
   const pathname = usePathname();
   const { isPremium, upgradeToPremiun } = useUser();
+  const { t } = useTranslation();
+
+  const navItems: NavItem[] = [
+    { href: '/feed', labelKey: 'home', icon: <Home className="w-5 h-5" /> },
+    { href: '/closet', labelKey: 'closet', icon: <ShoppingBag className="w-5 h-5" /> },
+    { href: '/create', labelKey: 'create', icon: null, isLogoMark: true },
+    { href: '/chat', labelKey: 'social', icon: <MessageCircle className="w-5 h-5" /> },
+    { href: '/profile', labelKey: 'profile', icon: <User className="w-5 h-5" /> },
+  ];
 
   return (
     <aside className="hidden md:flex flex-col w-64 glass border-r border-[var(--border-color)] h-screen sticky top-0 overflow-hidden z-50">
       {/* Logo */}
       <div className="p-4 border-b border-[var(--border-color)]">
         <LogoExtended size="md" className="mb-2" />
-        <p className="text-[10px] text-[var(--foreground-tertiary)]">Tu estilista personal</p>
+        <p className="text-[10px] text-[var(--foreground-tertiary)]">{t.app.tagline}</p>
       </div>
 
       {/* Nav */}
@@ -72,7 +74,7 @@ export default function Sidebar() {
                     item.icon
                   )}
                 </span>
-                <span className={`relative z-10 text-sm font-semibold`}>{item.label}</span>
+                <span className={`relative z-10 text-sm font-semibold`}>{t.nav[item.labelKey]}</span>
               </Link>
             </motion.div>
           );
@@ -85,9 +87,9 @@ export default function Sidebar() {
           <div className="p-3 rounded-2xl gradient-subtle">
             <div className="flex items-center gap-2 mb-1">
               <Crown className="w-4 h-4 text-[var(--brand-pink)]" />
-              <span className="font-bold text-sm text-[var(--foreground)]">Premium</span>
+              <span className="font-bold text-sm text-[var(--foreground)]">{t.premium.title}</span>
             </div>
-            <p className="text-[10px] text-[var(--foreground-tertiary)]">Activo</p>
+            <p className="text-[10px] text-[var(--foreground-tertiary)]">{t.premium.active}</p>
           </div>
         ) : (
           <button
@@ -96,11 +98,11 @@ export default function Sidebar() {
           >
             <div className="flex items-center gap-2 mb-2">
               <Crown className="w-4 h-4 text-[var(--brand-pink)]" />
-              <span className="font-bold text-sm text-[var(--foreground)]">Premium</span>
+              <span className="font-bold text-sm text-[var(--foreground)]">{t.premium.title}</span>
             </div>
-            <p className="text-[10px] text-[var(--foreground-tertiary)] mb-2">Desbloquea todo</p>
+            <p className="text-[10px] text-[var(--foreground-tertiary)] mb-2">{t.premium.unlockAll}</p>
             <div className="w-full bg-gradient-to-r from-[var(--brand-pink)] to-[var(--brand-pink-dark)] text-white rounded-full py-1.5 text-xs font-bold">
-              Upgrade
+              {t.premium.upgrade}
             </div>
           </button>
         )}

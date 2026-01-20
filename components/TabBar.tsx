@@ -10,24 +10,26 @@ import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Home, ShoppingBag, MessageCircle, User } from 'lucide-react';
 import LogoMark from './LogoMark';
+import { useTranslation } from '@/lib/i18n';
 
 interface TabItem {
   href: string;
-  label: string;
+  labelKey: 'home' | 'closet' | 'create' | 'social' | 'profile';
   icon: React.ReactNode;
   isLogoMark?: boolean;
 }
 
-const tabs: TabItem[] = [
-  { href: '/feed', label: 'Feed', icon: <Home className="w-6 h-6" /> },
-  { href: '/closet', label: 'Armario', icon: <ShoppingBag className="w-6 h-6" /> },
-  { href: '/create', label: 'Crear', icon: null, isLogoMark: true },
-  { href: '/chat', label: 'Chat', icon: <MessageCircle className="w-6 h-6" /> },
-  { href: '/profile', label: 'Perfil', icon: <User className="w-6 h-6" /> },
-];
-
 export default function TabBar() {
   const pathname = usePathname();
+  const { t } = useTranslation();
+
+  const tabs: TabItem[] = [
+    { href: '/feed', labelKey: 'home', icon: <Home className="w-6 h-6" /> },
+    { href: '/closet', labelKey: 'closet', icon: <ShoppingBag className="w-6 h-6" /> },
+    { href: '/create', labelKey: 'create', icon: null, isLogoMark: true },
+    { href: '/chat', labelKey: 'social', icon: <MessageCircle className="w-6 h-6" /> },
+    { href: '/profile', labelKey: 'profile', icon: <User className="w-6 h-6" /> },
+  ];
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 md:hidden z-50 pb-safe">
@@ -64,7 +66,7 @@ export default function TabBar() {
                       tab.icon
                     )}
                   </motion.span>
-                  <span className="relative z-10 text-[10px] font-semibold">{tab.label}</span>
+                  <span className="relative z-10 text-[10px] font-semibold">{t.nav[tab.labelKey]}</span>
                 </motion.div>
               </Link>
             );
