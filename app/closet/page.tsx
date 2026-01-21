@@ -125,14 +125,8 @@ export default function ClosetPage() {
   const { items, loading, addItem, updateItem, deleteItem, refresh } = useWardrobe();
 
   // Wardrobe Door Animation State - Solo mostrar la primera vez
-  const [showDoorAnimation, setShowDoorAnimation] = useState(() => {
-    // Verificar si es la primera visita al armario
-    if (typeof window !== 'undefined') {
-      const hasSeenAnimation = localStorage.getItem('hasSeenClosetAnimation');
-      return !hasSeenAnimation; // Mostrar solo si NO se ha visto antes
-    }
-    return true;
-  });
+  // Wardrobe Door Animation State - Mostrar siempre al entrar
+  const [showDoorAnimation, setShowDoorAnimation] = useState(true);
 
   // Style Quiz State - Mostrar si no está completado
   const [showStyleQuiz, setShowStyleQuiz] = useState(false);
@@ -265,10 +259,6 @@ export default function ClosetPage() {
   // Handle door animation completion
   const handleDoorAnimationComplete = () => {
     setShowDoorAnimation(false);
-    // Guardar en localStorage que ya se ha visto la animación
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('hasSeenClosetAnimation', 'true');
-    }
   };
 
   return (
