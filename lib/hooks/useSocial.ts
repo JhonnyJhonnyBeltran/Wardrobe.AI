@@ -61,11 +61,12 @@ export function useSocial() {
         .from('profiles')
         .select('id')
         .eq('username', username)
-        .single();
+        .eq('username', username)
+        .maybeSingle();
 
-      if (error && error.code === 'PGRST116') return true; // Not found = available
-      if (data) return false; // Found = taken
-      return false;
+      if (error) return false; // Error real
+      if (data) return false; // Encontrado = ocupado
+      return true; // No encontrado (data null) = disponible
     } catch (err) {
       console.error('Error checking username:', err);
       return false;

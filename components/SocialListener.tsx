@@ -31,8 +31,8 @@ export default function SocialListener() {
 
     fetchCount();
 
-    // 2. Polling fallback (every 10 seconds) - for when realtime isn't configured
-    const pollInterval = setInterval(fetchCount, 10000);
+    // 2. Polling fallback (every 30 seconds) - for when realtime isn't configured
+    const pollInterval = setInterval(fetchCount, 30000);
 
     // 3. Real-time Subscription (requires Supabase Realtime enabled for follows table)
     const channel = supabase

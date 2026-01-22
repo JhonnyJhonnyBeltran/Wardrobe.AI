@@ -10,6 +10,7 @@ export interface ProcessingOptions {
     canvasWidth?: number; // Ancho del canvas
     canvasHeight?: number; // Alto del canvas
     quality?: 'low' | 'medium' | 'high'; // Calidad del modelo de IA
+    transparentBackground?: boolean; // Fondo transparente
 }
 
 export interface ProcessingResult {
@@ -109,7 +110,8 @@ function detectRotationAngle(imageData: ImageData): number {
 function normalizeImage(
     imageBlob: Blob,
     canvasWidth = 800,
-    canvasHeight = 1000
+    canvasHeight = 1000,
+    options: { transparentBackground?: boolean } = {}
 ): Promise<{ blob: Blob; url: string }> {
     return new Promise((resolve, reject) => {
         const img = new Image();
@@ -179,9 +181,12 @@ function normalizeImage(
                     return;
                 }
 
-                // Fondo blanco
-                ctx.fillStyle = 'white';
-                ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+                // Fondo: Transparente por defecto
+                // Solo si explícitamente se pide NO transparenre (opcional, por ahora siempre transparente)
+                // if (!options.transparentBackground) {
+                //    ctx.fillStyle = 'white';
+                //    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+                // }
 
                 // 5. Calcular escala para ajustar al canvas con padding
                 const padding = 40;
@@ -333,7 +338,8 @@ export async function processClothingImage(
             const result = await normalizeImage(
                 removedBgBlob,
                 canvasWidth,
-                canvasHeight
+                canvasHeight,
+                { transparentBackground: options.transparentBackground }
             );
             finalBlob = result.blob;
             finalUrl = result.url;

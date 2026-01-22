@@ -54,13 +54,13 @@ export function useAuth(): UseAuthReturn {
 
   const updateUserStore = async (authUser: SupabaseUser) => {
     // 1. Try to fetch from 'profiles' (Social/New table)
-    const { data: profileData } = await supabase
+    const { data: profileResult } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', authUser.id)
-      .single();
+      .maybeSingle();
 
-    const profile = profileData as any;
+    let profile = profileResult as any;
 
     // 2. Try to fetch from 'users' (Legacy table) if needed
     let legacyProfile = null;
@@ -69,12 +69,11 @@ export function useAuth(): UseAuthReturn {
         .from('users')
         .select('*')
         .eq('id', authUser.id)
-        .single();
+        .maybeSingle();
       legacyProfile = lp as any;
     }
 
     // 3. Construct user object
-    // Priority: Profile (New) -> Users (Old) -> Auth Metadata -> Email
     // Priority: Profile (New) -> Users (Old) -> Auth Metadata -> Email
     const name = profile?.full_name || legacyProfile?.name || authUser.user_metadata?.name || authUser.email!.split('@')[0];
     const avatar = profile?.avatar_url || legacyProfile?.avatar || authUser.user_metadata?.avatar_url;

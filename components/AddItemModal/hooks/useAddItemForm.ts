@@ -175,6 +175,7 @@ export function useAddItemForm({
                 canvasWidth: 800,
                 canvasHeight: 1000,
                 quality: 'medium',
+                transparentBackground: true,
             });
 
             if (processResult.success && processResult.imageUrl) {
@@ -215,6 +216,7 @@ export function useAddItemForm({
                 canvasWidth: 800,
                 canvasHeight: 1000,
                 quality: 'medium',
+                transparentBackground: true,
             });
 
             if (result.success && result.imageUrl) {
@@ -321,6 +323,7 @@ export function useAddItemForm({
                 canvasWidth: 800,
                 canvasHeight: 1000,
                 quality: 'medium',
+                transparentBackground: true,
             });
 
             if (result.success && result.imageUrl) {

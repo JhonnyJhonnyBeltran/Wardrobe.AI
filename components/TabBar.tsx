@@ -35,7 +35,7 @@ export default function TabBar() {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 md:hidden z-50 bg-[var(--background)] border-t border-[var(--border-color)] pb-safe shadow-[0_-1px_10px_rgba(0,0,0,0.02)]">
+    <nav className="fixed bottom-0 left-0 right-0 md:hidden z-[5000] bg-[var(--background)] border-t border-[var(--border-color)] pb-safe shadow-[0_-1px_10px_rgba(0,0,0,0.02)]">
       <div className="flex justify-between items-center h-16 px-1">
         {tabs.map((tab) => {
           const isActive = pathname === tab.href;
