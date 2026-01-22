@@ -560,24 +560,32 @@ export default function ClosetPage() {
         onComplete={async (responses: StyleQuizResponses) => {
           // Guardar preferencias del usuario en Supabase
           if (user) {
-            // Actualizar en la base de datos
-            const { error } = await supabase
-              .from('users')
-              .update({
-                age_range: responses.ageRange,
-                gender: responses.gender,
-                height: responses.height,
-                height_range: responses.heightRange,
-                preferred_styles: responses.preferredStyles,
-                uses_accessories: responses.usesAccessories,
-                visual_style_preferences: responses.visualStylePreferences,
-                style_completed: true,
-                updated_at: new Date().toISOString(),
-              })
+            const updates = {
+              age_range: responses.ageRange,
+              gender: responses.gender,
+              height: responses.height,
+              height_range: responses.heightRange,
+              preferred_styles: responses.preferredStyles,
+              uses_accessories: responses.usesAccessories,
+              visual_style_preferences: responses.visualStylePreferences,
+              style_completed: true,
+              updated_at: new Date().toISOString(),
+            };
+
+            // 1. Actualizar 'profiles' (Nueva Tabla Social - PRIORIDAD)
+            const { error: errorProfiles } = await supabase
+              .from('profiles')
+              .update(updates)
               .eq('id', user.id);
 
-            if (error) {
-              console.error('Error guardando preferencias:', error);
+            // 2. Actualizar 'users' (Legacy)
+            const { error: errorUsers } = await supabase
+              .from('users')
+              .update(updates)
+              .eq('id', user.id);
+
+            if (errorProfiles || errorUsers) {
+              console.error('Error guardando preferencias:', errorProfiles || errorUsers);
               alert('Hubo un error guardando tus preferencias. Inténtalo de nuevo.');
               return;
             }

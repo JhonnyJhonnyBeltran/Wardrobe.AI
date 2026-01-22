@@ -11,6 +11,8 @@ export interface UserProfile {
   id: string;
   name: string;
   email: string;
+  username?: string; // from profiles table
+  bio?: string;      // from profiles table
   subscriptionTier: SubscriptionTier;
   avatar?: string;
   createdAt: Date;

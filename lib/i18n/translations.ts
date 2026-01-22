@@ -15,7 +15,10 @@ export interface Translations {
     closet: string;
     create: string;
     social: string;
+    messages: string;
+    kloe: string;
     profile: string;
+    search: string;
   };
 
   // Closet Page
@@ -236,7 +239,10 @@ export const translations: Record<Language, Translations> = {
       closet: 'Armario',
       create: 'Crear',
       social: 'Social',
+      messages: 'Mensajes',
+      kloe: 'Kloe',
       profile: 'Perfil',
+      search: 'Buscar',
     },
     closet: {
       title: 'Mi Armario',
@@ -434,7 +440,10 @@ export const translations: Record<Language, Translations> = {
       closet: 'Closet',
       create: 'Create',
       social: 'Social',
+      messages: 'Messages',
+      kloe: 'Kloe',
       profile: 'Profile',
+      search: 'Search',
     },
     closet: {
       title: 'My Closet',

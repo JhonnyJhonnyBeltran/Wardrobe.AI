@@ -14,6 +14,7 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import {
   Settings,
+  Menu,
   Grid3x3,
   Shirt,
   Heart,
@@ -43,11 +44,9 @@ export default function ProfilePage() {
 
       try {
         setIsLoading(true);
-        // Only fetch if we have a valid UUID (skip for default '1' guest user if it causes issues, 
-        // but for now let's try. Supabase will error on invalid UUID syntax)
+        // Only fetch if we have a valid UUID 
         const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(user.id);
         if (!isUuid) {
-          // Fallback for guest/mock user ID
           setProfileStats({ outfits: 0, followers: 0, following: 0 });
           setPosts([]);
           setOutfits([]);
@@ -64,12 +63,14 @@ export default function ProfilePage() {
         const { count: followersCount } = await supabase
           .from('follows')
           .select('*', { count: 'exact', head: true })
-          .eq('following_id', user.id);
+          .eq('following_id', user.id)
+          .eq('status', 'accepted');
 
         const { count: followingCount } = await supabase
           .from('follows')
           .select('*', { count: 'exact', head: true })
-          .eq('follower_id', user.id);
+          .eq('follower_id', user.id)
+          .eq('status', 'accepted');
 
         setProfileStats({
           outfits: outfitCount || 0,
@@ -84,7 +85,6 @@ export default function ProfilePage() {
           .eq('user_id', user.id)
           .order('created_at', { ascending: false });
 
-        // TODO: Fetch like/comment counts for each post if needed
         setPosts(postsData || []);
 
         // 3. Fetch Outfits
@@ -141,8 +141,8 @@ export default function ProfilePage() {
         animate="visible"
       >
         {/* Profile Header - Instagram Style */}
-        <motion.div variants={itemVariants} className="mb-8">
-          <div className="flex items-center gap-6 mb-6">
+        <motion.div variants={itemVariants} className="mb-6">
+          <div className="flex items-start gap-4 mb-4">
             {/* Avatar */}
             <div className="relative flex-shrink-0">
               <motion.div
@@ -150,7 +150,7 @@ export default function ProfilePage() {
                 whileHover={{ scale: 1.02 }}
                 transition={{ duration: 0.3 }}
               >
-                <div className="w-20 h-20 md:w-28 md:h-28 rounded-full bg-gradient-to-br from-[var(--brand-pink)] to-[var(--brand-pink-dark)] p-[3px] shadow-lg">
+                <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-gradient-to-br from-[var(--brand-pink)] to-[var(--brand-pink-dark)] p-[3px] shadow-lg">
                   <div className="w-full h-full rounded-full bg-[var(--card-bg)] flex items-center justify-center overflow-hidden">
                     {user.avatar ? (
                       <img
@@ -168,70 +168,71 @@ export default function ProfilePage() {
               </motion.div>
             </div>
 
-            {/* Stats & Username */}
-            <div className="flex-1 min-w-0">
-              {/* Username & Settings Row */}
-              <div className="flex items-center justify-between mb-2">
-                <h1 className="text-xl md:text-2xl font-bold text-[var(--foreground)] truncate mr-2">
-                  {user.name.toUpperCase()}
+            {/* Right Side: Name, Settings, Stats */}
+            <div className="flex-1 min-w-0 pt-1">
+              {/* Name & Settings Row - Aligned with top of avatar */}
+              <div className="flex items-center justify-between mb-3 pl-1">
+                <h1 className="text-xl md:text-2xl font-bold text-[var(--foreground)] truncate mr-2 py-1">
+                  {user.username ? `@${user.username}` : user.name}
                 </h1>
                 <Link href="/profile/settings">
                   <button className="p-2 -mr-2 rounded-full hover:bg-[var(--background-secondary)] transition-colors text-[var(--foreground-secondary)]">
-                    <Settings className="w-5 h-5" />
+                    <Menu className="w-6 h-6" />
                   </button>
                 </Link>
               </div>
 
-              {/* Stats */}
-              <div className="flex gap-6 mb-4">
+              {/* Stats - Below name */}
+              <div className="flex justify-between items-center pr-4">
                 <div className="text-center">
-                  <div className="text-lg md:text-xl font-bold text-[var(--foreground)]">
+                  <div className="text-lg font-bold text-[var(--foreground)] leading-tight">
                     {profileStats.outfits}
                   </div>
-                  <div className="text-xs md:text-sm text-[var(--foreground-tertiary)]">
+                  <div className="text-xs text-[var(--foreground-tertiary)]">
                     {t.profile.outfits}
                   </div>
                 </div>
                 <button className="text-center hover:opacity-80 transition-opacity">
-                  <div className="text-lg md:text-xl font-bold text-[var(--foreground)]">
+                  <div className="text-lg font-bold text-[var(--foreground)] leading-tight">
                     {profileStats.followers}
                   </div>
-                  <div className="text-xs md:text-sm text-[var(--foreground-tertiary)]">
+                  <div className="text-xs text-[var(--foreground-tertiary)]">
                     {t.profile.followers}
                   </div>
                 </button>
                 <button className="text-center hover:opacity-80 transition-opacity">
-                  <div className="text-lg md:text-xl font-bold text-[var(--foreground)]">
+                  <div className="text-lg font-bold text-[var(--foreground)] leading-tight">
                     {profileStats.following}
                   </div>
-                  <div className="text-xs md:text-sm text-[var(--foreground-tertiary)]">
+                  <div className="text-xs text-[var(--foreground-tertiary)]">
                     {t.profile.following}
                   </div>
                 </button>
               </div>
-
-              {/* Action Button */}
-              <Link href="/profile/edit" className="block">
-                <button className="w-full px-4 py-2 rounded-lg bg-[var(--background-secondary)] hover:bg-[var(--background-tertiary)] text-sm font-semibold text-[var(--foreground)] transition-colors">
-                  {t.profile.editProfile}
-                </button>
-              </Link>
             </div>
           </div>
 
-          {/* Style Tags - If completed */}
-          {user.styleCompleted && user.preferredStyles && user.preferredStyles.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {user.preferredStyles.slice(0, 3).map((style, idx) => (
-                <span
-                  key={idx}
-                  className="px-3 py-1.5 rounded-full bg-[var(--brand-pink)]/8 text-[var(--brand-pink)] text-xs font-medium"
-                >
-                  {style}
-                </span>
-              ))}
-            </div>
-          )}
+          {/* Bio Section */}
+          <div className="px-1 mb-4">
+            <h2 className="font-bold text-[var(--foreground)] text-sm">{user.name}</h2>
+            {user.bio && (
+              <p className="text-sm text-[var(--foreground-secondary)] whitespace-pre-wrap mt-1 leading-snug">
+                {user.bio}
+              </p>
+            )}
+            {!user.bio && (
+              <p className="text-sm text-[var(--foreground-tertiary)] italic mt-1">
+                Sin biografía
+              </p>
+            )}
+          </div>
+
+          {/* Action Button */}
+          <Link href="/profile/edit" className="block">
+            <button className="w-full px-4 py-1.5 rounded-lg bg-[var(--background-secondary)] hover:bg-[var(--background-tertiary)] text-sm font-semibold text-[var(--foreground)] transition-colors border border-[var(--border-color)]">
+              Editar
+            </button>
+          </Link>
         </motion.div>
 
         {/* Tabs */}

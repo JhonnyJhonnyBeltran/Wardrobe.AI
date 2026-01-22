@@ -11,7 +11,7 @@ import type { User as SupabaseUser } from '@supabase/supabase-js';
 interface UseAuthReturn {
   user: SupabaseUser | null;
   loading: boolean;
-  signUp: (email: string, password: string, name?: string) => Promise<{ success: boolean; error?: string }>;
+  signUp: (email: string, password: string, name?: string, username?: string) => Promise<{ success: boolean; error?: string }>;
   signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
@@ -24,7 +24,14 @@ export function useAuth(): UseAuthReturn {
 
   useEffect(() => {
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        console.warn('Session init error:', error.message);
+        if (error.message.includes('Refresh Token')) {
+          supabase.auth.signOut(); // Clear invalid tokens
+        }
+      }
+
       setUser(session?.user ?? null);
       if (session?.user) {
         updateUserStore(session.user);
@@ -46,39 +53,60 @@ export function useAuth(): UseAuthReturn {
   }, []);
 
   const updateUserStore = async (authUser: SupabaseUser) => {
-    // Fetch user profile from database
-    const { data: profile, error } = await supabase
-      .from('users')
+    // 1. Try to fetch from 'profiles' (Social/New table)
+    const { data: profileData } = await supabase
+      .from('profiles')
       .select('*')
       .eq('id', authUser.id)
       .single();
 
-    // Si el usuario no existe en la BD, cerrar sesión
-    if (error || !profile) {
-      await supabase.auth.signOut();
-      setUserStore(null);
-      setUser(null);
-      return;
+    const profile = profileData as any;
+
+    // 2. Try to fetch from 'users' (Legacy table) if needed
+    let legacyProfile = null;
+    if (!profile) {
+      const { data: lp } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', authUser.id)
+        .single();
+      legacyProfile = lp as any;
     }
+
+    // 3. Construct user object
+    // Priority: Profile (New) -> Users (Old) -> Auth Metadata -> Email
+    // Priority: Profile (New) -> Users (Old) -> Auth Metadata -> Email
+    const name = profile?.full_name || legacyProfile?.name || authUser.user_metadata?.name || authUser.email!.split('@')[0];
+    const avatar = profile?.avatar_url || legacyProfile?.avatar || authUser.user_metadata?.avatar_url;
+    const username = profile?.username;
+    const bio = profile?.bio;
+
+    // Style preferences might be in either, mostly likely legacy 'users' for now unless migrated
+    const styleSource = profile || legacyProfile || {};
 
     setUserStore({
       id: authUser.id,
       email: authUser.email!,
-      name: profile?.name || authUser.user_metadata?.name || authUser.email!.split('@')[0],
-      avatar: profile?.avatar || authUser.user_metadata?.avatar_url,
-      // Perfil de estilo
-      ageRange: profile.age_range,
-      gender: profile.gender,
-      height: profile.height,
-      heightRange: profile.height_range,
-      preferredStyles: profile.preferred_styles,
-      usesAccessories: profile.uses_accessories,
-      visualStylePreferences: profile.visual_style_preferences,
-      styleCompleted: profile.style_completed || false,
+      name: name,
+      username: username,
+      bio: bio,
+      avatar: avatar,
+      subscriptionTier: (styleSource.subscription_tier as any) || 'free',
+      createdAt: new Date(authUser.created_at || Date.now()),
+
+      // Style Profile
+      ageRange: styleSource.age_range,
+      gender: styleSource.gender,
+      height: styleSource.height,
+      heightRange: styleSource.height_range,
+      preferredStyles: styleSource.preferred_styles,
+      usesAccessories: styleSource.uses_accessories,
+      visualStylePreferences: styleSource.visual_style_preferences,
+      styleCompleted: styleSource.style_completed || false,
     });
   };
 
-  const signUp = async (email: string, password: string, name?: string) => {
+  const signUp = async (email: string, password: string, name?: string, username?: string) => {
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -86,6 +114,7 @@ export function useAuth(): UseAuthReturn {
         options: {
           data: {
             name: name || email.split('@')[0],
+            username: username,
           },
         },
       });

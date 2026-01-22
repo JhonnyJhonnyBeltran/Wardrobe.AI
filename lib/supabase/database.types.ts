@@ -93,7 +93,106 @@ export interface Database {
           updated_at?: string;
         };
       };
-      users: {
+      profiles: {
+        Row: {
+          id: string;
+          username: string | null;
+          full_name: string | null;
+          avatar_url: string | null;
+          website: string | null;
+          bio: string | null;
+          gender: string | null;
+          age_range: string | null;
+          height: number | null;
+          height_range: string | null;
+          preferred_styles: string[] | null;
+          uses_accessories: boolean | null;
+          visual_style_preferences: string[] | null;
+          style_completed: boolean;
+          updated_at: string | null;
+        };
+        Insert: {
+          id: string;
+          username?: string | null;
+          full_name?: string | null;
+          avatar_url?: string | null;
+          website?: string | null;
+          bio?: string | null;
+          gender?: string | null;
+          age_range?: string | null;
+          height?: number | null;
+          height_range?: string | null;
+          preferred_styles?: string[] | null;
+          uses_accessories?: boolean | null;
+          visual_style_preferences?: string[] | null;
+          style_completed?: boolean;
+          updated_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          username?: string | null;
+          full_name?: string | null;
+          avatar_url?: string | null;
+          website?: string | null;
+          bio?: string | null;
+          gender?: string | null;
+          age_range?: string | null;
+          height?: number | null;
+          height_range?: string | null;
+          preferred_styles?: string[] | null;
+          uses_accessories?: boolean | null;
+          visual_style_preferences?: string[] | null;
+          style_completed?: boolean;
+          updated_at?: string | null;
+        };
+      };
+      follows: {
+        Row: {
+          follower_id: string;
+          following_id: string;
+          status: 'pending' | 'accepted'; // Added status
+          created_at: string;
+        };
+        Insert: {
+          follower_id: string;
+          following_id: string;
+          status?: 'pending' | 'accepted';
+          created_at?: string;
+        };
+        Update: {
+          follower_id?: string;
+          following_id?: string;
+          status?: 'pending' | 'accepted';
+          created_at?: string;
+        };
+      };
+      messages: {
+        Row: {
+          id: string;
+          sender_id: string;
+          receiver_id: string;
+          content: string;
+          is_read: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          sender_id: string;
+          receiver_id: string;
+          content: string;
+          is_read?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          sender_id?: string;
+          receiver_id?: string;
+          content?: string;
+          is_read?: boolean;
+          created_at?: string;
+        };
+      };
+      users: { // Legacy/Alias - keeping for compatibility but prioritizing profiles
         Row: {
           id: string;
           email: string;
