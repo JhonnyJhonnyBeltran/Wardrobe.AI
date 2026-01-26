@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff, Sparkles, MailCheck, AtSign, Check, AlertCircle } from 'lucide-react';
 import { Button, Card, StyleQuizModal } from '@/components';
@@ -220,10 +221,22 @@ export default function AuthPage() {
                             animate={{ opacity: 1, y: 0 }}
                             className="text-center mb-8"
                         >
-                            <div className="w-20 h-20 mx-auto mb-4 rounded-3xl bg-gradient-to-br from-[var(--brand-pink)] to-[var(--brand-pink-dark)] flex items-center justify-center shadow-[var(--shadow-float-strong)]">
-                                <Sparkles className="w-10 h-10 text-white" />
+                            <div className="w-20 h-20 mx-auto mb-4 rounded-3xl flex items-center justify-center shadow-[var(--shadow-float-strong)] overflow-hidden">
+                                <Image 
+                                    src="/klozet-logo.png" 
+                                    alt="Klozet Logo" 
+                                    width={48}
+                                    height={48}
+                                    className="object-contain"
+                                />
                             </div>
-                            <h1 className="text-3xl font-bold gradient-text mb-2">Klozet</h1>
+                            <Image 
+                                src="/klozet-logo-extended.png" 
+                                alt="Klozet" 
+                                width={150}
+                                height={40}
+                                className="mx-auto mb-2 object-contain dark:hidden"
+                            />
                             <p className="text-sm text-[var(--foreground-tertiary)]">Tu estilista personal</p>
                         </motion.div>
 

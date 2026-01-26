@@ -5,19 +5,23 @@
  * Generates outfit collages based on saved posts and user preferences
  */
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, RefreshCw, Settings, Save, Share2, Image as ImageIcon } from 'lucide-react';
 import { Button, Card, LogoMark, OutfitLoadingCarousel, PremiumModal, WardrobeSelectionModal } from '@/components';
 import { useWardrobe } from '@/lib/hooks/useWardrobe';
 import { useUser } from '@/store/userStore';
 import { ClothingItem, ClothingCategory } from '@/types/clothing';
-import { X, Move, Trash2, Loader2, ArrowLeft, Layers } from 'lucide-react'; // Add icons for canvas interactions
+import { X, Move, Trash2, Loader2, ArrowLeft, Layers } from 'lucide-react';
 import { processClothingImage } from '@/lib/imageProcessing';
+
+// ============================================
+// Types
+// ============================================
 
 interface OutfitPiece {
     id: string;
-    type: 'top' | 'bottom' | 'shoes' | 'accessories' | 'outerwear';
+    type: 'top' | 'bottom' | 'shoes' | 'accessory' | 'outerwear';
     imageUrl: string;
     name: string;
 }
@@ -61,23 +65,87 @@ export default function CreateOutfitPage() {
 
     // Referencia al contenedor del outfit generado para scroll
     const outfitPreviewRef = useRef<HTMLDivElement>(null);
+    
+    // Referencia al canvas para obtener dimensiones dinámicas
+    const canvasRef = useRef<HTMLDivElement>(null);
+    const [canvasSize, setCanvasSize] = useState({ width: 400, height: 500 });
 
     // Obtener items del armario para el carrusel
     const { items: wardrobeItems } = useWardrobe();
+    
+    // Observar cambios en el tamaño del canvas
+    useEffect(() => {
+        const updateCanvasSize = () => {
+            if (canvasRef.current) {
+                const rect = canvasRef.current.getBoundingClientRect();
+                setCanvasSize({ width: rect.width, height: rect.height });
+            }
+        };
+        
+        updateCanvasSize();
+        
+        const resizeObserver = new ResizeObserver(updateCanvasSize);
+        if (canvasRef.current) {
+            resizeObserver.observe(canvasRef.current);
+        }
+        
+        return () => resizeObserver.disconnect();
+    }, [isManualPreviewOpen]);
 
-    // Preparar items para el carrusel
-    const carouselItems = wardrobeItems.map(item => ({
-        id: item.id,
-        imageUrl: item.imageUrl || '',
-        name: item.name,
-    }));
+    // Referencia para almacenar el tamaño previo del canvas
+    const prevCanvasSizeRef = useRef(canvasSize);
+    
+    // Reposicionar items cuando cambia el tamaño del canvas
+    useEffect(() => {
+        const prevSize = prevCanvasSizeRef.current;
+        
+        // Solo reposicionar si hay un cambio significativo en el tamaño
+        if (
+            isManualPreviewOpen &&
+            (Math.abs(prevSize.width - canvasSize.width) > 10 || 
+             Math.abs(prevSize.height - canvasSize.height) > 10)
+        ) {
+            // Calcular factores de escala
+            const scaleX = canvasSize.width / prevSize.width;
+            const scaleY = canvasSize.height / prevSize.height;
+            
+            // Aplicar escala proporcional a las posiciones de los items
+            setCanvasItems(items => {
+                if (items.length === 0) return items;
+                return items.map(item => ({
+                    ...item,
+                    x: Math.max(16, Math.min(item.x * scaleX, canvasSize.width - 144)),
+                    y: Math.max(16, Math.min(item.y * scaleY, canvasSize.height - 144)),
+                }));
+            });
+        }
+        
+        prevCanvasSizeRef.current = canvasSize;
+    }, [canvasSize, isManualPreviewOpen]);
 
-    // Sample data
+    // Memoize carousel items to prevent unnecessary re-renders
+    const carouselItems = useMemo(() => 
+        wardrobeItems.map(item => ({
+            id: item.id,
+            imageUrl: item.imageUrl || '',
+            name: item.name,
+        })),
+        [wardrobeItems]
+    );
+
+    // ============================================
+    // Constants
+    // ============================================
+    
     const occasions = ['Casual', 'Trabajo', 'Fiesta', 'Deportivo', 'Formal'];
     const weathers = ['Calor ☀️', 'Frío ❄️', 'Lluvia 🌧️', 'Templado 🌤️'];
     const moods = ['Cómodo', 'Elegante', 'Atrevido', 'Minimalista', 'Colorido'];
 
-    const handleGenerateOutfit = async () => {
+    // ============================================
+    // Handlers
+    // ============================================
+
+    const handleGenerateOutfit = useCallback(async () => {
         // Cambiar seed para mezclar items cada vez que se genera
         setCarouselSeed(prev => prev + 1);
         setIsGenerating(true);
@@ -89,26 +157,26 @@ export default function CreateOutfitPage() {
                 { id: '1', type: 'top', imageUrl: '', name: 'Blusa Blanca' },
                 { id: '2', type: 'bottom', imageUrl: '', name: 'Jeans Azules' },
                 { id: '3', type: 'shoes', imageUrl: '', name: 'Zapatillas Blancas' },
-                { id: '4', type: 'accessories', imageUrl: '', name: 'Bolso Beige' },
+                { id: '4', type: 'accessory', imageUrl: '', name: 'Bolso Beige' },
             ];
             setGeneratedOutfit(mockOutfit);
             setIsGenerating(false);
             setShowQuiz(false);
         }, 2000);
-    };
+    }, []);
 
-    const handleChangeItem = (type: string) => {
+    const handleChangeItem = useCallback((type: string) => {
         // Logic to change a specific item in the outfit
         console.log('Changing item:', type);
-    };
+    }, []);
 
-    const handleSaveOutfit = () => {
+    const handleSaveOutfit = useCallback(() => {
         console.log('Saving outfit...', { isPublic, items: isKloeEnabled ? generatedOutfit : canvasItems });
         // TODO: Implement actual save logic
-    };
+    }, [isPublic, isKloeEnabled, generatedOutfit, canvasItems]);
 
     // Función que se ejecuta cuando termina la animación del carrusel
-    const handleCarouselExitComplete = () => {
+    const handleCarouselExitComplete = useCallback(() => {
         // Scroll suave hacia el outfit generado
         if (outfitPreviewRef.current) {
             outfitPreviewRef.current.scrollIntoView({
@@ -116,69 +184,166 @@ export default function CreateOutfitPage() {
                 block: 'start',
             });
         }
-    };
+    }, []);
 
     // Canvas Functions
-    const handleOpenCategory = (category: ClothingCategory) => {
+    const handleOpenCategory = useCallback((category: ClothingCategory) => {
         setSelectedCategory(category);
         setIsSelectionModalOpen(true);
-    };
+    }, []);
 
-    // Canvas Placement Logic
-    const getInitialPosition = (type: ClothingCategory | string, existingItems: CanvasItem[]) => {
-        // Updated for mobile compatibility (350px width safe zone)
-        // Mobile container usually around 350-390px wide
-        // We will target a 320px safe area centered
-
-        // Dynamic centering if possible, but hardcoded safe values for initial
-        const CENTER_X = 100; // Left offset - works for mobile (~half of 300px item width? No, item is 128px-192px)
-        // If item is 128px (w-32), centered in 350px container is (350-128)/2 = 111px
-
-        const RIGHT_COL_X = 220; // For accessories. 220px + 128px item > 350px? 
-        // Accessories are usually smaller. Let's assume standard accessory size.
-
-        switch (type) {
-            case ClothingCategory.TOP:
-                return { x: CENTER_X, y: 50, zIndex: 10 };
-            case ClothingCategory.OUTERWEAR:
-                // Un poco arriba y a la derecha, detrás del top
-                return { x: CENTER_X + 20, y: 30, zIndex: 5 };
-            case ClothingCategory.BOTTOM:
-                return { x: CENTER_X, y: 200, zIndex: 9 };
-            case ClothingCategory.SHOES:
-                return { x: CENTER_X, y: 380, zIndex: 11 }; // Zapatos debajo
-            case ClothingCategory.ACCESSORY:
-            default:
-                // Stack en la derecha, pero más compacto para móvil
-                const accessoryCount = existingItems.filter(i =>
-                    i.category === ClothingCategory.ACCESSORY ||
-                    (i.category !== 'top' && i.category !== 'bottom' && i.category !== 'shoes' && i.category !== 'outerwear')
-                ).length;
-                return { x: RIGHT_COL_X, y: 50 + (accessoryCount * 80), zIndex: 12 };
-        }
-    };
-
-    const handleAddItemToCanvas = async (item: ClothingItem) => {
-        // Just add to state, placement happens later or we use default placement but hide canvas
-        // We calculate position now but it won't be visible until 'Generate' is clicked
-        const uniqueId = crypto.randomUUID();
-        const position = getInitialPosition(item.category, canvasItems);
-
-        const newItem: CanvasItem = {
-            ...item,
-            uniqueId,
-            x: position.x,
-            y: position.y,
-            rotation: 0,
-            scale: 1,
-            zIndex: position.zIndex,
-            isProcessing: false,
+    // Canvas Placement Logic - Dinámico basado en tamaño del canvas
+    const getInitialPosition = useCallback((type: ClothingCategory | string, existingItems: CanvasItem[]) => {
+        const ITEM_SIZE = 128; // Tamaño del item (w-32 = 128px)
+        const PADDING = 16; // Margen del borde
+        
+        const { width: canvasWidth, height: canvasHeight } = canvasSize;
+        
+        // Calcular el espacio disponible
+        const availableWidth = canvasWidth - ITEM_SIZE - PADDING * 2;
+        const availableHeight = canvasHeight - ITEM_SIZE - PADDING * 2;
+        
+        // Contar items por categoría para ajustar disposición
+        const countByCategory = {
+            tops: existingItems.filter(i => i.category === ClothingCategory.TOP).length,
+            bottoms: existingItems.filter(i => i.category === ClothingCategory.BOTTOM).length,
+            shoes: existingItems.filter(i => i.category === ClothingCategory.SHOES).length,
+            outerwear: existingItems.filter(i => i.category === ClothingCategory.OUTERWEAR).length,
+            accessories: existingItems.filter(i => i.category === ClothingCategory.ACCESSORY).length,
+        };
+        
+        const totalItems = existingItems.length;
+        
+        // Determinar si necesitamos modo compacto (muchas prendas)
+        const isCompactMode = totalItems >= 6;
+        
+        // Calcular posiciones base proporcionales
+        // Ajustar el espaciado vertical según la cantidad de items
+        const verticalSpacing = isCompactMode 
+            ? Math.min(availableHeight / 4, 100) // Modo compacto: menos espacio
+            : availableHeight / 3.5;
+        
+        // Zonas verticales (asegurando que queden dentro)
+        const topZoneY = PADDING;
+        const bottomZoneY = Math.min(PADDING + verticalSpacing, availableHeight * 0.45);
+        const shoesZoneY = Math.min(PADDING + verticalSpacing * 2, availableHeight * 0.75);
+        
+        // Calcular posición X base - columna principal más centrada
+        const mainColumnX = Math.max(PADDING, Math.min(availableWidth * 0.15, availableWidth - ITEM_SIZE));
+        
+        // Función helper para calcular offset horizontal cuando hay múltiples del mismo tipo
+        const getHorizontalOffset = (count: number, index: number) => {
+            const offsetStep = Math.min(50, availableWidth / (count + 2));
+            return index * offsetStep;
         };
 
-        setCanvasItems(prev => [...prev, newItem]);
-    };
+        // Asegurar que la posición X quede dentro del canvas
+        const clampX = (x: number) => Math.max(PADDING, Math.min(x, canvasWidth - ITEM_SIZE - PADDING));
+        
+        // Asegurar que la posición Y quede dentro del canvas
+        const clampY = (y: number) => Math.max(PADDING, Math.min(y, canvasHeight - ITEM_SIZE - PADDING));
 
-    const handleManualGenerate = () => {
+        switch (type) {
+            case ClothingCategory.TOP: {
+                const offsetX = getHorizontalOffset(countByCategory.tops + 1, countByCategory.tops);
+                return { 
+                    x: clampX(mainColumnX + offsetX), 
+                    y: clampY(topZoneY), 
+                    zIndex: 10 + countByCategory.tops 
+                };
+            }
+            case ClothingCategory.OUTERWEAR: {
+                // Outerwear detrás del top, ligeramente desplazado
+                const offsetX = getHorizontalOffset(countByCategory.outerwear + 1, countByCategory.outerwear);
+                const outerwearX = mainColumnX + 20 + offsetX;
+                return { 
+                    x: clampX(outerwearX), 
+                    y: clampY(topZoneY - 10), 
+                    zIndex: 5 + countByCategory.outerwear 
+                };
+            }
+            case ClothingCategory.BOTTOM: {
+                const offsetX = getHorizontalOffset(countByCategory.bottoms + 1, countByCategory.bottoms);
+                return { 
+                    x: clampX(mainColumnX + offsetX), 
+                    y: clampY(bottomZoneY), 
+                    zIndex: 9 + countByCategory.bottoms 
+                };
+            }
+            case ClothingCategory.SHOES: {
+                const offsetX = getHorizontalOffset(countByCategory.shoes + 1, countByCategory.shoes);
+                return { 
+                    x: clampX(mainColumnX + offsetX), 
+                    y: clampY(shoesZoneY), 
+                    zIndex: 11 + countByCategory.shoes 
+                };
+            }
+            case ClothingCategory.ACCESSORY:
+            default: {
+                // Accesorios en columna derecha, apilados con espaciado adaptativo
+                const accessoryBaseX = Math.max(canvasWidth * 0.55, mainColumnX + ITEM_SIZE + 30);
+                
+                // Calcular cuántos accesorios caben verticalmente
+                const maxAccessoriesVertical = Math.floor(availableHeight / 70);
+                const accessoryIndex = countByCategory.accessories;
+                
+                // Si hay más accesorios de los que caben, crear columnas
+                const column = Math.floor(accessoryIndex / maxAccessoriesVertical);
+                const row = accessoryIndex % maxAccessoriesVertical;
+                
+                // Espaciado vertical adaptativo
+                const accessorySpacingY = Math.min(70, availableHeight / (maxAccessoriesVertical + 1));
+                const accessorySpacingX = Math.min(70, (availableWidth - accessoryBaseX) / 2);
+                
+                const accessoryX = accessoryBaseX + (column * accessorySpacingX);
+                const accessoryY = PADDING + (row * accessorySpacingY);
+                
+                return { 
+                    x: clampX(accessoryX), 
+                    y: clampY(accessoryY), 
+                    zIndex: 12 + accessoryIndex 
+                };
+            }
+        }
+    }, [canvasSize]);
+
+    const handleAddItemToCanvas = useCallback((item: ClothingItem) => {
+        // Check if item is already in canvas - avoid duplicates
+        setCanvasItems(prev => {
+            const alreadyExists = prev.some(ci => ci.id === item.id);
+            if (alreadyExists) {
+                return prev; // Item already selected, do nothing
+            }
+
+            const uniqueId = crypto.randomUUID();
+            const position = getInitialPosition(item.category, prev);
+
+            const newItem: CanvasItem = {
+                ...item,
+                uniqueId,
+                x: position.x,
+                y: position.y,
+                rotation: 0,
+                scale: 1,
+                zIndex: position.zIndex,
+                isProcessing: false,
+            };
+
+            return [...prev, newItem];
+        });
+    }, [getInitialPosition]);
+
+    const handleDeselectItem = useCallback((itemId: string) => {
+        setCanvasItems(prev => prev.filter(item => item.id !== itemId));
+    }, []);
+
+    // Memoize IDs of currently selected items for the modal
+    const selectedItemIds = useMemo(
+        () => canvasItems.map(item => item.id),
+        [canvasItems]
+    );
+
+    const handleManualGenerate = useCallback(() => {
         setCarouselSeed(prev => prev + 1);
         setIsGenerating(true);
 
@@ -187,29 +352,31 @@ export default function CreateOutfitPage() {
             setIsGenerating(false);
             setIsManualPreviewOpen(true);
 
-            // Re-calculate positions to ensure they are correct for the current set?
-            // Actually, we already calculated them on add. 
-            // scroll to preview
+            // Scroll to preview
             if (outfitPreviewRef.current) {
                 outfitPreviewRef.current.scrollIntoView({ behavior: 'smooth' });
             }
         }, 1500);
-    };
+    }, []);
 
-    const handleUpdateCanvasItem = (uniqueId: string, updates: Partial<CanvasItem>) => {
+    const handleUpdateCanvasItem = useCallback((uniqueId: string, updates: Partial<CanvasItem>) => {
         setCanvasItems(items => items.map(item =>
             item.uniqueId === uniqueId ? { ...item, ...updates } : item
         ));
-    };
+    }, []);
 
-    const handleRemoveFromCanvas = (uniqueId: string) => {
+    const handleRemoveFromCanvas = useCallback((uniqueId: string) => {
         setCanvasItems(items => items.filter(item => item.uniqueId !== uniqueId));
-    };
+    }, []);
 
-    const bringToFront = (uniqueId: string) => {
-        const maxZ = Math.max(...canvasItems.map(i => i.zIndex), 0);
-        handleUpdateCanvasItem(uniqueId, { zIndex: maxZ + 1 });
-    };
+    const bringToFront = useCallback((uniqueId: string) => {
+        setCanvasItems(items => {
+            const maxZ = Math.max(...items.map(i => i.zIndex), 0);
+            return items.map(item =>
+                item.uniqueId === uniqueId ? { ...item, zIndex: maxZ + 1 } : item
+            );
+        });
+    }, []);
 
     return (
         <>
@@ -552,7 +719,9 @@ export default function CreateOutfitPage() {
                                             )}
                                         </div>
 
-                                        <div className="flex-1 relative bg-white dark:bg-gray-900/50 rounded-2xl border-2 border-dashed border-[var(--border-color)] overflow-hidden min-h-[500px]"
+                                        <div 
+                                            ref={canvasRef}
+                                            className="flex-1 relative bg-white dark:bg-gray-900/50 rounded-2xl border-2 border-dashed border-[var(--border-color)] overflow-hidden min-h-[500px]"
                                             id="outfit-canvas"
                                         >
                                             {!isManualPreviewOpen ? (
@@ -633,7 +802,9 @@ export default function CreateOutfitPage() {
                 isOpen={isSelectionModalOpen}
                 onClose={() => setIsSelectionModalOpen(false)}
                 onSelect={handleAddItemToCanvas}
+                onDeselect={handleDeselectItem}
                 category={selectedCategory}
+                selectedItemIds={selectedItemIds}
             />
         </>
     );

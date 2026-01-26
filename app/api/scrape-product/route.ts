@@ -633,7 +633,7 @@ export async function POST(request: Request) {
         } else if (lowerTitle.includes('zapato') || lowerTitle.includes('shoe') || lowerTitle.includes('botas') || lowerTitle.includes('boots') || lowerTitle.includes('sneaker') || lowerTitle.includes('sandal')) {
             type = 'shoes';
         } else if (lowerTitle.includes('bolso') || lowerTitle.includes('bag') || lowerTitle.includes('cartera') || lowerTitle.includes('cinturón') || lowerTitle.includes('belt') || lowerTitle.includes('gafas') || lowerTitle.includes('glasses')) {
-            type = 'accessories';
+            type = 'accessory';
         }
 
         return NextResponse.json({

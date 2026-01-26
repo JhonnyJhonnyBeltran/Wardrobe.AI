@@ -26,7 +26,6 @@ import {
     CustomSelect,
     ImageUploader,
     ImageSelector,
-    ColorPicker,
 } from './components';
 import {
     BRAND_OPTIONS,
@@ -56,7 +55,6 @@ export default function AddItemModal({
         image,
         availableImages,
         selectedImageIndex,
-        processedImage,
         isProcessing,
         processingMessage,
         url,
@@ -111,10 +109,10 @@ export default function AddItemModal({
                     exit={{ y: '100%' }}
                     transition={{ type: 'spring', damping: 25 }}
                     onClick={(e) => e.stopPropagation()}
-                    className="w-full md:max-w-lg bg-[var(--background)] rounded-t-3xl md:rounded-3xl max-h-[90vh] overflow-y-auto hide-scrollbar"
+                    className="w-full md:max-w-lg bg-[var(--background)] rounded-t-3xl md:rounded-3xl max-h-[85vh] md:max-h-[90vh] mb-16 md:mb-0 flex flex-col"
                 >
                     {/* Floating Close Button */}
-                    <div className="sticky top-4 z-50 flex justify-end px-4">
+                    <div className="sticky top-0 z-50 flex justify-end px-4 pt-4">
                         <motion.button
                             onClick={onClose}
                             initial={{ opacity: 0, scale: 0 }}
@@ -135,7 +133,8 @@ export default function AddItemModal({
                         </motion.button>
                     </div>
 
-                    <div className="p-4 space-y-4">
+                    {/* Scrollable Content */}
+                    <div className="flex-1 overflow-y-auto hide-scrollbar p-4 pb-4 space-y-4">
                         {/* Mode Toggle */}
                         <div className="flex gap-2">
                             <button
@@ -366,8 +365,10 @@ export default function AddItemModal({
                                 />
                             </motion.div>
                         )}
+                    </div>
 
-                        {/* Submit Button */}
+                    {/* Submit Button - Fixed at bottom for mobile */}
+                    <div className="flex-shrink-0 p-4 pt-2 pb-3 bg-[var(--background)] border-t border-[var(--border-color)]">
                         <Button
                             onClick={handleSubmit}
                             disabled={!image || isProcessing}
@@ -377,7 +378,7 @@ export default function AddItemModal({
                             {isProcessing ? (
                                 <>
                                     <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                                    Procesando imagen...
+                                    Eliminando fondo...
                                 </>
                             ) : (
                                 <>

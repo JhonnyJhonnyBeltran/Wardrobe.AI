@@ -108,7 +108,7 @@ export const TYPE_OPTIONS = [
     { value: 'dress', label: 'Vestido' },
     { value: 'outerwear', label: 'Abrigo / Chaqueta' },
     { value: 'shoes', label: 'Calzado' },
-    { value: 'accessories', label: 'Accesorio' },
+    { value: 'accessory', label: 'Accesorio' },
 ];
 
 // Season options

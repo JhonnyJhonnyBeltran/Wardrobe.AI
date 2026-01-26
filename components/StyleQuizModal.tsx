@@ -112,11 +112,11 @@ export default function StyleQuizModal({ isOpen, onClose, onComplete, required =
                     initial={{ opacity: 0, scale: 0.9, y: 20 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                    className="w-full max-w-2xl max-h-[90vh] overflow-hidden"
+                    className="w-full max-w-2xl"
                 >
-                    <Card className="p-6 md:p-8">
+                    <Card className="p-6 md:p-8 flex flex-col max-h-[90vh]">
                         {/* Header */}
-                        <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center justify-between mb-6 flex-shrink-0">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--brand-pink)] to-[var(--brand-pink-dark)] flex items-center justify-center">
                                     <Sparkles className="w-5 h-5 text-white" />
@@ -141,7 +141,7 @@ export default function StyleQuizModal({ isOpen, onClose, onComplete, required =
                         </div>
 
                         {/* Progress Bar */}
-                        <div className="mb-8 h-1.5 bg-[var(--background-secondary)] rounded-full overflow-hidden">
+                        <div className="mb-8 h-1.5 bg-[var(--background-secondary)] rounded-full overflow-hidden flex-shrink-0">
                             <motion.div
                                 className="h-full bg-gradient-to-r from-[var(--brand-pink)] to-[var(--brand-pink-dark)]"
                                 initial={{ width: '0%' }}
@@ -151,7 +151,7 @@ export default function StyleQuizModal({ isOpen, onClose, onComplete, required =
                         </div>
 
                         {/* Content */}
-                        <div className="min-h-[400px] mb-8">
+                        <div className="min-h-[300px] mb-8 flex-1 overflow-y-auto pr-2">
                             <AnimatePresence mode="wait">
                                 {/* Step 0: Age Range */}
                                 {step === 0 && (
@@ -400,7 +400,7 @@ export default function StyleQuizModal({ isOpen, onClose, onComplete, required =
                         </div>
 
                         {/* Navigation */}
-                        <div className="flex gap-3">
+                        <div className="flex gap-3 flex-shrink-0 pt-4 border-t border-[var(--border-color)]">
                             {step > 0 && (
                                 <Button variant="secondary" onClick={handleBack} className="flex-1">
                                     <ChevronLeft className="w-5 h-5 mr-2" />

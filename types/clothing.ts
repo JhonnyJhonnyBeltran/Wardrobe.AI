@@ -4,7 +4,10 @@
 
 export enum ClothingCategory {
   TOP = 'top',
+  SHIRT = 'shirt',
+  SWEATER = 'sweater',
   BOTTOM = 'bottom',
+  SKIRT = 'skirt',
   DRESS = 'dress',
   OUTERWEAR = 'outerwear',
   SHOES = 'shoes',

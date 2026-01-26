@@ -220,7 +220,7 @@ export default function ClosetPage() {
       source: 'wardrobe',
       trending: false,
       matchScore: 100,
-      sourceUrl: (item as any).sourceUrl || undefined, // Include source URL for scraped products
+      // sourceUrl: (item as any).sourceUrl || undefined, // Include source URL for scraped products
     };
 
     setSelectedProduct(productItem);
@@ -572,20 +572,14 @@ export default function ClosetPage() {
               updated_at: new Date().toISOString(),
             };
 
-            // 1. Actualizar 'profiles' (Nueva Tabla Social - PRIORIDAD)
+            // Actualizar 'profiles' (Tabla principal)
             const { error: errorProfiles } = await supabase
               .from('profiles')
               .update(updates)
               .eq('id', user.id);
 
-            // 2. Actualizar 'users' (Legacy)
-            const { error: errorUsers } = await supabase
-              .from('users')
-              .update(updates)
-              .eq('id', user.id);
-
-            if (errorProfiles || errorUsers) {
-              console.error('Error guardando preferencias:', errorProfiles || errorUsers);
+            if (errorProfiles) {
+              console.error('Error guardando preferencias:', errorProfiles);
               alert('Hubo un error guardando tus preferencias. Inténtalo de nuevo.');
               return;
             }
