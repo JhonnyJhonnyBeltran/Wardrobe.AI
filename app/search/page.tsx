@@ -8,6 +8,7 @@ import { Card, Button } from '@/components';
 import { useUiStore } from '@/store/uiStore';
 import { useUser } from '@/store/userStore';
 import { supabase } from '@/lib/supabase/client';
+import Link from 'next/link';
 
 type Tab = 'search' | 'requests';
 type RequestTab = 'incoming' | 'outgoing';
@@ -106,7 +107,7 @@ export default function SearchPage() {
 
       if (data) {
         const map: Record<string, string> = {};
-        data.forEach(f => { map[f.following_id] = f.status; });
+        (data as any[]).forEach((f: any) => { map[f.following_id] = f.status; });
         setMyFollows(map);
       }
     };
@@ -261,8 +262,8 @@ export default function SearchPage() {
 
                     return (
                       <Card key={profile.id} className="p-4 flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[var(--brand-pink)] to-orange-500 p-[2px]">
+                        <Link href={`/profile/${profile.id}`} className="flex items-center gap-3 flex-1 min-w-0">
+                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[var(--brand-pink)] to-orange-500 p-[2px] flex-shrink-0">
                             <div className="w-full h-full rounded-full bg-[var(--card-bg)] overflow-hidden">
                               {profile.avatar_url ? (
                                 <img src={profile.avatar_url} alt={profile.full_name || ''} className="w-full h-full object-cover" />
@@ -273,29 +274,29 @@ export default function SearchPage() {
                               )}
                             </div>
                           </div>
-                          <div>
-                            <h3 className="font-semibold text-[var(--foreground)]">
+                          <div className="min-w-0">
+                            <h3 className="font-semibold text-[var(--foreground)] truncate">
                               {profile.full_name}
                             </h3>
-                            <p className="text-sm text-[var(--foreground-tertiary)]">
+                            <p className="text-sm text-[var(--foreground-tertiary)] truncate">
                               @{profile.username}
                             </p>
                           </div>
-                        </div>
+                        </Link>
 
                         {isPending ? (
                           <Button
                             size="sm"
                             variant="secondary"
-                            className="px-3 md:px-4 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 group"
+                            className="px-3 md:px-4 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 group flex-shrink-0"
                             onClick={() => handleCancelRequest(profile.id)}
                           >
                             <Clock className="w-4 h-4 mr-1 md:mr-2" />
                             <span className="hidden md:inline mr-2">Pendiente</span>
                             <X className="w-3 h-3 opacity-50 group-hover:opacity-100 transition-opacity" />
                           </Button>
-                        ) : status === 'accepted' ? ( // Check explicitly for accepted in local state
-                          <Button size="sm" variant="secondary" className="px-3 md:px-4">
+                        ) : status === 'accepted' ? (
+                          <Button size="sm" variant="secondary" className="px-3 md:px-4 flex-shrink-0">
                             <UserCheck className="w-4 h-4 mr-1 md:mr-2" />
                             <span className="hidden md:inline">Siguiendo</span>
                           </Button>
@@ -303,7 +304,7 @@ export default function SearchPage() {
                           <Button
                             size="sm"
                             onClick={() => handleFollow(profile.id)}
-                            className="px-3 md:px-4 bg-[var(--brand-pink)] hover:bg-[var(--brand-pink-dark)] text-white border-none"
+                            className="px-3 md:px-4 bg-[var(--brand-pink)] hover:bg-[var(--brand-pink-dark)] text-white border-none flex-shrink-0"
                           >
                             <UserPlus className="w-4 h-4 mr-1 md:mr-2" />
                             <span className="hidden md:inline">Seguir</span>

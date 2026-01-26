@@ -11,6 +11,7 @@ import { motion } from 'framer-motion';
 import { Home, Search, Send, User, Crown, Bot, DoorClosed } from 'lucide-react';
 import { useUser } from '@/store';
 import { useTranslation } from '@/lib/i18n';
+import { useUiStore } from '@/store/uiStore';
 import LogoExtended from './LogoExtended';
 import LogoMark from './LogoMark';
 
@@ -25,6 +26,7 @@ export default function Sidebar() {
   const pathname = usePathname();
   const { isPremium, upgradeToPremiun } = useUser();
   const { t } = useTranslation();
+  const { requestsCount, messageRequestsCount } = useUiStore();
 
   const navItems: NavItem[] = [
     { href: '/feed', labelKey: 'home', icon: <Home className="w-5 h-5" /> },
@@ -34,6 +36,13 @@ export default function Sidebar() {
     { href: '/chat', labelKey: 'kloe', icon: <Bot className="w-5 h-5" /> },
     { href: '/profile', labelKey: 'profile', icon: <User className="w-5 h-5" /> },
   ];
+
+  // Helper to get badge count for each nav item
+  const getBadgeCount = (labelKey: string): number => {
+    if (labelKey === 'search') return requestsCount;
+    if (labelKey === 'messages') return messageRequestsCount;
+    return 0;
+  };
 
   return (
     <aside className="hidden md:flex flex-col w-64 glass border-r border-[var(--border-color)] h-screen sticky top-0 overflow-hidden z-50">
@@ -46,7 +55,9 @@ export default function Sidebar() {
       {/* Nav */}
       <nav className="flex-1 px-3 py-4 space-y-1">
         {navItems.map((item, index) => {
-          const isActive = pathname === item.href;
+          const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+          const badgeCount = getBadgeCount(item.labelKey);
+
           return (
             <motion.div
               key={item.href}
@@ -72,10 +83,22 @@ export default function Sidebar() {
                   {item.isLogoMark ? (
                     <LogoMark size="sm" inverted={isActive} />
                   ) : (
-                    item.icon
+                    <div className="relative">
+                      {item.icon}
+                      {badgeCount > 0 && (
+                        <span className="absolute -top-1 -right-1 min-w-[14px] h-3.5 px-1 flex items-center justify-center bg-red-500 text-white text-[8px] font-bold rounded-full">
+                          {badgeCount > 9 ? '9+' : badgeCount}
+                        </span>
+                      )}
+                    </div>
                   )}
                 </span>
                 <span className={`relative z-10 text-sm font-semibold`}>{t.nav[item.labelKey]}</span>
+                {badgeCount > 0 && (
+                  <span className="ml-auto bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                    {badgeCount > 99 ? '99+' : badgeCount}
+                  </span>
+                )}
               </Link>
             </motion.div>
           );
@@ -111,3 +134,4 @@ export default function Sidebar() {
     </aside>
   );
 }
+

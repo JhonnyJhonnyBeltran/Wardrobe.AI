@@ -73,6 +73,30 @@ export function useSocial() {
     }
   }, []);
 
+  // Check availability of an email
+  const checkEmailAvailability = useCallback(async (email: string) => {
+    // Basic validation
+    if (!email || !email.includes('@') || email.length < 5) return false;
+
+    try {
+      // Use RPC to check if email exists in DB
+      const { data, error } = await supabase.rpc('check_email_exists', {
+        email_to_check: email
+      });
+
+      if (error) throw error;
+
+      // If data is true (exists), then it is NOT available (return false)
+      // If data is false (does not exist), then it IS available (return true)
+      return !data;
+    } catch (err) {
+      console.error('Error checking email:', err);
+      // In case of error, we might want to fail safe or block.
+      // Usually blocking is safer to prevent errors during signup.
+      return false;
+    }
+  }, []);
+
   // Follow a user
   const followUser = useCallback(async (targetId: string) => {
     if (!user) return false;
@@ -312,6 +336,7 @@ export function useSocial() {
     error,
     searchUsers,
     checkUsernameAvailability,
+    checkEmailAvailability,
     followUser,
     unfollowUser,
     getPendingRequests,

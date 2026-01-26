@@ -18,6 +18,8 @@ interface UiStore {
     closeModal: () => void;
     requestsCount: number;
     setRequestsCount: (count: number) => void;
+    messageRequestsCount: number;
+    setMessageRequestsCount: (count: number) => void;
 }
 
 export const useUiStore = create<UiStore>((set) => ({
@@ -26,4 +28,6 @@ export const useUiStore = create<UiStore>((set) => ({
     closeModal: () => set({ modal: null }),
     requestsCount: 0,
     setRequestsCount: (count) => set({ requestsCount: count }),
+    messageRequestsCount: 0,
+    setMessageRequestsCount: (count) => set({ messageRequestsCount: count }),
 }));

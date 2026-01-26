@@ -192,22 +192,22 @@ export default function ProfilePage() {
                     {t.profile.outfits}
                   </div>
                 </div>
-                <button className="text-center hover:opacity-80 transition-opacity">
+                <Link href={`/profile/${user.id}/follows?tab=followers`} className="text-center hover:opacity-80 transition-opacity">
                   <div className="text-lg font-bold text-[var(--foreground)] leading-tight">
                     {profileStats.followers}
                   </div>
                   <div className="text-xs text-[var(--foreground-tertiary)]">
                     {t.profile.followers}
                   </div>
-                </button>
-                <button className="text-center hover:opacity-80 transition-opacity">
+                </Link>
+                <Link href={`/profile/${user.id}/follows?tab=following`} className="text-center hover:opacity-80 transition-opacity">
                   <div className="text-lg font-bold text-[var(--foreground)] leading-tight">
                     {profileStats.following}
                   </div>
                   <div className="text-xs text-[var(--foreground-tertiary)]">
                     {t.profile.following}
                   </div>
-                </button>
+                </Link>
               </div>
             </div>
           </div>

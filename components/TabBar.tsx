@@ -23,7 +23,7 @@ interface TabItem {
 export default function TabBar() {
   const pathname = usePathname();
   const { t } = useTranslation();
-  const { requestsCount } = useUiStore();
+  const { requestsCount, messageRequestsCount } = useUiStore();
 
   const tabs: TabItem[] = [
     { href: '/feed', labelKey: 'home', icon: <Home className="w-6 h-6" /> },
@@ -34,11 +34,20 @@ export default function TabBar() {
     { href: '/profile', labelKey: 'profile', icon: <User className="w-6 h-6" /> },
   ];
 
+  // Helper to get badge count for each tab
+  const getBadgeCount = (labelKey: string): number => {
+    if (labelKey === 'search') return requestsCount;
+    if (labelKey === 'messages') return messageRequestsCount;
+    return 0;
+  };
+
   return (
     <nav className="fixed bottom-0 left-0 right-0 md:hidden z-[5000] bg-[var(--background)] border-t border-[var(--border-color)] pb-safe shadow-[0_-1px_10px_rgba(0,0,0,0.02)]">
       <div className="flex justify-between items-center h-16 px-1">
         {tabs.map((tab) => {
-          const isActive = pathname === tab.href;
+          const isActive = pathname === tab.href || pathname.startsWith(tab.href + '/');
+          const badgeCount = getBadgeCount(tab.labelKey);
+
           return (
             <Link key={tab.href} href={tab.href} className="flex-1 flex justify-center items-center h-full">
               <div
@@ -54,13 +63,13 @@ export default function TabBar() {
                 ) : (
                   <div className="relative flex items-center justify-center">
                     {tab.icon}
-                    {tab.labelKey === 'search' && requestsCount > 0 && (
+                    {badgeCount > 0 && (
                       <motion.div
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
                         className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 flex items-center justify-center bg-red-500 text-white text-[10px] font-bold rounded-full border-2 border-[var(--background)] z-20"
                       >
-                        {requestsCount > 9 ? '9+' : requestsCount}
+                        {badgeCount > 9 ? '9+' : badgeCount}
                       </motion.div>
                     )}
                   </div>
@@ -73,3 +82,4 @@ export default function TabBar() {
     </nav>
   );
 }
+

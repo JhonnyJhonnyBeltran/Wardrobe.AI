@@ -136,6 +136,29 @@ export interface Translations {
     forYou: string;
   };
 
+  // Messages
+  messaging: {
+    title: string;
+    search: string;
+    suggestions: string;
+    results: string;
+    messagesTab: string;
+    requestsTab: string;
+    yourMessages: string;
+    sendPrivateMessages: string;
+    noRequests: string;
+    noRequestsDesc: string;
+    startConversation: string;
+    sendMessage: string;
+    viewProfile: string;
+    wantsToMessage: string;
+    accept: string;
+    restrict: string;
+    onlyOneMessage: string;
+    seen: string;
+    noUsersFound: string;
+  };
+
   // Common
   common: {
     loading: string;
@@ -349,6 +372,27 @@ export const translations: Record<Language, Translations> = {
       following: 'Siguiendo',
       forYou: 'Para ti',
     },
+    messaging: {
+      title: 'Mensajes',
+      search: 'Buscar',
+      suggestions: 'Sugerencias',
+      results: 'Resultados',
+      messagesTab: 'Mensajes',
+      requestsTab: 'Solicitudes',
+      yourMessages: 'Tus mensajes',
+      sendPrivateMessages: 'Envía mensajes privados a tus amigos',
+      noRequests: 'No hay solicitudes de mensajes',
+      noRequestsDesc: 'No tienes ninguna solicitud de mensaje.',
+      startConversation: 'Inicia una conversación',
+      sendMessage: 'Envía un mensaje...',
+      viewProfile: 'Ver perfil',
+      wantsToMessage: 'quiere enviarte un mensaje.',
+      accept: 'Aceptar',
+      restrict: 'Restringir',
+      onlyOneMessage: 'Solo puedes enviar un mensaje hasta que acepten tu solicitud.',
+      seen: 'Visto',
+      noUsersFound: 'No se encontraron usuarios',
+    },
     common: {
       loading: 'Cargando...',
       save: 'Guardar',
@@ -549,6 +593,27 @@ export const translations: Record<Language, Translations> = {
       trending: 'Trending',
       following: 'Following',
       forYou: 'For you',
+    },
+    messaging: {
+      title: 'Messages',
+      search: 'Search',
+      suggestions: 'Suggestions',
+      results: 'Results',
+      messagesTab: 'Messages',
+      requestsTab: 'Requests',
+      yourMessages: 'Your messages',
+      sendPrivateMessages: 'Send private messages to your friends',
+      noRequests: 'No message requests',
+      noRequestsDesc: 'You don\'t have any message requests.',
+      startConversation: 'Start a conversation',
+      sendMessage: 'Send a message...',
+      viewProfile: 'View profile',
+      wantsToMessage: 'wants to send you a message.',
+      accept: 'Accept',
+      restrict: 'Restrict',
+      onlyOneMessage: 'You can only send one message until they accept your request.',
+      seen: 'Seen',
+      noUsersFound: 'No users found',
     },
     common: {
       loading: 'Loading...',

@@ -17,7 +17,7 @@ export default function AuthPage() {
     const router = useRouter();
     const { setUser } = useUser();
     const { signIn, signUp, signInWithGoogle } = useAuth();
-    const { checkUsernameAvailability } = useSocial();
+    const { checkUsernameAvailability, checkEmailAvailability } = useSocial();
     const searchParams = useSearchParams();
     const mode = searchParams?.get('mode');
     const [isLogin, setIsLogin] = useState(mode === 'login');
@@ -33,6 +33,10 @@ export default function AuthPage() {
     // Username Verification State
     const [isUsernameAvailable, setIsUsernameAvailable] = useState<boolean | null>(null);
     const [isCheckingUsername, setIsCheckingUsername] = useState(false);
+
+    // Email Verification State
+    const [isEmailAvailable, setIsEmailAvailable] = useState<boolean | null>(null);
+    const [isCheckingEmail, setIsCheckingEmail] = useState(false);
 
     const [showResetPassword, setShowResetPassword] = useState(false);
     const [showQuiz, setShowQuiz] = useState(false);
@@ -57,6 +61,26 @@ export default function AuthPage() {
         const timeoutId = setTimeout(checkUsername, 500);
         return () => clearTimeout(timeoutId);
     }, [username, checkUsernameAvailability, isLogin]);
+
+    // Debounce check email availability
+    useEffect(() => {
+        if (isLogin) return;
+
+        const checkEmail = async () => {
+            if (!email || !email.includes('@') || email.length < 5) {
+                setIsEmailAvailable(null);
+                return;
+            }
+
+            setIsCheckingEmail(true);
+            const available = await checkEmailAvailability(email);
+            setIsEmailAvailable(available);
+            setIsCheckingEmail(false);
+        };
+
+        const timeoutId = setTimeout(checkEmail, 500);
+        return () => clearTimeout(timeoutId);
+    }, [email, checkEmailAvailability, isLogin]);
 
     const handleGoogleLogin = async () => {
         try {
@@ -125,6 +149,10 @@ export default function AuthPage() {
             // SIGNUP LOGIC
             if (isUsernameAvailable === false) {
                 alert('El nombre de usuario no está disponible');
+                return;
+            }
+            if (isEmailAvailable === false) {
+                alert('El email ya está registrado');
                 return;
             }
             if (!username) {
@@ -222,17 +250,17 @@ export default function AuthPage() {
                             className="text-center mb-8"
                         >
                             <div className="w-20 h-20 mx-auto mb-4 rounded-3xl flex items-center justify-center shadow-[var(--shadow-float-strong)] overflow-hidden">
-                                <Image 
-                                    src="/klozet-logo.png" 
-                                    alt="Klozet Logo" 
+                                <Image
+                                    src="/klozet-logo.png"
+                                    alt="Klozet Logo"
                                     width={48}
                                     height={48}
                                     className="object-contain"
                                 />
                             </div>
-                            <Image 
-                                src="/klozet-logo-extended.png" 
-                                alt="Klozet" 
+                            <Image
+                                src="/klozet-logo-extended.png"
+                                alt="Klozet"
                                 width={150}
                                 height={40}
                                 className="mx-auto mb-2 object-contain dark:hidden"
@@ -391,9 +419,26 @@ export default function AuthPage() {
                                                         onChange={(e) => isLogin ? setEmailOrUser(e.target.value) : setEmail(e.target.value)}
                                                         placeholder={isLogin ? "Email o @usuario" : "Email"}
                                                         required
-                                                        className="w-full pl-11 pr-4 py-3 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)]"
+                                                        className={`w-full pl-11 pr-10 py-3 rounded-2xl bg-[var(--background-secondary)] border text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:ring-2 ${!isLogin && isEmailAvailable === false ? 'border-red-500 focus:ring-red-500' :
+                                                                !isLogin && isEmailAvailable === true ? 'border-green-500 focus:ring-green-500' :
+                                                                    'border-[var(--border-color)] focus:ring-[var(--brand-pink)]'
+                                                            }`}
                                                     />
+                                                    {!isLogin && (
+                                                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                                            {isCheckingEmail ? (
+                                                                <div className="w-4 h-4 border-2 border-[var(--brand-pink)] border-t-transparent rounded-full animate-spin" />
+                                                            ) : isEmailAvailable === true ? (
+                                                                <Check className="w-5 h-5 text-green-500" />
+                                                            ) : isEmailAvailable === false ? (
+                                                                <AlertCircle className="w-5 h-5 text-red-500" />
+                                                            ) : null}
+                                                        </div>
+                                                    )}
                                                 </div>
+                                                {!isLogin && isEmailAvailable === false && (
+                                                    <p className="text-xs text-red-500 -mt-2 ml-2">Email ya registrado</p>
+                                                )}
 
                                                 <div className="relative">
                                                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--foreground-tertiary)]" />
