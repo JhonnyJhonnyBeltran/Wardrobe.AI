@@ -177,7 +177,7 @@ export default function ProfilePage() {
                 </h1>
                 <Link href="/profile/settings">
                   <button className="p-2 -mr-2 rounded-full hover:bg-[var(--background-secondary)] transition-colors text-[var(--foreground-secondary)]">
-                    <Menu className="w-6 h-6" />
+                    <Settings className="w-6 h-6" />
                   </button>
                 </Link>
               </div>

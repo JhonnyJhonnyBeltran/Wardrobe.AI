@@ -241,7 +241,7 @@ export default function MessagesPage() {
       <div className="sticky top-0 z-20 bg-[var(--background)] border-b border-[var(--border-color)]">
         <div className="max-w-lg mx-auto px-4 py-4">
           <h1 className="text-xl font-bold text-[var(--foreground)] text-center">
-            Mensajes
+            Bandeja de entrada
           </h1>
         </div>
       </div>
@@ -379,8 +379,8 @@ export default function MessagesPage() {
               <button
                 onClick={() => setActiveTab('messages')}
                 className={`flex-1 py-3 text-sm font-semibold transition-all duration-200 ${activeTab === 'messages'
-                    ? 'text-[var(--foreground)] border-b-2 border-[var(--foreground)]'
-                    : 'text-[var(--foreground-tertiary)]'
+                  ? 'text-[var(--foreground)] border-b-2 border-[var(--foreground)]'
+                  : 'text-[var(--foreground-tertiary)]'
                   }`}
               >
                 Mensajes
@@ -388,8 +388,8 @@ export default function MessagesPage() {
               <button
                 onClick={() => setActiveTab('requests')}
                 className={`flex-1 py-3 text-sm font-semibold transition-all duration-200 relative ${activeTab === 'requests'
-                    ? 'text-[var(--foreground)] border-b-2 border-[var(--foreground)]'
-                    : 'text-[var(--foreground-tertiary)]'
+                  ? 'text-[var(--foreground)] border-b-2 border-[var(--foreground)]'
+                  : 'text-[var(--foreground-tertiary)]'
                   }`}
               >
                 Solicitudes

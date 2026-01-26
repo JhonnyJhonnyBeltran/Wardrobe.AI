@@ -195,10 +195,6 @@ export default function SearchPage() {
   return (
     <div className="min-h-screen bg-[var(--background)] pb-24 md:pb-8 pt-6 px-4">
       <div className="max-w-md mx-auto">
-        <h1 className="text-2xl font-bold bg-gradient-to-r from-[var(--brand-pink)] to-orange-500 bg-clip-text text-transparent mb-6">
-          Buscar Usuarios
-        </h1>
-
         {/* Main Tabs */}
         <div className="flex p-1 bg-[var(--background-secondary)] rounded-xl mb-6">
           <button

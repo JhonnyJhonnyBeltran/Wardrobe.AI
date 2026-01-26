@@ -277,155 +277,7 @@ export default function ClosetPage() {
       {/* Main Content - Visible from the start */}
       <div>
         {/* Toolbar - Mobile Optimized */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1, duration: 0.4 }}
-          className="px-4 mb-4"
-        >
-          <Card className="p-3">
-            <div className="flex gap-2">
-              {/* Search - Expands on mobile */}
-              <AnimatePresence mode="wait">
-                {searchExpanded ? (
-                  <motion.div
-                    key="expanded"
-                    initial={{ width: 0, opacity: 0 }}
-                    animate={{ width: '100%', opacity: 1 }}
-                    exit={{ width: 0, opacity: 0 }}
-                    className="flex-1 relative"
-                  >
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--foreground-tertiary)]" />
-                    <input
-                      type="text"
-                      placeholder="Buscar..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      autoFocus
-                      className="w-full pl-9 pr-9 py-2 rounded-full bg-[var(--background-secondary)] border border-[var(--border-color)] text-sm text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)]"
-                    />
-                    <button
-                      onClick={() => {
-                        setSearchExpanded(false);
-                        setSearchQuery('');
-                      }}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-[var(--background-tertiary)] flex items-center justify-center"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="buttons"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="flex gap-2 flex-1"
-                  >
-                    {/* Search Icon - Mobile */}
-                    <Button
-                      variant="secondary"
-                      onClick={() => setSearchExpanded(true)}
-                      className="px-3 md:hidden"
-                    >
-                      <Search className="w-4 h-4" />
-                    </Button>
 
-                    {/* Search Full - Desktop */}
-                    <div className="hidden md:flex flex-1 relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--foreground-tertiary)]" />
-                      <input
-                        type="text"
-                        placeholder={t.closet.search}
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-9 pr-3 py-2 rounded-full bg-[var(--background-secondary)] border border-[var(--border-color)] text-sm text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)]"
-                      />
-                    </div>
-
-                    {/* Filters - Icon only on mobile */}
-                    <Button
-                      variant="secondary"
-                      onClick={() => setShowFilters(!showFilters)}
-                      className="px-3"
-                    >
-                      <Filter className="w-4 h-4" />
-                    </Button>
-
-                    {/* Favorites - Icon only on mobile */}
-                    <Button
-                      variant={showFavoritesOnly ? 'primary' : 'secondary'}
-                      onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
-                      className="px-3"
-                    >
-                      <Heart className={`w-4 h-4 ${showFavoritesOnly ? 'fill-current' : ''}`} />
-                    </Button>
-
-                    {/* View Mode - Icon only on mobile */}
-                    <Button
-                      variant={viewMode === 'grid' ? 'primary' : 'secondary'}
-                      onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-                      className="px-3"
-                    >
-                      {viewMode === 'grid' ? <Grid3x3 className="w-4 h-4" /> : <List className="w-4 h-4" />}
-                    </Button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Filter Panel */}
-            <AnimatePresence>
-              {showFilters && !searchExpanded && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  className="overflow-hidden"
-                >
-                  <div className="pt-3 border-t border-[var(--border-color)] mt-3">
-                    <div className="flex flex-wrap gap-2">
-                      <button
-                        onClick={() => setFilterType(null)}
-                        className={`px-3 py-1.5 rounded-full text-xs font-semibold ${!filterType
-                          ? 'bg-[var(--brand-pink)] text-white'
-                          : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)]'
-                          }`}
-                      >
-                        {t.closet.all}
-                      </button>
-                      {itemTypes.map((type) => (
-                        <button
-                          key={type}
-                          onClick={() => setFilterType(type)}
-                          className={`px-3 py-1.5 rounded-full text-xs font-semibold capitalize ${filterType === type
-                            ? 'bg-[var(--brand-pink)] text-white'
-                            : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)]'
-                            }`}
-                        >
-                          {t.itemTypes[type as keyof typeof t.itemTypes]}
-                        </button>
-                      ))}
-                    </div>
-
-                    {(filterType || showFavoritesOnly) && (
-                      <button
-                        onClick={() => {
-                          setFilterType(null);
-                          setShowFavoritesOnly(false);
-                        }}
-                        className="mt-2 text-xs text-[var(--brand-pink)] font-semibold flex items-center gap-1"
-                      >
-                        <X className="w-3 h-3" />
-                        {t.closet.clear}
-                      </button>
-                    )}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </Card>
-        </motion.div>
 
         {/* Quick Actions - Integrated in main content */}
         <motion.div
@@ -435,10 +287,10 @@ export default function ClosetPage() {
           className="px-4 mb-6"
         >
           <h2 className="text-sm font-bold text-[var(--foreground-secondary)] mb-3">{t.closet.quickActions}</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {/* Create Outfit Card */}
             <Link href="/create">
-              <Card className="p-6 hover-lift cursor-pointer group bg-gradient-to-br from-[var(--brand-pink)]/5 to-[var(--brand-pink-dark)]/5 border-2 border-[var(--brand-pink)]/20 hover:border-[var(--brand-pink)]">
+              <Card className="h-full p-6 hover-lift cursor-pointer group bg-gradient-to-br from-[var(--brand-pink)]/5 to-[var(--brand-pink-dark)]/5 border-2 border-[var(--brand-pink)]/20 hover:border-[var(--brand-pink)]">
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 rounded-2xl bg-[var(--background)] shadow-md flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform overflow-hidden">
                     <LogoMark size="md" />
@@ -455,10 +307,30 @@ export default function ClosetPage() {
               </Card>
             </Link>
 
+            {/* Chat with Kloe - Coming Soon */}
+            <Card className="h-full p-6 relative overflow-hidden group border-2 border-[var(--border-color)] opacity-80">
+              <div className="absolute top-3 right-3 bg-[var(--brand-pink)] text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                Próximamente
+              </div>
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-[var(--background-secondary)] border-2 border-gray-200 flex items-center justify-center flex-shrink-0 grayscale">
+                  <Wand2 className="w-6 h-6 text-gray-400" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-[var(--foreground)] mb-1">
+                    Charla con Kloe
+                  </h3>
+                  <p className="text-sm text-[var(--foreground-tertiary)]">
+                    Tu asistente de moda personal con IA
+                  </p>
+                </div>
+              </div>
+            </Card>
+
             {/* Add Item Card */}
             <Card
               onClick={() => setShowAddModal(true)}
-              className="p-6 hover-lift cursor-pointer group border-2 border-[var(--border-color)] hover:border-[var(--brand-pink)]"
+              className="h-full p-6 hover-lift cursor-pointer group border-2 border-[var(--border-color)] hover:border-[var(--brand-pink)]"
             >
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 rounded-2xl bg-[var(--background-secondary)] border-2 border-[var(--brand-pink)] flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
@@ -482,6 +354,156 @@ export default function ClosetPage() {
           <h2 className="text-sm font-bold text-[var(--foreground-secondary)]">
             {t.closet.myItems} {filteredItems.length > 0 && `(${filteredItems.length})`}
           </h2>
+          {/* Toolbar - Mobile Optimized (Moved) */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1, duration: 0.4 }}
+            className="mt-4 mb-2"
+          >
+            <Card className="p-3">
+              <div className="flex gap-2">
+                {/* Search - Expands on mobile */}
+                <AnimatePresence mode="wait">
+                  {searchExpanded ? (
+                    <motion.div
+                      key="expanded"
+                      initial={{ width: 0, opacity: 0 }}
+                      animate={{ width: '100%', opacity: 1 }}
+                      exit={{ width: 0, opacity: 0 }}
+                      className="flex-1 relative"
+                    >
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--foreground-tertiary)]" />
+                      <input
+                        type="text"
+                        placeholder="Buscar..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        autoFocus
+                        className="w-full pl-9 pr-9 py-2 rounded-full bg-[var(--background-secondary)] border border-[var(--border-color)] text-sm text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)]"
+                      />
+                      <button
+                        onClick={() => {
+                          setSearchExpanded(false);
+                          setSearchQuery('');
+                        }}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-[var(--background-tertiary)] flex items-center justify-center"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="buttons"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="flex gap-2 flex-1"
+                    >
+                      {/* Search Icon - Mobile */}
+                      <Button
+                        variant="secondary"
+                        onClick={() => setSearchExpanded(true)}
+                        className="px-3 md:hidden flex-1"
+                      >
+                        <Search className="w-4 h-4" />
+                      </Button>
+
+                      {/* Search Full - Desktop */}
+                      <div className="hidden md:flex flex-1 relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--foreground-tertiary)]" />
+                        <input
+                          type="text"
+                          placeholder={t.closet.search}
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          className="w-full pl-9 pr-3 py-2 rounded-full bg-[var(--background-secondary)] border border-[var(--border-color)] text-sm text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)]"
+                        />
+                      </div>
+
+                      {/* Filters - Icon only on mobile */}
+                      <Button
+                        variant="secondary"
+                        onClick={() => setShowFilters(!showFilters)}
+                        className="px-3 flex-1 md:flex-none"
+                      >
+                        <Filter className="w-4 h-4" />
+                      </Button>
+
+                      {/* Favorites - Icon only on mobile */}
+                      <Button
+                        variant={showFavoritesOnly ? 'primary' : 'secondary'}
+                        onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+                        className="px-3 flex-1 md:flex-none"
+                      >
+                        <Heart className={`w-4 h-4 ${showFavoritesOnly ? 'fill-current' : ''}`} />
+                      </Button>
+
+                      {/* View Mode - Icon only on mobile */}
+                      <Button
+                        variant={viewMode === 'grid' ? 'primary' : 'secondary'}
+                        onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+                        className="px-3 flex-1 md:flex-none"
+                      >
+                        {viewMode === 'grid' ? <Grid3x3 className="w-4 h-4" /> : <List className="w-4 h-4" />}
+                      </Button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Filter Panel */}
+              <AnimatePresence>
+                {showFilters && !searchExpanded && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="pt-3 border-t border-[var(--border-color)] mt-3">
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          onClick={() => setFilterType(null)}
+                          className={`px-3 py-1.5 rounded-full text-xs font-semibold ${!filterType
+                            ? 'bg-[var(--brand-pink)] text-white'
+                            : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)]'
+                            }`}
+                        >
+                          {t.closet.all}
+                        </button>
+                        {itemTypes.map((type) => (
+                          <button
+                            key={type}
+                            onClick={() => setFilterType(type)}
+                            className={`px-3 py-1.5 rounded-full text-xs font-semibold capitalize ${filterType === type
+                              ? 'bg-[var(--brand-pink)] text-white'
+                              : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)]'
+                              }`}
+                          >
+                            {t.itemTypes[type as keyof typeof t.itemTypes]}
+                          </button>
+                        ))}
+                      </div>
+
+                      {(filterType || showFavoritesOnly) && (
+                        <button
+                          onClick={() => {
+                            setFilterType(null);
+                            setShowFavoritesOnly(false);
+                          }}
+                          className="mt-2 text-xs text-[var(--brand-pink)] font-semibold flex items-center gap-1"
+                        >
+                          <X className="w-3 h-3" />
+                          {t.closet.clear}
+                        </button>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </Card>
+          </motion.div>
         </div>
 
         {filteredItems.length > 0 ? (
