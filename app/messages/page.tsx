@@ -8,6 +8,7 @@
  * - Suggestions from followed users  
  * - Recent conversations list
  * - Real-time updates
+ * - Unread message indicators (Instagram-style)
  */
 
 import { useState, useEffect, useMemo } from 'react';
@@ -15,10 +16,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Send, X, Camera } from 'lucide-react';
 import { useUser } from '@/store/userStore';
 import { useUiStore } from '@/store/uiStore';
+import { useUnreadMessages } from '@/lib/hooks/useUnreadMessages';
 import { supabase } from '@/lib/supabase/client';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { AvatarWithStatus } from '@/components/OnlineIndicator';
+import { ConversationItem } from '@/components/ConversationItem';
 
 interface Profile {
   id: string;
@@ -43,6 +46,9 @@ export default function MessagesPage() {
   const { user } = useUser();
   const router = useRouter();
   const { setMessageRequestsCount } = useUiStore();
+  
+  // Unread messages hook - handles badge visibility and read state
+  const { onEnterMessagesPage, hasUnread } = useUnreadMessages({ autoFetch: true, enableRealtime: true });
 
   // State
   const [activeTab, setActiveTab] = useState<'messages' | 'requests'>('messages');
@@ -56,6 +62,12 @@ export default function MessagesPage() {
   const [followedUsers, setFollowedUsers] = useState<Profile[]>([]);
   const [searchResults, setSearchResults] = useState<Profile[]>([]);
   const [requestsCount, setRequestsCount] = useState(0);
+
+  // Hide badge when entering messages page (Instagram behavior) - only on mount
+  useEffect(() => {
+    onEnterMessagesPage();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Fetch data on mount
   useEffect(() => {
@@ -425,41 +437,16 @@ export default function MessagesPage() {
               ) : (
                 <div className="space-y-1">
                   {conversations.map((conv) => (
-                    <button
+                    <ConversationItem
                       key={conv.id}
+                      conversationId={conv.id}
+                      otherUser={conv.other_user}
+                      lastMessageText={conv.last_message_text}
+                      lastMessageAt={conv.last_message_at}
+                      lastMessageSender={conv.last_message_sender}
+                      currentUserId={user?.id || ''}
                       onClick={() => conv.other_user && openChat(conv.other_user.id)}
-                      className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-[var(--background-secondary)] transition-colors"
-                    >
-                      <AvatarWithStatus 
-                        userId={conv.other_user?.id || ''} 
-                        indicatorSize="md" 
-                        showOnlyOnline
-                      >
-                        <div className="w-14 h-14 rounded-full bg-[var(--background-tertiary)] overflow-hidden flex-shrink-0">
-                          {conv.other_user?.avatar_url ? (
-                            <img src={conv.other_user.avatar_url} alt="" className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-[var(--foreground-secondary)] font-bold text-xl">
-                              {(conv.other_user?.full_name || conv.other_user?.username || '?')[0].toUpperCase()}
-                            </div>
-                          )}
-                        </div>
-                      </AvatarWithStatus>
-                      <div className="flex-1 min-w-0 text-left">
-                        <p className="font-semibold text-[var(--foreground)] text-sm truncate">
-                          {conv.other_user?.full_name || conv.other_user?.username}
-                        </p>
-                        <p className="text-xs text-[var(--foreground-tertiary)] truncate">
-                          {conv.last_message_text
-                            ? `${conv.last_message_sender === user?.id ? 'Tú: ' : ''}${conv.last_message_text}`
-                            : 'Inicia una conversación'
-                          }
-                          {conv.last_message_at && (
-                            <span className="ml-1">· {formatTimeAgo(conv.last_message_at)}</span>
-                          )}
-                        </p>
-                      </div>
-                    </button>
+                    />
                   ))}
                 </div>
               )}

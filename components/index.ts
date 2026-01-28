@@ -30,3 +30,8 @@ export { default as NotificationToastContainer } from './NotificationToast';
 export { NotificationBadge, NotificationBadgeWrapper } from './NotificationBadge';
 export { OnlineIndicator, OnlineStatusText, AvatarWithStatus } from './OnlineIndicator';
 export { TypingIndicator, TypingIndicatorInline } from './TypingIndicator';
+
+// Message components
+export { MessageBadge, MessageDot, MessageBadgeWrapper } from './MessageBadge';
+export { ConversationItem } from './ConversationItem';
+export { default as MessageProvider } from './MessageProvider';

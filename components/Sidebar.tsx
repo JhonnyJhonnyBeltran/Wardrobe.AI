@@ -2,6 +2,7 @@
 
 /**
  * Sidebar - Desktop Navigation (Minimal)
+ * Con sistema de notificaciones de mensajes modular
  */
 
 import React from 'react';
@@ -12,6 +13,7 @@ import { Home, Search, Send, User, Crown, Bot, DoorClosed } from 'lucide-react';
 import { useUser } from '@/store';
 import { useTranslation } from '@/lib/i18n';
 import { useUiStore } from '@/store/uiStore';
+import { useMessageStore, selectTotalUnread, selectBadgeVisible } from '@/store/messageStore';
 import LogoExtended from './LogoExtended';
 import LogoMark from './LogoMark';
 
@@ -26,7 +28,11 @@ export default function Sidebar() {
   const pathname = usePathname();
   const { isPremium, upgradeToPremiun } = useUser();
   const { t } = useTranslation();
-  const { requestsCount, messageRequestsCount } = useUiStore();
+  const { requestsCount } = useUiStore();
+  
+  // Message notifications from new store
+  const messageUnreadCount = useMessageStore(selectTotalUnread);
+  const messageBadgeVisible = useMessageStore(selectBadgeVisible);
 
   const navItems: NavItem[] = [
     { href: '/feed', labelKey: 'home', icon: <Home className="w-5 h-5" /> },
@@ -40,7 +46,8 @@ export default function Sidebar() {
   // Helper to get badge count for each nav item
   const getBadgeCount = (labelKey: string): number => {
     if (labelKey === 'search') return requestsCount;
-    if (labelKey === 'messages') return messageRequestsCount;
+    // Messages uses the new store with badge visibility logic
+    if (labelKey === 'messages') return messageBadgeVisible ? messageUnreadCount : 0;
     return 0;
   };
 

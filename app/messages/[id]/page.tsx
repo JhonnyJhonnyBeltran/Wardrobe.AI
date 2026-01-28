@@ -7,6 +7,7 @@
  * - Message bubbles with timestamps
  * - Message request flow for non-mutual followers
  * - Real-time updates
+ * - Automatic read status marking
  */
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
@@ -18,6 +19,7 @@ import { supabase } from '@/lib/supabase/client';
 import Link from 'next/link';
 import { useTypingIndicator } from '@/lib/hooks/useTypingIndicator';
 import { useOnlineStatus } from '@/lib/hooks/useOnlineStatus';
+import { useUnreadMessages } from '@/lib/hooks/useUnreadMessages';
 import { TypingIndicator } from '@/components/TypingIndicator';
 import { OnlineIndicator, OnlineStatusText } from '@/components/OnlineIndicator';
 
@@ -54,6 +56,9 @@ export default function ChatPage() {
   const targetUserId = params.id as string;
   const isRequest = searchParams.get('request') === 'true';
 
+  // Unread messages hook for marking as read
+  const { onOpenConversation } = useUnreadMessages({ autoFetch: false, enableRealtime: false });
+
   // State
   const [targetUser, setTargetUser] = useState<Profile | null>(null);
   const [conversation, setConversation] = useState<Conversation | null>(null);
@@ -64,7 +69,12 @@ export default function ChatPage() {
   const [canSendMessage, setCanSendMessage] = useState(true);
   const [showRequestActions, setShowRequestActions] = useState(false);
 
+  // Track first unread message for scroll and visual indicator
+  const [firstUnreadMessageId, setFirstUnreadMessageId] = useState<string | null>(null);
+  const [hasScrolledToUnread, setHasScrolledToUnread] = useState(false);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const unreadDividerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Online status for target user
@@ -91,9 +101,37 @@ export default function ChatPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, []);
 
+  // Scroll to unread messages divider or bottom
+  const scrollToUnreadOrBottom = useCallback(() => {
+    if (unreadDividerRef.current && !hasScrolledToUnread) {
+      unreadDividerRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setHasScrolledToUnread(true);
+    } else if (!firstUnreadMessageId) {
+      scrollToBottom();
+    }
+  }, [hasScrolledToUnread, firstUnreadMessageId, scrollToBottom]);
+
+  // Initial scroll when messages load
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, scrollToBottom]);
+    if (messages.length > 0 && !loading) {
+      // Small delay to ensure DOM is ready
+      setTimeout(scrollToUnreadOrBottom, 100);
+    }
+  }, [messages.length, loading, scrollToUnreadOrBottom]);
+
+  // Scroll to bottom when new message is sent (not received)
+  useEffect(() => {
+    if (messages.length > 0 && messages[messages.length - 1]?.sender_id === user?.id) {
+      scrollToBottom();
+    }
+  }, [messages, user?.id, scrollToBottom]);
+
+  // Mark conversation as read when opened
+  useEffect(() => {
+    if (conversation?.id) {
+      onOpenConversation(conversation.id);
+    }
+  }, [conversation?.id, onOpenConversation]);
 
   // Initialize chat
   useEffect(() => {
@@ -156,9 +194,18 @@ export default function ChatPage() {
           .eq('conversation_id', conv.id)
           .order('created_at', { ascending: true });
 
-        setMessages((msgs as any[] || []) as Message[]);
+        const messagesList = (msgs as any[] || []) as Message[];
+        setMessages(messagesList);
 
-        // 5. Mark messages as read
+        // 5. Find first unread message (messages sent to me that I haven't read)
+        const firstUnread = messagesList.find(
+          (msg) => msg.receiver_id === user.id && msg.read_at === null
+        );
+        if (firstUnread) {
+          setFirstUnreadMessageId(firstUnread.id);
+        }
+
+        // 6. Mark messages as read
         await supabase
           .from('messages' as any)
           .update({ read_at: new Date().toISOString() } as any)
@@ -512,25 +559,42 @@ export default function ChatPage() {
                     idx === 0 ||
                     group.messages[idx - 1]?.sender_id !== msg.sender_id
                   );
+                  
+                  // Check if this is the first unread message
+                  const isFirstUnread = msg.id === firstUnreadMessageId;
 
                   return (
-                    <motion.div
-                      key={msg.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className={`flex gap-2 ${isMe ? 'justify-end' : 'justify-start'}`}
-                    >
-                      {!isMe && (
-                        <div className="w-7 h-7 flex-shrink-0">
-                          {showAvatar && (
-                            <div className="w-7 h-7 rounded-full bg-[var(--background-secondary)] overflow-hidden">
-                              {targetUser?.avatar_url ? (
-                                <img src={targetUser.avatar_url} alt="" className="w-full h-full object-cover" />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center text-[var(--foreground-tertiary)] font-bold text-xs">
-                                  {(targetUser?.full_name || '?')[0]?.toUpperCase()}
-                                </div>
-                              )}
+                    <div key={msg.id}>
+                      {/* Unread messages divider */}
+                      {isFirstUnread && (
+                        <div 
+                          ref={unreadDividerRef}
+                          className="flex items-center gap-3 my-4"
+                        >
+                          <div className="flex-1 h-[1px] bg-[var(--brand-pink)]/30" />
+                          <span className="text-xs text-[var(--brand-pink)] font-medium px-2">
+                            Mensajes nuevos
+                          </span>
+                          <div className="flex-1 h-[1px] bg-[var(--brand-pink)]/30" />
+                        </div>
+                      )}
+                      
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className={`flex gap-2 ${isMe ? 'justify-end' : 'justify-start'}`}
+                      >
+                        {!isMe && (
+                          <div className="w-7 h-7 flex-shrink-0">
+                            {showAvatar && (
+                              <div className="w-7 h-7 rounded-full bg-[var(--background-secondary)] overflow-hidden">
+                                {targetUser?.avatar_url ? (
+                                  <img src={targetUser.avatar_url} alt="" className="w-full h-full object-cover" />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center text-[var(--foreground-tertiary)] font-bold text-xs">
+                                    {(targetUser?.full_name || '?')[0]?.toUpperCase()}
+                                  </div>
+                                )}
                             </div>
                           )}
                         </div>
@@ -551,6 +615,7 @@ export default function ChatPage() {
                         </p>
                       </div>
                     </motion.div>
+                    </div>
                   );
                 })}
               </div>

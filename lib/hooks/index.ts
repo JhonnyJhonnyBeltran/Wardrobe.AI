@@ -11,3 +11,6 @@ export { useRealtime } from './useRealtime';
 export { useNotifications } from './useNotifications';
 export { useOnlineStatus } from './useOnlineStatus';
 export { useTypingIndicator } from './useTypingIndicator';
+
+// Message hooks
+export { useUnreadMessages } from './useUnreadMessages';

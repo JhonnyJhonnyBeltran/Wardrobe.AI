@@ -2,6 +2,7 @@
 
 /**
  * TabBar - Mobile Navigation (Instagram-like Minimal)
+ * Con sistema de notificaciones de mensajes modular
  */
 
 import React from 'react';
@@ -10,6 +11,7 @@ import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Home, Search, Send, User } from 'lucide-react';
 import { useUiStore } from '@/store/uiStore';
+import { useMessageStore, selectTotalUnread, selectBadgeVisible } from '@/store/messageStore';
 
 // Assuming /klozet-logo-dark.png is a suitable mask (solid shape)
 const LOGO_MASK_URL = '/klozet-logo-dark.png';
@@ -23,7 +25,11 @@ interface TabItem {
 
 export default function TabBar() {
   const pathname = usePathname();
-  const { requestsCount, messageRequestsCount } = useUiStore();
+  const { requestsCount } = useUiStore();
+  
+  // Message notifications from new store
+  const messageUnreadCount = useMessageStore(selectTotalUnread);
+  const messageBadgeVisible = useMessageStore(selectBadgeVisible);
 
   const tabs: TabItem[] = [
     { href: '/feed', labelKey: 'home', icon: <Home /> },
@@ -36,8 +42,14 @@ export default function TabBar() {
   // Helper to get badge count for each tab
   const getBadgeCount = (labelKey: string): number => {
     if (labelKey === 'search') return requestsCount;
-    if (labelKey === 'messages') return messageRequestsCount;
+    // Messages uses the new store with badge visibility logic
+    if (labelKey === 'messages') return messageBadgeVisible ? messageUnreadCount : 0;
     return 0;
+  };
+
+  // Check if should show dot (for messages on mobile)
+  const shouldShowDot = (labelKey: string): boolean => {
+    return labelKey === 'messages' && messageBadgeVisible && messageUnreadCount > 0;
   };
 
   return (
@@ -92,9 +104,18 @@ export default function TabBar() {
                       className: `w-[30px] h-[30px]`
                     })}
 
-                    {/* Notification Badge - Minimal Red Dot */}
+                    {/* Notification Badge - Red Dot for Messages, Count for others */}
                     <AnimatePresence>
-                      {badgeCount > 0 && (
+                      {shouldShowDot(tab.labelKey) ? (
+                        // Mobile: Show only red dot for messages
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          exit={{ scale: 0 }}
+                          className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-[#FF3040] rounded-full border-2 border-[var(--background)] z-20"
+                        />
+                      ) : badgeCount > 0 && (
+                        // Other badges show count
                         <motion.div
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}

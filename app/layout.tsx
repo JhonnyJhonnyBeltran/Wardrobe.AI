@@ -5,6 +5,7 @@ import ConditionalLayout from "@/components/ConditionalLayout";
 import SystemModal from "@/components/SystemModal";
 import SocialListener from "@/components/SocialListener";
 import RealtimeProvider from "@/components/RealtimeProvider";
+import MessageProvider from "@/components/MessageProvider";
 import { NotificationToastContainer } from "@/components/NotificationToast";
 
 export const metadata: Metadata = {
@@ -38,12 +39,14 @@ export default function RootLayout({
         <ThemeProvider>
           <UserProvider>
             <RealtimeProvider>
-              <SocialListener />
-              <ConditionalLayout>
-                {children}
-              </ConditionalLayout>
-              <NotificationToastContainer position="top-right" />
-              <SystemModal />
+              <MessageProvider>
+                <SocialListener />
+                <ConditionalLayout>
+                  {children}
+                </ConditionalLayout>
+                <NotificationToastContainer position="top-right" />
+                <SystemModal />
+              </MessageProvider>
             </RealtimeProvider>
           </UserProvider>
         </ThemeProvider>
