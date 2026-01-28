@@ -4,6 +4,8 @@ import { UserProvider, ThemeProvider } from "@/store";
 import ConditionalLayout from "@/components/ConditionalLayout";
 import SystemModal from "@/components/SystemModal";
 import SocialListener from "@/components/SocialListener";
+import RealtimeProvider from "@/components/RealtimeProvider";
+import { NotificationToastContainer } from "@/components/NotificationToast";
 
 export const metadata: Metadata = {
   title: "Klozet - Tu Asistente de Moda IA",
@@ -35,11 +37,14 @@ export default function RootLayout({
       <body className="antialiased">
         <ThemeProvider>
           <UserProvider>
-            <SocialListener />
-            <ConditionalLayout>
-              {children}
-            </ConditionalLayout>
-            <SystemModal />
+            <RealtimeProvider>
+              <SocialListener />
+              <ConditionalLayout>
+                {children}
+              </ConditionalLayout>
+              <NotificationToastContainer position="top-right" />
+              <SystemModal />
+            </RealtimeProvider>
           </UserProvider>
         </ThemeProvider>
       </body>

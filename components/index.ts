@@ -23,3 +23,10 @@ export { default as LogoExtended } from './LogoExtended';
 export { default as OutfitLoadingCarousel } from './OutfitLoadingCarousel';
 export { default as PremiumModal } from './PremiumModal';
 export { default as WardrobeSelectionModal } from './WardrobeSelectionModal';
+
+// Realtime components
+export { default as RealtimeProvider } from './RealtimeProvider';
+export { default as NotificationToastContainer } from './NotificationToast';
+export { NotificationBadge, NotificationBadgeWrapper } from './NotificationBadge';
+export { OnlineIndicator, OnlineStatusText, AvatarWithStatus } from './OnlineIndicator';
+export { TypingIndicator, TypingIndicatorInline } from './TypingIndicator';

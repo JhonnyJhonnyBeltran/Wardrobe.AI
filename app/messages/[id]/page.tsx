@@ -9,13 +9,17 @@
  * - Real-time updates
  */
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Send, Info, Smile, Mic, Plus, ChevronRight, Check, Ban } from 'lucide-react';
 import { useUser } from '@/store/userStore';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
 import Link from 'next/link';
+import { useTypingIndicator } from '@/lib/hooks/useTypingIndicator';
+import { useOnlineStatus } from '@/lib/hooks/useOnlineStatus';
+import { TypingIndicator } from '@/components/TypingIndicator';
+import { OnlineIndicator, OnlineStatusText } from '@/components/OnlineIndicator';
 
 interface Message {
   id: string;
@@ -62,6 +66,26 @@ export default function ChatPage() {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Online status for target user
+  const { isUserOnline } = useOnlineStatus({ userIds: [targetUserId] });
+  const isTargetOnline = isUserOnline(targetUserId);
+
+  // Typing indicator - only initialize when we have a conversation
+  const {
+    isAnyoneTyping,
+    getTypingText,
+    handleInputChange: handleTypingChange,
+    handleMessageSent,
+  } = useTypingIndicator({
+    conversationId: conversation?.id || targetUserId,
+  });
+
+  // Username map for typing text
+  const usernameMap = useMemo(() => {
+    if (!targetUser) return {};
+    return { [targetUserId]: targetUser.full_name || targetUser.username || 'Usuario' };
+  }, [targetUserId, targetUser]);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -269,6 +293,9 @@ export default function ChatPage() {
       // Replace temp message with real one
       setMessages(prev => prev.map(m => m.id === tempId ? (data as any as Message) : m));
 
+      // Stop typing indicator
+      handleMessageSent();
+
       // If not mutual and this is pending, disable sending more
       if (!isMutualFollow && conversation?.status === 'pending') {
         setCanSendMessage(false);
@@ -369,7 +396,7 @@ export default function ChatPage() {
             href={`/profile/${targetUserId}`}
             className="flex items-center gap-3 flex-1 min-w-0"
           >
-            <div className="w-10 h-10 rounded-full bg-[var(--background-secondary)] overflow-hidden flex-shrink-0">
+            <div className="relative w-10 h-10 rounded-full bg-[var(--background-secondary)] overflow-hidden flex-shrink-0">
               {targetUser?.avatar_url ? (
                 <img src={targetUser.avatar_url} alt="" className="w-full h-full object-cover" />
               ) : (
@@ -377,6 +404,12 @@ export default function ChatPage() {
                   {(targetUser?.full_name || '?')[0]?.toUpperCase()}
                 </div>
               )}
+              <OnlineIndicator 
+                userId={targetUserId} 
+                size="sm" 
+                position="bottom-right" 
+                showOnlyOnline 
+              />
             </div>
 
             <div className="flex-1 min-w-0">
@@ -386,9 +419,15 @@ export default function ChatPage() {
                 </h1>
                 <ChevronRight className="w-4 h-4 text-[var(--foreground-tertiary)]" />
               </div>
-              <p className="text-xs text-[var(--foreground-tertiary)] truncate">
-                @{targetUser?.username}
-              </p>
+              <div className="flex items-center gap-1">
+                <OnlineIndicator userId={targetUserId} size="sm" showOnlyOnline />
+                <OnlineStatusText 
+                  userId={targetUserId} 
+                  onlineText="En línea"
+                  offlineText={`@${targetUser?.username}`}
+                  className="text-xs"
+                />
+              </div>
             </div>
           </Link>
 
@@ -518,6 +557,14 @@ export default function ChatPage() {
             </div>
           ))}
 
+          {/* Typing indicator */}
+          <TypingIndicator
+            isTyping={isAnyoneTyping}
+            text={getTypingText(usernameMap)}
+            variant="bubble"
+            className="mt-2"
+          />
+
           <div ref={messagesEndRef} />
         </div>
       </div>
@@ -549,7 +596,10 @@ export default function ChatPage() {
                   ref={inputRef}
                   type="text"
                   value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
+                  onChange={(e) => {
+                    setInputValue(e.target.value);
+                    handleTypingChange();
+                  }}
                   onKeyPress={handleKeyPress}
                   placeholder="Envía un mensaje..."
                   className="flex-1 bg-transparent text-sm text-[var(--foreground)] placeholder-[var(--foreground-tertiary)] outline-none"

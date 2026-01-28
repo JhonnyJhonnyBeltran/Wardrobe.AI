@@ -18,6 +18,7 @@ import { useUiStore } from '@/store/uiStore';
 import { supabase } from '@/lib/supabase/client';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { AvatarWithStatus } from '@/components/OnlineIndicator';
 
 interface Profile {
   id: string;
@@ -429,15 +430,21 @@ export default function MessagesPage() {
                       onClick={() => conv.other_user && openChat(conv.other_user.id)}
                       className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-[var(--background-secondary)] transition-colors"
                     >
-                      <div className="w-14 h-14 rounded-full bg-[var(--background-tertiary)] overflow-hidden flex-shrink-0">
-                        {conv.other_user?.avatar_url ? (
-                          <img src={conv.other_user.avatar_url} alt="" className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-[var(--foreground-secondary)] font-bold text-xl">
-                            {(conv.other_user?.full_name || conv.other_user?.username || '?')[0].toUpperCase()}
-                          </div>
-                        )}
-                      </div>
+                      <AvatarWithStatus 
+                        userId={conv.other_user?.id || ''} 
+                        indicatorSize="md" 
+                        showOnlyOnline
+                      >
+                        <div className="w-14 h-14 rounded-full bg-[var(--background-tertiary)] overflow-hidden flex-shrink-0">
+                          {conv.other_user?.avatar_url ? (
+                            <img src={conv.other_user.avatar_url} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-[var(--foreground-secondary)] font-bold text-xl">
+                              {(conv.other_user?.full_name || conv.other_user?.username || '?')[0].toUpperCase()}
+                            </div>
+                          )}
+                        </div>
+                      </AvatarWithStatus>
                       <div className="flex-1 min-w-0 text-left">
                         <p className="font-semibold text-[var(--foreground)] text-sm truncate">
                           {conv.other_user?.full_name || conv.other_user?.username}
