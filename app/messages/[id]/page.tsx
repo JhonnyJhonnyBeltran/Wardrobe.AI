@@ -636,27 +636,29 @@ export default function ChatPage() {
 
       {/* Cannot send more messages notice */}
       {!canSendMessage && !showRequestActions && (
-        <div className="bg-[var(--background-secondary)] border-t border-[var(--border-color)] p-4">
-          <div className="max-w-lg mx-auto text-center">
-            <p className="text-sm text-[var(--foreground-tertiary)]">
+        <div className="bg-[var(--background-secondary)] border-t border-[var(--border-color)]">
+          <div className="max-w-lg mx-auto px-4 py-3 md:p-4 text-center">
+            <p className="text-xs md:text-sm text-[var(--foreground-tertiary)]">
               Solo puedes enviar un mensaje hasta que {targetUser?.full_name || targetUser?.username} acepte tu solicitud.
             </p>
           </div>
+          {/* Minimal safe area spacing for iOS */}
+          <div className="h-[env(safe-area-inset-bottom,0px)] md:hidden" />
         </div>
       )}
 
       {/* Input */}
       {canSendMessage && !showRequestActions && (
-        <div className="border-t border-[var(--border-color)] bg-[var(--background)] pb-safe">
-          <div className="max-w-lg mx-auto p-3">
+        <div className="border-t border-[var(--border-color)] bg-[var(--background)]">
+          <div className="max-w-lg mx-auto px-3 py-2 md:p-3">
             <div className="flex items-center gap-2">
-              <button className="p-2 text-[var(--brand-pink)]">
-                <div className="w-9 h-9 rounded-full bg-[var(--brand-pink)] flex items-center justify-center">
-                  <Plus className="w-5 h-5 text-white" />
+              <button className="p-1.5 md:p-2 text-[var(--brand-pink)]">
+                <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-[var(--brand-pink)] flex items-center justify-center">
+                  <Plus className="w-4 h-4 md:w-5 md:h-5 text-white" />
                 </div>
               </button>
 
-              <div className="flex-1 flex items-center gap-2 bg-[var(--background-secondary)] rounded-full px-4 py-2">
+              <div className="flex-1 flex items-center gap-2 bg-[var(--background-secondary)] rounded-full px-3 md:px-4 py-2">
                 <input
                   ref={inputRef}
                   type="text"
@@ -678,17 +680,19 @@ export default function ChatPage() {
               {inputValue.trim() ? (
                 <button
                   onClick={handleSend}
-                  className="p-2 text-[var(--brand-pink)] font-semibold"
+                  className="p-1.5 md:p-2 text-[var(--brand-pink)] font-semibold"
                 >
                   <Send className="w-5 h-5" />
                 </button>
               ) : (
-                <button className="p-2 text-[var(--foreground-tertiary)]">
+                <button className="p-1.5 md:p-2 text-[var(--foreground-tertiary)]">
                   <Mic className="w-5 h-5" />
                 </button>
               )}
             </div>
           </div>
+          {/* Minimal safe area spacing for iOS - only what's needed */}
+          <div className="h-[env(safe-area-inset-bottom,0px)] md:hidden" />
         </div>
       )}
     </div>
