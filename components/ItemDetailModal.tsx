@@ -8,6 +8,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ExternalLink, Heart, Share2, ShoppingBag, Shirt } from 'lucide-react';
 import { MockOutfit } from '@/data/mockOutfits';
+import { useBodyScrollLock } from '@/lib/hooks';
 
 interface ItemDetailModalProps {
     outfit: MockOutfit | null;
@@ -26,6 +27,8 @@ const typeLabels: Record<string, string> = {
 };
 
 export default function ItemDetailModal({ outfit, isOpen, onClose }: ItemDetailModalProps) {
+    useBodyScrollLock(isOpen);
+
     if (!outfit) return null;
 
     return (

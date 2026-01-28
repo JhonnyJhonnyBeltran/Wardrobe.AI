@@ -10,12 +10,12 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { ClothingItem, ClothingCategory, ClothingColor, Season } from '@/types/clothing';
 import { useUser } from '@/store/userStore';
-import { 
-  uploadImage, 
-  deleteImage, 
-  BUCKETS, 
-  isDataUrl, 
-  isStorageUrl 
+import {
+  uploadImage,
+  deleteImage,
+  BUCKETS,
+  isDataUrl,
+  isStorageUrl
 } from '@/lib/supabase/storage';
 import type { Database } from '@/lib/supabase/database.types';
 
@@ -108,7 +108,7 @@ export function useWardrobe(): UseWardrobeReturn {
         const uploadResult = await uploadImage(
           item.imageUrl,
           BUCKETS.CLOTHING,
-          { 
+          {
             folder: authUser.id,
             maxWidth: 800,
             maxHeight: 800,
@@ -131,7 +131,7 @@ export function useWardrobe(): UseWardrobeReturn {
         const uploadResult = await uploadImage(
           item.originalImageUrl,
           BUCKETS.CLOTHING,
-          { 
+          {
             folder: `${authUser.id}/originals`,
             maxWidth: 1200,
             maxHeight: 1200,
@@ -209,8 +209,11 @@ export function useWardrobe(): UseWardrobeReturn {
   const updateItem = async (id: string, updates: Partial<ClothingItem>): Promise<boolean> => {
     let dbUpdates: any = {};
     try {
-      const { data: { user: authUser } } = await supabase.auth.getUser();
-      
+      // Use getSession to check auth locally instead of calling getUser (network)
+      // This prevents unnecessary user fetching on every interaction
+      const { data: { session } } = await supabase.auth.getSession();
+      const authUser = session?.user;
+
       if (!authUser) {
         setError('Usuario no autenticado');
         return false;
@@ -221,7 +224,7 @@ export function useWardrobe(): UseWardrobeReturn {
         const uploadResult = await uploadImage(
           updates.imageUrl,
           BUCKETS.CLOTHING,
-          { 
+          {
             folder: authUser.id,
             maxWidth: 800,
             maxHeight: 800,
@@ -234,7 +237,7 @@ export function useWardrobe(): UseWardrobeReturn {
           return false;
         }
         dbUpdates.image_url = uploadResult.url;
-        
+
         // Eliminar imagen anterior si era de Storage
         const oldItem = items.find(i => i.id === id);
         if (oldItem?.imageUrl && isStorageUrl(oldItem.imageUrl)) {
@@ -249,7 +252,7 @@ export function useWardrobe(): UseWardrobeReturn {
         const uploadResult = await uploadImage(
           updates.originalImageUrl,
           BUCKETS.CLOTHING,
-          { 
+          {
             folder: `${authUser.id}/originals`,
             maxWidth: 1200,
             maxHeight: 1200,
@@ -310,7 +313,7 @@ export function useWardrobe(): UseWardrobeReturn {
     try {
       // Obtener el item para eliminar sus imágenes de Storage
       const itemToDelete = items.find(i => i.id === id);
-      
+
       const { error: deleteError } = await supabase
         .from('clothing_items')
         .delete()

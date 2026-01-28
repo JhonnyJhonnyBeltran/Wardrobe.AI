@@ -23,8 +23,6 @@ interface UseAddItemFormReturn {
     // Form state
     mode: FormMode;
     setMode: (mode: FormMode) => void;
-    inputMethod: InputMethod;
-    setInputMethod: (method: InputMethod) => void;
     formData: ItemFormData;
     setFormData: React.Dispatch<React.SetStateAction<ItemFormData>>;
 
@@ -33,22 +31,14 @@ interface UseAddItemFormReturn {
     originalImage: string | null;
     processedImage: string | null;
     selectedFile: File | null;
-    availableImages: string[];
-    selectedImageIndex: number | null;
 
     // Processing state
     isProcessing: boolean;
     currentMessageIndex: number;
     processingMessage: string;
 
-    // URL state
-    url: string;
-    setUrl: (url: string) => void;
-
     // Handlers
     handleImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
-    handleImageSelection: (imageUrl: string, index: number) => Promise<void>;
-    handleUrlImport: () => Promise<void>;
     handleManualProcess: () => Promise<void>;
     handleColorSelect: (colorOption: { name: string; hex: string }) => void;
     handleColorPickerChange: (hex: string) => void;
@@ -66,7 +56,6 @@ export function useAddItemForm({
 }: UseAddItemFormProps): UseAddItemFormReturn {
     // Form mode state
     const [mode, setMode] = useState<FormMode>('quick');
-    const [inputMethod, setInputMethod] = useState<InputMethod>('upload');
 
     // Form data state
     const [formData, setFormData] = useState<ItemFormData>(DEFAULT_FORM_DATA);
@@ -76,15 +65,10 @@ export function useAddItemForm({
     const [originalImage, setOriginalImage] = useState<string | null>(null);
     const [processedImage, setProcessedImage] = useState<string | null>(null);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
-    const [availableImages, setAvailableImages] = useState<string[]>([]);
-    const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
 
     // Processing state
     const [isProcessing, setIsProcessing] = useState(false);
     const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
-
-    // URL state
-    const [url, setUrl] = useState('');
 
     // Rotate processing messages
     useEffect(() => {
@@ -142,9 +126,6 @@ export function useAddItemForm({
         setOriginalImage(null);
         setProcessedImage(null);
         setSelectedFile(null);
-        setAvailableImages([]);
-        setSelectedImageIndex(null);
-        setUrl('');
         setFormData(DEFAULT_FORM_DATA);
     }, []);
 
@@ -202,98 +183,6 @@ export function useAddItemForm({
             setIsProcessing(false);
         }
     }, []);
-
-    // Handle selection from scraped images
-    const handleImageSelection = useCallback(async (imageUrl: string, index: number) => {
-        setSelectedImageIndex(index);
-        setOriginalImage(imageUrl);
-        setIsProcessing(true);
-        setCurrentMessageIndex(0);
-
-        try {
-            const result = await processClothingImage(imageUrl, {
-                normalize: true,
-                canvasWidth: 800,
-                canvasHeight: 1000,
-                quality: 'medium',
-                transparentBackground: true,
-            });
-
-            if (result.success && result.imageUrl) {
-                setProcessedImage(result.imageUrl);
-                setImage(result.imageUrl);
-
-                // Detect dominant color
-                try {
-                    const dominantColor = await extractDominantColor(result.imageUrl);
-                    setFormData(prev => ({
-                        ...prev,
-                        color: dominantColor.name,
-                        colorHex: dominantColor.hex
-                    }));
-                } catch (colorError) {
-                    console.warn('Failed to extract dominant color:', colorError);
-                }
-            } else {
-                console.warn('Processing failed, keeping original:', result.error);
-                setImage(imageUrl);
-            }
-        } catch (error) {
-            console.error('Image processing failed:', error);
-            setImage(imageUrl);
-        } finally {
-            setIsProcessing(false);
-        }
-    }, []);
-
-    // Handle URL import (scraping)
-    const handleUrlImport = useCallback(async () => {
-        if (!url) return;
-        setIsProcessing(true);
-        setAvailableImages([]);
-        setSelectedImageIndex(null);
-
-        try {
-            const response = await fetch('/api/scrape-product', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ url }),
-            });
-
-            let data;
-            const contentType = response.headers.get("content-type");
-            if (contentType && contentType.indexOf("application/json") !== -1) {
-                data = await response.json();
-            } else {
-                const text = await response.text();
-                console.error('Server returned non-JSON response:', text);
-                throw new Error('Server returned non-JSON response. Check server logs.');
-            }
-
-            if (data.success) {
-                const { name, images, type, brand, url: productUrl } = data.data;
-
-                if (images && images.length > 0) {
-                    setAvailableImages(images);
-                }
-
-                setFormData(prev => ({
-                    ...prev,
-                    name: name || prev.name,
-                    type: type || prev.type,
-                    brand: brand || prev.brand,
-                    sourceUrl: productUrl || url,
-                }));
-                setMode('complete');
-            } else {
-                console.error('Scraping failed:', data.error);
-            }
-        } catch (error) {
-            console.error('Import failed:', error);
-        } finally {
-            setIsProcessing(false);
-        }
-    }, [url]);
 
     // Handle manual AI processing toggle
     const handleManualProcess = useCallback(async () => {
@@ -428,8 +317,6 @@ export function useAddItemForm({
         // Form state
         mode,
         setMode,
-        inputMethod,
-        setInputMethod,
         formData,
         setFormData,
 
@@ -438,22 +325,14 @@ export function useAddItemForm({
         originalImage,
         processedImage,
         selectedFile,
-        availableImages,
-        selectedImageIndex,
 
         // Processing state
         isProcessing,
         currentMessageIndex,
         processingMessage: PROCESSING_MESSAGES[currentMessageIndex],
 
-        // URL state
-        url,
-        setUrl,
-
         // Handlers
         handleImageUpload,
-        handleImageSelection,
-        handleUrlImport,
         handleManualProcess,
         handleColorSelect,
         handleColorPickerChange,

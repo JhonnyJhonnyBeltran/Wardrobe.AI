@@ -119,10 +119,18 @@ export default function ClosetPage() {
   const [searchExpanded, setSearchExpanded] = useState(false);
   const [filterType, setFilterType] = useState<string | null>(null);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
-  const [favorites, setFavorites] = useState<Set<string>>(new Set(['1', '2', '5', '6', '9', '10']));
+  const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingItem, setEditingItem] = useState<ClothingItemType | null>(null);
   const { items, loading, addItem, updateItem, deleteItem, refresh } = useWardrobe();
+
+  // Sync favorites from items
+  useEffect(() => {
+    if (items) {
+      const favIds = items.filter((i) => i.favorite).map(i => i.id);
+      setFavorites(new Set(favIds));
+    }
+  }, [items]);
 
   // Wardrobe Door Animation State - Solo mostrar la primera vez
   // Wardrobe Door Animation State - Mostrar siempre al entrar
@@ -142,16 +150,36 @@ export default function ClosetPage() {
   const [selectedProduct, setSelectedProduct] = useState<(OutfitItem & { sourceUrl?: string }) | null>(null);
   const [showProductModal, setShowProductModal] = useState(false);
 
-  const handleFavoriteToggle = (id: string) => {
+  const handleFavoriteToggle = async (id: string) => {
+    const isFav = favorites.has(id);
+    const newFavStatus = !isFav;
+
+    // Optimistic update
     setFavorites(prev => {
       const newFavorites = new Set(prev);
-      if (newFavorites.has(id)) {
+      if (isFav) {
         newFavorites.delete(id);
       } else {
         newFavorites.add(id);
       }
       return newFavorites;
     });
+
+    try {
+      await updateItem(id, { favorite: newFavStatus });
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+      // Revert on error
+      setFavorites(prev => {
+        const newFavorites = new Set(prev);
+        if (isFav) {
+          newFavorites.add(id);
+        } else {
+          newFavorites.delete(id);
+        }
+        return newFavorites;
+      });
+    }
   };
 
   const handleEditItem = (id: string) => {

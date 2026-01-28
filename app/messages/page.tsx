@@ -46,7 +46,7 @@ export default function MessagesPage() {
   const { user } = useUser();
   const router = useRouter();
   const { setMessageRequestsCount } = useUiStore();
-  
+
   // Unread messages hook - handles badge visibility and read state
   const { onEnterMessagesPage, hasUnread } = useUnreadMessages({ autoFetch: true, enableRealtime: true });
 
@@ -251,13 +251,10 @@ export default function MessagesPage() {
   return (
     <div className="min-h-screen bg-[var(--background)] pb-24 md:pb-8">
       {/* Header */}
-      <div className="sticky top-0 z-20 bg-[var(--background)] border-b border-[var(--border-color)]">
+      {/* <div className="sticky top-0 z-20 bg-[var(--background)] border-b border-[var(--border-color)]">
         <div className="max-w-lg mx-auto px-4 py-4">
-          <h1 className="text-xl font-bold text-[var(--foreground)] text-center">
-            Bandeja de entrada
-          </h1>
         </div>
-      </div>
+      </div> */}
 
       {/* Search Bar - Clean design */}
       <div className="max-w-lg mx-auto px-4 pt-4">

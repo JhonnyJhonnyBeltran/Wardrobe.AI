@@ -9,7 +9,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Home, Search, Send, User, Crown, Bot, DoorClosed } from 'lucide-react';
+import { Home, Search, Send, User, Crown, DoorClosed } from 'lucide-react';
 import { useUser } from '@/store';
 import { useTranslation } from '@/lib/i18n';
 import { useUiStore } from '@/store/uiStore';
@@ -19,7 +19,7 @@ import LogoMark from './LogoMark';
 
 interface NavItem {
   href: string;
-  labelKey: 'home' | 'closet' | 'create' | 'social' | 'profile' | 'search' | 'messages' | 'kloe';
+  labelKey: 'home' | 'closet' | 'create' | 'social' | 'profile' | 'search' | 'messages';
   icon: React.ReactNode;
   isLogoMark?: boolean;
 }
@@ -29,7 +29,7 @@ export default function Sidebar() {
   const { isPremium, upgradeToPremiun } = useUser();
   const { t } = useTranslation();
   const { requestsCount } = useUiStore();
-  
+
   // Message notifications from new store
   const messageUnreadCount = useMessageStore(selectTotalUnread);
   const messageBadgeVisible = useMessageStore(selectBadgeVisible);
@@ -37,9 +37,8 @@ export default function Sidebar() {
   const navItems: NavItem[] = [
     { href: '/feed', labelKey: 'home', icon: <Home className="w-5 h-5" /> },
     { href: '/search', labelKey: 'search', icon: <Search className="w-5 h-5" /> },
-    { href: '/messages', labelKey: 'messages', icon: <Send className="w-5 h-5 -rotate-45 translate-x-0.5 translate-y-1" /> },
     { href: '/closet', labelKey: 'closet', icon: null, isLogoMark: true },
-    { href: '/chat', labelKey: 'kloe', icon: <Bot className="w-5 h-5" /> },
+    { href: '/messages', labelKey: 'messages', icon: <Send className="w-5 h-5 -rotate-45 translate-x-0.5 translate-y-1" /> },
     { href: '/profile', labelKey: 'profile', icon: <User className="w-5 h-5" /> },
   ];
 

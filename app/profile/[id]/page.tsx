@@ -271,20 +271,46 @@ export default function PublicProfilePage() {
                   </div>
                 </div>
                 <div className="text-center">
-                  <div className="text-lg font-bold text-[var(--foreground)]">
-                    {profileStats.followers}
-                  </div>
-                  <div className="text-xs text-[var(--foreground-tertiary)]">
-                    {t.profile.followers}
-                  </div>
+                  {isFollowedByMe ? (
+                    <Link href={`/profile/${profileId}/follows?tab=followers`} className="block hover:opacity-80 transition-opacity">
+                      <div className="text-lg font-bold text-[var(--foreground)]">
+                        {profileStats.followers}
+                      </div>
+                      <div className="text-xs text-[var(--foreground-tertiary)]">
+                        {t.profile.followers}
+                      </div>
+                    </Link>
+                  ) : (
+                    <div>
+                      <div className="text-lg font-bold text-[var(--foreground)]">
+                        {profileStats.followers}
+                      </div>
+                      <div className="text-xs text-[var(--foreground-tertiary)]">
+                        {t.profile.followers}
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div className="text-center">
-                  <div className="text-lg font-bold text-[var(--foreground)]">
-                    {profileStats.following}
-                  </div>
-                  <div className="text-xs text-[var(--foreground-tertiary)]">
-                    {t.profile.following}
-                  </div>
+                  {isFollowedByMe ? (
+                    <Link href={`/profile/${profileId}/follows?tab=following`} className="block hover:opacity-80 transition-opacity">
+                      <div className="text-lg font-bold text-[var(--foreground)]">
+                        {profileStats.following}
+                      </div>
+                      <div className="text-xs text-[var(--foreground-tertiary)]">
+                        {t.profile.following}
+                      </div>
+                    </Link>
+                  ) : (
+                    <div>
+                      <div className="text-lg font-bold text-[var(--foreground)]">
+                        {profileStats.following}
+                      </div>
+                      <div className="text-xs text-[var(--foreground-tertiary)]">
+                        {t.profile.following}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

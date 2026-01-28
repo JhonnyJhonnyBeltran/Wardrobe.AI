@@ -16,8 +16,9 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Link as LinkIcon, ArrowRight, Loader2, Check } from 'lucide-react';
+import { X, ArrowRight, Loader2, Check } from 'lucide-react';
 import { Button, AdvisorModal } from '@/components';
+import { useBodyScrollLock } from '@/lib/hooks';
 
 // Local imports
 import { useAddItemForm } from './hooks/useAddItemForm';
@@ -25,7 +26,6 @@ import {
     DropdownWithCustom,
     CustomSelect,
     ImageUploader,
-    ImageSelector,
 } from './components';
 import {
     BRAND_OPTIONS,
@@ -44,24 +44,19 @@ export default function AddItemModal({
     initialData,
     isEditing = false
 }: AddItemModalProps) {
+    // Lock body scroll
+    useBodyScrollLock(isOpen);
+
     // All form logic is encapsulated in the hook
     const {
         mode,
         setMode,
-        inputMethod,
-        setInputMethod,
         formData,
         setFormData,
         image,
-        availableImages,
-        selectedImageIndex,
         isProcessing,
         processingMessage,
-        url,
-        setUrl,
         handleImageUpload,
-        handleImageSelection,
-        handleUrlImport,
         handleColorSelect,
         handleColorPickerChange,
         rotateImage,
@@ -109,7 +104,7 @@ export default function AddItemModal({
                     exit={{ y: '100%' }}
                     transition={{ type: 'spring', damping: 25 }}
                     onClick={(e) => e.stopPropagation()}
-                    className="w-full md:max-w-lg bg-[var(--background)] rounded-t-3xl md:rounded-3xl max-h-[85vh] md:max-h-[90vh] mb-16 md:mb-0 flex flex-col"
+                    className="w-full md:max-w-lg bg-[var(--background)] rounded-t-3xl md:rounded-3xl overflow-hidden max-h-[85vh] md:h-auto md:max-h-[85vh] mb-16 md:mb-0 flex flex-col"
                 >
                     {/* Floating Close Button */}
                     <div className="sticky top-0 z-50 flex justify-end px-4 pt-4">
@@ -157,95 +152,15 @@ export default function AddItemModal({
                             </button>
                         </div>
 
-                        {/* Input Method Tabs */}
-                        {!isEditing && (
-                            <div className="flex border-b border-[var(--border-color)]">
-                                <button
-                                    onClick={() => setInputMethod('upload')}
-                                    className={`flex-1 py-2 text-sm font-medium border-b-2 transition-colors ${inputMethod === 'upload'
-                                        ? 'border-[var(--brand-pink)] text-[var(--foreground)]'
-                                        : 'border-transparent text-[var(--foreground-tertiary)]'
-                                        }`}
-                                >
-                                    Subir Foto
-                                </button>
-                                <button
-                                    onClick={() => setInputMethod('url')}
-                                    className={`flex-1 py-2 text-sm font-medium border-b-2 transition-colors ${inputMethod === 'url'
-                                        ? 'border-[var(--brand-pink)] text-[var(--foreground)]'
-                                        : 'border-transparent text-[var(--foreground-tertiary)]'
-                                        }`}
-                                >
-                                    Importar URL
-                                </button>
-                            </div>
-                        )}
-
                         {/* Image Input Area */}
                         <div className="min-h-[150px]">
-                            {inputMethod === 'upload' || isEditing ? (
-                                <ImageUploader
-                                    image={image}
-                                    isProcessing={isProcessing}
-                                    processingMessage={processingMessage}
-                                    onImageUpload={handleImageUpload}
-                                    onRotate={rotateImage}
-                                />
-                            ) : (
-                                <div className="space-y-3">
-                                    <label className="block text-xs font-bold text-[var(--foreground)]">
-                                        Enlace del producto
-                                    </label>
-                                    <div className="flex gap-2">
-                                        <input
-                                            type="url"
-                                            value={url}
-                                            onChange={(e) => setUrl(e.target.value)}
-                                            placeholder="https://zara.com/..."
-                                            className="flex-1 px-4 py-2.5 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)] text-sm"
-                                        />
-                                        <button
-                                            onClick={handleUrlImport}
-                                            disabled={!url || isProcessing}
-                                            className="px-4 rounded-2xl bg-[var(--brand-pink)] text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-                                        >
-                                            {isProcessing ? <Loader2 className="w-5 h-5 animate-spin" /> : <ArrowRight className="w-5 h-5" />}
-                                        </button>
-                                    </div>
-
-                                    {/* Image selector for scraped images */}
-                                    {availableImages.length > 0 ? (
-                                        <ImageSelector
-                                            images={availableImages}
-                                            selectedIndex={selectedImageIndex}
-                                            isProcessing={isProcessing}
-                                            processingMessage={processingMessage}
-                                            processedImage={image}
-                                            onSelectImage={handleImageSelection}
-                                            onRotate={rotateImage}
-                                        />
-                                    ) : (
-                                        /* Empty state */
-                                        <div className="aspect-video rounded-2xl border border-[var(--border-color)] bg-[var(--background-secondary)] flex items-center justify-center overflow-hidden relative">
-                                            {isProcessing ? (
-                                                <div className="flex flex-col items-center justify-center gap-2">
-                                                    <Loader2 className="w-8 h-8 text-[var(--brand-pink)] animate-spin" />
-                                                    <span className="text-xs text-[var(--brand-pink)] font-semibold">
-                                                        Buscando imágenes...
-                                                    </span>
-                                                </div>
-                                            ) : (
-                                                <div className="text-center p-4">
-                                                    <LinkIcon className="w-8 h-8 text-[var(--foreground-tertiary)] mx-auto mb-2" />
-                                                    <p className="text-xs text-[var(--foreground-tertiary)]">
-                                                        Pega una URL para ver las imágenes disponibles
-                                                    </p>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
+                            <ImageUploader
+                                image={image}
+                                isProcessing={isProcessing}
+                                processingMessage={processingMessage}
+                                onImageUpload={handleImageUpload}
+                                onRotate={rotateImage}
+                            />
                         </div>
 
                         {/* Type Selector - Always visible */}
