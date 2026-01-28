@@ -21,11 +21,18 @@ export interface Database {
           name: string;
           category: string;
           color: string;
+          color_hex: string | null;
           image_url: string | null;
+          original_image_url: string | null;
           season: string[];
           brand: string | null;
           tags: string[] | null;
           favorite: boolean;
+          is_ai_processed: boolean;
+          size: string | null;
+          reference: string | null;
+          fabric: string | null;
+          source_url: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -35,11 +42,18 @@ export interface Database {
           name: string;
           category: string;
           color: string;
+          color_hex?: string | null;
           image_url?: string | null;
+          original_image_url?: string | null;
           season: string[];
           brand?: string | null;
           tags?: string[] | null;
           favorite?: boolean;
+          is_ai_processed?: boolean;
+          size?: string | null;
+          reference?: string | null;
+          fabric?: string | null;
+          source_url?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -49,11 +63,18 @@ export interface Database {
           name?: string;
           category?: string;
           color?: string;
+          color_hex?: string | null;
           image_url?: string | null;
+          original_image_url?: string | null;
           season?: string[];
           brand?: string | null;
           tags?: string[] | null;
           favorite?: boolean;
+          is_ai_processed?: boolean;
+          size?: string | null;
+          reference?: string | null;
+          fabric?: string | null;
+          source_url?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -148,18 +169,21 @@ export interface Database {
       };
       follows: {
         Row: {
+          id: string;
           follower_id: string;
           following_id: string;
-          status: 'pending' | 'accepted'; // Added status
+          status: 'pending' | 'accepted';
           created_at: string;
         };
         Insert: {
+          id?: string;
           follower_id: string;
           following_id: string;
           status?: 'pending' | 'accepted';
           created_at?: string;
         };
         Update: {
+          id?: string;
           follower_id?: string;
           following_id?: string;
           status?: 'pending' | 'accepted';
@@ -169,6 +193,7 @@ export interface Database {
       messages: {
         Row: {
           id: string;
+          conversation_id: string | null;
           sender_id: string;
           receiver_id: string;
           content: string;
@@ -177,6 +202,7 @@ export interface Database {
         };
         Insert: {
           id?: string;
+          conversation_id?: string | null;
           sender_id: string;
           receiver_id: string;
           content: string;
@@ -185,6 +211,7 @@ export interface Database {
         };
         Update: {
           id?: string;
+          conversation_id?: string | null;
           sender_id?: string;
           receiver_id?: string;
           content?: string;

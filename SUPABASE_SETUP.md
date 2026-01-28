@@ -52,27 +52,46 @@
    ```
 4. Clic en **"Create bucket"**
 
-#### Configurar Políticas del Bucket:
+#### Configurar Políticas del Bucket (IMPORTANTE):
 
-1. Clic en el bucket **"clothing-images"**
-2. Ve a **"Policies"** (pestaña)
-3. Clic en **"New policy"** dos veces para crear:
+Ve a **Storage** > **Policies** y crea las siguientes políticas usando SQL:
 
-**Política 1 - Upload (Usuarios pueden subir):**
+```sql
+-- Política 1: Usuarios autenticados pueden subir imágenes a su carpeta
+CREATE POLICY "Users can upload to their folder"
+ON storage.objects FOR INSERT
+TO authenticated
+WITH CHECK (
+  bucket_id = 'clothing-images' 
+  AND (storage.foldername(name))[1] = auth.uid()::text
+);
 
+-- Política 2: Usuarios autenticados pueden actualizar sus imágenes
+CREATE POLICY "Users can update their images"
+ON storage.objects FOR UPDATE
+TO authenticated
+USING (
+  bucket_id = 'clothing-images' 
+  AND (storage.foldername(name))[1] = auth.uid()::text
+);
+
+-- Política 3: Usuarios autenticados pueden eliminar sus imágenes
+CREATE POLICY "Users can delete their images"
+ON storage.objects FOR DELETE
+TO authenticated
+USING (
+  bucket_id = 'clothing-images' 
+  AND (storage.foldername(name))[1] = auth.uid()::text
+);
+
+-- Política 4: Cualquiera puede ver las imágenes (bucket público)
+CREATE POLICY "Public can view images"
+ON storage.objects FOR SELECT
+TO public
+USING (bucket_id = 'clothing-images');
 ```
-Name: Allow authenticated uploads
-Target roles: authenticated
-WITH CHECK: bucket_id = 'clothing-images'
-```
 
-**Política 2 - Read (Todos pueden ver):**
-
-```
-Name: Allow public read
-Target roles: public
-USING: bucket_id = 'clothing-images'
-```
+> **Nota:** Las imágenes se guardan en carpetas por usuario: `clothing-images/{user_id}/imagen.webp`
 
 ---
 

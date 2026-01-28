@@ -5,12 +5,13 @@
  * Componente para mostrar notificaciones toast en tiempo real
  */
 
-import { memo, useEffect, useState, useCallback } from 'react';
+import { memo, useEffect, useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, MessageCircle, UserPlus, Heart, Bell } from 'lucide-react';
 import { useRealtimeStore } from '@/store/realtimeStore';
 import type { Notification, NotificationType } from '@/lib/realtime';
 import Link from 'next/link';
+import Image from 'next/image';
 
 // ============================================
 // ICON MAPPING
@@ -98,10 +99,13 @@ const Toast = memo(function Toast({
         ${notificationColors[notification.type]}
       `}>
         {notification.sender?.avatar_url ? (
-          <img 
+          <Image 
             src={notification.sender.avatar_url} 
             alt="" 
+            width={40}
+            height={40}
             className="w-full h-full rounded-full object-cover"
+            unoptimized
           />
         ) : (
           notificationIcons[notification.type]
@@ -200,20 +204,17 @@ export const NotificationToastContainer = memo(function NotificationToastContain
   duration = 5000,
 }: NotificationToastContainerProps) {
   const notifications = useRealtimeStore(state => state.notifications);
-  const [visibleToasts, setVisibleToasts] = useState<Notification[]>([]);
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
 
-  // Update visible toasts when notifications change
-  useEffect(() => {
-    const unread = notifications
+  // Derive visible toasts from notifications (no useState needed)
+  const visibleToasts = useMemo(() => {
+    return notifications
       .filter(n => !n.read && !dismissedIds.has(n.id))
       .slice(0, maxVisible);
-    setVisibleToasts(unread);
   }, [notifications, maxVisible, dismissedIds]);
 
   const handleDismiss = useCallback((id: string) => {
     setDismissedIds(prev => new Set(prev).add(id));
-    setVisibleToasts(prev => prev.filter(t => t.id !== id));
   }, []);
 
   return (

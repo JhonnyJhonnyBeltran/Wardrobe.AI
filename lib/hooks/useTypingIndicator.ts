@@ -16,17 +16,11 @@ interface UseTypingIndicatorOptions {
   debounceMs?: number;
 }
 
-interface TypingUser {
-  userId: string;
-  username?: string;
-}
-
 export function useTypingIndicator(options: UseTypingIndicatorOptions) {
   const { conversationId, debounceMs = TIMING.TYPING_THROTTLE } = options;
   
   const { user } = useUser();
   const setUserTyping = useRealtimeStore(state => state.setUserTyping);
-  const getTypingUsers = useRealtimeStore(state => state.getTypingUsers);
   const clearTypingState = useRealtimeStore(state => state.clearTypingState);
 
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
@@ -66,7 +60,7 @@ export function useTypingIndicator(options: UseTypingIndicatorOptions) {
       clearTypingState(conversationId);
       setTypingUsers([]);
     };
-  }, [conversationId, user?.id]);
+  }, [conversationId, user?.id, setUserTyping, clearTypingState]);
 
   // Send typing indicator (debounced)
   const sendTyping = useCallback(() => {

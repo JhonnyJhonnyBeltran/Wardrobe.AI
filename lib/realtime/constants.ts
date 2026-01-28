@@ -1,6 +1,15 @@
 /**
  * Realtime Constants
- * Configuración y constantes para el sistema de tiempo real
+ * 
+ * Configuración centralizada para el sistema de tiempo real.
+ * Todas las constantes relacionadas con channels, eventos y timing.
+ * 
+ * Para modificar comportamientos como:
+ * - Tiempo de timeout de typing indicator
+ * - Máximo de notificaciones en memoria
+ * - Nombres de canales
+ * 
+ * @module lib/realtime/constants
  */
 
 // ============================================

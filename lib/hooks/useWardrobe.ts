@@ -1,12 +1,26 @@
 /**
  * useWardrobe Hook
  * Maneja todas las operaciones del armario con Supabase
+ * 
+ * NOTA: Las imágenes se suben a Supabase Storage (bucket 'clothing-images')
+ * y solo se guarda la URL pública en la base de datos.
  */
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { ClothingItem, ClothingCategory, ClothingColor, Season } from '@/types/clothing';
 import { useUser } from '@/store/userStore';
+import { 
+  uploadImage, 
+  deleteImage, 
+  BUCKETS, 
+  isDataUrl, 
+  isStorageUrl 
+} from '@/lib/supabase/storage';
+import type { Database } from '@/lib/supabase/database.types';
+
+// Tipo de fila de la tabla clothing_items
+type ClothingItemRow = Database['public']['Tables']['clothing_items']['Row'];
 
 interface UseWardrobeReturn {
   items: ClothingItem[];
@@ -47,7 +61,7 @@ export function useWardrobe(): UseWardrobeReturn {
       if (fetchError) throw fetchError;
 
       // Convert DB format to ClothingItem format
-      const formattedItems: ClothingItem[] = (data || []).map(item => ({
+      const formattedItems: ClothingItem[] = ((data || []) as ClothingItemRow[]).map(item => ({
         id: item.id,
         name: item.name,
         category: item.category as ClothingCategory,
@@ -59,16 +73,11 @@ export function useWardrobe(): UseWardrobeReturn {
         favorite: item.favorite,
         createdAt: new Date(item.created_at),
         isAiProcessed: item.is_ai_processed,
-        originalImageUrl: item.original_image_url,
-        // Campos adicionales
-        ...({
-          colorHex: item.color_hex,
-          size: item.size,
-          reference: item.reference,
-          fabric: item.fabric,
-          // TODO: Descomentar cuando se añada columna source_url en Supabase
-          // sourceUrl: item.source_url,
-        } as any)
+        originalImageUrl: item.original_image_url || undefined,
+        colorHex: item.color_hex || undefined,
+        size: item.size || undefined,
+        reference: item.reference || undefined,
+        fabric: item.fabric || undefined,
       }));
 
       setItems(formattedItems);
@@ -90,18 +99,67 @@ export function useWardrobe(): UseWardrobeReturn {
         return null;
       }
 
+      // Subir imágenes a Storage si son Data URLs (base64)
+      let processedImageUrl: string | null = null;
+      let originalImageUrl: string | null = null;
+
+      // Subir imagen procesada
+      if (item.imageUrl && isDataUrl(item.imageUrl)) {
+        const uploadResult = await uploadImage(
+          item.imageUrl,
+          BUCKETS.CLOTHING,
+          { 
+            folder: authUser.id,
+            maxWidth: 800,
+            maxHeight: 800,
+            quality: 0.85
+          }
+        );
+        if (uploadResult.error) {
+          console.error('Error subiendo imagen procesada:', uploadResult.error);
+          setError('Error al subir la imagen');
+          return null;
+        }
+        processedImageUrl = uploadResult.url ?? null;
+      } else if (item.imageUrl) {
+        // Ya es una URL válida (Storage o externa)
+        processedImageUrl = item.imageUrl;
+      }
+
+      // Subir imagen original si existe
+      if (item.originalImageUrl && isDataUrl(item.originalImageUrl)) {
+        const uploadResult = await uploadImage(
+          item.originalImageUrl,
+          BUCKETS.CLOTHING,
+          { 
+            folder: `${authUser.id}/originals`,
+            maxWidth: 1200,
+            maxHeight: 1200,
+            quality: 0.9
+          }
+        );
+        if (uploadResult.error) {
+          console.warn('Error subiendo imagen original:', uploadResult.error);
+          // No es crítico, continuamos sin la original
+        } else {
+          originalImageUrl = uploadResult.url ?? null;
+        }
+      } else if (item.originalImageUrl) {
+        originalImageUrl = item.originalImageUrl;
+      }
+
       const itemData: any = {
         user_id: authUser.id,
         name: item.name,
         category: item.category,
         color: item.color,
-        image_url: item.imageUrl || null,
+        image_url: processedImageUrl,
         season: item.season,
         brand: item.brand || null,
         tags: item.tags || null,
         favorite: item.favorite || false,
         is_ai_processed: item.isAiProcessed || false,
-        original_image_url: item.originalImageUrl || null,
+        original_image_url: originalImageUrl,
         color_hex: (item as any).colorHex || null,
         size: (item as any).size || null,
         reference: (item as any).reference || null,
@@ -118,27 +176,24 @@ export function useWardrobe(): UseWardrobeReturn {
 
       if (insertError) throw insertError;
 
+      const dbItem = data as ClothingItemRow;
       const newItem: ClothingItem = {
-        id: data.id,
-        name: data.name,
-        category: data.category as ClothingCategory,
-        color: data.color as ClothingColor,
-        imageUrl: data.image_url || undefined,
-        season: data.season as Season[],
-        brand: data.brand || undefined,
-        tags: data.tags || undefined,
-        favorite: data.favorite,
-        createdAt: new Date(data.created_at),
-        isAiProcessed: data.is_ai_processed,
-        originalImageUrl: data.original_image_url,
-        ...({
-          colorHex: data.color_hex,
-          size: data.size,
-          reference: data.reference,
-          fabric: data.fabric,
-          // TODO: Descomentar cuando se añada columna source_url en Supabase
-          // sourceUrl: data.source_url,
-        } as any)
+        id: dbItem.id,
+        name: dbItem.name,
+        category: dbItem.category as ClothingCategory,
+        color: dbItem.color as ClothingColor,
+        imageUrl: dbItem.image_url || undefined,
+        season: dbItem.season as Season[],
+        brand: dbItem.brand || undefined,
+        tags: dbItem.tags || undefined,
+        favorite: dbItem.favorite,
+        createdAt: new Date(dbItem.created_at),
+        isAiProcessed: dbItem.is_ai_processed,
+        originalImageUrl: dbItem.original_image_url || undefined,
+        colorHex: dbItem.color_hex || undefined,
+        size: dbItem.size || undefined,
+        reference: dbItem.reference || undefined,
+        fabric: dbItem.fabric || undefined,
       };
 
       setItems(prev => [newItem, ...prev]);
@@ -154,16 +209,68 @@ export function useWardrobe(): UseWardrobeReturn {
   const updateItem = async (id: string, updates: Partial<ClothingItem>): Promise<boolean> => {
     let dbUpdates: any = {};
     try {
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      
+      if (!authUser) {
+        setError('Usuario no autenticado');
+        return false;
+      }
+
+      // Si hay una imagen nueva en base64, subirla a Storage
+      if (updates.imageUrl !== undefined && isDataUrl(updates.imageUrl)) {
+        const uploadResult = await uploadImage(
+          updates.imageUrl,
+          BUCKETS.CLOTHING,
+          { 
+            folder: authUser.id,
+            maxWidth: 800,
+            maxHeight: 800,
+            quality: 0.85
+          }
+        );
+        if (uploadResult.error) {
+          console.error('Error subiendo imagen:', uploadResult.error);
+          setError('Error al subir la imagen');
+          return false;
+        }
+        dbUpdates.image_url = uploadResult.url;
+        
+        // Eliminar imagen anterior si era de Storage
+        const oldItem = items.find(i => i.id === id);
+        if (oldItem?.imageUrl && isStorageUrl(oldItem.imageUrl)) {
+          await deleteImage(oldItem.imageUrl); // No bloqueamos si falla
+        }
+      } else if (updates.imageUrl !== undefined) {
+        dbUpdates.image_url = updates.imageUrl;
+      }
+
+      // Lo mismo para imagen original
+      if (updates.originalImageUrl !== undefined && isDataUrl(updates.originalImageUrl)) {
+        const uploadResult = await uploadImage(
+          updates.originalImageUrl,
+          BUCKETS.CLOTHING,
+          { 
+            folder: `${authUser.id}/originals`,
+            maxWidth: 1200,
+            maxHeight: 1200,
+            quality: 0.9
+          }
+        );
+        if (!uploadResult.error) {
+          dbUpdates.original_image_url = uploadResult.url;
+        }
+      } else if (updates.originalImageUrl !== undefined) {
+        dbUpdates.original_image_url = updates.originalImageUrl;
+      }
+
       if (updates.name !== undefined) dbUpdates.name = updates.name;
       if (updates.category !== undefined) dbUpdates.category = updates.category;
       if (updates.color !== undefined) dbUpdates.color = updates.color;
-      if (updates.imageUrl !== undefined) dbUpdates.image_url = updates.imageUrl;
       if (updates.season !== undefined) dbUpdates.season = updates.season;
       if (updates.brand !== undefined) dbUpdates.brand = updates.brand;
       if (updates.tags !== undefined) dbUpdates.tags = updates.tags;
       if (updates.favorite !== undefined) dbUpdates.favorite = updates.favorite;
       if (updates.isAiProcessed !== undefined) dbUpdates.is_ai_processed = updates.isAiProcessed;
-      if (updates.originalImageUrl !== undefined) dbUpdates.original_image_url = updates.originalImageUrl;
 
       if ((updates as any).colorHex !== undefined) dbUpdates.color_hex = (updates as any).colorHex;
       if ((updates as any).size !== undefined) dbUpdates.size = (updates as any).size;
@@ -179,9 +286,14 @@ export function useWardrobe(): UseWardrobeReturn {
 
       if (updateError) throw updateError;
 
+      // Actualizar estado local con las URLs de Storage
+      const localUpdates = { ...updates };
+      if (dbUpdates.image_url) localUpdates.imageUrl = dbUpdates.image_url;
+      if (dbUpdates.original_image_url) localUpdates.originalImageUrl = dbUpdates.original_image_url;
+
       setItems(prev =>
         prev.map(item =>
-          item.id === id ? { ...item, ...updates } : item
+          item.id === id ? { ...item, ...localUpdates } : item
         )
       );
 
@@ -196,12 +308,25 @@ export function useWardrobe(): UseWardrobeReturn {
   // Delete item
   const deleteItem = async (id: string): Promise<boolean> => {
     try {
+      // Obtener el item para eliminar sus imágenes de Storage
+      const itemToDelete = items.find(i => i.id === id);
+      
       const { error: deleteError } = await supabase
         .from('clothing_items')
         .delete()
         .eq('id', id);
 
       if (deleteError) throw deleteError;
+
+      // Eliminar imágenes de Storage (en background, no bloqueamos)
+      if (itemToDelete) {
+        if (itemToDelete.imageUrl && isStorageUrl(itemToDelete.imageUrl)) {
+          deleteImage(itemToDelete.imageUrl).catch(console.warn);
+        }
+        if (itemToDelete.originalImageUrl && isStorageUrl(itemToDelete.originalImageUrl)) {
+          deleteImage(itemToDelete.originalImageUrl).catch(console.warn);
+        }
+      }
 
       setItems(prev => prev.filter(item => item.id !== id));
       return true;
