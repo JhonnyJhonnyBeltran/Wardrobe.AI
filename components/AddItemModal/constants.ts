@@ -3,17 +3,6 @@
  * Predefined options for dropdowns and form configuration
  */
 
-// Processing status messages shown during AI image processing
-export const PROCESSING_MESSAGES = [
-    'Analizando imagen...',
-    'Quitando fondo...',
-    'Detectando bordes...',
-    'Recortando imagen...',
-    'Enderezando prenda...',
-    'Centrando objeto...',
-    'Optimizando resultado...',
-];
-
 // Popular brand options
 export const BRAND_OPTIONS = [
     'Zara',

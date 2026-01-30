@@ -3,10 +3,10 @@
 /**
  * Closet - Your Wardrobe (Mobile Optimized)
  * Search expands, buttons icon-only on mobile
- * Features wardrobe door opening animation
+ * Features wardrobe door opening animation with model preloading
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Heart, Grid3x3, List, Search, Filter, Plus, Wand2, X
@@ -24,9 +24,23 @@ import Link from 'next/link';
 import { OutfitItem } from '@/lib/fashion/outfitGenerator';
 import { supabase } from '@/lib/supabase/client';
 import Image from 'next/image';
+import { preloadModel, isModelLoaded } from '@/lib/imageProcessing';
 
-// Wardrobe Door Animation Component
-const WardrobeDoorAnimation = ({ onComplete, isOpen }: { onComplete: () => void; isOpen: boolean }) => {
+// Storage key for tracking first visit
+const CLOSET_PRELOAD_KEY = 'klozet_model_preloaded';
+
+// Wardrobe Door Animation Component with Model Preloading
+const WardrobeDoorAnimation = ({ 
+  onComplete, 
+  isOpen,
+  isPreloading,
+  preloadProgress 
+}: { 
+  onComplete: () => void; 
+  isOpen: boolean;
+  isPreloading: boolean;
+  preloadProgress: string;
+}) => {
   useEffect(() => {
     if (!isOpen) return;
 
@@ -37,6 +51,25 @@ const WardrobeDoorAnimation = ({ onComplete, isOpen }: { onComplete: () => void;
 
   return (
     <div className="closet-door-container">
+      {/* Loading indicator while preloading model */}
+      {isPreloading && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="absolute inset-0 z-10 flex flex-col items-center justify-center"
+        >
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            className="w-12 h-12 border-3 border-[var(--brand-pink)] border-t-transparent rounded-full mb-4"
+          />
+          <p className="text-sm text-[var(--foreground-secondary)] font-medium">
+            {preloadProgress}
+          </p>
+        </motion.div>
+      )}
+
       {/* Left Door */}
       <motion.div
         className="closet-door closet-door-left"
@@ -132,9 +165,72 @@ export default function ClosetPage() {
     }
   }, [items]);
 
-  // Wardrobe Door Animation State - Solo mostrar la primera vez
-  // Wardrobe Door Animation State - Mostrar siempre al entrar
-  const [showDoorAnimation, setShowDoorAnimation] = useState(true);
+  // Model preloading state - now purely background, doesn't block UI
+  const [isModelPreloading, setIsModelPreloading] = useState(false);
+  const [modelPreloadProgress, setModelPreloadProgress] = useState('Preparando tu armario...');
+  const preloadStarted = useRef(false);
+
+  // Check if this is the first visit (model not preloaded yet)
+  const checkIsFirstVisit = useCallback(() => {
+    if (typeof window === 'undefined') return true;
+    const hasPreloaded = localStorage.getItem(CLOSET_PRELOAD_KEY);
+    return !hasPreloaded;
+  }, []);
+
+  // Wardrobe Door Animation State - null means "not yet determined"
+  const [showDoorAnimation, setShowDoorAnimation] = useState<boolean | null>(null);
+  const [doorsCanOpen, setDoorsCanOpen] = useState(false);
+
+  // Initialize animation state on mount (client-side only)
+  useEffect(() => {
+    const isFirst = checkIsFirstVisit();
+    
+    if (isFirst) {
+      // First visit: show animation
+      setShowDoorAnimation(true);
+      setIsModelPreloading(true);
+      setModelPreloadProgress('Preparando tu armario...');
+      
+      const openTimer = setTimeout(() => {
+        setDoorsCanOpen(true);
+        setIsModelPreloading(false);
+      }, 3000);
+      
+      return () => clearTimeout(openTimer);
+    } else {
+      // Not first visit: no animation at all
+      setShowDoorAnimation(false);
+      setDoorsCanOpen(true);
+    }
+  }, [checkIsFirstVisit]);
+
+  // Preload model in background (doesn't affect door animation)
+  useEffect(() => {
+    if (preloadStarted.current) return;
+    if (isModelLoaded('quality')) return;
+    
+    preloadStarted.current = true;
+    
+    // Preload in background - fire and forget
+    const doPreload = async () => {
+      try {
+        await preloadModel('quality');
+        
+        // Mark as preloaded for future visits
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(CLOSET_PRELOAD_KEY, 'true');
+        }
+      } catch {
+        // Still mark as "visited" so we don't show animation again
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(CLOSET_PRELOAD_KEY, 'true');
+        }
+      }
+    };
+    
+    // Start after a brief delay
+    setTimeout(doPreload, 500);
+  }, []);
 
   // Style Quiz State - Mostrar si no está completado
   const [showStyleQuiz, setShowStyleQuiz] = useState(false);
@@ -292,12 +388,14 @@ export default function ClosetPage() {
   return (
     <div className="min-h-screen bg-[var(--background)] pb-24 md:pb-8 pt-4 relative overflow-hidden">
 
-      {/* Wardrobe Door Opening Animation */}
+      {/* Wardrobe Door Opening Animation - Only on first visit (showDoorAnimation === true, not null) */}
       <AnimatePresence>
-        {showDoorAnimation && (
+        {showDoorAnimation === true && (
           <WardrobeDoorAnimation
             onComplete={handleDoorAnimationComplete}
-            isOpen={!loading}
+            isOpen={doorsCanOpen}
+            isPreloading={isModelPreloading}
+            preloadProgress={modelPreloadProgress}
           />
         )}
       </AnimatePresence>

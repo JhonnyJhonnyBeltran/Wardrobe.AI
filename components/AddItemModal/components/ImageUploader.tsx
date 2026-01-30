@@ -12,6 +12,7 @@
  */
 
 import React, { memo, useCallback } from 'react';
+import Image from 'next/image';
 import { Upload, Camera, RotateCw, RotateCcw, Loader2 } from 'lucide-react';
 import type { ImageUploaderProps } from '../types';
 
@@ -128,11 +129,15 @@ export const ImageUploader = memo(function ImageUploader({
                     <div className="aspect-square rounded-2xl border-2 border-dashed border-[var(--border-color)] hover:border-[var(--brand-pink)] transition-colors flex flex-col items-center justify-center gap-2 bg-[var(--background-secondary)] relative overflow-hidden">
                         {image ? (
                             <>
-                                <img
-                                    src={image}
-                                    alt="Vista previa"
-                                    className={`w-full h-full object-contain p-2 bg-white transition-opacity duration-200 ${isProcessing ? 'opacity-40' : 'opacity-100'}`}
-                                />
+                                <div className={`relative w-full h-full p-2 bg-white transition-opacity duration-200 ${isProcessing ? 'opacity-40' : 'opacity-100'}`}>
+                                    <Image
+                                        src={image}
+                                        alt="Vista previa"
+                                        fill
+                                        className="object-contain p-2"
+                                        unoptimized // Required for data URLs and blob URLs
+                                    />
+                                </div>
                                 {isProcessing && (
                                     <ProcessingOverlay message={processingMessage} />
                                 )}
@@ -160,13 +165,11 @@ export const ImageUploader = memo(function ImageUploader({
                                 icon={<RotateCw className="w-6 h-6 text-[var(--foreground-tertiary)]" />}
                                 label="Girar →"
                                 onClick={handleRotateRight}
-                                disabled={isProcessing}
                             />
                             <ActionButton
                                 icon={<RotateCcw className="w-6 h-6 text-[var(--foreground-tertiary)]" />}
                                 label="Girar ←"
                                 onClick={handleRotateLeft}
-                                disabled={isProcessing}
                             />
                         </>
                     )}

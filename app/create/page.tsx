@@ -13,7 +13,6 @@ import { useWardrobe } from '@/lib/hooks/useWardrobe';
 import { useUser } from '@/store/userStore';
 import { ClothingItem, ClothingCategory } from '@/types/clothing';
 import { X, Move, Trash2, Loader2, ArrowLeft, Layers } from 'lucide-react';
-import { processClothingImage } from '@/lib/imageProcessing';
 
 // ============================================
 // Types

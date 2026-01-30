@@ -293,7 +293,7 @@ export default function AddItemModal({
                             {isProcessing ? (
                                 <>
                                     <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                                    Eliminando fondo...
+                                    {processingMessage || 'Procesando...'}
                                 </>
                             ) : (
                                 <>
@@ -302,6 +302,11 @@ export default function AddItemModal({
                                 </>
                             )}
                         </Button>
+                        {isProcessing && (
+                            <p className="text-xs text-center text-[var(--foreground-tertiary)] mt-2">
+                                Puedes seguir rellenando el formulario mientras se procesa
+                            </p>
+                        )}
                     </div>
                 </motion.div>
             </motion.div>
