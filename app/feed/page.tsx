@@ -1,11 +1,30 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { useRouter } from 'next/navigation';
+import { motion, PanInfo } from 'framer-motion';
 import { Share2, Heart, Globe } from 'lucide-react';
 
 export default function FeedPage() {
+  const router = useRouter();
+
+  const handleDragEnd = (event: any, info: PanInfo) => {
+    // Swipe Left -> Search
+    if (info.offset.x < -50) {
+      router.push('/search');
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-[var(--background)] flex items-center justify-center px-6 relative overflow-hidden">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      drag="x"
+      dragConstraints={{ left: 0, right: 0 }}
+      dragElastic={0.05}
+      onDragEnd={handleDragEnd}
+      className="min-h-screen bg-[var(--background)] flex items-center justify-center px-6 relative overflow-hidden touch-pan-y"
+    >
       {/* Background blobs */}
       <div className="absolute top-20 left-20 w-64 h-64 bg-[var(--brand-pink)]/5 rounded-full blur-3xl" />
       <div className="absolute bottom-20 right-20 w-64 h-64 bg-orange-500/5 rounded-full blur-3xl" />
@@ -42,6 +61,6 @@ export default function FeedPage() {
           Muy pronto podrás compartir tus outfits, inspirarte con otros usuarios y unirte a la comunidad de moda.
         </p>
       </motion.div>
-    </div>
+    </motion.div>
   );
 }

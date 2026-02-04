@@ -9,7 +9,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, Search, Send, User } from 'lucide-react';
+import { Home, Search, Heart, UserRound } from 'lucide-react';
 import { useUiStore } from '@/store/uiStore';
 import { useMessageStore, selectTotalUnread, selectBadgeVisible } from '@/store/messageStore';
 
@@ -23,10 +23,17 @@ interface TabItem {
   isLogoMark?: boolean;
 }
 
+// Icono personalizado para estado activo de perfil (Relleno sólido)
+const UserFilledIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className={className} xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+  </svg>
+);
+
 export default function TabBar() {
   const pathname = usePathname();
   const { requestsCount } = useUiStore();
-  
+
   // Message notifications from new store
   const messageUnreadCount = useMessageStore(selectTotalUnread);
   const messageBadgeVisible = useMessageStore(selectBadgeVisible);
@@ -35,8 +42,8 @@ export default function TabBar() {
     { href: '/feed', labelKey: 'home', icon: <Home /> },
     { href: '/search', labelKey: 'search', icon: <Search /> },
     { href: '/closet', labelKey: 'closet', icon: null, isLogoMark: true },
-    { href: '/messages', labelKey: 'messages', icon: <Send className="-rotate-45 mb-0.5 ml-0.5" /> }, // Little nudge for visual balance
-    { href: '/profile', labelKey: 'profile', icon: <User /> },
+    { href: '/notifications', labelKey: 'messages', icon: <Heart /> }, // Heart icon for Notifications/Activity
+    { href: '/profile', labelKey: 'profile', icon: <UserRound /> },
   ];
 
   // Helper to get badge count for each tab
@@ -93,14 +100,15 @@ export default function TabBar() {
                   <motion.div
                     whileTap={{ scale: 0.9 }}
                     className={`relative transition-colors duration-200 ${isActive
-                        ? 'text-[var(--brand-pink)]'
-                        : 'text-black dark:text-white'
+                      ? 'text-[var(--brand-pink)]'
+                      : 'text-black dark:text-white'
                       }`}
                   >
                     {/* Icon */}
                     {React.cloneElement(tab.icon as React.ReactElement<any>, {
-                      strokeWidth: isActive ? 3 : 2, // Thicker stroke for active
-                      fill: (isActive && tab.labelKey !== 'search') ? 'currentColor' : 'none', // Fill active (except search)
+                      strokeWidth: isActive ? (['profile', 'home'].includes(tab.labelKey) ? 3.5 : 3) : 2, // Extra bold for profile/home
+                      // Only fill Heart (messages), keep others outlined
+                      fill: (isActive && tab.labelKey === 'messages') ? 'currentColor' : 'none',
                       className: `w-[30px] h-[30px]`
                     })}
 
@@ -136,4 +144,3 @@ export default function TabBar() {
     </nav>
   );
 }
-

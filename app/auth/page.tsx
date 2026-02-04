@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff, Sparkles, MailCheck, AtSign, Check, AlertCircle } from 'lucide-react';
-import { Button, Card, StyleQuizModal } from '@/components';
+import { Button, Card, StyleQuizModal, Logo, LogoExtended } from '@/components';
 import type { StyleQuizResponses } from '@/components/StyleQuizModal';
 import { useUser } from '@/store/userStore';
 import { useAuth } from '@/lib/hooks/useAuth';
@@ -249,30 +249,27 @@ export default function AuthPage() {
                             animate={{ opacity: 1, y: 0 }}
                             className="text-center mb-8"
                         >
-                            <div className="w-20 h-20 mx-auto mb-4 rounded-3xl flex items-center justify-center shadow-[var(--shadow-float-strong)] overflow-hidden">
-                                <Image
-                                    src="/klozet-logo.png"
-                                    alt="Klozet Logo"
-                                    width={48}
-                                    height={48}
-                                    className="object-contain"
-                                />
+                            <div className="w-24 h-24 mx-auto mb-6 rounded-3xl bg-white dark:bg-gray-800/50 flex items-center justify-center shadow-[var(--shadow-float-strong)] backdrop-blur-md border border-[var(--border-color)]">
+                                <div className="scale-125">
+                                    <Logo size="lg" />
+                                </div>
                             </div>
-                            <Image
-                                src="/klozet-logo-extended.png"
-                                alt="Klozet"
-                                width={150}
-                                height={40}
-                                className="mx-auto mb-2 object-contain dark:hidden"
-                            />
-                            <p className="text-sm text-[var(--foreground-tertiary)]">Tu estilista personal</p>
+
+                            <div className="flex justify-center mb-3 scale-90">
+                                <LogoExtended size="lg" />
+                            </div>
+
+                            <p className="text-sm text-[var(--foreground-tertiary)] font-medium">
+                                Tu estilista personal con IA
+                            </p>
                         </motion.div>
 
                         {/* Auth Card */}
                         <motion.div
+                            layout
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.1 }}
+                            transition={{ delay: 0.1, layout: { duration: 0.3, type: "spring", stiffness: 300, damping: 30 } }}
                             className="w-full max-w-md"
                         >
                             <Card className="p-6">
@@ -420,8 +417,8 @@ export default function AuthPage() {
                                                         placeholder={isLogin ? "Email o @usuario" : "Email"}
                                                         required
                                                         className={`w-full pl-11 pr-10 py-3 rounded-2xl bg-[var(--background-secondary)] border text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:ring-2 ${!isLogin && isEmailAvailable === false ? 'border-red-500 focus:ring-red-500' :
-                                                                !isLogin && isEmailAvailable === true ? 'border-green-500 focus:ring-green-500' :
-                                                                    'border-[var(--border-color)] focus:ring-[var(--brand-pink)]'
+                                                            !isLogin && isEmailAvailable === true ? 'border-green-500 focus:ring-green-500' :
+                                                                'border-[var(--border-color)] focus:ring-[var(--brand-pink)]'
                                                             }`}
                                                     />
                                                     {!isLogin && (

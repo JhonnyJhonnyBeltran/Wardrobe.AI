@@ -145,6 +145,51 @@ function normalizeImage(
                 const contentWidth = bbox.maxX - bbox.minX;
                 const contentHeight = bbox.maxY - bbox.minY;
 
+                // VALIDACIÓN 1: Asegurar dimensiones mínimas
+                if (contentWidth < 50 || contentHeight < 50) {
+                    reject(new Error('El objeto detectado es demasiado pequeño o no parece una prenda.'));
+                    return;
+                }
+
+                // VALIDACIÓN 2: Detectar posible persona (piel en la parte superior)
+                // Escanea el tercio superior del bounding box
+                const topThirdHeight = Math.floor(contentHeight * 0.4);
+                let skinPixelCount = 0;
+                let totalPixelsScanned = 0;
+
+                for (let y = bbox.minY; y < bbox.minY + topThirdHeight; y++) {
+                    for (let x = bbox.minX; x < bbox.maxX; x++) {
+                        const idx = (y * img.width + x) * 4;
+                        const r = imageData.data[idx];
+                        const g = imageData.data[idx + 1];
+                        const b = imageData.data[idx + 2];
+                        const a = imageData.data[idx + 3];
+
+                        if (a > 50) { // Solo píxeles visibles
+                            totalPixelsScanned++;
+                            // Heurística simple de tono de piel (RGB)
+                            // R > 95, G > 40, B > 20
+                            // Max-Min > 15
+                            // |R-G| > 15
+                            // R > G > B
+                            if (r > 95 && g > 40 && b > 20 &&
+                                r > g && r > b &&
+                                (Math.max(r, g, b) - Math.min(r, g, b) > 15) &&
+                                (Math.abs(r - g) > 15)) {
+                                skinPixelCount++;
+                            }
+                        }
+                    }
+                }
+
+                // Si más del 15% de los píxeles superiores son color piel, es sospechoso
+                const skinRatio = totalPixelsScanned > 0 ? skinPixelCount / totalPixelsScanned : 0;
+
+                if (skinRatio > 0.15) {
+                    reject(new Error('Por favor usa otra imagen. Haz una foto de la prenda estirada para los mejores resultados.'));
+                    return;
+                }
+
                 // Canvas para la imagen recortada
                 const croppedCanvas = document.createElement('canvas');
                 croppedCanvas.width = contentWidth;

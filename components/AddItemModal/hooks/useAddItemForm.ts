@@ -47,6 +47,8 @@ interface UseAddItemFormReturn {
     // Submit
     buildPayload: () => Partial<ClothingItem>;
     resetForm: () => void;
+    error: string | null;
+    setError: (error: string | null) => void;
 }
 
 export function useAddItemForm({
@@ -65,6 +67,9 @@ export function useAddItemForm({
     const [originalImage, setOriginalImage] = useState<string | null>(null);
     const [processedImage, setProcessedImage] = useState<string | null>(null);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+    // Error state
+    const [error, setError] = useState<string | null>(null);
 
     // Processing state
     const [isProcessing, setIsProcessing] = useState(false);
@@ -137,6 +142,7 @@ export function useAddItemForm({
         setSelectedFile(file);
         setIsProcessing(true);
         setCurrentMessageIndex(0);
+        setError(null);
 
         try {
             // Load original image first
@@ -176,9 +182,13 @@ export function useAddItemForm({
                 }
             } else {
                 console.warn('Processing failed, keeping original:', processResult.error);
+                if (processResult.error) {
+                    setError(processResult.error);
+                }
             }
         } catch (error) {
             console.error('Image processing failed:', error);
+            setError(error instanceof Error ? error.message : 'Error al procesar la imagen');
         } finally {
             setIsProcessing(false);
         }
@@ -341,5 +351,7 @@ export function useAddItemForm({
         // Submit
         buildPayload,
         resetForm,
+        error,
+        setError,
     };
 }

@@ -199,7 +199,7 @@ export default function FollowListPage() {
             <button
               onClick={() => setActiveTab('followers')}
               className={`flex-1 py-3 text-sm font-semibold transition-all ${activeTab === 'followers'
-                ? 'text-[var(--foreground)] border-b-2 border-[var(--foreground)]'
+                ? 'text-[var(--brand-pink)] border-b-2 border-[var(--brand-pink)]'
                 : 'text-[var(--foreground-tertiary)]'
                 }`}
             >
@@ -208,7 +208,7 @@ export default function FollowListPage() {
             <button
               onClick={() => setActiveTab('following')}
               className={`flex-1 py-3 text-sm font-semibold transition-all ${activeTab === 'following'
-                ? 'text-[var(--foreground)] border-b-2 border-[var(--foreground)]'
+                ? 'text-[var(--brand-pink)] border-b-2 border-[var(--brand-pink)]'
                 : 'text-[var(--foreground-tertiary)]'
                 }`}
             >
@@ -271,7 +271,7 @@ export default function FollowListPage() {
                       {status === 'accepted' ? (
                         <button
                           onClick={() => handleUnfollow(user.id)}
-                          className="px-3 py-1.5 rounded-lg bg-[var(--background-secondary)] text-[var(--foreground)] text-xs font-semibold border border-[var(--border-color)] hover:bg-red-50 hover:text-red-500 hover:border-red-200 dark:hover:bg-red-900/20 transition-colors"
+                          className="px-3 py-1.5 rounded-lg bg-[var(--brand-pink)]/5 text-[var(--brand-pink)] text-xs font-semibold border border-[var(--brand-pink)]/20 hover:bg-red-50 hover:text-red-500 hover:border-red-200 dark:hover:bg-red-900/20 transition-colors"
                         >
                           Siguiendo
                         </button>

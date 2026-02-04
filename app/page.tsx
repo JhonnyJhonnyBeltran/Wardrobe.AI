@@ -1,54 +1,62 @@
 'use client';
 
 /**
- * Onboarding - Slides de bienvenida móvil
- * Experiencia tipo app móvil con slides de funcionalidades
+ * Onboarding - Slides de bienvenida mÃ³vil
+ * Experiencia tipo app mÃ³vil con slides de funcionalidades
  */
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Shirt, Wand2, MessageSquare, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Sparkles, Shirt, Wand2, Compass, ChevronRight, ChevronLeft, Clock } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Button } from '@/components';
+import { Button, LogoExtended } from '@/components';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useTheme } from '@/store/themeStore';
+import { useTranslation } from '@/lib/i18n';
 
-const slides = [
-  {
-    title: 'Bienvenido a Klozet',
-    description: 'Tu asistente de moda personal impulsado por IA',
-    icon: Sparkles,
-    color: 'from-[var(--brand-pink)] to-[var(--brand-pink-dark)]',
-  },
-  {
-    title: 'Tu Armario Digital',
-    description: 'Organiza todas tus prendas en un solo lugar. Sube fotos, escanea URLs y gestiona tu colección fácilmente.',
-    icon: Shirt,
-    color: 'from-purple-500 to-pink-500',
-  },
-  {
-    title: 'Generador de Outfits',
-    description: 'Crea combinaciones perfectas con IA. Genera looks para cualquier ocasión en segundos.',
-    icon: Wand2,
-    color: 'from-blue-500 to-cyan-500',
-  },
-  {
-    title: 'Chat con IA',
-    description: 'Tu estilista personal disponible 24/7. Pregunta sobre moda, tendencias y consejos personalizados.',
-    icon: MessageSquare,
-    color: 'from-amber-500 to-orange-500',
-  },
-];
 
 export default function OnboardingPage() {
+  const { t } = useTranslation();
   const router = useRouter();
+
+  const slides = [
+    {
+      title: t.onboarding.slides.inspiration.title,
+      description: t.onboarding.slides.inspiration.description,
+      icon: Sparkles,
+      image: '/sudadera.png',
+      color: 'from-[var(--brand-pink)] to-purple-600',
+    },
+    {
+      title: t.onboarding.slides.time.title,
+      description: t.onboarding.slides.time.description,
+      icon: Clock,
+      image: '/reloj.png',
+      color: 'from-blue-500 to-cyan-500',
+    },
+    {
+      title: t.onboarding.slides.rediscover.title,
+      description: t.onboarding.slides.rediscover.description,
+      icon: Wand2,
+      image: '/pantalon.png',
+      color: 'from-amber-400 to-orange-500',
+    },
+    {
+      title: t.onboarding.slides.discovery.title,
+      description: t.onboarding.slides.discovery.description,
+      icon: Compass,
+      image: '/new balance.png',
+      color: 'from-pink-500 to-rose-500',
+    },
+  ];
   const { user } = useAuth();
   const { theme } = useTheme();
   const [currentSlide, setCurrentSlide] = useState(0);
   const [direction, setDirection] = useState(0);
 
-  // Si ya está autenticado, redirigir a /closet
+  // Si ya estÃ¡ autenticado, redirigir a /closet
   useEffect(() => {
     if (user) {
       router.push('/closet');
@@ -100,21 +108,92 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--background)] flex flex-col">
-      {/* Logo en la parte superior */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="pt-8 pb-4 px-4 text-center"
-      >
-        <h1 className="text-3xl font-black tracking-tighter gradient-text">
-          KLZT
-        </h1>
-      </motion.div>
+    <motion.div
+      className="min-h-screen bg-[var(--background)] flex flex-col relative overflow-hidden"
+      onPanEnd={(e, { offset, velocity }) => {
+        const swipe = Math.abs(offset.x) * velocity.x;
+        if (swipe < -10000 || offset.x < -50) nextSlide();
+        if (swipe > 10000 || offset.x > 50) prevSlide();
+      }}
+    >
+      {/* Background Gradients */}
+      <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-[var(--brand-pink)]/10 blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] rounded-full bg-purple-500/10 blur-[100px] pointer-events-none" />
+
+      {/* Logo en la parte superior (visible solo en intro) */}
+      {!isLastSlide && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          className="pt-12 pb-6 px-4 flex justify-center z-10"
+        >
+          <LogoExtended size="lg" className="h-48 w-auto drop-shadow-xl" />
+        </motion.div>
+      )}
 
       {/* Contenedor de slides */}
-      <div className="flex-1 flex flex-col justify-center px-4 pb-8 overflow-hidden">
-        <div className="max-w-md mx-auto w-full">
+      {/* Contenedor de slides */}
+      <div className="flex-1 flex flex-col justify-center px-4 pb-8 overflow-hidden relative w-full">
+        <div className="max-w-md mx-auto w-full relative z-10 flex flex-col items-center">
+
+          {/* VisualizaciÃ³n de Productos 3D (Solo visible en slides de intro) */}
+          {!isLastSlide && (
+            <div className="relative h-[280px] w-full mb-4 perspective-1000">
+              {slides.map((slide, index) => {
+                const total = slides.length;
+                // Calcular offset circular relative al currentSlide
+                const offset = (index - currentSlide + total) % total;
+
+                // ConfiguraciÃ³n de posiciones (Orbit) con valores adaptativos
+                let layout = { x: 0, y: 0, scale: 0.5, opacity: 0, zIndex: 0, blur: 0 };
+
+                if (offset === 0) { // Activo (Centro)
+                  layout = { x: 0, y: 0, scale: 1.1, opacity: 1, zIndex: 20, blur: 0 };
+                } else if (offset === 1) { // Siguiente (Derecha)
+                  layout = { x: 80, y: -40, scale: 0.6, opacity: 0.7, zIndex: 10, blur: 2 };
+                } else if (offset === 2) { // Fondo (Abajo)
+                  layout = { x: 0, y: 60, scale: 0.4, opacity: 0.4, zIndex: 5, blur: 4 };
+                } else if (offset === 3) { // Anterior (Izquierda)
+                  layout = { x: -80, y: -40, scale: 0.6, opacity: 0.7, zIndex: 10, blur: 2 };
+                }
+
+                return (
+                  <motion.div
+                    key={index}
+                    initial={false}
+                    animate={{
+                      x: layout.x,
+                      y: layout.y,
+                      scale: layout.scale,
+                      opacity: layout.opacity,
+                      zIndex: layout.zIndex,
+                      filter: `blur(${layout.blur}px)`
+                    }}
+                    transition={{ type: "spring", stiffness: 180, damping: 20, mass: 1 }}
+                    className="absolute top-1/2 left-1/2 -ml-24 -mt-24 w-48 h-48 flex items-center justify-center pointer-events-none"
+                  >
+                    {/* Glow activo */}
+                    <motion.div
+                      animate={{ opacity: offset === 0 ? 0.3 : 0 }}
+                      className={`absolute inset-0 bg-gradient-to-br ${slide.color} blur-3xl rounded-full transition-opacity duration-500`}
+                    />
+
+                    <div className="relative w-full h-full drop-shadow-[0_0_10px_rgba(255,255,255,0.7)]">
+                      <Image
+                        src={(slide as any).image}
+                        alt={slide.title}
+                        fill
+                        className="object-contain p-2"
+                        priority={index < 2}
+                      />
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
+
           <AnimatePresence mode="wait" custom={direction}>
             {!isLastSlide ? (
               <motion.div
@@ -128,21 +207,13 @@ export default function OnboardingPage() {
                   x: { type: 'spring', stiffness: 300, damping: 30 },
                   opacity: { duration: 0.2 },
                 }}
-                className="text-center"
+                className="text-center w-full"
               >
-                {/* Icono */}
-                <div className={`w-24 h-24 md:w-32 md:h-32 mx-auto mb-8 rounded-3xl bg-gradient-to-br ${slides[currentSlide].color} flex items-center justify-center shadow-[var(--shadow-float-strong)]`}>
-                  {(() => {
-                    const Icon = slides[currentSlide].icon;
-                    return <Icon className="w-12 h-12 md:w-16 md:h-16 text-white" />;
-                  })()}
-                </div>
                 <h2 className="text-3xl md:text-4xl font-bold text-[var(--foreground)] mb-4">
                   {slides[currentSlide].title}
                 </h2>
 
-                {/* Descripción */}
-                <p className="text-lg text-[var(--foreground-secondary)] leading-relaxed">
+                <p className="text-lg text-[var(--foreground-secondary)] leading-relaxed min-h-[80px]">
                   {slides[currentSlide].description}
                 </p>
               </motion.div>
@@ -158,36 +229,32 @@ export default function OnboardingPage() {
                   x: { type: 'spring', stiffness: 300, damping: 30 },
                   opacity: { duration: 0.2 },
                 }}
-                className="text-center"
+                className="text-center w-full"
               >
-                {/* Icono final */}
-                <div className="mb-8 flex justify-center">
-                  <div className="w-24 h-24 md:w-32 md:h-32 rounded-3xl bg-gradient-to-br from-[var(--brand-pink)] to-[var(--brand-pink-dark)] flex items-center justify-center shadow-[var(--shadow-float-strong)]">
-                    <Sparkles className="w-12 h-12 md:w-16 md:h-16 text-white" />
-                  </div>
+                {/* Logo Central Grande */}
+                <div className="flex justify-center mb-8">
+                  <LogoExtended size="lg" className="h-64 w-auto drop-shadow-2xl" />
                 </div>
 
-                {/* Título */}
                 <h2 className="text-3xl md:text-4xl font-bold text-[var(--foreground)] mb-4">
-                  ¿Listo para empezar?
+                  {t.onboarding.cta.title}
                 </h2>
 
-                {/* Descripción */}
                 <p className="text-lg text-[var(--foreground-secondary)] mb-8">
-                  Crea tu cuenta y comienza a revolucionar tu estilo hoy mismo.
+                  {t.onboarding.cta.description}
                 </p>
 
                 {/* Botones de auth */}
-                <div className="space-y-3">
+                <div className="flex flex-col gap-6 w-full">
                   <Link href="/auth?mode=signup">
                     <Button size="lg" glow className="w-full">
-                      Crear cuenta gratis
+                      {t.onboarding.cta.signup}
                       <ChevronRight className="w-5 h-5 ml-2" />
                     </Button>
                   </Link>
                   <Link href="/auth?mode=login">
                     <Button size="lg" variant="secondary" className="w-full">
-                      Ya tengo cuenta
+                      {t.onboarding.cta.login}
                     </Button>
                   </Link>
                 </div>
@@ -207,48 +274,40 @@ export default function OnboardingPage() {
                 key={index}
                 onClick={() => goToSlide(index)}
                 className={`h-2 rounded-full transition-all ${index === currentSlide
-                    ? 'w-8 bg-[var(--brand-pink)]'
-                    : 'w-2 bg-[var(--foreground-tertiary)] opacity-30'
+                  ? 'w-8 bg-[var(--brand-pink)]'
+                  : 'w-2 bg-[var(--foreground-tertiary)] opacity-30'
                   }`}
                 aria-label={`Ir a slide ${index + 1}`}
               />
             ))}
           </div>
 
-          {/* Botones de navegación */}
+          {/* Botones de navegaciÃ³n */}
           {!isLastSlide && (
             <div className="flex gap-3">
-              <Button
-                variant="secondary"
-                onClick={prevSlide}
-                disabled={currentSlide === 0}
-                className="flex-1"
-              >
-                <ChevronLeft className="w-5 h-5 mr-2" />
-                Atrás
-              </Button>
+              {currentSlide > 0 && (
+                <Button
+                  variant="secondary"
+                  onClick={prevSlide}
+                  className="flex-1"
+                >
+                  <ChevronLeft className="w-5 h-5 mr-2" />
+                  {t.common.back}
+                </Button>
+              )}
               <Button
                 onClick={nextSlide}
                 className="flex-1"
               >
-                Siguiente
+                {t.common.next}
                 <ChevronRight className="w-5 h-5 ml-2" />
               </Button>
             </div>
           )}
 
-          {isLastSlide && (
-            <Button
-              variant="secondary"
-              onClick={prevSlide}
-              className="w-full"
-            >
-              <ChevronLeft className="w-5 h-5 mr-2" />
-              Volver
-            </Button>
-          )}
+
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

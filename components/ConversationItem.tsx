@@ -78,36 +78,37 @@ export const ConversationItem = memo(function ConversationItem({
     <motion.button
       onClick={onClick}
       className={`
-        w-full flex items-center gap-3 p-3 rounded-xl
-        transition-colors duration-200
-        ${hasUnread 
-          ? 'bg-[var(--background-secondary)]/50 hover:bg-[var(--background-secondary)]' 
-          : 'hover:bg-[var(--background-secondary)]'
+        w-full flex items-center gap-3 p-4
+        transition-all duration-200 group
+        ${hasUnread
+          ? 'bg-[var(--background-secondary)]/30 hover:bg-[var(--background-secondary)]'
+          : 'hover:bg-[var(--background-secondary)]/30'
         }
       `}
       whileTap={{ scale: 0.98 }}
     >
       {/* Avatar with online status */}
-      <AvatarWithStatus 
-        userId={otherUser.id} 
-        indicatorSize="md" 
+      <AvatarWithStatus
+        userId={otherUser.id}
+        indicatorSize="md"
         showOnlyOnline
       >
         <div className={`
-          w-14 h-14 rounded-full overflow-hidden flex-shrink-0
-          ${hasUnread 
-            ? 'ring-2 ring-[var(--brand-pink)] ring-offset-2 ring-offset-[var(--background)]' 
-            : 'bg-[var(--background-tertiary)]'
+          w-12 h-12 rounded-full overflow-hidden flex-shrink-0 border 
+          ${hasUnread
+            ? 'border-[var(--brand-pink)] ring-1 ring-[var(--brand-pink)] ring-offset-2 ring-offset-[var(--background)]'
+            : 'border-[var(--border-color)] group-hover:border-[var(--foreground-tertiary)]'
           }
+           transition-all
         `}>
           {otherUser.avatar_url ? (
-            <img 
-              src={otherUser.avatar_url} 
-              alt="" 
-              className="w-full h-full object-cover" 
+            <img
+              src={otherUser.avatar_url}
+              alt=""
+              className="w-full h-full object-cover"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-[var(--foreground-secondary)] font-bold text-xl">
+            <div className="w-full h-full flex items-center justify-center bg-[var(--background-tertiary)] text-[var(--foreground-secondary)] font-bold text-lg">
               {initial}
             </div>
           )}
@@ -117,50 +118,50 @@ export const ConversationItem = memo(function ConversationItem({
       {/* Content */}
       <div className="flex-1 min-w-0 text-left">
         {/* Name row */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between">
           <p className={`
-            text-sm truncate
-            ${hasUnread 
-              ? 'font-bold text-[var(--foreground)]' 
-              : 'font-semibold text-[var(--foreground)]'
+            text-sm truncate mr-2
+            ${hasUnread
+              ? 'font-bold text-[var(--foreground)]'
+              : 'font-medium text-[var(--foreground)]'
             }
           `}>
             {displayName}
           </p>
           {lastMessageAt && (
-            <span className="text-xs text-[var(--foreground-tertiary)] flex-shrink-0">
-              · {formatTimeAgo(lastMessageAt)}
+            <span className={`text-[11px] ${hasUnread ? 'text-[var(--brand-pink)] font-medium' : 'text-[var(--foreground-tertiary)]'}`}>
+              {formatTimeAgo(lastMessageAt)}
             </span>
           )}
         </div>
 
         {/* Message preview */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 mt-0.5">
           <p className={`
-            text-xs truncate flex-1
-            ${hasUnread 
-              ? 'text-[var(--foreground)] font-medium' 
-              : 'text-[var(--foreground-tertiary)]'
+            text-[13px] truncate flex-1 leading-snug
+            ${hasUnread
+              ? 'text-[var(--foreground)] font-medium'
+              : 'text-[var(--foreground-secondary)]'
             }
           `}>
             {lastMessageText
               ? `${isFromMe ? 'Tú: ' : ''}${lastMessageText}`
-              : 'Inicia una conversación'
+              : <span className="italic opacity-80">Inicia una conversación</span>
             }
           </p>
+
+          {/* Unread indicator dot aligned with text */}
+          {hasUnread && (
+            <div className="flex-shrink-0 pl-1">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="w-2 h-2 rounded-full bg-[var(--brand-pink)]"
+              />
+            </div>
+          )}
         </div>
       </div>
-
-      {/* Unread indicator */}
-      {hasUnread && (
-        <div className="flex-shrink-0">
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            className="w-3 h-3 rounded-full bg-[var(--brand-pink)]"
-          />
-        </div>
-      )}
     </motion.button>
   );
 });

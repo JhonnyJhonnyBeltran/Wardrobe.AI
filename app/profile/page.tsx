@@ -5,12 +5,13 @@
  * Perfil social limpio con avatar, estadísticas y pestañas
  */
 
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 import { useUser } from '@/store/userStore';
 import { Card } from '@/components';
 import { useTranslation } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase/client';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import {
   Settings,
@@ -26,6 +27,7 @@ type TabType = 'posts' | 'outfits';
 export default function ProfilePage() {
   const { user } = useUser();
   const { t } = useTranslation();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>('posts');
 
   // Real data state
@@ -106,6 +108,24 @@ export default function ProfilePage() {
     fetchProfileData();
   }, [user]);
 
+  // Swipe Navigation Logic
+  const handleDragEnd = (event: any, info: PanInfo) => {
+    const threshold = 50;
+    if (info.offset.x > threshold) {
+      // Swipe Right (Go Previous)
+      if (activeTab === 'outfits') {
+        setActiveTab('posts');
+      } else {
+        router.push('/notifications');
+      }
+    } else if (info.offset.x < -threshold) {
+      // Swipe Left (Go Next)
+      if (activeTab === 'posts') {
+        setActiveTab('outfits');
+      }
+    }
+  };
+
   if (!user) return null;
 
   // Animation variants
@@ -142,6 +162,7 @@ export default function ProfilePage() {
       >
         {/* Profile Header - Instagram Style */}
         <motion.div variants={itemVariants} className="mb-6">
+          {/* ... (Header content unchanged, simplified for brevity in replacement if possible, but replace_file_content needs full context or precise targeting. I will duplicate header content carefully or target surrounding lines) */}
           <div className="flex items-start gap-4 mb-4">
             {/* Avatar */}
             <div className="relative flex-shrink-0">
@@ -262,96 +283,118 @@ export default function ProfilePage() {
         </motion.div>
 
         {/* Content Grid */}
-        <motion.div variants={itemVariants}>
-          {activeTab === 'posts' ? (
-            // Posts Grid
-            <div className="grid grid-cols-3 gap-1 md:gap-2">
-              {posts.length === 0 ? (
-                <div className="col-span-3 text-center py-16">
-                  <Grid3x3 className="w-12 h-12 mx-auto mb-4 text-[var(--foreground-tertiary)]" />
-                  <p className="text-[var(--foreground-secondary)] font-medium mb-2">
-                    {t.profile.noPostsYet}
-                  </p>
-                  <p className="text-sm text-[var(--foreground-tertiary)]">
-                    {t.profile.shareOutfits}
-                  </p>
-                </div>
-              ) : (
-                posts.map((post) => (
-                  <motion.div
-                    key={post.id}
-                    whileHover={{ scale: 1.02 }}
-                    className="relative aspect-square bg-gradient-to-br from-[var(--background-secondary)] to-[var(--background-tertiary)] rounded-lg overflow-hidden cursor-pointer group"
-                  >
-                    {post.image_url ? (
-                      <img src={post.image_url} alt="Post" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-4xl">
-                        👗
+        <motion.div
+          className="touch-pan-y min-h-[50vh]"
+          drag="x"
+          dragConstraints={{ left: 0, right: 0 }}
+          dragElastic={0.05}
+          onDragEnd={handleDragEnd}
+        >
+          <AnimatePresence mode="wait" initial={false}>
+            {activeTab === 'posts' ? (
+              // Posts Grid
+              <motion.div
+                key="posts"
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -50 }}
+                transition={{ duration: 0.25 }}
+                className="grid grid-cols-3 gap-1 md:gap-2"
+              >
+                {posts.length === 0 ? (
+                  <div className="col-span-3 text-center py-16">
+                    <Grid3x3 className="w-12 h-12 mx-auto mb-4 text-[var(--foreground-tertiary)]" />
+                    <p className="text-[var(--foreground-secondary)] font-medium mb-2">
+                      {t.profile.noPostsYet}
+                    </p>
+                    <p className="text-sm text-[var(--foreground-tertiary)]">
+                      {t.profile.shareOutfits}
+                    </p>
+                  </div>
+                ) : (
+                  posts.map((post) => (
+                    <motion.div
+                      key={post.id}
+                      whileHover={{ scale: 1.02 }}
+                      className="relative aspect-square bg-gradient-to-br from-[var(--background-secondary)] to-[var(--background-tertiary)] rounded-lg overflow-hidden cursor-pointer group"
+                    >
+                      {post.image_url ? (
+                        <img src={post.image_url} alt="Post" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-4xl">
+                          👗
+                        </div>
+                      )}
+                      {/* Hover Overlay */}
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
+                        <div className="flex items-center gap-1 text-white">
+                          <Heart className="w-5 h-5 fill-white" />
+                          <span className="font-semibold">{post.likes}</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-white">
+                          <MessageCircle className="w-5 h-5 fill-white" />
+                          <span className="font-semibold">{post.comments}</span>
+                        </div>
                       </div>
-                    )}
-                    {/* Hover Overlay */}
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
-                      <div className="flex items-center gap-1 text-white">
-                        <Heart className="w-5 h-5 fill-white" />
-                        <span className="font-semibold">{post.likes}</span>
+                    </motion.div>
+                  ))
+                )}
+              </motion.div>
+            ) : (
+              // Outfits Grid
+              <motion.div
+                key="outfits"
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 50 }}
+                transition={{ duration: 0.25 }}
+                className="grid grid-cols-3 gap-1 md:gap-2"
+              >
+                {outfits.length === 0 ? (
+                  <div className="col-span-3 text-center py-16">
+                    <Shirt className="w-12 h-12 mx-auto mb-4 text-[var(--foreground-tertiary)]" />
+                    <p className="text-[var(--foreground-secondary)] font-medium mb-2">
+                      {t.profile.noPublicOutfits}
+                    </p>
+                    <p className="text-sm text-[var(--foreground-tertiary)] mb-4">
+                      {t.profile.markOutfitsPublic}
+                    </p>
+                    <Link href="/closet">
+                      <button className="px-6 py-2 rounded-full bg-[var(--brand-pink)] text-white font-semibold hover:opacity-90 transition-opacity">
+                        {t.profile.goToCloset}
+                      </button>
+                    </Link>
+                  </div>
+                ) : (
+                  outfits.map((outfit) => (
+                    <motion.div
+                      key={outfit.id}
+                      whileHover={{ scale: 1.02 }}
+                      className="relative aspect-square bg-gradient-to-br from-[var(--background-secondary)] to-[var(--background-tertiary)] rounded-lg overflow-hidden cursor-pointer group"
+                    >
+                      {outfit.image_url ? (
+                        <img
+                          src={outfit.image_url}
+                          alt={outfit.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-4xl">
+                          👔
+                        </div>
+                      )}
+                      {/* Hover Overlay */}
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <p className="text-white font-semibold text-sm px-2 text-center">
+                          {outfit.name}
+                        </p>
                       </div>
-                      <div className="flex items-center gap-1 text-white">
-                        <MessageCircle className="w-5 h-5 fill-white" />
-                        <span className="font-semibold">{post.comments}</span>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))
-              )}
-            </div>
-          ) : (
-            // Outfits Grid
-            <div className="grid grid-cols-3 gap-1 md:gap-2">
-              {outfits.length === 0 ? (
-                <div className="col-span-3 text-center py-16">
-                  <Shirt className="w-12 h-12 mx-auto mb-4 text-[var(--foreground-tertiary)]" />
-                  <p className="text-[var(--foreground-secondary)] font-medium mb-2">
-                    {t.profile.noPublicOutfits}
-                  </p>
-                  <p className="text-sm text-[var(--foreground-tertiary)] mb-4">
-                    {t.profile.markOutfitsPublic}
-                  </p>
-                  <Link href="/closet">
-                    <button className="px-6 py-2 rounded-full bg-[var(--brand-pink)] text-white font-semibold hover:opacity-90 transition-opacity">
-                      {t.profile.goToCloset}
-                    </button>
-                  </Link>
-                </div>
-              ) : (
-                outfits.map((outfit) => (
-                  <motion.div
-                    key={outfit.id}
-                    whileHover={{ scale: 1.02 }}
-                    className="relative aspect-square bg-gradient-to-br from-[var(--background-secondary)] to-[var(--background-tertiary)] rounded-lg overflow-hidden cursor-pointer group"
-                  >
-                    {outfit.image_url ? (
-                      <img
-                        src={outfit.image_url}
-                        alt={outfit.name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-4xl">
-                        👔
-                      </div>
-                    )}
-                    {/* Hover Overlay */}
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <p className="text-white font-semibold text-sm px-2 text-center">
-                        {outfit.name}
-                      </p>
-                    </div>
-                  </motion.div>
-                ))
-              )}
-            </div>
-          )}
+                    </motion.div>
+                  ))
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
       </motion.div>
     </div>

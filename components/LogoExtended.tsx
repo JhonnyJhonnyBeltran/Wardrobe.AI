@@ -2,11 +2,10 @@
 
 /**
  * LogoExtended - Logo completo de Klozet (KLOZET escrito)
- * Se adapta automáticamente al tema (light/dark)
+ * Se adapta automáticamente al tema (light/dark) usando CSS puro para evitar flicker
  */
 
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
 
 interface LogoExtendedProps {
     className?: string;
@@ -20,34 +19,26 @@ const sizeMap = {
 };
 
 export default function LogoExtended({ className = '', size = 'md' }: LogoExtendedProps) {
-    const [isDark, setIsDark] = useState(false);
     const dims = sizeMap[size];
 
-    useEffect(() => {
-        const checkDarkMode = () => {
-            const isDarkMode = document.documentElement.classList.contains('dark');
-            setIsDark(isDarkMode);
-        };
-
-        checkDarkMode();
-
-        const observer = new MutationObserver(checkDarkMode);
-        observer.observe(document.documentElement, {
-            attributes: true,
-            attributeFilter: ['class']
-        });
-
-        return () => observer.disconnect();
-    }, []);
-
     return (
-        <div className={`${dims.className} ${className} relative`}>
+        <div className={`${dims.className} ${className} relative flex justify-center items-center`}>
+            {/* Light Mode Logo (Dark Text) */}
             <Image
-                src={isDark ? '/klozet-logo-dark-extended.png' : '/klozet-logo-extended.png'}
+                src="/klozet-logo-dark-extended.png"
                 alt="Klozet"
                 width={dims.width}
                 height={dims.height}
-                className="h-full w-auto object-contain"
+                className="h-full w-auto object-contain dark:hidden"
+                priority
+            />
+            {/* Dark Mode Logo (White Text) */}
+            <Image
+                src="/klozet-logo-extended.png"
+                alt="Klozet"
+                width={dims.width}
+                height={dims.height}
+                className="h-full w-auto object-contain hidden dark:block"
                 priority
             />
         </div>

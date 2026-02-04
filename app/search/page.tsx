@@ -1,34 +1,38 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Search, UserPlus, UserCheck, X, Clock, Users } from 'lucide-react';
-import { useSocial, Profile, FollowRequest } from '@/lib/hooks/useSocial';
+import { useRouter } from 'next/navigation';
+import { motion, AnimatePresence, PanInfo } from 'framer-motion';
+import { Search, UserPlus, UserCheck, X, Clock, Users, Image as ImageIcon } from 'lucide-react';
+import { useSocial, Profile } from '@/lib/hooks/useSocial';
 import { Card, Button } from '@/components';
-import { useUiStore } from '@/store/uiStore';
 import { useUser } from '@/store/userStore';
 import { supabase } from '@/lib/supabase/client';
 import Link from 'next/link';
 
-type Tab = 'search' | 'requests';
-type RequestTab = 'incoming' | 'outgoing';
+interface Post {
+  id: string;
+  user_id: string;
+  caption: string;
+  image_url?: string;
+  created_at: string;
+  user: {
+    full_name: string;
+    username: string;
+    avatar_url?: string;
+  };
+}
 
 export default function SearchPage() {
   const { user } = useUser();
-  const { searchUsers, followUser, unfollowUser, getPendingRequests, getOutgoingRequests, acceptRequest, removeRequest } = useSocial();
-  const { requestsCount } = useUiStore();
-
-  const [activeTab, setActiveTab] = useState<Tab>('search');
-  const [requestTab, setRequestTab] = useState<RequestTab>('incoming');
+  const router = useRouter();
+  const { searchUsers, followUser, unfollowUser } = useSocial();
 
   // Search State
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<Profile[]>([]);
+  const [userResults, setUserResults] = useState<Profile[]>([]);
+  const [postResults, setPostResults] = useState<Post[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-
-  // Requests State
-  const [incomingRequests, setIncomingRequests] = useState<FollowRequest[]>([]);
-  const [outgoingRequests, setOutgoingRequests] = useState<any[]>([]);
 
   // Cache of my following status: { [userId]: 'accepted' | 'pending' | null }
   const [myFollows, setMyFollows] = useState<Record<string, string>>({});
@@ -42,13 +46,12 @@ export default function SearchPage() {
       .on(
         'postgres_changes',
         {
-          event: '*', // Listen to all events (INSERT, UPDATE, DELETE)
+          event: '*',
           schema: 'public',
           table: 'follows',
-          filter: `follower_id=eq.${user.id}` // Things *I* requested
+          filter: `follower_id=eq.${user.id}`
         },
         (payload) => {
-          // If someone deleted my request (rejected me) or I unfollowed
           if (payload.eventType === 'DELETE') {
             const targetId = payload.old.following_id;
             setMyFollows(prev => {
@@ -56,39 +59,10 @@ export default function SearchPage() {
               delete next[targetId];
               return next;
             });
-            // Also refresh outgoing list if relevant
-            loadRequests();
-          }
-          // If request accepted
-          else if (payload.eventType === 'UPDATE') {
+          } else if (payload.eventType === 'UPDATE') {
             const targetId = payload.new.following_id;
             setMyFollows(prev => ({ ...prev, [targetId]: payload.new.status }));
-            loadRequests();
           }
-        }
-      )
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
-  }, [user]);
-
-  // Real-time listener for INCOMING requests (people wanting to follow ME)
-  useEffect(() => {
-    if (!user) return;
-
-    const channel = supabase
-      .channel('search-page-incoming')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'follows',
-          filter: `following_id=eq.${user.id}`
-        },
-        () => {
-          console.log('[SearchPage] Incoming request changed, reloading...');
-          loadRequests();
         }
       )
       .subscribe();
@@ -114,41 +88,78 @@ export default function SearchPage() {
     fetchMyFollows();
   }, [user]);
 
-  // Load appropriate requests when tab changes
-  useEffect(() => {
-    loadRequests();
-  }, [user, requestTab]); // Reload when tab changes
+  // Fuzzy search helper - simple implementation
+  const fuzzyMatch = (str: string, pattern: string): boolean => {
+    const cleanStr = str.toLowerCase();
+    const cleanPattern = pattern.toLowerCase();
 
-  const loadRequests = async () => {
-    if (requestTab === 'incoming') {
-      const reqs = await getPendingRequests();
-      setIncomingRequests(reqs);
+    if (cleanStr.includes(cleanPattern)) return true;
 
-      // Also fetch outgoing to have the count for badge, if we are in this tab
-      const out = await getOutgoingRequests();
-      setOutgoingRequests(out);
-    } else {
-      const out = await getOutgoingRequests();
-      setOutgoingRequests(out);
-      // Fetch incoming for badge
-      const reqs = await getPendingRequests();
-      setIncomingRequests(reqs);
+    let patternIdx = 0;
+    for (let i = 0; i < cleanStr.length && patternIdx < cleanPattern.length; i++) {
+      if (cleanStr[i] === cleanPattern[patternIdx]) {
+        patternIdx++;
+      }
     }
+    return patternIdx === cleanPattern.length;
   };
 
-  // Handle Search
+  // Handle Search & Initial Load
   useEffect(() => {
-    const timeoutId = setTimeout(async () => {
-      if (searchQuery.length >= 2) {
-        setIsSearching(true);
-        const results = await searchUsers(searchQuery);
-        setSearchResults(results);
-        setIsSearching(false);
-      } else {
-        setSearchResults([]);
-      }
-    }, 500);
+    const fetchContent = async () => {
+      // 1. If empty query, fetch Explore Feed (random/trending)
+      if (searchQuery.length < 2) {
+        setIsSearching(searchQuery.length > 0); // Only show loading if user is typing 1 char
 
+        // Fetch random/recent posts for explore feed
+        const { data: posts } = await supabase
+          .from('posts')
+          .select(`
+              id, user_id, caption, image_url, created_at,
+              user:profiles!posts_user_id_fkey(full_name, username, avatar_url)
+            `)
+          .eq('visibility', 'public')
+          .order('created_at', { ascending: false })
+          .limit(21); // 3x7 grid
+
+        setPostResults(posts as Post[] || []);
+        setUserResults([]); // Clear users when not searching specific
+        setIsSearching(false);
+        return;
+      }
+
+      // 2. Perform Active Search
+      setIsSearching(true);
+      try {
+        // Search Users
+        const results = await searchUsers(searchQuery);
+        setUserResults(results);
+
+        // Search Posts
+        const { data: posts } = await supabase
+          .from('posts')
+          .select(`
+            id, user_id, caption, image_url, created_at,
+            user:profiles!posts_user_id_fkey(full_name, username, avatar_url)
+          `)
+          .eq('visibility', 'public')
+          .order('created_at', { ascending: false })
+          .limit(50);
+
+        const filteredPosts = (posts || [])
+          .filter((p: any) => fuzzyMatch(p.caption || '', searchQuery))
+          .slice(0, 15);
+
+        setPostResults(filteredPosts as Post[]);
+
+      } catch (error) {
+        console.error('Search error:', error);
+      } finally {
+        setIsSearching(false);
+      }
+    };
+
+    const timeoutId = setTimeout(fetchContent, 400); // 400ms debounce
     return () => clearTimeout(timeoutId);
   }, [searchQuery]);
 
@@ -157,12 +168,7 @@ export default function SearchPage() {
     setMyFollows(prev => ({ ...prev, [id]: 'pending' }));
 
     const success = await followUser(id);
-    if (success) {
-      setSearchResults(prev => prev.map(p =>
-        p.id === id ? { ...p, follow_status: 'pending' } : p
-      ));
-      loadRequests();
-    } else {
+    if (!success) {
       // Revert if failed
       setMyFollows(prev => {
         const next = { ...prev };
@@ -172,16 +178,6 @@ export default function SearchPage() {
     }
   };
 
-  const handleAccept = async (followerId: string) => {
-    await acceptRequest(followerId);
-    loadRequests();
-  };
-
-  const handleReject = async (followerId: string) => {
-    await removeRequest(followerId);
-    loadRequests();
-  };
-
   const handleCancelRequest = async (targetId: string) => {
     await unfollowUser(targetId);
     setMyFollows(prev => {
@@ -189,267 +185,214 @@ export default function SearchPage() {
       delete next[targetId];
       return next;
     });
-    loadRequests();
+  };
+
+  const hasResults = userResults.length > 0 || postResults.length > 0;
+
+  // Swipe Navigation
+  const handleDragEnd = (event: any, info: PanInfo) => {
+    const threshold = 50;
+    if (info.offset.x < -threshold) {
+      // Swipe Left -> Next (Closet)
+      router.push('/closet');
+    } else if (info.offset.x > threshold) {
+      // Swipe Right -> Prev (Feed/Home)
+      router.push('/feed');
+    }
   };
 
   return (
-    <div className="min-h-screen bg-[var(--background)] pb-24 md:pb-8 pt-6 px-4">
-      <div className="max-w-md mx-auto">
-        {/* Main Tabs */}
-        <div className="flex p-1 bg-[var(--background-secondary)] rounded-xl mb-6">
-          <button
-            onClick={() => setActiveTab('search')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold rounded-lg transition-all ${activeTab === 'search'
-              ? 'bg-[var(--card-bg)] text-[var(--foreground)] shadow-sm'
-              : 'text-[var(--foreground-tertiary)] hover:text-[var(--foreground-secondary)]'
-              }`}
-          >
-            <Search className="w-4 h-4" />
-            Buscar
-          </button>
-          <button
-            onClick={() => setActiveTab('requests')}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold rounded-lg transition-all relative ${activeTab === 'requests'
-              ? 'bg-[var(--card-bg)] text-[var(--foreground)] shadow-sm'
-              : 'text-[var(--foreground-tertiary)] hover:text-[var(--foreground-secondary)]'
-              }`}
-          >
-            <Users className="w-4 h-4" />
-            Solicitudes
-            {requestsCount > 0 && (
-              <span className="absolute top-2 right-2 md:top-2 md:right-8 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+    <motion.div
+      className="min-h-screen bg-[var(--background)] pb-24 md:pb-8 pt-6 px-4 touch-pan-y"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
+      drag="x"
+      dragConstraints={{ left: 0, right: 0 }}
+      dragElastic={0.05}
+      onDragEnd={handleDragEnd}
+    >
+      <div className="max-w-2xl mx-auto">
+
+        {/* Search Input Only - Sticky */}
+        <div className="sticky top-0 z-50 bg-[var(--background)]/95 backdrop-blur-md pt-6 pb-2 -mx-4 px-4 mb-4 transition-all">
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--foreground-tertiary)]" />
+            <input
+              type="text"
+              placeholder="Buscar por nombre o @usuario..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-gray-100 dark:bg-zinc-800 border-none focus:ring-0 focus:bg-gray-200 dark:focus:bg-zinc-700 transition-all outline-none text-sm font-medium placeholder:text-gray-400 text-[var(--foreground)]"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--foreground-tertiary)] hover:text-[var(--foreground)]"
+              >
+                <X className="w-5 h-5" />
+              </button>
             )}
-          </button>
+          </div>
         </div>
 
+
+        {/* Results or Empty State */}
         <AnimatePresence mode="wait">
-          {activeTab === 'search' ? (
+          {searchQuery.length < 2 && !isSearching ? (
             <motion.div
-              key="search"
+              key="empty"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
+              className="text-center py-12"
             >
-              {/* Search Input */}
-              <div className="relative mb-6">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--foreground-tertiary)]" />
-                <input
-                  type="text"
-                  placeholder="Buscar por nombre o @usuario..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 rounded-2xl bg-[var(--background-secondary)] border-none focus:ring-2 focus:ring-[var(--brand-pink)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] transition-all"
-                />
+              <div className="w-16 h-16 mx-auto bg-[var(--background-secondary)] rounded-full flex items-center justify-center mb-4">
+                <Search className="w-8 h-8 text-[var(--brand-pink)]" />
               </div>
-
-              {/* Results List */}
-              <div className="space-y-3">
-                {isSearching ? (
-                  <div className="text-center py-8 text-[var(--foreground-tertiary)]">
-                    Buscando...
-                  </div>
-                ) : searchResults.length > 0 ? (
-                  searchResults.map((profile) => {
-                    // Check local optimistic state first
-                    const status = myFollows[profile.id];
-                    // Fallback to profile state if no local interaction yet
-                    const isPending = status === 'pending';
-                    const isFollowing = status === 'accepted' || profile.is_following; // Simplification
-
-                    return (
-                      <Card key={profile.id} className="p-4 flex items-center justify-between">
-                        <Link href={`/profile/${profile.id}`} className="flex items-center gap-3 flex-1 min-w-0">
-                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[var(--brand-pink)] to-orange-500 p-[2px] flex-shrink-0">
-                            <div className="w-full h-full rounded-full bg-[var(--card-bg)] overflow-hidden">
-                              {profile.avatar_url ? (
-                                <img src={profile.avatar_url} alt={profile.full_name || ''} className="w-full h-full object-cover" />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center bg-[var(--background-secondary)] text-lg font-bold">
-                                  {(profile.full_name || '?')[0]}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                          <div className="min-w-0">
-                            <h3 className="font-semibold text-[var(--foreground)] truncate">
-                              {profile.full_name}
-                            </h3>
-                            <p className="text-sm text-[var(--foreground-tertiary)] truncate">
-                              @{profile.username}
-                            </p>
-                          </div>
-                        </Link>
-
-                        {isPending ? (
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            className="px-3 md:px-4 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20 group flex-shrink-0"
-                            onClick={() => handleCancelRequest(profile.id)}
-                          >
-                            <Clock className="w-4 h-4 mr-1 md:mr-2" />
-                            <span className="hidden md:inline mr-2">Pendiente</span>
-                            <X className="w-3 h-3 opacity-50 group-hover:opacity-100 transition-opacity" />
-                          </Button>
-                        ) : status === 'accepted' ? (
-                          <Button size="sm" variant="secondary" className="px-3 md:px-4 flex-shrink-0">
-                            <UserCheck className="w-4 h-4 mr-1 md:mr-2" />
-                            <span className="hidden md:inline">Siguiendo</span>
-                          </Button>
-                        ) : (
-                          <Button
-                            size="sm"
-                            onClick={() => handleFollow(profile.id)}
-                            className="px-3 md:px-4 bg-[var(--brand-pink)] hover:bg-[var(--brand-pink-dark)] text-white border-none flex-shrink-0"
-                          >
-                            <UserPlus className="w-4 h-4 mr-1 md:mr-2" />
-                            <span className="hidden md:inline">Seguir</span>
-                          </Button>
-                        )}
-                      </Card>
-                    );
-                  })
-                ) : searchQuery.length > 1 ? (
-                  <div className="text-center py-12">
-                    <p className="text-[var(--foreground-tertiary)]">No se encontraron usuarios</p>
-                  </div>
-                ) : (
-                  <div className="text-center py-12">
-                    <Users className="w-12 h-12 mx-auto text-[var(--foreground-tertiary)]/50 mb-3" />
-                    <p className="text-[var(--foreground-secondary)] font-medium">Busca amigos para seguir</p>
-                    <p className="text-sm text-[var(--foreground-tertiary)]">Encuentra usuarios por nombre o @usuario</p>
-                  </div>
-                )}
-              </div>
+              <p className="text-[var(--foreground-secondary)] font-medium mb-1 text-lg">
+                Comienza a buscar
+              </p>
+              <p className="text-sm text-[var(--foreground-tertiary)] max-w-xs mx-auto">
+                Encuentra usuarios por nombre o @usuario, o busca tus outfits favoritos.
+              </p>
+            </motion.div>
+          ) : isSearching ? (
+            <motion.div
+              key="loading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="text-center py-12 text-[var(--foreground-tertiary)]"
+            >
+              <div className="w-8 h-8 border-3 border-[var(--brand-pink)] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+              Buscando...
+            </motion.div>
+          ) : !hasResults ? (
+            <motion.div
+              key="no-results"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="text-center py-12"
+            >
+              <p className="text-[var(--foreground-secondary)] font-medium mb-1">No se encontraron resultados</p>
+              <p className="text-sm text-[var(--foreground-tertiary)]">Intenta con otra búsqueda</p>
             </motion.div>
           ) : (
             <motion.div
-              key="requests"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
+              key="results"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="space-y-8"
             >
-              {/* Request Sub-tabs */}
-              <div className="flex gap-4 border-b border-[var(--border-color)] mb-4">
-                <button
-                  onClick={() => setRequestTab('incoming')}
-                  className={`pb-2 text-sm font-semibold transition-colors relative flex items-center gap-2 ${requestTab === 'incoming'
-                    ? 'text-[var(--brand-pink)]'
-                    : 'text-[var(--foreground-tertiary)]'
-                    }`}
-                >
-                  Recibidas
-                  {requestsCount > 0 && (
-                    <span className="bg-red-500 text-white text-[10px] h-4 min-w-[16px] px-1 rounded-full flex items-center justify-center">
-                      {requestsCount}
-                    </span>
-                  )}
-                  {requestTab === 'incoming' && (
-                    <motion.div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--brand-pink)]" layoutId="reqTab" />
-                  )}
-                </button>
-                <button
-                  onClick={() => setRequestTab('outgoing')}
-                  className={`pb-2 text-sm font-semibold transition-colors relative flex items-center gap-2 ${requestTab === 'outgoing'
-                    ? 'text-[var(--brand-pink)]'
-                    : 'text-[var(--foreground-tertiary)]'
-                    }`}
-                >
-                  Enviadas
-                  {outgoingRequests.length > 0 && (
-                    <span className="bg-[var(--background-tertiary)] text-[var(--foreground-tertiary)] text-[10px] h-4 min-w-[16px] px-1 rounded-full flex items-center justify-center">
-                      {outgoingRequests.length}
-                    </span>
-                  )}
-                  {requestTab === 'outgoing' && (
-                    <motion.div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--brand-pink)]" layoutId="reqTab" />
-                  )}
-                </button>
-              </div>
+              {/* Users Section */}
+              {userResults.length > 0 && (
+                <div className="space-y-4">
+                  <h2 className="text-sm font-bold text-[var(--foreground)] flex items-center gap-2 px-1">
+                    Personas
+                  </h2>
+                  <div className="space-y-3">
+                    {userResults.map((profile) => {
+                      const status = myFollows[profile.id];
+                      const isPending = status === 'pending';
+                      const isFollowing = status === 'accepted';
 
-              {requestTab === 'incoming' ? (
-                // Incoming Requests List
-                <div className="space-y-3">
-                  {incomingRequests.length > 0 ? (
-                    incomingRequests.map((req) => (
-                      <Card key={`${req.follower_id}-${req.created_at}`} className="p-4">
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-[var(--background-secondary)] overflow-hidden">
-                              {req.follower.avatar_url && (
-                                <img src={req.follower.avatar_url} className="w-full h-full object-cover" />
-                              )}
+                      return (
+                        <Card key={profile.id} className="p-3 flex items-center justify-between hover:bg-[var(--background-secondary)]/50 transition-all border-[var(--border-color)] shadow-sm">
+                          <Link href={`/profile/${profile.id}`} className="flex items-center gap-3 flex-1 min-w-0">
+                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[var(--brand-pink)] to-orange-500 p-[2px] flex-shrink-0">
+                              <div className="w-full h-full rounded-full bg-[var(--card-bg)] overflow-hidden">
+                                {profile.avatar_url ? (
+                                  <img src={profile.avatar_url} alt={profile.full_name || ''} className="w-full h-full object-cover" />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center bg-[var(--background-secondary)] text-lg font-bold">
+                                    {(profile.full_name || '?')[0]}
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                            <div>
-                              <h4 className="font-semibold text-[var(--foreground)]">{req.follower.full_name}</h4>
-                              <p className="text-xs text-[var(--foreground-tertiary)]">@{req.follower.username}</p>
+                            <div className="min-w-0">
+                              <h3 className="font-semibold text-[var(--foreground)] truncate text-sm">
+                                {profile.full_name}
+                              </h3>
+                              <p className="text-xs text-[var(--foreground-tertiary)] truncate">
+                                @{profile.username}
+                              </p>
                             </div>
-                          </div>
-                          <span className="text-xs text-[var(--foreground-tertiary)]">
-                            {new Date(req.created_at).toLocaleDateString()}
-                          </span>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button
-                            className="flex-1 bg-[var(--brand-pink)] text-white border-none"
-                            onClick={() => handleAccept(req.follower_id)}
-                          >
-                            Aceptar
-                          </Button>
-                          <Button
-                            variant="secondary"
-                            className="flex-1"
-                            onClick={() => handleReject(req.follower_id)}
-                          >
-                            Rechazar
-                          </Button>
-                        </div>
-                      </Card>
-                    ))
-                  ) : (
-                    <div className="text-center py-12 text-[var(--foreground-tertiary)]">
-                      No tienes solicitudes pendientes
-                    </div>
-                  )}
+                          </Link>
+
+                          {isPending ? (
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              className="h-8 px-4 text-xs font-medium hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 group transition-all"
+                              onClick={() => handleCancelRequest(profile.id)}
+                            >
+                              <span className="group-hover:hidden">Pendiente</span>
+                              <span className="hidden group-hover:inline">Cancelar</span>
+                            </Button>
+                          ) : isFollowing ? (
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              className="h-8 px-4 text-xs font-medium bg-[var(--background-secondary)] text-[var(--foreground)]"
+                            >
+                              Siguiendo
+                            </Button>
+                          ) : (
+                            <Button
+                              size="sm"
+                              onClick={() => handleFollow(profile.id)}
+                              className="h-8 px-5 text-xs font-medium bg-[var(--brand-pink)] hover:bg-[var(--brand-pink-dark)] text-white shadow-md shadow-[var(--brand-pink)]/20 active:scale-95 transition-all"
+                            >
+                              Seguir
+                            </Button>
+                          )}
+                        </Card>
+                      );
+                    })}
+                  </div>
                 </div>
-              ) : (
-                // Outgoing Requests List
-                <div className="space-y-3">
-                  {outgoingRequests.length > 0 ? (
-                    outgoingRequests.map((req) => (
-                      <Card key={`${req.following_id}-${req.created_at}`} className="p-4 flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-[var(--background-secondary)] overflow-hidden">
-                            {req.following.avatar_url && (
-                              <img src={req.following.avatar_url} className="w-full h-full object-cover" />
-                            )}
+              )}
+
+              {/* Posts Section */}
+              {postResults.length > 0 && (
+                <div className="space-y-4">
+                  <h2 className="text-sm font-bold text-[var(--foreground)] flex items-center gap-2 px-1">
+                    Explorar Outfits
+                  </h2>
+                  <div className="grid grid-cols-3 gap-3 md:gap-6 box-border">
+                    {postResults.map((post) => (
+                      <Link
+                        key={post.id}
+                        href={`/post/${post.id}`}
+                        className="relative aspect-square overflow-hidden bg-[var(--background-secondary)] group cursor-pointer md:rounded-xl"
+                      >
+                        {post.image_url ? (
+                          <img
+                            src={post.image_url}
+                            alt={post.caption}
+                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-4xl">
+                            👗
                           </div>
-                          <div>
-                            <h4 className="font-semibold text-[var(--foreground)]">{req.following.full_name}</h4>
-                            <p className="text-xs text-[var(--foreground-tertiary)]">@{req.following.username}</p>
-                          </div>
-                        </div>
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
-                          onClick={() => handleCancelRequest(req.following_id)}
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
-                      </Card>
-                    ))
-                  ) : (
-                    <div className="text-center py-12 text-[var(--foreground-tertiary)]">
-                      No has enviado solicitudes pendientes
-                    </div>
-                  )}
+                        )}
+                        {/* Overlay on hover */}
+                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </Link>
+                    ))}
+                  </div>
                 </div>
               )}
             </motion.div>
           )}
         </AnimatePresence>
       </div>
-    </div>
+    </motion.div >
   );
 }

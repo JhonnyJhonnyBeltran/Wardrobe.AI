@@ -230,6 +230,22 @@ export interface Translations {
   app: {
     tagline: string;
   };
+  // Onboarding
+  onboarding: {
+    slides: {
+      inspiration: { title: string; description: string; };
+      time: { title: string; description: string; };
+      rediscover: { title: string; description: string; };
+      discovery: { title: string; description: string; };
+    };
+    cta: {
+      title: string;
+      description: string;
+      signup: string;
+      login: string;
+    };
+  };
+
   // Privacy Page
   privacyPage: {
     back: string;
@@ -445,6 +461,32 @@ export const translations: Record<Language, Translations> = {
       complete: 'Completar',
       next: 'Siguiente',
       back: 'Atrás',
+    },
+    onboarding: {
+      slides: {
+        inspiration: {
+          title: 'Inspiración al Instante',
+          description: '¿No sabes qué ponerte? Olvídate del bloqueo creativo. Recibe ideas frescas de outfits cada mañana según tu estilo y el clima.',
+        },
+        time: {
+          title: 'Ahorro de Tiempo Valioso',
+          description: 'Vístete en segundos, no en minutos. Planifica tus looks desde el sofá y deja de probarte ropa innecesariamente.',
+        },
+        rediscover: {
+          title: 'Redescubre tu Armario',
+          description: 'Nuestra IA encuentra combinaciones increíbles con la ropa que ya tienes. ¡Parecerá que estrenas ropa nueva!',
+        },
+        discovery: {
+          title: 'Encuentra lo que Amas',
+          description: 'Explora nuevas tendencias y descubre prendas que encajan perfectamente con tu colección actual.',
+        },
+      },
+      cta: {
+        title: '¿Listo para empezar?',
+        description: 'Crea tu cuenta y comienza a revolucionar tu estilo hoy mismo.',
+        signup: 'Crear cuenta gratis',
+        login: 'Ya tengo cuenta',
+      },
     },
     privacyPage: {
       back: 'Volver',
@@ -667,6 +709,32 @@ export const translations: Record<Language, Translations> = {
       complete: 'Complete',
       next: 'Next',
       back: 'Back',
+    },
+    onboarding: {
+      slides: {
+        inspiration: {
+          title: 'Instant Inspiration',
+          description: 'Don\'t know what to wear? Forget creative block. Get fresh outfit ideas every morning based on your style and weather.',
+        },
+        time: {
+          title: 'Save Valuable Time',
+          description: 'Get dressed in seconds, not minutes. Plan your looks from the couch and stop trying on clothes unnecessarily.',
+        },
+        rediscover: {
+          title: 'Rediscover Your Wardrobe',
+          description: 'Our AI finds incredible combinations with clothes you already own. It\'ll feel like you\'re wearing new clothes!',
+        },
+        discovery: {
+          title: 'Find What You Love',
+          description: 'Explore new trends and discover items that fit perfectly with your current collection.',
+        },
+      },
+      cta: {
+        title: 'Ready to start?',
+        description: 'Create your account and start revolutionizing your style today.',
+        signup: 'Create free account',
+        login: 'I already have an account',
+      },
     },
     privacyPage: {
       back: 'Back',

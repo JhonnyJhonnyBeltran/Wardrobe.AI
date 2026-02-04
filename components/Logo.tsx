@@ -1,53 +1,41 @@
 /**
- * Logo Component - Adapts to theme
+ * Logo Component - Adapts to theme using CSS
  */
 
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
 
 interface LogoProps {
     className?: string;
     size?: 'sm' | 'md' | 'lg';
 }
 
+const sizeClasses = {
+    sm: 'h-6',
+    md: 'h-8',
+    lg: 'h-12',
+};
+
 export default function Logo({ className = '', size = 'md' }: LogoProps) {
-    const [isDark, setIsDark] = useState(false);
-
-    useEffect(() => {
-        // Check if dark mode is active
-        const checkDarkMode = () => {
-            const isDarkMode = document.documentElement.classList.contains('dark');
-            setIsDark(isDarkMode);
-        };
-
-        checkDarkMode();
-
-        // Listen for theme changes
-        const observer = new MutationObserver(checkDarkMode);
-        observer.observe(document.documentElement, {
-            attributes: true,
-            attributeFilter: ['class']
-        });
-
-        return () => observer.disconnect();
-    }, []);
-
-    const sizeClasses = {
-        sm: 'h-6',
-        md: 'h-8',
-        lg: 'h-12',
-    };
-
     return (
-        <div className={`${className} ${sizeClasses[size]} relative`}>
+        <div className={`${className} ${sizeClasses[size]} relative flex justify-center items-center`}>
+            {/* Light Mode */}
             <Image
-                src={isDark ? '/klozet-logo-dark.png' : '/klozet-logo.png'}
+                src="/klozet-logo-dark.png"
                 alt="Klozet"
                 width={120}
                 height={48}
-                className="h-full w-auto object-contain"
+                className="h-full w-auto object-contain dark:hidden"
+                priority
+            />
+            {/* Dark Mode */}
+            <Image
+                src="/klozet-logo.png"
+                alt="Klozet"
+                width={120}
+                height={48}
+                className="h-full w-auto object-contain hidden dark:block"
                 priority
             />
         </div>

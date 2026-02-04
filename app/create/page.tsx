@@ -9,11 +9,13 @@ import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, RefreshCw, Settings, Save, Share2, Image as ImageIcon } from 'lucide-react';
 import { Button, Card, LogoMark, OutfitLoadingCarousel, PremiumModal, WardrobeSelectionModal } from '@/components';
+import ProductModal from '@/components/ProductModal';
 import { useWardrobe } from '@/lib/hooks/useWardrobe';
 import { useUser } from '@/store/userStore';
 import { ClothingItem, ClothingCategory } from '@/types/clothing';
-import { X, Move, Trash2, Loader2, ArrowLeft, Layers } from 'lucide-react';
+import { X, Move, Trash2, Loader2, ArrowLeft, Layers, ChevronLeft, ChevronRight, Download, Instagram, Check, Plus } from 'lucide-react';
 import { processClothingImage } from '@/lib/imageProcessing';
+import { getTemplatesForCount, OutfitTemplate } from './templates';
 
 // ============================================
 // Types
@@ -50,7 +52,7 @@ export default function CreateOutfitPage() {
     const [isGenerating, setIsGenerating] = useState(false);
     const [editMode, setEditMode] = useState(false);
     const [carouselSeed, setCarouselSeed] = useState(0);
-    const [isPublic, setIsPublic] = useState(false); // Estado para marcar outfit como público
+    const [isPublic, setIsPublic] = useState(false); // Estado para marcar outfit como pÃºblico
     const [isKloeEnabled, setIsKloeEnabled] = useState(false);
     const [showPremiumModal, setShowPremiumModal] = useState(false);
 
@@ -59,21 +61,30 @@ export default function CreateOutfitPage() {
     const [selectedCategory, setSelectedCategory] = useState<ClothingCategory | null>(null);
     const [isSelectionModalOpen, setIsSelectionModalOpen] = useState(false);
     const [activeItem, setActiveItem] = useState<string | null>(null);
-    const [isManualPreviewOpen, setIsManualPreviewOpen] = useState(false);
+    const [isManualPreviewOpen, setIsManualPreviewOpen] = useState(false); // Now acts as "Review Mode"
+
+    // New Template Flow State
+    const [showResultModal, setShowResultModal] = useState(false);
+    const [currentTemplateIndex, setCurrentTemplateIndex] = useState(0);
+    const [outfitName, setOutfitName] = useState('');
+
+    // Product Modal State
+    const [productToView, setProductToView] = useState<ClothingItem | null>(null);
+    const [isProductModalOpen, setIsProductModalOpen] = useState(false);
 
     const { isPremium } = useUser();
 
     // Referencia al contenedor del outfit generado para scroll
     const outfitPreviewRef = useRef<HTMLDivElement>(null);
-    
-    // Referencia al canvas para obtener dimensiones dinámicas
+
+    // Referencia al canvas para obtener dimensiones dinÃ¡micas
     const canvasRef = useRef<HTMLDivElement>(null);
     const [canvasSize, setCanvasSize] = useState({ width: 400, height: 500 });
 
     // Obtener items del armario para el carrusel
     const { items: wardrobeItems } = useWardrobe();
-    
-    // Observar cambios en el tamaño del canvas
+
+    // Observar cambios en el tamaÃ±o del canvas
     useEffect(() => {
         const updateCanvasSize = () => {
             if (canvasRef.current) {
@@ -81,34 +92,34 @@ export default function CreateOutfitPage() {
                 setCanvasSize({ width: rect.width, height: rect.height });
             }
         };
-        
+
         updateCanvasSize();
-        
+
         const resizeObserver = new ResizeObserver(updateCanvasSize);
         if (canvasRef.current) {
             resizeObserver.observe(canvasRef.current);
         }
-        
+
         return () => resizeObserver.disconnect();
     }, [isManualPreviewOpen]);
 
-    // Referencia para almacenar el tamaño previo del canvas
+    // Referencia para almacenar el tamaÃ±o previo del canvas
     const prevCanvasSizeRef = useRef(canvasSize);
-    
-    // Reposicionar items cuando cambia el tamaño del canvas
+
+    // Reposicionar items cuando cambia el tamaÃ±o del canvas
     useEffect(() => {
         const prevSize = prevCanvasSizeRef.current;
-        
-        // Solo reposicionar si hay un cambio significativo en el tamaño
+
+        // Solo reposicionar si hay un cambio significativo en el tamaÃ±o
         if (
             isManualPreviewOpen &&
-            (Math.abs(prevSize.width - canvasSize.width) > 10 || 
-             Math.abs(prevSize.height - canvasSize.height) > 10)
+            (Math.abs(prevSize.width - canvasSize.width) > 10 ||
+                Math.abs(prevSize.height - canvasSize.height) > 10)
         ) {
             // Calcular factores de escala
             const scaleX = canvasSize.width / prevSize.width;
             const scaleY = canvasSize.height / prevSize.height;
-            
+
             // Aplicar escala proporcional a las posiciones de los items
             setCanvasItems(items => {
                 if (items.length === 0) return items;
@@ -119,12 +130,12 @@ export default function CreateOutfitPage() {
                 }));
             });
         }
-        
+
         prevCanvasSizeRef.current = canvasSize;
     }, [canvasSize, isManualPreviewOpen]);
 
     // Memoize carousel items to prevent unnecessary re-renders
-    const carouselItems = useMemo(() => 
+    const carouselItems = useMemo(() =>
         wardrobeItems.map(item => ({
             id: item.id,
             imageUrl: item.imageUrl || '',
@@ -136,10 +147,10 @@ export default function CreateOutfitPage() {
     // ============================================
     // Constants
     // ============================================
-    
+
     const occasions = ['Casual', 'Trabajo', 'Fiesta', 'Deportivo', 'Formal'];
-    const weathers = ['Calor ☀️', 'Frío ❄️', 'Lluvia 🌧️', 'Templado 🌤️'];
-    const moods = ['Cómodo', 'Elegante', 'Atrevido', 'Minimalista', 'Colorido'];
+    const weathers = ['Calor â˜€ï¸', 'FrÃ­o â„ï¸', 'Lluvia ðŸŒ§ï¸', 'Templado ðŸŒ¤ï¸'];
+    const moods = ['CÃ³modo', 'Elegante', 'Atrevido', 'Minimalista', 'Colorido'];
 
     // ============================================
     // Handlers
@@ -175,7 +186,7 @@ export default function CreateOutfitPage() {
         // TODO: Implement actual save logic
     }, [isPublic, isKloeEnabled, generatedOutfit, canvasItems]);
 
-    // Función que se ejecuta cuando termina la animación del carrusel
+    // FunciÃ³n que se ejecuta cuando termina la animaciÃ³n del carrusel
     const handleCarouselExitComplete = useCallback(() => {
         // Scroll suave hacia el outfit generado
         if (outfitPreviewRef.current) {
@@ -192,18 +203,18 @@ export default function CreateOutfitPage() {
         setIsSelectionModalOpen(true);
     }, []);
 
-    // Canvas Placement Logic - Dinámico basado en tamaño del canvas
+    // Canvas Placement Logic - DinÃ¡mico basado en tamaÃ±o del canvas
     const getInitialPosition = useCallback((type: ClothingCategory | string, existingItems: CanvasItem[]) => {
-        const ITEM_SIZE = 128; // Tamaño del item (w-32 = 128px)
+        const ITEM_SIZE = 128; // TamaÃ±o del item (w-32 = 128px)
         const PADDING = 16; // Margen del borde
-        
+
         const { width: canvasWidth, height: canvasHeight } = canvasSize;
-        
+
         // Calcular el espacio disponible
         const availableWidth = canvasWidth - ITEM_SIZE - PADDING * 2;
         const availableHeight = canvasHeight - ITEM_SIZE - PADDING * 2;
-        
-        // Contar items por categoría para ajustar disposición
+
+        // Contar items por categorÃ­a para ajustar disposiciÃ³n
         const countByCategory = {
             tops: existingItems.filter(i => i.category === ClothingCategory.TOP).length,
             bottoms: existingItems.filter(i => i.category === ClothingCategory.BOTTOM).length,
@@ -211,97 +222,97 @@ export default function CreateOutfitPage() {
             outerwear: existingItems.filter(i => i.category === ClothingCategory.OUTERWEAR).length,
             accessories: existingItems.filter(i => i.category === ClothingCategory.ACCESSORY).length,
         };
-        
+
         const totalItems = existingItems.length;
-        
+
         // Determinar si necesitamos modo compacto (muchas prendas)
         const isCompactMode = totalItems >= 6;
-        
+
         // Calcular posiciones base proporcionales
-        // Ajustar el espaciado vertical según la cantidad de items
-        const verticalSpacing = isCompactMode 
+        // Ajustar el espaciado vertical segÃºn la cantidad de items
+        const verticalSpacing = isCompactMode
             ? Math.min(availableHeight / 4, 100) // Modo compacto: menos espacio
             : availableHeight / 3.5;
-        
+
         // Zonas verticales (asegurando que queden dentro)
         const topZoneY = PADDING;
         const bottomZoneY = Math.min(PADDING + verticalSpacing, availableHeight * 0.45);
         const shoesZoneY = Math.min(PADDING + verticalSpacing * 2, availableHeight * 0.75);
-        
-        // Calcular posición X base - columna principal más centrada
+
+        // Calcular posiciÃ³n X base - columna principal mÃ¡s centrada
         const mainColumnX = Math.max(PADDING, Math.min(availableWidth * 0.15, availableWidth - ITEM_SIZE));
-        
-        // Función helper para calcular offset horizontal cuando hay múltiples del mismo tipo
+
+        // FunciÃ³n helper para calcular offset horizontal cuando hay mÃºltiples del mismo tipo
         const getHorizontalOffset = (count: number, index: number) => {
             const offsetStep = Math.min(50, availableWidth / (count + 2));
             return index * offsetStep;
         };
 
-        // Asegurar que la posición X quede dentro del canvas
+        // Asegurar que la posiciÃ³n X quede dentro del canvas
         const clampX = (x: number) => Math.max(PADDING, Math.min(x, canvasWidth - ITEM_SIZE - PADDING));
-        
-        // Asegurar que la posición Y quede dentro del canvas
+
+        // Asegurar que la posiciÃ³n Y quede dentro del canvas
         const clampY = (y: number) => Math.max(PADDING, Math.min(y, canvasHeight - ITEM_SIZE - PADDING));
 
         switch (type) {
             case ClothingCategory.TOP: {
                 const offsetX = getHorizontalOffset(countByCategory.tops + 1, countByCategory.tops);
-                return { 
-                    x: clampX(mainColumnX + offsetX), 
-                    y: clampY(topZoneY), 
-                    zIndex: 10 + countByCategory.tops 
+                return {
+                    x: clampX(mainColumnX + offsetX),
+                    y: clampY(topZoneY),
+                    zIndex: 10 + countByCategory.tops
                 };
             }
             case ClothingCategory.OUTERWEAR: {
-                // Outerwear detrás del top, ligeramente desplazado
+                // Outerwear detrÃ¡s del top, ligeramente desplazado
                 const offsetX = getHorizontalOffset(countByCategory.outerwear + 1, countByCategory.outerwear);
                 const outerwearX = mainColumnX + 20 + offsetX;
-                return { 
-                    x: clampX(outerwearX), 
-                    y: clampY(topZoneY - 10), 
-                    zIndex: 5 + countByCategory.outerwear 
+                return {
+                    x: clampX(outerwearX),
+                    y: clampY(topZoneY - 10),
+                    zIndex: 5 + countByCategory.outerwear
                 };
             }
             case ClothingCategory.BOTTOM: {
                 const offsetX = getHorizontalOffset(countByCategory.bottoms + 1, countByCategory.bottoms);
-                return { 
-                    x: clampX(mainColumnX + offsetX), 
-                    y: clampY(bottomZoneY), 
-                    zIndex: 9 + countByCategory.bottoms 
+                return {
+                    x: clampX(mainColumnX + offsetX),
+                    y: clampY(bottomZoneY),
+                    zIndex: 9 + countByCategory.bottoms
                 };
             }
             case ClothingCategory.SHOES: {
                 const offsetX = getHorizontalOffset(countByCategory.shoes + 1, countByCategory.shoes);
-                return { 
-                    x: clampX(mainColumnX + offsetX), 
-                    y: clampY(shoesZoneY), 
-                    zIndex: 11 + countByCategory.shoes 
+                return {
+                    x: clampX(mainColumnX + offsetX),
+                    y: clampY(shoesZoneY),
+                    zIndex: 11 + countByCategory.shoes
                 };
             }
             case ClothingCategory.ACCESSORY:
             default: {
                 // Accesorios en columna derecha, apilados con espaciado adaptativo
                 const accessoryBaseX = Math.max(canvasWidth * 0.55, mainColumnX + ITEM_SIZE + 30);
-                
-                // Calcular cuántos accesorios caben verticalmente
+
+                // Calcular cuÃ¡ntos accesorios caben verticalmente
                 const maxAccessoriesVertical = Math.floor(availableHeight / 70);
                 const accessoryIndex = countByCategory.accessories;
-                
-                // Si hay más accesorios de los que caben, crear columnas
+
+                // Si hay mÃ¡s accesorios de los que caben, crear columnas
                 const column = Math.floor(accessoryIndex / maxAccessoriesVertical);
                 const row = accessoryIndex % maxAccessoriesVertical;
-                
+
                 // Espaciado vertical adaptativo
                 const accessorySpacingY = Math.min(70, availableHeight / (maxAccessoriesVertical + 1));
                 const accessorySpacingX = Math.min(70, (availableWidth - accessoryBaseX) / 2);
-                
+
                 const accessoryX = accessoryBaseX + (column * accessorySpacingX);
                 const accessoryY = PADDING + (row * accessorySpacingY);
-                
-                return { 
-                    x: clampX(accessoryX), 
-                    y: clampY(accessoryY), 
-                    zIndex: 12 + accessoryIndex 
+
+                return {
+                    x: clampX(accessoryX),
+                    y: clampY(accessoryY),
+                    zIndex: 12 + accessoryIndex
                 };
             }
         }
@@ -343,20 +354,48 @@ export default function CreateOutfitPage() {
         [canvasItems]
     );
 
+    // Helpers function to get available templates based on current count
+    const availableTemplates = useMemo(() =>
+        getTemplatesForCount(Math.min(canvasItems.length || 2, 5)),
+        [canvasItems.length]); // Fallback to 2 to avoid empty array if 0
+
+    const activeTemplate = availableTemplates[currentTemplateIndex] || availableTemplates[0];
+
     const handleManualGenerate = useCallback(() => {
+        if (canvasItems.length < 2) {
+            alert("Selecciona al menos 2 prendas para crear un outfit.");
+            return;
+        }
+
+        // Start animation
         setCarouselSeed(prev => prev + 1);
         setIsGenerating(true);
 
-        // Delay to show carousel animation
+        // Wait for animation mock
         setTimeout(() => {
             setIsGenerating(false);
-            setIsManualPreviewOpen(true);
+            setCurrentTemplateIndex(0);
+            setShowResultModal(true);
+        }, 2000);
+    }, [canvasItems]);
 
-            // Scroll to preview
-            if (outfitPreviewRef.current) {
-                outfitPreviewRef.current.scrollIntoView({ behavior: 'smooth' });
-            }
-        }, 1500);
+    const handleNextTemplate = useCallback(() => {
+        if (availableTemplates.length === 0) return;
+        setCurrentTemplateIndex(prev => (prev + 1) % availableTemplates.length);
+    }, [availableTemplates.length]);
+
+    const handlePrevTemplate = useCallback(() => {
+        if (availableTemplates.length === 0) return;
+        setCurrentTemplateIndex(prev => (prev - 1 + availableTemplates.length) % availableTemplates.length);
+    }, [availableTemplates.length]);
+
+    const handleDownloadImage = useCallback(() => {
+        // En un entorno real usarÃ­amos html-to-image
+        alert("Descargando imagen... (SimulaciÃ³n)");
+    }, []);
+
+    const handleShare = useCallback((platform: string) => {
+        alert(`Compartiendo en ${platform}...`);
     }, []);
 
     const handleUpdateCanvasItem = useCallback((uniqueId: string, updates: Partial<CanvasItem>) => {
@@ -389,7 +428,7 @@ export default function CreateOutfitPage() {
             />
 
             <div className="min-h-screen bg-[var(--background)] p-4 md:p-8 max-w-6xl mx-auto">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
                     {/* Left Column - Controls */}
                     <div className="lg:col-span-1 space-y-4">
                         <Card className="p-6">
@@ -427,8 +466,8 @@ export default function CreateOutfitPage() {
                                     </div>
                                     <p className="text-xs text-[var(--foreground-tertiary)]">
                                         {isKloeEnabled
-                                            ? "IA activada: Kloe diseñará tu outfit ideal"
-                                            : "Modo estándar: Sugerencias básicas del armario"}
+                                            ? "IA activada: Kloe diseÃ±arÃ¡ tu outfit ideal"
+                                            : "Modo estÃ¡ndar: Sugerencias bÃ¡sicas del armario"}
                                     </p>
                                 </div>
 
@@ -437,7 +476,7 @@ export default function CreateOutfitPage() {
                                         {/* Occasion */}
                                         <div>
                                             <label className="block text-sm font-medium text-[var(--foreground-secondary)] mb-3">
-                                                Ocasión
+                                                OcasiÃ³n
                                             </label>
                                             <div className="grid grid-cols-2 gap-2">
                                                 {occasions.map((occasion) => (
@@ -479,7 +518,7 @@ export default function CreateOutfitPage() {
                                         {/* Mood */}
                                         <div>
                                             <label className="block text-sm font-medium text-[var(--foreground-secondary)] mb-3">
-                                                Estado de ánimo
+                                                Estado de Ã¡nimo
                                             </label>
                                             <div className="grid grid-cols-2 gap-2">
                                                 {moods.map((mood) => (
@@ -580,7 +619,7 @@ export default function CreateOutfitPage() {
                                         ) : (
                                             <div className="space-y-4">
                                                 <p className="text-sm text-[var(--foreground-tertiary)]">
-                                                    Tu outfit está listo. Puedes arrastrar las prendas para ajustarlas.
+                                                    Tu outfit estÃ¡ listo. Puedes arrastrar las prendas para ajustarlas.
                                                 </p>
                                                 <Button
                                                     variant="secondary"
@@ -588,7 +627,7 @@ export default function CreateOutfitPage() {
                                                     className="w-full"
                                                 >
                                                     <ArrowLeft className="w-4 h-4 mr-2" />
-                                                    Volver a selección
+                                                    Volver a selecciÃ³n
                                                 </Button>
                                             </div>
                                         )}
@@ -602,7 +641,7 @@ export default function CreateOutfitPage() {
                             <Card className="p-6">
                                 <h3 className="text-sm font-bold text-[var(--foreground)] mb-3 flex items-center gap-2">
                                     <ImageIcon className="w-4 h-4" />
-                                    Fuentes de Inspiración
+                                    Fuentes de InspiraciÃ³n
                                 </h3>
                                 <div className="space-y-2 text-sm text-[var(--foreground-tertiary)]">
                                     <div className="flex items-center justify-between">
@@ -617,182 +656,253 @@ export default function CreateOutfitPage() {
                             </Card>
                         )}
                     </div>
-
-                    {/* Right Column - Outfit Preview or Canvas */}
-                    <div ref={outfitPreviewRef} className="lg:col-span-2 scroll-mt-4">
-                        <Card className="p-8 min-h-[600px] h-full relative overflow-hidden">
-                            {/* Canvas Background Grid */}
-                            {!isKloeEnabled && (
-                                <div className="absolute inset-0 pointer-events-none opacity-[0.03]"
-                                    style={{
-                                        backgroundImage: 'radial-gradient(circle, currentColor 1px, transparent 1px)',
-                                        backgroundSize: '20px 20px'
-                                    }}
-                                />
-                            )}
-
-                            <AnimatePresence mode="wait">
-                                {isKloeEnabled ? (
-                                    // KLOE Preview Logic (Existing)
-                                    generatedOutfit.length === 0 ? (
-                                        <motion.div
-                                            key="empty-kloe"
-                                            initial={{ opacity: 0 }}
-                                            animate={{ opacity: 1 }}
-                                            exit={{ opacity: 0 }}
-                                            className="flex flex-col items-center justify-center h-full text-center py-12"
-                                        >
-                                            <div className="w-24 h-24 rounded-3xl bg-[var(--background)] shadow-[var(--shadow-float-strong)] flex items-center justify-center mb-6 overflow-hidden">
-                                                <LogoMark size="xl" />
+                    {/* Selection Dock - Fixed Bottom Bar */}
+                    <AnimatePresence>
+                        {canvasItems.length > 0 && (
+                            <motion.div
+                                initial={{ y: 100 }}
+                                animate={{ y: 0 }}
+                                exit={{ y: 100 }}
+                                className="fixed bottom-0 left-0 right-0 z-40 bg-[var(--card-bg)]/90 backdrop-blur-xl border-t border-[var(--border-color)] shadow-2xl pb-safe"
+                                style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+                            >
+                                <div className="container mx-auto max-w-5xl px-4 py-4">
+                                    <div className="flex items-center justify-between gap-6">
+                                        {/* Items Strip */}
+                                        <div className="flex items-center gap-3 overflow-x-auto py-1 flex-1 mask-fade-right scrollbar-hide">
+                                            <div className="flex flex-col justify-center mr-2 px-2 border-r border-[var(--border-color)]">
+                                                <span className="text-lg font-bold text-[var(--foreground)] leading-none">{canvasItems.length}</span>
+                                                <span className="text-[10px] text-[var(--foreground-secondary)] uppercase tracking-wider">Items</span>
                                             </div>
-                                            <h3 className="text-2xl font-bold text-[var(--foreground)] mb-2">
-                                                Crea tu Outfit Perfecto
-                                            </h3>
-                                            <p className="text-[var(--foreground-tertiary)] max-w-md">
-                                                Selecciona la ocasión, clima y estado de ánimo para generar un collage de prendas
-                                                personalizado de tu armario
-                                            </p>
-                                        </motion.div>
-                                    ) : (
-                                        <motion.div
-                                            key="outfit-kloe"
-                                            initial={{ opacity: 0, y: 20 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            exit={{ opacity: 0, y: -20 }}
-                                        >
-                                            {/* ... Existing Result View ... */}
-                                            <div className="flex items-center justify-between mb-6">
-                                                <h2 className="text-xl font-bold text-[var(--foreground)]">
-                                                    Tu Outfit Generado
-                                                </h2>
-                                                {/* Actions */}
-                                                <div className="flex gap-2">
-                                                    <Button variant="secondary" onClick={handleSaveOutfit}>
-                                                        <Save className="w-5 h-5" />
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                            <div className="grid grid-cols-2 gap-4 mb-6">
-                                                {generatedOutfit.map((piece) => (
-                                                    <div key={piece.id} className="aspect-square bg-gray-100 dark:bg-gray-800 rounded-xl flex items-center justify-center">
-                                                        {piece.imageUrl ? (
-                                                            <img src={piece.imageUrl} className="w-full h-full object-contain" />
-                                                        ) : (
-                                                            <span>{piece.name}</span>
-                                                        )}
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </motion.div>
-                                    )
-                                ) : (
-                                    // Manual Canvas Logic
-                                    <motion.div
-                                        key="canvas"
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        exit={{ opacity: 0 }}
-                                        className="h-full flex flex-col"
-                                    >
-                                        <div className="flex items-center justify-between mb-4 z-10 relative">
-                                            <h2 className="text-xl font-bold text-[var(--foreground)]">
-                                                {isManualPreviewOpen ? "Lienzo de Diseño" : "Previsualización"}
-                                            </h2>
 
-                                            {isManualPreviewOpen && (
-                                                <div className="flex gap-2">
-                                                    <Button
-                                                        variant="secondary"
-                                                        onClick={() => {
-                                                            setCanvasItems([]);
-                                                            setIsManualPreviewOpen(false);
-                                                        }}
-                                                        disabled={canvasItems.length === 0}
+                                            <AnimatePresence mode="popLayout">
+                                                {canvasItems.map((item) => (
+                                                    <motion.div
+                                                        layoutId={`dock-${item.uniqueId}`}
+                                                        key={item.uniqueId}
+                                                        initial={{ scale: 0, opacity: 0 }}
+                                                        animate={{ scale: 1, opacity: 1 }}
+                                                        exit={{ scale: 0, opacity: 0 }}
+                                                        className="relative w-12 h-12 bg-white rounded-lg border border-[var(--border-color)] flex-shrink-0 flex items-center justify-center p-1 group"
                                                     >
-                                                        <Trash2 className="w-5 h-5" />
-                                                    </Button>
-                                                    <Button onClick={handleSaveOutfit} disabled={canvasItems.length === 0}>
-                                                        <Save className="w-5 h-5 mr-2" />
-                                                        Guardar
-                                                    </Button>
-                                                </div>
-                                            )}
+                                                        <img src={item.imageUrl} className="w-full h-full object-contain" />
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); handleRemoveFromCanvas(item.uniqueId); }}
+                                                            className="absolute -top-2 -right-2 bg-red-500 text-white w-5 h-5 rounded-full flex items-center justify-center shadow-md transform scale-0 group-hover:scale-100 transition-transform"
+                                                        >
+                                                            <X className="w-3 h-3" />
+                                                        </button>
+                                                    </motion.div>
+                                                ))}
+                                            </AnimatePresence>
                                         </div>
 
-                                        <div 
-                                            ref={canvasRef}
-                                            className="flex-1 relative bg-white dark:bg-gray-900/50 rounded-2xl border-2 border-dashed border-[var(--border-color)] overflow-hidden min-h-[500px]"
-                                            id="outfit-canvas"
-                                        >
-                                            {!isManualPreviewOpen ? (
-                                                <div className="absolute inset-0 flex flex-col items-center justify-center text-[var(--foreground-tertiary)] bg-[var(--background-secondary)]/50">
-                                                    <div className="w-16 h-16 rounded-full bg-[var(--background)] flex items-center justify-center mb-4 shadow-sm">
-                                                        <Layers className="w-8 h-8 opacity-20" />
-                                                    </div>
-                                                    <p>Selecciona prendas para comenzar</p>
-                                                    <p className="text-xs mt-2 opacity-60">El lienzo aparecerá al generar</p>
-                                                </div>
-                                            ) : (
-                                                <>
-                                                    {canvasItems.length === 0 && (
-                                                        <div className="absolute inset-0 flex flex-col items-center justify-center text-[var(--foreground-tertiary)] pointer-events-none">
-                                                            <Move className="w-12 h-12 mb-4 opacity-20" />
-                                                            <p>Tu lienzo está vacío</p>
-                                                        </div>
-                                                    )}
+                                        {/* Main Action */}
+                                        <div className="flex gap-3">
+                                            <Button
+                                                variant="outline"
+                                                onClick={() => setCanvasItems([])}
+                                                className="hidden sm:flex border-red-200 text-red-500 hover:bg-red-50"
+                                            >
+                                                Borrar
+                                            </Button>
+                                            <Button
+                                                onClick={handleManualGenerate}
+                                                disabled={canvasItems.length < 2 || isGenerating}
+                                                className="bg-gradient-to-r from-[var(--brand-pink)] to-purple-600 text-white shadow-lg shadow-[var(--brand-pink)]/25 px-8 h-12 rounded-xl font-bold text-base transition-transform hover:scale-105 active:scale-95"
+                                            >
+                                                {isGenerating ? <Loader2 className="animate-spin mr-2" /> : <Sparkles className="mr-2 fill-current" />}
+                                                Generar Outfit
+                                            </Button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
 
-                                                    {canvasItems.map((item) => (
-                                                        <motion.div
-                                                            key={item.uniqueId}
-                                                            drag
-                                                            dragMomentum={false}
-                                                            onDragStart={() => bringToFront(item.uniqueId)}
-                                                            initial={{ x: item.x, y: item.y }}
-                                                            style={{ zIndex: item.zIndex }}
-                                                            className="absolute cursor-move touch-none"
-                                                        >
-                                                            <div className="relative group w-32 h-32 md:w-32 md:h-32">
-                                                                {item.imageUrl ? (
+                    {/* Global Loading Overlay */}
+                    <AnimatePresence>
+                        {isGenerating && (
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="fixed inset-0 z-[60] bg-[var(--background)]/80 backdrop-blur-xl flex flex-col items-center justify-center pointer-events-auto"
+                            >
+                                <div className="scale-125">
+                                    <OutfitLoadingCarousel items={carouselItems} seed={carouselSeed} />
+                                </div>
+                                <p className="mt-8 text-xl font-medium text-[var(--foreground)] animate-pulse">DiseÃ±ando tu look...</p>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+
+
+
+
+
+
+
+
+                </div >
+            </div >
+            {/* Result Modal - The Main Experience */}
+            <AnimatePresence>
+                {
+                    showResultModal && (
+                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+                            {/* Navigation Arrows */}
+                            <button
+                                onClick={handlePrevTemplate}
+                                className="absolute left-4 top-1/2 -translate-y-1/2 p-3 text-white/50 hover:text-white bg-white/10 hover:bg-white/20 rounded-full backdrop-blur-md transition-all z-50 hidden md:block"
+                            >
+                                <ChevronLeft className="w-8 h-8" />
+                            </button>
+
+                            <button
+                                onClick={handleNextTemplate}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 p-3 text-white/50 hover:text-white bg-white/10 hover:bg-white/20 rounded-full backdrop-blur-md transition-all z-50 hidden md:block"
+                            >
+                                <ChevronRight className="w-8 h-8" />
+                            </button>
+
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                                className="bg-[var(--card-bg)] w-full max-w-xl aspect-[4/5] max-h-[85vh] rounded-3xl overflow-hidden shadow-2xl flex flex-col relative"
+                            >
+                                {/* Header overlay */}
+                                <div className="absolute top-0 inset-x-0 p-4 z-20 flex justify-between items-start bg-gradient-to-b from-black/50 to-transparent pointer-events-none">
+                                    <div className="pointer-events-auto bg-white/10 backdrop-blur-md rounded-xl p-1 pr-3 flex items-center border border-white/20">
+                                        <div className="w-8 h-8 flex items-center justify-center bg-white text-black rounded-lg font-bold mr-2">
+                                            {currentTemplateIndex + 1}
+                                        </div>
+                                        <span className="text-white font-medium text-sm">{activeTemplate.name}</span>
+                                    </div>
+
+                                    <button
+                                        onClick={() => setShowResultModal(false)}
+                                        className="pointer-events-auto p-2 rounded-full bg-black/20 hover:bg-black/40 text-white backdrop-blur-md transition-colors"
+                                    >
+                                        <X className="w-5 h-5" />
+                                    </button>
+                                </div>
+
+                                {/* Main Content Collage */}
+                                <div className="flex-1 relative bg-[var(--background)]">
+                                    {activeTemplate && (
+                                        <div className="absolute inset-0 m-0">
+                                            <AnimatePresence mode="wait">
+                                                <motion.div
+                                                    key={activeTemplate.id}
+                                                    initial={{ opacity: 0 }}
+                                                    animate={{ opacity: 1 }}
+                                                    exit={{ opacity: 0 }}
+                                                    transition={{ duration: 0.3 }}
+                                                    className="absolute inset-0"
+                                                >
+                                                    {activeTemplate.slots.map((slot, index) => {
+                                                        const item = canvasItems[index];
+                                                        if (!item) return null;
+                                                        return (
+                                                            <motion.button
+                                                                key={`${activeTemplate.id}-${item.uniqueId}`}
+                                                                layoutId={`item-${item.uniqueId}`}
+                                                                onClick={() => {
+                                                                    setProductToView(item);
+                                                                    setIsProductModalOpen(true);
+                                                                }}
+                                                                className="absolute group focus:outline-none overflow-hidden"
+                                                                style={{
+                                                                    top: slot.top,
+                                                                    left: slot.left,
+                                                                    width: slot.width,
+                                                                    height: slot.height || 'auto',
+                                                                    aspectRatio: slot.height ? undefined : '1/1',
+                                                                    transform: `rotate(${slot.rotate}deg)`,
+                                                                    zIndex: slot.zIndex
+                                                                }}
+                                                            >
+                                                                <div className="relative w-full h-full transform transition-transform duration-300 group-hover:scale-105">
                                                                     <img
                                                                         src={item.imageUrl}
-                                                                        className={`w-full h-full object-contain pointer-events-none transition-all hover:drop-shadow-xl ${item.isProcessing ? 'opacity-50' : ''}`}
                                                                         alt={item.name}
+                                                                        className="w-full h-full object-contain drop-shadow-xl"
                                                                     />
-                                                                ) : (
-                                                                    <div className="w-full h-full bg-[var(--background-secondary)] rounded-xl flex items-center justify-center border border-[var(--border-color)]">
-                                                                        <span className="text-2xl">👕</span>
+                                                                    {/* Interactive Pin */}
+                                                                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                        <div className="w-2 h-2 bg-white rounded-full shadow-lg" />
                                                                     </div>
-                                                                )}
-
-                                                                {/* Loading State */}
-                                                                {item.isProcessing && (
-                                                                    <div className="absolute inset-0 flex items-center justify-center">
-                                                                        <Loader2 className="w-8 h-8 text-[var(--brand-pink)] animate-spin" />
-                                                                    </div>
-                                                                )}
-
-                                                                {/* Hover Controls */}
-                                                                <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                    <button
-                                                                        onClick={() => handleRemoveFromCanvas(item.uniqueId)}
-                                                                        className="p-1 rounded-full bg-red-500 text-white shadow-lg transform hover:scale-110 transition-transform"
-                                                                    >
-                                                                        <X className="w-4 h-4" />
-                                                                    </button>
                                                                 </div>
-                                                            </div>
-                                                        </motion.div>
-                                                    ))}
-                                                </>
-                                            )}
+                                                            </motion.button>
+                                                        );
+                                                    })}
+                                                </motion.div>
+                                            </AnimatePresence>
                                         </div>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                        </Card>
-                    </div>
-                </div>
-            </div>
+                                    )}
+                                </div>
+
+                                {/* Footer Actions */}
+                                <div className="p-5 bg-[var(--card-bg)] border-t border-[var(--border-color)] space-y-4 z-20">
+                                    {/* Name Input */}
+                                    <input
+                                        type="text"
+                                        placeholder="Nombra este outfit..."
+                                        value={outfitName}
+                                        onChange={(e) => setOutfitName(e.target.value)}
+                                        className="w-full bg-[var(--background-secondary)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] px-4 py-3 rounded-xl border-none outline-none focus:ring-2 ring-[var(--brand-pink)]/50 transition-all font-medium"
+                                    />
+
+                                    <div className="flex gap-3">
+                                        <Button
+                                            onClick={handleSaveOutfit}
+                                            className="flex-1 bg-[var(--brand-pink)] hover:opacity-90 text-white shadow-[var(--shadow-float)]"
+                                        >
+                                            <Save className="w-5 h-5 mr-2" />
+                                            Guardar
+                                        </Button>
+
+                                        <button
+                                            onClick={handleDownloadImage}
+                                            className="p-3 rounded-xl bg-[var(--background-secondary)] hover:bg-[var(--background-tertiary)] text-[var(--foreground)] transition-colors border border-[var(--border-color)]"
+                                            title="Descargar PNG"
+                                        >
+                                            <Download className="w-5 h-5" />
+                                        </button>
+
+                                        <button
+                                            onClick={() => handleShare('instagram')}
+                                            className="p-3 rounded-xl bg-[var(--background-secondary)] hover:bg-[var(--background-tertiary)] text-[var(--foreground)] transition-colors border border-[var(--border-color)]"
+                                            title="Compartir en Instagram"
+                                        >
+                                            <Instagram className="w-5 h-5" />
+                                        </button>
+                                    </div>
+
+                                    {/* Mobile Navigation Helper */}
+                                    <div className="flex justify-between md:hidden pt-2">
+                                        <button onClick={handlePrevTemplate} className="text-sm text-[var(--foreground-secondary)] font-medium flex items-center gap-1"><ChevronLeft className="w-4 h-4" /> Anterior</button>
+                                        <button onClick={handleNextTemplate} className="text-sm text-[var(--foreground-secondary)] font-medium flex items-center gap-1">Siguiente <ChevronRight className="w-4 h-4" /></button>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        </div>
+                    )
+                }
+            </AnimatePresence >
+
+            <ProductModal
+                item={productToView ? { ...productToView, type: productToView.category, source: 'wardrobe', trending: false, matchScore: 100 } as any : null}
+                isOpen={isProductModalOpen}
+                onClose={() => setIsProductModalOpen(false)}
+                onFavoriteToggle={() => { }}
+                onEdit={() => { }}
+            />
+
             <PremiumModal
                 isOpen={showPremiumModal}
                 onClose={() => setShowPremiumModal(false)}

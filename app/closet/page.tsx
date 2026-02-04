@@ -7,6 +7,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Heart, Grid3x3, List, Search, Filter, Plus, Wand2, X
@@ -284,15 +285,40 @@ export default function ClosetPage() {
     orange: '#FB923C',
   };
 
+  const router = useRouter();
+
   // Handle door animation completion
   const handleDoorAnimationComplete = () => {
     setShowDoorAnimation(false);
   };
 
-  return (
-    <div className="min-h-screen bg-[var(--background)] pb-24 md:pb-8 pt-4 relative overflow-hidden">
+  // Swipe Navigation Logic
+  const handleDragEnd = (event: any, info: any) => {
+    const threshold = 50;
+    if (info.offset.x < -threshold) {
+      // Swipe Left -> Next (Notifications)
+      router.push('/notifications');
+    } else if (info.offset.x > threshold) {
+      // Swipe Right -> Prev (Search)
+      router.push('/search');
+    }
+  };
 
-      {/* Wardrobe Door Opening Animation */}
+  return (
+    <motion.div
+      className="min-h-screen bg-[var(--background)] pb-24 md:pb-8 pt-4 relative overflow-hidden touch-pan-y"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
+      drag="x"
+      dragConstraints={{ left: 0, right: 0 }}
+      dragElastic={0.05}
+      onDragEnd={handleDragEnd}
+    >
+
+      {/* Wardrobe Door Opening Animation - Disabled for instant load */}
+      {/* 
       <AnimatePresence>
         {showDoorAnimation && (
           <WardrobeDoorAnimation
@@ -300,7 +326,8 @@ export default function ClosetPage() {
             isOpen={!loading}
           />
         )}
-      </AnimatePresence>
+      </AnimatePresence> 
+      */}
 
       {/* Main Content - Visible from the start */}
       <div>
@@ -315,7 +342,7 @@ export default function ClosetPage() {
           className="px-4 mb-6"
         >
           <h2 className="text-sm font-bold text-[var(--foreground-secondary)] mb-3">{t.closet.quickActions}</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {/* Create Outfit Card */}
             <Link href="/create">
               <Card className="h-full p-6 hover-lift cursor-pointer group bg-gradient-to-br from-[var(--brand-pink)]/5 to-[var(--brand-pink-dark)]/5 border-2 border-[var(--brand-pink)]/20 hover:border-[var(--brand-pink)]">
@@ -355,25 +382,6 @@ export default function ClosetPage() {
               </div>
             </Card>
 
-            {/* Add Item Card */}
-            <Card
-              onClick={() => setShowAddModal(true)}
-              className="h-full p-6 hover-lift cursor-pointer group border-2 border-[var(--border-color)] hover:border-[var(--brand-pink)]"
-            >
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-[var(--background-secondary)] border-2 border-[var(--brand-pink)] flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
-                  <Plus className="w-6 h-6 text-[var(--brand-pink)]" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-bold text-[var(--foreground)] mb-1">
-                    {t.closet.addItem}
-                  </h3>
-                  <p className="text-sm text-[var(--foreground-tertiary)]">
-                    {t.closet.addItemDesc}
-                  </p>
-                </div>
-              </div>
-            </Card>
           </div>
         </motion.div>
 
@@ -534,52 +542,70 @@ export default function ClosetPage() {
           </motion.div>
         </div>
 
-        {filteredItems.length > 0 ? (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className={`px-4 ${viewMode === 'grid'
-              ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'
-              : 'space-y-3'
-              }`}
-          >
-            {filteredItems.map((item, index) => (
-              <motion.div
-                key={item.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.05 * index }}
-              >
-                <ClothingItem
-                  id={item.id}
-                  name={item.name}
-                  brand={item.brand}
-                  type={t.itemTypes[item.category as keyof typeof t.itemTypes] || item.category}
-                  color={t.colors[(item.color as any) as keyof typeof t.colors] || item.color}
-                  colorHex={(item as any).colorHex || colorMap[(item.color as any) as string] || '#EEEEEE'}
-                  imageUrl={item.imageUrl || ''}
-                  isFavorite={favorites.has(item.id)}
-                  onFavoriteToggle={handleFavoriteToggle}
-                  onDelete={handleDeleteItem}
-                  onClick={() => handleItemClick(item)}
-                />
-              </motion.div>
-            ))}
-          </motion.div>
-        ) : (
-          <Card className="mx-4 p-8 text-center">
-            <Plus className="w-12 h-12 text-[var(--brand-pink)] mx-auto mb-3" />
-            <p className="text-sm font-bold text-[var(--foreground)] mb-1">{t.closet.addFirstItem}</p>
-            <p className="text-xs text-[var(--foreground-tertiary)]">{t.closet.wardrobeWaiting}</p>
-            <div className="mt-4">
-              <Button onClick={() => setShowAddModal(true)} className="px-4">
-                {t.closet.addItemButton}
-              </Button>
-            </div>
-          </Card>
-        )}
+        {
+          filteredItems.length > 0 ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className={`px-4 ${viewMode === 'grid'
+                ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'
+                : 'space-y-3'
+                }`}
+            >
+              {filteredItems.map((item, index) => (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.05 * index }}
+                >
+                  <ClothingItem
+                    id={item.id}
+                    name={item.name}
+                    brand={item.brand}
+                    type={t.itemTypes[item.category as keyof typeof t.itemTypes] || item.category}
+                    color={t.colors[(item.color as any) as keyof typeof t.colors] || item.color}
+                    colorHex={(item as any).colorHex || colorMap[(item.color as any) as string] || '#EEEEEE'}
+                    imageUrl={item.imageUrl || ''}
+                    isFavorite={favorites.has(item.id)}
+                    onFavoriteToggle={handleFavoriteToggle}
+                    onDelete={handleDeleteItem}
+                    onClick={() => handleItemClick(item)}
+                  />
+                </motion.div>
+              ))}
+            </motion.div>
+          ) : (
+            <Card className="mx-4 p-8 text-center">
+              <Plus className="w-12 h-12 text-[var(--brand-pink)] mx-auto mb-3" />
+              <p className="text-sm font-bold text-[var(--foreground)] mb-1">{t.closet.addFirstItem}</p>
+              <p className="text-xs text-[var(--foreground-tertiary)]">{t.closet.wardrobeWaiting}</p>
+              <div className="mt-4">
+                <Button onClick={() => setShowAddModal(true)} className="px-4">
+                  {t.closet.addItemButton}
+                </Button>
+              </div>
+            </Card>
+          )
+        }
       </div>
+
+      {/* Floating Action Button (FAB) for adding items */}
+      <motion.button
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.9 }}
+        onClick={() => {
+          setEditingItem(null);
+          setShowAddModal(true);
+        }}
+        className="fixed bottom-24 md:bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-[var(--brand-pink)] shadow-lg shadow-[var(--brand-pink)]/40 flex items-center justify-center text-white hover:bg-[var(--brand-pink-dark)] transition-colors focus:outline-none focus:ring-4 focus:ring-[var(--brand-pink)]/30"
+        aria-label={t.closet.addItem}
+      >
+        <Plus className="w-7 h-7 stroke-[2.5]" />
+      </motion.button>
 
       {/* Add Item Modal */}
       <AddItemModal
@@ -660,6 +686,6 @@ export default function ClosetPage() {
         onFavoriteToggle={handleFavoriteToggle}
         onEdit={handleEditItem}
       />
-    </div>
+    </motion.div >
   );
 }
