@@ -12,13 +12,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Home, Search, Heart, UserRound } from 'lucide-react';
 import { useUiStore } from '@/store/uiStore';
 import { useMessageStore, selectTotalUnread, selectBadgeVisible } from '@/store/messageStore';
+import { useRealtimeStore, selectUnreadCount } from '@/store/realtimeStore';
 
 // Assuming /klozet-logo-dark.png is a suitable mask (solid shape)
 const LOGO_MASK_URL = '/klozet-logo-dark.png';
 
 interface TabItem {
   href: string;
-  labelKey: 'home' | 'closet' | 'create' | 'social' | 'profile' | 'search' | 'messages' | 'kloe';
+  labelKey: 'home' | 'closet' | 'create' | 'social' | 'profile' | 'search' | 'messages' | 'notifications' | 'kloe';
   icon: React.ReactNode;
   isLogoMark?: boolean;
 }
@@ -37,20 +38,28 @@ export default function TabBar() {
   // Message notifications from new store
   const messageUnreadCount = useMessageStore(selectTotalUnread);
   const messageBadgeVisible = useMessageStore(selectBadgeVisible);
+  const notificationUnreadCount = useRealtimeStore(selectUnreadCount);
+
+  // Hide TabBar on messages chat pages (check after all hooks)
+  if (pathname.startsWith('/messages/') && pathname !== '/messages') {
+    return null;
+  }
 
   const tabs: TabItem[] = [
     { href: '/feed', labelKey: 'home', icon: <Home /> },
     { href: '/search', labelKey: 'search', icon: <Search /> },
     { href: '/closet', labelKey: 'closet', icon: null, isLogoMark: true },
-    { href: '/notifications', labelKey: 'messages', icon: <Heart /> }, // Heart icon for Notifications/Activity
+    { href: '/notifications', labelKey: 'notifications', icon: <Heart /> }, // Heart icon for Notifications/Activity
     { href: '/profile', labelKey: 'profile', icon: <UserRound /> },
   ];
 
   // Helper to get badge count for each tab
   const getBadgeCount = (labelKey: string): number => {
-    if (labelKey === 'search') return requestsCount;
+    if (labelKey === 'search') return 0;
     // Messages uses the new store with badge visibility logic
     if (labelKey === 'messages') return messageBadgeVisible ? messageUnreadCount : 0;
+    // Notifications logic
+    if (labelKey === 'notifications') return notificationUnreadCount;
     return 0;
   };
 
@@ -62,7 +71,7 @@ export default function TabBar() {
   return (
     <nav className="fixed bottom-0 left-0 right-0 md:hidden z-[5000]">
       {/* Minimal Glass Background */}
-      <div className="absolute inset-0 bg-[var(--background)]/95 backdrop-blur-xl border-t border-[var(--border-color)]/50" />
+      <div className="absolute inset-0 bg-[var(--background)]/80 backdrop-blur-xl border-t border-[var(--border-color)]/50" />
 
       <div className="relative flex justify-between items-center h-[72px] px-2 pb-safe">
         {tabs.map((tab) => {
@@ -130,7 +139,7 @@ export default function TabBar() {
                           exit={{ scale: 0 }}
                           className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-[3px] flex items-center justify-center bg-[#FF3040] text-white text-[10px] font-bold rounded-full border border-[var(--background)] leading-none z-20"
                         >
-                          {badgeCount > 9 ? '9+' : badgeCount}
+                          {badgeCount > 99 ? '+99' : badgeCount}
                         </motion.div>
                       )}
                     </AnimatePresence>

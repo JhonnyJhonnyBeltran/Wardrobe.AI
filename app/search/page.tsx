@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence, PanInfo } from 'framer-motion';
-import { Search, UserPlus, UserCheck, X, Clock, Users, Image as ImageIcon } from 'lucide-react';
+import { Search, UserPlus, UserCheck, X, Clock, Users, Image as ImageIcon, MessageCircle } from 'lucide-react';
 import { useSocial, Profile } from '@/lib/hooks/useSocial';
 import { Card, Button } from '@/components';
 import { useUser } from '@/store/userStore';
@@ -324,33 +324,45 @@ export default function SearchPage() {
                             </div>
                           </Link>
 
-                          {isPending ? (
-                            <Button
-                              size="sm"
-                              variant="secondary"
-                              className="h-8 px-4 text-xs font-medium hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 group transition-all"
-                              onClick={() => handleCancelRequest(profile.id)}
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                router.push(`/messages/${profile.id}`);
+                              }}
+                              className="p-2 text-[var(--foreground-tertiary)] hover:text-[var(--brand-pink)] hover:bg-[var(--brand-pink)]/5 rounded-full transition-colors"
                             >
-                              <span className="group-hover:hidden">Pendiente</span>
-                              <span className="hidden group-hover:inline">Cancelar</span>
-                            </Button>
-                          ) : isFollowing ? (
-                            <Button
-                              size="sm"
-                              variant="secondary"
-                              className="h-8 px-4 text-xs font-medium bg-[var(--background-secondary)] text-[var(--foreground)]"
-                            >
-                              Siguiendo
-                            </Button>
-                          ) : (
-                            <Button
-                              size="sm"
-                              onClick={() => handleFollow(profile.id)}
-                              className="h-8 px-5 text-xs font-medium bg-[var(--brand-pink)] hover:bg-[var(--brand-pink-dark)] text-white shadow-md shadow-[var(--brand-pink)]/20 active:scale-95 transition-all"
-                            >
-                              Seguir
-                            </Button>
-                          )}
+                              <MessageCircle className="w-5 h-5" />
+                            </button>
+
+                            {isPending ? (
+                              <Button
+                                size="sm"
+                                variant="secondary"
+                                className="h-8 px-4 text-xs font-medium hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 group transition-all"
+                                onClick={() => handleCancelRequest(profile.id)}
+                              >
+                                <span className="group-hover:hidden">Pendiente</span>
+                                <span className="hidden group-hover:inline">Cancelar</span>
+                              </Button>
+                            ) : isFollowing ? (
+                              <Button
+                                size="sm"
+                                variant="secondary"
+                                className="h-8 px-4 text-xs font-medium bg-[var(--background-secondary)] text-[var(--foreground)]"
+                              >
+                                Siguiendo
+                              </Button>
+                            ) : (
+                              <Button
+                                size="sm"
+                                onClick={() => handleFollow(profile.id)}
+                                className="h-8 px-5 text-xs font-medium bg-[var(--brand-pink)] hover:bg-[var(--brand-pink-dark)] text-white shadow-md shadow-[var(--brand-pink)]/20 active:scale-95 transition-all"
+                              >
+                                Seguir
+                              </Button>
+                            )}
+                          </div>
                         </Card>
                       );
                     })}

@@ -8,6 +8,7 @@ import React, { ReactNode } from 'react';
 import TabBar from './TabBar';
 import Sidebar from './Sidebar';
 import AuthGuard from './AuthGuard';
+import FloatingCreateButton from './FloatingCreateButton';
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -28,6 +29,9 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
       {/* Mobile TabBar */}
       <TabBar />
+
+      {/* Floating Create Button (Desktop only) */}
+      <FloatingCreateButton />
     </div>
   );
 }

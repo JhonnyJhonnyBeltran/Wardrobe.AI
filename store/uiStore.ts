@@ -20,6 +20,9 @@ interface UiStore {
     setRequestsCount: (count: number) => void;
     messageRequestsCount: number;
     setMessageRequestsCount: (count: number) => void;
+    isPremiumModalOpen: boolean;
+    openPremiumModal: () => void;
+    closePremiumModal: () => void;
 }
 
 export const useUiStore = create<UiStore>((set) => ({
@@ -30,4 +33,7 @@ export const useUiStore = create<UiStore>((set) => ({
     setRequestsCount: (count) => set({ requestsCount: count }),
     messageRequestsCount: 0,
     setMessageRequestsCount: (count) => set({ messageRequestsCount: count }),
+    isPremiumModalOpen: false,
+    openPremiumModal: () => set({ isPremiumModalOpen: true }),
+    closePremiumModal: () => set({ isPremiumModalOpen: false }),
 }));

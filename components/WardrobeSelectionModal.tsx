@@ -61,49 +61,53 @@ const SelectableItem = memo(function SelectableItem({
 
     return (
         <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            layoutId={`item-${item.id}`}
+            whileHover={{ y: -5, scale: 1.02 }}
+            whileTap={{ scale: 0.95 }}
             onClick={handleClick}
-            className={`group relative aspect-square rounded-2xl bg-[var(--background-secondary)] overflow-hidden text-left transition-all duration-200 ease-out ${
-                isSelected 
-                    ? 'border-2 border-[var(--brand-pink)] ring-2 ring-[var(--brand-pink)]/30 shadow-lg' 
+            className={`group relative aspect-[3/4] rounded-2xl bg-[var(--card-bg)] overflow-hidden text-left transition-all duration-300 shadow-sm hover:shadow-xl ${isSelected
+                    ? 'ring-4 ring-[var(--brand-pink)]/50 border-transparent shadow-[0_0_20px_rgba(255,105,180,0.3)]'
                     : 'border border-[var(--border-color)] hover:border-[var(--brand-pink)]'
-            }`}
+                }`}
         >
-            {/* Image or Placeholder */}
-            {item.imageUrl ? (
-                <Image
-                    src={item.imageUrl}
-                    alt={item.name}
-                    fill
-                    sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
-                    className={`object-contain transition-opacity duration-200 ${isSelected ? 'opacity-90' : ''}`}
-                />
-            ) : (
-                <div className="w-full h-full flex items-center justify-center text-4xl bg-[var(--background-tertiary)]">
-                    👕
-                </div>
-            )}
+            {/* Image or Placeholder - Larger Display */}
+            <div className="absolute inset-0 p-4">
+                {item.imageUrl ? (
+                    <Image
+                        src={item.imageUrl}
+                        alt={item.name}
+                        fill
+                        sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
+                        className={`object-contain transition-all duration-500 group-hover:scale-110 drop-shadow-lg ${isSelected ? 'opacity-100 scale-105' : 'opacity-90'}`}
+                    />
+                ) : (
+                    <div className="w-full h-full flex items-center justify-center text-4xl bg-[var(--background-tertiary)] rounded-xl">
+                        👕
+                    </div>
+                )}
+            </div>
 
-            {/* Selected Indicator */}
+            {/* Selected Indicator - Premium Checkmark */}
             <AnimatePresence>
                 {isSelected && (
-                    <motion.div 
-                        initial={{ scale: 0, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        exit={{ scale: 0, opacity: 0 }}
-                        transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                        className="absolute top-2 right-2 w-6 h-6 rounded-full bg-[var(--brand-pink)] flex items-center justify-center shadow-lg"
+                    <motion.div
+                        initial={{ scale: 0, rotate: -45 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        exit={{ scale: 0 }}
+                        className="absolute top-3 right-3 w-8 h-8 rounded-full bg-[var(--brand-pink)] flex items-center justify-center shadow-lg border-2 border-white z-10"
                     >
-                        <Check className="w-4 h-4 text-white" />
+                        <Check className="w-5 h-5 text-white stroke-[3]" />
                     </motion.div>
                 )}
             </AnimatePresence>
 
-            {/* Overlay Info */}
-            <div className={`absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/80 to-transparent pt-8 transition-opacity duration-200 ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
-                <p className="text-white text-xs font-medium truncate">
+            {/* Info Badge - Bottom */}
+            <div className="absolute bottom-0 inset-x-0 p-3 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
+                <p className="text-white font-bold text-sm truncate drop-shadow-md transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
                     {item.name}
+                </p>
+                <p className="text-white/70 text-[10px] uppercase tracking-wider opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-75">
+                    {item.brand || 'Klozet'}
                 </p>
             </div>
         </motion.button>
@@ -242,7 +246,7 @@ export default function WardrobeSelectionModal({
                         {filteredItems.length === 0 ? (
                             <EmptyState />
                         ) : (
-                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 pb-20">
                                 {filteredItems.map((item, index) => (
                                     <SelectableItem
                                         key={item.id || `item-${index}`}

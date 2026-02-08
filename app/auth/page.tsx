@@ -1,17 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff, Sparkles, MailCheck, AtSign, Check, AlertCircle } from 'lucide-react';
-import { Button, Card, StyleQuizModal, Logo, LogoExtended } from '@/components';
-import type { StyleQuizResponses } from '@/components/StyleQuizModal';
+import { Button, LogoExtended } from '@/components'; // Usamos solo LogoExtended para limpieza
 import { useUser } from '@/store/userStore';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useSocial } from '@/lib/hooks/useSocial';
 import { supabase } from '@/lib/supabase/client';
-import { useSearchParams } from 'next/navigation';
 
 export default function AuthPage() {
     const router = useRouter();
@@ -20,494 +18,245 @@ export default function AuthPage() {
     const { checkUsernameAvailability, checkEmailAvailability } = useSocial();
     const searchParams = useSearchParams();
     const mode = searchParams?.get('mode');
+
+    // States
     const [isLogin, setIsLogin] = useState(mode === 'login');
     const [showPassword, setShowPassword] = useState(false);
 
-    // Auth State
-    const [emailOrUser, setEmailOrUser] = useState(''); // Used for Login
-    const [email, setEmail] = useState(''); // Used for Signup
+    // Form Data
+    const [emailOrUser, setEmailOrUser] = useState('');
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [name, setName] = useState(''); // Full Name
-    const [username, setUsername] = useState(''); // @username handle
+    const [name, setName] = useState('');
+    const [username, setUsername] = useState('');
 
-    // Username Verification State
+    // Validation States
     const [isUsernameAvailable, setIsUsernameAvailable] = useState<boolean | null>(null);
     const [isCheckingUsername, setIsCheckingUsername] = useState(false);
-
-    // Email Verification State
     const [isEmailAvailable, setIsEmailAvailable] = useState<boolean | null>(null);
     const [isCheckingEmail, setIsCheckingEmail] = useState(false);
 
-    const [showResetPassword, setShowResetPassword] = useState(false);
-    const [showQuiz, setShowQuiz] = useState(false);
-    const [waitingVerification, setWaitingVerification] = useState(false);
-
-    // Debounce check username availability
+    // Debounce Checks
     useEffect(() => {
-        if (isLogin) return; // Don't check on login mode
-
+        if (isLogin) return;
         const checkUsername = async () => {
-            if (!username || username.length < 3) {
-                setIsUsernameAvailable(null);
-                return;
-            }
-
+            if (!username || username.length < 3) { setIsUsernameAvailable(null); return; }
             setIsCheckingUsername(true);
             const available = await checkUsernameAvailability(username);
             setIsUsernameAvailable(available);
             setIsCheckingUsername(false);
         };
-
         const timeoutId = setTimeout(checkUsername, 500);
         return () => clearTimeout(timeoutId);
     }, [username, checkUsernameAvailability, isLogin]);
 
-    // Debounce check email availability
     useEffect(() => {
         if (isLogin) return;
-
         const checkEmail = async () => {
-            if (!email || !email.includes('@') || email.length < 5) {
-                setIsEmailAvailable(null);
-                return;
-            }
-
+            if (!email || !email.includes('@') || email.length < 5) { setIsEmailAvailable(null); return; }
             setIsCheckingEmail(true);
             const available = await checkEmailAvailability(email);
             setIsEmailAvailable(available);
             setIsCheckingEmail(false);
         };
-
         const timeoutId = setTimeout(checkEmail, 500);
         return () => clearTimeout(timeoutId);
     }, [email, checkEmailAvailability, isLogin]);
 
-    const handleGoogleLogin = async () => {
-        try {
-            await signInWithGoogle();
-        } catch (err) {
-            console.error('Google login error', err);
-        }
-    };
 
-    const handleAppleLogin = () => {
-        // Apple sign-in not configured in Supabase settings here
-        console.log('Apple login - not configured');
+    // Handlers
+    const handleGoogleLogin = async () => {
+        try { await signInWithGoogle(); } catch (err) { console.error('Google login error', err); }
     };
 
     const resolveEmail = async (input: string): Promise<string | null> => {
-        // If it looks like an email, return it
         if (input.includes('@') && input.includes('.')) return input;
-
-        // Otherwise, treat as username
-        // 1. Find Profile ID from username
         const cleanUsername = input.startsWith('@') ? input.substring(1) : input;
-        const { data: profile } = await supabase
-            .from('profiles')
-            .select('id')
-            .eq('username', cleanUsername)
-            .single();
-
+        const { data: profile } = await supabase.from('profiles').select('id').eq('username', cleanUsername).single();
         if (!profile) return null;
-
-        // 2. Find Email from Users (Legacy/Mirror) table using ID
-        const { data: user } = await supabase
-            .from('users')
-            .select('email')
-            .eq('id', (profile as any).id)
-            .single();
-
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: user } = await supabase.from('users' as any).select('email').eq('id', (profile as any).id).single();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return (user as any)?.email || null;
     };
 
     const handleEmailAuth = async (e: React.FormEvent) => {
         e.preventDefault();
-
-        if (showResetPassword) {
-            // TODO: Send reset email
-            console.log('Reset password for:', emailOrUser);
-            setShowResetPassword(false);
-            return;
-        }
-
         if (isLogin) {
-            // LOGIN LOGIC
             const resolvedEmail = await resolveEmail(emailOrUser);
-
-            if (!resolvedEmail) {
-                alert('Usuario o email no encontrado');
-                return;
-            }
-
+            if (!resolvedEmail) { alert('Usuario o email no encontrado'); return; }
             const res = await signIn(resolvedEmail, password);
-            if (res.success) {
-                router.push('/closet');
-            } else {
-                alert(res.error || 'Error al iniciar sesión');
-            }
+            if (res.success) router.push('/closet');
+            else alert(res.error || 'Error al iniciar sesión');
         } else {
-            // SIGNUP LOGIC
-            if (isUsernameAvailable === false) {
-                alert('El nombre de usuario no está disponible');
-                return;
-            }
-            if (isEmailAvailable === false) {
-                alert('El email ya está registrado');
-                return;
-            }
-            if (!username) {
-                alert('Por favor elige un nombre de usuario');
-                return;
-            }
+            if (isUsernameAvailable === false) return alert('El nombre de usuario no está disponible');
+            if (isEmailAvailable === false) return alert('El email ya está registrado');
+            if (!username) return alert('Elige un nombre de usuario');
 
             const res = await signUp(email, password, name, username);
-            if (res.success) {
-                // Mostrar pantalla de verificación en lugar del quiz
-                setWaitingVerification(true);
-            } else {
-                alert(res.error || 'Error al crear cuenta');
-            }
+            if (res.success) router.push('/onboarding/preferences');
+            else alert(res.error || 'Error al crear cuenta');
         }
-    };
-
-    // Authentication handled by `useAuth`; simulateLogin removed
-
-    const handleQuizComplete = (responses: StyleQuizResponses) => {
-        // After signup, style quiz completes — useAuth already updated the store
-        setShowQuiz(false);
-        router.push('/closet');
     };
 
     return (
-        <>
-            <div className="min-h-screen bg-[var(--background)] flex flex-col items-center justify-center p-4">
-                {waitingVerification ? (
-                    /* Pantalla de verificación */
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="w-full max-w-md"
-                    >
-                        <Card className="p-8 text-center">
-                            <motion.div
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
-                                transition={{ delay: 0.2, type: 'spring', stiffness: 200 }}
-                                className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-[var(--brand-pink)] to-[var(--brand-pink-dark)] flex items-center justify-center shadow-[var(--shadow-float-strong)]"
-                            >
-                                <MailCheck className="w-10 h-10 text-white" />
-                            </motion.div>
+        <div className="relative min-h-screen flex items-center justify-center p-4 overflow-hidden bg-black">
 
-                            <h2 className="text-2xl font-bold text-[var(--foreground)] mb-3">
-                                Revisa tu correo
+            {/* Background Image with Overlay */}
+            <div className="absolute inset-0 z-0">
+                <Image
+                    src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=2070&auto=format&fit=crop"
+                    alt="Fashion Background"
+                    fill
+                    className="object-cover opacity-60"
+                    priority
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/20" />
+            </div>
+
+            {/* Glass Card */}
+            <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
+                className="relative z-10 w-full max-w-md bg-white/10 dark:bg-black/40 backdrop-blur-xl border border-white/20 rounded-[32px] shadow-2xl overflow-hidden"
+            >
+                <div className="p-8 md:p-10">
+                    {/* Logo Section */}
+                    <div className="flex justify-center mb-8">
+                        <LogoExtended size="lg" className="text-white drop-shadow-md" />
+                    </div>
+
+                    <AnimatePresence mode="wait">
+                        <motion.div
+                            key={isLogin ? 'login' : 'signup'}
+                            initial={{ opacity: 0, x: isLogin ? -20 : 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: isLogin ? 20 : -20 }}
+                            transition={{ duration: 0.3 }}
+                        >
+                            <h2 className="text-2xl font-bold text-white text-center mb-6 tracking-tight">
+                                {isLogin ? 'Bienvenido de nuevo' : 'Únete a KLOZET'}
                             </h2>
 
-                            <p className="text-[var(--foreground-secondary)] mb-2">
-                                Te hemos enviado un email a
-                            </p>
-                            <p className="text-[var(--brand-pink)] font-semibold mb-6">
-                                {email}
-                            </p>
-
-                            <div className="bg-[var(--background-secondary)] rounded-2xl p-4 mb-6">
-                                <p className="text-sm text-[var(--foreground-secondary)] leading-relaxed">
-                                    Haz clic en el enlace de verificación para activar tu cuenta y comenzar a usar KLOZET
-                                </p>
+                            {/* Social Login */}
+                            <div className="space-y-3 mb-6">
+                                <Button
+                                    onClick={handleGoogleLogin}
+                                    variant="secondary"
+                                    className="w-full !bg-white/90 hover:!bg-white !text-black !border-none h-12 rounded-xl font-medium"
+                                >
+                                    <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
+                                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                                    </svg>
+                                    Continuar con Google
+                                </Button>
                             </div>
 
-                            <motion.div
-                                animate={{ opacity: [0.5, 1, 0.5] }}
-                                transition={{ duration: 2, repeat: Infinity }}
-                                className="text-sm text-[var(--foreground-tertiary)] mb-6"
-                            >
-                                Esperando verificación...
-                            </motion.div>
-
-                            <Button
-                                variant="secondary"
-                                onClick={() => {
-                                    setWaitingVerification(false);
-                                    setEmail('');
-                                    setPassword('');
-                                    setName('');
-                                }}
-                                className="w-full"
-                            >
-                                Usar otro email
-                            </Button>
-
-                            <p className="text-xs text-[var(--foreground-tertiary)] mt-4">
-                                ¿No recibiste el email? Revisa tu carpeta de spam
-                            </p>
-                        </Card>
-                    </motion.div>
-                ) : (
-                    <>
-                        {/* Logo */}
-                        <motion.div
-                            initial={{ opacity: 0, y: -20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="text-center mb-8"
-                        >
-                            <div className="w-24 h-24 mx-auto mb-6 rounded-3xl bg-white dark:bg-gray-800/50 flex items-center justify-center shadow-[var(--shadow-float-strong)] backdrop-blur-md border border-[var(--border-color)]">
-                                <div className="scale-125">
-                                    <Logo size="lg" />
+                            <div className="relative mb-6">
+                                <div className="absolute inset-0 flex items-center">
+                                    <div className="w-full border-t border-white/20"></div>
+                                </div>
+                                <div className="relative flex justify-center text-xs uppercase tracking-widest text-white/50">
+                                    <span className="px-2 bg-transparent">o</span>
                                 </div>
                             </div>
 
-                            <div className="flex justify-center mb-3 scale-90">
-                                <LogoExtended size="lg" />
+                            {/* Form */}
+                            <form onSubmit={handleEmailAuth} className="space-y-4">
+                                {!isLogin && (
+                                    <>
+                                        <div className="relative group">
+                                            <Sparkles className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/60 group-focus-within:text-[var(--brand-pink)] transition-colors" />
+                                            <input
+                                                type="text"
+                                                value={name}
+                                                onChange={(e) => setName(e.target.value)}
+                                                placeholder="Nombre completo"
+                                                required
+                                                className="w-full pl-12 pr-4 h-12 rounded-xl bg-white/10 border border-white/10 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)] focus:bg-white/20 transition-all"
+                                            />
+                                        </div>
+                                        <div className="relative group">
+                                            <AtSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/60 group-focus-within:text-[var(--brand-pink)] transition-colors" />
+                                            <input
+                                                type="text"
+                                                value={username}
+                                                onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_.]/g, ''))}
+                                                placeholder="usuario_id"
+                                                required
+                                                className={`w-full pl-12 pr-10 h-12 rounded-xl bg-white/10 border text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:bg-white/20 transition-all ${isUsernameAvailable === false ? 'border-red-500/50 focus:ring-red-500' :
+                                                        isUsernameAvailable === true ? 'border-green-500/50 focus:ring-green-500' :
+                                                            'border-white/10 focus:ring-[var(--brand-pink)]'
+                                                    }`}
+                                            />
+                                            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                                {isCheckingUsername ? <div className="w-4 h-4 border-2 border-white/50 border-t-transparent rounded-full animate-spin" /> :
+                                                    isUsernameAvailable === true ? <Check className="w-4 h-4 text-green-400" /> :
+                                                        isUsernameAvailable === false ? <AlertCircle className="w-4 h-4 text-red-400" /> : null}
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
+
+                                <div className="relative group">
+                                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/60 group-focus-within:text-[var(--brand-pink)] transition-colors" />
+                                    <input
+                                        type={isLogin ? "text" : "email"}
+                                        value={isLogin ? emailOrUser : email}
+                                        onChange={(e) => isLogin ? setEmailOrUser(e.target.value) : setEmail(e.target.value)}
+                                        placeholder={isLogin ? "Email o @usuario" : "Email"}
+                                        required
+                                        className="w-full pl-12 pr-4 h-12 rounded-xl bg-white/10 border border-white/10 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)] focus:bg-white/20 transition-all"
+                                    />
+                                </div>
+
+                                <div className="relative group">
+                                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/60 group-focus-within:text-[var(--brand-pink)] transition-colors" />
+                                    <input
+                                        type={showPassword ? 'text' : 'password'}
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        placeholder="Contraseña"
+                                        required
+                                        className="w-full pl-12 pr-12 h-12 rounded-xl bg-white/10 border border-white/10 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)] focus:bg-white/20 transition-all"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-white/60 hover:text-white transition-colors"
+                                    >
+                                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                    </button>
+                                </div>
+
+                                <Button
+                                    type="submit"
+                                    className="w-full h-12 text-lg font-semibold rounded-xl bg-[var(--brand-pink)] hover:bg-[var(--brand-pink-dark)] text-white shadow-lg shadow-[var(--brand-pink)]/20"
+                                    glow
+                                >
+                                    {isLogin ? 'Entrar' : 'Registrarse'}
+                                </Button>
+                            </form>
+
+                            <div className="mt-8 text-center">
+                                <p className="text-sm text-white/60">
+                                    {isLogin ? '¿No tienes cuenta? ' : '¿Ya tienes cuenta? '}
+                                    <button
+                                        onClick={() => setIsLogin(!isLogin)}
+                                        className="font-bold text-white hover:text-[var(--brand-pink)] transition-colors ml-1"
+                                    >
+                                        {isLogin ? 'Regístrate' : 'Inicia Sesión'}
+                                    </button>
+                                </p>
                             </div>
-
-                            <p className="text-sm text-[var(--foreground-tertiary)] font-medium">
-                                Tu estilista personal con IA
-                            </p>
                         </motion.div>
-
-                        {/* Auth Card */}
-                        <motion.div
-                            layout
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.1, layout: { duration: 0.3, type: "spring", stiffness: 300, damping: 30 } }}
-                            className="w-full max-w-md"
-                        >
-                            <Card className="p-6">
-                                <AnimatePresence mode="wait">
-                                    {showResetPassword ? (
-                                        <motion.div
-                                            key="reset"
-                                            initial={{ opacity: 0, x: 20 }}
-                                            animate={{ opacity: 1, x: 0 }}
-                                            exit={{ opacity: 0, x: -20 }}
-                                        >
-                                            <h2 className="text-xl font-bold text-[var(--foreground)] mb-2">Recuperar contraseña</h2>
-                                            <p className="text-sm text-[var(--foreground-tertiary)] mb-6">
-                                                Te enviaremos un link para resetearla
-                                            </p>
-
-                                            <form onSubmit={handleEmailAuth} className="space-y-4">
-                                                <div className="relative">
-                                                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--foreground-tertiary)]" />
-                                                    <input
-                                                        type="email"
-                                                        value={emailOrUser}
-                                                        onChange={(e) => setEmailOrUser(e.target.value)}
-                                                        placeholder="Email"
-                                                        required
-                                                        className="w-full pl-11 pr-4 py-3 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)]"
-                                                    />
-                                                </div>
-
-                                                <Button type="submit" className="w-full" glow>
-                                                    Enviar link
-                                                </Button>
-
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setShowResetPassword(false)}
-                                                    className="w-full text-sm text-[var(--brand-pink)] font-semibold"
-                                                >
-                                                    Volver al login
-                                                </button>
-                                            </form>
-                                        </motion.div>
-                                    ) : (
-                                        <motion.div
-                                            key="auth"
-                                            initial={{ opacity: 0, x: -20 }}
-                                            animate={{ opacity: 1, x: 0 }}
-                                            exit={{ opacity: 0, x: 20 }}
-                                        >
-                                            <h2 className="text-xl font-bold text-[var(--foreground)] mb-6">
-                                                {isLogin ? 'Iniciar sesión' : 'Crear cuenta'}
-                                            </h2>
-
-                                            {/* Social Login */}
-                                            <div className="space-y-3 mb-6">
-                                                <Button
-                                                    onClick={handleGoogleLogin}
-                                                    variant="secondary"
-                                                    className="w-full !bg-white dark:!bg-[#1A1A1A] !text-[#202124] dark:!text-white !border-[#dadce0] dark:!border-[#5f6368] hover:!shadow-lg"
-                                                >
-                                                    <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
-                                                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                                                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                                                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                                                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-                                                    </svg>
-                                                    Continuar con Google
-                                                </Button>
-
-                                                <Button
-                                                    onClick={handleAppleLogin}
-                                                    variant="secondary"
-                                                    className="w-full !bg-black dark:!bg-white !text-white dark:!text-black !border-black dark:!border-white hover:!bg-black/90 dark:hover:!bg-white/90"
-                                                >
-                                                    <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
-                                                        <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
-                                                    </svg>
-                                                    Continuar con Apple
-                                                </Button>
-                                            </div>
-
-                                            <div className="relative mb-6">
-                                                <div className="absolute inset-0 flex items-center">
-                                                    <div className="w-full border-t border-[var(--border-color)]"></div>
-                                                </div>
-                                                <div className="relative flex justify-center text-xs">
-                                                    <span className="px-2 bg-[var(--card-bg)] text-[var(--foreground-tertiary)]">
-                                                        o con email / usuario
-                                                    </span>
-                                                </div>
-                                            </div>
-
-
-                                            {/* Email/Password Form */}
-                                            <form onSubmit={handleEmailAuth} className="space-y-4">
-                                                {/* Name & Username fields (only for registration) */}
-                                                {!isLogin && (
-                                                    <>
-                                                        <div className="relative">
-                                                            <Sparkles className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--foreground-tertiary)]" />
-                                                            <input
-                                                                type="text"
-                                                                value={name}
-                                                                onChange={(e) => setName(e.target.value)}
-                                                                placeholder="Nombre completo"
-                                                                required
-                                                                className="w-full pl-11 pr-4 py-3 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)]"
-                                                            />
-                                                        </div>
-                                                        <div className="relative">
-                                                            <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--foreground-tertiary)]" />
-                                                            <input
-                                                                type="text"
-                                                                value={username}
-                                                                onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_.]/g, ''))}
-                                                                placeholder="usuario_id"
-                                                                required
-                                                                className={`w-full pl-11 pr-10 py-3 rounded-2xl bg-[var(--background-secondary)] border text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:ring-2 ${isUsernameAvailable === false ? 'border-red-500 focus:ring-red-500' :
-                                                                    isUsernameAvailable === true ? 'border-green-500 focus:ring-green-500' :
-                                                                        'border-[var(--border-color)] focus:ring-[var(--brand-pink)]'
-                                                                    }`}
-                                                            />
-                                                            <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                                                                {isCheckingUsername ? (
-                                                                    <div className="w-4 h-4 border-2 border-[var(--brand-pink)] border-t-transparent rounded-full animate-spin" />
-                                                                ) : isUsernameAvailable === true ? (
-                                                                    <Check className="w-5 h-5 text-green-500" />
-                                                                ) : isUsernameAvailable === false ? (
-                                                                    <AlertCircle className="w-5 h-5 text-red-500" />
-                                                                ) : null}
-                                                            </div>
-                                                        </div>
-                                                        {isUsernameAvailable === false && (
-                                                            <p className="text-xs text-red-500 -mt-2 ml-2">Nombre de usuario no disponible</p>
-                                                        )}
-                                                    </>
-                                                )}
-
-                                                <div className="relative">
-                                                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--foreground-tertiary)]" />
-                                                    <input
-                                                        type={isLogin ? "text" : "email"}
-                                                        value={isLogin ? emailOrUser : email}
-                                                        onChange={(e) => isLogin ? setEmailOrUser(e.target.value) : setEmail(e.target.value)}
-                                                        placeholder={isLogin ? "Email o @usuario" : "Email"}
-                                                        required
-                                                        className={`w-full pl-11 pr-10 py-3 rounded-2xl bg-[var(--background-secondary)] border text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:ring-2 ${!isLogin && isEmailAvailable === false ? 'border-red-500 focus:ring-red-500' :
-                                                            !isLogin && isEmailAvailable === true ? 'border-green-500 focus:ring-green-500' :
-                                                                'border-[var(--border-color)] focus:ring-[var(--brand-pink)]'
-                                                            }`}
-                                                    />
-                                                    {!isLogin && (
-                                                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                                                            {isCheckingEmail ? (
-                                                                <div className="w-4 h-4 border-2 border-[var(--brand-pink)] border-t-transparent rounded-full animate-spin" />
-                                                            ) : isEmailAvailable === true ? (
-                                                                <Check className="w-5 h-5 text-green-500" />
-                                                            ) : isEmailAvailable === false ? (
-                                                                <AlertCircle className="w-5 h-5 text-red-500" />
-                                                            ) : null}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                {!isLogin && isEmailAvailable === false && (
-                                                    <p className="text-xs text-red-500 -mt-2 ml-2">Email ya registrado</p>
-                                                )}
-
-                                                <div className="relative">
-                                                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--foreground-tertiary)]" />
-                                                    <input
-                                                        type={showPassword ? 'text' : 'password'}
-                                                        value={password}
-                                                        onChange={(e) => setPassword(e.target.value)}
-                                                        placeholder="Contraseña"
-                                                        required
-                                                        className="w-full pl-11 pr-11 py-3 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)]"
-                                                    />
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setShowPassword(!showPassword)}
-                                                        className="absolute right-3 top-1/2 -translate-y-1/2"
-                                                    >
-                                                        {showPassword ? (
-                                                            <EyeOff className="w-5 h-5 text-[var(--foreground-tertiary)]" />
-                                                        ) : (
-                                                            <Eye className="w-5 h-5 text-[var(--foreground-tertiary)]" />
-                                                        )}
-                                                    </button>
-                                                </div>
-
-                                                {isLogin && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setShowResetPassword(true)}
-                                                        className="text-sm text-[var(--brand-pink)] font-semibold"
-                                                    >
-                                                        ¿Olvidaste tu contraseña?
-                                                    </button>
-                                                )}
-
-                                                <Button type="submit" className="w-full" glow>
-                                                    {isLogin ? 'Iniciar sesión' : 'Crear cuenta'}
-                                                </Button>
-                                            </form>
-
-                                            <div className="mt-6 text-center">
-                                                <button
-                                                    onClick={() => setIsLogin(!isLogin)}
-                                                    className="text-sm text-[var(--foreground-secondary)]"
-                                                >
-                                                    {isLogin ? '¿No tienes cuenta? ' : '¿Tienes cuenta? '}
-                                                    <span className="text-[var(--brand-pink)] font-semibold">
-                                                        {isLogin ? 'Regístrate' : 'Inicia sesión'}
-                                                    </span>
-                                                </button>
-                                            </div>
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
-                            </Card>
-                        </motion.div>
-
-                        <p className="mt-6 text-xs text-[var(--foreground-tertiary)] text-center max-w-md">
-                            Al continuar, aceptas nuestros Términos de Servicio y Política de Privacidad
-                        </p>
-                    </>
-                )}
-            </div>
-
-            {/* Style Quiz Modal - Shows after registration */}
-            <StyleQuizModal
-                isOpen={showQuiz}
-                onClose={() => {
-                    setShowQuiz(false);
-                    router.push('/');
-                }}
-                onComplete={handleQuizComplete}
-            />
-        </>
+                    </AnimatePresence>
+                </div>
+            </motion.div>
+        </div>
     );
 }

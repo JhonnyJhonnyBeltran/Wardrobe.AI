@@ -30,6 +30,8 @@ interface ConversationItemProps {
   lastMessageSender: string | null;
   currentUserId: string;
   onClick: () => void;
+  onDelete?: () => void;
+  onReport?: () => void;
 }
 
 // ============================================
@@ -56,6 +58,8 @@ const formatTimeAgo = (dateStr: string | null): string => {
 // COMPONENT
 // ============================================
 
+import { MoreVertical } from 'lucide-react';
+
 export const ConversationItem = memo(function ConversationItem({
   conversationId,
   otherUser,
@@ -64,6 +68,8 @@ export const ConversationItem = memo(function ConversationItem({
   lastMessageSender,
   currentUserId,
   onClick,
+  onDelete,
+  onReport,
 }: ConversationItemProps) {
   // Check if this conversation has unread messages
   const hasUnread = useMessageStore((state) => state.hasUnread(conversationId));
@@ -75,8 +81,10 @@ export const ConversationItem = memo(function ConversationItem({
   const initial = (displayName || '?')[0].toUpperCase();
 
   return (
-    <motion.button
+    <motion.div
       onClick={onClick}
+      role="button"
+      tabIndex={0}
       className={`
         w-full flex items-center gap-3 p-4
         transition-all duration-200 group
@@ -162,7 +170,42 @@ export const ConversationItem = memo(function ConversationItem({
           )}
         </div>
       </div>
-    </motion.button>
+
+      {/* Actions (Stop Propagation) */}
+      <div className="relative group/actions">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            // Toggle dropdown or just show it via hover (using CSS group-hover for simplicity in MVP)
+          }}
+          className="p-2 text-[var(--foreground-tertiary)] hover:text-[var(--foreground)] hover:bg-[var(--background-tertiary)] rounded-full transition-colors opacity-0 group-hover:opacity-100"
+        >
+          <MoreVertical className="w-5 h-5" />
+        </button>
+
+        {/* Dropdown - Visible on hover of the button wrapper */}
+        <div className="absolute right-0 top-8 w-40 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl shadow-lg z-20 hidden group-hover/actions:block">
+          <div
+            onClick={(e) => {
+              e.stopPropagation();
+              onReport?.();
+            }}
+            className="px-4 py-2 text-sm text-[var(--foreground)] hover:bg-[var(--background-secondary)] cursor-pointer flex items-center gap-2"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-yellow-500" /> Reportar
+          </div>
+          <div
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete?.();
+            }}
+            className="px-4 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 cursor-pointer flex items-center gap-2"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-red-500" /> Eliminar
+          </div>
+        </div>
+      </div>
+    </motion.div>
   );
 });
 
