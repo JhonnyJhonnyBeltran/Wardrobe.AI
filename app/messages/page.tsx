@@ -8,7 +8,7 @@ import { useUiStore } from '@/store/uiStore';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ConversationItem } from '@/components/ConversationItem';
 import { supabase } from '@/lib/supabase/client';
-import { useSwipe } from '@/hooks/useSwipe';
+import { useSwipeNavigation } from '@/hooks/useSwipeNavigation';
 
 interface Conversation {
     id: string;
@@ -33,10 +33,8 @@ export default function MessagesPage() {
     const searchParams = useSearchParams();
     const sharePostData = searchParams.get('share_post');
 
-    // Swipe Logic -> Back to Feed
-    const swipeHandlers = useSwipe({
-        onSwipeRight: () => router.push('/feed')
-    });
+    // Enable swipe navigation (mobile only)
+    useSwipeNavigation();
 
     const [conversations, setConversations] = useState<Conversation[]>([]);
     const [loading, setLoading] = useState(true);
@@ -151,7 +149,6 @@ export default function MessagesPage() {
 
     return (
         <div
-            {...swipeHandlers}
             className="min-h-screen bg-[var(--background)] pb-20"
         >
             {/* Header */}
@@ -185,7 +182,7 @@ export default function MessagesPage() {
                         placeholder="Buscar mensajes..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2.5 bg-[var(--background-secondary)] rounded-xl text-sm outline-none focus:ring-2 ring-[var(--brand-pink)]/50 transition-all font-medium text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)]"
+                        className="w-full pl-10 pr-4 py-2.5 bg-[var(--background-secondary)] rounded-xl text-sm outline-none transition-all font-medium text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)]"
                     />
                 </div>
             </div>

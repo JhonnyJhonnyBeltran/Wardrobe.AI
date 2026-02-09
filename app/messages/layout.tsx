@@ -1,0 +1,169 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import { Search } from 'lucide-react';
+import { ConversationList } from '@/components/Messages/ConversationList';
+import { useUser } from '@/store/userStore';
+import { supabase } from '@/lib/supabase/client';
+
+interface Conversation {
+    id: string;
+    participant_1: string;
+    participant_2: string;
+    status: 'active' | 'pending' | 'restricted';
+    initiated_by: string;
+    last_message_text: string | null;
+    last_message_at: string | null;
+    last_message_sender: string | null;
+    other_user?: {
+        id: string;
+        username: string;
+        full_name: string | null;
+        avatar_url: string | null;
+    };
+}
+
+export default function MessagesLayout({ children }: { children: React.ReactNode }) {
+    const { user } = useUser();
+    const router = useRouter();
+    const pathname = usePathname();
+    const [conversations, setConversations] = useState<Conversation[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [searchQuery, setSearchQuery] = useState('');
+
+    // Extract active conversation ID from pathname
+    const activeConversationId = pathname.startsWith('/messages/') && pathname !== '/messages'
+        ? pathname.split('/messages/')[1]
+        : null;
+
+    useEffect(() => {
+        const fetchConversations = async () => {
+            if (!user) return;
+
+            try {
+                setLoading(true);
+                const { data: messages } = await supabase
+                    .from('messages')
+                    .select('*')
+                    .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+                    .order('created_at', { ascending: false });
+
+                if (messages && messages.length > 0) {
+                    const convMap = new Map();
+                    for (const msg of messages) {
+                        const otherId = msg.sender_id === user.id ? msg.receiver_id : msg.sender_id;
+                        if (!convMap.has(otherId)) {
+                            convMap.set(otherId, msg);
+                        }
+                    }
+
+                    const otherUserIds = Array.from(convMap.keys());
+                    const { data: profiles } = await supabase
+                        .from('profiles')
+                        .select('id, username, full_name, avatar_url')
+                        .in('id', otherUserIds);
+
+                    const profileMap = new Map((profiles as any[])?.map(p => [p.id, p]));
+
+                    const convs: Conversation[] = [];
+                    for (const [otherId, lastMsg] of convMap.entries()) {
+                        const profile = profileMap.get(otherId);
+                        if (profile) {
+                            convs.push({
+                                id: otherId,
+                                participant_1: user.id,
+                                participant_2: otherId,
+                                status: 'active',
+                                initiated_by: 'unknown',
+                                last_message_text: lastMsg.content,
+                                last_message_at: lastMsg.created_at,
+                                last_message_sender: lastMsg.sender_id === user.id ? 'me' : 'other',
+                                other_user: {
+                                    id: profile.id,
+                                    username: profile.username || 'Usuario',
+                                    full_name: profile.full_name,
+                                    avatar_url: profile.avatar_url || 'https://i.pravatar.cc/150?u=default'
+                                }
+                            });
+                        }
+                    }
+                    setConversations(convs);
+
+                    // Auto-select first conversation on desktop if none selected
+                    if (convs.length > 0 && !activeConversationId && typeof window !== 'undefined' && window.innerWidth >= 768) {
+                        router.replace(`/messages/${convs[0].id}`);
+                    }
+                } else {
+                    setConversations([]);
+                }
+            } catch (err) {
+                console.error("Error fetching conversations:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchConversations();
+    }, [user]);
+
+    const filteredConversations = conversations.filter(c =>
+        c.other_user?.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        c.other_user?.full_name?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    const handleConversationClick = (convId: string) => {
+        router.push(`/messages/${convId}`);
+    };
+
+    // Mobile: Show only children (full screen chat or conversation list)
+    // Desktop: Show split view
+    return (
+        <>
+            {/* Mobile View - Full Screen */}
+            <div className="md:hidden">
+                {children}
+            </div>
+
+            {/* Desktop View - Split Layout */}
+            <div className="hidden md:flex h-screen bg-[var(--background)]">
+                {/* Left Sidebar - Conversation List */}
+                <div className="w-[380px] border-r border-[var(--border-color)] flex flex-col bg-[var(--background)]">
+                    {/* Header */}
+                    <div className="h-14 px-4 flex items-center justify-between border-b border-[var(--border-color)] flex-shrink-0">
+                        <h1 className="text-xl font-bold text-[var(--foreground)]">Mensajes</h1>
+                    </div>
+
+                    {/* Search */}
+                    <div className="px-4 py-3 border-b border-[var(--border-color)] flex-shrink-0">
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--foreground-tertiary)]" />
+                            <input
+                                type="text"
+                                placeholder="Buscar conversaciones..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full pl-10 pr-4 py-2 bg-[var(--background-secondary)] border border-transparent rounded-lg text-sm text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] outline-none transition-colors"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Conversation List */}
+                    <div className="flex-1 overflow-y-auto">
+                        <ConversationList
+                            conversations={filteredConversations}
+                            activeConversationId={activeConversationId || undefined}
+                            onConversationClick={handleConversationClick}
+                            loading={loading}
+                        />
+                    </div>
+                </div>
+
+                {/* Right Panel - Active Chat */}
+                <div className="flex-1 flex flex-col">
+                    {children}
+                </div>
+            </div>
+        </>
+    );
+}

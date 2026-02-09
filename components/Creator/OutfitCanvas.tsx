@@ -97,7 +97,7 @@ export function OutfitCanvas({ selections, onRemoveItem, isMobile = false }: Out
                                 {/* Remove Button (Visible on Hover/Touch) */}
                                 {onRemoveItem && (
                                     <button
-                                        onPointerDown={(e) => { e.stopPropagation(); onRemoveItem(slotId); }}
+                                        onPointerDown={(e) => { e.stopPropagation(); onRemoveItem(slotId, item.id); }}
                                         className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
                                     >
                                         <X className="w-3 h-3" />
@@ -106,17 +106,15 @@ export function OutfitCanvas({ selections, onRemoveItem, isMobile = false }: Out
                             </div>
                         </motion.div>
                     );
-                })
-            }
+                });
+            })}
 
-            {/* Empty State Hint */ }
-            {
-                    Object.values(selections).every(v => v === null) && (
-                        <div className="absolute inset-0 flex items-center justify-center text-[var(--foreground-tertiary)] pointer-events-none">
-                            <p className="text-sm font-medium">Arrastra prendas aquí</p>
-                        </div>
-                    )
-                }
+            {/* Empty State Hint */}
+            {Object.values(selections).every(items => items.length === 0) && (
+                <div className="absolute inset-0 flex items-center justify-center text-[var(--foreground-tertiary)] pointer-events-none">
+                    <p className="text-sm font-medium">Arrastra prendas aquí</p>
+                </div>
+            )}
         </div>
     );
 }

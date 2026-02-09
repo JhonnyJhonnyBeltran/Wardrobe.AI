@@ -9,11 +9,20 @@ import OutfitDetailsModal from '@/components/Feed/GarmentModal'; // Reusing Garm
 import { LogoMark } from '@/components';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';
+import { useSwipeNavigation } from '@/hooks/useSwipeNavigation';
+import { useMessageStore, selectTotalUnread, selectBadgeVisible } from '@/store/messageStore';
 
 export default function FeedPage() {
   const [outfits, setOutfits] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOutfit, setSelectedOutfit] = useState<Post | null>(null);
+
+  // Enable swipe navigation
+  useSwipeNavigation();
+
+  // Message notifications
+  const messageUnreadCount = useMessageStore(selectTotalUnread);
+  const messageBadgeVisible = useMessageStore(selectBadgeVisible);
 
   useEffect(() => {
     const fetchOutfits = async () => {
@@ -109,7 +118,11 @@ export default function FeedPage() {
           <Link href="/messages">
             <button className="p-2 -mr-2 text-[var(--foreground)] hover:bg-[var(--background-secondary)] rounded-full transition-colors relative">
               <Send className="w-6 h-6" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full border border-[var(--background)] bg-black dark:bg-[var(--brand-pink)]" />
+              {messageBadgeVisible && messageUnreadCount > 0 && (
+                <span className="absolute top-0.5 right-0.5 min-w-[18px] h-[18px] px-1.5 flex items-center justify-center bg-[#FF69B4] text-white text-[10px] font-bold rounded-full border-2 border-[var(--background)]">
+                  {messageUnreadCount > 99 ? '+99' : messageUnreadCount}
+                </span>
+              )}
             </button>
           </Link>
         </div>

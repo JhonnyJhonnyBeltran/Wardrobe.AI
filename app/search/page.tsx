@@ -3,12 +3,13 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence, PanInfo } from 'framer-motion';
-import { Search, UserPlus, UserCheck, X, Clock, Users, Image as ImageIcon, MessageCircle } from 'lucide-react';
+import { Search, UserPlus, UserCheck, X, Clock, Users, Image as ImageIcon, MessageCircle, Shirt } from 'lucide-react';
 import { useSocial, Profile } from '@/lib/hooks/useSocial';
 import { Card, Button } from '@/components';
 import { useUser } from '@/store/userStore';
 import { supabase } from '@/lib/supabase/client';
 import Link from 'next/link';
+import { useSwipeNavigation } from '@/hooks/useSwipeNavigation';
 
 interface Post {
   id: string;
@@ -28,11 +29,16 @@ export default function SearchPage() {
   const router = useRouter();
   const { searchUsers, followUser, unfollowUser } = useSocial();
 
+  // Enable swipe navigation
+  useSwipeNavigation();
+
   // Search State
   const [searchQuery, setSearchQuery] = useState('');
   const [userResults, setUserResults] = useState<Profile[]>([]);
   const [postResults, setPostResults] = useState<Post[]>([]);
+  const [itemResults, setItemResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [activeTab, setActiveTab] = useState<'all' | 'users' | 'posts' | 'items'>('all');
 
   // Cache of my following status: { [userId]: 'accepted' | 'pending' | null }
   const [myFollows, setMyFollows] = useState<Record<string, string>>({});
@@ -109,7 +115,7 @@ export default function SearchPage() {
     const fetchContent = async () => {
       // 1. If empty query, fetch Explore Feed (random/trending)
       if (searchQuery.length < 2) {
-        setIsSearching(searchQuery.length > 0); // Only show loading if user is typing 1 char
+        setIsSearching(searchQuery.length > 0);
 
         // Fetch random/recent posts for explore feed
         const { data: posts } = await supabase
@@ -120,10 +126,11 @@ export default function SearchPage() {
             `)
           .eq('visibility', 'public')
           .order('created_at', { ascending: false })
-          .limit(21); // 3x7 grid
+          .limit(21);
 
         setPostResults(posts as Post[] || []);
-        setUserResults([]); // Clear users when not searching specific
+        setUserResults([]);
+        setItemResults([]);
         setIsSearching(false);
         return;
       }
@@ -135,7 +142,7 @@ export default function SearchPage() {
         const results = await searchUsers(searchQuery);
         setUserResults(results);
 
-        // Search Posts
+        // Search Posts by caption
         const { data: posts } = await supabase
           .from('posts')
           .select(`
@@ -151,6 +158,55 @@ export default function SearchPage() {
           .slice(0, 15);
 
         setPostResults(filteredPosts as Post[]);
+
+        // Search Clothing Items in Outfits
+        const { data: outfits } = await supabase
+          .from('outfits')
+          .select(`
+            id,
+            name,
+            items,
+            user_id,
+            created_at,
+            profiles (username, avatar_url)
+          `)
+          .order('created_at', { ascending: false })
+          .limit(100);
+
+        if (outfits && outfits.length > 0) {
+          const matchingItems: any[] = [];
+
+          for (const outfit of (outfits as any[])) {
+            if (outfit.items && outfit.items.length > 0) {
+              // Fetch clothing items for this outfit
+              const { data: clothingItems } = await supabase
+                .from('clothing_items')
+                .select('id, name, type, image_url, brand')
+                .in('id', outfit.items);
+
+              if (clothingItems) {
+                clothingItems.forEach((item: any) => {
+                  if (
+                    fuzzyMatch(item.name || '', searchQuery) ||
+                    fuzzyMatch(item.type || '', searchQuery) ||
+                    fuzzyMatch(item.brand || '', searchQuery)
+                  ) {
+                    matchingItems.push({
+                      ...item,
+                      outfit_id: outfit.id,
+                      outfit_name: outfit.name,
+                      owner: outfit.profiles
+                    });
+                  }
+                });
+              }
+            }
+          }
+
+          setItemResults(matchingItems.slice(0, 12));
+        } else {
+          setItemResults([]);
+        }
 
       } catch (error) {
         console.error('Search error:', error);
@@ -187,7 +243,7 @@ export default function SearchPage() {
     });
   };
 
-  const hasResults = userResults.length > 0 || postResults.length > 0;
+  const hasResults = userResults.length > 0 || postResults.length > 0 || itemResults.length > 0;
 
   // Swipe Navigation
   const handleDragEnd = (event: any, info: PanInfo) => {
@@ -224,7 +280,7 @@ export default function SearchPage() {
               placeholder="Buscar por nombre o @usuario..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-gray-100 dark:bg-zinc-800 border-none focus:ring-0 focus:bg-gray-200 dark:focus:bg-zinc-700 transition-all outline-none text-sm font-medium placeholder:text-gray-400 text-[var(--foreground)]"
+              className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-gray-100 dark:bg-zinc-800 border-none outline-none text-sm font-medium placeholder:text-gray-400 text-[var(--foreground)]"
             />
             {searchQuery && (
               <button
@@ -366,6 +422,62 @@ export default function SearchPage() {
                         </Card>
                       );
                     })}
+                  </div>
+                </div>
+              )}
+
+              {/* Clothing Items Section */}
+              {itemResults.length > 0 && (
+                <div className="space-y-4">
+                  <h2 className="text-sm font-bold text-[var(--foreground)] flex items-center gap-2 px-1">
+                    <Shirt className="w-4 h-4" />
+                    Prendas
+                  </h2>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {itemResults.map((item) => (
+                      <Link
+                        key={item.id}
+                        href={`/closet`}
+                        className="group"
+                      >
+                        <Card className="overflow-hidden hover:shadow-lg transition-shadow">
+                          {/* Item Image */}
+                          <div className="aspect-square bg-[var(--background-secondary)] relative overflow-hidden">
+                            {item.image_url ? (
+                              <img
+                                src={item.image_url}
+                                alt={item.name}
+                                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-4xl">
+                                👔
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Item Info */}
+                          <div className="p-3">
+                            <h3 className="font-semibold text-sm text-[var(--foreground)] truncate mb-1">
+                              {item.name}
+                            </h3>
+                            <p className="text-xs text-[var(--foreground-secondary)] truncate mb-2">
+                              {item.type} {item.brand && `• ${item.brand}`}
+                            </p>
+
+                            {/* Owner Info */}
+                            {item.owner && (
+                              <div className="flex items-center gap-1.5 text-xs text-[var(--foreground-tertiary)]">
+                                <div className="w-4 h-4 rounded-full bg-gradient-to-br from-[#FF69B4] to-[#FF1493] flex items-center justify-center text-white text-[8px] font-bold">
+                                  {item.owner.username?.[0]?.toUpperCase() || '?'}
+                                </div>
+                                <span className="truncate">@{item.owner.username}</span>
+                              </div>
+                            )}
+                          </div>
+                        </Card>
+                      </Link>
+                    ))}
                   </div>
                 </div>
               )}

@@ -25,6 +25,7 @@ import Link from 'next/link';
 import { OutfitItem } from '@/lib/fashion/outfitGenerator';
 import { supabase } from '@/lib/supabase/client';
 import Image from 'next/image';
+import { useSwipeNavigation } from '@/hooks/useSwipeNavigation';
 
 // Wardrobe Door Animation Component
 const WardrobeDoorAnimation = ({ onComplete, isOpen }: { onComplete: () => void; isOpen: boolean }) => {
@@ -124,6 +125,9 @@ export default function ClosetPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingItem, setEditingItem] = useState<ClothingItemType | null>(null);
   const { items, loading, addItem, updateItem, deleteItem, refresh } = useWardrobe();
+
+  // Enable swipe navigation
+  useSwipeNavigation();
 
   // Sync favorites from items
   useEffect(() => {

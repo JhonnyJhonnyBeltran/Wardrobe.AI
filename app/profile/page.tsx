@@ -21,6 +21,7 @@ import {
   Heart,
   MessageCircle
 } from 'lucide-react';
+import { useSwipeNavigation } from '@/hooks/useSwipeNavigation';
 
 type TabType = 'posts' | 'outfits';
 
@@ -29,6 +30,9 @@ export default function ProfilePage() {
   const { t } = useTranslation();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>('posts');
+
+  // Enable swipe navigation
+  useSwipeNavigation();
 
   // Real data state
   const [profileStats, setProfileStats] = useState({

@@ -61,6 +61,13 @@ export default function CreateOutfitPage() {
         setSelections(prev => ({ ...prev, [slotId]: [] }));
     }, []);
 
+    const handleRemoveItem = useCallback((slotId: string, itemId: string) => {
+        setSelections(prev => ({
+            ...prev,
+            [slotId]: prev[slotId].filter(item => item.id !== itemId)
+        }));
+    }, []);
+
     const handleGenerate = () => {
         // Validation: Need at least 2 items total?
         const totalCount = Object.values(selections).reduce((sum, items) => sum + items.length, 0);
@@ -153,7 +160,7 @@ export default function CreateOutfitPage() {
                 {/* Right: Preview Area (Sticky on Desktop) */}
                 <div className="hidden lg:block lg:w-1/3 pl-4">
                     <div className="sticky top-24">
-                        <OutfitCanvas selections={selections} onRemoveItem={handleClear} />
+                        <OutfitCanvas selections={selections} onRemoveItem={handleRemoveItem} />
 
                         <div className="mt-6 p-6 bg-[var(--card-bg)] rounded-3xl border border-[var(--border-color)] shadow-sm">
                             <div className="flex justify-between items-center text-sm text-[var(--foreground-secondary)]">

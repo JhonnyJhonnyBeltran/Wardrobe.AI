@@ -10,7 +10,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Home, Search, Send, UserRound, Crown, Plus, Heart } from 'lucide-react';
+import { Home, Search, Send, UserRound, Crown, Plus, Heart, Mail } from 'lucide-react';
 import { useUser } from '@/store/userStore';
 import { useTranslation } from '@/lib/i18n';
 import { useUiStore } from '@/store/uiStore';
@@ -39,6 +39,7 @@ export default function Sidebar() {
   const navItems: NavItem[] = [
     { href: '/feed', labelKey: 'home', icon: <Home /> },
     { href: '/search', labelKey: 'search', icon: <Search /> },
+    { href: '/messages', labelKey: 'messages', icon: <Send /> },
     { href: '/closet', labelKey: 'closet', icon: null, isLogoMark: true },
     { href: '/notifications', labelKey: 'notifications', icon: <Heart /> },
     { href: '/profile', labelKey: 'profile', icon: <UserRound /> },
@@ -67,7 +68,7 @@ export default function Sidebar() {
                 className={`flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-200 
                   ${isActive
                     ? 'text-[var(--brand-pink)]'
-                    : 'text-black dark:text-white hover:bg-[var(--background-secondary)]'
+                    : 'text-black dark:text-white'
                   }`}
               >
                 <div className="relative flex items-center justify-center">
@@ -82,8 +83,8 @@ export default function Sidebar() {
                       })}
 
                       {badgeCount > 0 && (
-                        <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 flex items-center justify-center bg-red-500 text-white text-[10px] font-bold rounded-full border-2 border-[var(--background)]">
-                          {badgeCount > 9 ? '9+' : badgeCount}
+                        <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1.5 flex items-center justify-center bg-[#FF69B4] text-white text-[10px] font-bold rounded-full border-2 border-[var(--background)]">
+                          {badgeCount > 99 ? '+99' : badgeCount}
                         </span>
                       )}
                     </>

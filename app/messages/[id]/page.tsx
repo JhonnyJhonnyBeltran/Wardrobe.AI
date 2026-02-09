@@ -328,11 +328,11 @@ export default function ChatPage() {
             <div className="fixed bottom-0 left-0 right-0 bg-[var(--background)]/95 backdrop-blur-xl border-t border-[var(--border-color)] safe-area-bottom md:relative md:bottom-auto md:left-auto md:right-auto">
                 <div className="px-4 py-3 max-w-2xl mx-auto">
                     <div className="flex items-end gap-2">
-                        <button className="p-2 text-[var(--foreground-secondary)] hover:text-[var(--foreground)] hover:bg-[var(--background-secondary)] rounded-full transition-colors flex-shrink-0">
+                        <button className="p-2 text-[#FF69B4] hover:text-[#FF1493] hover:bg-[var(--background-secondary)] rounded-full transition-colors flex-shrink-0">
                             <ImageIcon className="w-6 h-6" />
                         </button>
 
-                        <div className="flex-1 bg-[var(--background-secondary)] rounded-3xl border border-[var(--border-color)] focus-within:border-[var(--foreground-tertiary)] transition-colors">
+                        <div className="flex-1 bg-[var(--background-secondary)] rounded-3xl border border-[var(--border-color)] transition-colors">
                             <textarea
                                 value={newMessage}
                                 onChange={(e) => setNewMessage(e.target.value)}
@@ -351,7 +351,7 @@ export default function ChatPage() {
                                 Enviar
                             </button>
                         ) : (
-                            <button className="p-2 text-[var(--foreground-secondary)] hover:text-[var(--foreground)] hover:bg-[var(--background-secondary)] rounded-full transition-colors flex-shrink-0">
+                            <button className="p-2 text-[#FF69B4] hover:text-[#FF1493] hover:bg-[var(--background-secondary)] rounded-full transition-colors flex-shrink-0">
                                 <Smile className="w-6 h-6" />
                             </button>
                         )}
