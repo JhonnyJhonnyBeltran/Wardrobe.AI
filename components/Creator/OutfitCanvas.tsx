@@ -1,118 +1,203 @@
 'use client';
 
-import { useRef, useMemo } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ClothingItem } from '@/types/clothing';
 import { X } from 'lucide-react';
 
 interface OutfitCanvasProps {
-    selections: Record<string, ClothingItem[]>; // Changed to arrays
-    onRemoveItem?: (slotId: string, itemId: string) => void; // Need itemId to remove specific item
+    selections: Record<string, ClothingItem[]>;
+    onRemoveItem?: (slotId: string, itemId: string) => void;
     isMobile?: boolean;
+    onCanvasChange?: (states: Record<string, ItemState>) => void;
 }
 
-// Configuration based on user's "Blueprint"
-const LAYOUT_CONFIG: Record<string, { x: string; y: string; scale: number; zIndex: number; rotateRange: [number, number] }> = {
-    headwear: { x: '65%', y: '5%', scale: 0.8, zIndex: 40, rotateRange: [-5, 5] },
-    top: { x: '15%', y: '10%', scale: 1.0, zIndex: 20, rotateRange: [-2, 2] },
-    layer: { x: '10%', y: '8%', scale: 1.05, zIndex: 30, rotateRange: [-2, 2] }, // Slightly offset from top, higher Z
-    bottom: { x: '25%', y: '50%', scale: 0.9, zIndex: 10, rotateRange: [-3, 3] },
-    shoes: { x: '60%', y: '75%', scale: 0.7, zIndex: 5, rotateRange: [-10, 10] }, // "Base" but offset
-    accessories: { x: '70%', y: '45%', scale: 0.5, zIndex: 50, rotateRange: [0, 15] },
-};
+interface ItemState {
+    zIndex: number;
+    scale: number;
+    rotation: number;
+    x: number; // Percentage 0-100
+    y: number; // Percentage 0-100
+}
 
-export function OutfitCanvas({ selections, onRemoveItem, isMobile = false }: OutfitCanvasProps) {
+export function OutfitCanvas({ selections, onRemoveItem, isMobile = false, onCanvasChange }: OutfitCanvasProps) {
     const containerRef = useRef<HTMLDivElement>(null);
+    const [maxZIndex, setMaxZIndex] = useState(100);
+    const [itemStates, setItemStates] = useState<Record<string, ItemState>>({});
 
-    // Helper to get random rotation within range (stable per render until unmount/change)
-    const getRandomRotation = (min: number, max: number) => {
-        return Math.random() * (max - min) + min;
+    // Initialize new items at center
+    useEffect(() => {
+        const newStates = { ...itemStates };
+        let hasChanges = false;
+
+        Object.entries(selections).forEach(([slotId, items]) => {
+            items.forEach((item, index) => {
+                const itemId = `${slotId}-${item.id}`;
+
+                if (!newStates[itemId]) {
+                    hasChanges = true;
+                    // Start at EXACT center, no stagger, no smarts.
+                    newStates[itemId] = {
+                        zIndex: index + 1,
+                        scale: 0.8,
+                        rotation: 0,
+                        x: 50,
+                        y: 50
+                    };
+                }
+            });
+        });
+
+        if (hasChanges) {
+            setItemStates(newStates);
+            onCanvasChange?.(newStates);
+        }
+    }, [selections]);
+
+    const updateState = (itemId: string, updates: Partial<ItemState>) => {
+        setItemStates(prev => {
+            const next = {
+                ...prev,
+                [itemId]: { ...prev[itemId], ...updates }
+            };
+            onCanvasChange?.(next);
+            return next;
+        });
+    };
+
+    const handleDragEnd = (itemId: string, event: any, info: any) => {
+        if (!containerRef.current) return;
+
+        // Find draggable element to get its real visual position
+        const target = event.target as HTMLElement;
+        const draggableEl = target.closest('.group') as HTMLElement;
+
+        if (!draggableEl) return;
+
+        const containerRect = containerRef.current.getBoundingClientRect();
+        const itemRect = draggableEl.getBoundingClientRect();
+
+        // Calculate center relative to container
+        const centerX = (itemRect.left + itemRect.width / 2) - containerRect.left;
+        const centerY = (itemRect.top + itemRect.height / 2) - containerRect.top;
+
+        const x = (centerX / containerRect.width) * 100;
+        const y = (centerY / containerRect.height) * 100;
+
+        updateState(itemId, { x, y });
+    };
+
+    const bringToFront = (itemId: string) => {
+        const newZ = maxZIndex + 1;
+        setMaxZIndex(newZ);
+        updateState(itemId, { zIndex: newZ });
+    };
+
+    const handleResize = (itemId: string, delta: number) => {
+        const current = itemStates[itemId];
+        if (!current) return;
+        const newScale = Math.max(0.2, Math.min(4.0, current.scale + delta));
+        updateState(itemId, { scale: newScale });
+    };
+
+    // Flatten items for rendering - DO NOT SORT to avoid DOM shuffling.
+    // Use CSS z-index to handle layering.
+    const renderItems = () => {
+        const itemsToRender: { id: string; item: ClothingItem; slotId: string }[] = [];
+        Object.entries(selections).forEach(([slotId, items]) => {
+            items.forEach(item => {
+                itemsToRender.push({ id: `${slotId}-${item.id}`, item, slotId });
+            });
+        });
+        return itemsToRender;
     };
 
     return (
         <div
             ref={containerRef}
             className="relative w-full h-full bg-[var(--background-secondary)]/30 overflow-hidden rounded-[32px] shadow-inner"
-            style={{
-                aspectRatio: isMobile ? '9/16' : '3/4'
-            }}
+            style={{ aspectRatio: isMobile ? '9/16' : '3/4' }}
         >
-            {/* Background Grid Pattern (Subtle) */}
             <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
+            {/* Version marker to force HMR */}
+            <div className="absolute top-2 right-2 opacity-0 pointer-events-none">v2-free</div>
 
-            {/* Content - Render all items from all slots */}
-            {Object.entries(selections).map(([slotId, items]) => {
-                if (!items || items.length === 0) return null;
+            {renderItems().map(({ id: itemId, item, slotId }) => {
+                const state = itemStates[itemId];
+                if (!state) return null;
 
-                const config = LAYOUT_CONFIG[slotId] || { x: '50%', y: '50%', scale: 0.5, zIndex: 1, rotateRange: [0, 0] };
+                return (
+                    <motion.div
+                        key={itemId}
+                        drag
+                        dragMomentum={false}
+                        onDragEnd={(e, info) => handleDragEnd(itemId, e, info)}
+                        // Removed auto-bringToFront on touch to keep layers stable
 
-                // Render each item in this slot with slight offset if multiple
-                return items.map((item, index) => {
-                    // Generate a random rotation for this render
-                    const rotation = getRandomRotation(config.rotateRange[0], config.rotateRange[1]);
-
-                    // Offset multiple items slightly
-                    const offsetX = index * 5; // 5% offset for each additional item
-                    const offsetY = index * 3;
-
-                    return (
-                        <motion.div
-                            key={slotId}
-                            drag
-                            dragConstraints={containerRef}
-                            dragMomentum={false}
-                            initial={{ opacity: 0, scale: 0.8, y: 20 }}
-                            animate={{
-                                opacity: 1,
-                                scale: 1,
-                                y: 0,
-                                rotate: rotation
-                            }}
-                            className="absolute cursor-move touch-none group"
+                        // Use strict absolute positioning with percentage
+                        initial={false}
+                        animate={{
+                            left: `${state.x}%`,
+                            top: `${state.y}%`,
+                            x: "-50%", // CRITICAL: Force reset of drag transform residue to true center
+                            y: "-50%", // CRITICAL: Force reset of drag transform residue to true center
+                            zIndex: state.zIndex,
+                            // Removed duration: 0 to restore smooth animation as requested
+                        }}
+                        style={{
+                            position: 'absolute',
+                            width: isMobile ? '45%' : '40%',
+                            // transform is handled by animate x/y
+                        }}
+                        className="cursor-move touch-none group"
+                    >
+                        <div
+                            className="relative w-full"
                             style={{
-                                left: config.x,
-                                top: config.y,
-                                width: isMobile ? '45%' : '40%', // Base width relative to container
-                                zIndex: config.zIndex,
-                                // originX: 0.5,
-                                // originY: 0.5
+                                transform: `scale(${state.scale})`,
+                                filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.15))'
                             }}
                         >
-                            <div
-                                className="relative w-full"
-                                style={{
-                                    filter: 'drop-shadow(0 20px 30px rgba(0,0,0,0.15))' // Deep soft shadow as requested
-                                }}
-                            >
-                                {/* The Image */}
-                                <img
-                                    src={item.imageUrl}
-                                    alt={item.name}
-                                    className="w-full h-auto object-contain pointer-events-none select-none"
-                                    style={{
-                                        transform: `scale(${config.scale})`
-                                    }}
-                                />
+                            <img
+                                src={item.imageUrl}
+                                alt={item.name}
+                                className="w-full h-auto object-contain pointer-events-none select-none"
+                                draggable={false}
+                            />
 
-                                {/* Remove Button (Visible on Hover/Touch) */}
+                            {/* Controls */}
+                            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                                 {onRemoveItem && (
                                     <button
                                         onPointerDown={(e) => { e.stopPropagation(); onRemoveItem(slotId, item.id); }}
-                                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
+                                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 shadow-lg pointer-events-auto hover:bg-red-600 z-10"
                                     >
-                                        <X className="w-3 h-3" />
+                                        <X className="w-3.5 h-3.5" />
                                     </button>
                                 )}
+                                <div className="absolute -bottom-2 -right-2 flex gap-1 pointer-events-auto z-10">
+                                    <button
+                                        onPointerDown={(e) => { e.stopPropagation(); handleResize(itemId, -0.15); }}
+                                        className="bg-[#FF69B4] text-white rounded-full w-7 h-7 flex items-center justify-center shadow-lg font-bold"
+                                    >
+                                        −
+                                    </button>
+                                    <button
+                                        onPointerDown={(e) => { e.stopPropagation(); handleResize(itemId, 0.15); }}
+                                        className="bg-[#FF69B4] text-white rounded-full w-7 h-7 flex items-center justify-center shadow-lg font-bold"
+                                    >
+                                        +
+                                    </button>
+                                </div>
                             </div>
-                        </motion.div>
-                    );
-                });
+                        </div>
+                    </motion.div>
+                );
             })}
 
-            {/* Empty State Hint */}
-            {Object.values(selections).every(items => items.length === 0) && (
+            {renderItems().length === 0 && (
                 <div className="absolute inset-0 flex items-center justify-center text-[var(--foreground-tertiary)] pointer-events-none">
-                    <p className="text-sm font-medium">Arrastra prendas aquí</p>
+                    <p className="text-sm font-medium">Selecciona prendas para crear tu outfit</p>
                 </div>
             )}
         </div>

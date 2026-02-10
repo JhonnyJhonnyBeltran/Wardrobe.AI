@@ -6,6 +6,8 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { UserProfile, SubscriptionTier, UserPreferences } from '@/types';
+import { supabase } from '@/lib/supabase/client';
+import { User as SupabaseUser } from '@supabase/supabase-js';
 
 interface UserState {
   user: UserProfile | null;
@@ -18,59 +20,135 @@ interface UserContextType extends UserState {
   setPreferences: (preferences: UserPreferences) => void;
   isPremium: () => boolean;
   upgradeToPremiun: () => void;
+  refreshProfile: () => Promise<void>;
 }
-
-const defaultUser: UserProfile = {
-  id: '1',
-  name: 'Guest User',
-  email: 'guest@wardrobe.ai',
-  subscriptionTier: SubscriptionTier.FREE,
-  createdAt: new Date(),
-};
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export function UserProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
-  
-  // Initialize state from localStorage
-  const getInitialUser = () => {
-    if (typeof window === 'undefined') return null;
-    const storedUser = localStorage.getItem('wardrobe_user');
-    return storedUser ? JSON.parse(storedUser) : null;
-  };
-  
-  const getInitialPreferences = () => {
-    if (typeof window === 'undefined') return {};
-    const storedPreferences = localStorage.getItem('wardrobe_preferences');
-    return storedPreferences ? JSON.parse(storedPreferences) : {};
-  };
-
   const [user, setUser] = useState<UserProfile | null>(null);
   const [preferences, setPreferences] = useState<UserPreferences>({});
 
+  // Fetch user profile from DB
+  const fetchUserProfile = async (authUser: SupabaseUser) => {
+    try {
+      // 1. Try to fetch from 'profiles' (Social/New table)
+      const { data: profileResult, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', authUser.id)
+        .maybeSingle();
+
+      let profile = profileResult as any;
+
+      // 2. Try to fetch from 'users' (Legacy table) if needed
+      let legacyProfile = null;
+      if (!profile) {
+        const { data: lp } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', authUser.id)
+          .maybeSingle();
+        legacyProfile = lp as any;
+      }
+
+      // 3. Construct user object
+      // Priority: Profile (New) -> Users (Old) -> Auth Metadata -> Email
+      const name = profile?.full_name || legacyProfile?.name || authUser.user_metadata?.name || authUser.email!.split('@')[0];
+      const avatar = profile?.avatar_url || legacyProfile?.avatar || authUser.user_metadata?.avatar_url;
+      const username = profile?.username;
+
+      // Get subscription tier from profile or legacy
+      const subscriptionTier = (profile?.subscription_tier || legacyProfile?.subscription_tier || 'free') as SubscriptionTier;
+
+      // Style preferences
+      // Check both tables, prefer 'profiles'
+      const styleSource = profile || legacyProfile || {};
+
+      setUser({
+        id: authUser.id,
+        email: authUser.email!,
+        name: name,
+        username: username,
+        bio: profile?.bio,
+        avatar: avatar,
+        subscriptionTier: subscriptionTier,
+        createdAt: new Date(authUser.created_at || Date.now()),
+
+        // Morph/Color
+        morphology: styleSource.morphology,
+        colorimetry: styleSource.colorimetry,
+
+        // Style Profile
+        ageRange: styleSource.age_range,
+        gender: styleSource.gender,
+        height: styleSource.height,
+        heightRange: styleSource.height_range,
+        preferredStyles: styleSource.preferred_styles,
+        usesAccessories: styleSource.uses_accessories,
+        visualStylePreferences: styleSource.visual_style_preferences,
+        styleCompleted: styleSource.style_completed || false,
+      });
+
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+    }
+  };
+
+  const refreshProfile = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      await fetchUserProfile(session.user);
+    }
+  };
+
   useEffect(() => {
-    // Hydrate from localStorage on client side
-    // This is intentional - we need to sync state with localStorage on mount
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setUser(getInitialUser());
-    setPreferences(getInitialPreferences());
-    setIsLoading(false);
+    // 1. Check active session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        fetchUserProfile(session.user);
+      } else {
+        setUser(null);
+      }
+      setIsLoading(false);
+    });
+
+    // 2. Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user) {
+        // Only fetch if user ID changed or we don't have a user yet
+        // OR simply fetch every time to be safe/fresh
+        // To avoid loops/over-fetching, we can check IDs. 
+        // But simply calling fetchUserProfile is usually fine on auth state change.
+        if (session.user.id !== user?.id) {
+          await fetchUserProfile(session.user);
+        }
+      } else {
+        setUser(null);
+      }
+      setIsLoading(false);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  // Preferences (Local Only for now, or could be DB)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedPreferences = localStorage.getItem('wardrobe_preferences');
+      if (storedPreferences) {
+        setPreferences(JSON.parse(storedPreferences));
+      }
+    }
   }, []);
 
   useEffect(() => {
-    // Save user to localStorage whenever it changes
-    if (user) {
-      localStorage.setItem('wardrobe_user', JSON.stringify(user));
-    } else {
-      // Limpiar localStorage cuando no hay usuario
-      localStorage.removeItem('wardrobe_user');
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('wardrobe_preferences', JSON.stringify(preferences));
     }
-  }, [user]);
-
-  useEffect(() => {
-    // Save preferences to localStorage whenever they change
-    localStorage.setItem('wardrobe_preferences', JSON.stringify(preferences));
   }, [preferences]);
 
   const isPremium = () => {
@@ -78,6 +156,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   };
 
   const upgradeToPremiun = () => {
+    // This is just a client-side mock for now, realistically this would trigger a payment flow
     if (user) {
       setUser({
         ...user,
@@ -96,6 +175,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         setPreferences,
         isPremium,
         upgradeToPremiun,
+        refreshProfile,
       }}
     >
       {children}

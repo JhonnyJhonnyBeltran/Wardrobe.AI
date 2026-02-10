@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { Search } from 'lucide-react';
 import { ConversationList } from '@/components/Messages/ConversationList';
 import { useUser } from '@/store/userStore';
@@ -28,6 +28,8 @@ export default function MessagesLayout({ children }: { children: React.ReactNode
     const { user } = useUser();
     const router = useRouter();
     const pathname = usePathname();
+    const searchParams = useSearchParams();
+    const sharePostData = searchParams.get('share_post');
     const [conversations, setConversations] = useState<Conversation[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -112,7 +114,19 @@ export default function MessagesLayout({ children }: { children: React.ReactNode
         c.other_user?.full_name?.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    const handleConversationClick = (convId: string) => {
+    const handleConversationClick = async (convId: string) => {
+        if (sharePostData && user) {
+            try {
+                await supabase.from('messages').insert({
+                    sender_id: user.id,
+                    receiver_id: convId,
+                    content: sharePostData,
+                    created_at: new Date().toISOString()
+                } as any);
+            } catch (e) {
+                console.error('Error sharing post', e);
+            }
+        }
         router.push(`/messages/${convId}`);
     };
 
@@ -134,6 +148,13 @@ export default function MessagesLayout({ children }: { children: React.ReactNode
                         <h1 className="text-xl font-bold text-[var(--foreground)]">Mensajes</h1>
                     </div>
 
+                    {/* Share mode banner - desktop */}
+                    {sharePostData && (
+                        <div className="mx-3 mt-2 p-2.5 rounded-xl bg-[var(--brand-pink)]/10 border border-[var(--brand-pink)]/20 flex items-center gap-2">
+                            <p className="text-xs font-medium text-[var(--foreground)] truncate flex-1">Enviar publicación a...</p>
+                        </div>
+                    )}
+
                     {/* Search */}
                     <div className="px-4 py-3 border-b border-[var(--border-color)] flex-shrink-0">
                         <div className="relative">
@@ -143,7 +164,7 @@ export default function MessagesLayout({ children }: { children: React.ReactNode
                                 placeholder="Buscar conversaciones..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2 bg-[var(--background-secondary)] border border-transparent rounded-lg text-sm text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] outline-none transition-colors"
+                                className="w-full pl-10 pr-4 py-2 bg-[var(--background-secondary)] border border-transparent rounded-xl text-sm text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] outline-none transition-colors"
                             />
                         </div>
                     </div>

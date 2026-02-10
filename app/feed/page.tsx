@@ -27,17 +27,22 @@ export default function FeedPage() {
   useEffect(() => {
     const fetchOutfits = async () => {
       try {
+        setLoading(true);
         const { data, error } = await supabase
           .from('outfits')
           .select(`
             id,
             name,
             created_at,
-            items,
             user_id,
             profiles (
                 username,
                 avatar_url
+            ),
+            outfit_items (
+              clothing_items (
+                image_url
+              )
             )
           `)
           .order('created_at', { ascending: false });
@@ -45,31 +50,19 @@ export default function FeedPage() {
         if (error) throw error;
 
         if (data) {
-          // Fetch the first item image for the post thumbnail (or a generated collage logic later)
-          // For now, we will try to fetch the first item's image for each outfit
-          // optimization: in a real app, outfits table should have a 'thumbnail_url' column
-
-          const outfitsWithImages = await Promise.all(data.map(async (outfit: any) => {
+          const formattedOutfits = data.map((outfit: any) => {
+            // Get first image from nested joins
             let imageUrl = 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600&q=80'; // Fallback
 
-            if (outfit.items && outfit.items.length > 0) {
-              const { data: itemData } = await supabase
-                .from('clothing_items')
-                .select('image_url')
-                .eq('id', outfit.items[0])
-                .single();
-
-              // Explicitly cast or check
-              const item = itemData as { image_url: string | null } | null;
-              if (item?.image_url) {
-                imageUrl = item.image_url;
+            // outfit.outfit_items is array of objects, each has clothing_items object
+            if (outfit.outfit_items && outfit.outfit_items.length > 0) {
+              // Find first item with an image
+              const itemWithImage = outfit.outfit_items.find((oi: any) => oi.clothing_items?.image_url);
+              if (itemWithImage) {
+                imageUrl = itemWithImage.clothing_items.image_url;
               }
             }
 
-            // Map profile data correctly.
-            // Supabase join returns an array or object depending on relationship.
-            // Assuming One-to-One or Many-to-One, it returns a single object if ! is used or array otherwise.
-            // We need to cast or check.
             const profile = Array.isArray(outfit.profiles) ? outfit.profiles[0] : outfit.profiles;
 
             return {
@@ -80,12 +73,12 @@ export default function FeedPage() {
                 name: profile?.username || 'Usuario',
                 avatar: profile?.avatar_url || 'https://i.pravatar.cc/150?u=default'
               },
-              likes: 0, // TODO: Implement likes table count
+              likes: 0,
               comments: 0,
               isLiked: false
             };
-          }));
-          setOutfits(outfitsWithImages);
+          });
+          setOutfits(formattedOutfits);
         }
       } catch (error) {
         console.error('Error fetching outfits:', error);
@@ -126,20 +119,27 @@ export default function FeedPage() {
             </button>
           </Link>
         </div>
-      </header >
+      </header>
 
-      {/* Feed Content */}
-      < div className="px-2 pt-2" >
+      {/* Feed Content - Contexto §4A: Masonry, skeletons (§6D) */}
+      <div className="px-2 pt-2 md:px-4">
         {
           loading ? (
-            <div className="flex justify-center py-20" >
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--brand-pink)]"></div>
+            <div className="masonry-grid">
+              {[...Array(12)].map((_, i) => (
+                <div key={i} className="break-inside-avoid mb-4">
+                  <div className="rounded-xl overflow-hidden bg-[var(--background-secondary)] skeleton" style={{ height: [180, 220, 260, 200, 240][i % 5] }} />
+                </div>
+              ))}
             </div>
           ) : outfits.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
-              <p className="text-[var(--foreground-secondary)] mb-4">Aún no hay publicaciones.</p>
-              <Link href="/create">
-                <button className="text-[var(--brand-pink)] font-bold">¡Crea el primer outfit!</button>
+              <p className="text-[var(--foreground-secondary)] text-lg font-medium">No hay publicaciones aún.</p>
+              <p className="text-[var(--foreground-tertiary)] text-sm mt-2">Sé el primero en compartir tu estilo.</p>
+              <Link href="/create" className="mt-6">
+                <button className="text-[var(--brand-pink)] font-bold px-6 py-2 rounded-full bg-[var(--brand-pink)]/10 hover:bg-[var(--brand-pink)]/20 transition-colors">
+                  Crear Outfit
+                </button>
               </Link>
             </div>
           ) : (
@@ -163,21 +163,28 @@ export default function FeedPage() {
             </div>
           )
         }
-      </div >
+      </div>
 
       <style jsx global>{`
         .masonry-grid {
           column-count: 2;
-          column-gap: 1rem;
+          column-gap: 0.75rem;
         }
         @media (min-width: 768px) {
           .masonry-grid {
-            column-count: 3;
+            column-count: 4;
+            column-gap: 1rem;
           }
         }
         @media (min-width: 1024px) {
           .masonry-grid {
-            column-count: 4;
+            column-count: 6;
+            column-gap: 1rem;
+          }
+        }
+        @media (min-width: 1440px) {
+          .masonry-grid {
+            column-count: 7;
           }
         }
       `}</style>
@@ -185,18 +192,12 @@ export default function FeedPage() {
       <AnimatePresence>
         {selectedOutfit && (
           <OutfitDetailsModal
+            post={selectedOutfit}
             isOpen={!!selectedOutfit}
             onClose={() => setSelectedOutfit(null)}
-            // @ts-ignore
-            garment={{
-              id: selectedOutfit.id,
-              name: selectedOutfit.title,
-              imageUrl: selectedOutfit.imageUrl,
-              category: 'outfit'
-            }}
           />
         )}
       </AnimatePresence>
-    </div >
+    </div>
   );
 }

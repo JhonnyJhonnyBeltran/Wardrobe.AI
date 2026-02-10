@@ -81,16 +81,16 @@ html {
   --radius-full: 9999px;
 }
 
-/* ===== DARK MODE (Premium) ===== */
+/* ===== DARK MODE (Contexto §6A: Negro puro + Gris carbón) ===== */
 .dark {
-  --background: var(--deep-black);
-  --background-secondary: #0F0F0F;
+  --background: #000000;
+  --background-secondary: #121212;
   --background-tertiary: #1A1A1A;
   --foreground: var(--pure-white);
   --foreground-secondary: var(--gray-300);
   --foreground-tertiary: var(--gray-500);
 
-  --card-bg: #0F0F0F;
+  --card-bg: #121212;
   --card-hover: #1A1A1A;
 
   --border-color: rgba(255, 255, 255, 0.08);

@@ -23,6 +23,14 @@ interface UiStore {
     isPremiumModalOpen: boolean;
     openPremiumModal: () => void;
     closePremiumModal: () => void;
+
+    // Closet State
+    isDoorsOpen: boolean;
+    openDoors: () => void;
+    closeDoors: () => void;
+    searchQuery: string;
+    setSearchQuery: (query: string) => void;
+    setDoorsOpen: (isOpen: boolean) => void;
 }
 
 export const useUiStore = create<UiStore>((set) => ({
@@ -36,4 +44,12 @@ export const useUiStore = create<UiStore>((set) => ({
     isPremiumModalOpen: false,
     openPremiumModal: () => set({ isPremiumModalOpen: true }),
     closePremiumModal: () => set({ isPremiumModalOpen: false }),
+
+    // Closet State
+    isDoorsOpen: false,
+    openDoors: () => set({ isDoorsOpen: true }),
+    closeDoors: () => set({ isDoorsOpen: false }),
+    setDoorsOpen: (isOpen) => set({ isDoorsOpen: isOpen }),
+    searchQuery: '',
+    setSearchQuery: (query) => set({ searchQuery: query }),
 }));

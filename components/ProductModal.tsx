@@ -7,7 +7,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ExternalLink, ShoppingBag, Tag, Store, Sparkles, Heart, Edit2 } from 'lucide-react';
+import { X, ExternalLink, ShoppingBag, Tag, Store, Sparkles, Heart, Edit2, Trash2 } from 'lucide-react';
 import { OutfitItem } from '@/lib/fashion/outfitGenerator';
 
 // Extended OutfitItem to support sourceUrl from scraped items
@@ -22,9 +22,10 @@ interface ProductModalProps {
     isFavorite?: boolean;
     onFavoriteToggle?: (id: string) => void;
     onEdit?: (id: string) => void;
+    onDelete?: (id: string) => void;
 }
 
-export default function ProductModal({ item, isOpen, onClose, isFavorite = false, onFavoriteToggle, onEdit }: ProductModalProps) {
+export default function ProductModal({ item, isOpen, onClose, isFavorite = false, onFavoriteToggle, onEdit, onDelete }: ProductModalProps) {
     if (!item) return null;
 
     // Get the store link from either buyLink or sourceUrl
@@ -210,24 +211,38 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
                                             whileHover={{ scale: 1.02 }}
                                             whileTap={{ scale: 0.98 }}
                                             onClick={() => onFavoriteToggle?.(item.id)}
-                                            className={`flex-1 flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl font-medium transition-all duration-300 border-2 min-w-[130px] h-[56px] ${isFavorite
+                                            className={`flex-1 flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl font-medium transition-all duration-300 border-2 min-w-[100px] h-[56px] ${isFavorite
                                                 ? 'bg-gradient-to-r from-pink-500/20 to-fuchsia-500/20 text-pink-500 border-pink-500/50'
                                                 : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 border-transparent'
                                                 }`}
                                         >
                                             <Heart className={`w-5 h-5 transition-all ${isFavorite ? 'fill-pink-500 text-pink-500' : ''}`} />
-                                            <span className="min-w-[60px] text-center">{isFavorite ? 'Favorito' : 'Guardar'}</span>
+                                            <span className="min-w-[50px] text-center">{isFavorite ? 'Fav' : 'Guardar'}</span>
                                         </motion.button>
 
-                                        <motion.button
-                                            whileHover={{ scale: 1.02 }}
-                                            whileTap={{ scale: 0.98 }}
-                                            onClick={() => onEdit?.(item.id)}
-                                            className="flex-1 flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl font-medium transition-all duration-300 border-2 border-transparent bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 min-w-[130px] h-[56px]"
-                                        >
-                                            <Edit2 className="w-5 h-5" />
-                                            <span className="min-w-[60px] text-center">Editar</span>
-                                        </motion.button>
+                                        {onEdit && (
+                                            <motion.button
+                                                whileHover={{ scale: 1.02 }}
+                                                whileTap={{ scale: 0.98 }}
+                                                onClick={() => onEdit(item.id)}
+                                                className="flex-1 flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl font-medium transition-all duration-300 border-2 border-transparent bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 min-w-[90px] h-[56px]"
+                                            >
+                                                <Edit2 className="w-5 h-5" />
+                                                <span className="text-center">Editar</span>
+                                            </motion.button>
+                                        )}
+
+                                        {onDelete && (
+                                            <motion.button
+                                                whileHover={{ scale: 1.02 }}
+                                                whileTap={{ scale: 0.98 }}
+                                                onClick={() => onDelete(item.id)}
+                                                className="flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl font-medium transition-all duration-300 border-2 border-transparent bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/20 h-[56px]"
+                                                title="Eliminar"
+                                            >
+                                                <Trash2 className="w-5 h-5" />
+                                            </motion.button>
+                                        )}
                                     </div>
                                 </div>
                             </motion.div>

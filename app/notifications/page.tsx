@@ -35,7 +35,13 @@ export default function NotificationsPage() {
 
   useEffect(() => {
     const fetchNotifications = async () => {
+      // Always start loading when effect runs
+      setLoading(true);
+
       if (!user) {
+        // user not ready yet, keep loading or just return empty?
+        // if we return loading=false here, it will flash empty.
+        // But since useUser handles initial loading, user might be null briefly.
         setLoading(false);
         return;
       };
@@ -153,7 +159,8 @@ export default function NotificationsPage() {
           <div className="w-16 h-16 rounded-full bg-[var(--background-secondary)] flex items-center justify-center text-[var(--foreground-tertiary)]">
             <BellOff className="w-8 h-8 opacity-50" />
           </div>
-          <p className="text-lg font-medium text-[var(--foreground-secondary)]">No tienes novedades</p>
+          <p className="text-lg font-medium text-[var(--foreground)]">Estás al día</p>
+          <p className="text-sm text-[var(--foreground-tertiary)]">No tienes notificaciones nuevas</p>
         </div>
       ) : (
         <div className="p-4 space-y-8 flex-1">
@@ -190,37 +197,57 @@ export default function NotificationsPage() {
             )}
           </AnimatePresence>
 
-          {/* New Activity */}
-          {activityNotifications.length > 0 && (
+          {/* Contexto §4G: Agrupación de likes/comentarios y seguidos */}
+          {activityNotifications.filter(n => n.type === 'follow').length > 0 && (
             <section className="space-y-3">
-              <h2 className="text-xs font-bold text-[var(--foreground-secondary)] uppercase tracking-wider">Esta semana</h2>
+              <h2 className="text-xs font-bold text-[var(--foreground-secondary)] uppercase tracking-wider">Seguidos</h2>
               <div className="space-y-4">
-                {activityNotifications.map((notif) => (
+                {activityNotifications.filter(n => n.type === 'follow').map((notif) => (
                   <div key={notif.id} className="flex items-center gap-3 group">
                     <div className="relative">
                       <div className="w-12 h-12 rounded-full overflow-hidden relative border border-[var(--border-color)]">
                         <Image src={notif.actor!.avatar} alt={notif.actor!.name} fill className="object-cover" />
                       </div>
-                      <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-[var(--background)] flex items-center justify-center text-white text-[10px] ${notif.type === 'like' ? 'bg-[#FF3040]' : 'bg-blue-500'}`}>
-                        {notif.type === 'like' ? <Heart className="w-3 h-3 fill-current" /> : <UserPlus className="w-3 h-3" />}
+                      <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-[var(--background)] flex items-center justify-center text-white bg-[var(--brand-pink)]">
+                        <UserPlus className="w-3 h-3" />
                       </div>
                     </div>
                     <div className="flex-1 text-sm">
                       <span className="font-semibold text-[var(--foreground)]">{notif.actor!.name}</span>
-                      <span className="text-[var(--foreground-secondary)]">
-                        {notif.type === 'like' ? ' le gustó tu post.' : ' comenzó a seguirte.'}
-                      </span>
+                      <span className="text-[var(--foreground-secondary)]"> comenzó a seguirte.</span>
                       <span className="text-[var(--foreground-tertiary)] text-xs ml-2">{notif.time}</span>
                     </div>
-                    {notif.type === 'like' && notif.image && (
+                    <button className="px-4 py-1.5 rounded-full bg-[var(--foreground)] text-[var(--background)] text-xs font-semibold hover:opacity-90 transition-opacity">
+                      Seguir
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+          {activityNotifications.filter(n => n.type === 'like').length > 0 && (
+            <section className="space-y-3">
+              <h2 className="text-xs font-bold text-[var(--foreground-secondary)] uppercase tracking-wider">Likes</h2>
+              <div className="space-y-4">
+                {activityNotifications.filter(n => n.type === 'like').map((notif) => (
+                  <div key={notif.id} className="flex items-center gap-3 group">
+                    <div className="relative">
+                      <div className="w-12 h-12 rounded-full overflow-hidden relative border border-[var(--border-color)]">
+                        <Image src={notif.actor!.avatar} alt={notif.actor!.name} fill className="object-cover" />
+                      </div>
+                      <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-[var(--background)] flex items-center justify-center text-white bg-[#FF3040]">
+                        <Heart className="w-3 h-3 fill-current" />
+                      </div>
+                    </div>
+                    <div className="flex-1 text-sm">
+                      <span className="font-semibold text-[var(--foreground)]">{notif.actor!.name}</span>
+                      <span className="text-[var(--foreground-secondary)]"> le gustó tu post.</span>
+                      <span className="text-[var(--foreground-tertiary)] text-xs ml-2">{notif.time}</span>
+                    </div>
+                    {notif.image && (
                       <div className="w-10 h-10 rounded-md overflow-hidden relative border border-[var(--border-color)]">
                         <Image src={notif.image} alt="Post" fill className="object-cover" />
                       </div>
-                    )}
-                    {notif.type === 'follow' && (
-                      <button className="px-4 py-1.5 rounded-full bg-[var(--foreground)] text-[var(--background)] text-xs font-semibold hover:opacity-90 transition-opacity">
-                        Seguir
-                      </button>
                     )}
                   </div>
                 ))}

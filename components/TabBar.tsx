@@ -40,10 +40,12 @@ export default function TabBar() {
   const messageBadgeVisible = useMessageStore(selectBadgeVisible);
   const notificationUnreadCount = useRealtimeStore(selectUnreadCount);
 
-  // Hide TabBar on messages chat pages (check after all hooks)
-  if (pathname.startsWith('/messages/') && pathname !== '/messages') {
-    return null;
-  }
+  // Hide TabBar on deep flows (Contexto §3): Chat, Editor de Outfit, Configuración
+  const hideTabBar =
+    (pathname.startsWith('/messages/') && pathname !== '/messages') ||
+    pathname === '/create' ||
+    pathname.startsWith('/profile/settings');
+  if (hideTabBar) return null;
 
   const tabs: TabItem[] = [
     { href: '/feed', labelKey: 'home', icon: <Home /> },

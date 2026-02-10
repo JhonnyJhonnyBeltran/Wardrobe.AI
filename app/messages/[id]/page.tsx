@@ -174,12 +174,12 @@ export default function ChatPage() {
     return (
         <div
             {...swipeHandlers}
-            className="flex flex-col h-screen bg-[var(--background)]"
+            className="flex flex-col h-screen md:h-full bg-[var(--background)]"
         >
             {/* Header */}
             <div className="sticky top-0 z-30 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-color)] px-4 py-3 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                    <button onClick={() => router.back()} className="p-1 -ml-1 text-[var(--foreground)] hover:bg-[var(--background-secondary)] rounded-full transition-colors">
+                    <button onClick={() => router.back()} className="p-1 -ml-1 text-[var(--foreground)] hover:bg-[var(--background-secondary)] rounded-full transition-colors md:hidden">
                         <ArrowLeft className="w-6 h-6" />
                     </button>
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 import { X, ExternalLink, ShoppingBag } from 'lucide-react';
 import Image from 'next/image';
 import { Post } from './PostCard';
@@ -12,6 +12,8 @@ interface GarmentModalProps {
     onClose: () => void;
 }
 
+const SWIPE_CLOSE_THRESHOLD = 80;
+
 // Mock Garments - Just items, no prices
 const MOCK_GARMENTS = [
     { id: 'g1', name: 'Camiseta de Algodón', brand: 'Básico', image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=200' },
@@ -21,6 +23,10 @@ const MOCK_GARMENTS = [
 
 export default function OutfitDetailsModal({ post, isOpen, onClose }: GarmentModalProps) {
     if (!isOpen || !post) return null;
+
+    const handleDragEnd = (_: unknown, info: PanInfo) => {
+        if (info.offset.y > SWIPE_CLOSE_THRESHOLD || info.velocity.y > 300) onClose();
+    };
 
     return (
         <AnimatePresence>
@@ -34,12 +40,16 @@ export default function OutfitDetailsModal({ post, isOpen, onClose }: GarmentMod
                     className="absolute inset-0 bg-black/60 backdrop-blur-sm"
                 />
 
-                {/* Modal Content */}
+                {/* Modal Content - Contexto §6C: Swipe down to close */}
                 <motion.div
                     initial={{ y: '100%' }}
                     animate={{ y: 0 }}
                     exit={{ y: '100%' }}
                     transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                    drag="y"
+                    dragConstraints={{ top: 0, bottom: 0 }}
+                    dragElastic={{ top: 0, bottom: 0.5 }}
+                    onDragEnd={handleDragEnd}
                     className="relative z-10 w-full md:max-w-4xl h-[85vh] md:h-[80vh] bg-[var(--background)] rounded-t-[32px] md:rounded-[32px] shadow-2xl overflow-hidden flex flex-col md:flex-row"
                 >
                     {/* Close Button Mobile */}

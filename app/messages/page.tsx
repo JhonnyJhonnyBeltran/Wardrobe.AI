@@ -148,109 +148,109 @@ export default function MessagesPage() {
     );
 
     return (
-        <div
-            className="min-h-screen bg-[var(--background)] pb-20"
-        >
-            {/* Header */}
-            <header className="sticky top-0 z-30 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-color)]">
-                <div className="px-4 h-14 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <button
-                            onClick={() => router.back()}
-                            className="p-2 -ml-2 hover:bg-[var(--background-secondary)] rounded-full transition-colors"
-                        >
-                            <ChevronLeft className="w-6 h-6 text-[var(--foreground)]" />
+        <div className="min-h-screen bg-[var(--background)] pb-20 md:pb-0">
+            {/* Mobile: Header + Search + List. Desktop: layout shows list; this page is only for placeholder when no chat selected. */}
+            <div className="md:hidden">
+                <header className="sticky top-0 z-30 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-color)]">
+                    <div className="px-4 h-14 flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <button onClick={() => router.back()} className="p-2 -ml-2 hover:bg-[var(--background-secondary)] rounded-full transition-colors">
+                                <ChevronLeft className="w-6 h-6 text-[var(--foreground)]" />
+                            </button>
+                            <h1 className="text-lg font-bold text-[var(--foreground)]">Mensajes</h1>
+                        </div>
+                        <button onClick={() => router.push('/search')} className="p-2 -mr-2 text-[var(--brand-pink)] hover:bg-[var(--brand-pink)]/10 rounded-full transition-colors">
+                            <Plus className="w-6 h-6" />
                         </button>
-                        <h1 className="text-lg font-bold text-[var(--foreground)]">Mensajes</h1>
                     </div>
+                </header>
 
-                    <button
-                        onClick={() => router.push('/search')}
-                        className="p-2 -mr-2 text-[var(--brand-pink)] hover:bg-[var(--brand-pink)]/10 rounded-full transition-colors"
-                    >
-                        <Plus className="w-6 h-6" />
-                    </button>
+                {/* Search - mobile only */}
+                <div className="p-4">
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--foreground-tertiary)]" />
+                        <input
+                            type="text"
+                            placeholder="Buscar mensajes..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2.5 bg-[var(--background-secondary)] rounded-xl text-sm outline-none transition-all font-medium text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)]"
+                        />
+                    </div>
                 </div>
-            </header>
 
-            {/* Search */}
-            <div className="p-4">
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--foreground-tertiary)]" />
-                    <input
-                        type="text"
-                        placeholder="Buscar mensajes..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2.5 bg-[var(--background-secondary)] rounded-xl text-sm outline-none transition-all font-medium text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)]"
-                    />
+                {/* Share Mode Banner - mobile */}
+                {sharePostData && (
+                    <div className="bg-[var(--brand-pink)]/10 p-3 mx-4 mb-2 rounded-xl border border-[var(--brand-pink)]/20 flex items-center gap-3">
+                        <div className="w-10 h-10 bg-white rounded-lg overflow-hidden flex-shrink-0">
+                            {(() => {
+                                try {
+                                    const data = JSON.parse(sharePostData);
+                                    return <img src={data.image} className="w-full h-full object-cover" alt="" />;
+                                } catch (e) { return null; }
+                            })()}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-xs font-bold text-[var(--foreground)] truncate">Enviar publicación a...</p>
+                            <p className="text-xs text-[var(--foreground-secondary)]">Selecciona un chat para compartir</p>
+                        </div>
+                    </div>
+                )}
+
+                {/* List - mobile only */}
+                <div className="px-2">
+                    {loading ? (
+                        <div className="space-y-4 p-4">
+                            {[1, 2, 3].map((i) => (
+                                <div key={i} className="flex gap-4 animate-pulse">
+                                    <div className="w-12 h-12 rounded-full bg-[var(--background-secondary)]" />
+                                    <div className="flex-1 space-y-2">
+                                        <div className="h-4 w-1/3 bg-[var(--background-secondary)] rounded" />
+                                        <div className="h-3 w-2/3 bg-[var(--background-secondary)] rounded" />
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="space-y-1">
+                            {filteredConversations.map((conv) => (
+                                <ConversationItem
+                                    key={conv.id}
+                                    conversationId={conv.id}
+                                    otherUser={conv.other_user}
+                                    lastMessageText={conv.last_message_text}
+                                    lastMessageAt={conv.last_message_at}
+                                    lastMessageSender={conv.last_message_sender}
+                                    currentUserId={user?.id || 'me'}
+                                    onClick={() => handleConversationClick(conv.id, conv.id)}
+                                    onReport={() => alert("Usuario reportado.")}
+                                    onDelete={async () => {
+                                        if (confirm("¿Eliminar conversación?")) {
+                                            setLoading(true);
+                                            const partnerId = conv.other_user?.id || (conv.participant_2 === user?.id ? conv.participant_1 : conv.participant_2);
+                                            await supabase.from('messages').delete().or(`and(sender_id.eq.${user?.id},receiver_id.eq.${partnerId}),and(sender_id.eq.${partnerId},receiver_id.eq.${user?.id})`);
+                                            window.location.reload();
+                                        }
+                                    }}
+                                />
+                            ))}
+                            {filteredConversations.length === 0 && (
+                                <div className="text-center py-12">
+                                    <p className="text-[var(--foreground-tertiary)]">No hay mensajes</p>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
 
-            {/* Share Mode Banner */}
-            {sharePostData && (
-                <div className="bg-[var(--brand-pink)]/10 p-3 mx-4 mb-2 rounded-xl border border-[var(--brand-pink)]/20 flex items-center gap-3">
-                    <div className="w-10 h-10 bg-white rounded-lg overflow-hidden flex-shrink-0">
-                        {(() => {
-                            try {
-                                const data = JSON.parse(sharePostData);
-                                return <img src={data.image} className="w-full h-full object-cover" />
-                            } catch (e) { return null; }
-                        })()}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                        <p className="text-xs font-bold text-[var(--foreground)] truncate">Enviar publicación a...</p>
-                        <p className="text-xs text-[var(--foreground-secondary)]">Selecciona un chat para compartir</p>
-                    </div>
+            {/* Desktop: placeholder when no conversation selected (layout shows list on left) - Contexto §4C */}
+            <div className="hidden md:flex flex-1 flex-col items-center justify-center p-8 text-center min-h-0">
+                <div className="w-16 h-16 rounded-full bg-[var(--background-secondary)] flex items-center justify-center mb-4">
+                    <Plus className="w-8 h-8 text-[var(--foreground-tertiary)]" />
                 </div>
-            )}
-
-            {/* List */}
-            <div className="px-2">
-                {loading ? (
-                    <div className="space-y-4 p-4">
-                        {[1, 2, 3].map((i) => (
-                            <div key={i} className="flex gap-4 animate-pulse">
-                                <div className="w-12 h-12 rounded-full bg-[var(--background-secondary)]" />
-                                <div className="flex-1 space-y-2">
-                                    <div className="h-4 w-1/3 bg-[var(--background-secondary)] rounded" />
-                                    <div className="h-3 w-2/3 bg-[var(--background-secondary)] rounded" />
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                ) : (
-                    <div className="space-y-1">
-                        {filteredConversations.map((conv) => (
-                            <ConversationItem
-                                key={conv.id}
-                                conversationId={conv.id}
-                                otherUser={conv.other_user}
-                                lastMessageText={conv.last_message_text}
-                                lastMessageAt={conv.last_message_at}
-                                lastMessageSender={conv.last_message_sender}
-                                currentUserId={user?.id || 'me'}
-                                onClick={() => handleConversationClick(conv.id, conv.id)}
-                                onReport={() => alert("Usuario reportado.")}
-                                onDelete={async () => {
-                                    if (confirm("¿Eliminar conversación?")) {
-                                        setLoading(true);
-                                        const partnerId = conv.other_user?.id || (conv.participant_2 === user?.id ? conv.participant_1 : conv.participant_2);
-                                        await supabase.from('messages').delete().or(`and(sender_id.eq.${user?.id},receiver_id.eq.${partnerId}),and(sender_id.eq.${partnerId},receiver_id.eq.${user?.id})`);
-                                        // Refresh
-                                        window.location.reload();
-                                    }
-                                }}
-                            />
-                        ))}
-
-                        {filteredConversations.length === 0 && (
-                            <div className="text-center py-12">
-                                <p className="text-[var(--foreground-tertiary)]">No hay mensajes</p>
-                            </div>
-                        )}
-                    </div>
-                )}
+                <p className="text-[var(--foreground-secondary)] font-medium">Selecciona una conversación</p>
+                <p className="text-sm text-[var(--foreground-tertiary)] mt-1">o inicia un chat desde Búsqueda</p>
             </div>
         </div>
     );

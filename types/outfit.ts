@@ -24,7 +24,11 @@ export interface Outfit {
   imageUrl?: string;
   aiGenerated: boolean;
   favorite?: boolean;
-  isPublic?: boolean; // Si el outfit es público para el feed social
+  isPublic?: boolean;
+  description?: string;
+  // UI Helpers (mapped from DB or calculated)
+  style?: string; // e.g. from tags or occasion
+  date?: string;  // formatted date string
 }
 
 export interface OutfitGenerationRequest {

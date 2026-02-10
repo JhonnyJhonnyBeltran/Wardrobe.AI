@@ -67,13 +67,14 @@ export function CarouselSlot({
                             <motion.button
                                 id={`slot-item-${item.id}`}
                                 key={item.id}
-                                layoutId={`slot-${item.id}`} // Shared layout ID if transitioning
+                                layoutId={`slot-${item.id}`}
                                 onClick={() => onSelect(item)}
-                                whileHover={{ y: -5 }}
+                                whileHover={{ y: -1 }}
                                 whileTap={{ scale: 0.95 }}
-                                className={`relative flex-shrink-0 w-32 h-40 rounded-2xl overflow-hidden snap-center transition-all ${isSelected ? 'ring-4 ring-[var(--brand-pink)] shadow-lg shadow-pink-500/20' : 'opacity-70 hover:opacity-100 hover:shadow-md'}`}
+                                className={`relative flex-shrink-0 w-32 snap-center transition-all ${isSelected ? '' : 'opacity-70 hover:opacity-100'}`}
                             >
-                                <div className="absolute inset-0 bg-[var(--card-bg)]">
+                                {/* Image Container */}
+                                <div className="relative w-32 h-40 rounded-2xl overflow-hidden bg-[var(--card-bg)]">
                                     {item.imageUrl ? (
                                         <Image
                                             src={item.imageUrl}
@@ -86,20 +87,23 @@ export function CarouselSlot({
                                             <span className="text-xs">Sin imagen</span>
                                         </div>
                                     )}
+
+                                    {/* Selection Indicator - Simple Circle */}
+                                    {isSelected && (
+                                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                            <div className="w-12 h-12 rounded-full bg-[#FF69B4] flex items-center justify-center shadow-lg">
+                                                <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                                </svg>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
 
-                                {/* Gradient Overlay for Name */}
-                                <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/80 to-transparent">
-                                    <p className="text-white text-xs font-medium truncate w-full text-center">
-                                        {item.name}
-                                    </p>
-                                </div>
-
-                                {isSelected && (
-                                    <div className="absolute top-2 right-2 w-6 h-6 bg-[var(--brand-pink)] rounded-full flex items-center justify-center text-white shadow-sm">
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                                    </div>
-                                )}
+                                {/* Name Below Image */}
+                                <p className="mt-2 text-xs font-medium text-[var(--foreground)] truncate w-full text-center">
+                                    {item.name}
+                                </p>
                             </motion.button>
                         );
                     })}
@@ -109,6 +113,6 @@ export function CarouselSlot({
                 <div className="hidden md:block absolute inset-y-0 left-0 w-12 bg-gradient-to-r from-[var(--background)] to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity" />
                 <div className="hidden md:block absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-[var(--background)] to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
-        </div>
+        </div >
     );
 }

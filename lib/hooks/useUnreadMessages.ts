@@ -58,7 +58,8 @@ export function useUnreadMessages(options: UseUnreadMessagesOptions = {}) {
         .from('messages' as any)
         .select('id, conversation_id, sender_id, created_at')
         .eq('receiver_id', user.id)
-        .is('read_at', null)
+        .eq('receiver_id', user.id)
+        .eq('is_read', false)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -71,7 +72,7 @@ export function useUnreadMessages(options: UseUnreadMessagesOptions = {}) {
 
       (unreadMessages as UnreadMessageData[] || []).forEach((msg) => {
         const existing = unreadState[msg.conversation_id];
-        
+
         if (!existing) {
           unreadState[msg.conversation_id] = {
             conversationId: msg.conversation_id,
@@ -119,7 +120,7 @@ export function useUnreadMessages(options: UseUnreadMessagesOptions = {}) {
         },
         (payload) => {
           const newMessage = payload.new as UnreadMessageData & { receiver_id: string };
-          
+
           // Only add if it's a message for us and not from us
           if (newMessage.receiver_id === user.id && newMessage.sender_id !== user.id) {
             addUnreadMessage(
@@ -140,8 +141,8 @@ export function useUnreadMessages(options: UseUnreadMessagesOptions = {}) {
         },
         (payload) => {
           // If message was marked as read, refetch to update state
-          const updatedMessage = payload.new as UnreadMessageData & { read_at: string | null };
-          if (updatedMessage.read_at) {
+          const updatedMessage = payload.new as UnreadMessageData & { is_read: boolean };
+          if (updatedMessage.is_read) {
             // Optimistically handled by markConversationAsRead
           }
         }
@@ -173,10 +174,10 @@ export function useUnreadMessages(options: UseUnreadMessagesOptions = {}) {
       const messagesTable = supabase.from('messages' as any);
       await messagesTable
         // @ts-expect-error - Supabase type definitions don't include messages table
-        .update({ read_at: new Date().toISOString() })
+        .update({ is_read: true })
         .eq('conversation_id', conversationId)
         .eq('receiver_id', user.id)
-        .is('read_at', null);
+        .eq('is_read', false);
     } catch (error) {
       console.error('Error marking messages as read:', error);
       // Refetch to restore correct state
