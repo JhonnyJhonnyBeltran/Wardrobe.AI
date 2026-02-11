@@ -135,30 +135,24 @@ export default function ChatPage() {
         setNewMessage(''); // Optimistic clear
 
         try {
-            // Get or create conversation to satisfy NOT NULL constraint
-            const { data: conversationId, error: convError } = await supabase
-                .rpc('get_or_create_conversation', { other_user_id: targetUserId });
-
-            if (convError || !conversationId) throw convError || new Error('Could not get conversation');
-
+            // El trigger handle_new_message creará la conversación automáticamente
             const { error } = await supabase
                 .from('messages')
                 .insert({
-                    conversation_id: conversationId,
                     sender_id: user.id,
                     receiver_id: targetUserId,
                     content: content,
                 } as any);
 
-            if (error) throw error;
-
-            // Note: We don't manually add to state because subscription should catch it. 
-            // BUT for responsiveness we might want to:
-            // setMessages(prev => [...prev, optimisticMsg]);
+            if (error) {
+                console.error('Error inserting message:', error);
+                throw error;
+            }
 
         } catch (error) {
             console.error('Error sending message:', error);
-            // Restore message if failed (optional, simplified)
+            // Restore message if failed
+            setNewMessage(content);
         }
     };
 
@@ -235,9 +229,23 @@ export default function ChatPage() {
                                 if (confirm("¿Estás seguro de que quieres eliminar esta conversación? Esta acción no se puede deshacer.")) {
                                     setLoading(true);
                                     try {
-                                        // Delete matches for both participants (simulating total delete)
-                                        // RLS might prevent deleting 'received' messages depending on policy, but assuming we can delete row.
-                                        await supabase.from('messages').delete().or(`and(sender_id.eq.${user?.id},receiver_id.eq.${targetUserId}),and(sender_id.eq.${targetUserId},receiver_id.eq.${user?.id})`);
+                                        // Get or create conversation first
+                                        const { data: convData } = await supabase
+                                            .rpc('get_or_create_conversation', { target_user_id: targetUserId });
+                                        
+                                        const conversationId = convData?.conversation_id;
+                                        
+                                        if (conversationId) {
+                                            // Delete the conversation (messages will be deleted by CASCADE)
+                                            await supabase
+                                                .from('conversations')
+                                                .delete()
+                                                .eq('id', conversationId);
+                                        } else {
+                                            // Fallback: delete messages directly
+                                            await supabase.from('messages').delete().or(`and(sender_id.eq.${user?.id},receiver_id.eq.${targetUserId}),and(sender_id.eq.${targetUserId},receiver_id.eq.${user?.id})`);
+                                        }
+                                        
                                         router.push('/messages');
                                     } catch (e) {
                                         console.error(e);

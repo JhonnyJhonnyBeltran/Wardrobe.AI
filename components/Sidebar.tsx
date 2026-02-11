@@ -47,7 +47,7 @@ export default function Sidebar() {
 
   // Helper to get badge count for each nav item
   const getBadgeCount = (labelKey: string): number => {
-    if (labelKey === 'search') return requestsCount;
+    if (labelKey === 'search') return 0; // Explicitly 0 for search
     if (labelKey === 'messages') return messageBadgeVisible ? messageUnreadCount : 0;
     if (labelKey === 'notifications') return notificationUnreadCount;
     return 0;
@@ -82,7 +82,7 @@ export default function Sidebar() {
                         className: `w-[30px] h-[30px] ${(item.icon as any).props.className || ''}`
                       })}
 
-                      {badgeCount > 0 && (
+                      {badgeCount > 0 && item.labelKey !== 'search' && (
                         <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1.5 flex items-center justify-center bg-[#FF69B4] text-white text-[10px] font-bold rounded-full border-2 border-[var(--background)]">
                           {badgeCount > 99 ? '+99' : badgeCount}
                         </span>

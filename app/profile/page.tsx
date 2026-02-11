@@ -132,77 +132,66 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-[var(--background)] pb-24">
-      {/* Header - Contexto §3: Izq = Avatar + Nombre, Der = (+) desplegable + Menú hamburguesa → Configuración */}
+      {/* Header - Nuevo diseño: (+) a la izquierda, username centrado */}
       <header className="sticky top-0 z-30 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-color)]/50 supports-[ios]:pt-safe-top">
         <div className="flex items-center justify-between px-4 h-14 w-full md:max-w-[60%] mx-auto">
-          {/* Izquierda: Avatar + Nombre de usuario (móvil) */}
-          <div className="flex items-center gap-3 min-w-0 flex-1">
-            <Link href="/profile" className="flex items-center gap-3 min-w-0 flex-shrink-0">
-              <div className="w-9 h-9 rounded-full overflow-hidden bg-[var(--background-secondary)] flex-shrink-0 border border-[var(--border-color)]">
-                <img
-                  src={user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || user.email)}&background=random`}
-                  alt=""
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <span className="font-semibold text-[var(--foreground)] truncate max-w-[120px] sm:max-w-[180px]">
-                {user.username || user.name || user.email?.split('@')[0] || 'Perfil'}
-              </span>
-            </Link>
+          {/* Izquierda: Botón (+) para crear */}
+          <div className="relative flex-shrink-0">
+            <button
+              className="p-2 hover:bg-[var(--background-secondary)] rounded-full transition-colors"
+              onClick={() => setShowCreateMenu(!showCreateMenu)}
+              aria-label="Crear"
+            >
+              <Plus className="w-6 h-6 text-[var(--foreground)]" />
+            </button>
+            <AnimatePresence>
+              {showCreateMenu && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm"
+                    onClick={() => setShowCreateMenu(false)}
+                  />
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.9, y: 10 }}
+                    className="absolute top-full left-0 mt-2 w-48 bg-[var(--card-bg)] rounded-xl shadow-xl border border-[var(--border-color)] z-50 overflow-hidden"
+                  >
+                    <Link
+                      href="/create"
+                      onClick={() => setShowCreateMenu(false)}
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-[var(--background-secondary)] transition-colors"
+                    >
+                      <Shirt className="w-5 h-5 text-[var(--brand-pink)]" />
+                      <span className="text-sm font-medium">Nuevo Outfit</span>
+                    </Link>
+                    <Link
+                      href="/create-post"
+                      onClick={() => setShowCreateMenu(false)}
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-[var(--background-secondary)] transition-colors border-t border-[var(--border-color)]"
+                    >
+                      <Layers className="w-5 h-5 text-[var(--brand-pink)]" />
+                      <span className="text-sm font-medium">Nuevo Post</span>
+                    </Link>
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
           </div>
 
-          {/* Derecha: (+) desplegable + Menú hamburguesa (Configuración) */}
-          <div className="flex items-center gap-1 flex-shrink-0">
-            <div className="relative">
-              <button
-                className="p-2 hover:bg-[var(--background-secondary)] rounded-full transition-colors"
-                onClick={() => setShowCreateMenu(!showCreateMenu)}
-                aria-label="Crear"
-              >
-                <Plus className="w-6 h-6 text-[var(--foreground)]" />
-              </button>
-              <AnimatePresence>
-                {showCreateMenu && (
-                  <>
-                    <div
-                      className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm"
-                      onClick={() => setShowCreateMenu(false)}
-                    />
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.9, y: 10 }}
-                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.9, y: 10 }}
-                      className="absolute top-full right-0 mt-2 w-48 bg-[var(--card-bg)] rounded-xl shadow-xl border border-[var(--border-color)] z-50 overflow-hidden"
-                    >
-                      <Link
-                        href="/create"
-                        onClick={() => setShowCreateMenu(false)}
-                        className="flex items-center gap-3 px-4 py-3 hover:bg-[var(--background-secondary)] transition-colors"
-                      >
-                        <Shirt className="w-5 h-5 text-[var(--brand-pink)]" />
-                        <span className="text-sm font-medium">Nuevo Outfit</span>
-                      </Link>
-                      <Link
-                        href="/create-post"
-                        onClick={() => setShowCreateMenu(false)}
-                        className="flex items-center gap-3 px-4 py-3 hover:bg-[var(--background-secondary)] transition-colors border-t border-[var(--border-color)]"
-                      >
-                        <Layers className="w-5 h-5 text-[var(--brand-pink)]" />
-                        <span className="text-sm font-medium">Nuevo Post</span>
-                      </Link>
-                    </motion.div>
-                  </>
-                )}
-              </AnimatePresence>
-            </div>
-            <Link
-              href="/profile/settings"
-              className="p-2 hover:bg-[var(--background-secondary)] rounded-full transition-colors"
-              aria-label="Configuración"
-            >
-              <Menu className="w-6 h-6 text-[var(--foreground)]" />
-            </Link>
-          </div>
+          {/* Centro: Username centrado */}
+          <span className="font-bold text-[var(--foreground)] truncate max-w-[200px] sm:max-w-[280px] px-2">
+            {user.username || user.name || user.email?.split('@')[0] || 'Perfil'}
+          </span>
+
+          {/* Derecha: Menú hamburguesa (Configuración) */}
+          <Link
+            href="/profile/settings"
+            className="p-2 hover:bg-[var(--background-secondary)] rounded-full transition-colors flex-shrink-0"
+            aria-label="Configuración"
+          >
+            <Menu className="w-6 h-6 text-[var(--foreground)]" />
+          </Link>
         </div>
       </header>
 

@@ -45,7 +45,7 @@ export default function MessagesPage() {
             // Send the post immediately
             try {
                 const { data: conversationId, error: convError } = await supabase
-                    .rpc('get_or_create_conversation', { other_user_id: otherUserId });
+                    .rpc('get_or_create_conversation', { target_user_id: otherUserId } as any);
 
                 if (convError || !conversationId) throw convError || new Error('Could not get conversation');
 
@@ -54,7 +54,6 @@ export default function MessagesPage() {
                     sender_id: user.id,
                     receiver_id: otherUserId,
                     content: sharePostData,
-                    message_type: 'post_share',
                 } as any);
             } catch (e) {
                 console.error('Error sharing post', e);
@@ -64,23 +63,37 @@ export default function MessagesPage() {
     };
 
     useEffect(() => {
+        let isMounted = true;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
         const fetchConversations = async () => {
-            if (!user) return;
+            if (!user) {
+                if (isMounted) setLoading(false);
+                return;
+            }
 
             try {
                 // 1. Get distinct conversation IDs where user is sender or receiver
-                // Since we don't have a 'conversations' table, we group messages by the OTHER user_id.
-
                 // Fetch all messages involving the user
                 const { data: myMessages, error } = await supabase
                     .from('messages')
                     .select('created_at, content, sender_id, receiver_id, read_at')
                     .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
-                    .order('created_at', { ascending: false });
+                    .order('created_at', { ascending: false })
+                    .limit(100)
+                    .abortSignal(controller.signal);
 
-                if (error) throw error;
-                if (!myMessages) {
-                    setLoading(false);
+                clearTimeout(timeoutId);
+
+                if (error) {
+                    console.error("Error fetching messages:", error);
+                    if (isMounted) setLoading(false);
+                    return;
+                }
+
+                if (!myMessages || !isMounted) {
+                    if (isMounted) setLoading(false);
                     return;
                 }
 
@@ -138,14 +151,20 @@ export default function MessagesPage() {
                     setConversations([]);
                 }
 
-            } catch (err) {
-                console.error("Error fetching conversations:", err);
+            } catch (err: any) {
+                if (err.name !== 'AbortError') {
+                    console.error("Error fetching conversations:", err);
+                }
             } finally {
-                setLoading(false);
+                if (isMounted) setLoading(false);
             }
         };
 
         fetchConversations();
+
+        return () => {
+            isMounted = false;
+        };
     }, [user]);
 
     const filteredConversations = conversations.filter(c =>
@@ -234,8 +253,32 @@ export default function MessagesPage() {
                                         if (confirm("¿Eliminar conversación?")) {
                                             setLoading(true);
                                             const partnerId = conv.other_user?.id || (conv.participant_2 === user?.id ? conv.participant_1 : conv.participant_2);
-                                            await supabase.from('messages').delete().or(`and(sender_id.eq.${user?.id},receiver_id.eq.${partnerId}),and(sender_id.eq.${partnerId},receiver_id.eq.${user?.id})`);
-                                            window.location.reload();
+                                            
+                                            try {
+                                                // Get or create conversation first
+                                                const { data: convData } = await supabase
+                                                    .rpc('get_or_create_conversation', { target_user_id: partnerId } as any) as { data: any };
+                                                
+                                                const conversationId = convData?.conversation_id;
+                                                
+                                                if (conversationId) {
+                                                    // Delete the conversation (messages will be deleted by CASCADE)
+                                                    await supabase
+                                                        .from('conversations')
+                                                        .delete()
+                                                        .eq('id', conversationId);
+                                                } else {
+                                                    // Fallback: delete messages directly
+                                                    await supabase.from('messages').delete().or(`and(sender_id.eq.${user?.id},receiver_id.eq.${partnerId}),and(sender_id.eq.${partnerId},receiver_id.eq.${user?.id})`);
+                                                }
+                                                
+                                                // Remove from local state
+                                                setConversations(prev => prev.filter(c => c.id !== conv.id));
+                                            } catch (e) {
+                                                console.error('Error deleting conversation:', e);
+                                            } finally {
+                                                setLoading(false);
+                                            }
                                         }
                                     }}
                                 />

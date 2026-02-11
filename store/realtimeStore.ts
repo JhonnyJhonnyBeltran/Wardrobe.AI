@@ -16,7 +16,7 @@ interface RealtimeStore {
   isConnected: boolean;
   setConnected: (connected: boolean) => void;
 
-  // Notifications
+  // Activity / Notifications (Virtual)
   notifications: Notification[];
   unreadCount: number;
   addNotification: (notification: Notification) => void;
@@ -24,6 +24,10 @@ interface RealtimeStore {
   markAllAsRead: () => void;
   removeNotification: (notificationId: string) => void;
   clearNotifications: () => void;
+
+  // New Activity Methods
+  checkActivity: (userId: string) => Promise<void>;
+  markActivityAsViewed: () => void;
 
   // Online users
   onlineUsers: string[];
@@ -61,115 +65,71 @@ export const useRealtimeStore = create<RealtimeStore>((set, get) => ({
   isConnected: initialState.isConnected,
   setConnected: (connected) => set({ isConnected: connected }),
 
-  // Notifications
-  notifications: initialState.notifications,
+  // Activity / Notifications (Virtual)
+  notifications: initialState.notifications, // Keep for type safety if needed, but unused
   unreadCount: initialState.unreadCount,
+  lastViewedActivity: null,
 
-  addNotification: (notification) => {
-    set((state) => {
-      // Avoid duplicates
-      if (state.notifications.some(n => n.id === notification.id)) {
-        return state;
-      }
+  checkActivity: async (userId: string) => {
+    // 1. Get last viewed time from local storage
+    const lastViewed = typeof window !== 'undefined' ? localStorage.getItem('last_viewed_activity') : null;
+    const lastViewedDate = lastViewed ? new Date(lastViewed) : new Date(0); // Epoch if never viewed
 
-      // Add to beginning, limit total
-      const newNotifications = [notification, ...state.notifications]
-        .slice(0, LIMITS.MAX_NOTIFICATIONS);
-      
-      return {
-        notifications: newNotifications,
-        unreadCount: state.unreadCount + (notification.read ? 0 : 1),
-      };
-    });
+    // 2. Count new follows
+    const { supabase } = await import('@/lib/supabase/client');
+
+    // Check follows created after lastViewedDate
+    const { count, error } = await supabase
+      .from('follows')
+      .select('*', { count: 'exact', head: true })
+      .eq('following_id', userId)
+      .gt('created_at', lastViewedDate.toISOString());
+
+    let totalUnread = count || 0;
+
+    set({ unreadCount: totalUnread });
   },
 
-  markAsRead: (notificationId) => {
-    set((state) => {
-      const notification = state.notifications.find(n => n.id === notificationId);
-      if (!notification || notification.read) return state;
-
-      return {
-        notifications: state.notifications.map(n =>
-          n.id === notificationId ? { ...n, read: true } : n
-        ),
-        unreadCount: Math.max(0, state.unreadCount - 1),
-      };
-    });
+  markActivityAsViewed: () => {
+    const now = new Date().toISOString();
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('last_viewed_activity', now);
+    }
+    set({ unreadCount: 0 });
   },
 
-  markAllAsRead: () => {
-    set((state) => ({
-      notifications: state.notifications.map(n => ({ ...n, read: true })),
-      unreadCount: 0,
-    }));
-  },
-
-  removeNotification: (notificationId) => {
-    set((state) => {
-      const notification = state.notifications.find(n => n.id === notificationId);
-      return {
-        notifications: state.notifications.filter(n => n.id !== notificationId),
-        unreadCount: notification && !notification.read 
-          ? Math.max(0, state.unreadCount - 1) 
-          : state.unreadCount,
-      };
-    });
-  },
-
-  clearNotifications: () => {
-    set({ notifications: [], unreadCount: 0 });
-  },
+  // Stub methods for compatibility if something else uses them (though we removed usages)
+  addNotification: () => { },
+  markAsRead: () => { },
+  markAllAsRead: () => { },
+  removeNotification: () => { },
+  clearNotifications: () => { },
 
   // Online users
   onlineUsers: initialState.onlineUsers,
-  
   setOnlineUsers: (users) => set({ onlineUsers: users }),
-  
   isUserOnline: (userId) => get().onlineUsers.includes(userId),
 
   // Typing indicators
   typingState: initialState.typingState,
-
   setUserTyping: (conversationId, userId, isTyping) => {
+    // ... typing logic same as before ...
     set((state) => {
       const currentTyping = state.typingState[conversationId] || [];
-      
       if (isTyping) {
-        // Add user if not already typing
         if (currentTyping.some(t => t.user_id === userId)) {
-          // Update timestamp
-          return {
-            typingState: {
-              ...state.typingState,
-              [conversationId]: currentTyping.map(t =>
-                t.user_id === userId ? { ...t, timestamp: Date.now() } : t
-              ),
-            },
-          };
+          return { typingState: { ...state.typingState, [conversationId]: currentTyping.map(t => t.user_id === userId ? { ...t, timestamp: Date.now() } : t) } };
         }
-        return {
-          typingState: {
-            ...state.typingState,
-            [conversationId]: [...currentTyping, { user_id: userId, timestamp: Date.now() }],
-          },
-        };
+        return { typingState: { ...state.typingState, [conversationId]: [...currentTyping, { user_id: userId, timestamp: Date.now() }] } };
       } else {
-        // Remove user
-        return {
-          typingState: {
-            ...state.typingState,
-            [conversationId]: currentTyping.filter(t => t.user_id !== userId),
-          },
-        };
+        return { typingState: { ...state.typingState, [conversationId]: currentTyping.filter(t => t.user_id !== userId) } };
       }
     });
   },
-
   getTypingUsers: (conversationId) => {
     const typing = get().typingState[conversationId] || [];
     return typing.map(t => t.user_id);
   },
-
   clearTypingState: (conversationId) => {
     set((state) => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -178,7 +138,6 @@ export const useRealtimeStore = create<RealtimeStore>((set, get) => ({
     });
   },
 
-  // Reset
   reset: () => set(initialState),
 }));
 

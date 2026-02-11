@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';
 import { useSwipeNavigation } from '@/hooks/useSwipeNavigation';
 import { useMessageStore, selectTotalUnread, selectBadgeVisible } from '@/store/messageStore';
+import { useSearchParams } from 'next/navigation';
 
 export default function FeedPage() {
   const [outfits, setOutfits] = useState<Post[]>([]);
@@ -89,6 +90,16 @@ export default function FeedPage() {
 
     fetchOutfits();
   }, []);
+
+  const searchParams = useSearchParams();
+  const postIdFromUrl = searchParams.get('postId');
+
+  useEffect(() => {
+    if (postIdFromUrl && outfits.length > 0) {
+      const post = outfits.find(p => p.id === postIdFromUrl);
+      if (post) setSelectedOutfit(post);
+    }
+  }, [postIdFromUrl, outfits]);
 
   return (
     <div className="min-h-screen bg-[var(--background)] pb-24">

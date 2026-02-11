@@ -519,12 +519,20 @@ export default function ClosetPage() {
                       ? 'Combina prendas de tu armario y guarda tus looks favoritos.'
                       : 'Prueba con otra búsqueda.'}
                   </p>
-                  <Link href="/create">
-                    <Button className="h-12 px-8 text-lg rounded-xl shadow-lg shadow-[var(--brand-pink)]/20 hover:shadow-[var(--brand-pink)]/40 transition-all">
-                      <Plus className="w-5 h-5 mr-2" />
-                      {outfits.length === 0 ? 'Crear primer outfit' : 'Crear outfit'}
-                    </Button>
-                  </Link>
+                  <Button
+                    onClick={() => {
+                      if (!items || items.length === 0) {
+                        alert('Añade prendas a tu armario antes de crear outfits');
+                      } else {
+                        router.push('/create');
+                      }
+                    }}
+                    className={`h-12 px-8 text-lg rounded-xl shadow-lg shadow-[var(--brand-pink)]/20 transition-all
+                       ${(!items || items.length === 0) ? 'opacity-60 cursor-pointer' : 'hover:shadow-[var(--brand-pink)]/40'}`}
+                  >
+                    <Plus className="w-5 h-5 mr-2" />
+                    {outfits.length === 0 ? 'Crear primer outfit' : 'Crear outfit'}
+                  </Button>
                 </div>
               ) : (
                 <div className={`px-4 ${viewMode === 'grid'

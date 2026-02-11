@@ -10,7 +10,7 @@
  * Table schema:
  *   follower_id  UUID  (PK part 1)
  *   following_id UUID  (PK part 2)
- *   status       TEXT  ('pending' | 'accepted')
+ *   status       TEXT  ('accepted') - Direct follow, no pending
  *   created_at   TIMESTAMPTZ
  */
 
@@ -48,13 +48,13 @@ interface ProfileRow {
 // ─── Core CRUD ───────────────────────────────────────────────────────────────
 
 /**
- * Create or re-activate a follow relationship.
+ * Create a follow relationship directly (no approval needed).
  * Uses upsert with `ignoreDuplicates` to prevent constraint violations.
  */
 export async function followUser(
   followerId: string,
   followingId: string,
-  status: FollowStatus = 'pending',
+  status: FollowStatus = 'accepted',
 ): Promise<{ success: boolean; error?: string }> {
   const { error } = await supabase
     .from(TABLE)
@@ -82,7 +82,10 @@ export async function unfollowUser(
   return { success: true };
 }
 
-/** Update the status of an existing follow row (e.g. accept a request). */
+/**
+ * Update the status of an existing follow row.
+ * Note: With direct follow, this is mainly for backwards compatibility.
+ */
 export async function updateFollowStatus(
   followerId: string,
   followingId: string,
@@ -144,7 +147,7 @@ export async function checkMutualFollow(
 
 // ─── Count queries ───────────────────────────────────────────────────────────
 
-/** Count users that follow `userId` with `accepted` status. */
+/** Count users that follow `userId` (all are 'accepted'). */
 export async function getFollowersCount(userId: string): Promise<number> {
   const { count } = await supabase
     .from(TABLE)
@@ -155,7 +158,7 @@ export async function getFollowersCount(userId: string): Promise<number> {
   return count ?? 0;
 }
 
-/** Count users that `userId` follows with `accepted` status. */
+/** Count users that `userId` follows (all are 'accepted'). */
 export async function getFollowingCount(userId: string): Promise<number> {
   const { count } = await supabase
     .from(TABLE)
@@ -166,7 +169,7 @@ export async function getFollowingCount(userId: string): Promise<number> {
   return count ?? 0;
 }
 
-/** Count pending incoming follow requests for `userId`. */
+/** Count pending incoming follow requests - NOTE: No longer used with direct follow. */
 export async function getPendingRequestsCount(userId: string): Promise<number> {
   const { count } = await supabase
     .from(TABLE)
@@ -180,7 +183,7 @@ export async function getPendingRequestsCount(userId: string): Promise<number> {
 // ─── List queries ────────────────────────────────────────────────────────────
 
 /**
- * Fetch followers of `userId` (accepted) with joined profile data.
+ * Fetch followers of `userId` (all are 'accepted') with joined profile data.
  */
 export async function getFollowers(userId: string): Promise<FollowProfile[]> {
   const { data } = await supabase
@@ -194,7 +197,7 @@ export async function getFollowers(userId: string): Promise<FollowProfile[]> {
 }
 
 /**
- * Fetch users that `userId` follows (accepted) with joined profile data.
+ * Fetch users that `userId` follows (all are 'accepted') with joined profile data.
  */
 export async function getFollowing(userId: string): Promise<FollowProfile[]> {
   const { data } = await supabase
@@ -208,8 +211,8 @@ export async function getFollowing(userId: string): Promise<FollowProfile[]> {
 }
 
 /**
- * Pending incoming requests (people who want to follow `userId`).
- * Returns follow data + joined follower profile.
+ * Pending incoming requests - NOTE: No longer used with direct follow.
+ * Kept for backwards compatibility.
  */
 export async function getPendingRequests(userId: string): Promise<FollowRequest[]> {
   // Step 1: fetch pending rows
@@ -247,7 +250,8 @@ export async function getPendingRequests(userId: string): Promise<FollowRequest[
 }
 
 /**
- * Pending outgoing requests (people `userId` wants to follow).
+ * Pending outgoing requests - NOTE: No longer used with direct follow.
+ * Kept for backwards compatibility.
  */
 export async function getOutgoingRequests(userId: string): Promise<OutgoingFollowRequest[]> {
   const { data: followsData, error } = await supabase
@@ -284,7 +288,7 @@ export async function getOutgoingRequests(userId: string): Promise<OutgoingFollo
 
 /**
  * Build a map of follow statuses for all outgoing follows of `userId`.
- * Returns { [targetUserId]: 'pending' | 'accepted' }.
+ * With direct follow, this will always be 'accepted' or 'none'.
  */
 export async function getMyFollowStatusMap(userId: string): Promise<FollowStatusMap> {
   const { data } = await supabase
@@ -319,6 +323,7 @@ export async function getRecentFollowActivity(
       follower:profiles!follower_id(${PROFILE_JOIN_COLUMNS})
     `)
     .eq('following_id', userId)
+    .eq('status', 'accepted')
     .order('created_at', { ascending: false })
     .limit(limit);
 

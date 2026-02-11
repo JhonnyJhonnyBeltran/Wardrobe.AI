@@ -3,47 +3,77 @@
 /**
  * Activity Page (Notifications)
  * Displays likes, follows, and system prompts.
+ * Enhanced with interactivity: Follow/Unfollow, Links, and Create Outfit Check.
  */
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, UserPlus, X, BellOff } from 'lucide-react';
 import { useUser } from '@/store/userStore';
+import { useRealtimeStore } from '@/store/realtimeStore';
 import Image from 'next/image';
 import { supabase } from '@/lib/supabase/client';
-import { getRecentFollowActivity } from '@/lib/services/followService';
+import { getRecentFollowActivity, followUser, unfollowUser, getMyFollowStatusMap, getFollowStatus } from '@/lib/services/followService';
 import { LogoMark } from '@/components';
 import { useSwipe } from '@/hooks/useSwipe';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { useWardrobe } from '@/lib/hooks/useWardrobe';
 
 // Types
 interface Notification {
   id: string;
   type: 'like' | 'follow' | 'system';
   actor?: {
+    id: string;
+    username: string; // Add username for linking
     name: string;
     avatar: string;
   };
   content?: string;
   time: string;
+  timestamp: number; // For sorting
   image?: string; // For liked posts
+  postId?: string; // For linking to post
 }
 
 export default function NotificationsPage() {
   const { user } = useUser();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
+  const markActivityAsViewed = useRealtimeStore(state => state.markActivityAsViewed);
+  const { items: wardrobeItems } = useWardrobe(); // For Create Outfit check
+  const [followMap, setFollowMap] = useState<Record<string, string>>({}); // Track follow status
 
   useEffect(() => {
+    // Clear badge when page is viewed
+    markActivityAsViewed();
+  }, [markActivityAsViewed]);
+
+  // Fetch Follow Status Map on mount
+  useEffect(() => {
+    if (user?.id) {
+      getMyFollowStatusMap(user.id).then((map) => {
+        // Convert FollowDisplayStatus to string for simplicity in map
+        const simplifiedMap: Record<string, string> = {};
+        Object.entries(map).forEach(([key, val]) => simplifiedMap[key] = val);
+        setFollowMap(simplifiedMap);
+      });
+    }
+  }, [user?.id]);
+
+
+  useEffect(() => {
+    let isMounted = true;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
     const fetchNotifications = async () => {
       // Always start loading when effect runs
       setLoading(true);
 
       if (!user) {
-        // user not ready yet, keep loading or just return empty?
-        // if we return loading=false here, it will flash empty.
-        // But since useUser handles initial loading, user might be null briefly.
-        setLoading(false);
+        if (isMounted) setLoading(false);
         return;
       };
 
@@ -54,12 +84,9 @@ export default function NotificationsPage() {
       const lastMsgDate = localStorage.getItem('last_klozet_msg_date');
       const dismissedMsgId = localStorage.getItem('dismissed_system_msg_id');
       const nineDaysMs = 9 * 24 * 60 * 60 * 1000;
-
-      // Simple ID generation for current period (e.g. week number) or just time-based check
       const currentSystemMsgId = `sys-${Math.floor(now.getTime() / nineDaysMs)}`;
 
       let shouldShowSystemMsg = false;
-
       if (dismissedMsgId !== currentSystemMsgId) {
         if (!lastMsgDate) {
           shouldShowSystemMsg = true;
@@ -77,7 +104,8 @@ export default function NotificationsPage() {
           type: 'system',
           content: '¡Hola! Han pasado unos días. ¿Qué tal si subes tu outfit de hoy o le pides consejo a Kloe?',
           time: 'Justo ahora',
-          actor: { name: 'Klozet', avatar: '' }
+          timestamp: now.getTime(),
+          actor: { id: 'system', username: 'klozet', name: 'Klozet', avatar: '' }
         });
       }
 
@@ -91,43 +119,133 @@ export default function NotificationsPage() {
               id: `follow_${f.follower_id}::${f.following_id}`,
               type: 'follow',
               actor: {
+                id: f.follower_id,
+                username: f.follower?.username || '',
                 name: f.follower?.full_name || f.follower?.username || 'Usuario',
                 avatar: f.follower?.avatar_url || 'https://i.pravatar.cc/150?u=default'
               },
               time: new Date(f.created_at).toLocaleDateString(),
+              timestamp: new Date(f.created_at).getTime(),
             });
           });
         }
+
+        // 3. Fetch Likes (Real Data) - NEW LOGIC for Interaction
+        // Likes on MY posts (posts where user_id = me)
+        const { data: myPosts } = await supabase
+          .from('posts')
+          .select('id')
+          .eq('user_id', user.id);
+
+        if (myPosts && myPosts.length > 0) {
+          const myPostIds = myPosts.map(p => p.id);
+          const { data: likes } = await supabase
+            .from('likes')
+            .select(`
+                  user_id, post_id, created_at,
+                  user:user_id(id, full_name, username, avatar_url),
+                  post:post_id(image_url)
+               `)
+            .in('post_id', myPostIds)
+            .order('created_at', { ascending: false })
+            .limit(10);
+
+          if (likes) {
+            likes.forEach((l: any) => {
+              realNotifications.push({
+                id: `like_${l.user_id}_${l.post_id}`,
+                type: 'like',
+                actor: {
+                  id: l.user_id,
+                  username: l.user?.username || '',
+                  name: l.user?.full_name || l.user?.username || 'Usuario',
+                  avatar: l.user?.avatar_url || 'https://i.pravatar.cc/150?u=default'
+                },
+                time: new Date(l.created_at).toLocaleDateString(),
+                timestamp: new Date(l.created_at).getTime(),
+                image: l.post?.image_url,
+                postId: l.post_id
+              });
+            });
+          }
+        }
+
       } catch (err) {
-        console.error("Error fetching follows", err);
+        console.error("Error fetching activity", err);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
 
-      setNotifications(realNotifications);
+      // Sort by time (newest first)
+      if (isMounted) {
+        setNotifications(realNotifications.sort((a, b) => b.timestamp - a.timestamp));
+      }
     };
 
     fetchNotifications();
+
+    return () => {
+      isMounted = false;
+    };
   }, [user]);
 
-  const handleDismissSystem = (id: string) => {
-    // Mark as dismissed in local storage
+  const handleDismissSystem = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation(); // Prevent triggering the main click
     localStorage.setItem('dismissed_system_msg_id', id);
-    // Also update last msg date to reset the timer
     localStorage.setItem('last_klozet_msg_date', new Date().toISOString());
-
     setNotifications(prev => prev.filter(n => n.id !== id));
   };
 
-  const hasSystem = notifications.some(n => n.type === 'system');
-  const activityNotifications = notifications.filter(n => n.type !== 'system');
-  const isEmpty = notifications.length === 0;
-
   const router = useRouter();
+
+  // Handler for System Notification Click -> Create Outfit
+  const handleSystemClick = () => {
+    if (!wardrobeItems || wardrobeItems.length === 0) {
+      alert('Añade prendas a tu armario antes de crear outfits');
+      return;
+    }
+    router.push('/create');
+  };
+
+  // Handler for Follow/Unfollow - Direct follow (no pending)
+  const handleFollow = async (targetId: string) => {
+    if (!user) return;
+    const currentStatus = followMap[targetId];
+    const isFollowing = currentStatus === 'accepted';
+
+    // Optimistic Update - Follow directly
+    const newMap = { ...followMap };
+    if (isFollowing) {
+      delete newMap[targetId]; // Will unfollow
+    } else {
+      newMap[targetId] = 'accepted'; // Direct follow
+    }
+    setFollowMap(newMap);
+
+    try {
+      if (isFollowing) {
+        await unfollowUser(user.id, targetId);
+      } else {
+        await followUser(user.id, targetId);
+      }
+      // Verify status
+      const realStatus = await getFollowStatus(user.id, targetId);
+      setFollowMap(prev => ({ ...prev, [targetId]: realStatus }));
+    } catch (err) {
+      console.error("Follow failed", err);
+      // Revert
+      setFollowMap(followMap);
+    }
+  };
+
   const swipeHandlers = useSwipe({
     onSwipeRight: () => router.push('/closet'),
     onSwipeLeft: () => router.push('/profile')
   });
+
+  const hasSystem = notifications.some(n => n.type === 'system');
+  const activityNotifications = notifications.filter(n => n.type !== 'system');
+  const isEmpty = notifications.length === 0;
 
   return (
     <div
@@ -163,11 +281,13 @@ export default function NotificationsPage() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, height: 0, marginTop: 0, marginBottom: 0 }}
-                    className="relative p-4 rounded-xl bg-[var(--background-secondary)] border border-[var(--brand-pink)]/20 flex items-start gap-4 pr-10"
+                    onClick={handleSystemClick}
+                    className={`relative p-4 rounded-xl bg-[var(--background-secondary)] border border-[var(--brand-pink)]/20 flex items-start gap-4 pr-10 cursor-pointer hover:bg-[var(--background-secondary)]/80 transition-colors
+                       ${(!wardrobeItems || wardrobeItems.length === 0) ? 'opacity-90' : ''}`}
                   >
                     <button
-                      onClick={() => handleDismissSystem(notif.id)}
-                      className="absolute top-2 right-2 p-1 text-[var(--foreground-tertiary)] hover:text-[var(--foreground)] rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                      onClick={(e) => handleDismissSystem(e, notif.id)}
+                      className="absolute top-2 right-2 p-1 text-[var(--foreground-tertiary)] hover:text-[var(--foreground)] rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors z-10"
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -192,21 +312,30 @@ export default function NotificationsPage() {
               <div className="space-y-4">
                 {activityNotifications.filter(n => n.type === 'follow').map((notif) => (
                   <div key={notif.id} className="flex items-center gap-3 group">
-                    <div className="relative">
+                    <Link href={`/profile/${notif.actor!.username || notif.actor!.id}`} className="relative">
                       <div className="w-12 h-12 rounded-full overflow-hidden relative border border-[var(--border-color)]">
                         <Image src={notif.actor!.avatar} alt={notif.actor!.name} fill className="object-cover" />
                       </div>
                       <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-[var(--background)] flex items-center justify-center text-white bg-[var(--brand-pink)]">
                         <UserPlus className="w-3 h-3" />
                       </div>
-                    </div>
+                    </Link>
                     <div className="flex-1 text-sm">
-                      <span className="font-semibold text-[var(--foreground)]">{notif.actor!.name}</span>
+                      <Link href={`/profile/${notif.actor!.username || notif.actor!.id}`} className="font-semibold text-[var(--foreground)] hover:underline">
+                        {notif.actor!.name}
+                      </Link>
                       <span className="text-[var(--foreground-secondary)]"> comenzó a seguirte.</span>
                       <span className="text-[var(--foreground-tertiary)] text-xs ml-2">{notif.time}</span>
                     </div>
-                    <button className="px-4 py-1.5 rounded-full bg-[var(--foreground)] text-[var(--background)] text-xs font-semibold hover:opacity-90 transition-opacity">
-                      Seguir
+                    <button
+                      onClick={() => handleFollow(notif.actor!.id)}
+                      className={`px-4 py-1.5 rounded-full text-xs font-semibold hover:opacity-90 transition-opacity min-w-[90px]
+                          ${(followMap[notif.actor!.id] === 'accepted' || followMap[notif.actor!.id] === 'pending')
+                          ? 'bg-[var(--background-secondary)] text-[var(--foreground)] border border-[var(--border-color)]'
+                          : 'bg-[var(--foreground)] text-[var(--background)]'}`}
+                    >
+                      {followMap[notif.actor!.id] === 'accepted' ? 'Siguiendo' :
+                        followMap[notif.actor!.id] === 'pending' ? 'Solicitado' : 'Seguir'}
                     </button>
                   </div>
                 ))}
@@ -219,23 +348,25 @@ export default function NotificationsPage() {
               <div className="space-y-4">
                 {activityNotifications.filter(n => n.type === 'like').map((notif) => (
                   <div key={notif.id} className="flex items-center gap-3 group">
-                    <div className="relative">
+                    <Link href={`/profile/${notif.actor!.username || notif.actor!.id}`} className="relative">
                       <div className="w-12 h-12 rounded-full overflow-hidden relative border border-[var(--border-color)]">
                         <Image src={notif.actor!.avatar} alt={notif.actor!.name} fill className="object-cover" />
                       </div>
                       <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-[var(--background)] flex items-center justify-center text-white bg-[#FF3040]">
                         <Heart className="w-3 h-3 fill-current" />
                       </div>
-                    </div>
+                    </Link>
                     <div className="flex-1 text-sm">
-                      <span className="font-semibold text-[var(--foreground)]">{notif.actor!.name}</span>
+                      <Link href={`/profile/${notif.actor!.username || notif.actor!.id}`} className="font-semibold text-[var(--foreground)] hover:underline">
+                        {notif.actor!.name}
+                      </Link>
                       <span className="text-[var(--foreground-secondary)]"> le gustó tu post.</span>
                       <span className="text-[var(--foreground-tertiary)] text-xs ml-2">{notif.time}</span>
                     </div>
                     {notif.image && (
-                      <div className="w-10 h-10 rounded-md overflow-hidden relative border border-[var(--border-color)]">
+                      <Link href={`/feed?postId=${notif.postId}`} className="w-10 h-10 rounded-md overflow-hidden relative border border-[var(--border-color)] hover:opacity-80 transition-opacity">
                         <Image src={notif.image} alt="Post" fill className="object-cover" />
-                      </div>
+                      </Link>
                     )}
                   </div>
                 ))}

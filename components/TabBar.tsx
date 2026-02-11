@@ -57,10 +57,10 @@ export default function TabBar() {
 
   // Helper to get badge count for each tab
   const getBadgeCount = (labelKey: string): number => {
-    if (labelKey === 'search') return 0;
+    if (labelKey === 'search') return 0; // Explicitly 0 for search
     // Messages uses the new store with badge visibility logic
     if (labelKey === 'messages') return messageBadgeVisible ? messageUnreadCount : 0;
-    // Notifications logic
+    // Notifications logic (Heart Icon)
     if (labelKey === 'notifications') return notificationUnreadCount;
     return 0;
   };
@@ -133,8 +133,8 @@ export default function TabBar() {
                           exit={{ scale: 0 }}
                           className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-[#FF3040] rounded-full border-2 border-[var(--background)] z-20"
                         />
-                      ) : badgeCount > 0 && (
-                        // Other badges show count
+                      ) : badgeCount > 0 && tab.labelKey !== 'search' && (
+                        // Other badges show count (Safeguard: Never show on search)
                         <motion.div
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}

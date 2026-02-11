@@ -1,67 +1,125 @@
 -- ============================================
--- SQL DE RESET COMPLETO (Mantiene usuarios logueados)
+-- SQL DE RESET COMPLETO KLOZET
+-- Mantiene usuarios logueados, añade funcionalidades sociales
+-- Ejecutar en Supabase SQL Editor
 -- ============================================
 
--- 1. LIMPIEZA (Orden inverso a dependencias)
+-- 0. LIMPIEZA DE OBJETOS EXISTENTES (Políticas, Triggers, Funciones)
+-- ============================================
+
+-- Eliminar políticas
+DROP POLICY IF EXISTS "Users view own conversations" ON public.conversations;
+DROP POLICY IF EXISTS "Users start conversations" ON public.conversations;
+DROP POLICY IF EXISTS "Users view messages" ON public.messages;
+DROP POLICY IF EXISTS "Users send messages" ON public.messages;
+DROP POLICY IF EXISTS "Users view own saves" ON public.saves;
+DROP POLICY IF EXISTS "Users manage own saves" ON public.saves;
+DROP POLICY IF EXISTS "Public likes view" ON public.likes;
+DROP POLICY IF EXISTS "Users manage likes" ON public.likes;
+DROP POLICY IF EXISTS "Public comments view" ON public.comments;
+DROP POLICY IF EXISTS "Users manage comments" ON public.comments;
+DROP POLICY IF EXISTS "Public follows are visible" ON public.follows;
+DROP POLICY IF EXISTS "Users can create follow requests" ON public.follows;
+DROP POLICY IF EXISTS "Users can delete follows" ON public.follows;
+DROP POLICY IF EXISTS "Users can update follow status" ON public.follows;
+DROP POLICY IF EXISTS "Public posts view" ON public.posts;
+DROP POLICY IF EXISTS "Users manage own posts" ON public.posts;
+DROP POLICY IF EXISTS "Users view items of visible outfits" ON public.outfit_items;
+DROP POLICY IF EXISTS "Users manage own outfit items" ON public.outfit_items;
+DROP POLICY IF EXISTS "Users view own outfits" ON public.outfits;
+DROP POLICY IF EXISTS "Users view public outfits" ON public.outfits;
+DROP POLICY IF EXISTS "Users manage own outfits" ON public.outfits;
+DROP POLICY IF EXISTS "Users view own clothes" ON public.clothing_items;
+DROP POLICY IF EXISTS "Users manage own clothes" ON public.clothing_items;
+DROP POLICY IF EXISTS "Public profiles view" ON public.profiles;
+DROP POLICY IF EXISTS "Users update own profile" ON public.profiles;
+DROP POLICY IF EXISTS "Users insert own profile" ON public.profiles;
+DROP POLICY IF EXISTS "Users view own" ON public.users;
+DROP POLICY IF EXISTS "Users update own" ON public.users;
+DROP POLICY IF EXISTS "Users insert own" ON public.users;
+DROP POLICY IF EXISTS "Avatar Public Access" ON storage.objects;
+DROP POLICY IF EXISTS "Auth Users Upload Avatar" ON storage.objects;
+DROP POLICY IF EXISTS "Auth Users Update Own Avatar" ON storage.objects;
+DROP POLICY IF EXISTS "Auth Users Delete Own Avatar" ON storage.objects;
+DROP POLICY IF EXISTS "Posts Public Access" ON storage.objects;
+DROP POLICY IF EXISTS "Auth Users Upload Posts" ON storage.objects;
+DROP POLICY IF EXISTS "Auth Users Update Own Posts" ON storage.objects;
+DROP POLICY IF EXISTS "Clothing Public Access" ON storage.objects;
+DROP POLICY IF EXISTS "Auth Users Upload Clothing" ON storage.objects;
+DROP POLICY IF EXISTS "Users view own collections" ON public.collections;
+DROP POLICY IF EXISTS "Users manage own collections" ON public.collections;
+DROP POLICY IF EXISTS "Users view own collection items" ON public.collection_items;
+DROP POLICY IF EXISTS "Users manage own collection items" ON public.collection_items;
+
+-- Eliminar triggers
+DROP TRIGGER IF EXISTS on_message_sent_before ON public.messages;
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+DROP TRIGGER IF EXISTS set_updated_at ON public.users;
+DROP TRIGGER IF EXISTS set_updated_at ON public.profiles;
+DROP TRIGGER IF EXISTS set_updated_at ON public.clothing_items;
+DROP TRIGGER IF EXISTS set_updated_at ON public.outfits;
+DROP TRIGGER IF EXISTS set_updated_at ON public.collections;
+DROP TRIGGER IF EXISTS set_updated_at ON public.conversations;
+
+-- Eliminar funciones
+DROP FUNCTION IF EXISTS public.handle_new_message();
+DROP FUNCTION IF EXISTS public.handle_new_user();
+DROP FUNCTION IF EXISTS public.handle_updated_at();
+DROP FUNCTION IF EXISTS public.get_or_create_conversation(UUID);
+DROP FUNCTION IF EXISTS public.get_followers_with_info(UUID);
+DROP FUNCTION IF EXISTS public.get_following_with_info(UUID);
+DROP FUNCTION IF EXISTS public.ensure_conversation_exists();
+
+-- 1. LIMPIEZA DE TABLAS
+-- ============================================
 DROP TABLE IF EXISTS public.outfit_items CASCADE;
 DROP TABLE IF EXISTS public.comments CASCADE;
 DROP TABLE IF EXISTS public.likes CASCADE;
-DROP TABLE IF EXISTS public.posts CASCADE;
-DROP TABLE IF EXISTS public.collection_items CASCADE;
-DROP TABLE IF EXISTS public.collections CASCADE;
 DROP TABLE IF EXISTS public.saves CASCADE;
+DROP TABLE IF EXISTS public.collection_items CASCADE;
 DROP TABLE IF EXISTS public.messages CASCADE;
-DROP TABLE IF EXISTS public.conversations CASCADE;
+DROP TABLE IF EXISTS public.posts CASCADE;
+DROP TABLE IF EXISTS public.collections CASCADE;
 DROP TABLE IF EXISTS public.follows CASCADE;
 DROP TABLE IF EXISTS public.outfits CASCADE;
 DROP TABLE IF EXISTS public.clothing_items CASCADE;
 DROP TABLE IF EXISTS public.profiles CASCADE;
 DROP TABLE IF EXISTS public.users CASCADE;
 
--- Extensiones
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
 -- ============================================
 -- 2. RECREACIÓN DE TABLAS
 -- ============================================
 
 -- 2.1 USERS (Legacy mirror)
-CREATE TABLE public.users (
+CREATE TABLE IF NOT EXISTS public.users (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   email TEXT,
   name TEXT,
   avatar TEXT,
   username TEXT,
-  
-  -- Estilo y Preferencias
   age_range TEXT,
   gender TEXT,
-  height NUMERIC, -- Cambiado a NUMERIC para coincidir con profiles
+  height NUMERIC,
   height_range TEXT,
   preferred_styles TEXT[],
   uses_accessories BOOLEAN DEFAULT false,
   visual_style_preferences TEXT[],
   style_completed BOOLEAN DEFAULT false,
-  
-  -- Nuevos campos detectados en TS
   morphology TEXT,
   colorimetry TEXT,
-  
   subscription_tier TEXT DEFAULT 'free',
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- 2.2 PROFILES (Social Profile)
-CREATE TABLE public.profiles (
+CREATE TABLE IF NOT EXISTS public.profiles (
   id UUID REFERENCES auth.users NOT NULL PRIMARY KEY,
   username TEXT UNIQUE,
   full_name TEXT,
   bio TEXT,
   avatar_url TEXT,
   website TEXT,
-  
-  -- Info de Estilo (Espejo de users por ahora)
   gender TEXT,
   age_range TEXT,
   height NUMERIC,
@@ -70,25 +128,19 @@ CREATE TABLE public.profiles (
   uses_accessories BOOLEAN,
   visual_style_preferences TEXT[],
   style_completed BOOLEAN DEFAULT false,
-  
-  -- Nuevos campos
   morphology TEXT,
   colorimetry TEXT,
-  
   subscription_tier TEXT DEFAULT 'free',
   updated_at TIMESTAMPTZ,
-  
   CONSTRAINT username_length CHECK (char_length(username) >= 3)
 );
 
 -- 2.3 CLOTHING ITEMS
-CREATE TABLE public.clothing_items (
+CREATE TABLE IF NOT EXISTS public.clothing_items (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   user_id UUID REFERENCES auth.users NOT NULL,
   name TEXT NOT NULL,
   category TEXT NOT NULL,
-  
-  -- Detalles
   color TEXT,
   color_hex TEXT,
   image_url TEXT,
@@ -98,52 +150,44 @@ CREATE TABLE public.clothing_items (
   fabric TEXT,
   reference TEXT,
   source_url TEXT,
-  
   season TEXT[],
   tags TEXT[],
-  
   favorite BOOLEAN DEFAULT false,
   is_ai_processed BOOLEAN DEFAULT false,
-  
   created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
-  updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) -- Added updated_at
+  updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
 -- 2.4 OUTFITS
-CREATE TABLE public.outfits (
+CREATE TABLE IF NOT EXISTS public.outfits (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-  user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL, -- Changed to public.profiles to fix PostgREST embedding
+  user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
   name TEXT NOT NULL,
   description TEXT,
   image_url TEXT,
   occasion TEXT,
   season TEXT,
-  
   is_public BOOLEAN DEFAULT false,
-  favorite BOOLEAN DEFAULT false, -- Added favorite matches TS
+  favorite BOOLEAN DEFAULT false,
   ai_generated BOOLEAN DEFAULT false,
-  
   created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
-  updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now())
+  updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- 2.5 OUTFIT_ITEMS (Relación)
-CREATE TABLE public.outfit_items (
+-- 2.5 OUTFIT_ITEMS
+CREATE TABLE IF NOT EXISTS public.outfit_items (
   outfit_id UUID REFERENCES public.outfits ON DELETE CASCADE NOT NULL,
   clothing_item_id UUID REFERENCES public.clothing_items ON DELETE CASCADE NOT NULL,
-  
-  -- Posicionamiento en Canvas
   position_x NUMERIC DEFAULT 0,
   position_y NUMERIC DEFAULT 0,
   scale NUMERIC DEFAULT 1,
   rotation NUMERIC DEFAULT 0,
   layer_order INTEGER DEFAULT 0,
-  
   PRIMARY KEY (outfit_id, clothing_item_id)
 );
 
--- 2.6 POSTS (Social Feed)
-CREATE TABLE public.posts (
+-- 2.6 POSTS
+CREATE TABLE IF NOT EXISTS public.posts (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   user_id UUID REFERENCES auth.users NOT NULL,
   outfit_id UUID REFERENCES public.outfits,
@@ -152,8 +196,8 @@ CREATE TABLE public.posts (
   created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- 2.7 FOLLOWS
-CREATE TABLE public.follows (
+-- 2.7 FOLLOWS (Follow directo sin pending)
+CREATE TABLE IF NOT EXISTS public.follows (
   follower_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
   following_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
   status TEXT DEFAULT 'accepted',
@@ -161,13 +205,15 @@ CREATE TABLE public.follows (
   PRIMARY KEY (follower_id, following_id)
 );
 
+CREATE INDEX IF NOT EXISTS idx_follows_follower ON public.follows(follower_id);
+CREATE INDEX IF NOT EXISTS idx_follows_following ON public.follows(following_id);
+
 -- 2.8 LIKES
-CREATE TABLE public.likes (
+CREATE TABLE IF NOT EXISTS public.likes (
   user_id UUID REFERENCES auth.users NOT NULL,
   post_id UUID REFERENCES public.posts ON DELETE CASCADE,
   outfit_id UUID REFERENCES public.outfits ON DELETE CASCADE,
   created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
-  -- Constraint: Like a post O a outfit
   CONSTRAINT like_target_check CHECK (
     (post_id IS NOT NULL AND outfit_id IS NULL) OR 
     (post_id IS NULL AND outfit_id IS NOT NULL)
@@ -176,7 +222,7 @@ CREATE TABLE public.likes (
 );
 
 -- 2.9 COMMENTS
-CREATE TABLE public.comments (
+CREATE TABLE IF NOT EXISTS public.comments (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   user_id UUID REFERENCES auth.users NOT NULL,
   post_id UUID REFERENCES public.posts ON DELETE CASCADE,
@@ -185,7 +231,7 @@ CREATE TABLE public.comments (
 );
 
 -- 2.10 CONVERSATIONS
-CREATE TABLE public.conversations (
+CREATE TABLE IF NOT EXISTS public.conversations (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   participant1_id UUID REFERENCES auth.users NOT NULL,
   participant2_id UUID REFERENCES auth.users NOT NULL,
@@ -194,36 +240,31 @@ CREATE TABLE public.conversations (
   last_message_sender_id UUID REFERENCES auth.users,
   created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
   updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
-  -- Garantizar unicidad de par de participantes (ordenado para evitar duplicados A-B y B-A)
   CONSTRAINT unique_participants UNIQUE (participant1_id, participant2_id)
 );
 
--- Indice para búsquedas rápidas de conversaciones de un usuario
-CREATE INDEX idx_conversations_p1 ON public.conversations(participant1_id);
-CREATE INDEX idx_conversations_p2 ON public.conversations(participant2_id);
+CREATE INDEX IF NOT EXISTS idx_conversations_p1 ON public.conversations(participant1_id);
+CREATE INDEX IF NOT EXISTS idx_conversations_p2 ON public.conversations(participant2_id);
 
 -- 2.11 MESSAGES
-CREATE TABLE public.messages (
+CREATE TABLE IF NOT EXISTS public.messages (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   conversation_id UUID REFERENCES public.conversations ON DELETE CASCADE NOT NULL,
   sender_id UUID REFERENCES auth.users NOT NULL,
+  receiver_id UUID REFERENCES auth.users,
   content TEXT NOT NULL,
   is_read BOOLEAN DEFAULT false,
-  receiver_id UUID REFERENCES auth.users, -- Added for easier unread queries
   created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- Indice para listar mensajes de una conver
-CREATE INDEX idx_messages_conversation ON public.messages(conversation_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_messages_conversation ON public.messages(conversation_id, created_at DESC);
 
--- 2.12 SAVES (Guardados)
-CREATE TABLE public.saves (
+-- 2.12 SAVES
+CREATE TABLE IF NOT EXISTS public.saves (
   user_id UUID REFERENCES auth.users NOT NULL,
   post_id UUID REFERENCES public.posts ON DELETE CASCADE,
   outfit_id UUID REFERENCES public.outfits ON DELETE CASCADE,
   created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
-  
-  -- Constraint: Save a post OR a outfit
   CONSTRAINT save_target_check CHECK (
     (post_id IS NOT NULL AND outfit_id IS NULL) OR 
     (post_id IS NULL AND outfit_id IS NOT NULL)
@@ -231,31 +272,27 @@ CREATE TABLE public.saves (
   UNIQUE (user_id, post_id, outfit_id)
 );
 
--- 2.13 COLLECTIONS (Carpetas de Guardados)
-CREATE TABLE public.collections (
+-- 2.13 COLLECTIONS
+CREATE TABLE IF NOT EXISTS public.collections (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   user_id UUID REFERENCES auth.users NOT NULL,
   name TEXT NOT NULL,
-  cover_image_url TEXT, -- Optional custom cover, otherwise take from first item
+  cover_image_url TEXT,
   is_private BOOLEAN DEFAULT true,
   created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
   updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- 2.14 COLLECTION ITEMS (Relación Many-to-Many entre Collections y Posts/Outfits)
-CREATE TABLE public.collection_items (
+-- 2.14 COLLECTION ITEMS
+CREATE TABLE IF NOT EXISTS public.collection_items (
   collection_id UUID REFERENCES public.collections ON DELETE CASCADE NOT NULL,
   post_id UUID REFERENCES public.posts ON DELETE CASCADE,
   outfit_id UUID REFERENCES public.outfits ON DELETE CASCADE,
   created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
-  
-  -- Constraint: Item de collection es Post O Outfit
   CONSTRAINT collection_item_check CHECK (
     (post_id IS NOT NULL AND outfit_id IS NULL) OR 
     (post_id IS NULL AND outfit_id IS NOT NULL)
   ),
-  
-  -- Evitar duplicados en la misma colección
   UNIQUE (collection_id, post_id, outfit_id)
 );
 
@@ -263,7 +300,6 @@ CREATE TABLE public.collection_items (
 -- 3. SEGURIDAD (RLS)
 -- ============================================
 
--- Habilitar RLS en todas
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.clothing_items ENABLE ROW LEVEL SECURITY;
@@ -278,8 +314,6 @@ ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.saves ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.collections ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.collection_items ENABLE ROW LEVEL SECURITY;
-
--- Políticas Genéricas (Simplificadas para robustez)
 
 -- USERS
 CREATE POLICY "Users view own" ON public.users FOR SELECT USING (auth.uid() = id);
@@ -329,16 +363,14 @@ CREATE POLICY "Public comments view" ON public.comments FOR SELECT USING (true);
 CREATE POLICY "Users manage comments" ON public.comments FOR ALL USING (auth.uid() = user_id);
 
 -- CONVERSATIONS
--- Users can see conversations where they are participant 1 OR 2
 CREATE POLICY "Users view own conversations" ON public.conversations 
   FOR SELECT USING (auth.uid() = participant1_id OR auth.uid() = participant2_id);
-
--- Users can insert conversation if they are one of the participants
 CREATE POLICY "Users start conversations" ON public.conversations 
   FOR INSERT WITH CHECK (auth.uid() = participant1_id OR auth.uid() = participant2_id);
+CREATE POLICY "Users delete own conversations" ON public.conversations 
+  FOR DELETE USING (auth.uid() = participant1_id OR auth.uid() = participant2_id);
 
 -- MESSAGES
--- Users can see messages of conversations they belong to
 CREATE POLICY "Users view messages" ON public.messages 
   FOR SELECT USING (
     EXISTS (
@@ -347,14 +379,20 @@ CREATE POLICY "Users view messages" ON public.messages
       AND (participant1_id = auth.uid() OR participant2_id = auth.uid())
     )
   );
-
--- Users can send messages to conversations they belong to
 CREATE POLICY "Users send messages" ON public.messages 
   FOR INSERT WITH CHECK (
     auth.uid() = sender_id AND
     EXISTS (
       SELECT 1 FROM public.conversations 
       WHERE id = conversation_id 
+      AND (participant1_id = auth.uid() OR participant2_id = auth.uid())
+    )
+  );
+CREATE POLICY "Users delete messages" ON public.messages 
+  FOR DELETE USING (
+    EXISTS (
+      SELECT 1 FROM public.conversations 
+      WHERE id = messages.conversation_id 
       AND (participant1_id = auth.uid() OR participant2_id = auth.uid())
     )
   );
@@ -371,13 +409,50 @@ CREATE POLICY "Users manage own collection items" ON public.collection_items FOR
   EXISTS (SELECT 1 FROM public.collections WHERE id = collection_items.collection_id AND user_id = auth.uid())
 );
 
--- Function to handle last message update on conversation
+-- ============================================
+-- 4. FUNCIONES Y TRIGGERS
+-- ============================================
+
+-- Function: Ensure Conversation Exists (creates if not exists)
+CREATE OR REPLACE FUNCTION public.ensure_conversation_exists(sender_uuid UUID, receiver_uuid UUID)
+RETURNS UUID AS $$
+DECLARE
+  conv_id UUID;
+  p1 UUID;
+  p2 UUID;
+BEGIN
+  -- Ordenar participantes para evitar duplicados
+  IF sender_uuid < receiver_uuid THEN
+    p1 := sender_uuid;
+    p2 := receiver_uuid;
+  ELSE
+    p1 := receiver_uuid;
+    p2 := sender_uuid;
+  END IF;
+
+  -- Buscar conversación existente
+  SELECT id INTO conv_id FROM public.conversations
+  WHERE participant1_id = p1 AND participant2_id = p2;
+
+  -- Si no existe, crear nueva
+  IF conv_id IS NULL THEN
+    INSERT INTO public.conversations (participant1_id, participant2_id)
+    VALUES (p1, p2)
+    RETURNING id INTO conv_id;
+  END IF;
+
+  RETURN conv_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Function: Handle New Message (creates conversation if needed)
 CREATE OR REPLACE FUNCTION public.handle_new_message()
 RETURNS TRIGGER AS $$
 DECLARE
   recipient UUID;
+  conv_id UUID;
 BEGIN
-  -- 1. Determine Receiver if not set
+  -- Determinar receptor
   IF NEW.receiver_id IS NULL THEN
     SELECT 
       CASE 
@@ -386,11 +461,18 @@ BEGIN
       END INTO recipient
     FROM public.conversations
     WHERE id = NEW.conversation_id;
-    
     NEW.receiver_id := recipient;
+  ELSE
+    recipient := NEW.receiver_id;
   END IF;
 
-  -- 2. Update Conversation Timestamp
+  -- Si no hay conversation_id, crear o obtener conversación
+  IF NEW.conversation_id IS NULL THEN
+    conv_id := public.ensure_conversation_exists(NEW.sender_id, recipient);
+    NEW.conversation_id := conv_id;
+  END IF;
+
+  -- Actualizar conversación con último mensaje
   UPDATE public.conversations
   SET 
     last_message_text = NEW.content,
@@ -403,23 +485,11 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Trigger must be BEFORE INSERT to set receiver_id
 CREATE TRIGGER on_message_sent_before
   BEFORE INSERT ON public.messages
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_message();
 
--- Drop old trigger if exists (it was AFTER)
-DROP TRIGGER IF EXISTS on_message_sent ON public.messages;
-
-
-
-
-
--- ============================================
--- 4. TRIGGERS Y FUNCIONES
--- ============================================
-
--- Function: Handle New User (Sync Auth -> Public)
+-- Function: Handle New User
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -445,18 +515,197 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Re-attach trigger
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
--- Sincronización Manual (Para usuarios existentes durante el reset)
--- Esto inserta en profiles/users cualquier auth.user que ya exista pero no tenga perfil
+-- Function: Updated_at auto-update
+CREATE OR REPLACE FUNCTION public.handle_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER set_updated_at
+  BEFORE UPDATE ON public.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
+
+CREATE TRIGGER set_updated_at
+  BEFORE UPDATE ON public.profiles
+  FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
+
+CREATE TRIGGER set_updated_at
+  BEFORE UPDATE ON public.clothing_items
+  FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
+
+CREATE TRIGGER set_updated_at
+  BEFORE UPDATE ON public.outfits
+  FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
+
+CREATE TRIGGER set_updated_at
+  BEFORE UPDATE ON public.collections
+  FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
+
+CREATE TRIGGER set_updated_at
+  BEFORE UPDATE ON public.conversations
+  FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
+
+-- ============================================
+-- 5. FUNCIONES RPC (Para la app)
+-- ============================================
+
+-- Get or Create Conversation
+CREATE OR REPLACE FUNCTION public.get_or_create_conversation(target_user_id UUID)
+RETURNS TABLE (conversation_id UUID, created BOOLEAN) AS $$
+DECLARE
+  conv_id UUID;
+  my_id UUID := auth.uid();
+  p1 UUID;
+  p2 UUID;
+BEGIN
+  IF my_id < target_user_id THEN
+    p1 := my_id;
+    p2 := target_user_id;
+  ELSE
+    p1 := target_user_id;
+    p2 := my_id;
+  END IF;
+
+  SELECT id INTO conv_id FROM public.conversations
+  WHERE participant1_id = p1 AND participant2_id = p2;
+
+  IF conv_id IS NULL THEN
+    INSERT INTO public.conversations (participant1_id, participant2_id)
+    VALUES (p1, p2)
+    RETURNING id INTO conv_id;
+    RETURN QUERY SELECT conv_id, true;
+  ELSE
+    RETURN QUERY SELECT conv_id, false;
+  END IF;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Get Followers with Profile Info
+CREATE OR REPLACE FUNCTION public.get_followers_with_info(profile_id UUID)
+RETURNS TABLE (
+  user_id UUID,
+  username TEXT,
+  full_name TEXT,
+  avatar_url TEXT,
+  bio TEXT,
+  followed_at TIMESTAMPTZ,
+  is_following_back BOOLEAN
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    p.id,
+    p.username,
+    p.full_name,
+    p.avatar_url,
+    p.bio,
+    f.created_at,
+    EXISTS (
+      SELECT 1 FROM public.follows f2 
+      WHERE f2.follower_id = profile_id 
+      AND f2.following_id = p.id
+      AND f2.status = 'accepted'
+    ) AS is_following_back
+  FROM public.follows f
+  JOIN public.profiles p ON f.follower_id = p.id
+  WHERE f.following_id = profile_id
+  AND f.status = 'accepted'
+  ORDER BY f.created_at DESC;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Get Following with Profile Info
+CREATE OR REPLACE FUNCTION public.get_following_with_info(profile_id UUID)
+RETURNS TABLE (
+  user_id UUID,
+  username TEXT,
+  full_name TEXT,
+  avatar_url TEXT,
+  bio TEXT,
+  followed_at TIMESTAMPTZ,
+  is_followed_by_them BOOLEAN
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    p.id,
+    p.username,
+    p.full_name,
+    p.avatar_url,
+    p.bio,
+    f.created_at,
+    EXISTS (
+      SELECT 1 FROM public.follows f2 
+      WHERE f2.follower_id = p.id 
+      AND f2.following_id = profile_id
+      AND f2.status = 'accepted'
+    ) AS is_followed_by_them
+  FROM public.follows f
+  JOIN public.profiles p ON f.following_id = p.id
+  WHERE f.follower_id = profile_id
+  AND f.status = 'accepted'
+  ORDER BY f.created_at DESC;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- ============================================
+-- 6. STORAGE BUCKETS
+-- ============================================
+
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('avatars', 'avatars', true)
+ON CONFLICT (id) DO NOTHING;
+
+CREATE POLICY "Avatar Public Access" ON storage.objects FOR SELECT
+USING ( bucket_id = 'avatars' );
+
+CREATE POLICY "Auth Users Upload Avatar" ON storage.objects FOR INSERT
+WITH CHECK ( bucket_id = 'avatars' AND auth.role() = 'authenticated' );
+
+CREATE POLICY "Auth Users Update Own Avatar" ON storage.objects FOR UPDATE
+USING ( bucket_id = 'avatars' AND auth.role() = 'authenticated' );
+
+CREATE POLICY "Auth Users Delete Own Avatar" ON storage.objects FOR DELETE
+USING ( bucket_id = 'avatars' AND auth.role() = 'authenticated' );
+
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('posts', 'posts', true)
+ON CONFLICT (id) DO NOTHING;
+
+CREATE POLICY "Posts Public Access" ON storage.objects FOR SELECT
+USING ( bucket_id = 'posts' );
+
+CREATE POLICY "Auth Users Upload Posts" ON storage.objects FOR INSERT
+WITH CHECK ( bucket_id = 'posts' AND auth.role() = 'authenticated' );
+
+CREATE POLICY "Auth Users Update Own Posts" ON storage.objects FOR UPDATE
+USING ( bucket_id = 'posts' AND auth.role() = 'authenticated' );
+
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('clothing', 'clothing', true)
+ON CONFLICT (id) DO NOTHING;
+
+CREATE POLICY "Clothing Public Access" ON storage.objects FOR SELECT
+USING ( bucket_id = 'clothing' );
+
+CREATE POLICY "Auth Users Upload Clothing" ON storage.objects FOR INSERT
+WITH CHECK ( bucket_id = 'clothing' AND auth.role() = 'authenticated' );
+
+-- ============================================
+-- 7. SINCRONIZACIÓN DE USUARIOS EXISTENTES
+-- ============================================
+
 INSERT INTO public.profiles (id, full_name, username, avatar_url)
 SELECT 
   id, 
-  COALESCE(raw_user_meta_data->>'name', 'User'), 
+  COALESCE(raw_user_meta_data->>'name', raw_user_meta_data->>'full_name', 'User'), 
   COALESCE(raw_user_meta_data->>'username', 'user_' || substr(id::text, 1, 8)),
   raw_user_meta_data->>'avatar_url'
 FROM auth.users
@@ -466,7 +715,7 @@ INSERT INTO public.users (id, email, name, avatar)
 SELECT 
   id, 
   email, 
-  COALESCE(raw_user_meta_data->>'name', 'User'), 
+  COALESCE(raw_user_meta_data->>'name', raw_user_meta_data->>'full_name', 'User'), 
   raw_user_meta_data->>'avatar_url'
 FROM auth.users
 ON CONFLICT (id) DO NOTHING;

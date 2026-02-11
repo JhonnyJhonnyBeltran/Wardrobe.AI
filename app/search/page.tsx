@@ -106,12 +106,17 @@ export default function SearchPage() {
 
   // Handle Search & Initial Load
   useEffect(() => {
+    let isMounted = true;
+    const controller = new AbortController();
+    const fetchTimeout = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
     const fetchContent = async () => {
       // 1. If empty query, fetch Explore Feed
       if (searchQuery.length < 2) {
         setIsSearching(searchQuery.length > 0);
-        setLoading(true); // Add loading state if not present, or use setIsSearching? setIsSearching implies search... let's just use isSearching for simplicity or add a separate loader. 
-        // Actually, existing code uses setIsSearching for loading too.
+        setLoading(true);
+
+        if (!isMounted) return;
 
         try {
           let query = supabase
@@ -122,36 +127,31 @@ export default function SearchPage() {
                 `)
             .eq('visibility', 'public')
             .order('created_at', { ascending: false })
-            .limit(21);
+            .limit(21)
+            .abortSignal(controller.signal);
 
           // PERSONALIZATION LOGIC ("For You")
-          // If user has completed style quiz, try to filter by their preferences
           if (user?.styleCompleted && user.preferredStyles && user.preferredStyles.length > 0) {
-            // Note: This is a simple client-side-ish filter or simple text match. 
-            // Ideally this would be a complex backend query or vector search.
-            // For now, we'll try to match caption or tags if we had them. 
-            // Since we only have 'caption' in posts, we might not get great results filtering solely by SQL 'like'.
-            // BETTER APPROACH FOR MVP: 
-            // 1. Fetch recent posts.
-            // 2. Client-side boost/filter? Or just fetch typical "Trending" for now but vaguely filtered?
-
-            // Let's implement a "Gender" filter at least if possible, assuming posts might be tagged? 
-            // We don't have tags on posts yet in the types above. 
-
-            // Fallback to "Trending" (Recent) for now but with a console log for "Personalized"
             console.log('Fetching personalized feed for:', user.preferredStyles);
           }
 
           const { data: posts } = await query;
+          clearTimeout(fetchTimeout);
 
-          setPostResults(posts as Post[] || []);
+          if (!isMounted) return;
+
+          setPostResults((posts as Post[]) || []);
           setUserResults([]);
           setItemResults([]);
-        } catch (err) {
-          console.error(err);
+        } catch (err: any) {
+          if (err.name !== 'AbortError') {
+            console.error(err);
+          }
         } finally {
-          setIsSearching(false);
-          setLoading(false);
+          if (isMounted) {
+            setIsSearching(false);
+            setLoading(false);
+          }
         }
         return;
       }
@@ -232,26 +232,43 @@ export default function SearchPage() {
       } catch (error) {
         console.error('Search error:', error);
       } finally {
-        setIsSearching(false);
+        if (isMounted) setIsSearching(false);
       }
     };
 
-    const timeoutId = setTimeout(fetchContent, 400); // 400ms debounce
-    return () => clearTimeout(timeoutId);
-  }, [searchQuery]);
+    const debounceTimer = setTimeout(fetchContent, 400); // 400ms debounce
+    
+    return () => {
+      isMounted = false;
+      clearTimeout(debounceTimer);
+    };
+  }, [searchQuery, user]);
 
   const handleFollow = async (id: string) => {
-    // Optimistic Update
-    setMyFollows(prev => ({ ...prev, [id]: 'pending' }));
+    const currentStatus = myFollows[id];
+    const isFollowing = currentStatus === 'accepted';
 
-    const success = await followUser(id);
-    if (!success) {
-      // Revert if failed
+    if (isFollowing) {
+      // Unfollow
+      await unfollowUser(id);
       setMyFollows(prev => {
         const next = { ...prev };
         delete next[id];
         return next;
       });
+    } else {
+      // Direct follow (no pending)
+      setMyFollows(prev => ({ ...prev, [id]: 'accepted' }));
+
+      const success = await followUser(id);
+      if (!success) {
+        // Revert if failed
+        setMyFollows(prev => {
+          const next = { ...prev };
+          delete next[id];
+          return next;
+        });
+      }
     }
   };
 
@@ -336,10 +353,6 @@ export default function SearchPage() {
                 exit={{ opacity: 0 }}
                 className="space-y-6"
               >
-                <h2 className="text-xl font-bold text-[var(--foreground)] px-2">
-                  {user?.styleCompleted ? 'Para ti' : 'Trending'}
-                </h2>
-
                 {/* Masonry Grid for Explore Feed */}
                 <div className="columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4 px-1">
                   {postResults.map((post) => (
@@ -503,10 +516,13 @@ function SectionHeader({ title, icon, onClick }: { title: string, icon?: React.R
   );
 }
 
-// Extracted User Card for readability (simplified version of previous inline code)
+// Extracted User Card for readability
 function UserResultCard({ profile, status, onFollow, onCancel, router }: any) {
-  const isPending = status === 'pending';
   const isFollowing = status === 'accepted';
+
+  const handleMessage = () => {
+    router.push(`/messages/${profile.id}`);
+  };
 
   return (
     <div className="p-3 rounded-2xl bg-[var(--card-bg)] flex items-center justify-between border border-[var(--border-color)] shadow-sm">
@@ -533,7 +549,15 @@ function UserResultCard({ profile, status, onFollow, onCancel, router }: any) {
       </Link>
 
       <div className="flex items-center gap-2">
-        {/* Logic handles button render... simplified here for brevity */}
+        {/* Message Button - Always visible */}
+        <button
+          onClick={handleMessage}
+          className="p-2 rounded-full bg-[var(--background-secondary)] text-[var(--foreground)] hover:bg-[var(--background-tertiary)] transition-colors"
+          title="Enviar mensaje"
+        >
+          <MessageCircle className="w-4 h-4" />
+        </button>
+        {/* Follow Button */}
         {isFollowing ? (
           <button className="px-3 py-1.5 rounded-full bg-[var(--background-secondary)] text-[var(--foreground)] text-xs font-medium border border-transparent">Siguiendo</button>
         ) : (

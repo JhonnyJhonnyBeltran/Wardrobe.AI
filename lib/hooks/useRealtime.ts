@@ -20,7 +20,7 @@ export function useRealtime(options: UseRealtimeOptions = {}) {
   const { onNotification, autoConnect = true } = options;
   const { user } = useUser();
   const setConnected = useRealtimeStore(state => state.setConnected);
-  const addNotification = useRealtimeStore(state => state.addNotification);
+  const checkActivity = useRealtimeStore(state => state.checkActivity);
   const setOnlineUsers = useRealtimeStore(state => state.setOnlineUsers);
   const reset = useRealtimeStore(state => state.reset);
   const isConnected = useRealtimeStore(state => state.isConnected);
@@ -39,7 +39,7 @@ export function useRealtime(options: UseRealtimeOptions = {}) {
     const initRealtime = async () => {
       try {
         console.log('[useRealtime] Initializing...');
-        
+
         await realtimeManager.initialize(user.id, {
           username: user.name,
           avatar_url: user.avatar,
@@ -48,10 +48,19 @@ export function useRealtime(options: UseRealtimeOptions = {}) {
         setConnected(true);
         isInitializedRef.current = true;
 
+        // Initial fetch of unread activity count (Follows + System)
+        if (checkActivity) {
+          checkActivity(user.id).catch(console.error);
+        }
+
         // Subscribe to notifications
         const unsubNotifications = realtimeManager.onNotification((notification) => {
-          addNotification(notification);
+          // Store update removed as we moved to virtual "checkActivity"
           onNotificationRef.current?.(notification);
+          // Optionally trigger a re-check if it's a relevant type
+          if ((notification as any).type === 'follow') {
+            if (checkActivity) checkActivity(user.id).catch(console.error);
+          }
         });
 
         // Subscribe to online users
@@ -75,7 +84,7 @@ export function useRealtime(options: UseRealtimeOptions = {}) {
     return () => {
       cleanupPromise.then(cleanup => cleanup?.());
     };
-  }, [user?.id, user?.name, user?.avatar, autoConnect, setConnected, addNotification, setOnlineUsers]);
+  }, [user?.id, user?.name, user?.avatar, autoConnect, setConnected, setOnlineUsers, checkActivity]);
 
   // Cleanup on user logout
   useEffect(() => {
@@ -90,7 +99,7 @@ export function useRealtime(options: UseRealtimeOptions = {}) {
   // Manual connect function
   const connect = useCallback(async () => {
     if (!user?.id) return;
-    
+
     await realtimeManager.initialize(user.id, {
       username: user.name,
       avatar_url: user.avatar,
