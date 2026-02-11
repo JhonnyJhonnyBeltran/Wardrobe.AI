@@ -11,6 +11,7 @@ import { Heart, UserPlus, X, BellOff } from 'lucide-react';
 import { useUser } from '@/store/userStore';
 import Image from 'next/image';
 import { supabase } from '@/lib/supabase/client';
+import { getRecentFollowActivity } from '@/lib/services/followService';
 import { LogoMark } from '@/components';
 import { useSwipe } from '@/hooks/useSwipe';
 import { useRouter } from 'next/navigation';
@@ -82,25 +83,12 @@ export default function NotificationsPage() {
 
       // 2. Fetch Follows (Real Data)
       try {
-        const { data: follows, error } = await supabase
-          .from('follows')
-          .select(`
-                    id,
-                    created_at,
-                    follower:profiles!follower_id (
-                        username,
-                        avatar_url,
-                        full_name
-                    )
-                `)
-          .eq('following_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(10);
+        const follows = await getRecentFollowActivity(user.id, 10);
 
-        if (follows && !error) {
+        if (follows.length > 0) {
           follows.forEach((f: any) => {
             realNotifications.push({
-              id: f.id,
+              id: `follow_${f.follower_id}::${f.following_id}`,
               type: 'follow',
               actor: {
                 name: f.follower?.full_name || f.follower?.username || 'Usuario',

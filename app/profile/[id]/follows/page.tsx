@@ -10,6 +10,7 @@ import { ArrowLeft, UserMinus, UserPlus, UserCheck, Clock } from 'lucide-react';
 import { useUser } from '@/store/userStore';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
+import * as followService from '@/lib/services/followService';
 import Link from 'next/link';
 
 interface FollowUser {
@@ -63,45 +64,17 @@ export default function FollowListPage() {
       }
 
       // Fetch followers
-      const { data: followersData } = await supabase
-        .from('follows')
-        .select(`
-          follower:profiles!follower_id(id, username, full_name, avatar_url)
-        `)
-        .eq('following_id', profileId)
-        .eq('status', 'accepted');
-
-      if (followersData) {
-        setFollowers(followersData.map((f: any) => f.follower).filter(Boolean));
-      }
+      const fetchedFollowers = await followService.getFollowers(profileId);
+      setFollowers(fetchedFollowers as FollowUser[]);
 
       // Fetch following
-      const { data: followingData } = await supabase
-        .from('follows')
-        .select(`
-          following:profiles!following_id(id, username, full_name, avatar_url)
-        `)
-        .eq('follower_id', profileId)
-        .eq('status', 'accepted');
-
-      if (followingData) {
-        setFollowing(followingData.map((f: any) => f.following).filter(Boolean));
-      }
+      const fetchedFollowing = await followService.getFollowing(profileId);
+      setFollowing(fetchedFollowing as FollowUser[]);
 
       // Get my follow statuses
       if (currentUser) {
-        const { data: myFollows } = await supabase
-          .from('follows')
-          .select('following_id, status')
-          .eq('follower_id', currentUser.id);
-
-        if (myFollows) {
-          const statusMap: Record<string, 'none' | 'pending' | 'accepted'> = {};
-          (myFollows as any[]).forEach((f: any) => {
-            statusMap[f.following_id] = f.status as 'pending' | 'accepted';
-          });
-          setMyFollowStatus(statusMap);
-        }
+        const statusMap = await followService.getMyFollowStatusMap(currentUser.id);
+        setMyFollowStatus(statusMap as Record<string, 'none' | 'pending' | 'accepted'>);
       }
     } catch (error) {
       console.error('Error fetching follow data:', error);
@@ -115,15 +88,9 @@ export default function FollowListPage() {
 
     setMyFollowStatus(prev => ({ ...prev, [userId]: 'pending' }));
 
-    const { error } = await supabase
-      .from('follows')
-      .insert({
-        follower_id: currentUser.id,
-        following_id: userId,
-        status: 'pending'
-      } as any);
+    const result = await followService.followUser(currentUser.id, userId);
 
-    if (error) {
+    if (!result.success) {
       setMyFollowStatus(prev => {
         const next = { ...prev };
         delete next[userId];
@@ -147,13 +114,9 @@ export default function FollowListPage() {
       setFollowing(prev => prev.filter(u => u.id !== userId));
     }
 
-    const { error } = await supabase
-      .from('follows')
-      .delete()
-      .eq('follower_id', currentUser.id)
-      .eq('following_id', userId);
+    const result = await followService.unfollowUser(currentUser.id, userId);
 
-    if (error) {
+    if (!result.success) {
       setMyFollowStatus(prev => ({ ...prev, [userId]: previousStatus }));
       if (isOwnProfile && activeTab === 'following') {
         fetchData(); // Refetch to restore
@@ -167,13 +130,9 @@ export default function FollowListPage() {
     // Remove from UI optimistically
     setFollowers(prev => prev.filter(u => u.id !== followerId));
 
-    const { error } = await supabase
-      .from('follows')
-      .delete()
-      .eq('follower_id', followerId)
-      .eq('following_id', currentUser.id);
+    const result = await followService.unfollowUser(followerId, currentUser.id);
 
-    if (error) {
+    if (!result.success) {
       fetchData(); // Refetch to restore
     }
   };

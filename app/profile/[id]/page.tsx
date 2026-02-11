@@ -8,6 +8,7 @@ import { motion } from 'framer-motion';
 import { useUser } from '@/store/userStore';
 import { useTranslation } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase/client';
+import * as followService from '@/lib/services/followService';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -95,22 +96,13 @@ export default function PublicProfilePage() {
         .eq('user_id', profileId)
         .eq('is_public', true);
 
-      const { count: followersCount } = await supabase
-        .from('follows')
-        .select('*', { count: 'exact', head: true })
-        .eq('following_id', profileId)
-        .eq('status', 'accepted');
-
-      const { count: followingCount } = await supabase
-        .from('follows')
-        .select('*', { count: 'exact', head: true })
-        .eq('follower_id', profileId)
-        .eq('status', 'accepted');
+      const followersCount = await followService.getFollowersCount(profileId);
+      const followingCount = await followService.getFollowingCount(profileId);
 
       setProfileStats({
         outfits: outfitCount || 0,
-        followers: followersCount || 0,
-        following: followingCount || 0
+        followers: followersCount,
+        following: followingCount
       });
 
       // 3. Fetch posts
@@ -134,17 +126,9 @@ export default function PublicProfilePage() {
 
       // 5. Check follow status
       if (currentUser) {
-        const { data: followData } = await supabase
-          .from('follows')
-          .select('status')
-          .eq('follower_id', currentUser.id)
-          .eq('following_id', profileId)
-          .single();
-
-        if (followData) {
-          setFollowStatus(followData.status as 'pending' | 'accepted');
-          setIsFollowedByMe(followData.status === 'accepted');
-        }
+        const status = await followService.getFollowStatus(currentUser.id, profileId);
+        setFollowStatus(status);
+        setIsFollowedByMe(status === 'accepted');
       }
 
     } catch (error) {
@@ -160,17 +144,11 @@ export default function PublicProfilePage() {
     // Optimistic update
     setFollowStatus('pending');
 
-    const { error } = await supabase
-      .from('follows')
-      .insert({
-        follower_id: currentUser.id,
-        following_id: profileId,
-        status: 'pending'
-      });
+    const result = await followService.followUser(currentUser.id, profileId);
 
-    if (error) {
+    if (!result.success) {
       setFollowStatus('none');
-      console.error('Error following:', error);
+      console.error('Error following:', result.error);
     }
   };
 
@@ -182,16 +160,12 @@ export default function PublicProfilePage() {
     setFollowStatus('none');
     setIsFollowedByMe(false);
 
-    const { error } = await supabase
-      .from('follows')
-      .delete()
-      .eq('follower_id', currentUser.id)
-      .eq('following_id', profileId);
+    const result = await followService.unfollowUser(currentUser.id, profileId);
 
-    if (error) {
+    if (!result.success) {
       setFollowStatus(previousStatus);
       setIsFollowedByMe(previousStatus === 'accepted');
-      console.error('Error unfollowing:', error);
+      console.error('Error unfollowing:', result.error);
     } else {
       // Update follower count
       setProfileStats(prev => ({

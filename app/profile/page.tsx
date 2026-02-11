@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useUser } from '@/store/userStore';
 import { useTranslation } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase/client';
+import * as followService from '@/lib/services/followService';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
@@ -78,22 +79,14 @@ export default function ProfilePage() {
           .select('*', { count: 'exact', head: true })
           .eq('user_id', user.id);
 
-        const { count: followersCount } = await supabase
-          .from('follows')
-          .select('*', { count: 'exact', head: true })
-          .eq('following_id', user.id)
-          .eq('status', 'accepted');
+        const followersCount = await followService.getFollowersCount(user.id);
 
-        const { count: followingCount } = await supabase
-          .from('follows')
-          .select('*', { count: 'exact', head: true })
-          .eq('follower_id', user.id)
-          .eq('status', 'accepted');
+        const followingCount = await followService.getFollowingCount(user.id);
 
         setProfileStats({
           outfits: outfitCount || 0,
-          followers: followersCount || 0,
-          following: followingCount || 0
+          followers: followersCount,
+          following: followingCount
         });
 
         // 2. Fetch Posts (My Posts)

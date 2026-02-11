@@ -8,6 +8,7 @@ import { useSocial, Profile } from '@/lib/hooks/useSocial';
 import { Card, Button } from '@/components';
 import { useUser } from '@/store/userStore';
 import { supabase } from '@/lib/supabase/client';
+import * as followService from '@/lib/services/followService';
 import Link from 'next/link';
 import { useSwipeNavigation } from '@/hooks/useSwipeNavigation';
 
@@ -81,16 +82,8 @@ export default function SearchPage() {
     // Initial fetch of my follows
     const fetchMyFollows = async () => {
       if (!user) return;
-      const { data } = await supabase
-        .from('follows')
-        .select('following_id, status')
-        .eq('follower_id', user.id);
-
-      if (data) {
-        const map: Record<string, string> = {};
-        (data as any[]).forEach((f: any) => { map[f.following_id] = f.status; });
-        setMyFollows(map);
-      }
+      const map = await followService.getMyFollowStatusMap(user.id);
+      setMyFollows(map as Record<string, string>);
     };
     fetchMyFollows();
   }, [user]);

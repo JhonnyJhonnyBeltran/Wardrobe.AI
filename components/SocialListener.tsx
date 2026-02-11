@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { useUser } from '@/store/userStore';
 import { useUiStore } from '@/store/uiStore';
+import { getPendingRequestsCount } from '@/lib/services/followService';
 
 export default function SocialListener() {
   const { user } = useUser();
@@ -14,19 +15,9 @@ export default function SocialListener() {
 
     // 1. Initial fetch of count
     const fetchCount = async () => {
-      const { count, error } = await supabase
-        .from('follows')
-        .select('*', { count: 'exact', head: true })
-        .eq('following_id', user.id)
-        .eq('status', 'pending');
-
-      if (error) {
-        console.error('[SocialListener] Error fetching count:', error);
-        return;
-      }
-
+      const count = await getPendingRequestsCount(user.id);
       console.log('[SocialListener] Pending requests count:', count);
-      setRequestsCount(count || 0);
+      setRequestsCount(count);
     };
 
     fetchCount();

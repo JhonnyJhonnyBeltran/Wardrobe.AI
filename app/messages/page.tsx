@@ -44,11 +44,17 @@ export default function MessagesPage() {
         if (sharePostData && user) {
             // Send the post immediately
             try {
+                const { data: conversationId, error: convError } = await supabase
+                    .rpc('get_or_create_conversation', { other_user_id: otherUserId });
+
+                if (convError || !conversationId) throw convError || new Error('Could not get conversation');
+
                 await supabase.from('messages').insert({
+                    conversation_id: conversationId,
                     sender_id: user.id,
                     receiver_id: otherUserId,
                     content: sharePostData,
-                    created_at: new Date().toISOString()
+                    message_type: 'post_share',
                 } as any);
             } catch (e) {
                 console.error('Error sharing post', e);

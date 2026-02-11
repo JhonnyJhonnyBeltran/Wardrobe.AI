@@ -169,21 +169,18 @@ export interface Database {
       };
       follows: {
         Row: {
-          id: string;
           follower_id: string;
           following_id: string;
           status: 'pending' | 'accepted';
           created_at: string;
         };
         Insert: {
-          id?: string;
           follower_id: string;
           following_id: string;
           status?: 'pending' | 'accepted';
           created_at?: string;
         };
         Update: {
-          id?: string;
           follower_id?: string;
           following_id?: string;
           status?: 'pending' | 'accepted';

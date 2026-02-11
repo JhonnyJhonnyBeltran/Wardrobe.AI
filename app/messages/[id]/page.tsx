@@ -135,14 +135,19 @@ export default function ChatPage() {
         setNewMessage(''); // Optimistic clear
 
         try {
-            // Send Message without conversation relation (it's optional in schema)
+            // Get or create conversation to satisfy NOT NULL constraint
+            const { data: conversationId, error: convError } = await supabase
+                .rpc('get_or_create_conversation', { other_user_id: targetUserId });
+
+            if (convError || !conversationId) throw convError || new Error('Could not get conversation');
+
             const { error } = await supabase
                 .from('messages')
                 .insert({
+                    conversation_id: conversationId,
                     sender_id: user.id,
                     receiver_id: targetUserId,
                     content: content,
-                    created_at: new Date().toISOString()
                 } as any);
 
             if (error) throw error;

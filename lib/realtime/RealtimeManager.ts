@@ -287,6 +287,9 @@ class RealtimeManager {
   ): Promise<void> {
     const follow = payload.new as Record<string, unknown>;
     
+    // Build a deterministic ID from the composite key (no `id` column exists)
+    const compositeId = `${follow.follower_id}::${follow.following_id}`;
+
     // Get the other user's info
     const otherUserId = eventType === 'new' ? follow.follower_id : follow.following_id;
     
@@ -301,11 +304,11 @@ class RealtimeManager {
 
     if (eventType === 'new' && follow.status === 'pending') {
       notification = {
-        id: `follow_req_${follow.id}`,
+        id: `follow_req_${compositeId}`,
         type: 'follow_request',
         title: 'Nueva solicitud',
         message: `${otherUserData?.username || 'Alguien'} quiere seguirte`,
-        data: { follow_id: follow.id, follower_id: follow.follower_id },
+        data: { follower_id: follow.follower_id, following_id: follow.following_id },
         sender_id: otherUserId as string,
         sender: otherUserData || undefined,
         read: false,
@@ -313,11 +316,11 @@ class RealtimeManager {
       };
     } else if (eventType === 'new' && follow.status === 'accepted') {
       notification = {
-        id: `follow_${follow.id}`,
+        id: `follow_${compositeId}`,
         type: 'new_follower',
         title: 'Nuevo seguidor',
         message: `${otherUserData?.username || 'Alguien'} comenzó a seguirte`,
-        data: { follow_id: follow.id, follower_id: follow.follower_id },
+        data: { follower_id: follow.follower_id, following_id: follow.following_id },
         sender_id: otherUserId as string,
         sender: otherUserData || undefined,
         read: false,
@@ -325,11 +328,11 @@ class RealtimeManager {
       };
     } else if (eventType === 'update' && follow.status === 'accepted') {
       notification = {
-        id: `follow_accepted_${follow.id}`,
+        id: `follow_accepted_${compositeId}`,
         type: 'follow_accepted',
         title: 'Solicitud aceptada',
         message: `${otherUserData?.username || 'Alguien'} aceptó tu solicitud`,
-        data: { follow_id: follow.id, following_id: follow.following_id },
+        data: { follower_id: follow.follower_id, following_id: follow.following_id },
         sender_id: otherUserId as string,
         sender: otherUserData || undefined,
         read: false,

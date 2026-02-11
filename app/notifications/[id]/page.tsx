@@ -16,6 +16,7 @@ import { ArrowLeft, Send, Info, Smile, Mic, Plus, ChevronRight, Check, Ban } fro
 import { useUser } from '@/store/userStore';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
+import { checkMutualFollow as checkMutualFollowService } from '@/lib/services/followService';
 import Link from 'next/link';
 import { useTypingIndicator } from '@/lib/hooks/useTypingIndicator';
 import { useOnlineStatus } from '@/lib/hooks/useOnlineStatus';
@@ -228,23 +229,7 @@ export default function ChatPage() {
   };
 
   const checkMutualFollow = async (userId1: string, userId2: string): Promise<boolean> => {
-    const { data: follows1 } = await supabase
-      .from('follows')
-      .select('id')
-      .eq('follower_id', userId1)
-      .eq('following_id', userId2)
-      .eq('status', 'accepted')
-      .single();
-
-    const { data: follows2 } = await supabase
-      .from('follows')
-      .select('id')
-      .eq('follower_id', userId2)
-      .eq('following_id', userId1)
-      .eq('status', 'accepted')
-      .single();
-
-    return !!follows1 && !!follows2;
+    return checkMutualFollowService(userId1, userId2);
   };
 
   const subscribeToMessages = () => {
