@@ -7,9 +7,9 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { processClothingImage } from '@/lib/imageProcessing';
+import { processClothingImage, type ProcessingStage, STAGE_MESSAGES } from '@/lib/imageProcessing';
 import { extractDominantColor, hexToRgb, rgbToColorName } from '@/lib/utils/colorUtils';
-import { DEFAULT_FORM_DATA, PROCESSING_MESSAGES } from '../constants';
+import { DEFAULT_FORM_DATA } from '../constants';
 import type { ItemFormData, FormMode, InputMethod } from '../types';
 import type { ClothingItem } from '@/types/clothing';
 
@@ -34,7 +34,7 @@ interface UseAddItemFormReturn {
 
     // Processing state
     isProcessing: boolean;
-    currentMessageIndex: number;
+    processingStage: ProcessingStage;
     processingMessage: string;
 
     // Handlers
@@ -71,23 +71,14 @@ export function useAddItemForm({
     // Error state
     const [error, setError] = useState<string | null>(null);
 
-    // Processing state
+    // Processing state - now with stage-based tracking
     const [isProcessing, setIsProcessing] = useState(false);
-    const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
+    const [processingStage, setProcessingStage] = useState<ProcessingStage>('idle');
 
-    // Rotate processing messages
-    useEffect(() => {
-        if (!isProcessing) {
-            setCurrentMessageIndex(0);
-            return;
-        }
-
-        const interval = setInterval(() => {
-            setCurrentMessageIndex((prev) => (prev + 1) % PROCESSING_MESSAGES.length);
-        }, 1500);
-
-        return () => clearInterval(interval);
-    }, [isProcessing]);
+    // Progress callback for real-time updates
+    const handleProgress = useCallback((stage: ProcessingStage, _progress: number, _message?: string) => {
+        setProcessingStage(stage);
+    }, []);
 
     // Initialize form when modal opens
     useEffect(() => {
@@ -134,65 +125,95 @@ export function useAddItemForm({
         setFormData(DEFAULT_FORM_DATA);
     }, []);
 
-    // Handle image file upload
+    // Handle image file upload - optimized for non-blocking UI
     const handleImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
         setSelectedFile(file);
+
+        // Load original image first - show immediately for instant feedback
+        const originalDataUrl = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+
+        setOriginalImage(originalDataUrl);
+        setImage(originalDataUrl);
+
+        // Set processing state AFTER showing the image
+        // This ensures the UI is fully updated before heavy processing starts
         setIsProcessing(true);
-        setCurrentMessageIndex(0);
+        setProcessingStage('compressing');
         setError(null);
 
+        // Use multiple frame delays to ensure React has fully rendered
+        // before starting heavy processing
+        await new Promise<void>(resolve => {
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    setTimeout(resolve, 100);
+                });
+            });
+        });
+
+        // Process with AI in background - Web Worker handles the heavy lifting
+        // The processClothingImage function uses proxyToWorker: true
+        // which means processing happens in a Web Worker, not blocking the main thread
         try {
-            // Load original image first
-            const originalDataUrl = await new Promise<string>((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onloadend = () => resolve(reader.result as string);
-                reader.onerror = reject;
-                reader.readAsDataURL(file);
-            });
-
-            setOriginalImage(originalDataUrl);
-            setImage(originalDataUrl);
-
-            // Process with AI
-            const processResult = await processClothingImage(file, {
-                normalize: true,
-                canvasWidth: 800,
-                canvasHeight: 1000,
-                quality: 'medium',
-                transparentBackground: true,
-            });
+            const processResult = await processClothingImage(
+                file, 
+                {
+                    normalize: true,
+                    canvasWidth: 1200,
+                    canvasHeight: 1500,
+                    quality: 'quality', // Best quality model for clean backgrounds
+                    transparentBackground: true,
+                },
+                handleProgress
+            );
 
             if (processResult.success && processResult.imageUrl) {
+                // Yield to browser before updating state with processed image
+                await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+                
                 setProcessedImage(processResult.imageUrl);
                 setImage(processResult.imageUrl);
+                setProcessingStage('complete');
 
-                // Detect dominant color
-                try {
-                    const dominantColor = await extractDominantColor(processResult.imageUrl);
-                    setFormData(prev => ({
-                        ...prev,
-                        color: dominantColor.name,
-                        colorHex: dominantColor.hex
-                    }));
-                } catch (colorError) {
-                    console.warn('Failed to extract dominant color:', colorError);
-                }
+                // Detect dominant color in the next idle frame to not block UI
+                // Use setTimeout to schedule after React has updated
+                setTimeout(async () => {
+                    try {
+                        const dominantColor = await extractDominantColor(processResult.imageUrl!);
+                        setFormData(prev => ({
+                            ...prev,
+                            color: dominantColor.name,
+                            colorHex: dominantColor.hex
+                        }));
+                    } catch (colorError) {
+                        console.warn('Failed to extract dominant color:', colorError);
+                    }
+                }, 50);
             } else {
                 console.warn('Processing failed, keeping original:', processResult.error);
+                setProcessingStage('error');
                 if (processResult.error) {
                     setError(processResult.error);
                 }
             }
         } catch (error) {
             console.error('Image processing failed:', error);
+            setProcessingStage('error');
             setError(error instanceof Error ? error.message : 'Error al procesar la imagen');
         } finally {
+            // Ensure UI is responsive before clearing processing state
+            await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
             setIsProcessing(false);
         }
-    }, []);
+    }, [handleProgress]);
 
     // Handle manual AI processing toggle
     const handleManualProcess = useCallback(async () => {
@@ -209,6 +230,8 @@ export function useAddItemForm({
         if (!selectedFile && !image) return;
 
         setIsProcessing(true);
+        setProcessingStage('compressing');
+        
         try {
             const source = selectedFile || image;
 
@@ -217,24 +240,32 @@ export function useAddItemForm({
                 return;
             }
 
-            const result = await processClothingImage(source, {
-                normalize: true,
-                canvasWidth: 800,
-                canvasHeight: 1000,
-                quality: 'medium',
-                transparentBackground: true,
-            });
+            const result = await processClothingImage(
+                source, 
+                {
+                    normalize: true,
+                    canvasWidth: 1200,
+                    canvasHeight: 1500,
+                    quality: 'quality',
+                    transparentBackground: true,
+                },
+                handleProgress
+            );
 
             if (result.success && result.imageUrl) {
                 setProcessedImage(result.imageUrl);
                 setImage(result.imageUrl);
+                setProcessingStage('complete');
+            } else {
+                setProcessingStage('error');
             }
         } catch (error) {
             console.error('Manual processing failed:', error);
+            setProcessingStage('error');
         } finally {
             setIsProcessing(false);
         }
-    }, [processedImage, image, originalImage, selectedFile]);
+    }, [processedImage, image, originalImage, selectedFile, handleProgress]);
 
     // Handle color selection from swatches
     const handleColorSelect = useCallback((colorOption: { name: string; hex: string }) => {
@@ -338,8 +369,8 @@ export function useAddItemForm({
 
         // Processing state
         isProcessing,
-        currentMessageIndex,
-        processingMessage: PROCESSING_MESSAGES[currentMessageIndex],
+        processingStage,
+        processingMessage: STAGE_MESSAGES[processingStage] || '',
 
         // Handlers
         handleImageUpload,

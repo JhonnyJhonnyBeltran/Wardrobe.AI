@@ -1,46 +1,34 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { processClothingImage, ProcessingResult } from '@/lib/imageProcessing';
+import { useState, useCallback } from 'react';
+import { 
+    processClothingImage, 
+    type ProcessingResult, 
+    type ProcessingStage,
+    STAGE_MESSAGES 
+} from '@/lib/imageProcessing';
 import { Upload, Download, Loader2, CheckCircle2, XCircle } from 'lucide-react';
 
 interface ImageProcessorProps {
     onImageProcessed?: (result: ProcessingResult) => void;
 }
 
-const PROCESSING_MESSAGES = [
-    'Analizando imagen...',
-    'Quitando fondo...',
-    'Detectando bordes...',
-    'Recortando imagen...',
-    'Enderezando prenda...',
-    'Centrando objeto...',
-    'Optimizando resultado...',
-    'Aplicando ajustes finales...',
-];
-
 export default function ImageProcessor({ onImageProcessed }: ImageProcessorProps) {
     const [originalImage, setOriginalImage] = useState<string>('');
     const [processedImage, setProcessedImage] = useState<string>('');
     const [processing, setProcessing] = useState(false);
-    const [progress, setProgress] = useState('');
-    const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
+    const [processingStage, setProcessingStage] = useState<ProcessingStage>('idle');
+    const [progressPercent, setProgressPercent] = useState(0);
+    const [progressMessage, setProgressMessage] = useState('');
     const [error, setError] = useState('');
     const [processingTime, setProcessingTime] = useState<number>(0);
 
-    // Efecto para rotar mensajes durante el procesamiento
-    useEffect(() => {
-        if (!processing) {
-            setCurrentMessageIndex(0);
-            return;
-        }
-
-        const interval = setInterval(() => {
-            setCurrentMessageIndex((prev) => (prev + 1) % PROCESSING_MESSAGES.length);
-        }, 1500); // Cambia el mensaje cada 1.5 segundos
-
-        return () => clearInterval(interval);
-    }, [processing]);
+    // Progress callback for real-time updates
+    const handleProgress = useCallback((stage: ProcessingStage, progress: number, message?: string) => {
+        setProcessingStage(stage);
+        setProgressPercent(progress);
+        setProgressMessage(message || STAGE_MESSAGES[stage] || '');
+    }, []);
 
     const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -52,15 +40,17 @@ export default function ImageProcessor({ onImageProcessed }: ImageProcessorProps
             return;
         }
 
-        // Validar tamaño (máx 10MB)
-        if (file.size > 10 * 1024 * 1024) {
-            setError('La imagen es demasiado grande (máx 10MB)');
+        // Validar tamaño (máx 15MB - increased for high-res photos)
+        if (file.size > 15 * 1024 * 1024) {
+            setError('La imagen es demasiado grande (máx 15MB)');
             return;
         }
 
         // Reset estados
         setError('');
         setProcessedImage('');
+        setProcessingStage('idle');
+        setProgressPercent(0);
         setOriginalImage(URL.createObjectURL(file));
 
         // Procesar automáticamente
@@ -69,29 +59,33 @@ export default function ImageProcessor({ onImageProcessed }: ImageProcessorProps
 
     const processImage = async (file: File) => {
         setProcessing(true);
-        setCurrentMessageIndex(0);
-        const startTime = Date.now();
+        setProcessingStage('compressing');
 
         try {            
-            const result = await processClothingImage(file, {
-                normalize: true,
-                canvasWidth: 800,
-                canvasHeight: 1000,
-                quality: 'medium',
-            });
+            const result = await processClothingImage(
+                file, 
+                {
+                    normalize: true,
+                    canvasWidth: 1200,
+                    canvasHeight: 1500,
+                    quality: 'quality', // Best quality model for clean backgrounds
+                },
+                handleProgress
+            );
 
-            const endTime = Date.now();
-            setProcessingTime(endTime - startTime);
+            setProcessingTime(result.processingTime || 0);
 
             if (result.success && result.imageUrl) {
                 setProcessedImage(result.imageUrl);
-                setProgress('¡Listo!');
+                setProcessingStage('complete');
                 onImageProcessed?.(result);
             } else {
                 setError(result.error || 'Error al procesar la imagen');
+                setProcessingStage('error');
             }
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Error desconocido');
+            setProcessingStage('error');
         } finally {
             setProcessing(false);
         }
@@ -144,23 +138,38 @@ export default function ImageProcessor({ onImageProcessed }: ImageProcessorProps
                     <div>
                         <p className="text-lg font-medium">
                             {processing ? (
-                                <span className="inline-flex items-center gap-2">
-                                    <span className="animate-pulse">{PROCESSING_MESSAGES[currentMessageIndex]}</span>
+                                <span className="inline-flex flex-col items-center gap-1">
+                                    <span className="animate-pulse">{progressMessage}</span>
+                                    {progressPercent > 0 && (
+                                        <span className="text-sm text-blue-400">{progressPercent}%</span>
+                                    )}
                                 </span>
                             ) : (
                                 'Haz click para subir una imagen'
                             )}
                         </p>
                         <p className="text-sm text-gray-500 mt-1">
-                            JPG, PNG o WebP • Máximo 10MB
+                            JPG, PNG o WebP • Máximo 15MB
                         </p>
-                        {processingTime > 0 && (
+                        {processingTime > 0 && !processing && (
                             <p className="text-xs text-green-600 dark:text-green-400 mt-2">
                                 ⚡ Procesado en {(processingTime / 1000).toFixed(1)}s
                             </p>
                         )}
                     </div>
                 </label>
+                
+                {/* Progress Bar */}
+                {processing && (
+                    <div className="mt-4 w-full max-w-xs mx-auto">
+                        <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                            <div 
+                                className="h-full bg-blue-500 transition-all duration-300 ease-out"
+                                style={{ width: `${Math.max(progressPercent, 5)}%` }}
+                            />
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Error Message */}

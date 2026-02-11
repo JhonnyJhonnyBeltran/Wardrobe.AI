@@ -29,7 +29,7 @@ export default function ProcessImagePage() {
                 {/* Technical Info */}
                 <div className="max-w-4xl mx-auto mt-12 p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
                     <h3 className="text-lg font-semibold mb-4">
-                        🚀 Tecnología 100% Local
+                        🚀 Tecnología 100% Local - Optimizado para &lt;10s
                     </h3>
                     <div className="grid md:grid-cols-2 gap-6 text-sm text-gray-600 dark:text-gray-400">
                         <div>
@@ -41,7 +41,8 @@ export default function ProcessImagePage() {
                                 <li>• Privacidad total (sin enviar datos)</li>
                                 <li>• Funciona offline una vez cargado</li>
                                 <li>• Compatible con móviles</li>
-                                <li>• Procesamiento rápido</li>
+                                <li>• Procesamiento en menos de 10 segundos</li>
+                                <li>• Compresión automática de imágenes</li>
                             </ul>
                         </div>
                         <div>
@@ -49,17 +50,17 @@ export default function ProcessImagePage() {
                                 🛠️ Tecnologías
                             </h4>
                             <ul className="space-y-1">
-                                <li>• @imgly/background-removal (IA)</li>
+                                <li>• @imgly/background-removal (IA cuantizada)</li>
                                 <li>• WebAssembly (ONNX Runtime)</li>
                                 <li>• Canvas API (normalización)</li>
-                                <li>• Next.js 15 + React 19</li>
-                                <li>• TypeScript</li>
+                                <li>• Modelo isnet_quint8 (4x más rápido)</li>
+                                <li>• Procesamiento en cola para batch</li>
                             </ul>
                         </div>
                     </div>
                     <p className="mt-4 text-xs text-gray-500 dark:text-gray-500">
-                        La primera vez que uses la herramienta, se descargará el modelo de IA 
-                        (~5-10MB). Luego quedará en caché y funcionará instantáneamente.
+                        El modelo de IA se precarga automáticamente al iniciar la app. 
+                        Las imágenes grandes se comprimen antes de procesar para garantizar tiempos de respuesta óptimos.
                     </p>
                 </div>
             </div>

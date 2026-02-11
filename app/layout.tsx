@@ -7,6 +7,7 @@ import SocialListener from "@/components/SocialListener";
 import RealtimeProvider from "@/components/RealtimeProvider";
 import MessageProvider from "@/components/MessageProvider";
 import { NotificationToastContainer } from "@/components/NotificationToast";
+import WardrobePreloader from "@/components/WardrobePreloader";
 
 export const metadata: Metadata = {
   title: "Klozet - Tu Asistente de Moda IA",
@@ -41,6 +42,7 @@ export default function RootLayout({
             <RealtimeProvider>
               <MessageProvider>
                 <SocialListener />
+                <WardrobePreloader />
                 <ConditionalLayout>
                   {children}
                 </ConditionalLayout>

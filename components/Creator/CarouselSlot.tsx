@@ -80,6 +80,7 @@ export function CarouselSlot({
                                             src={item.imageUrl}
                                             alt={item.name}
                                             fill
+                                            sizes="128px"
                                             className="object-cover"
                                         />
                                     ) : (

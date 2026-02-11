@@ -6,7 +6,7 @@
  * y solo se guarda la URL pública en la base de datos.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { ClothingItem, ClothingCategory, ClothingColor, Season } from '@/types/clothing';
 import { useUser } from '@/store/userStore';
@@ -38,17 +38,24 @@ export function useWardrobe(): UseWardrobeReturn {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { user } = useUser();
+  const mountedRef = useRef(true);
+  const fetchIdRef = useRef(0); // Para cancelar fetches obsoletos
 
-  // Fetch items
-  const fetchItems = async () => {
+  // Fetch items — usa getSession() (local) en vez de getUser() (red)
+  // para evitar fallos intermitentes por latencia o token refresh
+  const fetchItems = useCallback(async () => {
+    const currentFetchId = ++fetchIdRef.current;
     try {
       setLoading(true);
       setError(null);
 
-      const { data: { user: authUser } } = await supabase.auth.getUser();
+      const { data: { session } } = await supabase.auth.getSession();
+      const authUser = session?.user;
 
       if (!authUser) {
-        setItems([]);
+        if (mountedRef.current && currentFetchId === fetchIdRef.current) {
+          setItems([]);
+        }
         return;
       }
 
@@ -59,6 +66,9 @@ export function useWardrobe(): UseWardrobeReturn {
         .order('created_at', { ascending: false });
 
       if (fetchError) throw fetchError;
+
+      // No actualizar si el componente se desmontó o hay un fetch más reciente
+      if (!mountedRef.current || currentFetchId !== fetchIdRef.current) return;
 
       // Convert DB format to ClothingItem format
       const formattedItems: ClothingItem[] = ((data || []) as ClothingItemRow[]).map(item => ({
@@ -82,17 +92,21 @@ export function useWardrobe(): UseWardrobeReturn {
 
       setItems(formattedItems);
     } catch (err) {
+      if (!mountedRef.current || currentFetchId !== fetchIdRef.current) return;
       console.error('Error fetching wardrobe:', err);
       setError(err instanceof Error ? err.message : 'Error desconocido');
     } finally {
-      setLoading(false);
+      if (mountedRef.current && currentFetchId === fetchIdRef.current) {
+        setLoading(false);
+      }
     }
-  };
+  }, []);
 
-  // Add item
+  // Add item — usa getSession() (local) para consistencia
   const addItem = async (item: Omit<ClothingItem, 'id' | 'createdAt'>): Promise<ClothingItem | null> => {
     try {
-      const { data: { user: authUser } } = await supabase.auth.getUser();
+      const { data: { session } } = await supabase.auth.getSession();
+      const authUser = session?.user;
 
       if (!authUser) {
         setError('Usuario no autenticado');
@@ -353,19 +367,31 @@ export function useWardrobe(): UseWardrobeReturn {
     await fetchItems();
   };
 
-  // Fetch on mount and user change
+  // Fetch on mount and auth changes
   useEffect(() => {
+    mountedRef.current = true;
     fetchItems();
 
-    // Subscribe to auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+    // Suscribirse a cambios de auth, pero saltar INITIAL_SESSION
+    // (ya hicimos fetch arriba) para evitar doble llamada/race condition
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'INITIAL_SESSION') return; // Ya cargamos arriba
+      if (!mountedRef.current) return;
+
+      if (event === 'SIGNED_OUT') {
+        setItems([]);
+        setLoading(false);
+        return;
+      }
+      // TOKEN_REFRESHED, SIGNED_IN, etc → refrescar items
       fetchItems();
     });
 
     return () => {
+      mountedRef.current = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [fetchItems]);
 
   return {
     items,

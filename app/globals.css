@@ -328,6 +328,282 @@ html {
 }
 
 /* ============================================
+   WARDROBE PRELOADER (App-level first load)
+   Full-screen wardrobe door animation
+   ============================================ */
+
+.wardrobe-preloader-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: var(--background);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.wardrobe-preloader-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.wardrobe-preloader-particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--brand-pink);
+  opacity: 0;
+}
+
+.wardrobe-preloader-doors {
+  position: absolute;
+  inset: 0;
+  perspective: 2500px;
+  pointer-events: none;
+}
+
+.wardrobe-preloader-door {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 50%;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.08);
+}
+
+.wardrobe-preloader-door-left {
+  left: 0;
+  transform-origin: left center;
+  background: linear-gradient(135deg,
+    var(--pure-white) 0%,
+    var(--gray-100) 20%,
+    var(--brand-pink-light) 50%,
+    var(--gray-100) 80%,
+    var(--pure-white) 100%);
+  border-right: 1px solid var(--gray-200);
+}
+
+.wardrobe-preloader-door-right {
+  right: 0;
+  transform-origin: right center;
+  background: linear-gradient(225deg,
+    var(--pure-white) 0%,
+    var(--gray-100) 20%,
+    var(--brand-pink-light) 50%,
+    var(--gray-100) 80%,
+    var(--pure-white) 100%);
+  border-left: 1px solid var(--gray-200);
+}
+
+.wardrobe-preloader-door-inner {
+  position: absolute;
+  top: 5%;
+  width: 82%;
+  height: 90%;
+  border: 2px solid var(--gray-200);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.2rem;
+}
+
+.wardrobe-preloader-door-left .wardrobe-preloader-door-inner {
+  left: 9%;
+  background: linear-gradient(180deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(255, 182, 213, 0.12) 50%,
+    rgba(255, 255, 255, 0.95) 100%);
+  box-shadow: inset 2px 2px 12px rgba(0, 0, 0, 0.02);
+}
+
+.wardrobe-preloader-door-right .wardrobe-preloader-door-inner {
+  right: 9%;
+  background: linear-gradient(180deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(255, 182, 213, 0.12) 50%,
+    rgba(255, 255, 255, 0.95) 100%);
+  box-shadow: inset -2px 2px 12px rgba(0, 0, 0, 0.02);
+}
+
+.wardrobe-preloader-door-line {
+  position: absolute;
+  width: 55%;
+  height: 1px;
+  background: var(--gray-200);
+}
+
+.wardrobe-preloader-door-line-top {
+  top: 22%;
+}
+
+.wardrobe-preloader-door-line-bottom {
+  bottom: 22%;
+}
+
+.wardrobe-preloader-door-left .wardrobe-preloader-door-line {
+  left: 18%;
+}
+
+.wardrobe-preloader-door-right .wardrobe-preloader-door-line {
+  right: 18%;
+}
+
+.wardrobe-preloader-door-accent {
+  width: 44px;
+  height: 3px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    var(--brand-pink) 50%,
+    transparent 100%);
+  border-radius: var(--radius-full);
+}
+
+.wardrobe-preloader-handle {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 80px;
+  background: linear-gradient(180deg,
+    var(--gray-800) 0%,
+    var(--pure-black) 50%,
+    var(--gray-800) 100%);
+  border-radius: var(--radius-full);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.wardrobe-preloader-handle-left {
+  right: 12%;
+}
+
+.wardrobe-preloader-handle-right {
+  left: 12%;
+}
+
+/* Status indicator area */
+.wardrobe-preloader-status {
+  position: absolute;
+  bottom: 12%;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  z-index: 20;
+  padding: 0 2rem;
+}
+
+.wardrobe-preloader-spinner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 2px 8px rgba(255, 105, 180, 0.3));
+}
+
+.wardrobe-preloader-bar {
+  width: 260px;
+  max-width: 80%;
+  height: 4px;
+  background: var(--gray-200);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.wardrobe-preloader-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg,
+    var(--brand-pink) 0%,
+    var(--brand-pink-light) 50%,
+    var(--brand-pink) 100%);
+  border-radius: var(--radius-full);
+  background-size: 200% 100%;
+  animation: preloader-shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes preloader-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.wardrobe-preloader-phrase {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--foreground-secondary);
+  text-align: center;
+  letter-spacing: 0.01em;
+}
+
+/* Dark mode */
+.dark .wardrobe-preloader-door-left {
+  background: linear-gradient(135deg,
+    var(--gray-900) 0%,
+    var(--gray-800) 20%,
+    rgba(255, 105, 180, 0.12) 50%,
+    var(--gray-800) 80%,
+    var(--gray-900) 100%);
+  border-right-color: var(--gray-700);
+}
+
+.dark .wardrobe-preloader-door-right {
+  background: linear-gradient(225deg,
+    var(--gray-900) 0%,
+    var(--gray-800) 20%,
+    rgba(255, 105, 180, 0.12) 50%,
+    var(--gray-800) 80%,
+    var(--gray-900) 100%);
+  border-left-color: var(--gray-700);
+}
+
+.dark .wardrobe-preloader-door-inner {
+  border-color: var(--gray-700);
+}
+
+.dark .wardrobe-preloader-door-left .wardrobe-preloader-door-inner {
+  background: linear-gradient(180deg,
+    rgba(26, 26, 26, 0.95) 0%,
+    rgba(255, 105, 180, 0.06) 50%,
+    rgba(26, 26, 26, 0.95) 100%);
+  box-shadow: inset 2px 2px 12px rgba(0, 0, 0, 0.2);
+}
+
+.dark .wardrobe-preloader-door-right .wardrobe-preloader-door-inner {
+  background: linear-gradient(180deg,
+    rgba(26, 26, 26, 0.95) 0%,
+    rgba(255, 105, 180, 0.06) 50%,
+    rgba(26, 26, 26, 0.95) 100%);
+  box-shadow: inset -2px 2px 12px rgba(0, 0, 0, 0.2);
+}
+
+.dark .wardrobe-preloader-handle {
+  background: linear-gradient(180deg,
+    var(--gray-300) 0%,
+    var(--pure-white) 50%,
+    var(--gray-300) 100%);
+}
+
+.dark .wardrobe-preloader-door-line {
+  background: var(--gray-700);
+}
+
+.dark .wardrobe-preloader-bar {
+  background: var(--gray-700);
+}
+
+.dark .wardrobe-preloader-phrase {
+  color: var(--gray-400);
+}
+
+/* ============================================
    DRAWER ITEM STYLING
    Wardrobe drawer appearance for clothing items
    ============================================ */

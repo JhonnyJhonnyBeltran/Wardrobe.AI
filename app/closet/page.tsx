@@ -3,10 +3,9 @@
 /**
  * Closet - Your Wardrobe (Mobile Optimized)
  * Search expands, buttons icon-only on mobile
- * Features wardrobe door opening animation
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -15,102 +14,19 @@ import {
 import { Card, Button, ClothingItem, LogoMark } from '@/components';
 import AddItemModal from '@/components/AddItemModal';
 import ProductModal from '@/components/ProductModal';
+import BubbleToggle from '@/components/BubbleToggle';
 import OutfitCard from '@/components/OutfitCard';
 import type { Outfit } from '@/types/outfit';
 import type { ClothingItem as ClothingItemType } from '@/types/clothing';
 import { useUser } from '@/store';
 import { useUiStore } from '@/store/uiStore';
 import { useWardrobe } from '@/lib/hooks/useWardrobe';
+import { useBodyScrollLock } from '@/lib/hooks';
 import { useTranslation } from '@/lib/i18n';
 import Link from 'next/link';
 import { OutfitItem } from '@/lib/fashion/outfitGenerator';
 import { supabase } from '@/lib/supabase/client';
 import Image from 'next/image';
-
-// Wardrobe Door Animation Component
-const WardrobeDoorAnimation = ({ onComplete, isOpen }: { onComplete: () => void; isOpen: boolean }) => {
-  useEffect(() => {
-    if (!isOpen) return;
-
-    // Complete animation after doors fully open
-    const timer = setTimeout(onComplete, 2300);
-    return () => clearTimeout(timer);
-  }, [onComplete, isOpen]);
-
-  return (
-    <div className="closet-door-container">
-      {/* Left Door */}
-      <motion.div
-        className="closet-door closet-door-left"
-        initial={{ rotateY: 0 }}
-        animate={{ rotateY: isOpen ? -105 : 0 }}
-        transition={{
-          duration: 1.7,
-          delay: isOpen ? 0.3 : 0,
-          ease: [0.4, 0, 0.2, 1],
-        }}
-      >
-        <div className="closet-door-inner">
-          <div className="closet-door-detail closet-door-detail-horizontal closet-door-detail-top" />
-          <Image
-            src="/klozet-logo-extended.png"
-            alt="Klozet"
-            width={120} // Valor de referencia (ancho intrínseco)
-            height={48} // Valor de referencia (alto intrínseco)
-            style={{
-              width: '40%', // Aquí aplicas el porcentaje
-              height: 'auto',
-            }}
-            className="h-8 w-auto object-contain opacity-100"
-          />
-          <div className="closet-door-accent" />
-          <div className="closet-door-detail closet-door-detail-horizontal closet-door-detail-bottom" />
-        </div>
-        <motion.div
-          className="closet-door-handle"
-          initial={{ opacity: 1 }}
-          animate={{ opacity: isOpen ? 0 : 1 }}
-          transition={{ duration: 0.4, delay: isOpen ? 0.6 : 0 }}
-        />
-      </motion.div>
-
-      {/* Right Door */}
-      <motion.div
-        className="closet-door closet-door-right"
-        initial={{ rotateY: 0 }}
-        animate={{ rotateY: isOpen ? 105 : 0 }}
-        transition={{
-          duration: 1.7,
-          delay: isOpen ? 0.3 : 0,
-          ease: [0.4, 0, 0.2, 1],
-        }}
-      >
-        <div className="closet-door-inner">
-          <div className="closet-door-detail closet-door-detail-horizontal closet-door-detail-top" />
-          <Image
-            src="/klozet-logo-dark-extended.png"
-            alt="Klozet"
-            width={120} // Valor de referencia (ancho intrínseco)
-            height={48} // Valor de referencia (alto intrínseco)
-            style={{
-              width: '40%', // Aquí aplicas el porcentaje
-              height: 'auto',
-            }}
-            className="h-8 w-auto object-contain opacity-100"
-          />
-          <div className="closet-door-accent" />
-          <div className="closet-door-detail closet-door-detail-horizontal closet-door-detail-bottom" />
-        </div>
-        <motion.div
-          className="closet-door-handle"
-          initial={{ opacity: 1 }}
-          animate={{ opacity: isOpen ? 0 : 1 }}
-          transition={{ duration: 0.4, delay: isOpen ? 0.6 : 0 }}
-        />
-      </motion.div>
-    </div>
-  );
-};
 
 export default function ClosetPage() {
   const router = useRouter();
@@ -122,16 +38,19 @@ export default function ClosetPage() {
   const [searchExpanded, setSearchExpanded] = useState(false);
   const [filterType, setFilterType] = useState<string | null>(null);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingItem, setEditingItem] = useState<ClothingItemType | null>(null);
   const { items, loading, addItem, updateItem, deleteItem, refresh } = useWardrobe();
 
+  // Lock body scroll when filter panel is open
+  useBodyScrollLock(showFilters);
+
   // Outfits State
   const [activeTab, setActiveTab] = useState<'items' | 'outfits'>('items');
   const [outfits, setOutfits] = useState<any[]>([]);
   const [outfitsLoading, setOutfitsLoading] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   // Fetch Outfits
   useEffect(() => {
@@ -188,10 +107,6 @@ export default function ClosetPage() {
       setFavorites(new Set(favIds));
     }
   }, [items]);
-
-  // Wardrobe Door Animation State - Solo mostrar la primera vez
-  // Wardrobe Door Animation State - Mostrar si es la primera visit
-  const [showDoorAnimation, setShowDoorAnimation] = useState(true);
 
   // REDIRECT TO ONBOARDING if style profile is missing
   useEffect(() => {
@@ -322,17 +237,34 @@ export default function ClosetPage() {
     ? (items || []).filter(item => {
       const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (item.brand || '').toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesType = !selectedCategory || item.category === selectedCategory;
+      const matchesType = selectedCategories.size === 0 || selectedCategories.has(item.category);
       const matchesFavorites = !showFavoritesOnly || favorites.has(item.id);
       return matchesSearch && matchesType && matchesFavorites;
     })
     : (outfits || []).filter(outfit => {
       const matchesSearch = outfit.name.toLowerCase().includes(searchQuery.toLowerCase());
-      // For outfits we might want to filter by occasion if we had that UI
       return matchesSearch;
     });
 
-  const categories = ['top', 'bottom', 'dress', 'outerwear', 'shoes', 'accessories'];
+  const categories = ['top', 'shirt', 'sweater', 'bottom', 'skirt', 'dress', 'outerwear', 'shoes', 'accessory'];
+
+  const toggleCategory = (category: string) => {
+    setSelectedCategories(prev => {
+      const next = new Set(prev);
+      if (next.has(category)) {
+        next.delete(category);
+      } else {
+        next.add(category);
+      }
+      return next;
+    });
+  };
+
+  // Active filter badge count
+  const activeFilterCount = useMemo(
+    () => (searchQuery ? 1 : 0) + selectedCategories.size + (showFavoritesOnly ? 1 : 0),
+    [searchQuery, selectedCategories, showFavoritesOnly]
+  );
 
   const colorMap: Record<string, string> = {
     white: '#FFFFFF',
@@ -348,13 +280,6 @@ export default function ClosetPage() {
     purple: '#8B5CF6',
     orange: '#FB923C',
     // ... add more if needed
-  };
-
-
-
-  // Handle door animation completion
-  const handleDoorAnimationComplete = () => {
-    setShowDoorAnimation(false);
   };
 
   // Swipe Navigation Logic
@@ -436,80 +361,32 @@ export default function ClosetPage() {
             </button>
           </div>
 
-          {/* Filters Area (Wrapped in rounded div) */}
-          <div className="bg-[var(--card-bg)] rounded-2xl border border-[var(--border-color)] p-2 shadow-sm overflow-hidden">
-
-            {/* Search Bar - Always Visible here */}
-            <div className="relative mb-2">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--foreground-tertiary)]" />
-              <input
-                type="text"
-                placeholder={`Buscar ${activeTab === 'items' ? 'prendas' : 'outfits'}...`}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-[var(--background-secondary)] border-none rounded-xl py-2 pl-9 pr-10 text-sm focus:ring-1 focus:ring-[var(--brand-pink)]"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2"
-                >
-                  <X className="w-4 h-4 text-[var(--foreground-tertiary)]" />
-                </button>
-              )}
-            </div>
-
-            {/* Categories (Only for Items) */}
-            {activeTab === 'items' && (
-              <div className="overflow-x-auto scrollbar-hide pb-1">
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setSelectedCategory(null)}
-                    className={`px-4 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${!selectedCategory
-                      ? 'bg-[var(--foreground)] text-[var(--background)]'
-                      : 'bg-[var(--background-secondary)] text-[var(--foreground)] hover:bg-[var(--background-tertiary)]'
-                      }`}
-                  >
-                    Todo
-                  </button>
-                  {categories.map((category) => (
-                    <button
-                      key={category}
-                      onClick={() => setSelectedCategory(category)}
-                      className={`px-4 py-1.5 rounded-full text-xs font-medium capitalize whitespace-nowrap transition-colors ${selectedCategory === category
-                        ? 'bg-[var(--foreground)] text-[var(--background)]'
-                        : 'bg-[var(--background-secondary)] text-[var(--foreground)] hover:bg-[var(--background-tertiary)]'
-                        }`}
-                    >
-                      {t.itemTypes?.[category as keyof typeof t.itemTypes] || category}
-                    </button>
-                  ))}
-
-                  {/* Divider */}
-                  <div className="w-px h-6 bg-[var(--border-color)] mx-1" />
-
-                  {/* Favorites Toggle */}
-                  <button
-                    onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
-                    className={`p-2 rounded-full border transition-all ${showFavoritesOnly
-                      ? 'bg-[var(--brand-pink)] border-[var(--brand-pink)] text-white shadow-sm'
-                      : 'bg-[var(--background-secondary)] border-transparent text-[var(--foreground-secondary)] hover:bg-[var(--background-tertiary)]'
-                      }`}
-                    aria-label="Ver favoritos"
-                  >
-                    <Heart className={`w-4 h-4 ${showFavoritesOnly ? 'fill-current' : ''}`} />
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-
         </div>
       </header>
 
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto pt-44 sm:pt-32 pb-4">
+      {/* Filter Backdrop */}
+      <AnimatePresence>
+        {showFilters && (
+          <motion.div
+            key="filter-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={() => setShowFilters(false)}
+            className="fixed inset-0 bg-black/20 backdrop-blur-[2px] z-[55]"
+          />
+        )}
+      </AnimatePresence>
+
+
+
+      <main className="max-w-7xl mx-auto pt-36 sm:pt-24 pb-4 relative">
+
+        {/* Spacer for filter button area — keeps consistent top margin */}
+        <div className="h-16" />
 
         {/* TABS CONTENT */}
         <AnimatePresence mode="wait">
@@ -681,66 +558,152 @@ export default function ClosetPage() {
 
       </main>
 
-      {/* Modals */}
-      <AnimatePresence>
-        {showAddModal && (
-          <AddItemModal
-            isOpen={showAddModal}
-            onClose={() => {
-              setShowAddModal(false);
-              setEditingItem(null);
-            }}
-            initialData={editingItem || undefined}
-            isEditing={!!editingItem}
-            onAdd={async (partial) => {
-              if (editingItem && editingItem.id) {
-                await updateItem(editingItem.id, partial as any);
-              } else {
-                await addItem(partial as any);
-              }
-              setEditingItem(null); // Reset after save
-            }}
-          />
-        )}
+      {/* Modals — always mounted, internal AnimatePresence handles exit */}
+      <AddItemModal
+        isOpen={showAddModal}
+        onClose={() => {
+          setShowAddModal(false);
+          setEditingItem(null);
+        }}
+        initialData={editingItem || undefined}
+        isEditing={!!editingItem}
+        onAdd={async (partial) => {
+          if (editingItem && editingItem.id) {
+            await updateItem(editingItem.id, partial as any);
+          } else {
+            await addItem(partial as any);
+          }
+          setEditingItem(null); // Reset after save
+        }}
+      />
 
-        {selectedItem && (
-          <ProductModal
-            item={{
-              ...selectedItem,
-              type: selectedItem.category,
-              source: 'Closet',
-              trending: false,
-              matchScore: 0,
-              imageUrl: selectedItem.imageUrl || '',
-            } as any}
-            isOpen={!!selectedItem}
-            onClose={() => setSelectedItem(null)}
-            onDelete={async (id: string) => {
-              await deleteItem(id);
-              setSelectedItem(null);
-            }}
-          />
-        )}
+      <ProductModal
+        item={selectedItem ? {
+          ...selectedItem,
+          type: selectedItem.category,
+          source: 'Closet',
+          trending: false,
+          matchScore: 0,
+          imageUrl: selectedItem.imageUrl || '',
+        } as any : null}
+        isOpen={!!selectedItem}
+        onClose={() => setSelectedItem(null)}
+        onDelete={async (id: string) => {
+          await deleteItem(id);
+          setSelectedItem(null);
+        }}
+      />
 
-
-      </AnimatePresence>
-
-      {/* Floating Action Button (FAB) for adding items (Only in Items tab) */}
+      {/* FAB stack: Filter + Add — always stacked, fully responsive */}
       {activeTab === 'items' && (
-        <motion.button
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={() => {
-            setEditingItem(null);
-            setShowAddModal(true);
-          }}
-          className="fixed bottom-24 md:bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-[var(--brand-pink)] shadow-lg shadow-[var(--brand-pink)]/40 flex items-center justify-center text-white hover:bg-[var(--brand-pink-dark)] transition-colors focus:outline-none focus:ring-4 focus:ring-[var(--brand-pink)]/30"
-          aria-label={t.closet.addItem}
-        >
-          <Plus className="w-8 h-8" />
-        </motion.button>
+        <div className="fixed bottom-24 md:bottom-6 right-6 z-[60] flex flex-col items-end gap-3">
+          {/* Filter Bubble */}
+          <BubbleToggle
+            isOpen={showFilters}
+            onToggle={() => setShowFilters(prev => !prev)}
+            icon={Filter}
+            activeCount={activeFilterCount}
+            ariaLabel="Filtros"
+            origin="bottom right"
+          >
+            <div className="w-[calc(100vw-3rem)] max-w-sm bg-[var(--card-bg)] rounded-2xl border border-[var(--border-color)] shadow-2xl p-3 max-h-[60vh] overflow-auto">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm font-semibold text-[var(--foreground)] pl-1">Filtros</span>
+                <motion.button
+                  whileHover={{ scale: 1.1, rotate: 90 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setShowFilters(false)}
+                  className="w-8 h-8 rounded-full bg-[var(--background-secondary)] flex items-center justify-center text-[var(--foreground-secondary)] hover:bg-[var(--foreground)] hover:text-[var(--background)] transition-colors"
+                  aria-label="Cerrar filtros"
+                >
+                  <X className="w-4 h-4" />
+                </motion.button>
+              </div>
+
+              {/* Search */}
+              <div className="relative mb-3">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--foreground-tertiary)]" />
+                <input
+                  type="text"
+                  placeholder={`Buscar ${activeTab === 'items' ? 'prendas' : 'outfits'}...`}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-[var(--background-secondary)] border-none rounded-xl py-2.5 pl-9 pr-10 text-sm focus:ring-1 focus:ring-[var(--brand-pink)]"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2"
+                  >
+                    <X className="w-4 h-4 text-[var(--foreground-tertiary)]" />
+                  </button>
+                )}
+              </div>
+
+              {/* Categories (Only for Items tab) */}
+              {activeTab === 'items' && (
+                <>
+                  <p className="text-xs font-medium text-[var(--foreground-tertiary)] uppercase tracking-wider mb-2 pl-1">Categoría</p>
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    {categories.map((category) => (
+                      <button
+                        key={category}
+                        onClick={() => toggleCategory(category)}
+                        className={`px-4 py-1.5 rounded-full text-xs font-medium capitalize whitespace-nowrap transition-colors ${selectedCategories.has(category)
+                          ? 'bg-[var(--foreground)] text-[var(--background)]'
+                          : 'bg-[var(--background-secondary)] text-[var(--foreground)] hover:bg-[var(--background-tertiary)]'
+                          }`}
+                      >
+                        {t.itemTypes?.[category as keyof typeof t.itemTypes] || category}
+                      </button>
+                    ))}
+                  </div>
+
+                  {selectedCategories.size > 0 && (
+                    <button
+                      onClick={() => setSelectedCategories(new Set())}
+                      className="text-xs text-[var(--brand-pink)] font-medium mb-3 pl-1 hover:underline"
+                    >
+                      Limpiar categorías
+                    </button>
+                  )}
+
+                  {/* Divider */}
+                  <div className="h-px bg-[var(--border-color)] mb-3" />
+                </>
+              )}
+
+              {/* Favorites Toggle */}
+              <button
+                onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${showFavoritesOnly
+                  ? 'bg-[var(--brand-pink)]/10 text-[var(--brand-pink)]'
+                  : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:bg-[var(--background-tertiary)]'
+                  }`}
+              >
+                <Heart className={`w-4 h-4 ${showFavoritesOnly ? 'fill-current' : ''}`} />
+                <span className="text-sm font-medium">Solo favoritos</span>
+              </button>
+            </div>
+          </BubbleToggle>
+
+          {/* Add item FAB */}
+          <motion.button
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => {
+              setEditingItem(null);
+              setShowAddModal(true);
+            }}
+            className="w-14 h-14 rounded-full bg-[var(--brand-pink)] shadow-lg shadow-[var(--brand-pink)]/40 flex items-center justify-center text-white hover:bg-[var(--brand-pink-dark)] transition-colors focus:outline-none focus:ring-4 focus:ring-[var(--brand-pink)]/30"
+            aria-label={t.closet.addItem}
+          >
+            <Plus className="w-8 h-8" />
+          </motion.button>
+        </div>
       )}
     </motion.div>
   );

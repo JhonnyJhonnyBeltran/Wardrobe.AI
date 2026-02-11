@@ -5,7 +5,7 @@
  * Shows product image, buy link, source, and price
  */
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ExternalLink, ShoppingBag, Tag, Store, Sparkles, Heart, Edit2, Trash2 } from 'lucide-react';
 import { OutfitItem } from '@/lib/fashion/outfitGenerator';
@@ -26,10 +26,17 @@ interface ProductModalProps {
 }
 
 export default function ProductModal({ item, isOpen, onClose, isFavorite = false, onFavoriteToggle, onEdit, onDelete }: ProductModalProps) {
-    if (!item) return null;
+    // Cache last valid item so content persists during exit animation
+    const lastItemRef = useRef(item);
+    useEffect(() => {
+        if (item) lastItemRef.current = item;
+    }, [item]);
+    const displayItem = item || lastItemRef.current;
+
+    if (!displayItem) return null;
 
     // Get the store link from either buyLink or sourceUrl
-    const storeLink = item.buyLink || item.sourceUrl;
+    const storeLink = displayItem.buyLink || displayItem.sourceUrl;
 
     const handleViewInStore = () => {
         if (storeLink) {
@@ -43,32 +50,34 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
                 <>
                     {/* Backdrop */}
                     <motion.div
+                        key="product-backdrop"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        transition={{ duration: 0.3 }}
+                        transition={{ duration: 0.3, ease: 'easeInOut' }}
                         onClick={onClose}
-                        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60]"
+                        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[80]"
                     />
 
                     {/* Modal Container */}
                     <motion.div
+                        key="product-container"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[60] flex items-center justify-center p-4"
+                        transition={{ duration: 0.25, ease: 'easeInOut' }}
+                        className="fixed inset-0 z-[80] flex items-center justify-center p-4"
                         onClick={onClose}
                     >
                         {/* Modal Content */}
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.9, y: 50 }}
+                            initial={{ opacity: 0, scale: 0.92, y: 40 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.9, y: 50 }}
+                            exit={{ opacity: 0, scale: 0.92, y: 40 }}
                             transition={{
                                 type: 'spring',
-                                damping: 25,
+                                damping: 28,
                                 stiffness: 300,
-                                duration: 0.4
                             }}
                             onClick={(e) => e.stopPropagation()}
                             className="relative w-full max-w-md max-h-[90vh] bg-white dark:bg-gray-900 rounded-3xl overflow-hidden shadow-2xl flex flex-col"
@@ -86,13 +95,13 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
 
                             {/* Product Image */}
                             <div className="relative aspect-[4/3] sm:aspect-square max-h-[40vh] bg-white overflow-hidden flex-shrink-0">
-                                {item.imageUrl ? (
+                                {displayItem.imageUrl ? (
                                     <motion.img
                                         initial={{ scale: 1.1, opacity: 0 }}
                                         animate={{ scale: 1, opacity: 1 }}
                                         transition={{ duration: 0.5 }}
-                                        src={item.imageUrl}
-                                        alt={item.name}
+                                        src={displayItem.imageUrl}
+                                        alt={displayItem.name}
                                         className="w-full h-full object-contain"
                                         onError={(e) => {
                                             const target = e.target as HTMLImageElement;
@@ -102,14 +111,14 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
                                 ) : (
                                     <div
                                         className="w-full h-full flex items-center justify-center"
-                                        style={{ backgroundColor: item.colorHex || '#f0f0f0' }}
+                                        style={{ backgroundColor: displayItem.colorHex || '#f0f0f0' }}
                                     >
                                         <ShoppingBag className="w-20 h-20 text-white/50" />
                                     </div>
                                 )}
 
                                 {/* Trending Badge */}
-                                {item.trending && (
+                                {displayItem.trending && (
                                     <motion.div
                                         initial={{ x: -100, opacity: 0 }}
                                         animate={{ x: 0, opacity: 1 }}
@@ -122,14 +131,14 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
                                 )}
 
                                 {/* Price Badge */}
-                                {item.price && (
+                                {displayItem.price && (
                                     <motion.div
                                         initial={{ y: 50, opacity: 0 }}
                                         animate={{ y: 0, opacity: 1 }}
                                         transition={{ delay: 0.25, type: 'spring' }}
                                         className="absolute bottom-4 right-4 px-4 py-2 bg-white/95 dark:bg-gray-800/95 backdrop-blur-md rounded-2xl shadow-lg"
                                     >
-                                        <span className="text-lg font-bold text-gray-900 dark:text-white">{item.price}</span>
+                                        <span className="text-lg font-bold text-gray-900 dark:text-white">{displayItem.price}</span>
                                     </motion.div>
                                 )}
                             </div>
@@ -143,8 +152,8 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
                             >
                                 {/* Brand & Name */}
                                 <div className="mb-4">
-                                    <p className="text-sm font-medium text-pink-500 mb-1">{item.brand}</p>
-                                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">{item.name}</h3>
+                                    <p className="text-sm font-medium text-pink-500 mb-1">{displayItem.brand}</p>
+                                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">{displayItem.name}</h3>
                                 </div>
 
                                 {/* Details Grid */}
@@ -154,7 +163,7 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
                                         <Tag className="w-4 h-4 text-gray-400" />
                                         <div>
                                             <p className="text-xs text-gray-500 dark:text-gray-400">Tipo</p>
-                                            <p className="text-sm font-medium text-gray-900 dark:text-white capitalize">{item.type}</p>
+                                            <p className="text-sm font-medium text-gray-900 dark:text-white capitalize">{displayItem.type}</p>
                                         </div>
                                     </div>
 
@@ -163,20 +172,20 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
                                         <Store className="w-4 h-4 text-gray-400" />
                                         <div>
                                             <p className="text-xs text-gray-500 dark:text-gray-400">Fuente</p>
-                                            <p className="text-sm font-medium text-gray-900 dark:text-white">{item.source}</p>
+                                            <p className="text-sm font-medium text-gray-900 dark:text-white">{displayItem.source}</p>
                                         </div>
                                     </div>
 
                                     {/* Color */}
-                                    {item.color && (
+                                    {displayItem.color && (
                                         <div className="flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
                                             <div
                                                 className="w-4 h-4 rounded-full border-2 border-white shadow-sm"
-                                                style={{ backgroundColor: item.colorHex || '#ccc' }}
+                                                style={{ backgroundColor: displayItem.colorHex || '#ccc' }}
                                             />
                                             <div>
                                                 <p className="text-xs text-gray-500 dark:text-gray-400">Color</p>
-                                                <p className="text-sm font-medium text-gray-900 dark:text-white">{item.color}</p>
+                                                <p className="text-sm font-medium text-gray-900 dark:text-white">{displayItem.color}</p>
                                             </div>
                                         </div>
                                     )}
@@ -186,7 +195,7 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
                                         <Sparkles className="w-4 h-4 text-pink-400" />
                                         <div>
                                             <p className="text-xs text-gray-500 dark:text-gray-400">Match</p>
-                                            <p className="text-sm font-medium text-gray-900 dark:text-white">{Math.round(item.matchScore)}%</p>
+                                            <p className="text-sm font-medium text-gray-900 dark:text-white">{Math.round(displayItem.matchScore)}%</p>
                                         </div>
                                     </div>
                                 </div>
@@ -210,7 +219,7 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
                                         <motion.button
                                             whileHover={{ scale: 1.02 }}
                                             whileTap={{ scale: 0.98 }}
-                                            onClick={() => onFavoriteToggle?.(item.id)}
+                                            onClick={() => onFavoriteToggle?.(displayItem.id)}
                                             className={`flex-1 flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl font-medium transition-all duration-300 border-2 min-w-[100px] h-[56px] ${isFavorite
                                                 ? 'bg-gradient-to-r from-pink-500/20 to-fuchsia-500/20 text-pink-500 border-pink-500/50'
                                                 : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 border-transparent'
@@ -224,7 +233,7 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
                                             <motion.button
                                                 whileHover={{ scale: 1.02 }}
                                                 whileTap={{ scale: 0.98 }}
-                                                onClick={() => onEdit(item.id)}
+                                                onClick={() => onEdit(displayItem.id)}
                                                 className="flex-1 flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl font-medium transition-all duration-300 border-2 border-transparent bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 min-w-[90px] h-[56px]"
                                             >
                                                 <Edit2 className="w-5 h-5" />
@@ -236,7 +245,7 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
                                             <motion.button
                                                 whileHover={{ scale: 1.02 }}
                                                 whileTap={{ scale: 0.98 }}
-                                                onClick={() => onDelete(item.id)}
+                                                onClick={() => onDelete(displayItem.id)}
                                                 className="flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl font-medium transition-all duration-300 border-2 border-transparent bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/20 h-[56px]"
                                                 title="Eliminar"
                                             >

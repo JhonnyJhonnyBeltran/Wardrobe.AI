@@ -22,7 +22,9 @@ export { default as LogoMark } from './LogoMark';
 export { default as LogoExtended } from './LogoExtended';
 export { default as OutfitLoadingCarousel } from './OutfitLoadingCarousel';
 export { default as PremiumModal } from './PremiumModal';
+export { default as BubbleToggle } from './BubbleToggle';
 export { default as WardrobeSelectionModal } from './WardrobeSelectionModal';
+export { default as ModelPreloader } from './ModelPreloader';
 
 // Realtime components
 export { default as RealtimeProvider } from './RealtimeProvider';

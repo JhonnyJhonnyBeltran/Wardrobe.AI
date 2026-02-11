@@ -88,22 +88,24 @@ export default function AddItemModal({
         setShowAdvisor(false);
     };
 
-    if (!isOpen) return null;
-
-    return (
+    return (<>
         <AnimatePresence>
+            {isOpen && (
             <motion.div
+                key="add-item-backdrop"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-black/50 z-[60] flex items-end md:items-center justify-center p-0 md:p-4"
+                transition={{ duration: 0.25 }}
+                className="fixed inset-0 bg-black/50 z-[80] flex items-end md:items-center justify-center p-0 md:p-4"
                 onClick={onClose}
             >
                 <motion.div
-                    initial={{ y: '100%' }}
-                    animate={{ y: 0 }}
-                    exit={{ y: '100%' }}
-                    transition={{ type: 'spring', damping: 25 }}
+                    key="add-item-content"
+                    initial={{ y: '100%', opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: '100%', opacity: 0 }}
+                    transition={{ type: 'spring', damping: 28, stiffness: 300 }}
                     onClick={(e) => e.stopPropagation()}
                     className="w-full md:max-w-lg bg-[var(--background)] rounded-t-3xl md:rounded-3xl overflow-hidden max-h-[85vh] md:h-auto md:max-h-[85vh] mb-16 md:mb-0 flex flex-col"
                 >
@@ -312,7 +314,7 @@ export default function AddItemModal({
                             {isProcessing ? (
                                 <>
                                     <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                                    Eliminando fondo...
+                                    {processingMessage || 'Procesando...'}
                                 </>
                             ) : (
                                 <>
@@ -321,16 +323,22 @@ export default function AddItemModal({
                                 </>
                             )}
                         </Button>
+                        {isProcessing && (
+                            <p className="text-xs text-center text-[var(--foreground-tertiary)] mt-2">
+                                Puedes seguir rellenando el formulario mientras se procesa
+                            </p>
+                        )}
                     </div>
                 </motion.div>
             </motion.div>
-
-            <AdvisorModal
-                key="advisor-modal"
-                isOpen={showAdvisor}
-                onClose={() => setShowAdvisor(false)}
-                onConfirm={handleAdvisorConfirm}
-            />
+            )}
         </AnimatePresence>
-    );
+
+        <AdvisorModal
+            key="advisor-modal"
+            isOpen={showAdvisor}
+            onClose={() => setShowAdvisor(false)}
+            onConfirm={handleAdvisorConfirm}
+        />
+    </>);
 }
