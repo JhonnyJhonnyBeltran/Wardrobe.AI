@@ -1,28 +1,38 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { Card, Button } from '@/components';
-import { useAuth } from '@/lib/hooks/useAuth';
+import { useUser } from '@/store/userStore';
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+  const { user, isLoading } = useUser();
   const pathname = usePathname();
   const router = useRouter();
 
   // Allow public pages (onboarding and auth)
   const publicPaths = ['/', '/auth'];
   const isPublicPath = publicPaths.includes(pathname || '') || pathname?.startsWith('/auth/');
-  
-  if (isPublicPath) return <>{children}</>;
+  const isOnboarding = pathname?.startsWith('/onboarding');
 
-  if (loading) {
+  // Redirect to onboarding if needed
+  useEffect(() => {
+    if (!isLoading && user && !user.styleCompleted && !isOnboarding) {
+      router.replace('/onboarding/preferences');
+    }
+  }, [user, isLoading, isOnboarding, router]);
+
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p className="text-sm text-[var(--foreground-tertiary)]">Cargando...</p>
       </div>
     );
   }
+
+  // If public path, allow access
+  // Note: The useEffect above will still trigger redirect if they are logged in and incomplete style
+  if (isPublicPath) return <>{children}</>;
 
   if (!user) {
     return (
@@ -36,6 +46,11 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
         </Card>
       </div>
     );
+  }
+
+  // Prevent rendering protected content if we are about to redirect
+  if (user && !user.styleCompleted && !isOnboarding) {
+    return null;
   }
 
   return <>{children}</>;

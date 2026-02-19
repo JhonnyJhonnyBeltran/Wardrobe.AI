@@ -43,6 +43,7 @@ interface UseAddItemFormReturn {
     handleColorSelect: (colorOption: { name: string; hex: string }) => void;
     handleColorPickerChange: (hex: string) => void;
     rotateImage: (degrees: number) => void;
+    scaleImage: (scale: number) => void;
 
     // Submit
     buildPayload: () => Partial<ClothingItem>;
@@ -322,6 +323,44 @@ export function useAddItemForm({
         };
     }, [image, processedImage]);
 
+    // Scale the current image (zoom in/out)
+    const scaleImage = useCallback((scaleFactor: number) => {
+        if (!image) return;
+
+        const img = new Image();
+        img.src = image;
+
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return;
+
+            // Calculate new dimensions
+            const newWidth = img.width * scaleFactor;
+            const newHeight = img.height * scaleFactor;
+
+            canvas.width = newWidth;
+            canvas.height = newHeight;
+
+            // Draw scaled image
+            ctx.drawImage(img, 0, 0, newWidth, newHeight);
+
+            canvas.toBlob((blob) => {
+                if (blob) {
+                    const newImageUrl = URL.createObjectURL(blob);
+
+                    if (processedImage && image === processedImage) {
+                        setProcessedImage(newImageUrl);
+                        setImage(newImageUrl);
+                    } else {
+                        setOriginalImage(newImageUrl);
+                        setImage(newImageUrl);
+                    }
+                }
+            }, 'image/png');
+        };
+    }, [image, processedImage]);
+
     // Build the payload for submission
     const buildPayload = useCallback((): Partial<ClothingItem> => {
         const shouldUpdateImage = !initialData || image !== initialData.imageUrl;
@@ -378,6 +417,7 @@ export function useAddItemForm({
         handleColorSelect,
         handleColorPickerChange,
         rotateImage,
+        scaleImage,
 
         // Submit
         buildPayload,

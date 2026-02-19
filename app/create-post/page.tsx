@@ -3,45 +3,42 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Shirt, Layers, Camera, Check, Plus, Image as ImageIcon, X } from 'lucide-react';
+import { ArrowLeft, Shirt, Layers, Camera, Check, Plus, Image as ImageIcon, X, ChevronRight, Edit2 } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';
 import Image from 'next/image';
 import { useUser } from '@/store/userStore';
-
-type Step = 'initial' | 'select-outfit' | 'compose';
+import ImageCropper from '@/components/ImageCropper';
+import { Button } from '@/components';
 
 export default function CreatePostPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { user } = useUser();
 
-    // State
-    const [step, setStep] = useState<Step>('initial');
+    // Mode: 'compose' is the main screen. 'select-outfit' is the picker view.
+    const [mode, setMode] = useState<'compose' | 'select-outfit'>('compose');
+
+    // Data
     const [selectedOutfit, setSelectedOutfit] = useState<any>(null);
     const [userOutfits, setUserOutfits] = useState<any[]>([]);
     const [loadingOutfits, setLoadingOutfits] = useState(false);
-    const [realImage, setRealImage] = useState<string | null>(null); // URL or base64
+
+    // Image State
+    const [realImage, setRealImage] = useState<string | null>(null); // Preview URL
+    const [imageFile, setImageFile] = useState<File | Blob | null>(null); // File to upload
+    const [croppingImage, setCroppingImage] = useState<string | null>(null); // Image being cropped
+
     const [caption, setCaption] = useState('');
     const [publishing, setPublishing] = useState(false);
 
     // Check for return from Create Page
     useEffect(() => {
         const outfitId = searchParams.get('outfitId');
-        const returnStep = searchParams.get('step');
-
-        if (outfitId && slugIsStep(returnStep)) {
-            // Fetch the created outfit
+        if (outfitId) {
             fetchSingleOutfit(outfitId);
-            setStep('compose'); // Go directly to compose
-        } else if (searchParams.get('returnTo')) { // Handle legacy/manual return
-            // ...
         }
     }, [searchParams]);
-
-    const slugIsStep = (s: string | null): s is Step => {
-        return s === 'compose';
-    }
 
     // Fetch user outfits
     const fetchOutfits = async () => {
@@ -69,7 +66,7 @@ export default function CreatePostPage() {
 
     const handleOutfitSelect = (outfit: any) => {
         setSelectedOutfit(outfit);
-        setStep('compose');
+        setMode('compose');
     };
 
     const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -77,33 +74,67 @@ export default function CreatePostPage() {
         if (file) {
             const reader = new FileReader();
             reader.onloadend = () => {
-                setRealImage(reader.result as string);
+                setCroppingImage(reader.result as string);
             };
             reader.readAsDataURL(file);
         }
+        e.target.value = '';
+    };
+
+    const handleCropComplete = (croppedBlob: Blob) => {
+        const url = URL.createObjectURL(croppedBlob);
+        setRealImage(url);
+        setImageFile(croppedBlob);
+        setCroppingImage(null);
+    };
+
+    const validatePost = () => {
+        // Require Image OR Outfit
+        if (!selectedOutfit && !realImage) return false;
+        return true;
     };
 
     const handlePublish = async () => {
-        if (!selectedOutfit || !realImage) return;
+        if (!validatePost() || !user) return;
         setPublishing(true);
 
         try {
-            // 1. Upload Real Image to Storage (Skipping actual storage upload for demo speed, using base64 or mock)
-            // In real app: upload to supabase storage bucket 'posts'
+            let finalImageUrl = null;
+
+            // 1. Upload Real Image if exists
+            if (imageFile) {
+                const fileExt = 'png';
+                const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+                const { error: uploadError, data } = await supabase.storage
+                    .from('posts')
+                    .upload(fileName, imageFile);
+
+                if (uploadError) throw uploadError;
+
+                const { data: { publicUrl } } = supabase.storage
+                    .from('posts')
+                    .getPublicUrl(fileName);
+
+                finalImageUrl = publicUrl;
+            }
 
             // 2. Create Post in DB
-            // Assuming a 'posts' table exists. If not, we might need to create it.
-            // For now, let's assume specific logic or just log it. 
-            // Note: The task says "Post Creation Flow".
+            const { error: insertError } = await supabase
+                .from('posts')
+                .insert({
+                    user_id: user.id,
+                    outfit_id: selectedOutfit?.id, // Can be null now
+                    image_url: finalImageUrl,
+                    caption: caption.trim() || (selectedOutfit ? selectedOutfit.name : '') // Default caption
+                } as any);
 
-            // Mocking success
-            await new Promise(r => setTimeout(r, 1500));
-            alert('¡Publicación creada con éxito!');
+            if (insertError) throw insertError;
+
             router.push('/profile');
 
         } catch (err) {
-            console.error(err);
-            alert('Error al publicar');
+            console.error('Error publishing:', err);
+            alert('Error al publicar. Por favor intenta de nuevo.');
         } finally {
             setPublishing(false);
         }
@@ -112,193 +143,198 @@ export default function CreatePostPage() {
     return (
         <div className="min-h-screen bg-[var(--background)] flex flex-col">
             {/* Header */}
-            <header className="sticky top-0 z-30 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-color)] px-4 h-16 flex items-center gap-4">
-                <button
-                    onClick={() => {
-                        if (step === 'select-outfit' || step === 'compose') setStep('initial');
-                        else router.back();
-                    }}
-                    className="p-2 -ml-2 hover:bg-[var(--background-secondary)] rounded-full transition-colors"
-                >
-                    <ArrowLeft className="w-5 h-5 text-[var(--foreground)]" />
-                </button>
-                <h1 className="text-lg font-bold text-[var(--foreground)]">
-                    {step === 'initial' && 'Nueva Publicación'}
-                    {step === 'select-outfit' && 'Seleccionar Outfit'}
-                    {step === 'compose' && 'Crear Post'}
-                </h1>
-                {step === 'compose' && (
+            <header className="sticky top-0 z-30 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-color)] px-4 h-16 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                    <button
+                        onClick={() => {
+                            if (mode === 'select-outfit') setMode('compose');
+                            else router.back();
+                        }}
+                        className="p-2 -ml-2 hover:bg-[var(--background-secondary)] rounded-full transition-colors"
+                    >
+                        <ArrowLeft className="w-5 h-5 text-[var(--foreground)]" />
+                    </button>
+                    <h1 className="text-lg font-bold text-[var(--foreground)]">
+                        {mode === 'select-outfit' ? 'Seleccionar Outfit' : 'Nueva Publicación'}
+                    </h1>
+                </div>
+                {mode === 'compose' && (
                     <button
                         onClick={handlePublish}
-                        disabled={publishing || !realImage}
-                        className="ml-auto text-[var(--brand-pink)] font-bold text-sm disabled:opacity-50"
+                        disabled={publishing || !validatePost()}
+                        className="text-[var(--brand-pink)] font-bold text-sm disabled:opacity-50 px-2 py-1"
                     >
-                        {publishing ? 'Publicando...' : 'Publicar'}
+                        {publishing ? 'Publicando...' : 'Compartir'}
                     </button>
                 )}
             </header>
 
-            {/* Content */}
-            <main className="flex-1 p-6 flex flex-col items-center w-full max-w-md mx-auto">
+            {/* Main Content */}
+            <main className="flex-1 w-full max-w-2xl mx-auto">
 
-                {/* STEP 1: INITIAL CHOICE */}
-                {step === 'initial' && (
-                    <div className="space-y-8 w-full mt-8">
-                        <div className="text-center space-y-2">
-                            <h2 className="text-2xl font-bold">¿Qué quieres publicar?</h2>
-                            <p className="text-[var(--foreground-secondary)]">Elige el origen de tu outfit</p>
-                        </div>
+                {/* COMPOSE MODE */}
+                {mode === 'compose' && (
+                    <div className="p-4 space-y-6">
 
-                        <div className="grid grid-cols-1 gap-4 w-full">
-                            {/* Create New */}
-                            <div
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    router.push('/create?returnTo=/create-post?step=compose');
-                                }}
-                                className="w-full relative group overflow-hidden bg-[var(--card-bg)] p-1 rounded-3xl transition-all duration-300 hover:shadow-xl hover:shadow-[var(--brand-pink)]/20 border border-[var(--border-color)] text-left cursor-pointer"
-                            >
-                                <div className="relative bg-[var(--card-bg)] p-6 rounded-[22px] flex items-center gap-4 h-full">
-                                    <div className="w-14 h-14 rounded-full bg-[var(--brand-pink)]/10 flex items-center justify-center shrink-0">
-                                        <Shirt className="w-7 h-7 text-[var(--brand-pink)]" />
-                                    </div>
-                                    <div>
-                                        <h3 className="font-bold text-lg text-[var(--foreground)]">Crear Nuevo Outfit</h3>
-                                        <p className="text-sm text-[var(--foreground-secondary)]">Diseña un look desde cero</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Select Existing */}
-                            <button
-                                onClick={() => {
-                                    setStep('select-outfit');
-                                    fetchOutfits();
-                                }}
-                                className="w-full relative group overflow-hidden bg-[var(--card-bg)] p-1 rounded-3xl transition-all duration-300 hover:shadow-xl hover:shadow-[var(--brand-purple)]/20 border border-[var(--border-color)] text-left"
-                            >
-                                <div className="relative bg-[var(--card-bg)] p-6 rounded-[22px] flex items-center gap-4 h-full">
-                                    <div className="w-14 h-14 rounded-full bg-[var(--brand-purple)]/10 flex items-center justify-center shrink-0">
-                                        <Layers className="w-7 h-7 text-[var(--brand-purple)]" />
-                                    </div>
-                                    <div>
-                                        <h3 className="font-bold text-lg text-[var(--foreground)]">Seleccionar del Armario</h3>
-                                        <p className="text-sm text-[var(--foreground-secondary)]">Elige uno de tus outfits guardados</p>
-                                    </div>
-                                </div>
-                            </button>
-                        </div>
-                    </div>
-                )}
-
-                {/* STEP 2: SELECT OUTFIT */}
-                {step === 'select-outfit' && (
-                    <div className="w-full h-full pb-20">
-                        {loadingOutfits ? (
-                            <div className="flex justify-center p-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>
-                        ) : (
-                            <div className="grid grid-cols-2 gap-4">
-                                {userOutfits.map(outfit => (
+                        {/* Media Section: Image OR Placeholder */}
+                        <div className="w-full aspect-[4/5] bg-[var(--card-bg)] rounded-2xl overflow-hidden border border-[var(--border-color)] relative group">
+                            {realImage ? (
+                                <>
+                                    <Image src={realImage} alt="Post preview" fill className="object-cover" />
                                     <button
-                                        key={outfit.id}
-                                        onClick={() => handleOutfitSelect(outfit)}
-                                        className="relative aspect-[3/4] rounded-xl overflow-hidden border border-[var(--border-color)] group hover:border-[var(--brand-pink)] transition-colors"
+                                        onClick={() => { setRealImage(null); setImageFile(null); }}
+                                        className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-full hover:bg-black/70"
                                     >
-                                        {/* Simple Preview - First Item */}
-                                        {outfit.outfit_items?.[0]?.clothing_items?.image_url ? (
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                </>
+                            ) : (
+                                <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer hover:bg-[var(--background-secondary)] transition-colors gap-3">
+                                    <div className="w-16 h-16 rounded-full bg-[var(--background-secondary)] flex items-center justify-center">
+                                        <Camera className="w-8 h-8 text-[var(--foreground-secondary)]" />
+                                    </div>
+                                    <div className="text-center">
+                                        <p className="font-bold text-[var(--foreground)]">Añadir Foto</p>
+                                        <p className="text-sm text-[var(--foreground-tertiary)]">Opcional si usas Outfit</p>
+                                    </div>
+                                    <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+                                </label>
+                            )}
+                        </div>
+
+                        {/* Outfit Section: Row Style */}
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-[var(--foreground)] ml-1">Outfit</label>
+
+                            {selectedOutfit ? (
+                                <div className="flex items-center gap-4 p-3 bg-[var(--card-bg)] rounded-2xl border border-[var(--border-color)]">
+                                    <div className="w-12 h-12 bg-[var(--background-secondary)] rounded-lg relative overflow-hidden shrink-0">
+                                        {selectedOutfit.outfit_items?.[0]?.clothing_items?.image_url ? (
                                             <Image
-                                                src={outfit.outfit_items[0].clothing_items.image_url}
-                                                alt={outfit.name}
+                                                src={selectedOutfit.outfit_items[0].clothing_items.image_url}
+                                                alt={selectedOutfit.name}
                                                 fill
                                                 className="object-cover"
                                             />
                                         ) : (
-                                            <div className="w-full h-full bg-[var(--background-secondary)] flex items-center justify-center">
-                                                <Shirt className="w-8 h-8 opacity-20" />
+                                            <div className="w-full h-full flex items-center justify-center">
+                                                <Shirt className="w-5 h-5 opacity-40" />
                                             </div>
                                         )}
-                                        <div className="absolute bottom-0 inset-x-0 p-2 bg-gradient-to-t from-black/80 to-transparent text-white text-xs font-medium text-left pt-6">
-                                            {outfit.name}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="font-medium text-[var(--foreground)] truncate">{selectedOutfit.name}</p>
+                                        <div className="flex gap-3 text-xs font-medium mt-0.5">
+                                            <button
+                                                onClick={() => {
+                                                    setMode('select-outfit');
+                                                    fetchOutfits();
+                                                }}
+                                                className="text-[var(--foreground-secondary)] hover:text-[var(--foreground)]"
+                                            >
+                                                Cambiar
+                                            </button>
+                                            <button
+                                                onClick={() => router.push(`/create?outfitId=${selectedOutfit.id}&returnTo=/create-post`)}
+                                                className="text-[var(--brand-pink)] hover:text-[var(--brand-pink)]/80 flex items-center"
+                                            >
+                                                <Edit2 className="w-3 h-3 mr-1" />
+                                                Editar
+                                            </button>
                                         </div>
+                                    </div>
+                                    <button
+                                        onClick={() => setSelectedOutfit(null)}
+                                        className="p-2 text-[var(--foreground-tertiary)] hover:text-red-500"
+                                    >
+                                        <X className="w-5 h-5" />
                                     </button>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                )}
-
-                {/* STEP 3: COMPOSE */}
-                {step === 'compose' && selectedOutfit && (
-                    <div className="w-full space-y-6 pb-20">
-
-                        {/* 1. Selected Outfit Preview (Small) */}
-                        <div className="flex items-center gap-4 p-4 bg-[var(--card-bg)] rounded-2xl border border-[var(--border-color)] shadow-sm">
-                            <div className="w-16 h-16 bg-[var(--background-secondary)] rounded-xl flex items-center justify-center relative overflow-hidden border border-[var(--border-color)]">
-                                {selectedOutfit.outfit_items?.[0]?.clothing_items?.image_url ? (
-                                    <Image
-                                        src={selectedOutfit.outfit_items[0].clothing_items.image_url}
-                                        alt={selectedOutfit.name}
-                                        fill
-                                        className="object-cover"
-                                    />
-                                ) : (
-                                    <Shirt className="w-6 h-6 opacity-50" />
-                                )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <p className="font-bold text-[var(--foreground)] truncate">{selectedOutfit.name}</p>
+                                </div>
+                            ) : (
                                 <button
-                                    onClick={() => setStep('select-outfit')}
-                                    className="text-xs text-[var(--brand-pink)] font-medium hover:underline mt-1"
+                                    onClick={() => { setMode('select-outfit'); fetchOutfits(); }}
+                                    className="w-full p-4 flex items-center justify-between bg-[var(--card-bg)] rounded-2xl border border-[var(--border-color)] hover:bg-[var(--background-secondary)] transition-colors group"
                                 >
-                                    Cambiar Outfit
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* 2. Photo Upload (Real Life) */}
-                        <div className="space-y-3">
-                            <label className="block text-sm font-bold text-[var(--foreground)]">
-                                Foto del Look (Real) <span className="text-[var(--brand-pink)]">*</span>
-                            </label>
-                            <div className="relative aspect-square rounded-3xl border-2 border-dashed border-[var(--border-color)] hover:border-[var(--brand-pink)] transition-colors bg-[var(--card-bg)] overflow-hidden">
-                                {realImage ? (
-                                    <>
-                                        <Image src={realImage} alt="Real look" fill className="object-cover" />
-                                        <button
-                                            onClick={() => setRealImage(null)}
-                                            className="absolute top-3 right-3 p-2 bg-black/60 backdrop-blur-md rounded-full text-white hover:bg-black/80 transition-colors"
-                                        >
-                                            <X className="w-5 h-5" />
-                                        </button>
-                                    </>
-                                ) : (
-                                    <label className="absolute inset-0 flex flex-col items-center justify-center cursor-pointer hover:bg-[var(--background-secondary)]/50 transition-colors">
-                                        <div className="w-16 h-16 rounded-full bg-[var(--background-tertiary)] flex items-center justify-center mb-4">
-                                            <ImageIcon className="w-8 h-8 text-[var(--foreground-secondary)]" />
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-full bg-[var(--brand-pink)]/10 flex items-center justify-center text-[var(--brand-pink)]">
+                                            <Layers className="w-5 h-5" />
                                         </div>
-                                        <span className="font-bold text-[var(--foreground)]">Sube una foto</span>
-                                        <span className="text-sm text-[var(--foreground-tertiary)] mt-1">Muestra cómo te queda</span>
-                                        <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-                                    </label>
-                                )}
-                            </div>
+                                        <span className="font-medium text-[var(--foreground)]">Enlazar un Outfit</span>
+                                    </div>
+                                    <ChevronRight className="w-5 h-5 text-[var(--foreground-tertiary)] group-hover:translate-x-1 transition-transform" />
+                                </button>
+                            )}
                         </div>
 
-                        {/* 3. Caption */}
-                        <div className="space-y-3">
-                            <label className="block text-sm font-bold text-[var(--foreground)]">
-                                Descripción
-                            </label>
+                        {/* Caption Section */}
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-[var(--foreground)] ml-1">Descripción</label>
                             <textarea
-                                className="w-full p-4 rounded-2xl bg-[var(--card-bg)] border border-[var(--border-color)] outline-none focus:ring-2 focus:ring-[var(--brand-pink)]/50 resize-none h-32 transition-shadow placeholder:text-[var(--foreground-tertiary)]"
-                                placeholder="Cuéntanos sobre este outfit, ocasión, mood..."
+                                className="w-full p-4 rounded-2xl bg-[var(--card-bg)] border border-[var(--border-color)] outline-none focus:ring-2 focus:ring-[var(--brand-pink)]/50 resize-none h-24 transition-all placeholder:text-[var(--foreground-tertiary)]"
+                                placeholder="Escribe un pie de foto..."
                                 value={caption}
                                 onChange={(e) => setCaption(e.target.value)}
                             />
                         </div>
 
                     </div>
+                )}
+
+                {/* SELECT OUTFIT MODE */}
+                {mode === 'select-outfit' && (
+                    <div className="p-4 grid grid-cols-2 gap-4 pb-20">
+                        {/* Create New Option */}
+                        <button
+                            onClick={() => router.push('/create?returnTo=/create-post')}
+                            className="aspect-[3/4] rounded-2xl border-2 border-dashed border-[var(--border-color)] flex flex-col items-center justify-center gap-2 hover:bg-[var(--background-secondary)] transition-colors text-[var(--foreground-secondary)] hover:text-[var(--foreground)]"
+                        >
+                            <div className="w-12 h-12 rounded-full bg-[var(--brand-pink)]/10 flex items-center justify-center">
+                                <Plus className="w-6 h-6 text-[var(--brand-pink)]" />
+                            </div>
+                            <span className="font-medium">Crear Nuevo</span>
+                        </button>
+
+                        {/* Existing Outfits */}
+                        {loadingOutfits ? (
+                            [...Array(4)].map((_, i) => (
+                                <div key={i} className="aspect-[3/4] bg-[var(--card-bg)] rounded-2xl animate-pulse" />
+                            ))
+                        ) : (
+                            userOutfits.map(outfit => (
+                                <button
+                                    key={outfit.id}
+                                    onClick={() => handleOutfitSelect(outfit)}
+                                    className="relative aspect-[3/4] rounded-2xl overflow-hidden border border-[var(--border-color)] group hover:border-[var(--brand-pink)] transition-all"
+                                >
+                                    {outfit.outfit_items?.[0]?.clothing_items?.image_url ? (
+                                        <Image
+                                            src={outfit.outfit_items[0].clothing_items.image_url}
+                                            alt={outfit.name}
+                                            fill
+                                            className="object-cover"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full bg-[var(--background-secondary)] flex items-center justify-center">
+                                            <Shirt className="w-8 h-8 opacity-20" />
+                                        </div>
+                                    )}
+                                    <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/80 to-transparent pt-8">
+                                        <p className="text-white text-xs font-bold truncate">{outfit.name}</p>
+                                    </div>
+                                </button>
+                            ))
+                        )}
+                    </div>
+                )}
+
+                {/* Cropper Modal */}
+                {croppingImage && (
+                    <ImageCropper
+                        imageSrc={croppingImage}
+                        onCropComplete={handleCropComplete}
+                        onCancel={() => setCroppingImage(null)}
+                        aspectRatio={4 / 5}
+                    />
                 )}
 
             </main>

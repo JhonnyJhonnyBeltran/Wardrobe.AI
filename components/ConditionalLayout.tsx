@@ -13,7 +13,7 @@ export default function ConditionalLayout({ children }: { children: React.ReactN
 
   // Rutas públicas sin AppLayout (sin navbar/tabbar)
   const publicRoutes = ['/', '/auth'];
-  const isPublicRoute = publicRoutes.includes(pathname || '') || pathname?.startsWith('/auth/');
+  const isPublicRoute = publicRoutes.includes(pathname || '') || pathname?.startsWith('/auth/') || pathname?.startsWith('/onboarding');
 
   if (isPublicRoute) {
     return <>{children}</>;

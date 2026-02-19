@@ -1,8 +1,9 @@
 'use client';
 
 /**
- * Card Component - Floating Design (Apple/Revolut Style)
- * Ultra-rounded with subtle depth, no harsh borders
+ * Card Component - Apple Style Design
+ * Removed zoom and inner shadow
+ * Implemented full card expansion on hover with subtle border
  */
 
 import React, { ReactNode } from 'react';
@@ -23,7 +24,7 @@ export default function Card({
   ...props
 }: CardProps) {
   const variantClasses = {
-    default: 'floating-card',
+    default: 'card-apple',
     glass: 'glass',
     gradient: 'gradient-card',
   };
@@ -33,8 +34,9 @@ export default function Card({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       whileHover={hover ? {
-        y: -4,
-        scale: 1.01,
+        scale: 1.02,
+        boxShadow: '0 8px 32px -2px rgba(0, 0, 0, 0.08)',
+        borderColor: 'rgba(255, 105, 180, 0.2)',
         transition: { duration: 0.3, ease: [0.4, 0, 0.2, 1] }
       } : {}}
       transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}

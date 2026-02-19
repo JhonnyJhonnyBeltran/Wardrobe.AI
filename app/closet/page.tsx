@@ -9,7 +9,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Heart, Grid3x3, List, Search, Filter, Plus, Wand2, X, Shirt, Layers
+  Heart, Grid3x3, List, Search, Filter, Plus, Wand2, X, Shirt, Layers, Share2
 } from 'lucide-react';
 import { Card, Button, ClothingItem, LogoMark } from '@/components';
 import AddItemModal from '@/components/AddItemModal';
@@ -121,6 +121,7 @@ export default function ClosetPage() {
   // Product Modal State
   const [selectedProduct, setSelectedProduct] = useState<(OutfitItem & { sourceUrl?: string }) | null>(null);
   const [showProductModal, setShowProductModal] = useState(false);
+  const [shareOutfit, setShareOutfit] = useState<any | null>(null); // State for sharing outfit
 
   const handleFavoriteToggle = async (id: string) => {
     const isFav = favorites.has(id);
@@ -317,11 +318,11 @@ export default function ClosetPage() {
     >
 
       {/* Header Fixed */}
-      <header className="fixed top-0 left-0 right-0 z-40 bg-[var(--background)]/95 backdrop-blur-md border-b border-[var(--border-color)] pb-2 transition-all supports-[ios]:pt-safe-top">
+      <header className="fixed top-0 left-0 right-0 z-40 bg-[var(--background)]/95 backdrop-blur-md pb-2 transition-all supports-[ios]:pt-safe-top">
         <div className="max-w-7xl mx-auto px-4 pt-4 space-y-4">
 
           {/* Top Actions: Create & AI */}
-          <div className="bg-[var(--card-bg)] p-2 rounded-2xl border border-[var(--border-color)] flex items-center gap-2 shadow-sm">
+          <div className="bg-[var(--card-bg)] p-2 rounded-2xl flex items-center gap-2">
             <Link href="/create" className="flex-1">
               <button className="w-full py-3 px-4 rounded-xl bg-[var(--foreground)] text-[var(--background)] font-bold flex items-center justify-center gap-2 shadow-md hover:opacity-90 transition-opacity">
                 <Plus className="w-5 h-5" />
@@ -398,34 +399,27 @@ export default function ClosetPage() {
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.2 }}
             >
-              {(filteredContent as ClothingItemType[]).length === 0 && !loading ? (
+              {!loading && (!items || items.length === 0 || (filteredContent as ClothingItemType[]).length === 0) ? (
                 <div className="flex flex-col items-center justify-center py-16 px-6 text-center mt-8 md:mt-12 mx-4 bg-[var(--card-bg)]/50 rounded-3xl border border-dashed border-[var(--border-color)]">
                   <div className="w-20 h-20 bg-[var(--background-secondary)] rounded-full flex items-center justify-center mb-6 shadow-sm">
-                    {(items || []).length === 0 ? (
+                    {(!items || items.length === 0) ? (
                       <Shirt className="w-10 h-10 text-[var(--foreground-tertiary)]" />
                     ) : (
                       <Search className="w-10 h-10 text-[var(--foreground-tertiary)]" />
                     )}
                   </div>
                   <h3 className="text-xl font-bold mb-3 text-[var(--foreground)]">
-                    {(items || []).length === 0 ? 'Añade tu primera prenda' : 'No se encontraron prendas'}
+                    {(!items || items.length === 0) ? 'Añade tu primera prenda' : 'No se encontraron prendas'}
                   </h3>
                   <p className="text-[var(--foreground-secondary)] max-w-sm mx-auto mb-8 text-base">
-                    {(items || []).length === 0
+                    {(!items || items.length === 0)
                       ? 'Tu armario está esperando. Añade prendas con foto y crea looks increíbles.'
                       : 'No hay resultados para tu búsqueda. Prueba otros filtros o términos.'}
                   </p>
-                  <Button
-                    onClick={() => setShowAddModal(true)}
-                    className="h-12 px-8 text-lg rounded-xl shadow-lg shadow-[var(--brand-pink)]/20 hover:shadow-[var(--brand-pink)]/40 transition-all"
-                  >
-                    <Plus className="w-5 h-5 mr-2" />
-                    {(items || []).length === 0 ? 'Añadir primera prenda' : 'Añadir prenda'}
-                  </Button>
                 </div>
               ) : (
                 <div className={`px-4 ${viewMode === 'grid'
-                  ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'
+                  ? 'grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3'
                   : 'space-y-3' // List View
                   }`}>
                   {(filteredContent as ClothingItemType[]).map((item) => (
@@ -450,7 +444,7 @@ export default function ClosetPage() {
                         <Card
                           key={item.id}
                           variant="default"
-                          className="group relative overflow-hidden bg-[var(--card-bg)] border-none shadow-sm hover:shadow-md transition-all duration-300"
+                          className="group relative overflow-hidden bg-[var(--card-bg)] border-none shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
                           onClick={() => setSelectedItem(item)}
                         >
                           <div className="relative aspect-[3/4] overflow-hidden bg-[var(--background-secondary)]">
@@ -458,7 +452,7 @@ export default function ClosetPage() {
                               <img
                                 src={item.imageUrl}
                                 alt={item.name}
-                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                                className="w-full h-full object-cover"
                                 loading="lazy"
                               />
                             ) : (
@@ -478,9 +472,6 @@ export default function ClosetPage() {
                             >
                               <Heart className={`w-4 h-4 ${item.favorite ? 'fill-current text-red-500' : 'text-white'}`} />
                             </motion.button>
-
-                            {/* Gradient Overlay */}
-                            <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                           </div>
 
                           <div className="p-3">
@@ -506,16 +497,16 @@ export default function ClosetPage() {
               exit={{ opacity: 0, x: 20 }}
               transition={{ duration: 0.2 }}
             >
-              {(filteredContent as Outfit[]).length === 0 && !outfitsLoading ? (
+              {!outfitsLoading && (!outfits || outfits.length === 0 || (filteredContent as Outfit[]).length === 0) ? (
                 <div className="flex flex-col items-center justify-center py-16 px-6 text-center mt-8 md:mt-12 mx-4 bg-[var(--card-bg)]/50 rounded-3xl border border-dashed border-[var(--border-color)]">
                   <div className="w-20 h-20 bg-[var(--background-secondary)] rounded-full flex items-center justify-center mb-6 shadow-sm">
                     <Layers className="w-10 h-10 text-[var(--foreground-tertiary)]" />
                   </div>
                   <h3 className="text-xl font-bold mb-3 text-[var(--foreground)]">
-                    {outfits.length === 0 ? 'Crea tu primer outfit' : 'No hay resultados'}
+                    {(!outfits || outfits.length === 0) ? 'Crea tu primer outfit' : 'No hay resultados'}
                   </h3>
                   <p className="text-[var(--foreground-secondary)] max-w-sm mx-auto mb-8 text-base">
-                    {outfits.length === 0
+                    {(!outfits || outfits.length === 0)
                       ? 'Combina prendas de tu armario y guarda tus looks favoritos.'
                       : 'Prueba con otra búsqueda.'}
                   </p>
@@ -531,7 +522,7 @@ export default function ClosetPage() {
                        ${(!items || items.length === 0) ? 'opacity-60 cursor-pointer' : 'hover:shadow-[var(--brand-pink)]/40'}`}
                   >
                     <Plus className="w-5 h-5 mr-2" />
-                    {outfits.length === 0 ? 'Crear primer outfit' : 'Crear outfit'}
+                    {(!outfits || outfits.length === 0) ? 'Crear primer outfit' : 'Crear outfit'}
                   </Button>
                 </div>
               ) : (
@@ -544,8 +535,14 @@ export default function ClosetPage() {
                       <OutfitCard
                         outfit={outfit}
                         index={0}
+                        onClick={() => {
+                          router.push(`/outfit/${outfit.id}`);
+                        }}
                         onEdit={(outfit) => {
                           router.push(`/create?outfitId=${outfit.id}`);
+                        }}
+                        onShare={(outfit) => {
+                          setShareOutfit(outfit);
                         }}
                         onDelete={async (id) => {
                           const confirmDelete = confirm('¿Seguro que quieres eliminar este outfit?');
@@ -596,6 +593,7 @@ export default function ClosetPage() {
         } as any : null}
         isOpen={!!selectedItem}
         onClose={() => setSelectedItem(null)}
+        onEdit={handleEditItem}
         onDelete={async (id: string) => {
           await deleteItem(id);
           setSelectedItem(null);
@@ -604,7 +602,7 @@ export default function ClosetPage() {
 
       {/* FAB stack: Filter + Add — always stacked, fully responsive */}
       {activeTab === 'items' && (
-        <div className="fixed bottom-24 md:bottom-6 right-6 z-[60] flex flex-col items-end gap-3">
+        <div className="fixed bottom-24 md:bottom-6 right-6 z-[5005] flex flex-col items-end gap-3">
           {/* Filter Bubble */}
           <BubbleToggle
             isOpen={showFilters}
@@ -696,23 +694,64 @@ export default function ClosetPage() {
             </div>
           </BubbleToggle>
 
-          {/* Add item FAB */}
+          {/* Create Outfit Button */}
           <motion.button
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={() => {
-              setEditingItem(null);
-              setShowAddModal(true);
-            }}
-            className="w-14 h-14 rounded-full bg-[var(--brand-pink)] shadow-lg shadow-[var(--brand-pink)]/40 flex items-center justify-center text-white hover:bg-[var(--brand-pink-dark)] transition-colors focus:outline-none focus:ring-4 focus:ring-[var(--brand-pink)]/30"
-            aria-label={t.closet.addItem}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setShowAddModal(true)}
+            className="w-14 h-14 rounded-full bg-[var(--brand-pink)] flex items-center justify-center text-white shadow-xl hover:shadow-[0_0_20px_rgba(236,72,153,0.5)] transition-all cursor-pointer"
           >
-            <Plus className="w-8 h-8" />
+            <Plus className="w-7 h-7" />
           </motion.button>
         </div>
       )}
+      {/* Share/Post Modal */}
+      <AnimatePresence>
+        {shareOutfit && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+            onClick={() => setShareOutfit(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-[var(--card-bg)] rounded-3xl p-6 w-full max-w-sm shadow-2xl border border-[var(--border-color)]"
+            >
+              <div className="w-16 h-16 rounded-full bg-[var(--brand-pink)]/10 flex items-center justify-center mx-auto mb-4">
+                <Share2 className="w-8 h-8 text-[var(--brand-pink)]" />
+              </div>
+              <h3 className="text-xl font-bold text-center text-[var(--foreground)] mb-2">
+                Crear Publicación
+              </h3>
+              <p className="text-center text-[var(--foreground-secondary)] mb-6">
+                ¿Quieres crear una nueva publicación con el outfit <span className="font-bold text-[var(--foreground)]">"{shareOutfit.name}"</span>?
+              </p>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShareOutfit(null)}
+                  className="flex-1 py-3 rounded-xl font-medium text-[var(--foreground-secondary)] hover:bg-[var(--background-secondary)] transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => {
+                    router.push(`/create-post?outfitId=${shareOutfit.id}`);
+                  }}
+                  className="flex-1 py-3 rounded-xl font-bold bg-[var(--foreground)] text-[var(--background)] shadow-lg hover:opacity-90 transition-opacity"
+                >
+                  Crear Post
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

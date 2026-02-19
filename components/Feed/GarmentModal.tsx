@@ -107,7 +107,7 @@ export default function OutfitDetailsModal({ post, isOpen, onClose }: GarmentMod
                                             src={garment.image}
                                             alt={garment.name}
                                             fill
-                                            className="object-cover group-hover:scale-105 transition-transform duration-500"
+                                            className="object-cover transition-transform duration-500"
                                         />
                                     </div>
                                     <div className="flex-1 flex flex-col justify-center">

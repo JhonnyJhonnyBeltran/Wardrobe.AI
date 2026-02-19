@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { Search } from 'lucide-react';
+import { Search, Edit } from 'lucide-react';
 import { ConversationList } from '@/components/Messages/ConversationList';
+import { NewMessageModal } from '@/components/Messages/NewMessageModal';
 import { useUser } from '@/store/userStore';
 import { supabase } from '@/lib/supabase/client';
 
@@ -33,6 +34,7 @@ export default function MessagesLayout({ children }: { children: React.ReactNode
     const [conversations, setConversations] = useState<Conversation[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
+    const [showNewMessageModal, setShowNewMessageModal] = useState(false);
 
     // Extract active conversation ID from pathname
     const activeConversationId = pathname.startsWith('/messages/') && pathname !== '/messages'
@@ -51,9 +53,11 @@ export default function MessagesLayout({ children }: { children: React.ReactNode
                     .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
                     .order('created_at', { ascending: false });
 
-                if (messages && messages.length > 0) {
+                const msgs = messages as any[] | null;
+
+                if (msgs && msgs.length > 0) {
                     const convMap = new Map();
-                    for (const msg of messages) {
+                    for (const msg of msgs) {
                         const otherId = msg.sender_id === user.id ? msg.receiver_id : msg.sender_id;
                         if (!convMap.has(otherId)) {
                             convMap.set(otherId, msg);
@@ -118,8 +122,10 @@ export default function MessagesLayout({ children }: { children: React.ReactNode
         if (sharePostData && user) {
             try {
                 // convId here is actually the other user's ID
-                const { data: conversationId, error: convError } = await supabase
-                    .rpc('get_or_create_conversation', { other_user_id: convId });
+                const { data: conversationId, error: convError } = await (supabase.rpc as any)(
+                    'get_or_create_conversation',
+                    { target_user_id: convId }
+                );
 
                 if (convError || !conversationId) throw convError || new Error('Could not get conversation');
 
@@ -128,7 +134,7 @@ export default function MessagesLayout({ children }: { children: React.ReactNode
                     sender_id: user.id,
                     receiver_id: convId,
                     content: sharePostData,
-                    message_type: 'post_share',
+                    message_type: 'post_share', // Note: Make sure this column exists or removed if not needed
                 } as any);
             } catch (e) {
                 console.error('Error sharing post', e);
@@ -153,6 +159,12 @@ export default function MessagesLayout({ children }: { children: React.ReactNode
                     {/* Header */}
                     <div className="h-14 px-4 flex items-center justify-between border-b border-[var(--border-color)] flex-shrink-0">
                         <h1 className="text-xl font-bold text-[var(--foreground)]">Mensajes</h1>
+                        <button
+                            onClick={() => setShowNewMessageModal(true)}
+                            className="p-2 hover:bg-[var(--background-secondary)] rounded-full transition-colors"
+                        >
+                            <Edit className="w-5 h-5 text-[var(--foreground)]" />
+                        </button>
                     </div>
 
                     {/* Share mode banner - desktop */}
@@ -192,6 +204,16 @@ export default function MessagesLayout({ children }: { children: React.ReactNode
                     {children}
                 </div>
             </div>
+
+            <NewMessageModal
+                isOpen={showNewMessageModal}
+                onClose={() => setShowNewMessageModal(false)}
+                currentUserId={user?.id}
+                onSelectUser={(userId) => {
+                    setShowNewMessageModal(false);
+                    handleConversationClick(userId);
+                }}
+            />
         </>
     );
 }

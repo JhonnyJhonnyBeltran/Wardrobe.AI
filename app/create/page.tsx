@@ -6,19 +6,20 @@
  * Desktop: Side-by-side with name input
  */
 
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, Save, ArrowRight, Shirt, Wand2 } from 'lucide-react';
+import { ArrowLeft, Save, ArrowRight, Shirt, Wand2, Eye, X, Share2, Camera, Check } from 'lucide-react';
 import { Button } from '@/components';
 import { useWardrobe } from '@/lib/hooks/useWardrobe';
 import { ClothingItem } from '@/types/clothing';
 import { CarouselSlot } from '@/components/Creator/CarouselSlot';
-import { OutfitCanvas } from '@/components/Creator/OutfitCanvas';
+import { FreeDragCanvas, FreeDragCanvasRef } from '@/components/Creator/FreeDragCanvas';
 import { FilterBar } from '@/components/Creator/FilterBar';
 import { MobileItemSelector } from '@/components/Creator/MobileItemSelector';
 
 import { supabase } from '@/lib/supabase/client';
+import { uploadImage, BUCKETS } from '@/lib/supabase/storage';
 import Image from 'next/image';
 
 export default function CreateOutfitPage() {
@@ -46,6 +47,18 @@ export default function CreateOutfitPage() {
 
     // Canvas state for positions
     const [canvasState, setCanvasState] = useState<Record<string, any>>({});
+    // Canvas ref
+    const canvasRef = useRef<FreeDragCanvasRef>(null);
+
+    // Flatten selections to a single list for FreeDragCanvas
+    const flatItems = useMemo(() => {
+        return Object.values(selections).flat();
+    }, [selections]);
+
+    // Preview modal state
+    const [showPreview, setShowPreview] = useState(false);
+    const [previewImage, setPreviewImage] = useState<string | null>(null);
+    const [previewLoading, setPreviewLoading] = useState(false);
 
     // Load outfit data if editing
     useEffect(() => {
@@ -181,11 +194,14 @@ export default function CreateOutfitPage() {
         setSelections(prev => ({ ...prev, [slotId]: [] }));
     }, []);
 
-    const handleRemoveItem = useCallback((slotId: string, itemId: string) => {
-        setSelections(prev => ({
-            ...prev,
-            [slotId]: prev[slotId].filter(item => item.id !== itemId)
-        }));
+    const handleRemoveItem = useCallback((itemId: string) => {
+        setSelections(prev => {
+            const next = { ...prev };
+            Object.keys(next).forEach(key => {
+                next[key] = next[key].filter(item => item.id !== itemId);
+            });
+            return next;
+        });
     }, []);
 
     // Filter items based on search, color, type, and favorites
@@ -220,6 +236,35 @@ export default function CreateOutfitPage() {
     const isEmpty = Object.values(selections).every(items => items.length === 0);
     const totalSelected = Object.values(selections).reduce((sum, items) => sum + items.length, 0);
 
+    // Preview handler
+    const handlePreview = async () => {
+        if (isEmpty) return;
+        setPreviewLoading(true);
+        try {
+            const imageData = await canvasRef.current?.exportToImage();
+            setPreviewImage(imageData || null);
+            setShowPreview(true);
+        } catch (error) {
+            console.error('Error generating preview:', error);
+        } finally {
+            setPreviewLoading(false);
+        }
+    };
+
+    // Publish to feed
+    const handlePublishToFeed = async () => {
+        if (!previewImage) return;
+        // TODO: Implement publish to feed functionality
+        alert('¡Publicando en el feed! (Funcionalidad en desarrollo)');
+    };
+
+    // Add to stories
+    const handleAddToStories = async () => {
+        if (!previewImage) return;
+        // TODO: Implement add to stories functionality  
+        alert('¡Añadiendo a historias! (Funcionalidad en desarrollo)');
+    };
+
     // Save outfit
     const handleSave = async () => {
         if (isEmpty || !outfitName.trim()) return;
@@ -233,18 +278,50 @@ export default function CreateOutfitPage() {
 
             setLoading(true);
 
+            // 1. Generate Image
+            let finalImage = previewImage;
+            if (!finalImage) {
+                try {
+                    finalImage = await canvasRef.current?.exportToImage() || null;
+                } catch (e) {
+                    console.error("Error generating image on save:", e);
+                }
+            }
+
+            // 2. Upload Image to Storage
+            let publicImageUrl = null;
+            if (finalImage) {
+                // Use CLOTHING bucket ('clothing-images') as it's guaranteed to exist
+                const uploadResult = await uploadImage(finalImage, BUCKETS.CLOTHING, {
+                    folder: `outfits/${user.id}`, // Subfolder for organization
+                    fileName: `outfit_${Date.now()}`
+                });
+
+                if (uploadResult.success) {
+                    publicImageUrl = uploadResult.url;
+                } else {
+                    console.error("Failed to upload outfit image:", uploadResult.error);
+                }
+            }
+
             let savedOutfitId = outfitId;
 
             if (outfitId) {
                 // UPDATE existing outfit
+                const updatePayload: any = {
+                    name: outfitName,
+                    description: `Outfit con ${totalSelected} prendas`,
+                    updated_at: new Date().toISOString()
+                };
+
+                if (publicImageUrl) {
+                    updatePayload.image_url = publicImageUrl;
+                }
+
                 const { error: updateError } = await supabase
                     .from('outfits')
                     // @ts-ignore
-                    .update({
-                        name: outfitName,
-                        description: `Outfit con ${totalSelected} prendas`,
-                        updated_at: new Date().toISOString()
-                    } as any)
+                    .update(updatePayload)
                     .eq('id', outfitId);
 
                 if (updateError) throw updateError;
@@ -267,7 +344,8 @@ export default function CreateOutfitPage() {
                         description: `Outfit con ${totalSelected} prendas`,
                         season: 'all-season', // Default for now
                         is_public: false,
-                        ai_generated: false
+                        ai_generated: false,
+                        image_url: publicImageUrl
                     } as any)
                     .select()
                     .single();
@@ -346,10 +424,10 @@ export default function CreateOutfitPage() {
             </header>
 
             {/* Main Content */}
-            <main className="flex-1 flex flex-col lg:flex-row lg:container lg:mx-auto lg:max-w-7xl lg:p-8 lg:gap-8">
+            <main className="flex-1 flex flex-col lg:flex-row lg:container lg:mx-auto lg:max-w-7xl lg:p-8 lg:gap-8 overflow-hidden h-full">
 
                 {/* MOBILE: Two-Step Flow */}
-                <div className="flex-1 flex flex-col lg:hidden">
+                <div className="flex-1 flex flex-col lg:hidden relative h-full">
                     <AnimatePresence mode="wait">
                         {/* Step 1: Selection */}
                         {mobileStep === 'selection' && (
@@ -358,62 +436,78 @@ export default function CreateOutfitPage() {
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: -20 }}
-                                className="flex-1 flex flex-col p-4 space-y-4 pb-24"
+                                className="flex flex-col h-full"
                             >
-                                {/* Filters */}
-                                <FilterBar
-                                    searchQuery={searchQuery}
-                                    onSearchChange={setSearchQuery}
-                                    selectedColor={selectedColor}
-                                    onColorChange={setSelectedColor}
-                                    selectedType={selectedType}
-                                    onTypeChange={setSelectedType}
-                                    showFavoritesOnly={showFavoritesOnly}
-                                    onFavoritesToggle={() => setShowFavoritesOnly(!showFavoritesOnly)}
-                                />
-
-                                {/* Mobile Swipeable Item Selectors */}
-                                <div className="space-y-8">
-                                    <MobileItemSelector
-                                        title="Accesorios Cabeza"
-                                        items={getItemsForSlot('accessory', (i) => i.name.toLowerCase().includes('sombrero') || i.name.toLowerCase().includes('gorra') || i.name.toLowerCase().includes('gafas'))}
-                                        selectedItems={selections.headwear || []}
-                                        onSelect={(item) => handleSelect('headwear', item)}
-                                    />
-                                    <MobileItemSelector
-                                        title="Parte Superior"
-                                        items={getItemsForSlot('top')}
-                                        selectedItems={selections.top || []}
-                                        onSelect={(item) => handleSelect('top', item)}
-                                    />
-                                    <MobileItemSelector
-                                        title="Capas / Abrigos"
-                                        items={getItemsForSlot('outerwear')}
-                                        selectedItems={selections.layer || []}
-                                        onSelect={(item) => handleSelect('layer', item)}
-                                    />
-                                    <MobileItemSelector
-                                        title="Parte Inferior"
-                                        items={getItemsForSlot('bottom')}
-                                        selectedItems={selections.bottom || []}
-                                        onSelect={(item) => handleSelect('bottom', item)}
-                                    />
-                                    <MobileItemSelector
-                                        title="Calzado"
-                                        items={getItemsForSlot('shoes')}
-                                        selectedItems={selections.shoes || []}
-                                        onSelect={(item) => handleSelect('shoes', item)}
-                                    />
-                                    <MobileItemSelector
-                                        title="Accesorios Extra"
-                                        items={getItemsForSlot('accessory', (i) => !i.name.toLowerCase().includes('sombrero') && !i.name.toLowerCase().includes('gorra') && !i.name.toLowerCase().includes('gafas'))}
-                                        selectedItems={selections.accessories || []}
-                                        onSelect={(item) => handleSelect('accessories', item)}
+                                <div className="p-4 bg-[var(--background)] sticky top-0 z-10">
+                                    <FilterBar
+                                        searchQuery={searchQuery}
+                                        onSearchChange={setSearchQuery}
+                                        selectedColor={selectedColor}
+                                        onColorChange={setSelectedColor}
+                                        selectedType={selectedType}
+                                        onTypeChange={setSelectedType}
+                                        showFavoritesOnly={showFavoritesOnly}
+                                        onFavoritesToggle={() => setShowFavoritesOnly(!showFavoritesOnly)}
                                     />
                                 </div>
 
+                                {/* Unified Grid for filtered items */}
+                                <div className="flex-1 overflow-y-auto px-4 pb-32">
+                                    <div className="grid grid-cols-3 gap-3">
+                                        {filteredItems.length === 0 ? (
+                                            <div className="col-span-full flex flex-col items-center justify-center py-12 text-center text-[var(--foreground-secondary)]">
+                                                <p>No se encontraron prendas con estos filtros.</p>
+                                            </div>
+                                        ) : (
+                                            filteredItems.map(item => {
+                                                // Determine slot dynamically for selection checking
+                                                let slot = 'accessories';
+                                                if (['top', 'shirt', 'blouse', 't-shirt'].includes(item.category)) slot = 'top';
+                                                else if (['bottom', 'pants', 'skirt', 'jeans', 'shorts'].includes(item.category)) slot = 'bottom';
+                                                else if (['shoes', 'boots', 'sneakers', 'sandals'].includes(item.category)) slot = 'shoes';
+                                                else if (['outerwear', 'jacket', 'coat', 'blazer'].includes(item.category)) slot = 'layer';
+                                                else if (item.category === 'accessory') {
+                                                    if (item.name.toLowerCase().includes('sombrero') || item.name.toLowerCase().includes('gorra') || item.name.toLowerCase().includes('gafas')) {
+                                                        slot = 'headwear';
+                                                    }
+                                                }
+
+                                                const isSelected = selections[slot]?.some(i => i.id === item.id);
+
+                                                return (
+                                                    <div
+                                                        key={item.id}
+                                                        onClick={() => handleSelect(slot, item)}
+                                                        className={`cursor-pointer group relative aspect-[3/4] rounded-2xl overflow-hidden bg-[var(--card-bg)] border transition-all ${isSelected
+                                                            ? 'border-[var(--brand-pink)] ring-2 ring-[var(--brand-pink)] ring-opacity-50'
+                                                            : 'border-[var(--border-color)] hover:border-[var(--foreground-secondary)]'
+                                                            }`}
+                                                    >
+                                                        <img
+                                                            src={item.imageUrl}
+                                                            alt={item.name}
+                                                            className="w-full h-full object-cover"
+                                                            loading="lazy"
+                                                        />
+                                                        {isSelected && (
+                                                            <div className="absolute inset-0 bg-[var(--brand-pink)]/20 flex items-center justify-center">
+                                                                <div className="bg-[var(--brand-pink)] text-white rounded-full p-1">
+                                                                    <Check className="w-4 h-4" />
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            <p className="text-white text-xs truncate">{item.name}</p>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })
+                                        )}
+                                    </div>
+                                </div>
+
                                 {/* Next Button */}
-                                <div className="fixed bottom-24 left-4 right-4 z-40">
+                                <div className="fixed bottom-0 left-0 right-0 p-4 border-t border-[var(--border-color)] bg-[var(--background)]/80 backdrop-blur-md z-40">
                                     <Button
                                         onClick={() => setMobileStep('preview')}
                                         disabled={isEmpty}
@@ -434,7 +528,7 @@ export default function CreateOutfitPage() {
                                 initial={{ opacity: 0, x: 20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: 20 }}
-                                className="flex-1 flex flex-col p-4 space-y-4 pb-24"
+                                className="flex flex-col h-full p-4 space-y-4 pb-24 overflow-y-auto"
                             >
                                 {/* Outfit Name Input */}
                                 <div className="bg-[var(--card-bg)] rounded-2xl p-4 border border-[var(--border-color)]">
@@ -446,41 +540,47 @@ export default function CreateOutfitPage() {
                                         placeholder="Ej: Look casual de verano"
                                         value={outfitName}
                                         onChange={(e) => setOutfitName(e.target.value)}
-                                        className="w-full px-4 py-3 bg-[var(--background-secondary)] rounded-xl text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] outline-none"
+                                        className="w-full px-4 py-3 bg-[var(--background-secondary)] rounded-xl text-[var(--foreground)] outline-none"
                                     />
                                 </div>
 
                                 {/* Canvas Preview */}
-                                <div className="w-full max-w-md space-y-4">
-                                    <OutfitCanvas
-                                        selections={selections}
+                                <div className="w-full bg-[var(--card-bg)] rounded-3xl overflow-hidden border border-[var(--border-color)] aspect-[4/5]">
+                                    <FreeDragCanvas
+                                        ref={canvasRef}
+                                        items={flatItems}
                                         onRemoveItem={handleRemoveItem}
-                                        isMobile={true}
-                                        onCanvasChange={setCanvasState}
                                     />
-
-                                    {/* Add More Items Button */}
-                                    <button
-                                        onClick={() => setMobileStep('selection')}
-                                        className="w-full py-3 px-4 rounded-xl border border-[var(--border-color)] bg-[var(--card-bg)] text-[var(--foreground)] font-medium flex items-center justify-center gap-2 hover:bg-[var(--background-secondary)] transition-colors"
-                                    >
-                                        <div className="w-6 h-6 rounded-full bg-[var(--brand-pink)]/10 flex items-center justify-center">
-                                            <Shirt className="w-4 h-4 text-[var(--brand-pink)]" />
-                                        </div>
-                                        Seguir añadiendo prendas
-                                    </button>
                                 </div>
+                                <button
+                                    onClick={() => setMobileStep('selection')}
+                                    className="w-full py-3 px-4 rounded-xl border border-[var(--border-color)] bg-[var(--card-bg)] text-[var(--foreground)] font-medium flex items-center justify-center gap-2 hover:bg-[var(--background-secondary)] transition-colors"
+                                >
+                                    <div className="w-6 h-6 rounded-full bg-[var(--brand-pink)]/10 flex items-center justify-center">
+                                        <Shirt className="w-4 h-4 text-[var(--brand-pink)]" />
+                                    </div>
+                                    Seguir añadiendo prendas
+                                </button>
 
-                                {/* Save Button */}
-                                <div className="fixed bottom-24 left-4 right-4 z-40">
+                                {/* Preview & Save Buttons */}
+                                <div className="fixed bottom-0 left-0 right-0 p-4 border-t border-[var(--border-color)] bg-[var(--background)]/80 backdrop-blur-md z-40 flex gap-3">
+                                    <Button
+                                        onClick={handlePreview}
+                                        disabled={isEmpty || previewLoading}
+                                        className="flex-1 rounded-full py-4 text-sm font-semibold bg-[var(--background)] border-2 border-[var(--brand-pink)] text-[var(--brand-pink)]"
+                                    >
+                                        <Eye className="w-5 h-5 mr-2" />
+                                        Preview
+                                    </Button>
+
                                     <Button
                                         onClick={handleSave}
                                         disabled={isEmpty || !outfitName.trim()}
                                         glow={!isEmpty && outfitName.trim().length > 0}
-                                        className="w-full rounded-full py-4 text-base font-semibold"
+                                        className="flex-1 rounded-full py-4 text-sm font-semibold"
                                     >
                                         <Save className="w-5 h-5 mr-2" />
-                                        Guardar Outfit
+                                        Guardar
                                     </Button>
                                 </div>
                             </motion.div>
@@ -489,10 +589,9 @@ export default function CreateOutfitPage() {
                 </div>
 
                 {/* DESKTOP: Side-by-side Layout */}
-                <div className="hidden lg:flex lg:flex-1 lg:gap-8">
-                    {/* Left: Selection Panel */}
-                    <div className="flex-1 space-y-4 overflow-y-auto">
-                        {/* Filters */}
+                <div className="hidden lg:flex lg:flex-1 lg:gap-8 overflow-hidden h-full">
+                    {/* Left: Selection Panel (Unified Grid) */}
+                    <div className="flex-1 flex flex-col gap-4 overflow-hidden h-full">
                         <FilterBar
                             searchQuery={searchQuery}
                             onSearchChange={setSearchQuery}
@@ -501,129 +600,197 @@ export default function CreateOutfitPage() {
                             selectedType={selectedType}
                             onTypeChange={setSelectedType}
                             showFavoritesOnly={showFavoritesOnly}
-                            onFavoritesToggle={() => setShowFavoritesOnly(!showFavoritesOnly)
-                            }
+                            onFavoritesToggle={() => setShowFavoritesOnly(!showFavoritesOnly)}
                         />
 
-                        {/* Clothing Slots */}
-                        <div className="bg-[var(--card-bg)]/50 rounded-3xl p-6 border border-[var(--border-color)] shadow-sm">
-                            <div className="space-y-6 divide-y divide-[var(--border-color)]/50">
-                                {(() => {
-                                    const headwearItems = getItemsForSlot('accessory', (i) => i.name.toLowerCase().includes('sombrero') || i.name.toLowerCase().includes('gorra') || i.name.toLowerCase().includes('gafas'));
-                                    const topItems = getItemsForSlot('top');
-                                    const layerItems = getItemsForSlot('outerwear');
-                                    const bottomItems = getItemsForSlot('bottom');
-                                    const shoesItems = getItemsForSlot('shoes');
-                                    const accessoriesItems = getItemsForSlot('accessory', (i) => !i.name.toLowerCase().includes('sombrero') && !i.name.toLowerCase().includes('gorra') && !i.name.toLowerCase().includes('gafas'));
+                        {/* Grid Container */}
+                        <div className="flex-1 overflow-y-auto bg-[var(--card-bg)]/50 rounded-3xl p-6">
+                            <div className="grid grid-cols-4 xl:grid-cols-5 gap-4">
+                                {filteredItems.length === 0 ? (
+                                    <div className="col-span-full flex flex-col items-center justify-center py-20 text-[var(--foreground-secondary)]">
+                                        <p>No se encontraron prendas.</p>
+                                    </div>
+                                ) : (
+                                    filteredItems.map(item => {
+                                        // Determine slot dynamically
+                                        let slot = 'accessories';
+                                        if (['top', 'shirt', 'blouse', 't-shirt'].includes(item.category)) slot = 'top';
+                                        else if (['bottom', 'pants', 'skirt', 'jeans', 'shorts'].includes(item.category)) slot = 'bottom';
+                                        else if (['shoes', 'boots', 'sneakers', 'sandals'].includes(item.category)) slot = 'shoes';
+                                        else if (['outerwear', 'jacket', 'coat', 'blazer'].includes(item.category)) slot = 'layer';
+                                        else if (item.category === 'accessory') {
+                                            if (item.name.toLowerCase().includes('sombrero') || item.name.toLowerCase().includes('gorra') || item.name.toLowerCase().includes('gafas')) {
+                                                slot = 'headwear';
+                                            }
+                                        }
 
-                                    return (
-                                        <>
-                                            {headwearItems.length > 0 && (
-                                                <CarouselSlot
-                                                    title="Accesorios Cabeza"
-                                                    items={headwearItems}
-                                                    selectedItems={selections.headwear || []}
-                                                    onSelect={(item) => handleSelect('headwear', item)}
-                                                    onClear={() => handleClear('headwear')}
+                                        const isSelected = selections[slot]?.some(i => i.id === item.id);
+
+                                        return (
+                                            <div
+                                                key={item.id}
+                                                onClick={() => handleSelect(slot, item)}
+                                                className={`cursor-pointer group relative aspect-[3/4] rounded-2xl overflow-hidden bg-[var(--card-bg)] border transition-all duration-300 ${isSelected
+                                                    ? 'border-[var(--brand-pink)] ring-4 ring-[var(--brand-pink)] ring-opacity-30 transform scale-95'
+                                                    : 'border-[var(--border-color)] hover:border-[var(--foreground)] hover:shadow-lg hover:scale-105'
+                                                    }`}
+                                            >
+                                                <img
+                                                    src={item.imageUrl}
+                                                    alt={item.name}
+                                                    className="w-full h-full object-cover"
+                                                    loading="lazy"
                                                 />
-                                            )}
-                                            {topItems.length > 0 && (
-                                                <CarouselSlot
-                                                    title="Parte Superior"
-                                                    items={topItems}
-                                                    selectedItems={selections.top || []}
-                                                    onSelect={(item) => handleSelect('top', item)}
-                                                    onClear={() => handleClear('top')}
-                                                />
-                                            )}
-                                            {layerItems.length > 0 && (
-                                                <CarouselSlot
-                                                    title="Capas / Abrigos"
-                                                    items={layerItems}
-                                                    selectedItems={selections.layer || []}
-                                                    onSelect={(item) => handleSelect('layer', item)}
-                                                    onClear={() => handleClear('layer')}
-                                                />
-                                            )}
-                                            {bottomItems.length > 0 && (
-                                                <CarouselSlot
-                                                    title="Parte Inferior"
-                                                    items={bottomItems}
-                                                    selectedItems={selections.bottom || []}
-                                                    onSelect={(item) => handleSelect('bottom', item)}
-                                                    onClear={() => handleClear('bottom')}
-                                                />
-                                            )}
-                                            {shoesItems.length > 0 && (
-                                                <CarouselSlot
-                                                    title="Calzado"
-                                                    items={shoesItems}
-                                                    selectedItems={selections.shoes || []}
-                                                    onSelect={(item) => handleSelect('shoes', item)}
-                                                    onClear={() => handleClear('shoes')}
-                                                />
-                                            )}
-                                            {accessoriesItems.length > 0 && (
-                                                <CarouselSlot
-                                                    title="Accesorios Extra"
-                                                    items={accessoriesItems}
-                                                    selectedItems={selections.accessories || []}
-                                                    onSelect={(item) => handleSelect('accessories', item)}
-                                                    onClear={() => handleClear('accessories')}
-                                                />
-                                            )}
-                                        </>
-                                    );
-                                })()}
+                                                {isSelected && (
+                                                    <div className="absolute inset-0 bg-[var(--brand-pink)]/20 flex items-center justify-center backdrop-blur-[1px]">
+                                                        <div className="bg-[var(--brand-pink)] text-white rounded-full p-2 shadow-lg scale-110">
+                                                            <Check className="w-5 h-5" />
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <p className="text-white text-xs font-medium truncate">{item.name}</p>
+                                                </div>
+                                            </div>
+                                        );
+                                    })
+                                )}
                             </div>
                         </div>
                     </div>
 
-                    {/* Right: Preview Panel */}
-                    <div className="w-[400px]">
-                        <div className="sticky top-24 space-y-4">
-                            {/* Outfit Name */}
-                            <div className="bg-[var(--card-bg)] rounded-2xl p-4 border border-[var(--border-color)]">
-                                <label className="block text-sm font-medium text-[var(--foreground-secondary)] mb-2">
-                                    Nombre del Outfit
-                                </label>
-                                <input
-                                    type="text"
-                                    placeholder="Ej: Look casual de verano"
-                                    value={outfitName}
-                                    onChange={(e) => setOutfitName(e.target.value)}
-                                    className="w-full px-4 py-2.5 bg-[var(--background-secondary)] rounded-xl text-sm text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] outline-none"
-                                />
-                            </div>
-
-                            {/* Canvas */}
-                            <OutfitCanvas
-                                selections={selections}
-                                onRemoveItem={handleRemoveItem}
-                                onCanvasChange={setCanvasState}
+                    {/* Right: Preview Panel (Sticky) */}
+                    <div className="w-[400px] flex-shrink-0 flex flex-col gap-4 h-full overflow-y-auto pb-8">
+                        {/* Outfit Name */}
+                        <div className="bg-[var(--card-bg)] rounded-2xl p-4 border border-[var(--border-color)] shadow-sm">
+                            <label className="block text-sm font-medium text-[var(--foreground-secondary)] mb-2">
+                                Nombre del Outfit
+                            </label>
+                            <input
+                                type="text"
+                                placeholder="Ej: Look casual de verano"
+                                value={outfitName}
+                                onChange={(e) => setOutfitName(e.target.value)}
+                                className="w-full px-4 py-3 bg-[var(--background-secondary)] rounded-xl text-sm text-[var(--foreground)] outline-none focus:ring-2 focus:ring-[var(--brand-pink)] transition-all"
                             />
+                        </div>
 
-                            {/* Info & Save */}
-                            <div className="bg-[var(--card-bg)] rounded-2xl p-4 border border-[var(--border-color)] space-y-3">
-                                <div className="flex justify-between items-center text-sm text-[var(--foreground-secondary)]">
-                                    <span>{totalSelected} prendas seleccionadas</span>
-                                </div>
+                        {/* Canvas */}
+                        <div className="rounded-[32px] overflow-hidden shadow-md border border-[var(--border-color)] bg-white">
+                            <FreeDragCanvas
+                                ref={canvasRef}
+                                items={flatItems}
+                                onRemoveItem={handleRemoveItem}
+                            />
+                        </div>
 
-                                <Button
-                                    onClick={handleSave}
-                                    disabled={isEmpty || !outfitName.trim()}
-                                    glow={!isEmpty && outfitName.trim().length > 0}
-                                    className="w-full rounded-full"
-                                >
-                                    <Save className="w-4 h-4 mr-2" />
-                                    Guardar Outfit
-                                </Button>
+                        {/* Info & Save */}
+                        <div className="bg-[var(--card-bg)] rounded-2xl p-5 border border-[var(--border-color)] space-y-4 shadow-sm">
+                            <div className="flex justify-between items-center text-sm font-medium text-[var(--foreground-secondary)]">
+                                <span>{totalSelected} prendas seleccionadas</span>
+                                {totalSelected > 0 && <span className="text-[var(--brand-pink)]">¡Listo para guardar!</span>}
                             </div>
+
+                            <Button
+                                onClick={handlePreview}
+                                disabled={isEmpty || previewLoading}
+                                variant="outline"
+                                className="w-full rounded-2xl py-6 text-sm font-bold border-2 hover:bg-[var(--background-secondary)]"
+                            >
+                                <Eye className="w-4 h-4 mr-2" />
+                                {previewLoading ? 'Generando...' : 'Ver Preview Completa'}
+                            </Button>
+
+                            <Button
+                                onClick={handleSave}
+                                disabled={isEmpty || !outfitName.trim()}
+                                glow={!isEmpty && outfitName.trim().length > 0}
+                                className="w-full rounded-2xl py-6 text-sm font-bold shadow-lg shadow-pink-500/20"
+                            >
+                                <Save className="w-4 h-4 mr-2" />
+                                Guardar Outfit
+                            </Button>
                         </div>
                     </div>
                 </div>
 
             </main>
+
+            {/* Preview Modal */}
+            <AnimatePresence>
+                {showPreview && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+                        onClick={() => setShowPreview(false)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            className="bg-white rounded-3xl overflow-hidden max-w-md w-full max-h-[90vh] flex flex-col"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            {/* Header */}
+                            <div className="flex items-center justify-between p-4 border-b border-gray-100">
+                                <h3 className="text-lg font-semibold text-gray-900">Preview del Outfit</h3>
+                                <button
+                                    onClick={() => setShowPreview(false)}
+                                    className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+                                >
+                                    <X className="w-5 h-5 text-gray-500" />
+                                </button>
+                            </div>
+
+                            {/* Preview Image */}
+                            <div className="flex-1 overflow-auto p-4 bg-gray-50">
+                                {previewImage ? (
+                                    <div className="relative aspect-[3/4] mx-auto max-h-[50vh] rounded-2xl overflow-hidden bg-white shadow-lg">
+                                        <img
+                                            src={previewImage}
+                                            alt="Preview"
+                                            className="w-full h-full object-contain"
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center justify-center h-48 text-gray-400">
+                                        <p>No se pudo generar la preview</p>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Action Buttons */}
+                            <div className="p-4 border-t border-gray-100 space-y-3">
+                                <Button
+                                    onClick={handlePublishToFeed}
+                                    disabled={!previewImage}
+                                    className="w-full rounded-full py-3 font-semibold"
+                                >
+                                    <Share2 className="w-5 h-5 mr-2" />
+                                    Publicar en Feed
+                                </Button>
+                                <Button
+                                    onClick={handleAddToStories}
+                                    disabled={!previewImage}
+                                    className="w-full rounded-full py-3 font-semibold bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:opacity-90"
+                                >
+                                    <Camera className="w-5 h-5 mr-2" />
+                                    Añadir a Historias
+                                </Button>
+                                <Button
+                                    onClick={() => setShowPreview(false)}
+                                    variant="outline"
+                                    className="w-full rounded-full py-3"
+                                >
+                                    Cerrar
+                                </Button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

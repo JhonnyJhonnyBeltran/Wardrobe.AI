@@ -1,15 +1,20 @@
 'use client';
 
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { motion } from 'framer-motion';
 import { ClothingItem } from '@/types/clothing';
 import { X } from 'lucide-react';
+import html2canvas from 'html2canvas';
 
 interface OutfitCanvasProps {
     selections: Record<string, ClothingItem[]>;
     onRemoveItem?: (slotId: string, itemId: string) => void;
     isMobile?: boolean;
     onCanvasChange?: (states: Record<string, ItemState>) => void;
+}
+
+export interface OutfitCanvasRef {
+    exportToImage: () => Promise<string | null>;
 }
 
 interface ItemState {
@@ -20,10 +25,32 @@ interface ItemState {
     y: number; // Percentage 0-100
 }
 
-export function OutfitCanvas({ selections, onRemoveItem, isMobile = false, onCanvasChange }: OutfitCanvasProps) {
+export const OutfitCanvas = forwardRef<OutfitCanvasRef, OutfitCanvasProps>(function OutfitCanvas({ selections, onRemoveItem, isMobile = false, onCanvasChange }: OutfitCanvasProps, ref) {
     const containerRef = useRef<HTMLDivElement>(null);
     const [maxZIndex, setMaxZIndex] = useState(100);
     const [itemStates, setItemStates] = useState<Record<string, ItemState>>({});
+
+    // Expose export function to parent components
+    useImperativeHandle(ref, () => ({
+        exportToImage: async () => {
+            if (!containerRef.current) return null;
+
+            try {
+                const canvas = await html2canvas(containerRef.current, {
+                    backgroundColor: '#ffffff',
+                    scale: 2,
+                    useCORS: true,
+                    allowTaint: true,
+                    logging: false,
+                });
+
+                return canvas.toDataURL('image/png');
+            } catch (error) {
+                console.error('Failed to export canvas:', error);
+                return null;
+            }
+        }
+    }), []);
 
     // Initialize new items at center
     useEffect(() => {
@@ -36,13 +63,13 @@ export function OutfitCanvas({ selections, onRemoveItem, isMobile = false, onCan
 
                 if (!newStates[itemId]) {
                     hasChanges = true;
-                    // Start at EXACT center, no stagger, no smarts.
+                    // Start near center but with slight random variation to prevent perfect stacking
                     newStates[itemId] = {
                         zIndex: index + 1,
                         scale: 0.8,
-                        rotation: 0,
-                        x: 50,
-                        y: 50
+                        rotation: (Math.random() - 0.5) * 20, // More rotation variance
+                        x: 20 + Math.random() * 60, // Anywhere between 20% and 80% width
+                        y: 20 + Math.random() * 60  // Anywhere between 20% and 80% height
                     };
                 }
             });
@@ -50,19 +77,23 @@ export function OutfitCanvas({ selections, onRemoveItem, isMobile = false, onCan
 
         if (hasChanges) {
             setItemStates(newStates);
-            onCanvasChange?.(newStates);
+            // onCanvasChange will be triggered by the useEffect observing itemStates
         }
     }, [selections]);
 
+    // Notify parent of changes when itemStates changes
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            onCanvasChange?.(itemStates);
+        }, 0);
+        return () => clearTimeout(timer);
+    }, [itemStates, onCanvasChange]);
+
     const updateState = (itemId: string, updates: Partial<ItemState>) => {
-        setItemStates(prev => {
-            const next = {
-                ...prev,
-                [itemId]: { ...prev[itemId], ...updates }
-            };
-            onCanvasChange?.(next);
-            return next;
-        });
+        setItemStates(prev => ({
+            ...prev,
+            [itemId]: { ...prev[itemId], ...updates }
+        }));
     };
 
     const handleDragEnd = (itemId: string, event: any, info: any) => {
@@ -84,7 +115,11 @@ export function OutfitCanvas({ selections, onRemoveItem, isMobile = false, onCan
         const x = (centerX / containerRect.width) * 100;
         const y = (centerY / containerRect.height) * 100;
 
-        updateState(itemId, { x, y });
+        // Ensure we don't go out of bounds (0-100%)
+        const boundedX = Math.max(0, Math.min(100, x));
+        const boundedY = Math.max(0, Math.min(100, y));
+
+        updateState(itemId, { x: boundedX, y: boundedY });
     };
 
     const bringToFront = (itemId: string) => {
@@ -115,8 +150,10 @@ export function OutfitCanvas({ selections, onRemoveItem, isMobile = false, onCan
     return (
         <div
             ref={containerRef}
-            className="relative w-full h-full bg-[var(--background-secondary)]/30 overflow-hidden rounded-[32px] shadow-inner"
+            className="relative w-full h-full bg-white overflow-hidden rounded-[32px] shadow-inner"
             style={{ aspectRatio: isMobile ? '9/16' : '3/4' }}
+            data-canvas-export="true"
+        // Note: Tap-to-place could be added here if we track a 'selectedId'
         >
             <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
             {/* Version marker to force HMR */}
@@ -142,7 +179,14 @@ export function OutfitCanvas({ selections, onRemoveItem, isMobile = false, onCan
                             x: "-50%", // CRITICAL: Force reset of drag transform residue to true center
                             y: "-50%", // CRITICAL: Force reset of drag transform residue to true center
                             zIndex: state.zIndex,
-                            // Removed duration: 0 to restore smooth animation as requested
+                        }}
+                        transition={{
+                            left: { duration: 0 },
+                            top: { duration: 0 },
+                            x: { duration: 0 },
+                            y: { duration: 0 },
+                            // Keep other transitions (like scale/opacity) smooth if needed, or set default interaction
+                            default: { duration: 0.2 }
                         }}
                         style={{
                             position: 'absolute',
@@ -202,4 +246,4 @@ export function OutfitCanvas({ selections, onRemoveItem, isMobile = false, onCan
             )}
         </div>
     );
-}
+});

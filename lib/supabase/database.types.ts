@@ -114,7 +114,7 @@ export interface Database {
           updated_at?: string;
         };
       };
-      profiles: {
+       profiles: {
         Row: {
           id: string;
           username: string | null;
@@ -130,6 +130,14 @@ export interface Database {
           uses_accessories: boolean | null;
           visual_style_preferences: string[] | null;
           style_completed: boolean;
+          morphology: string | null;
+          colorimetry: string | null;
+          hair_type: string | null;
+          skin_tone: string | null;
+          body_shape: string | null;
+          favorite_colors: string[] | null;
+          occasions_preferences: string[] | null;
+          budget_range: string | null;
           updated_at: string | null;
         };
         Insert: {
@@ -147,6 +155,14 @@ export interface Database {
           uses_accessories?: boolean | null;
           visual_style_preferences?: string[] | null;
           style_completed?: boolean;
+          morphology?: string | null;
+          colorimetry?: string | null;
+          hair_type?: string | null;
+          skin_tone?: string | null;
+          body_shape?: string | null;
+          favorite_colors?: string[] | null;
+          occasions_preferences?: string[] | null;
+          budget_range?: string | null;
           updated_at?: string | null;
         };
         Update: {
@@ -164,6 +180,14 @@ export interface Database {
           uses_accessories?: boolean | null;
           visual_style_preferences?: string[] | null;
           style_completed?: boolean;
+          morphology?: string | null;
+          colorimetry?: string | null;
+          hair_type?: string | null;
+          skin_tone?: string | null;
+          body_shape?: string | null;
+          favorite_colors?: string[] | null;
+          occasions_preferences?: string[] | null;
+          budget_range?: string | null;
           updated_at?: string | null;
         };
       };
@@ -262,6 +286,76 @@ export interface Database {
           uses_accessories?: boolean | null;
           visual_style_preferences?: string[] | null;
           style_completed?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      categories: {
+        Row: {
+          id: string;
+          name: string;
+          slug: string;
+          icon: string | null;
+          color: string | null;
+          is_active: boolean;
+          display_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          slug: string;
+          icon?: string | null;
+          color?: string | null;
+          is_active?: boolean;
+          display_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          slug?: string;
+          icon?: string | null;
+          color?: string | null;
+          is_active?: boolean;
+          display_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      brands: {
+        Row: {
+          id: string;
+          name: string;
+          slug: string;
+          logo_url: string | null;
+          website: string | null;
+          is_active: boolean;
+          display_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          slug: string;
+          logo_url?: string | null;
+          website?: string | null;
+          is_active?: boolean;
+          display_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          slug?: string;
+          logo_url?: string | null;
+          website?: string | null;
+          is_active?: boolean;
+          display_order?: number;
           created_at?: string;
           updated_at?: string;
         };

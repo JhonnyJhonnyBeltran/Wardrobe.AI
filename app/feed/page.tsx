@@ -1,22 +1,21 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { PlusSquare, Send, Heart } from 'lucide-react';
+import { PlusSquare, Send } from 'lucide-react';
 import PostCard, { type Post } from '@/components/Feed/PostCard';
 import PremiumAdCard from '@/components/Feed/PremiumAdCard';
-import OutfitDetailsModal from '@/components/Feed/GarmentModal'; // Reusing GarmentModal as OutfitDetailsModal
 import { LogoMark } from '@/components';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';
 import { useSwipeNavigation } from '@/hooks/useSwipeNavigation';
 import { useMessageStore, selectTotalUnread, selectBadgeVisible } from '@/store/messageStore';
-import { useSearchParams } from 'next/navigation';
+import { useUser } from '@/store/userStore';
+import { getFollowing } from '@/lib/services/followService';
 
 export default function FeedPage() {
-  const [outfits, setOutfits] = useState<Post[]>([]);
+  const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedOutfit, setSelectedOutfit] = useState<Post | null>(null);
+  const { user } = useUser();
 
   // Enable swipe navigation
   useSwipeNavigation();
@@ -26,104 +25,147 @@ export default function FeedPage() {
   const messageBadgeVisible = useMessageStore(selectBadgeVisible);
 
   useEffect(() => {
-    const fetchOutfits = async () => {
+    let isMounted = true;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+    const fetchPosts = async () => {
       try {
         setLoading(true);
-        const { data, error } = await supabase
-          .from('outfits')
+
+        if (!user) {
+          setPosts([]);
+          setLoading(false);
+          return;
+        }
+
+        // Get all users that the current user follows
+        const following = await getFollowing(user.id);
+        const followingIds = following.map(f => f.id);
+
+        // Include current user's posts and friends' posts
+        const targetIds = [user.id, ...followingIds];
+
+        const { data: postsData, error: postsError } = await supabase
+          .from('posts')
           .select(`
             id,
-            name,
+            caption,
+            image_url,
             created_at,
             user_id,
-            profiles (
-                username,
-                avatar_url
+            outfits (
+                name,
+                outfit_items (
+                    clothing_items (
+                        image_url
+                    )
+                )
             ),
-            outfit_items (
-              clothing_items (
-                image_url
-              )
-            )
+             likes (count)
           `)
-          .order('created_at', { ascending: false });
+          .in('user_id', targetIds)
+          .order('created_at', { ascending: false })
+          .abortSignal(controller.signal);
 
-        if (error) throw error;
+        if (postsError) throw postsError;
 
-        if (data) {
-          const formattedOutfits = data.map((outfit: any) => {
-            // Get first image from nested joins
-            let imageUrl = 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600&q=80'; // Fallback
+        if (postsData && isMounted) {
+          // Manually fetch profiles for these posts
+          const userIds = [...new Set(postsData.map(p => p.user_id))];
 
-            // outfit.outfit_items is array of objects, each has clothing_items object
-            if (outfit.outfit_items && outfit.outfit_items.length > 0) {
-              // Find first item with an image
-              const itemWithImage = outfit.outfit_items.find((oi: any) => oi.clothing_items?.image_url);
+          let profilesMap: Record<string, any> = {};
+
+          if (userIds.length > 0) {
+            const { data: profilesData } = await supabase
+              .from('profiles')
+              .select('id, username, avatar_url')
+              .in('id', userIds);
+
+            if (profilesData) {
+              profilesData.forEach(p => {
+                profilesMap[p.id] = p;
+              });
+            }
+          }
+
+          const formattedPosts = postsData.map((post: any) => {
+            // Determine display image:
+            // 1. Real Uploaded Image (post.image_url)
+            // 2. Outfit Image (first item)
+            let displayImage = post.image_url;
+
+            if (!displayImage && post.outfits?.outfit_items?.length > 0) {
+              const itemWithImage = post.outfits.outfit_items.find((oi: any) => oi.clothing_items?.image_url);
               if (itemWithImage) {
-                imageUrl = itemWithImage.clothing_items.image_url;
+                displayImage = itemWithImage.clothing_items.image_url;
               }
             }
 
-            const profile = Array.isArray(outfit.profiles) ? outfit.profiles[0] : outfit.profiles;
+            // Fallback if still no image (shouldn't happen if validation works, but mostly for old data)
+            // If no image is found, we pass null to PostCard which handles text-only card
+
+            const profile = profilesMap[post.user_id];
 
             return {
-              id: outfit.id,
-              title: outfit.name || 'Outfit sin título',
-              imageUrl: imageUrl,
+              id: post.id,
+              title: post.caption || post.outfits?.name || 'Publicación sin título',
+              description: post.caption, // For text-only fallback
+              imageUrl: displayImage,
               author: {
                 name: profile?.username || 'Usuario',
                 avatar: profile?.avatar_url || 'https://i.pravatar.cc/150?u=default'
               },
-              likes: 0,
+              likes: post.likes?.[0]?.count || 0,
               comments: 0,
               isLiked: false
             };
           });
-          setOutfits(formattedOutfits);
+          setPosts(formattedPosts);
         }
-      } catch (error) {
-        console.error('Error fetching outfits:', error);
+      } catch (error: any) {
+        console.error('Error fetching posts:', error);
+        if (error.name !== 'AbortError' && isMounted) {
+          setPosts([]); // Set to empty on error
+        }
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
-    fetchOutfits();
+    fetchPosts();
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
+    };
   }, []);
-
-  const searchParams = useSearchParams();
-  const postIdFromUrl = searchParams.get('postId');
-
-  useEffect(() => {
-    if (postIdFromUrl && outfits.length > 0) {
-      const post = outfits.find(p => p.id === postIdFromUrl);
-      if (post) setSelectedOutfit(post);
-    }
-  }, [postIdFromUrl, outfits]);
 
   return (
     <div className="min-h-screen bg-[var(--background)] pb-24">
-      {/* Header */}
-      <header className="sticky top-0 z-30 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-color)] md:hidden">
-        <div className="px-4 h-14 flex items-center justify-between">
+      {/* Header Mejorado */}
+      <header className="sticky top-0 z-30 bg-[var(--background)]/95 backdrop-blur-lg border-b border-[var(--border-color)]/50 md:hidden shadow-sm">
+        <div className="px-5 h-16 flex items-center justify-between">
           {/* Left: New Post Icon */}
           <Link href="/create">
-            <button className="p-2 -ml-2 text-[var(--foreground)] hover:bg-[var(--background-secondary)] rounded-full transition-colors">
+            <button className="p-3 -ml-1 text-[var(--foreground)] hover:bg-[var(--background-secondary)] rounded-full transition-all duration-200 transform hover:scale-110">
               <PlusSquare className="w-6 h-6" />
             </button>
           </Link>
 
           {/* Center: Logo */}
-          <div className="w-8 h-8">
+          <div className="w-10 h-10">
             <LogoMark size="sm" />
           </div>
 
           {/* Right: Messages Icon */}
           <Link href="/messages">
-            <button className="p-2 -mr-2 text-[var(--foreground)] hover:bg-[var(--background-secondary)] rounded-full transition-colors relative">
+            <button className="p-3 -mr-1 text-[var(--foreground)] hover:bg-[var(--background-secondary)] rounded-full transition-all duration-200 transform hover:scale-110 relative">
               <Send className="w-6 h-6" />
               {messageBadgeVisible && messageUnreadCount > 0 && (
-                <span className="absolute top-0.5 right-0.5 min-w-[18px] h-[18px] px-1.5 flex items-center justify-center bg-[#FF69B4] text-white text-[10px] font-bold rounded-full border-2 border-[var(--background)]">
+                <span className="absolute top-1 right-1 min-w-[20px] h-[20px] px-1.5 flex items-center justify-center bg-gradient-to-r from-[var(--brand-pink)] to-[var(--brand-purple)] text-white text-[10px] font-bold rounded-full border-2 border-[var(--background)] shadow-md">
                   {messageUnreadCount > 99 ? '+99' : messageUnreadCount}
                 </span>
               )}
@@ -132,44 +174,44 @@ export default function FeedPage() {
         </div>
       </header>
 
-      {/* Feed Content - Contexto §4A: Masonry, skeletons (§6D) */}
-      <div className="px-2 pt-2 md:px-4">
+      {/* Feed Content - Masonry Grid con mejor diseño */}
+      <div className="px-3 pt-4 md:px-6">
         {
           loading ? (
             <div className="masonry-grid">
               {[...Array(12)].map((_, i) => (
-                <div key={i} className="break-inside-avoid mb-4">
-                  <div className="rounded-xl overflow-hidden bg-[var(--background-secondary)] skeleton" style={{ height: [180, 220, 260, 200, 240][i % 5] }} />
+                <div key={i} className="break-inside-avoid mb-6">
+                  <div className="rounded-2xl overflow-hidden bg-[var(--background-secondary)] skeleton" style={{ height: [180, 220, 260, 200, 240][i % 5] }} />
                 </div>
               ))}
             </div>
-          ) : outfits.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center">
+          ) : posts.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-24 text-center">
+              <div className="w-20 h-20 bg-[var(--background-secondary)] rounded-full flex items-center justify-center mb-6">
+                <PlusSquare className="w-10 h-10 text-[var(--foreground-tertiary)]" />
+              </div>
               <p className="text-[var(--foreground-secondary)] text-lg font-medium">No hay publicaciones aún.</p>
-              <p className="text-[var(--foreground-tertiary)] text-sm mt-2">Sé el primero en compartir tu estilo.</p>
-              <Link href="/create" className="mt-6">
-                <button className="text-[var(--brand-pink)] font-bold px-6 py-2 rounded-full bg-[var(--brand-pink)]/10 hover:bg-[var(--brand-pink)]/20 transition-colors">
+              <p className="text-[var(--foreground-tertiary)] text-sm mt-2 max-w-xs mx-auto">Sé el primero en compartir tu estilo con la comunidad.</p>
+              <Link href="/create" className="mt-8">
+                <button className="text-white font-bold px-8 py-3 rounded-full bg-gradient-to-r from-[var(--brand-pink)] to-[var(--brand-purple)] hover:from-[var(--brand-purple)] hover:to-[var(--brand-pink)] transition-all duration-300 transform hover:scale-105 shadow-lg">
                   Crear Outfit
                 </button>
               </Link>
             </div>
           ) : (
             <div className="masonry-grid">
-              {outfits.map((post, index) => (
-                <>
-                  <div key={post.id} className="break-inside-avoid mb-4">
-                    <PostCard
-                      post={post}
-                      onClick={() => setSelectedOutfit(post)}
-                    />
+              {posts.map((post, index) => (
+                <div key={post.id} className="contents">
+                  <div className="break-inside-avoid mb-6">
+                    <PostCard post={post} />
                   </div>
                   {/* Insert Premium Ad Card every 15 posts on desktop */}
                   {(index + 1) % 15 === 0 && (
-                    <div key={`premium-ad-${index}`} className="break-inside-avoid mb-4 col-span-full">
+                    <div key={`premium-ad-${index}`} className="break-inside-avoid mb-6 col-span-full">
                       <PremiumAdCard />
                     </div>
                   )}
-                </>
+                </div>
               ))}
             </div>
           )
@@ -179,36 +221,26 @@ export default function FeedPage() {
       <style jsx global>{`
         .masonry-grid {
           column-count: 2;
-          column-gap: 0.75rem;
+          column-gap: 0.5rem;
         }
         @media (min-width: 768px) {
           .masonry-grid {
-            column-count: 4;
+            column-count: 3;
             column-gap: 1rem;
           }
         }
         @media (min-width: 1024px) {
           .masonry-grid {
-            column-count: 6;
+            column-count: 4;
             column-gap: 1rem;
           }
         }
         @media (min-width: 1440px) {
           .masonry-grid {
-            column-count: 7;
+            column-count: 5;
           }
         }
       `}</style>
-
-      <AnimatePresence>
-        {selectedOutfit && (
-          <OutfitDetailsModal
-            post={selectedOutfit}
-            isOpen={!!selectedOutfit}
-            onClose={() => setSelectedOutfit(null)}
-          />
-        )}
-      </AnimatePresence>
     </div>
   );
 }

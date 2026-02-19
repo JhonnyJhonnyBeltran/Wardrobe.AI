@@ -10,6 +10,7 @@ import Sidebar from './Sidebar';
 import AuthGuard from './AuthGuard';
 import FloatingCreateButton from './FloatingCreateButton';
 
+
 interface AppLayoutProps {
   children: ReactNode;
 }
@@ -32,6 +33,9 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
       {/* Floating Create Button (Desktop only) */}
       <FloatingCreateButton />
+
+      {/* Onboarding Modal (Global) */}
+
     </div>
   );
 }

@@ -64,6 +64,8 @@ export interface ImageUploaderProps {
     processingMessage: string;
     onImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
     onRotate: (degrees: number) => void;
+    onScale?: (scale: number) => void;
+    currentScale?: number;
 }
 
 // Image selector (for scraped images) props

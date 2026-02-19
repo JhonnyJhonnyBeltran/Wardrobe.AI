@@ -1,587 +1,315 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { motion, AnimatePresence, PanInfo } from 'framer-motion';
-import { Search, UserPlus, UserCheck, X, Clock, Users, Image as ImageIcon, MessageCircle, Shirt } from 'lucide-react';
-import { useSocial, Profile } from '@/lib/hooks/useSocial';
-import { Card, Button } from '@/components';
-import { useUser } from '@/store/userStore';
+import { Search as SearchIcon, X, Users, Image as ImageIcon } from 'lucide-react';
+import PostCard, { type Post } from '@/components/Feed/PostCard';
 import { supabase } from '@/lib/supabase/client';
-import * as followService from '@/lib/services/followService';
-import Link from 'next/link';
 import { useSwipeNavigation } from '@/hooks/useSwipeNavigation';
+import Link from 'next/link';
 
-interface Post {
+interface UserProfile {
   id: string;
-  user_id: string;
-  caption: string;
-  image_url?: string;
-  created_at: string;
-  user: {
-    full_name: string;
-    username: string;
-    avatar_url?: string;
-  };
+  username: string;
+  full_name: string;
+  avatar_url?: string;
+  bio?: string;
+  followers_count?: number;
+  following_count?: number;
 }
 
 export default function SearchPage() {
-  const { user } = useUser();
-  const router = useRouter();
-  const { searchUsers, followUser, unfollowUser } = useSocial();
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<Post[]>([]);
+  const [userResults, setUserResults] = useState<UserProfile[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [debouncedQuery, setDebouncedQuery] = useState('');
 
   // Enable swipe navigation
   useSwipeNavigation();
 
-  // Search State
-  const [searchQuery, setSearchQuery] = useState('');
-  const [userResults, setUserResults] = useState<Profile[]>([]);
-  const [postResults, setPostResults] = useState<Post[]>([]);
-  const [itemResults, setItemResults] = useState<any[]>([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'all' | 'users' | 'posts' | 'items'>('all');
-
-  // Cache of my following status: { [userId]: 'accepted' | 'pending' | null }
-  const [myFollows, setMyFollows] = useState<Record<string, string>>({});
-
-  // Real-time listener for MY outgoing actions (rejections/acceptances from others)
+  // Debounce query
   useEffect(() => {
-    if (!user) return;
+    const handler = setTimeout(() => {
+      setDebouncedQuery(query);
+    }, 500);
 
-    const channel = supabase
-      .channel('search-page-realtime')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'follows',
-          filter: `follower_id=eq.${user.id}`
-        },
-        (payload) => {
-          if (payload.eventType === 'DELETE') {
-            const targetId = payload.old.following_id;
-            setMyFollows(prev => {
-              const next = { ...prev };
-              delete next[targetId];
-              return next;
-            });
-          } else if (payload.eventType === 'UPDATE') {
-            const targetId = payload.new.following_id;
-            setMyFollows(prev => ({ ...prev, [targetId]: payload.new.status }));
-          }
-        }
-      )
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
-  }, [user]);
+    return () => clearTimeout(handler);
+  }, [query]);
 
   useEffect(() => {
-    // Initial fetch of my follows
-    const fetchMyFollows = async () => {
-      if (!user) return;
-      const map = await followService.getMyFollowStatusMap(user.id);
-      setMyFollows(map as Record<string, string>);
-    };
-    fetchMyFollows();
-  }, [user]);
-
-  // Fuzzy search helper - simple implementation
-  const fuzzyMatch = (str: string, pattern: string): boolean => {
-    const cleanStr = str.toLowerCase();
-    const cleanPattern = pattern.toLowerCase();
-
-    if (cleanStr.includes(cleanPattern)) return true;
-
-    let patternIdx = 0;
-    for (let i = 0; i < cleanStr.length && patternIdx < cleanPattern.length; i++) {
-      if (cleanStr[i] === cleanPattern[patternIdx]) {
-        patternIdx++;
-      }
+    if (debouncedQuery.trim()) {
+      setLoading(true);
+      // Unified search - fetch both posts and users simultaneously
+      Promise.all([
+        searchPosts(debouncedQuery),
+        searchUsers(debouncedQuery)
+      ]).finally(() => setLoading(false));
+    } else {
+      setResults([]);
+      setUserResults([]);
+      setLoading(false);
     }
-    return patternIdx === cleanPattern.length;
+  }, [debouncedQuery]);
+
+
+  const searchUsers = async (searchTerm: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select(`
+          id,
+          username,
+          full_name,
+          avatar_url,
+          bio
+        `)
+        .or(`username.ilike.%${searchTerm}%,full_name.ilike.%${searchTerm}%`)
+        .order('username')
+        .limit(20);
+
+      if (error) throw error;
+
+      setUserResults(data || []);
+    } catch (error) {
+      console.error('Error searching users:', error);
+    }
   };
 
-  // Handle Search & Initial Load
-  useEffect(() => {
-    let isMounted = true;
-    const controller = new AbortController();
-    const fetchTimeout = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+  const searchPosts = async (searchTerm: string) => {
+    try {
+      let data: any[] | null = null;
+      let error: any = null;
 
-    const fetchContent = async () => {
-      // 1. If empty query, fetch Explore Feed
-      if (searchQuery.length < 2) {
-        setIsSearching(searchQuery.length > 0);
-        setLoading(true);
-
-        if (!isMounted) return;
-
-        try {
-          let query = supabase
-            .from('posts')
-            .select(`
-                    id, user_id, caption, image_url, created_at,
-                    user:profiles!posts_user_id_fkey(full_name, username, avatar_url)
-                `)
-            .eq('visibility', 'public')
-            .order('created_at', { ascending: false })
-            .limit(21)
-            .abortSignal(controller.signal);
-
-          // PERSONALIZATION LOGIC ("For You")
-          if (user?.styleCompleted && user.preferredStyles && user.preferredStyles.length > 0) {
-            console.log('Fetching personalized feed for:', user.preferredStyles);
-          }
-
-          const { data: posts } = await query;
-          clearTimeout(fetchTimeout);
-
-          if (!isMounted) return;
-
-          setPostResults((posts as Post[]) || []);
-          setUserResults([]);
-          setItemResults([]);
-        } catch (err: any) {
-          if (err.name !== 'AbortError') {
-            console.error(err);
-          }
-        } finally {
-          if (isMounted) {
-            setIsSearching(false);
-            setLoading(false);
-          }
-        }
-        return;
-      }
-
-      // 2. Perform Active Search
-      setIsSearching(true);
-      try {
-        // Search Users
-        const results = await searchUsers(searchQuery);
-        setUserResults(results);
-
-        // Search Posts by caption
-        const { data: posts } = await supabase
+      if (!searchTerm.trim()) {
+        // Default: Show recent posts if no query
+        const { data: recentData, error: recentError } = await supabase
           .from('posts')
           .select(`
-            id, user_id, caption, image_url, created_at,
-            user:profiles!posts_user_id_fkey(full_name, username, avatar_url)
-          `)
-          .eq('visibility', 'public')
+                        id,
+                        caption,
+                        image_url,
+                        created_at,
+                        user_id,
+                        profiles (
+                            username,
+                            avatar_url
+                        ),
+                        outfits (
+                            name,
+                            outfit_items (
+                                clothing_items (
+                                    image_url
+                                )
+                            )
+                        ),
+                        likes (count)
+                    `)
           .order('created_at', { ascending: false })
-          .limit(50);
+          .limit(20);
 
-        const filteredPosts = (posts || [])
-          .filter((p: any) => fuzzyMatch(p.caption || '', searchQuery))
-          .slice(0, 15);
+        data = recentData;
+        error = recentError;
 
-        setPostResults(filteredPosts as Post[]);
-
-        // Search Clothing Items in Outfits
-        const { data: outfits } = await supabase
-          .from('outfits')
+      } else {
+        // Standard search using ilike on caption
+        const { data: searchData, error: searchError } = await supabase
+          .from('posts')
           .select(`
             id,
-            name,
-            items,
-            user_id,
+            caption,
+            image_url,
             created_at,
-            profiles (username, avatar_url)
-          `)
+            user_id,
+            outfits (
+                name,
+                outfit_items (
+                    clothing_items (
+                        image_url
+                    )
+                )
+            ),
+            likes (count)
+        `)
+          .ilike('caption', `%${searchTerm}%`)
           .order('created_at', { ascending: false })
-          .limit(100);
+          .limit(20);
 
-        if (outfits && outfits.length > 0) {
-          const matchingItems: any[] = [];
+        data = searchData;
+        error = searchError;
+      }
 
-          for (const outfit of (outfits as any[])) {
-            if (outfit.items && outfit.items.length > 0) {
-              // Fetch clothing items for this outfit
-              const { data: clothingItems } = await supabase
-                .from('clothing_items')
-                .select('id, name, type, image_url, brand')
-                .in('id', outfit.items);
+      if (error) throw error;
 
-              if (clothingItems) {
-                clothingItems.forEach((item: any) => {
-                  if (
-                    fuzzyMatch(item.name || '', searchQuery) ||
-                    fuzzyMatch(item.type || '', searchQuery) ||
-                    fuzzyMatch(item.brand || '', searchQuery)
-                  ) {
-                    matchingItems.push({
-                      ...item,
-                      outfit_id: outfit.id,
-                      outfit_name: outfit.name,
-                      owner: outfit.profiles
-                    });
-                  }
-                });
-              }
+      if (data) {
+        // Fetch profiles manually
+        const userIds = [...new Set(data.map(p => p.user_id))];
+        let profilesMap: Record<string, any> = {};
+
+        if (userIds.length > 0) {
+          const { data: profilesData } = await supabase
+            .from('profiles')
+            .select('id, username, avatar_url')
+            .in('id', userIds);
+
+          if (profilesData) {
+            profilesData.forEach(p => {
+              profilesMap[p.id] = p;
+            });
+          }
+        }
+
+        const formattedPosts = data.map((item: any) => {
+          let displayImage = item.image_url;
+          let title = item.caption || 'Sin título';
+          let authorName = 'Usuario';
+          let authorAvatar = 'https://i.pravatar.cc/150?u=default';
+          let likesCount = 0;
+
+          // Get profile from map
+          const profile = profilesMap[item.user_id];
+          if (profile) {
+            authorName = profile.username;
+            authorAvatar = profile.avatar_url;
+          }
+
+          likesCount = item.likes?.[0]?.count || 0;
+          title = item.caption || item.outfits?.name || 'Sin título';
+
+          if (!displayImage && item.outfits?.outfit_items?.length > 0) {
+            const itemWithImage = item.outfits.outfit_items.find((oi: any) => oi.clothing_items?.image_url);
+            if (itemWithImage) {
+              displayImage = itemWithImage.clothing_items.image_url;
             }
           }
 
-          setItemResults(matchingItems.slice(0, 12));
-        } else {
-          setItemResults([]);
-        }
-
-      } catch (error) {
-        console.error('Search error:', error);
-      } finally {
-        if (isMounted) setIsSearching(false);
-      }
-    };
-
-    const debounceTimer = setTimeout(fetchContent, 400); // 400ms debounce
-    
-    return () => {
-      isMounted = false;
-      clearTimeout(debounceTimer);
-    };
-  }, [searchQuery, user]);
-
-  const handleFollow = async (id: string) => {
-    const currentStatus = myFollows[id];
-    const isFollowing = currentStatus === 'accepted';
-
-    if (isFollowing) {
-      // Unfollow
-      await unfollowUser(id);
-      setMyFollows(prev => {
-        const next = { ...prev };
-        delete next[id];
-        return next;
-      });
-    } else {
-      // Direct follow (no pending)
-      setMyFollows(prev => ({ ...prev, [id]: 'accepted' }));
-
-      const success = await followUser(id);
-      if (!success) {
-        // Revert if failed
-        setMyFollows(prev => {
-          const next = { ...prev };
-          delete next[id];
-          return next;
+          return {
+            id: item.id,
+            imageUrl: displayImage,
+            title: title,
+            author: {
+              name: authorName,
+              avatar: authorAvatar
+            },
+            likes: likesCount,
+            comments: 0, // Placeholder
+            isLiked: false, // Placeholder
+            user_id: item.user_id,
+            description: item.caption // Added description
+          };
         });
+        setResults(formattedPosts);
       }
-    }
-  };
 
-  const handleCancelRequest = async (targetId: string) => {
-    await unfollowUser(targetId);
-    setMyFollows(prev => {
-      const next = { ...prev };
-      delete next[targetId];
-      return next;
-    });
-  };
-
-  const hasResults = userResults.length > 0 || postResults.length > 0 || itemResults.length > 0;
-
-  // Swipe Navigation
-  const handleDragEnd = (event: any, info: PanInfo) => {
-    const threshold = 50;
-    if (info.offset.x < -threshold) {
-      // Swipe Left -> Next (Closet)
-      router.push('/closet');
-    } else if (info.offset.x > threshold) {
-      // Swipe Right -> Prev (Feed/Home)
-      router.push('/feed');
+    } catch (error) {
+      console.error('Error searching:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <motion.div
-      className="min-h-screen bg-[var(--background)] pb-24 md:pb-8 pt-6 px-4 touch-pan-y"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.3 }}
-      drag="x"
-      dragConstraints={{ left: 0, right: 0 }}
-      dragElastic={0.05}
-      onDragEnd={handleDragEnd}
-    >
-      <div className="max-w-4xl mx-auto w-full">
-
-        {/* Search Input - Sticky */}
-        <div className="sticky top-0 z-50 bg-[var(--background)]/95 backdrop-blur-md pt-4 pb-2 px-4 -mx-4 mb-2 transition-all border-b border-[var(--border-color)]/50">
-          <div className="relative max-w-2xl mx-auto">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--foreground-tertiary)]" />
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-20">
+      {/* Header */}
+      <div className="sticky top-0 z-10 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800">
+        <div className="max-w-2xl mx-auto px-4 pt-12 pb-4">
+          <div className="relative">
+            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
-              placeholder="Usuarios, #hashtags, prendas, outfits..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 rounded-2xl bg-[var(--background-secondary)]/50 border border-transparent focus:border-[var(--brand-pink)]/30 focus:bg-[var(--background-secondary)] outline-none text-sm font-medium placeholder:text-[var(--foreground-tertiary)] text-[var(--foreground)] transition-all"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Buscar personas o posts..."
+              className="w-full bg-gray-100 dark:bg-gray-800 border-none rounded-xl py-3 pl-10 pr-10 text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-pink-500/20"
             />
-            {searchQuery && (
+            {query && (
               <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--foreground-tertiary)] hover:text-[var(--foreground)] bg-[var(--background-secondary)] rounded-full p-1"
+                onClick={() => setQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 bg-gray-200 dark:bg-gray-700 rounded-full"
               >
-                <X className="w-3 h-3" />
+                <X className="w-3 h-3 text-gray-500 dark:text-gray-400" />
               </button>
             )}
           </div>
-
-          {/* Tabs - Only visible when searching or results exist */}
-          {(isSearching || hasResults) && (
-            <div className="flex items-center gap-2 mt-3 overflow-x-auto no-scrollbar pb-1 max-w-2xl mx-auto">
-              <FilterTab label="Todo" active={activeTab === 'all'} onClick={() => setActiveTab('all')} />
-              <FilterTab label="Personas" active={activeTab === 'users'} onClick={() => setActiveTab('users')} count={userResults.length} />
-              <FilterTab label="Outfits" active={activeTab === 'posts'} onClick={() => setActiveTab('posts')} count={postResults.length} />
-              <FilterTab label="Prendas" active={activeTab === 'items'} onClick={() => setActiveTab('items')} count={itemResults.length} />
-            </div>
-          )}
         </div>
+      </div>
 
+      <div className="max-w-2xl mx-auto px-4 py-6 space-y-8">
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-500"></div>
+          </div>
+        ) : (
+          <>
+            {/* NO RESULTS STATE */}
+            {!loading && userResults.length === 0 && results.length === 0 && query && (
+              <div className="text-center py-12">
+                <p className="text-gray-500 dark:text-gray-400">No se encontraron resultados para "{query}"</p>
+              </div>
+            )}
 
-        {/* Results or Empty State */}
-        <div className="min-h-[60vh]">
-          <AnimatePresence mode="wait">
-            {searchQuery.length < 2 && !isSearching && !loading ? (
-              <motion.div
-                key="explore-feed"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="space-y-6"
-              >
-                {/* Masonry Grid for Explore Feed */}
-                <div className="columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4 px-1">
-                  {postResults.map((post) => (
+            {/* PEOPLE RESULTS SECTION */}
+            {userResults.length > 0 && (
+              <section>
+                <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 px-1 flex items-center gap-2">
+                  <Users className="w-5 h-5 text-violet-500" />
+                  Personas
+                </h2>
+                <div className="space-y-3">
+                  {userResults.map(user => (
                     <Link
-                      key={post.id}
-                      href={`/post/${post.id}`}
-                      className="break-inside-avoid block group relative rounded-xl overflow-hidden bg-[var(--card-bg)] shadow-sm hover:shadow-md transition-all"
+                      key={user.id}
+                      href={`/profile/${user.id}`}
+                      className="flex items-center gap-4 p-3 bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 hover:border-pink-500/30 transition-colors"
                     >
-                      <div className="relative w-full">
-                        <img
-                          src={post.image_url || '/placeholder-outfit.jpg'}
-                          alt={post.caption}
-                          className="w-full h-auto object-cover"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                        <div className="absolute bottom-2 left-2 right-2 text-white text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity truncate">
-                          @{post.user?.username}
-                        </div>
+                      <img
+                        src={user.avatar_url || 'https://i.pravatar.cc/150?u=default'}
+                        alt={user.username}
+                        className="w-12 h-12 rounded-full object-cover border-2 border-white dark:border-gray-800 shadow-sm"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-gray-900 dark:text-white truncate">
+                          {user.full_name || user.username}
+                        </h3>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                          @{user.username}
+                        </p>
+                        {user.bio && (
+                          <p className="text-xs text-gray-400 mt-1 line-clamp-1">{user.bio}</p>
+                        )}
                       </div>
                     </Link>
                   ))}
                 </div>
-              </motion.div>
-            ) : (isSearching || loading) ? (
-              <motion.div
-                key="loading"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="flex flex-col items-center justify-center py-20 text-[var(--foreground-tertiary)]"
-              >
-                <div className="w-10 h-10 border-4 border-[var(--brand-pink)] border-t-transparent rounded-full animate-spin mb-4" />
-                <p className="font-medium animate-pulse">
-                  {(loading && !isSearching) ? 'Personalizando tu feed...' : 'Buscando inspiración...'}
-                </p>
-              </motion.div>
-            ) : !hasResults ? (
-              <motion.div
-                key="no-results"
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                className="flex flex-col items-center justify-center py-20 text-center"
-              >
-                <div className="w-20 h-20 bg-[var(--background-secondary)] rounded-full flex items-center justify-center mb-6">
-                  <Search className="w-10 h-10 text-[var(--foreground-tertiary)]" />
-                </div>
-                <p className="text-[var(--foreground)] font-bold text-lg mb-2">No encontramos nada</p>
-                <p className="text-[var(--foreground-secondary)] max-w-xs mx-auto">
-                  Intenta buscar algo más general como "casual", "verano" o un nombre de usuario.
-                </p>
-              </motion.div>
-            ) : (
-              <motion.div
-                key="results"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="space-y-8 pb-12"
-              >
-                {/* Users Section */}
-                {(activeTab === 'all' || activeTab === 'users') && userResults.length > 0 && (
-                  <div className="space-y-4">
-                    {activeTab === 'all' && <SectionHeader title="Personas" onClick={() => setActiveTab('users')} />}
-                    <div className="space-y-3">
-                      {userResults.map((profile) => (
-                        <UserResultCard
-                          key={profile.id}
-                          profile={profile}
-                          status={myFollows[profile.id]}
-                          onFollow={() => handleFollow(profile.id)}
-                          onCancel={() => handleCancelRequest(profile.id)}
-                          router={router}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Items Section */}
-                {(activeTab === 'all' || activeTab === 'items') && itemResults.length > 0 && (
-                  <div className="space-y-4">
-                    {activeTab === 'all' && <SectionHeader title="Prendas" icon={<Shirt className="w-4 h-4" />} onClick={() => setActiveTab('items')} />}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                      {itemResults.map(item => <ItemResultCard key={item.id} item={item} />)}
-                    </div>
-                  </div>
-                )}
-
-                {/* Posts/Outfits Section */}
-                {(activeTab === 'all' || activeTab === 'posts') && postResults.length > 0 && (
-                  <div className="space-y-4">
-                    {activeTab === 'all' && <SectionHeader title="Outfits" onClick={() => setActiveTab('posts')} />}
-                    {/* Masonry Grid for Results */}
-                    <div className="columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4">
-                      {postResults.map((post) => (
-                        <Link
-                          key={post.id}
-                          href={`/post/${post.id}`}
-                          className="break-inside-avoid block group relative rounded-xl overflow-hidden bg-[var(--card-bg)] shadow-sm border border-[var(--border-color)]/50"
-                        >
-                          <img
-                            src={post.image_url || '/placeholder-outfit.jpg'}
-                            alt={post.caption}
-                            className="w-full h-auto object-cover"
-                          />
-                          <div className="p-3">
-                            <p className="text-xs text-[var(--foreground)] font-medium line-clamp-2">{post.caption}</p>
-                            <div className="flex items-center gap-2 mt-2">
-                              <div className="w-4 h-4 rounded-full bg-gray-200 overflow-hidden relative">
-                                {post.user?.avatar_url && <img src={post.user.avatar_url} className="object-cover w-full h-full" />}
-                              </div>
-                              <span className="text-[10px] text-[var(--foreground-secondary)] truncate">{post.user?.username}</span>
-                            </div>
-                          </div>
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-              </motion.div>
+              </section>
             )}
-          </AnimatePresence>
-        </div>
-      </div>
-    </motion.div >
-  );
-}
 
-// Sub-components for cleaner code
-function FilterTab({ label, active, onClick, count }: { label: string, active: boolean, onClick: () => void, count?: number }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`
-                px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap transition-all border
-                ${active
-          ? 'bg-[var(--brand-pink)] border-[var(--brand-pink)] text-white shadow-md shadow-[var(--brand-pink)]/20'
-          : 'bg-[var(--card-bg)] border-[var(--border-color)] text-[var(--foreground-secondary)] hover:border-[var(--brand-pink)]/50'
-        }
-            `}
-    >
-      {label}
-      {count !== undefined && <span className="ml-1.5 opacity-80 text-xs">({count})</span>}
-    </button>
-  );
-}
+            {/* POST RESULTS SECTION */}
+            {results.length > 0 && (
+              <section>
+                <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 px-1 flex items-center gap-2">
+                  <ImageIcon className="w-5 h-5 text-pink-500" />
+                  Posts
+                </h2>
+                <div className="grid grid-cols-2 gap-4">
+                  {results.map(post => (
+                    <PostCard key={post.id} post={post} />
+                  ))}
+                </div>
+              </section>
+            )}
 
-function SectionHeader({ title, icon, onClick }: { title: string, icon?: React.ReactNode, onClick: () => void }) {
-  return (
-    <div className="flex items-center justify-between px-1">
-      <h2 className="text-base font-bold text-[var(--foreground)] flex items-center gap-2">
-        {icon}
-        {title}
-      </h2>
-      <button onClick={onClick} className="text-xs text-[var(--brand-pink)] font-medium hover:underline">
-        Ver todo
-      </button>
-    </div>
-  );
-}
-
-// Extracted User Card for readability
-function UserResultCard({ profile, status, onFollow, onCancel, router }: any) {
-  const isFollowing = status === 'accepted';
-
-  const handleMessage = () => {
-    router.push(`/messages/${profile.id}`);
-  };
-
-  return (
-    <div className="p-3 rounded-2xl bg-[var(--card-bg)] flex items-center justify-between border border-[var(--border-color)] shadow-sm">
-      <Link href={`/profile/${profile.id}`} className="flex items-center gap-3 flex-1 min-w-0">
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--brand-pink)] to-orange-500 p-[1.5px] flex-shrink-0">
-          <div className="w-full h-full rounded-full bg-[var(--card-bg)] overflow-hidden">
-            {profile.avatar_url ? (
-              <img src={profile.avatar_url} alt={profile.full_name || ''} className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-[var(--background-secondary)] text-sm font-bold">
-                {(profile.full_name || '?')[0]}
+            {/* Empty State / Initial Placeholders */}
+            {!query && (
+              <div className="text-center py-20 opacity-50">
+                <div className="flex justify-center mb-4">
+                  <SearchIcon className="w-16 h-16 text-gray-300 dark:text-gray-700" />
+                </div>
+                <p className="text-gray-500 dark:text-gray-400">Busca usuarios, amigos y outfits</p>
               </div>
             )}
-          </div>
-        </div>
-        <div className="min-w-0">
-          <h3 className="font-semibold text-[var(--foreground)] truncate text-sm">
-            {profile.full_name}
-          </h3>
-          <p className="text-xs text-[var(--foreground-tertiary)] truncate">
-            @{profile.username}
-          </p>
-        </div>
-      </Link>
-
-      <div className="flex items-center gap-2">
-        {/* Message Button - Always visible */}
-        <button
-          onClick={handleMessage}
-          className="p-2 rounded-full bg-[var(--background-secondary)] text-[var(--foreground)] hover:bg-[var(--background-tertiary)] transition-colors"
-          title="Enviar mensaje"
-        >
-          <MessageCircle className="w-4 h-4" />
-        </button>
-        {/* Follow Button */}
-        {isFollowing ? (
-          <button className="px-3 py-1.5 rounded-full bg-[var(--background-secondary)] text-[var(--foreground)] text-xs font-medium border border-transparent">Siguiendo</button>
-        ) : (
-          <button onClick={onFollow} className="px-4 py-1.5 rounded-full bg-[var(--brand-pink)] text-white text-xs font-medium shadow-sm active:scale-95 transition-transform">Seguir</button>
+          </>
         )}
       </div>
     </div>
-  )
+  );
 }
-
-function ItemResultCard({ item }: { item: any }) {
-  return (
-    <Link href={`/closet`} className="group block">
-      <div className="rounded-xl overflow-hidden bg-[var(--card-bg)] hover:shadow-lg transition-all border border-[var(--border-color)]/50 aspect-square relative">
-        {item.image_url ? (
-          <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
-        ) : (
-          <div className="w-full h-full bg-[var(--background-secondary)] flex items-center justify-center">👔</div>
-        )}
-        <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/60 to-transparent">
-          <p className="text-white text-xs font-medium truncate">{item.name}</p>
-        </div>
-      </div>
-    </Link>
-  )
-}
-

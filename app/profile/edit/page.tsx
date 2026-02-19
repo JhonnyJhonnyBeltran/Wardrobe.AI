@@ -100,20 +100,47 @@ export default function EditProfilePage() {
   const uploadAvatar = async (userId: string): Promise<string | null> => {
     if (!avatarFile) return null;
 
-    const fileExt = avatarFile.name.split('.').pop();
-    const fileName = `${userId}-${Math.random()}.${fileExt}`;
-    const filePath = `${fileName}`;
+    try {
+      // 1. Delete old avatar if exists (optional cleanup)
+      if (user?.avatar) {
+        try {
+          // Extract filename from URL
+          const oldUrl = new URL(user.avatar);
+          const oldPath = oldUrl.pathname.split('/').pop();
+          if (oldPath) {
+            await supabase.storage.from('avatars').remove([oldPath]);
+          }
+        } catch (e) {
+          // Ignore errors when deleting old avatar
+          console.log('Could not delete old avatar:', e);
+        }
+      }
 
-    const { error: uploadError } = await supabase.storage
-      .from('avatars')
-      .upload(filePath, avatarFile);
+      // 2. Upload new avatar with user ID as filename
+      const fileExt = avatarFile.name.split('.').pop() || 'jpg';
+      const fileName = `${userId}.${fileExt}`;
 
-    if (uploadError) {
-      throw uploadError;
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, avatarFile, {
+          upsert: true, // Overwrite if exists
+          cacheControl: '3600',
+        });
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        throw new Error(`Error al subir la imagen: ${uploadError.message}`);
+      }
+
+      // 3. Get public URL with timestamp to avoid cache
+      const { data } = supabase.storage.from('avatars').getPublicUrl(fileName);
+      const urlWithCache = `${data.publicUrl}?t=${Date.now()}`;
+      
+      return urlWithCache;
+    } catch (error: any) {
+      console.error('Avatar upload failed:', error);
+      throw error;
     }
-
-    const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
-    return data.publicUrl;
   };
 
   const handleSave = async () => {

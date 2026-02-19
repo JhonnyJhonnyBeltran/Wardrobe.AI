@@ -267,13 +267,13 @@ export default function SettingsPage() {
                             <h2 className="text-sm font-semibold text-[var(--foreground-secondary)] uppercase tracking-wider">
                                 {t.profile.yourStyle}
                             </h2>
-                            <button
-                                onClick={() => setShowStyleForm(true)}
+                            <Link
+                                href="/onboarding/preferences"
                                 className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--brand-pink)] text-white text-sm font-medium hover:opacity-90 transition-opacity"
                             >
                                 <Edit className="w-4 h-4" />
                                 {t.common.edit}
-                            </button>
+                            </Link>
                         </div>
                         <Card className="p-5">
                             <div className="space-y-5">

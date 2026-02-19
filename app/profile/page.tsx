@@ -17,9 +17,7 @@ import {
   Menu,
   Grid3x3,
   Bookmark,
-  Plus,
   Shirt,
-  Layers,
   UserCircle,
   Palette
 } from 'lucide-react';
@@ -44,13 +42,12 @@ export default function ProfilePage() {
   const { t } = useTranslation();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>('posts');
-  const [showCreateMenu, setShowCreateMenu] = useState(false);
 
   useSwipeNavigation();
 
   // Real data state
   const [profileStats, setProfileStats] = useState({
-    outfits: 0,
+    posts: 0,
     followers: 0,
     following: 0
   });
@@ -59,6 +56,10 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    let isMounted = true;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
     const fetchProfileData = async () => {
       if (!user) return;
 
@@ -66,7 +67,7 @@ export default function ProfilePage() {
         setIsLoading(true);
         const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(user.id);
         if (!isUuid) {
-          setProfileStats({ outfits: 0, followers: 0, following: 0 });
+          setProfileStats({ posts: 0, followers: 0, following: 0 });
           setPosts([]);
           setSavedPosts([]);
           setIsLoading(false);
@@ -74,29 +75,31 @@ export default function ProfilePage() {
         }
 
         // 1. Fetch Stats
-        const { count: outfitCount } = await supabase
-          .from('outfits')
+        const { count: postCount } = await supabase
+          .from('posts')
           .select('*', { count: 'exact', head: true })
-          .eq('user_id', user.id);
+          .eq('user_id', user.id)
+          .abortSignal(controller.signal);
 
         const followersCount = await followService.getFollowersCount(user.id);
 
         const followingCount = await followService.getFollowingCount(user.id);
 
-        setProfileStats({
-          outfits: outfitCount || 0,
-          followers: followersCount,
-          following: followingCount
-        });
+        if (isMounted) {
+          setProfileStats({ posts: postCount || 0, followers: followersCount, following: followingCount });
+        }
 
         // 2. Fetch Posts (My Posts)
         const { data: postsData } = await supabase
           .from('posts')
           .select('*')
           .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false })
+          .abortSignal(controller.signal);
 
-        setPosts(postsData || []);
+        if (isMounted) {
+          setPosts(postsData || []);
+        }
 
         // 3. Fetch SAVED Posts (Posts saved by user)
         // We join with posts table
@@ -105,27 +108,42 @@ export default function ProfilePage() {
           .select(`
             id,
             created_at,
-            post:posts (*)
+            posts (*)
           `)
           .eq('user_id', user.id)
           .not('post_id', 'is', null) // Only fetch saved posts, not outfits
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false })
+          .abortSignal(controller.signal);
 
         // Extract posts from the join
         const formattedSavedPosts = (savesData || [])
-          .map((save: any) => save.post)
+          .map((save: any) => save.posts)
           .filter((post: any) => post !== null); // Ensure no nulls
 
-        setSavedPosts(formattedSavedPosts);
+        if (isMounted) {
+          setSavedPosts(formattedSavedPosts);
+        }
 
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error fetching profile:', error);
+        if (error.name !== 'AbortError' && isMounted) {
+          setProfileStats({ posts: 0, followers: 0, following: 0 });
+          setPosts([]);
+          setSavedPosts([]);
+        }
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
     fetchProfileData();
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
+    };
   }, [user]);
 
   if (!user) return null;
@@ -135,52 +153,8 @@ export default function ProfilePage() {
       {/* Header - Nuevo diseño: (+) a la izquierda, username centrado */}
       <header className="sticky top-0 z-30 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-color)]/50 supports-[ios]:pt-safe-top">
         <div className="flex items-center justify-between px-4 h-14 w-full md:max-w-[60%] mx-auto">
-          {/* Izquierda: Botón (+) para crear */}
-          <div className="relative flex-shrink-0">
-            <button
-              className="p-2 hover:bg-[var(--background-secondary)] rounded-full transition-colors"
-              onClick={() => setShowCreateMenu(!showCreateMenu)}
-              aria-label="Crear"
-            >
-              <Plus className="w-6 h-6 text-[var(--foreground)]" />
-            </button>
-            <AnimatePresence>
-              {showCreateMenu && (
-                <>
-                  <div
-                    className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm"
-                    onClick={() => setShowCreateMenu(false)}
-                  />
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.9, y: 10 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.9, y: 10 }}
-                    className="absolute top-full left-0 mt-2 w-48 bg-[var(--card-bg)] rounded-xl shadow-xl border border-[var(--border-color)] z-50 overflow-hidden"
-                  >
-                    <Link
-                      href="/create"
-                      onClick={() => setShowCreateMenu(false)}
-                      className="flex items-center gap-3 px-4 py-3 hover:bg-[var(--background-secondary)] transition-colors"
-                    >
-                      <Shirt className="w-5 h-5 text-[var(--brand-pink)]" />
-                      <span className="text-sm font-medium">Nuevo Outfit</span>
-                    </Link>
-                    <Link
-                      href="/create-post"
-                      onClick={() => setShowCreateMenu(false)}
-                      className="flex items-center gap-3 px-4 py-3 hover:bg-[var(--background-secondary)] transition-colors border-t border-[var(--border-color)]"
-                    >
-                      <Layers className="w-5 h-5 text-[var(--brand-pink)]" />
-                      <span className="text-sm font-medium">Nuevo Post</span>
-                    </Link>
-                  </motion.div>
-                </>
-              )}
-            </AnimatePresence>
-          </div>
-
           {/* Centro: Username centrado */}
-          <span className="font-bold text-[var(--foreground)] truncate max-w-[200px] sm:max-w-[280px] px-2">
+          <span className="font-bold text-[var(--foreground)] truncate max-w-[200px] sm:max-w-[280px] px-2 ml-4">
             {user.username || user.name || user.email?.split('@')[0] || 'Perfil'}
           </span>
 
@@ -213,8 +187,8 @@ export default function ProfilePage() {
             {/* Stats */}
             <div className="flex-1 flex justify-around text-center">
               <div>
-                <div className="font-bold text-lg">{profileStats.outfits}</div>
-                <div className="text-xs text-[var(--foreground-secondary)]">Outfits</div>
+                <div className="font-bold text-lg">{profileStats.posts}</div>
+                <div className="text-xs text-[var(--foreground-secondary)]">Posts</div>
               </div>
               <div>
                 <div className="font-bold text-lg">{profileStats.followers}</div>
@@ -236,7 +210,7 @@ export default function ProfilePage() {
                 <UserCircle className="w-4 h-4 text-[var(--brand-pink)]" />
                 Editar perfil
               </Link>
-              <Link href="/profile/preferences" className="flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--background-secondary)] border border-[var(--border-color)] text-sm font-medium text-[var(--foreground)] hover:bg-[var(--card-hover)] transition-colors">
+              <Link href="/onboarding/preferences" className="flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--background-secondary)] border border-[var(--border-color)] text-sm font-medium text-[var(--foreground)] hover:bg-[var(--card-hover)] transition-colors">
                 <Palette className="w-4 h-4 text-[var(--brand-pink)]" />
                 Editar preferencias
               </Link>

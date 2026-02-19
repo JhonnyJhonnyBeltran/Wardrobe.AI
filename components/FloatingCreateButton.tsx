@@ -4,16 +4,25 @@ import { Plus } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { usePathname } from 'next/navigation';
+import { triggerHaptic } from '@/lib/haptic';
 
 export default function FloatingCreateButton() {
     const pathname = usePathname();
 
-    // Only show on feed page
-    if (pathname !== '/feed') return null;
+    // Show on feed and profile pages (removed closet as it has its own button)
+    const showOnPages = ['/feed', '/profile'];
+    if (!showOnPages.includes(pathname) && !pathname.startsWith('/profile')) return null;
+
+    const handleClick = () => {
+        triggerHaptic('medium');
+    };
+
+    // Hide on mobile if on feed (as per user request)
+    const isFeed = pathname === '/feed';
 
     return (
-        <div className="hidden md:block fixed bottom-8 right-8 z-50">
-            <Link href="/create">
+        <div className={`fixed bottom-8 right-8 z-50 ${isFeed ? 'hidden md:block' : ''}`}>
+            <Link href="/create-post" onClick={handleClick}>
                 <motion.div
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}

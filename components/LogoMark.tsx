@@ -13,6 +13,8 @@ interface LogoMarkProps {
     size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
     /** Forzar uso del logo oscuro (para fondos de color como rosa) */
     inverted?: boolean;
+    /** Forzar uso del logo rosa (para estado activo) */
+    active?: boolean;
 }
 
 const sizeMap = {
@@ -23,7 +25,7 @@ const sizeMap = {
     xl: { width: 64, height: 64, className: 'w-16 h-16' },
 };
 
-export default function LogoMark({ className = '', size = 'md', inverted = false }: LogoMarkProps) {
+export default function LogoMark({ className = '', size = 'md', inverted = false, active = false }: LogoMarkProps) {
     const [isDark, setIsDark] = useState(false);
     const dims = sizeMap[size];
 
@@ -44,9 +46,14 @@ export default function LogoMark({ className = '', size = 'md', inverted = false
         return () => observer.disconnect();
     }, []);
 
-    // Si inverted está activo, usar el logo dark (tiene colores más visibles sobre fondo rosa)
-    // Si no, usar la lógica normal basada en el tema
-    const logoSrc = inverted
+    // Lógica de selección del logo:
+    // - Si active: usar logo rosa (para estado activo)
+    // - Si inverted: usar logo dark (para fondos de color)
+    // - Si dark mode: usar logo dark (blanco)
+    // - Si light mode: usar logo normal (negro)
+    const logoSrc = active
+        ? '/klozet-logo-pink.png'
+        : inverted
         ? '/klozet-logo-dark.png'
         : (isDark ? '/klozet-logo-dark.png' : '/klozet-logo.png');
 

@@ -1,14 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Search, ChevronLeft, Plus } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Search, ChevronLeft, Plus, X, MessageCircle, UserPlus } from 'lucide-react';
 import { useUser } from '@/store/userStore';
 import { useUiStore } from '@/store/uiStore';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ConversationItem } from '@/components/ConversationItem';
 import { supabase } from '@/lib/supabase/client';
 import { useSwipeNavigation } from '@/hooks/useSwipeNavigation';
+import { getFollowing } from '@/lib/services/followService';
+import type { FollowProfile } from '@/types/follow';
 
 interface Conversation {
     id: string;
@@ -40,6 +42,11 @@ export default function MessagesPage() {
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
 
+    // New conversation modal state
+    const [showNewConversationModal, setShowNewConversationModal] = useState(false);
+    const [followedUsers, setFollowedUsers] = useState<FollowProfile[]>([]);
+    const [loadingFollowed, setLoadingFollowed] = useState(false);
+
     const handleConversationClick = async (convId: string, otherUserId: string) => {
         if (sharePostData && user) {
             // Send the post immediately
@@ -60,6 +67,41 @@ export default function MessagesPage() {
             }
         }
         router.push(`/messages/${otherUserId}`);
+    };
+
+    // Fetch followed users when modal opens
+    useEffect(() => {
+        if (showNewConversationModal && user) {
+            setLoadingFollowed(true);
+            getFollowing(user.id)
+                .then((users) => {
+                    setFollowedUsers(users);
+                })
+                .catch((err) => {
+                    console.error('Error fetching following:', err);
+                    setFollowedUsers([]);
+                })
+                .finally(() => {
+                    setLoadingFollowed(false);
+                });
+        }
+    }, [showNewConversationModal, user]);
+
+    // Handle selecting a user to start a conversation
+    const handleSelectUser = async (selectedUser: FollowProfile) => {
+        if (!user) return;
+        
+        try {
+            const { data: conversationId, error: convError } = await supabase
+                .rpc('get_or_create_conversation', { target_user_id: selectedUser.id } as any);
+
+            if (convError || !conversationId) throw convError || new Error('Could not get conversation');
+
+            setShowNewConversationModal(false);
+            router.push(`/messages/${selectedUser.id}`);
+        } catch (e) {
+            console.error('Error creating conversation:', e);
+        }
     };
 
     useEffect(() => {
@@ -184,7 +226,7 @@ export default function MessagesPage() {
                             </button>
                             <h1 className="text-lg font-bold text-[var(--foreground)]">Mensajes</h1>
                         </div>
-                        <button onClick={() => router.push('/search')} className="p-2 -mr-2 text-[var(--brand-pink)] hover:bg-[var(--brand-pink)]/10 rounded-full transition-colors">
+                        <button onClick={() => setShowNewConversationModal(true)} className="p-2 -mr-2 text-[var(--brand-pink)] hover:bg-[var(--brand-pink)]/10 rounded-full transition-colors">
                             <Plus className="w-6 h-6" />
                         </button>
                     </div>
@@ -301,6 +343,114 @@ export default function MessagesPage() {
                 <p className="text-[var(--foreground-secondary)] font-medium">Selecciona una conversación</p>
                 <p className="text-sm text-[var(--foreground-tertiary)] mt-1">o inicia un chat desde Búsqueda</p>
             </div>
+
+            {/* New Conversation Modal */}
+            <AnimatePresence>
+                {showNewConversationModal && (
+                    <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 flex items-end md:items-center justify-center"
+                        onClick={() => setShowNewConversationModal(false)}
+                    >
+                        {/* Backdrop */}
+                        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+                        
+                        {/* Modal Content */}
+                        <motion.div 
+                            initial={{ y: '100%' }}
+                            animate={{ y: 0 }}
+                            exit={{ y: '100%' }}
+                            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                            className="relative w-full md:max-w-md md:rounded-2xl bg-[var(--background)] md:max-h-[70vh] rounded-t-2xl overflow-hidden"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            {/* Header */}
+                            <div className="sticky top-0 z-10 bg-[var(--background)] border-b border-[var(--border-color)] px-4 py-3 flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <UserPlus className="w-5 h-5 text-[var(--brand-pink)]" />
+                                    <h2 className="text-lg font-bold text-[var(--foreground)]">Nueva conversación</h2>
+                                </div>
+                                <button 
+                                    onClick={() => setShowNewConversationModal(false)}
+                                    className="p-2 hover:bg-[var(--background-secondary)] rounded-full transition-colors"
+                                >
+                                    <X className="w-5 h-5 text-[var(--foreground-secondary)]" />
+                                </button>
+                            </div>
+
+                            {/* Users List */}
+                            <div className="max-h-[60vh] overflow-y-auto">
+                                {loadingFollowed ? (
+                                    <div className="p-4 space-y-3">
+                                        {[1, 2, 3, 4, 5].map((i) => (
+                                            <div key={i} className="flex items-center gap-3 animate-pulse">
+                                                <div className="w-12 h-12 rounded-full bg-[var(--background-secondary)]" />
+                                                <div className="flex-1 space-y-2">
+                                                    <div className="h-4 w-1/3 bg-[var(--background-secondary)] rounded" />
+                                                    <div className="h-3 w-1/2 bg-[var(--background-secondary)] rounded" />
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : followedUsers.length > 0 ? (
+                                    <div className="py-2">
+                                        {followedUsers.map((followedUser) => (
+                                            <button
+                                                key={followedUser.id}
+                                                onClick={() => handleSelectUser(followedUser)}
+                                                className="w-full px-4 py-3 flex items-center gap-3 hover:bg-[var(--background-secondary)] transition-colors"
+                                            >
+                                                <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 bg-[var(--background-secondary)]">
+                                                    {followedUser.avatar_url ? (
+                                                        <img 
+                                                            src={followedUser.avatar_url} 
+                                                            alt={followedUser.username || 'User'}
+                                                            className="w-full h-full object-cover"
+                                                        />
+                                                    ) : (
+                                                        <div className="w-full h-full flex items-center justify-center text-[var(--foreground-tertiary)]">
+                                                            <MessageCircle className="w-5 h-5" />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="flex-1 text-left">
+                                                    <p className="font-semibold text-[var(--foreground)] truncate">
+                                                        {followedUser.username || 'Usuario'}
+                                                    </p>
+                                                    {followedUser.full_name && (
+                                                        <p className="text-sm text-[var(--foreground-secondary)] truncate">
+                                                            {followedUser.full_name}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </button>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="p-8 text-center">
+                                        <UserPlus className="w-12 h-12 mx-auto text-[var(--foreground-tertiary)] mb-3" />
+                                        <p className="text-[var(--foreground-secondary)]">No sigues a nadie todavía</p>
+                                        <p className="text-sm text-[var(--foreground-tertiary)] mt-1">
+                                            Busca usuarios para seguir y chatear con ellos
+                                        </p>
+                                        <button
+                                            onClick={() => {
+                                                setShowNewConversationModal(false);
+                                                router.push('/search');
+                                            }}
+                                            className="mt-4 px-4 py-2 bg-[var(--brand-pink)] text-white rounded-full font-medium text-sm"
+                                        >
+                                            Buscar usuarios
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

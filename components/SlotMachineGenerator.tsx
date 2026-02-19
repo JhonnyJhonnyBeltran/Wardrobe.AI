@@ -170,7 +170,7 @@ export const MultiSlotMachineGenerator: React.FC<MultiSlotMachineGeneratorProps>
                 animate={{ opacity: 1, y: 0 }}
                 className="text-center"
             >
-                <h2 className="text-2xl font-bold gradient-text mb-2">
+                <h2 className="text-2xl font-bold text-[var(--brand-pink)] mb-2">
                     Generando tu outfit perfecto
                 </h2>
                 <p className="text-sm text-[var(--foreground-tertiary)]">

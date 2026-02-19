@@ -2,12 +2,13 @@
 
 /**
  * Button Component - Apple/Revolut Premium Style
- * Ultra-rounded with elastic animations and subtle depth
+ * Ultra-rounded with elastic animations, haptic feedback and subtle depth
  */
 
 import React, { ReactNode } from 'react';
 import { motion, HTMLMotionProps } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
+import { haptics } from '@/lib/haptic';
 
 interface ButtonProps extends Omit<HTMLMotionProps<'button'>, 'children'> {
   children: ReactNode;
@@ -76,6 +77,15 @@ export default function Button({
 
   const isDisabled = disabled || loading;
 
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    // Trigger haptic feedback on click
+    if (!isDisabled) {
+      haptics.tap();
+    }
+    // Call original onClick if provided
+    props.onClick?.(e);
+  };
+
   return (
     <motion.button
       whileHover={!isDisabled ? { scale: 1.02, y: -2 } : {}}
@@ -94,6 +104,7 @@ export default function Button({
         ${className}
       `.trim().replace(/\s+/g, ' ')}
       disabled={isDisabled}
+      onClick={handleClick}
       {...props}
     >
       {loading && (

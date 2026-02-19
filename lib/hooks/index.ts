@@ -6,6 +6,9 @@ export { useAuth } from './useAuth';
 export { useSocial } from './useSocial';
 export { useWardrobe } from './useWardrobe';
 
+// Database hooks
+export { useCategoriesAndBrands } from './useCategoriesAndBrands';
+
 // Realtime hooks
 export { useRealtime } from './useRealtime';
 export { useNotifications } from './useNotifications';

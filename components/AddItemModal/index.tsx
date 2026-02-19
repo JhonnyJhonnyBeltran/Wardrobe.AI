@@ -22,20 +22,20 @@ import { useBodyScrollLock } from '@/lib/hooks';
 
 // Local imports
 import { useAddItemForm } from './hooks/useAddItemForm';
+import { useCategoriesAndBrands } from '@/lib/hooks/useCategoriesAndBrands';
 import {
     DropdownWithCustom,
     CustomSelect,
     ImageUploader,
 } from './components';
 import {
-    BRAND_OPTIONS,
     SIZE_OPTIONS,
     FABRIC_OPTIONS,
-    TYPE_OPTIONS,
     SEASON_OPTIONS,
     COLOR_OPTIONS,
 } from './constants';
 import type { AddItemModalProps } from './types';
+import ImageCropper from '@/components/ImageCropper';
 
 export default function AddItemModal({
     isOpen,
@@ -60,13 +60,41 @@ export default function AddItemModal({
         handleColorSelect,
         handleColorPickerChange,
         rotateImage,
+        scaleImage,
         buildPayload,
         resetForm,
         error,
     } = useAddItemForm({ isOpen, initialData, isEditing });
 
+    // Fetch categories and brands from database
+    const { categories, brands, isLoading: isOptionsLoading } = useCategoriesAndBrands();
+
     // Advisor modal state (kept here as it's UI-specific)
     const [showAdvisor, setShowAdvisor] = React.useState(false);
+    const [showCropper, setShowCropper] = React.useState(false);
+
+    // Listen for crop trigger from ImageUploader
+    React.useEffect(() => {
+        const handleTriggerCrop = () => {
+            if (image) {
+                setShowCropper(true);
+            }
+        };
+        window.addEventListener('triggerCrop', handleTriggerCrop);
+        return () => window.removeEventListener('triggerCrop', handleTriggerCrop);
+    }, [image]);
+
+    const handleCropComplete = (croppedImage: Blob) => {
+        // Convert blob to data URL
+        const reader = new FileReader();
+        reader.onload = () => {
+            if (reader.result) {
+                setFormData(prev => ({ ...prev, imageUrl: reader.result as string }));
+            }
+        };
+        reader.readAsDataURL(croppedImage);
+        setShowCropper(false);
+    };
 
     const handleSubmit = async () => {
         if (isProcessing) {
@@ -181,6 +209,7 @@ export default function AddItemModal({
                                 processingMessage={processingMessage}
                                 onImageUpload={handleImageUpload}
                                 onRotate={rotateImage}
+                                onScale={scaleImage}
                             />
                         </div>
 
@@ -190,7 +219,7 @@ export default function AddItemModal({
                                 label="Tipo de prenda"
                                 value={formData.type}
                                 onChange={(value) => setFormData(prev => ({ ...prev, type: value }))}
-                                options={TYPE_OPTIONS}
+                                options={categories}
                             />
                         </div>
 
@@ -221,7 +250,7 @@ export default function AddItemModal({
                                     label="Marca"
                                     value={formData.brand}
                                     onChange={(value) => setFormData(prev => ({ ...prev, brand: value }))}
-                                    options={BRAND_OPTIONS}
+                                    options={brands}
                                     placeholder="Seleccionar marca..."
                                 />
 
@@ -340,5 +369,14 @@ export default function AddItemModal({
             onClose={() => setShowAdvisor(false)}
             onConfirm={handleAdvisorConfirm}
         />
+
+        {/* Image Cropper Modal */}
+        {showCropper && image && (
+            <ImageCropper
+                imageSrc={image}
+                onCropComplete={handleCropComplete}
+                onCancel={() => setShowCropper(false)}
+            />
+        )}
     </>);
 }

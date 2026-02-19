@@ -2,12 +2,13 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { Heart, Bookmark, Send } from 'lucide-react';
-import { hapticLight } from '@/lib/utils/haptic';
+import Link from 'next/link';
+import { Heart } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export interface Post {
     id: string;
-    imageUrl: string;
+    imageUrl: string | null;
     title: string;
     author: {
         name: string;
@@ -17,6 +18,7 @@ export interface Post {
     comments: number;
     isLiked?: boolean;
     isSaved?: boolean;
+    description?: string; // Add description for text-only posts
 }
 
 interface PostCardProps {
@@ -25,86 +27,74 @@ interface PostCardProps {
 }
 
 /**
- * PostCard - Contexto §6B: Solo foto en grid. Botones sobre imagen con blur (cristal).
- * Like activo = Klozet Pink. Border radius pronunciado (rounded-xl / 16px).
+ * PostCard - Minimalista estilo Pinterest via User Request.
+ * Sin botones visibles. Clic navega al detalle.
  */
 export default function PostCard({ post, onClick }: PostCardProps) {
-    const [isLiked, setIsLiked] = useState(post.isLiked || false);
-    const [isSaved, setIsSaved] = useState(post.isSaved || false);
-    const [likeCount, setLikeCount] = useState(post.likes);
+    const [isHovered, setIsHovered] = useState(false);
 
-    const handleLike = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        hapticLight();
-        if (isLiked) setLikeCount(prev => prev - 1);
-        else setLikeCount(prev => prev + 1);
-        setIsLiked(!isLiked);
-    };
-
-    const handleSave = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        hapticLight();
-        setIsSaved(!isSaved);
-    };
-
-    const handleShare = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        const shareData = encodeURIComponent(JSON.stringify({
-            type: 'post',
-            id: post.id,
-            title: post.title,
-            image: post.imageUrl
-        }));
-        window.location.href = `/messages?share_post=${shareData}`;
-    };
-
-    return (
-        <div
-            onClick={onClick}
-            className="break-inside-avoid mb-4 group relative rounded-xl overflow-hidden bg-[var(--card-bg)] shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
-        >
-            {/* Solo imagen en grid - Contexto: limpieza de metadatos */}
-            <div className="relative w-full">
-                <Image
-                    src={post.imageUrl}
-                    alt={post.title}
-                    width={500}
-                    height={600}
-                    className="w-full h-auto object-cover"
-                    sizes="(max-width: 768px) 50vw, (max-width: 1024px) 25vw, 16vw"
-                />
-
-                {/* Botones sobre imagen: blur (cristal) - Contexto §6B */}
-                <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between pointer-events-none">
-                    <div className="pointer-events-auto flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-white/70 dark:bg-black/50 backdrop-blur-md border border-white/30 dark:border-white/10">
-                        <button
-                            onClick={handleLike}
-                            className="flex items-center gap-1 text-[var(--foreground)]"
-                        >
-                            <Heart className={`w-4 h-4 ${isLiked ? 'fill-[var(--brand-pink)] text-[var(--brand-pink)]' : ''}`} />
-                            <span className="text-xs font-medium tabular-nums">{likeCount}</span>
-                        </button>
+    // If no image, show text card
+    if (!post.imageUrl) {
+        return (
+            <Link href={`/post/${post.id}`}>
+                <div
+                    className="break-inside-avoid mb-6 group relative rounded-2xl overflow-hidden bg-[var(--card-bg)] shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer p-6 flex flex-col gap-4 border border-[var(--border-color)]"
+                >
+                    <div className="flex items-center gap-2">
+                        <div className="relative w-6 h-6 rounded-full overflow-hidden">
+                            <Image src={post.author.avatar || '/placeholder-avatar.png'} alt={post.author.name} fill className="object-cover" />
+                        </div>
+                        <span className="text-xs font-medium text-[var(--foreground-secondary)]">{post.author.name}</span>
+                    </div>
+                    <p className="text-[var(--foreground)] font-serif text-lg leading-relaxed line-clamp-4">
+                        {post.title || post.description}
+                    </p>
+                    <div className="flex items-center gap-1 text-[var(--foreground-tertiary)] text-xs mt-auto">
+                        <Heart className="w-3 h-3" />
+                        <span>{post.likes}</span>
                     </div>
                 </div>
+            </Link>
+        );
+    }
 
-                <button
-                    onClick={handleSave}
-                    className={`absolute top-2.5 right-2.5 p-2 rounded-full transition-all duration-200 pointer-events-auto
-                        ${isSaved
-                            ? 'bg-[var(--brand-pink)] text-white'
-                            : 'bg-white/70 dark:bg-black/50 backdrop-blur-md border border-white/30 dark:border-white/10 text-[var(--foreground)] hover:bg-white/90 dark:hover:bg-black/70'
-                        }`}
-                >
-                    <Bookmark className={`w-4 h-4 ${isSaved ? 'fill-current' : ''}`} />
-                </button>
+    return (
+        <Link href={`/post/${post.id}`}>
+            <div
+                className="break-inside-avoid mb-6 group relative rounded-2xl overflow-hidden bg-[var(--card-bg)] shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer"
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
+            >
+                <div className="relative w-full">
+                    <Image
+                        src={post.imageUrl}
+                        alt={post.title}
+                        width={500}
+                        height={600}
+                        className="w-full h-full object-cover"
+                        sizes="(max-width: 768px) 50vw, (max-width: 1024px) 25vw, 16vw"
+                    />
 
-                <button
-                    onClick={handleShare}
-                    className="absolute top-2.5 right-14 p-2 rounded-full bg-white/70 dark:bg-black/50 backdrop-blur-md border border-white/30 dark:border-white/10 text-[var(--foreground)] hover:bg-white/90 dark:hover:bg-black/70 transition-all duration-200 pointer-events-auto"
-                >
-                    <Send className="w-4 h-4 -rotate-45 translate-y-[1px] translate-x-[1px]" />
-                </button>
+                    {/* Gradient Overlay - Always visible for text readability or removed if user wants clean */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-60" />
+
+                    {/* Minimal Info on Hover */}
+                    <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <div className="flex items-center gap-2 text-white/90">
+                            <div className="relative w-5 h-5 rounded-full overflow-hidden border border-white/20">
+                                <Image src={post.author.avatar || '/placeholder-avatar.png'} alt={post.author.name} fill className="object-cover" />
+                            </div>
+                            <span className="text-xs font-medium truncate max-w-[100px]">{post.author.name}</span>
+                        </div>
+                        {post.likes > 0 && (
+                            <div className="flex items-center gap-1 text-white/90 bg-black/20 backdrop-blur-sm px-2 py-1 rounded-full">
+                                <Heart className="w-3 h-3 fill-white/50" />
+                                <span className="text-xs">{post.likes}</span>
+                            </div>
+                        )}
+                    </div>
+                </div>
             </div>
-        </div>
+        </Link>
     );
 }

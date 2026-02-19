@@ -27,6 +27,7 @@ import type {
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const TABLE = 'follows' as const;
+const BLOCKED_TABLE = 'blocked_users' as const;
 
 const PROFILE_JOIN_COLUMNS = 'id, username, full_name, avatar_url' as const;
 
@@ -329,4 +330,78 @@ export async function getRecentFollowActivity(
 
   if (error || !data) return [];
   return data as unknown as Array<FollowRecord & { follower: FollowProfile }>;
+}
+
+// ─── Block/Unblock Functions ───────────────────────────────────────────────────
+
+/**
+ * Block a user. Creates a blocked_users record and removes any follow relationship.
+ */
+export async function blockUser(
+  blockerId: string,
+  blockedId: string,
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    // First, remove any follow relationship
+    await supabase
+      .from(TABLE)
+      .delete()
+      .eq('follower_id', blockerId)
+      .eq('following_id', blockedId);
+
+    await supabase
+      .from(TABLE)
+      .delete()
+      .eq('follower_id', blockedId)
+      .eq('following_id', blockerId);
+
+    // Then, create the block record
+    const { error } = await supabase
+      .from(BLOCKED_TABLE)
+      .upsert(
+        { blocker_id: blockerId, blocked_id: blockedId } as never,
+        { onConflict: 'blocker_id,blocked_id', ignoreDuplicates: true },
+      );
+
+    if (error) return { success: false, error: error.message };
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: String(error) };
+  }
+}
+
+/**
+ * Unblock a user. Removes the blocked_users record.
+ */
+export async function unblockUser(
+  blockerId: string,
+  blockedId: string,
+): Promise<{ success: boolean; error?: string }> {
+  const { error } = await supabase
+    .from(BLOCKED_TABLE)
+    .delete()
+    .eq('blocker_id', blockerId)
+    .eq('blocked_id', blockedId);
+
+  if (error) return { success: false, error: error.message };
+  return { success: true };
+}
+
+/**
+ * Check if a user is blocked by the current user.
+ */
+export async function isBlocked(blockerId: string, blockedId: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from(BLOCKED_TABLE)
+    .select('*')
+    .eq('blocker_id', blockerId)
+    .eq('blocked_id', blockedId)
+    .maybeSingle();
+
+  if (error) {
+    console.error('Error checking block status:', error);
+    return false;
+  }
+
+  return !!data;
 }

@@ -11,9 +11,9 @@
  * - Camera button (placeholder for future implementation)
  */
 
-import React, { memo, useCallback } from 'react';
+import React, { memo, useCallback, useEffect } from 'react';
 import Image from 'next/image';
-import { Upload, Camera, RotateCw, RotateCcw, Loader2 } from 'lucide-react';
+import { Upload, Camera, RotateCw, RotateCcw, Loader2, Crop, ZoomIn, ZoomOut } from 'lucide-react';
 import type { ImageUploaderProps } from '../types';
 
 // ============================================
@@ -106,10 +106,32 @@ export const ImageUploader = memo(function ImageUploader({
     processingMessage,
     onImageUpload,
     onRotate,
+    onScale,
 }: ImageUploaderProps) {
     // Stable callbacks
     const handleRotateRight = useCallback(() => onRotate(90), [onRotate]);
     const handleRotateLeft = useCallback(() => onRotate(-90), [onRotate]);
+
+    // Scale handlers
+    const handleZoomIn = useCallback(() => {
+        if (onScale) onScale(1.2); // Scale up by 20%
+    }, [onScale]);
+
+    const handleZoomOut = useCallback(() => {
+        if (onScale) onScale(0.8); // Scale down by 20%
+    }, [onScale]);
+
+    // Listen for crop event from parent
+    useEffect(() => {
+        const handleOpenCropper = () => {
+            // Dispatch custom event that parent can listen to
+            const event = new CustomEvent('triggerCrop', { detail: { image } });
+            window.dispatchEvent(event);
+        };
+
+        window.addEventListener('openCropper', handleOpenCropper);
+        return () => window.removeEventListener('openCropper', handleOpenCropper);
+    }, [image]);
 
     return (
         <div>
@@ -161,6 +183,25 @@ export const ImageUploader = memo(function ImageUploader({
 
                     {image && (
                         <>
+                            <ActionButton
+                                icon={<Crop className="w-6 h-6 text-[var(--foreground-tertiary)]" />}
+                                label="Recortar"
+                                onClick={() => {
+                                    // Trigger crop - this will be handled by parent component
+                                    const event = new CustomEvent('openCropper');
+                                    window.dispatchEvent(event);
+                                }}
+                            />
+                            <ActionButton
+                                icon={<ZoomIn className="w-6 h-6 text-[var(--foreground-tertiary)]" />}
+                                label="Acercar"
+                                onClick={handleZoomIn}
+                            />
+                            <ActionButton
+                                icon={<ZoomOut className="w-6 h-6 text-[var(--foreground-tertiary)]" />}
+                                label="Alejar"
+                                onClick={handleZoomOut}
+                            />
                             <ActionButton
                                 icon={<RotateCw className="w-6 h-6 text-[var(--foreground-tertiary)]" />}
                                 label="Girar →"

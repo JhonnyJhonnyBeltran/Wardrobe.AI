@@ -61,26 +61,24 @@ export const ClothingItem: React.FC<ClothingItemProps> = ({
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
-      whileHover={{ y: -2 }}
+      whileHover={{ scale: 1.03 }}
       transition={{ type: 'spring', stiffness: 300, damping: 25 }}
       className={`clothing-item group relative cursor-pointer focus:outline-none ${className}`}
       onClick={onClick}
       style={{ WebkitTapHighlightColor: 'transparent' }}
     >
       {/* Card Container */}
-      <div className="relative aspect-square overflow-hidden rounded-3xl bg-white border border-[var(--border-color)] transition-all duration-500 shadow-sm hover:shadow-md">
+      <div className="relative aspect-square overflow-hidden rounded-3xl bg-white border border-[var(--border-color)]">
 
         {/* Image or Placeholder */}
         <div className="w-full h-full flex items-center justify-center relative z-10">
           {!imageError && imageUrl ? (
-            <motion.img
+            <img
               src={imageUrl}
               alt={name}
               className="w-full h-full object-contain p-2"
               loading="lazy"
               onError={() => setImageError(true)}
-              whileHover={{ scale: 1.02 }}
-              transition={{ duration: 0.4, ease: "easeOut" }}
             />
           ) : (
             <div className="flex flex-col items-center justify-center text-[var(--foreground-tertiary)] animate-pulse">

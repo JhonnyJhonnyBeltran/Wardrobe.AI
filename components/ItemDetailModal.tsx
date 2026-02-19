@@ -180,7 +180,7 @@ export default function ItemDetailModal({ outfit, isOpen, onClose }: ItemDetailM
                             <motion.button
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
-                                className="w-full py-3 rounded-full gradient-primary text-white font-medium text-sm glow-effect"
+                                className="w-full py-3 rounded-full bg-[var(--brand-pink)] text-white font-medium text-sm glow-effect"
                             >
                                 Recrear este look
                             </motion.button>

@@ -48,6 +48,7 @@ const nextConfig: NextConfig = {
 
     return config;
   },
+  turbopack: {}, // Habilitar Turbopack para evitar errores
 };
 
 export default nextConfig;

@@ -48,10 +48,12 @@ export default function PublicProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [followStatus, setFollowStatus] = useState<'none' | 'pending' | 'accepted'>('none');
   const [isFollowedByMe, setIsFollowedByMe] = useState(false);
+  const [isBlocked, setIsBlocked] = useState(false);
+  const [isBlocking, setIsBlocking] = useState(false);
 
   // Stats
   const [profileStats, setProfileStats] = useState({
-    outfits: 0,
+    posts: 0,
     followers: 0,
     following: 0
   });
@@ -90,17 +92,16 @@ export default function PublicProfilePage() {
       setProfile(profileData);
 
       // 2. Fetch stats
-      const { count: outfitCount } = await supabase
-        .from('outfits')
+      const { count: postCount } = await supabase
+        .from('posts')
         .select('*', { count: 'exact', head: true })
-        .eq('user_id', profileId)
-        .eq('is_public', true);
+        .eq('user_id', profileId);
 
       const followersCount = await followService.getFollowersCount(profileId);
       const followingCount = await followService.getFollowingCount(profileId);
 
       setProfileStats({
-        outfits: outfitCount || 0,
+        posts: postCount || 0,
         followers: followersCount,
         following: followingCount
       });
@@ -129,6 +130,10 @@ export default function PublicProfilePage() {
         const status = await followService.getFollowStatus(currentUser.id, profileId);
         setFollowStatus(status);
         setIsFollowedByMe(status === 'accepted');
+        
+        // 6. Check if user is blocked
+        const blocked = await followService.isBlocked(currentUser.id, profileId);
+        setIsBlocked(blocked);
       }
 
     } catch (error) {
@@ -177,6 +182,37 @@ export default function PublicProfilePage() {
 
   const navigateToChat = () => {
     router.push(`/messages/${profileId}`);
+  };
+
+  const handleBlock = async () => {
+    if (!currentUser || !profileId) return;
+    
+    const confirmed = confirm('¿Estás seguro de que quieres bloquear a este usuario?');
+    if (!confirmed) return;
+    
+    setIsBlocking(true);
+    
+    if (isBlocked) {
+      // Unblock the user
+      const result = await followService.unblockUser(currentUser.id, profileId);
+      if (result.success) {
+        setIsBlocked(false);
+      } else {
+        console.error('Error unblocking:', result.error);
+      }
+    } else {
+      // Block the user
+      const result = await followService.blockUser(currentUser.id, profileId);
+      if (result.success) {
+        setIsBlocked(true);
+        // Navigate away after blocking
+        router.push('/feed');
+      } else {
+        console.error('Error blocking:', result.error);
+      }
+    }
+    
+    setIsBlocking(false);
   };
 
   if (isLoading) {
@@ -238,10 +274,10 @@ export default function PublicProfilePage() {
               <div className="flex justify-around items-center mb-4">
                 <div className="text-center">
                   <div className="text-lg font-bold text-[var(--foreground)]">
-                    {profileStats.outfits}
+                    {profileStats.posts}
                   </div>
                   <div className="text-xs text-[var(--foreground-tertiary)]">
-                    {t.profile.outfits}
+                    Posts
                   </div>
                 </div>
                 <div className="text-center">
@@ -335,6 +371,31 @@ export default function PublicProfilePage() {
               className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[var(--background-secondary)] text-[var(--foreground)] font-semibold text-sm border border-[var(--border-color)] hover:bg-[var(--background-tertiary)] transition-colors"
             >
               <Send className="w-4 h-4 -rotate-45" />
+            </button>
+
+            <button
+              onClick={handleBlock}
+              disabled={isBlocking}
+              className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm border transition-colors ${
+                isBlocked
+                  ? 'bg-red-50 border-red-200 text-red-500 dark:bg-red-900/20'
+                  : 'bg-[var(--background-secondary)] text-[var(--foreground)] border-[var(--border-color)] hover:bg-red-50 hover:text-red-500 hover:border-red-200 dark:hover:bg-red-900/20'
+              }`}
+            >
+              {isBlocking ? (
+                <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
+              ) : isBlocked ? (
+                <>
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  Bloqueado
+                </>
+              ) : (
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                </svg>
+              )}
             </button>
           </div>
         </div>
