@@ -8,7 +8,6 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';
 import Image from 'next/image';
 import { useUser } from '@/store/userStore';
-import ImageCropper from '@/components/ImageCropper';
 import { Button } from '@/components';
 
 export default function CreatePostPage() {
@@ -27,7 +26,6 @@ export default function CreatePostPage() {
     // Image State
     const [realImage, setRealImage] = useState<string | null>(null); // Preview URL
     const [imageFile, setImageFile] = useState<File | Blob | null>(null); // File to upload
-    const [croppingImage, setCroppingImage] = useState<string | null>(null); // Image being cropped
 
     const [caption, setCaption] = useState('');
     const [publishing, setPublishing] = useState(false);
@@ -74,7 +72,9 @@ export default function CreatePostPage() {
         if (file) {
             const reader = new FileReader();
             reader.onloadend = () => {
-                setCroppingImage(reader.result as string);
+                // Skip cropping - use image directly
+                setRealImage(reader.result as string);
+                setImageFile(file);
             };
             reader.readAsDataURL(file);
         }
@@ -82,10 +82,7 @@ export default function CreatePostPage() {
     };
 
     const handleCropComplete = (croppedBlob: Blob) => {
-        const url = URL.createObjectURL(croppedBlob);
-        setRealImage(url);
-        setImageFile(croppedBlob);
-        setCroppingImage(null);
+        // Not used anymore
     };
 
     const validatePost = () => {
@@ -327,15 +324,7 @@ export default function CreatePostPage() {
                     </div>
                 )}
 
-                {/* Cropper Modal */}
-                {croppingImage && (
-                    <ImageCropper
-                        imageSrc={croppingImage}
-                        onCropComplete={handleCropComplete}
-                        onCancel={() => setCroppingImage(null)}
-                        aspectRatio={4 / 5}
-                    />
-                )}
+                {/* Cropper Modal - Removed */}
 
             </main>
         </div>

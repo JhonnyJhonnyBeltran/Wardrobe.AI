@@ -59,6 +59,7 @@ export default function CreateOutfitPage() {
     const [showPreview, setShowPreview] = useState(false);
     const [previewImage, setPreviewImage] = useState<string | null>(null);
     const [previewLoading, setPreviewLoading] = useState(false);
+    const savedOutfitIdRef = useRef<string | null>(null);
 
     // Load outfit data if editing
     useEffect(() => {
@@ -251,11 +252,20 @@ export default function CreateOutfitPage() {
         }
     };
 
-    // Publish to feed
+    // Publish to feed - redirect to create post page
     const handlePublishToFeed = async () => {
-        if (!previewImage) return;
-        // TODO: Implement publish to feed functionality
-        alert('¡Publicando en el feed! (Funcionalidad en desarrollo)');
+        // First save the outfit if not saved yet
+        if (!outfitId) {
+            // Save the outfit first
+            await handleSaveWithoutRedirect();
+            // Then redirect to create post
+            if (savedOutfitIdRef.current) {
+                router.push(`/create-post?outfitId=${savedOutfitIdRef.current}`);
+            }
+        } else {
+            router.push(`/create-post?outfitId=${outfitId}`);
+        }
+        setShowPreview(false);
     };
 
     // Add to stories
@@ -263,6 +273,88 @@ export default function CreateOutfitPage() {
         if (!previewImage) return;
         // TODO: Implement add to stories functionality  
         alert('¡Añadiendo a historias! (Funcionalidad en desarrollo)');
+    };
+
+    // Helper to save outfit without redirecting (for publish flow)
+    const handleSaveWithoutRedirect = async (): Promise<string | null> => {
+        if (isEmpty || !outfitName.trim()) return null;
+
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                alert('Debes iniciar sesión para guardar outfits');
+                return null;
+            }
+
+            // Generate Image
+            let finalImage = previewImage;
+            if (!finalImage) {
+                try {
+                    finalImage = await canvasRef.current?.exportToImage() || null;
+                } catch (e) {
+                    console.error("Error generating image on save:", e);
+                }
+            }
+
+            // Upload Image to Storage
+            let publicImageUrl = null;
+            if (finalImage) {
+                const uploadResult = await uploadImage(finalImage, BUCKETS.CLOTHING, {
+                    folder: `outfits/${user.id}`,
+                    fileName: `outfit_${Date.now()}`
+                });
+
+                if (uploadResult.success) {
+                    publicImageUrl = uploadResult.url;
+                }
+            }
+
+            // Insert new outfit
+            const { data: outfitData, error: outfitError } = await supabase
+                .from('outfits')
+                .insert({
+                    user_id: user.id,
+                    name: outfitName,
+                    description: `Outfit con ${totalSelected} prendas`,
+                    season: 'all-season',
+                    is_public: false,
+                    ai_generated: false,
+                    image_url: publicImageUrl
+                } as any)
+                .select()
+                .single();
+
+            if (outfitError) throw outfitError;
+            const newOutfitId = (outfitData as any).id;
+
+            // Create Outfit Items
+            const outfitItemsArr: any[] = [];
+            Object.entries(selections).forEach(([slotId, items]) => {
+                items.forEach(item => {
+                    const stateKey = `${slotId}-${item.id}`;
+                    const state = canvasState[stateKey] || { x: 50, y: 50, scale: 1, rotation: 0, zIndex: 1 };
+
+                    outfitItemsArr.push({
+                        outfit_id: newOutfitId,
+                        clothing_item_id: item.id,
+                        position_x: state.x,
+                        position_y: state.y,
+                        scale: state.scale,
+                        rotation: state.rotation,
+                        layer_order: state.zIndex
+                    });
+                });
+            });
+
+            if (outfitItemsArr.length > 0) {
+                await supabase.from('outfit_items').insert(outfitItemsArr as any);
+            }
+
+            return newOutfitId;
+        } catch (error) {
+            console.error('Error saving outfit:', error);
+            return null;
+        }
     };
 
     // Save outfit
@@ -352,6 +444,7 @@ export default function CreateOutfitPage() {
 
                 if (outfitError) throw outfitError;
                 savedOutfitId = (outfitData as any).id;
+                savedOutfitIdRef.current = savedOutfitId;
             }
 
             // Create Outfit Items (Common for both insert and update)
@@ -480,7 +573,7 @@ export default function CreateOutfitPage() {
                                                         onClick={() => handleSelect(slot, item)}
                                                         className={`cursor-pointer group relative aspect-[3/4] rounded-2xl overflow-hidden bg-[var(--card-bg)] border transition-all ${isSelected
                                                             ? 'border-[var(--brand-pink)] ring-2 ring-[var(--brand-pink)] ring-opacity-50'
-                                                            : 'border-[var(--border-color)] hover:border-[var(--foreground-secondary)]'
+                                                            : 'border-[var(--border-color)]'
                                                             }`}
                                                     >
                                                         <img
@@ -496,7 +589,7 @@ export default function CreateOutfitPage() {
                                                                 </div>
                                                             </div>
                                                         )}
-                                                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
                                                             <p className="text-white text-xs truncate">{item.name}</p>
                                                         </div>
                                                     </div>
@@ -632,7 +725,7 @@ export default function CreateOutfitPage() {
                                                 onClick={() => handleSelect(slot, item)}
                                                 className={`cursor-pointer group relative aspect-[3/4] rounded-2xl overflow-hidden bg-[var(--card-bg)] border transition-all duration-300 ${isSelected
                                                     ? 'border-[var(--brand-pink)] ring-4 ring-[var(--brand-pink)] ring-opacity-30 transform scale-95'
-                                                    : 'border-[var(--border-color)] hover:border-[var(--foreground)] hover:shadow-lg hover:scale-105'
+                                                    : 'border-[var(--border-color)]'
                                                     }`}
                                             >
                                                 <img
@@ -648,7 +741,7 @@ export default function CreateOutfitPage() {
                                                         </div>
                                                     </div>
                                                 )}
-                                                <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
                                                     <p className="text-white text-xs font-medium truncate">{item.name}</p>
                                                 </div>
                                             </div>
@@ -769,7 +862,7 @@ export default function CreateOutfitPage() {
                                     className="w-full rounded-full py-3 font-semibold"
                                 >
                                     <Share2 className="w-5 h-5 mr-2" />
-                                    Publicar en Feed
+                                    Crear Publicación
                                 </Button>
                                 <Button
                                     onClick={handleAddToStories}

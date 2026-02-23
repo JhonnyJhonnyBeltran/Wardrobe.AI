@@ -63,13 +63,13 @@ export const OutfitCanvas = forwardRef<OutfitCanvasRef, OutfitCanvasProps>(funct
 
                 if (!newStates[itemId]) {
                     hasChanges = true;
-                    // Start near center but with slight random variation to prevent perfect stacking
+                    // Start at random position anywhere on canvas - no limits
                     newStates[itemId] = {
                         zIndex: index + 1,
                         scale: 0.8,
-                        rotation: (Math.random() - 0.5) * 20, // More rotation variance
-                        x: 20 + Math.random() * 60, // Anywhere between 20% and 80% width
-                        y: 20 + Math.random() * 60  // Anywhere between 20% and 80% height
+                        rotation: 0,
+                        x: Math.random() * 100, // Anywhere from 0% to 100%
+                        y: Math.random() * 100  // Anywhere from 0% to 100%
                     };
                 }
             });

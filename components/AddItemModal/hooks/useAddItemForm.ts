@@ -289,6 +289,7 @@ export function useAddItemForm({
         if (!image) return;
 
         const img = new Image();
+        img.crossOrigin = 'anonymous'; // Prevent tainted canvas
         img.src = image;
 
         img.onload = () => {
@@ -321,43 +322,67 @@ export function useAddItemForm({
                 }
             }, 'image/png');
         };
+
+        img.onerror = () => {
+            console.error('Error loading image for rotation');
+        };
     }, [image, processedImage]);
 
     // Scale the current image (zoom in/out)
     const scaleImage = useCallback((scaleFactor: number) => {
-        if (!image) return;
+        console.log('scaleImage called with factor:', scaleFactor);
+        if (!image) {
+            console.warn('No image to scale');
+            return;
+        }
 
         const img = new Image();
+        img.crossOrigin = 'anonymous'; // Prevent tainted canvas
         img.src = image;
 
         img.onload = () => {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            if (!ctx) return;
-
-            // Calculate new dimensions
-            const newWidth = img.width * scaleFactor;
-            const newHeight = img.height * scaleFactor;
-
-            canvas.width = newWidth;
-            canvas.height = newHeight;
-
-            // Draw scaled image
-            ctx.drawImage(img, 0, 0, newWidth, newHeight);
-
-            canvas.toBlob((blob) => {
-                if (blob) {
-                    const newImageUrl = URL.createObjectURL(blob);
-
-                    if (processedImage && image === processedImage) {
-                        setProcessedImage(newImageUrl);
-                        setImage(newImageUrl);
-                    } else {
-                        setOriginalImage(newImageUrl);
-                        setImage(newImageUrl);
-                    }
+            console.log('Image loaded for scaling');
+            try {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                if (!ctx) {
+                    console.error('Could not get canvas context');
+                    return;
                 }
-            }, 'image/png');
+
+                // Calculate new dimensions
+                const newWidth = img.width * scaleFactor;
+                const newHeight = img.height * scaleFactor;
+
+                canvas.width = newWidth;
+                canvas.height = newHeight;
+
+                // Draw scaled image
+                ctx.drawImage(img, 0, 0, newWidth, newHeight);
+
+                canvas.toBlob((blob) => {
+                    if (blob) {
+                        const newImageUrl = URL.createObjectURL(blob);
+
+                        if (processedImage && image === processedImage) {
+                            setProcessedImage(newImageUrl);
+                            setImage(newImageUrl);
+                        } else {
+                            setOriginalImage(newImageUrl);
+                            setImage(newImageUrl);
+                        }
+                        console.log('Image scaled successfully');
+                    } else {
+                        console.error('Failed to create blob from scaled image');
+                    }
+                }, 'image/png');
+            } catch (err) {
+                console.error('Error scaling image:', err);
+            }
+        };
+
+        img.onerror = () => {
+            console.error('Error loading image for scaling');
         };
     }, [image, processedImage]);
 

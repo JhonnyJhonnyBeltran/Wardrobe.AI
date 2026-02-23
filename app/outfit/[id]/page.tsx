@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { ArrowLeft, Edit2, Trash2, Share2, Heart, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Edit2, Trash2, Share2, Heart, MessageCircle, Send } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
 import { useUser } from '@/store/userStore';
 import { haptics } from '@/lib/haptic';
@@ -110,6 +110,11 @@ export default function OutfitDetailPage() {
     }
   };
 
+  const handleCreatePost = () => {
+    haptics.tap();
+    router.push(`/create-post?outfitId=${outfitId}`);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[var(--background)] flex items-center justify-center">
@@ -152,6 +157,13 @@ export default function OutfitDetailPage() {
         </h1>
 
         <div className="flex items-center gap-2">
+          <button
+            onClick={handleCreatePost}
+            className="p-2 hover:bg-[var(--background-secondary)] rounded-full transition-colors text-[var(--brand-pink)]"
+            title="Crear Publicación"
+          >
+            <Send className="w-5 h-5" />
+          </button>
           <button
             onClick={handleShare}
             className="p-2 hover:bg-[var(--background-secondary)] rounded-full transition-colors"

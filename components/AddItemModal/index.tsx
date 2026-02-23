@@ -16,7 +16,7 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ArrowRight, Loader2, Check } from 'lucide-react';
+import { X, ArrowRight, Loader2, Check, Crop } from 'lucide-react';
 import { Button, AdvisorModal } from '@/components';
 import { useBodyScrollLock } from '@/lib/hooks';
 
@@ -35,7 +35,6 @@ import {
     COLOR_OPTIONS,
 } from './constants';
 import type { AddItemModalProps } from './types';
-import ImageCropper from '@/components/ImageCropper';
 
 export default function AddItemModal({
     isOpen,
@@ -71,29 +70,18 @@ export default function AddItemModal({
 
     // Advisor modal state (kept here as it's UI-specific)
     const [showAdvisor, setShowAdvisor] = React.useState(false);
-    const [showCropper, setShowCropper] = React.useState(false);
 
     // Listen for crop trigger from ImageUploader
     React.useEffect(() => {
         const handleTriggerCrop = () => {
-            if (image) {
-                setShowCropper(true);
-            }
+            // Cropper removed - just use the image as-is
         };
         window.addEventListener('triggerCrop', handleTriggerCrop);
         return () => window.removeEventListener('triggerCrop', handleTriggerCrop);
     }, [image]);
 
     const handleCropComplete = (croppedImage: Blob) => {
-        // Convert blob to data URL
-        const reader = new FileReader();
-        reader.onload = () => {
-            if (reader.result) {
-                setFormData(prev => ({ ...prev, imageUrl: reader.result as string }));
-            }
-        };
-        reader.readAsDataURL(croppedImage);
-        setShowCropper(false);
+        // Cropper removed - no action needed
     };
 
     const handleSubmit = async () => {
@@ -370,13 +358,6 @@ export default function AddItemModal({
             onConfirm={handleAdvisorConfirm}
         />
 
-        {/* Image Cropper Modal */}
-        {showCropper && image && (
-            <ImageCropper
-                imageSrc={image}
-                onCropComplete={handleCropComplete}
-                onCancel={() => setShowCropper(false)}
-            />
-        )}
+        {/* Image Cropper Modal - Removed */}
     </>);
 }

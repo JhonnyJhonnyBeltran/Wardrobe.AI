@@ -233,7 +233,10 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
                                             <motion.button
                                                 whileHover={{ scale: 1.02 }}
                                                 whileTap={{ scale: 0.98 }}
-                                                onClick={() => onEdit(displayItem.id)}
+                                                onClick={() => {
+                                                    if (onClose) onClose();
+                                                    setTimeout(() => onEdit(displayItem.id), 100);
+                                                }}
                                                 className="flex-1 flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl font-medium transition-all duration-300 border-2 border-transparent bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 min-w-[90px] h-[56px]"
                                             >
                                                 <Edit2 className="w-5 h-5" />

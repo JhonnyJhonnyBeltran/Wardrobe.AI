@@ -41,15 +41,22 @@ const styleConfig: Record<string, { icon: React.ReactNode; gradient: string }> =
     'Party Ready': { icon: <PartyPopper className="w-3 h-3" />, gradient: 'from-violet-400 to-purple-500' },
 };
 
-import { Edit2, Trash2, Share2 } from 'lucide-react';
+import { Edit2, Trash2, Share2, Send } from 'lucide-react';
 
 export default function OutfitCard({ outfit, isLocked = false, onClick, onEdit, onDelete, onShare, index = 0 }: OutfitCardProps) {
     const styleKey = outfit.occasion || outfit.style || 'everyday';
     const config = styleConfig[styleKey] || { icon: <Layers className="w-3 h-3" />, gradient: 'from-pink-400 to-rose-500' };
 
-    // Check if any item has images
-    const hasImages = outfit.items?.some(item => item.imageUrl) ?? false;
-    const hasShopLinks = outfit.items?.some(item => item.sourceUrl) ?? false; // Changed buyLink to sourceUrl
+    // Check if any item has images - handle both imageUrl and image_url field names
+    const outfitAny = outfit as any;
+    const hasImages = outfitAny.items?.some((item: any) => item.imageUrl || item.image_url) ?? false;
+    const hasShopLinks = outfitAny.items?.some((item: any) => item.sourceUrl || item.buyLink) ?? false;
+
+    // Get the outfit preview image - handle both field names
+    const outfitPreviewImage = outfitAny.imageUrl || outfitAny.image_url;
+
+    // Get item image - handle both field names
+    const getItemImage = (item: any) => item.imageUrl || item.image_url;
 
     // Date formatting
     const dateDisplay = outfit.date || new Date(outfit.createdAt).toLocaleDateString();
@@ -70,29 +77,30 @@ export default function OutfitCard({ outfit, isLocked = false, onClick, onEdit, 
             <div onClick={!isLocked ? onClick : undefined} className="cursor-pointer">
                 {/* Outfit Preview */}
                 <div
-                    className={`aspect-square bg-gray-50 dark:bg-gray-800 p-0 flex flex-col ${isLocked ? 'blur-sm' : ''
+                    className={`relative bg-gray-50 dark:bg-gray-800 p-0 flex flex-col ${isLocked ? 'blur-sm' : ''
                         }`}
+                    style={{ minHeight: '200px' }}
                 >
-                    {outfit.imageUrl ? (
+                    {outfitPreviewImage ? (
                         <div className="w-full h-full relative">
                             <img
-                                src={outfit.imageUrl}
+                                src={outfitPreviewImage}
                                 alt={outfit.name}
-                                className="w-full h-full object-contain p-4"
+                                className="w-full h-auto object-contain p-2"
                                 loading="lazy"
                             />
                         </div>
                     ) : (
                         /* Items Grid - With Images (Fallback) */
                         <div className="grid grid-cols-2 gap-2 flex-1 p-3">
-                            {(outfit.items || []).slice(0, 4).map((item, i) => (
+                            {(outfit.items || []).slice(0, 4).map((item: any, i: number) => (
                                 <motion.div
                                     key={item.id || i}
                                     className="relative rounded-xl overflow-hidden bg-white dark:bg-gray-700 aspect-square border border-gray-100 dark:border-gray-600"
                                 >
-                                    {item.imageUrl ? (
+                                    {getItemImage(item) ? (
                                         <img
-                                            src={item.imageUrl}
+                                            src={getItemImage(item)}
                                             alt={item.name}
                                             className="w-full h-full object-cover"
                                             loading="lazy"
@@ -164,7 +172,7 @@ export default function OutfitCard({ outfit, isLocked = false, onClick, onEdit, 
                                 className="p-2 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-full shadow-sm hover:bg-blue-50 dark:hover:bg-blue-900/30 text-blue-500 dark:text-blue-400 transition-colors"
                                 title="Crear Publicación"
                             >
-                                <Share2 className="w-4 h-4" />
+                                <Send className="w-4 h-4" />
                             </button>
                         )}
                         {onDelete && (

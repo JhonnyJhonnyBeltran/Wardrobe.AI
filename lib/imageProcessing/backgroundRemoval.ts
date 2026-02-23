@@ -50,8 +50,9 @@ async function performBackgroundRemoval(
     let lastProgressUpdate = 0;
     
     try {
+        // Use fp16 model for better quality
         const config: Config = {
-            model: modelConfig.name as 'isnet_quint8' | 'isnet_fp16',
+            model: 'isnet_fp16', // Always use best model
             publicPath: modelConfig.publicPath,
             debug: false,
             // CRITICAL: Run in Web Worker to prevent UI blocking
@@ -72,7 +73,7 @@ async function performBackgroundRemoval(
             },
             output: {
                 format: 'image/png',
-                quality: 0.9,
+                quality: 1.0, // Maximum quality
             },
         };
 

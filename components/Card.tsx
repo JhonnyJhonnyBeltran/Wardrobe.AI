@@ -1,9 +1,8 @@
 'use client';
 
 /**
- * Card Component - Apple Style Design
- * Removed zoom and inner shadow
- * Implemented full card expansion on hover with subtle border
+ * Card Component - Clean Pinterest/iPhone Style
+ * No hover effects - just clean and minimal
  */
 
 import React, { ReactNode } from 'react';
@@ -33,12 +32,6 @@ export default function Card({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      whileHover={hover ? {
-        scale: 1.02,
-        boxShadow: '0 8px 32px -2px rgba(0, 0, 0, 0.08)',
-        borderColor: 'rgba(255, 105, 180, 0.2)',
-        transition: { duration: 0.3, ease: [0.4, 0, 0.2, 1] }
-      } : {}}
       transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
       className={`
         ${variantClasses[variant]}

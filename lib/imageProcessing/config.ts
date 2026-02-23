@@ -13,7 +13,7 @@ export const DEFAULT_CANVAS_WIDTH = 1200;
 export const DEFAULT_CANVAS_HEIGHT = 1500;
 
 /** Maximum image dimension before pre-compression */
-export const MAX_INPUT_DIMENSION = 1400;
+export const MAX_INPUT_DIMENSION = 2000; // Increased for better quality
 
 /** Maximum file size before aggressive compression (2MB) */
 export const MAX_INPUT_SIZE_BYTES = 2 * 1024 * 1024;

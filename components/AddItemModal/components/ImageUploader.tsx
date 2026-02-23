@@ -13,7 +13,7 @@
 
 import React, { memo, useCallback, useEffect } from 'react';
 import Image from 'next/image';
-import { Upload, Camera, RotateCw, RotateCcw, Loader2, Crop, ZoomIn, ZoomOut } from 'lucide-react';
+import { Upload, Camera, RotateCw, RotateCcw, Loader2, ZoomIn, ZoomOut } from 'lucide-react';
 import type { ImageUploaderProps } from '../types';
 
 // ============================================
@@ -114,11 +114,21 @@ export const ImageUploader = memo(function ImageUploader({
 
     // Scale handlers
     const handleZoomIn = useCallback(() => {
-        if (onScale) onScale(1.2); // Scale up by 20%
+        console.log('Zoom In clicked');
+        if (onScale) {
+            onScale(1.1); // Scale up by 10%
+        } else {
+            console.warn('onScale not provided');
+        }
     }, [onScale]);
 
     const handleZoomOut = useCallback(() => {
-        if (onScale) onScale(0.8); // Scale down by 20%
+        console.log('Zoom Out clicked');
+        if (onScale) {
+            onScale(0.9); // Scale down by 10%
+        } else {
+            console.warn('onScale not provided');
+        }
     }, [onScale]);
 
     // Listen for crop event from parent
@@ -183,15 +193,6 @@ export const ImageUploader = memo(function ImageUploader({
 
                     {image && (
                         <>
-                            <ActionButton
-                                icon={<Crop className="w-6 h-6 text-[var(--foreground-tertiary)]" />}
-                                label="Recortar"
-                                onClick={() => {
-                                    // Trigger crop - this will be handled by parent component
-                                    const event = new CustomEvent('openCropper');
-                                    window.dispatchEvent(event);
-                                }}
-                            />
                             <ActionButton
                                 icon={<ZoomIn className="w-6 h-6 text-[var(--foreground-tertiary)]" />}
                                 label="Acercar"

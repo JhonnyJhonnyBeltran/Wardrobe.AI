@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search as SearchIcon, X, Users, Image as ImageIcon } from 'lucide-react';
+import { Search as SearchIcon, X, Users, Image as ImageIcon, UserPlus, Check } from 'lucide-react';
 import PostCard, { type Post } from '@/components/Feed/PostCard';
 import { supabase } from '@/lib/supabase/client';
 import { useSwipeNavigation } from '@/hooks/useSwipeNavigation';
+import { useUser } from '@/store/userStore';
 import Link from 'next/link';
 
 interface UserProfile {
@@ -15,6 +16,7 @@ interface UserProfile {
   bio?: string;
   followers_count?: number;
   following_count?: number;
+  is_private?: boolean;
 }
 
 export default function SearchPage() {
@@ -23,6 +25,9 @@ export default function SearchPage() {
   const [userResults, setUserResults] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(false);
   const [debouncedQuery, setDebouncedQuery] = useState('');
+  const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
+  const [pendingRequestIds, setPendingRequestIds] = useState<Set<string>>(new Set());
+  const { user } = useUser();
 
   // Enable swipe navigation
   useSwipeNavigation();
@@ -54,35 +59,123 @@ export default function SearchPage() {
 
   const searchUsers = async (searchTerm: string) => {
     try {
-      const { data, error } = await supabase
+      // Search by username first
+      const { data: usernameData, error: usernameError } = await supabase
         .from('profiles')
-        .select(`
-          id,
-          username,
-          full_name,
-          avatar_url,
-          bio
-        `)
-        .or(`username.ilike.%${searchTerm}%,full_name.ilike.%${searchTerm}%`)
-        .order('username')
+        .select('id, username, full_name, avatar_url, bio, is_private')
+        .ilike('username', `%${searchTerm}%`)
         .limit(20);
 
-      if (error) throw error;
-
-      setUserResults(data || []);
+      // If no results from username, try full_name
+      if (!usernameData || usernameData.length === 0) {
+        const { data: fullNameData } = await supabase
+          .from('profiles')
+          .select('id, username, full_name, avatar_url, bio, is_private')
+          .ilike('full_name', `%${searchTerm}%`)
+          .limit(20);
+        
+        setUserResults(fullNameData || []);
+      } else {
+        // Also search by full_name and combine results
+        const { data: fullNameData } = await supabase
+          .from('profiles')
+          .select('id, username, full_name, avatar_url, bio, is_private')
+          .ilike('full_name', `%${searchTerm}%`)
+          .limit(20);
+        
+        // Combine and deduplicate
+        const combined = [...(usernameData || []), ...(fullNameData || [])];
+        const unique = combined.filter((value, index, self) => 
+          index === self.findIndex((t) => t.id === value.id)
+        );
+        setUserResults(unique);
+      }
     } catch (error) {
       console.error('Error searching users:', error);
+      setUserResults([]);
+    }
+  };
+
+  // Follow/Unfollow user
+  const handleFollow = async (targetUserId: string) => {
+    if (!user) return;
+    
+    const isFollowing = followingIds.has(targetUserId);
+    const isPending = pendingRequestIds.has(targetUserId);
+    
+    // Find the user in results to check if profile is private
+    const targetUser = userResults.find(u => u.id === targetUserId);
+    const isPrivate = targetUser?.is_private || false;
+    
+    try {
+      if (isFollowing || isPending) {
+        // Unfollow or cancel request
+        if (isPending) {
+          // Cancel follow request
+          await supabase
+            .from('follow_requests')
+            .delete()
+            .eq('follower_id', user.id)
+            .eq('following_id', targetUserId);
+          
+          setPendingRequestIds(prev => {
+            const next = new Set(prev);
+            next.delete(targetUserId);
+            return next;
+          });
+        } else {
+          // Unfollow
+          await supabase
+            .from('follows')
+            .delete()
+            .eq('follower_id', user.id)
+            .eq('following_id', targetUserId);
+          
+          setFollowingIds(prev => {
+            const next = new Set(prev);
+            next.delete(targetUserId);
+            return next;
+          });
+        }
+      } else {
+        // Follow - check if profile is private
+        if (isPrivate) {
+          // Create follow request for private profile
+          await supabase
+            .from('follow_requests')
+            .insert({
+              follower_id: user.id,
+              following_id: targetUserId,
+              status: 'pending'
+            } as any);
+          
+          setPendingRequestIds(prev => new Set(prev).add(targetUserId));
+          alert('Solicitud de seguimiento enviada. El usuario debe aceptar tu solicitud.');
+        } else {
+          // Auto-follow public profile
+          await supabase
+            .from('follows')
+            .insert({
+              follower_id: user.id,
+              following_id: targetUserId,
+              status: 'accepted'
+            } as any);
+          
+          setFollowingIds(prev => new Set(prev).add(targetUserId));
+        }
+      }
+    } catch (error) {
+      console.error('Error following/unfollowing:', error);
     }
   };
 
   const searchPosts = async (searchTerm: string) => {
     try {
       let data: any[] | null = null;
-      let error: any = null;
 
       if (!searchTerm.trim()) {
         // Default: Show recent posts if no query
-        const { data: recentData, error: recentError } = await supabase
+        const { data: recentData } = await supabase
           .from('posts')
           .select(`
                         id,
@@ -108,11 +201,9 @@ export default function SearchPage() {
           .limit(20);
 
         data = recentData;
-        error = recentError;
-
       } else {
-        // Standard search using ilike on caption
-        const { data: searchData, error: searchError } = await supabase
+        // Search posts by caption (description)
+        const { data: searchData } = await supabase
           .from('posts')
           .select(`
             id,
@@ -135,12 +226,9 @@ export default function SearchPage() {
           .limit(20);
 
         data = searchData;
-        error = searchError;
       }
 
-      if (error) throw error;
-
-      if (data) {
+      if (data && data.length > 0) {
         // Fetch profiles manually
         const userIds = [...new Set(data.map(p => p.user_id))];
         let profilesMap: Record<string, any> = {};
@@ -247,24 +335,19 @@ export default function SearchPage() {
               </div>
             )}
 
-            {/* PEOPLE RESULTS SECTION */}
+            {/* USER RESULTS - No title, just the list */}
             {userResults.length > 0 && (
-              <section>
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 px-1 flex items-center gap-2">
-                  <Users className="w-5 h-5 text-violet-500" />
-                  Personas
-                </h2>
-                <div className="space-y-3">
-                  {userResults.map(user => (
-                    <Link
-                      key={user.id}
-                      href={`/profile/${user.id}`}
-                      className="flex items-center gap-4 p-3 bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 hover:border-pink-500/30 transition-colors"
-                    >
+              <div className="space-y-3">
+                {userResults.map(user => (
+                  <div
+                    key={user.id}
+                    className="flex items-center gap-4 p-3 bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800"
+                  >
+                    <Link href={`/profile/${user.id}`} className="flex items-center gap-4 flex-1">
                       <img
                         src={user.avatar_url || 'https://i.pravatar.cc/150?u=default'}
                         alt={user.username}
-                        className="w-12 h-12 rounded-full object-cover border-2 border-white dark:border-gray-800 shadow-sm"
+                        className="w-12 h-12 rounded-full object-cover border-2 border-white dark:border-gray-800"
                       />
                       <div className="flex-1 min-w-0">
                         <h3 className="font-semibold text-gray-900 dark:text-white truncate">
@@ -273,29 +356,30 @@ export default function SearchPage() {
                         <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
                           @{user.username}
                         </p>
-                        {user.bio && (
-                          <p className="text-xs text-gray-400 mt-1 line-clamp-1">{user.bio}</p>
-                        )}
                       </div>
                     </Link>
-                  ))}
-                </div>
-              </section>
+                    <button 
+                      onClick={() => handleFollow(user.id)}
+                      className={`px-4 py-2 rounded-full text-sm font-medium transition-opacity ${
+                        followingIds.has(user.id) 
+                          ? 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300' 
+                          : 'bg-[var(--brand-pink)] text-white hover:opacity-90'
+                      }`}
+                    >
+                      {followingIds.has(user.id) ? 'Siguiendo' : 'Seguir'}
+                    </button>
+                  </div>
+                ))}
+              </div>
             )}
 
-            {/* POST RESULTS SECTION */}
+            {/* POST RESULTS - No title, just the grid */}
             {results.length > 0 && (
-              <section>
-                <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4 px-1 flex items-center gap-2">
-                  <ImageIcon className="w-5 h-5 text-pink-500" />
-                  Posts
-                </h2>
-                <div className="grid grid-cols-2 gap-4">
-                  {results.map(post => (
-                    <PostCard key={post.id} post={post} />
-                  ))}
-                </div>
-              </section>
+              <div className="grid grid-cols-2 gap-4 mt-6">
+                {results.map(post => (
+                  <PostCard key={post.id} post={post} />
+                ))}
+              </div>
             )}
 
             {/* Empty State / Initial Placeholders */}

@@ -69,6 +69,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   occasions_preferences TEXT[],
   budget_range TEXT,
   subscription_tier TEXT DEFAULT 'free',
+  is_private BOOLEAN DEFAULT false,
   updated_at TIMESTAMPTZ,
   CONSTRAINT username_length CHECK (char_length(username) >= 3)
 );
@@ -164,9 +165,20 @@ CREATE TABLE IF NOT EXISTS public.posts (
 CREATE TABLE IF NOT EXISTS public.follows (
   follower_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
   following_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
-  status TEXT DEFAULT 'accepted',
+  status TEXT DEFAULT 'accepted', -- 'accepted', 'pending', 'rejected'
   created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
   PRIMARY KEY (follower_id, following_id)
+);
+
+-- Follow requests table (for private profiles)
+CREATE TABLE IF NOT EXISTS public.follow_requests (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  follower_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+  following_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
+  status TEXT DEFAULT 'pending', -- 'pending', 'accepted', 'rejected'
+  created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
+  UNIQUE(follower_id, following_id)
 );
 
 -- Likes table

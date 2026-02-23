@@ -135,10 +135,38 @@ export default function ChatPage() {
         setNewMessage(''); // Optimistic clear
 
         try {
-            // El trigger handle_new_message creará la conversación automáticamente
+            // First, find or create conversation
+            let { data: existingConv } = await supabase
+                .from('conversations')
+                .select('id')
+                .or(`and(participant1_id.eq.${user.id},participant2_id.eq.${targetUserId}),and(participant1_id.eq.${targetUserId},participant2_id.eq.${user.id})`)
+                .single();
+
+            let conversationId = existingConv?.id as string | undefined;
+
+            // If no conversation exists, create one
+            if (!conversationId) {
+                const { data: newConv, error: convError } = await supabase
+                    .from('conversations')
+                    .insert({
+                        participant1_id: user.id,
+                        participant2_id: targetUserId
+                    } as any)
+                    .select('id')
+                    .single();
+
+                if (convError) {
+                    console.error('Error creating conversation:', convError);
+                    throw convError;
+                }
+                conversationId = (newConv as any)?.id;
+            }
+
+            // Now insert the message
             const { error } = await supabase
                 .from('messages')
                 .insert({
+                    conversation_id: conversationId,
                     sender_id: user.id,
                     receiver_id: targetUserId,
                     content: content,
