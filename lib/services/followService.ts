@@ -399,7 +399,7 @@ export async function isBlocked(blockerId: string, blockedId: string): Promise<b
     .maybeSingle();
 
   if (error) {
-    console.error('Error checking block status:', error);
+    // console.error('Error checking block status:', error);
     return false;
   }
 

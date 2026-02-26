@@ -49,10 +49,7 @@ export function useWardrobe(): UseWardrobeReturn {
       setLoading(true);
       setError(null);
 
-      const { data: { session } } = await supabase.auth.getSession();
-      const authUser = session?.user;
-
-      if (!authUser) {
+      if (!user) {
         if (mountedRef.current && currentFetchId === fetchIdRef.current) {
           setItems([]);
         }
@@ -62,7 +59,7 @@ export function useWardrobe(): UseWardrobeReturn {
       const { data, error: fetchError } = await supabase
         .from('clothing_items')
         .select('*')
-        .eq('user_id', authUser.id)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (fetchError) throw fetchError;
@@ -105,10 +102,7 @@ export function useWardrobe(): UseWardrobeReturn {
   // Add item — usa getSession() (local) para consistencia
   const addItem = async (item: Omit<ClothingItem, 'id' | 'createdAt'>): Promise<ClothingItem | null> => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const authUser = session?.user;
-
-      if (!authUser) {
+      if (!user) {
         setError('Usuario no autenticado');
         return null;
       }
@@ -123,7 +117,7 @@ export function useWardrobe(): UseWardrobeReturn {
           item.imageUrl,
           BUCKETS.CLOTHING,
           {
-            folder: authUser.id,
+            folder: user.id,
             maxWidth: 800,
             maxHeight: 800,
             quality: 0.85
@@ -146,7 +140,7 @@ export function useWardrobe(): UseWardrobeReturn {
           item.originalImageUrl,
           BUCKETS.CLOTHING,
           {
-            folder: `${authUser.id}/originals`,
+            folder: `${user.id}/originals`,
             maxWidth: 1200,
             maxHeight: 1200,
             quality: 0.9
@@ -163,7 +157,7 @@ export function useWardrobe(): UseWardrobeReturn {
       }
 
       const itemData: any = {
-        user_id: authUser.id,
+        user_id: user.id,
         name: item.name,
         category: item.category,
         color: item.color,
@@ -225,10 +219,7 @@ export function useWardrobe(): UseWardrobeReturn {
     try {
       // Use getSession to check auth locally instead of calling getUser (network)
       // This prevents unnecessary user fetching on every interaction
-      const { data: { session } } = await supabase.auth.getSession();
-      const authUser = session?.user;
-
-      if (!authUser) {
+      if (!user) {
         setError('Usuario no autenticado');
         return false;
       }
@@ -239,7 +230,7 @@ export function useWardrobe(): UseWardrobeReturn {
           updates.imageUrl,
           BUCKETS.CLOTHING,
           {
-            folder: authUser.id,
+            folder: user.id,
             maxWidth: 800,
             maxHeight: 800,
             quality: 0.85
@@ -255,7 +246,7 @@ export function useWardrobe(): UseWardrobeReturn {
         // Eliminar imagen anterior si era de Storage
         const oldItem = items.find(i => i.id === id);
         if (oldItem?.imageUrl && isStorageUrl(oldItem.imageUrl)) {
-          await deleteImage(oldItem.imageUrl); // No bloqueamos si falla
+          await deleteImage(oldItem.imageUrl, BUCKETS.CLOTHING); // No bloqueamos si falla
         }
       } else if (updates.imageUrl !== undefined) {
         dbUpdates.image_url = updates.imageUrl;
@@ -267,7 +258,7 @@ export function useWardrobe(): UseWardrobeReturn {
           updates.originalImageUrl,
           BUCKETS.CLOTHING,
           {
-            folder: `${authUser.id}/originals`,
+            folder: `${user.id}/originals`,
             maxWidth: 1200,
             maxHeight: 1200,
             quality: 0.9
@@ -338,10 +329,10 @@ export function useWardrobe(): UseWardrobeReturn {
       // Eliminar imágenes de Storage (en background, no bloqueamos)
       if (itemToDelete) {
         if (itemToDelete.imageUrl && isStorageUrl(itemToDelete.imageUrl)) {
-          deleteImage(itemToDelete.imageUrl).catch(console.warn);
+          deleteImage(itemToDelete.imageUrl, BUCKETS.CLOTHING).catch(console.warn);
         }
         if (itemToDelete.originalImageUrl && isStorageUrl(itemToDelete.originalImageUrl)) {
-          deleteImage(itemToDelete.originalImageUrl).catch(console.warn);
+          deleteImage(itemToDelete.originalImageUrl, BUCKETS.CLOTHING).catch(console.warn);
         }
       }
 

@@ -222,13 +222,13 @@ export const OutfitCanvas = forwardRef<OutfitCanvasRef, OutfitCanvasProps>(funct
                                 <div className="absolute -bottom-2 -right-2 flex gap-1 pointer-events-auto z-10">
                                     <button
                                         onPointerDown={(e) => { e.stopPropagation(); handleResize(itemId, -0.15); }}
-                                        className="bg-[#FF69B4] text-white rounded-full w-7 h-7 flex items-center justify-center shadow-lg font-bold"
+                                        className="bg-[var(--brand-pink)] text-white rounded-full w-7 h-7 flex items-center justify-center shadow-lg font-bold"
                                     >
                                         −
                                     </button>
                                     <button
                                         onPointerDown={(e) => { e.stopPropagation(); handleResize(itemId, 0.15); }}
-                                        className="bg-[#FF69B4] text-white rounded-full w-7 h-7 flex items-center justify-center shadow-lg font-bold"
+                                        className="bg-[var(--brand-pink)] text-white rounded-full w-7 h-7 flex items-center justify-center shadow-lg font-bold"
                                     >
                                         +
                                     </button>

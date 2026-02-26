@@ -16,7 +16,7 @@ interface Message {
     receiver_id: string;
     content: string;
     created_at: string;
-    read_at: string | null;
+    is_read: boolean;
 }
 
 interface UserProfile {
@@ -47,6 +47,22 @@ export default function ChatPage() {
         scrollToBottom();
     }, [messages]);
 
+    const fetchMessages = async () => {
+        if (!user || !targetUserId) return;
+
+        // OR query for bidirectional messages
+        const { data } = await supabase
+            .from('messages')
+            .select('*')
+            .or(`and(sender_id.eq.${user.id},receiver_id.eq.${targetUserId}),and(sender_id.eq.${targetUserId},receiver_id.eq.${user.id})`)
+            .order('created_at', { ascending: true });
+
+        if (data) {
+            setMessages(data as any[]);
+            setLoading(false);
+        }
+    };
+
     // Fetch Target User & Messages
     useEffect(() => {
         if (!user || !targetUserId) return;
@@ -70,8 +86,7 @@ export default function ChatPage() {
                 }
 
                 // 2. Fetch Messages between User and Target
-                fetchMessages();
-                subscribeToMessages();
+                await fetchMessages();
             } catch (error) {
                 console.error('Error initializing chat:', error);
                 setLoading(false);
@@ -81,52 +96,40 @@ export default function ChatPage() {
         initChat();
     }, [user, targetUserId]);
 
-    const fetchMessages = async () => {
+    // Setup Realtime Subscription
+    useEffect(() => {
         if (!user || !targetUserId) return;
 
-        // OR query for bidirectional messages
-        const { data } = await supabase
-            .from('messages')
-            .select('*')
-            .or(`and(sender_id.eq.${user.id},receiver_id.eq.${targetUserId}),and(sender_id.eq.${targetUserId},receiver_id.eq.${user.id})`)
-            .order('created_at', { ascending: true });
-
-        if (data) {
-            setMessages(data as any[]);
-            setLoading(false);
-        }
-    };
-
-    const subscribeToMessages = () => {
-        if (!user || !targetUserId) return () => { };
-
-        // Subscribe to all messages where I am sender or receiver (filtering in callback might be safer given simple RLS)
-        // Or specific filter if Supabase supports complex filters in channels (limited).
-        // Let's listen to table and filter client side for now or use row level security.
         const channel = supabase.channel(`chat:${targetUserId}`)
             .on('postgres_changes', {
-                event: 'INSERT',
+                event: '*',
                 schema: 'public',
                 table: 'messages',
             }, (payload) => {
+                // If it's a delete, new might be null.
+                if (!payload.new || Object.keys(payload.new).length === 0) return;
+
                 const newMsg = payload.new as Message;
-                // Check if this message belongs to this conversation
+
                 const isRelevant =
                     (newMsg.sender_id === user.id && newMsg.receiver_id === targetUserId) ||
                     (newMsg.sender_id === targetUserId && newMsg.receiver_id === user.id);
 
                 if (isRelevant) {
                     setMessages(prev => {
-                        // Avoid duplicates
                         if (prev.some(m => m.id === newMsg.id)) return prev;
                         return [...prev, newMsg];
                     });
                 }
             })
-            .subscribe();
+            .subscribe((status, err) => {
+                console.log(`Supabase Realtime status: ${status}`, err || '');
+            });
 
-        return () => { supabase.removeChannel(channel); };
-    };
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [user, targetUserId]);
 
     const sendMessage = async () => {
         if (!newMessage.trim() || !user || !targetUserId) return;
@@ -142,7 +145,7 @@ export default function ChatPage() {
                 .or(`and(participant1_id.eq.${user.id},participant2_id.eq.${targetUserId}),and(participant1_id.eq.${targetUserId},participant2_id.eq.${user.id})`)
                 .single();
 
-            let conversationId = existingConv?.id as string | undefined;
+            let conversationId = (existingConv as any)?.id as string | undefined;
 
             // If no conversation exists, create one
             if (!conversationId) {
@@ -258,11 +261,9 @@ export default function ChatPage() {
                                     setLoading(true);
                                     try {
                                         // Get or create conversation first
-                                        const { data: convData } = await supabase
-                                            .rpc('get_or_create_conversation', { target_user_id: targetUserId });
-                                        
-                                        const conversationId = convData?.conversation_id;
-                                        
+                                        const { data: conversationId } = await supabase
+                                            .rpc('get_or_create_conversation', { target_user_id: targetUserId } as any);
+
                                         if (conversationId) {
                                             // Delete the conversation (messages will be deleted by CASCADE)
                                             await supabase
@@ -273,7 +274,7 @@ export default function ChatPage() {
                                             // Fallback: delete messages directly
                                             await supabase.from('messages').delete().or(`and(sender_id.eq.${user?.id},receiver_id.eq.${targetUserId}),and(sender_id.eq.${targetUserId},receiver_id.eq.${user?.id})`);
                                         }
-                                        
+
                                         router.push('/messages');
                                     } catch (e) {
                                         console.error(e);
@@ -291,85 +292,87 @@ export default function ChatPage() {
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 pb-safe">
-                {loading ? (
-                    <div className="flex justify-center py-20">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#FF69B4]"></div>
-                    </div>
-                ) : messages.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full text-center px-4">
-                        <div className="w-20 h-20 rounded-full bg-[var(--background-secondary)] flex items-center justify-center mb-4">
-                            <Send className="w-10 h-10 text-[var(--foreground-tertiary)]" />
+            <div className="flex-1 overflow-y-auto px-4 py-4 pb-safe flex flex-col">
+                <div className="w-full md:w-[60%] mx-auto flex flex-col space-y-3 flex-1 justify-end">
+                    {loading ? (
+                        <div className="flex justify-center py-20">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--brand-pink)]"></div>
                         </div>
-                        <p className="text-[var(--foreground-secondary)] mb-2">No hay mensajes aún</p>
-                        <p className="text-sm text-[var(--foreground-tertiary)]">Envía un mensaje para comenzar la conversación</p>
-                    </div>
-                ) : (
-                    messages.map((msg, idx) => {
-                        const isMe = msg.sender_id === user?.id;
-                        const prevMsg = idx > 0 ? messages[idx - 1] : null;
-                        const showAvatar = !prevMsg || prevMsg.sender_id !== msg.sender_id;
+                    ) : messages.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center h-full text-center px-4">
+                            <div className="w-20 h-20 rounded-full bg-[var(--background-secondary)] flex items-center justify-center mb-4">
+                                <Send className="w-10 h-10 text-[var(--foreground-tertiary)]" />
+                            </div>
+                            <p className="text-[var(--foreground-secondary)] mb-2">No hay mensajes aún</p>
+                            <p className="text-sm text-[var(--foreground-tertiary)]">Envía un mensaje para comenzar la conversación</p>
+                        </div>
+                    ) : (
+                        messages.map((msg, idx) => {
+                            const isMe = msg.sender_id === user?.id;
+                            const prevMsg = idx > 0 ? messages[idx - 1] : null;
+                            const showAvatar = !prevMsg || prevMsg.sender_id !== msg.sender_id;
 
-                        // Check if message is a shared post
-                        let isSharedPost = false;
-                        let sharedPostData: any = null;
-                        try {
-                            if (msg.content.startsWith('{"type":"post"')) {
-                                sharedPostData = JSON.parse(msg.content);
-                                isSharedPost = true;
-                            }
-                        } catch (e) { }
+                            // Check if message is a shared post
+                            let isSharedPost = false;
+                            let sharedPostData: any = null;
+                            try {
+                                if (msg.content.startsWith('{"type":"post"')) {
+                                    sharedPostData = JSON.parse(msg.content);
+                                    isSharedPost = true;
+                                }
+                            } catch (e) { }
 
-                        return (
-                            <motion.div
-                                key={msg.id}
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className={`flex w-full ${isMe ? 'justify-end' : 'justify-start'}`}
-                            >
-                                <div className={`flex max-w-[75%] items-end gap-2 ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
-                                    {/* Avatar placeholder for alignment */}
-                                    {!isMe && (
-                                        <div className="w-8 h-8 flex-shrink-0">
-                                            {showAvatar && (
-                                                <img src={targetUser?.avatar_url || ''} className="w-8 h-8 rounded-full object-cover border border-[var(--border-color)]" />
-                                            )}
-                                        </div>
-                                    )}
-
-                                    {isSharedPost && sharedPostData ? (
-                                        <div className={`overflow-hidden rounded-2xl border ${isMe ? 'border-[#FF69B4] bg-[#FF69B4]/5' : 'border-[var(--border-color)] bg-[var(--card-bg)]'}`}>
-                                            <div className="relative aspect-[3/4] w-48 bg-gray-100">
-                                                <img src={sharedPostData.image} className="w-full h-full object-cover" />
+                            return (
+                                <motion.div
+                                    key={msg.id}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className={`flex w-full ${isMe ? 'justify-end' : 'justify-start'}`}
+                                >
+                                    <div className={`flex w-fit max-w-[85%] md:max-w-[340px] xl:max-w-[420px] items-end gap-2 ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
+                                        {/* Avatar placeholder for alignment */}
+                                        {!isMe && (
+                                            <div className="w-8 h-8 flex-shrink-0">
+                                                {showAvatar && (
+                                                    <img src={targetUser?.avatar_url || ''} className="w-8 h-8 rounded-full object-cover border border-[var(--border-color)]" />
+                                                )}
                                             </div>
-                                            <div className="p-3">
-                                                <p className="text-xs font-bold text-[var(--foreground)] truncate">{sharedPostData.title || 'Outfit compartido'}</p>
-                                                <Link href={`/feed?post=${sharedPostData.id}`} className="text-[10px] text-[var(--foreground-secondary)] hover:underline">Ver publicación</Link>
+                                        )}
+
+                                        {isSharedPost && sharedPostData ? (
+                                            <div className={`overflow-hidden rounded-2xl border ${isMe ? 'border-[var(--brand-pink)] bg-[var(--brand-pink)]/5' : 'border-[var(--border-color)] bg-[var(--card-bg)]'}`}>
+                                                <div className="relative aspect-[3/4] w-48 bg-gray-100">
+                                                    <img src={sharedPostData.image} className="w-full h-full object-cover" />
+                                                </div>
+                                                <div className="p-3">
+                                                    <p className="text-xs font-bold text-[var(--foreground)] truncate">{sharedPostData.title || 'Outfit compartido'}</p>
+                                                    <Link href={`/feed?post=${sharedPostData.id}`} className="text-[10px] text-[var(--foreground-secondary)] hover:underline">Ver publicación</Link>
+                                                </div>
                                             </div>
-                                        </div>
-                                    ) : (
-                                        <div className={`
-                                            px-4 py-2.5 rounded-[22px] text-[15px] leading-relaxed break-words
+                                        ) : (
+                                            <div className={`
+                                            px-4 py-2.5 rounded-[22px] text-[15px] leading-relaxed break-all
                                             ${isMe
-                                                ? 'bg-[#FF69B4] text-white rounded-br-sm'
-                                                : 'bg-[var(--background-secondary)] text-[var(--foreground)] rounded-bl-sm'}
+                                                    ? 'bg-[var(--brand-pink)] text-white rounded-br-sm'
+                                                    : 'bg-[var(--background-secondary)] text-[var(--foreground)] rounded-bl-sm'}
                                         `}>
-                                            {msg.content}
-                                        </div>
-                                    )}
-                                </div>
-                            </motion.div>
-                        );
-                    })
-                )}
-                <div ref={messagesEndRef} />
+                                                {msg.content}
+                                            </div>
+                                        )}
+                                    </div>
+                                </motion.div>
+                            );
+                        })
+                    )}
+                    <div ref={messagesEndRef} />
+                </div>
             </div>
 
             {/* Input Area - Fixed at bottom where TabBar would be */}
-            <div className="fixed bottom-0 left-0 right-0 bg-[var(--background)]/95 backdrop-blur-xl border-t border-[var(--border-color)] safe-area-bottom md:relative md:bottom-auto md:left-auto md:right-auto">
-                <div className="px-4 py-3 max-w-2xl mx-auto">
+            <div className="fixed bottom-0 left-0 right-0 bg-[var(--background)]/95 backdrop-blur-xl border-t border-[var(--border-color)] safe-area-bottom md:relative md:bottom-auto md:left-auto md:right-auto flex justify-center">
+                <div className="px-4 py-3 w-full md:w-[60%]">
                     <div className="flex items-end gap-2">
-                        <button className="p-2 text-[#FF69B4] hover:text-[#FF1493] hover:bg-[var(--background-secondary)] rounded-full transition-colors flex-shrink-0">
+                        <button className="p-2 text-[var(--brand-pink)] hover:text-[#FF1493] hover:bg-[var(--background-secondary)] rounded-full transition-colors flex-shrink-0">
                             <ImageIcon className="w-6 h-6" />
                         </button>
 
@@ -379,7 +382,7 @@ export default function ChatPage() {
                                 onChange={(e) => setNewMessage(e.target.value)}
                                 onKeyDown={handleKeyDown}
                                 placeholder="Mensaje..."
-                                className="w-full bg-transparent max-h-32 min-h-[44px] py-2.5 px-4 outline-none text-[15px] resize-none text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)]"
+                                className="w-full bg-transparent max-h-32 min-h-[44px] py-2.5 px-4 outline-none focus:outline-none focus:ring-0 focus:border-transparent text-[15px] resize-none text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)]"
                                 rows={1}
                             />
                         </div>
@@ -387,12 +390,12 @@ export default function ChatPage() {
                         {newMessage.trim() ? (
                             <button
                                 onClick={sendMessage}
-                                className="p-2.5 text-[#FF69B4] hover:bg-[#FF69B4]/10 rounded-full transition-all flex-shrink-0 font-semibold"
+                                className="p-2.5 text-[var(--brand-pink)] hover:bg-[var(--brand-pink)]/10 rounded-full transition-all flex-shrink-0 font-semibold"
                             >
                                 Enviar
                             </button>
                         ) : (
-                            <button className="p-2 text-[#FF69B4] hover:text-[#FF1493] hover:bg-[var(--background-secondary)] rounded-full transition-colors flex-shrink-0">
+                            <button className="p-2 text-[var(--brand-pink)] hover:text-[#FF1493] hover:bg-[var(--background-secondary)] rounded-full transition-colors flex-shrink-0">
                                 <Smile className="w-6 h-6" />
                             </button>
                         )}

@@ -200,7 +200,7 @@ export default function MessagesLayout({ children }: { children: React.ReactNode
                 </div>
 
                 {/* Right Panel - Active Chat */}
-                <div className="flex-1 flex flex-col">
+                <div className="flex-1 flex flex-col bg-[var(--background)]">
                     {children}
                 </div>
             </div>

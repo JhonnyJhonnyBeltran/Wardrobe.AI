@@ -109,13 +109,7 @@ export default function ClosetPage() {
   }, [items]);
 
   // REDIRECT TO ONBOARDING if style profile is missing
-  useEffect(() => {
-    if (!isLoading && user && !user.styleCompleted) {
-      // Checking if styleCompleted is explicitly false (it defaults to false in new users)
-      // Adding a slight delay or check to ensure user data is loaded
-      router.push('/onboarding');
-    }
-  }, [user, isLoading, router]);
+  // Removed faulty user.styleCompleted redirect that caused blank screens on client-side routing
 
 
   // Product Modal State
@@ -463,54 +457,54 @@ export default function ClosetPage() {
                             className="group relative overflow-hidden bg-[var(--card-bg)] border-none shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
                             onClick={() => setSelectedItem(item)}
                           >
-                          <div className="relative aspect-[3/4] overflow-hidden bg-[var(--background-secondary)]">
-                            {item.imageUrl ? (
-                              <img
-                                src={item.imageUrl}
-                                alt={item.name}
-                                className="w-full h-full object-cover"
-                                loading="lazy"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex flex-col items-center justify-center text-[var(--foreground-tertiary)]">
-                                <span className="text-xs">Sin imagen</span>
-                              </div>
-                            )}
+                            <div className="relative aspect-[3/4] overflow-hidden bg-[var(--background-secondary)]">
+                              {item.imageUrl ? (
+                                <img
+                                  src={item.imageUrl}
+                                  alt={item.name}
+                                  className="w-full h-full object-cover"
+                                  loading="lazy"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex flex-col items-center justify-center text-[var(--foreground-tertiary)]">
+                                  <span className="text-xs">Sin imagen</span>
+                                </div>
+                              )}
 
-                            {/* Favorite Button Overlay */}
-                            <motion.button
-                              whileTap={{ scale: 0.9 }}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleFavoriteToggle(item.id);
-                              }}
-                              className="absolute top-2 right-2 p-2 rounded-full bg-black/20 backdrop-blur-sm text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                              <Heart className={`w-4 h-4 ${item.favorite ? 'fill-current text-red-500' : 'text-white'}`} />
-                            </motion.button>
+                              {/* Favorite Button Overlay */}
+                              <motion.button
+                                whileTap={{ scale: 0.9 }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleFavoriteToggle(item.id);
+                                }}
+                                className="absolute top-2 right-2 p-2 rounded-full bg-black/20 backdrop-blur-sm text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <Heart className={`w-4 h-4 ${item.favorite ? 'fill-current text-red-500' : 'text-white'}`} />
+                              </motion.button>
 
-                            {/* Delete Button - Always visible on desktop */}
-                            <motion.button
-                              whileTap={{ scale: 0.9 }}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteItem(item.id);
-                              }}
-                              className="absolute top-2 left-2 p-2 rounded-full bg-black/40 backdrop-blur-sm text-white hover:bg-red-500 transition-colors hidden md:block"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </motion.button>
-                          </div>
+                              {/* Delete Button - Always visible on desktop */}
+                              <motion.button
+                                whileTap={{ scale: 0.9 }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteItem(item.id);
+                                }}
+                                className="absolute top-2 left-2 p-2 rounded-full bg-black/40 backdrop-blur-sm text-white hover:bg-red-500 transition-colors hidden md:block"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </motion.button>
+                            </div>
 
-                          <div className="p-3">
-                            <h3 className="font-medium text-[var(--foreground)] truncate text-sm">
-                              {item.name}
-                            </h3>
-                            <p className="text-xs text-[var(--foreground-secondary)] mt-0.5 capitalize truncate">
-                              {item.category} • {item.brand || 'Sin marca'}
-                            </p>
-                          </div>
-                        </Card>
+                            <div className="p-3">
+                              <h3 className="font-medium text-[var(--foreground)] truncate text-sm">
+                                {item.name}
+                              </h3>
+                              <p className="text-xs text-[var(--foreground-secondary)] mt-0.5 capitalize truncate">
+                                {item.category} • {item.brand || 'Sin marca'}
+                              </p>
+                            </div>
+                          </Card>
                         </motion.div>
                       )}
                     </div>

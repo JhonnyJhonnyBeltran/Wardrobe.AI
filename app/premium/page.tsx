@@ -111,7 +111,7 @@ export default function PremiumPage() {
                                 transition={{ delay: 0.2 + index * 0.05 }}
                                 className="flex items-center gap-3"
                             >
-                                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[#FF69B4] flex items-center justify-center">
+                                <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--brand-pink)] flex items-center justify-center">
                                     <Check className="w-4 h-4 text-white" strokeWidth={3} />
                                 </div>
                                 <span className="text-[var(--foreground)]">{benefit}</span>
@@ -125,14 +125,14 @@ export default function PremiumPage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.6 }}
-                    className="bg-[#FF69B4] rounded-3xl p-8 text-white mb-8"
+                    className="bg-[var(--brand-pink)] rounded-3xl p-8 text-white mb-8"
                 >
                     <div className="text-center mb-6">
                         <div className="text-5xl font-bold mb-2">9.99€</div>
                         <div className="text-white/80">al mes</div>
                     </div>
 
-                    <button className="w-full bg-white text-[#FF69B4] font-semibold py-4 rounded-2xl hover:bg-gray-50 transition-all active:scale-95 mb-4">
+                    <button className="w-full bg-white text-[var(--brand-pink)] font-semibold py-4 rounded-2xl hover:bg-gray-50 transition-all active:scale-95 mb-4">
                         Actualizar a Premium
                     </button>
 

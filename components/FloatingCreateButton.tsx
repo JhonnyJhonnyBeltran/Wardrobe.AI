@@ -26,7 +26,7 @@ export default function FloatingCreateButton() {
                 <motion.div
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    className="w-14 h-14 rounded-full bg-[#FF69B4] flex items-center justify-center text-white shadow-2xl cursor-pointer hover:shadow-[0_0_30px_rgba(255,105,180,0.5)] transition-all"
+                    className="w-14 h-14 rounded-full bg-[var(--brand-pink)] flex items-center justify-center text-white shadow-2xl cursor-pointer hover:shadow-[0_0_30px_var(--shadow-glow-pink)] transition-all"
                 >
                     <Plus className="w-7 h-7" strokeWidth={2.5} />
                 </motion.div>

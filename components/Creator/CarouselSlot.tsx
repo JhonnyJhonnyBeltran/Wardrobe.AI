@@ -92,7 +92,7 @@ export function CarouselSlot({
                                     {/* Selection Indicator - Simple Circle */}
                                     {isSelected && (
                                         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                            <div className="w-12 h-12 rounded-full bg-[#FF69B4] flex items-center justify-center shadow-lg">
+                                            <div className="w-12 h-12 rounded-full bg-[var(--brand-pink)] flex items-center justify-center shadow-lg">
                                                 <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                                 </svg>

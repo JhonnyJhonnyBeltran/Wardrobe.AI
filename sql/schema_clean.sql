@@ -598,6 +598,11 @@ INSERT INTO public.brands (name, slug, logo_url, website, is_active, display_ord
 ('Alohas', 'alohas', NULL, 'https://alohas.com', true, 73),
 ('Morrison', 'morrison', NULL, 'https://morrisonshoes.com', true, 74),
 ('Munich', 'munich', NULL, 'https://munich.es', true, 75),
+('Converse', 'converse', NULL, 'https://www.converse.com', true, 76),
+('Vans', 'vans', NULL, 'https://www.vans.com', true, 77),
+('Dr. Martens', 'drmartens', NULL, 'https://www.drmartens.com', true, 78),
+('Birkenstock', 'birkenstock', NULL, 'https://www.birkenstock.com', true, 79),
+('Timberland', 'timberland', NULL, 'https://www.timberland.com', true, 80),
 ('Ecoalf', 'ecoalf', NULL, 'https://ecoalf.com', true, 76),
 -- Jewelry / Glasses
 ('PDPAOLA', 'pdpaola', NULL, 'https://pdpaola.com', true, 81),

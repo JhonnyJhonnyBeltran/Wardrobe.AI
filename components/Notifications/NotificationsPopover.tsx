@@ -38,7 +38,7 @@ export default function NotificationsPopover({ isOpen, onClose }: NotificationsP
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
                     transition={{ duration: 0.2 }}
-                    className="fixed top-0 left-[72px] h-screen w-[400px] bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 shadow-2xl z-40 flex flex-col"
+                    className="fixed top-0 left-[72px] h-screen w-[400px] bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 shadow-2xl z-[60] flex flex-col"
                 >
                     <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-white/95 dark:bg-gray-900/95 backdrop-blur-md z-10 shrink-0">
                         <h2 className="text-xl font-bold text-gray-900 dark:text-white">Notificaciones</h2>

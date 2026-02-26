@@ -51,10 +51,10 @@ interface ToastProps {
   duration?: number;
 }
 
-const Toast = memo(function Toast({ 
-  notification, 
-  onDismiss, 
-  duration = 5000 
+const Toast = memo(function Toast({
+  notification,
+  onDismiss,
+  duration = 5000
 }: ToastProps) {
   const markAsRead = useRealtimeStore(state => state.markAsRead);
 
@@ -74,16 +74,20 @@ const Toast = memo(function Toast({
   const getLink = (): string | null => {
     switch (notification.type) {
       case 'new_message':
-        return notification.data?.sender_id 
-          ? `/messages/${notification.data.sender_id}` 
+        return notification.data?.sender_id
+          ? `/messages/${notification.data.sender_id}`
           : '/messages';
       case 'follow_request':
         return '/profile?tab=requests';
       case 'new_follower':
       case 'follow_accepted':
-        return notification.sender_id 
-          ? `/profile/${notification.sender_id}` 
+        return notification.sender_id
+          ? `/profile/${notification.sender_id}`
           : '/profile';
+      case 'like':
+      case 'comment':
+        const postId = notification.data?.post_id || notification.data?.postId;
+        return postId ? `/post/${postId}` : '/profile';
       default:
         return null;
     }
@@ -99,9 +103,9 @@ const Toast = memo(function Toast({
         ${notificationColors[notification.type]}
       `}>
         {notification.sender?.avatar_url ? (
-          <Image 
-            src={notification.sender.avatar_url} 
-            alt="" 
+          <Image
+            src={notification.sender.avatar_url}
+            alt=""
             width={40}
             height={40}
             className="w-full h-full rounded-full object-cover"
@@ -159,7 +163,7 @@ const Toast = memo(function Toast({
           </div>
         </Link>
       ) : (
-        <div 
+        <div
           onClick={handleClick}
           className="
             bg-white dark:bg-gray-800 
@@ -218,7 +222,7 @@ export const NotificationToastContainer = memo(function NotificationToastContain
   }, []);
 
   return (
-    <div 
+    <div
       className={`
         fixed z-50 pointer-events-none
         flex flex-col gap-2

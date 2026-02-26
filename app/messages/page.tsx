@@ -90,7 +90,7 @@ export default function MessagesPage() {
     // Handle selecting a user to start a conversation
     const handleSelectUser = async (selectedUser: FollowProfile) => {
         if (!user) return;
-        
+
         try {
             const { data: conversationId, error: convError } = await supabase
                 .rpc('get_or_create_conversation', { target_user_id: selectedUser.id } as any);
@@ -120,7 +120,7 @@ export default function MessagesPage() {
                 // Fetch all messages involving the user
                 const { data: myMessages, error } = await supabase
                     .from('messages')
-                    .select('created_at, content, sender_id, receiver_id, read_at')
+                    .select('created_at, content, sender_id, receiver_id, is_read')
                     .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
                     .order('created_at', { ascending: false })
                     .limit(100)
@@ -295,14 +295,13 @@ export default function MessagesPage() {
                                         if (confirm("¿Eliminar conversación?")) {
                                             setLoading(true);
                                             const partnerId = conv.other_user?.id || (conv.participant_2 === user?.id ? conv.participant_1 : conv.participant_2);
-                                            
+
                                             try {
                                                 // Get or create conversation first
-                                                const { data: convData } = await supabase
+                                                const { data: conversationId } = await supabase
                                                     .rpc('get_or_create_conversation', { target_user_id: partnerId } as any) as { data: any };
-                                                
-                                                const conversationId = convData?.conversation_id;
-                                                
+
+
                                                 if (conversationId) {
                                                     // Delete the conversation (messages will be deleted by CASCADE)
                                                     await supabase
@@ -313,7 +312,7 @@ export default function MessagesPage() {
                                                     // Fallback: delete messages directly
                                                     await supabase.from('messages').delete().or(`and(sender_id.eq.${user?.id},receiver_id.eq.${partnerId}),and(sender_id.eq.${partnerId},receiver_id.eq.${user?.id})`);
                                                 }
-                                                
+
                                                 // Remove from local state
                                                 setConversations(prev => prev.filter(c => c.id !== conv.id));
                                             } catch (e) {
@@ -347,7 +346,7 @@ export default function MessagesPage() {
             {/* New Conversation Modal */}
             <AnimatePresence>
                 {showNewConversationModal && (
-                    <motion.div 
+                    <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
@@ -356,9 +355,9 @@ export default function MessagesPage() {
                     >
                         {/* Backdrop */}
                         <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
-                        
+
                         {/* Modal Content */}
-                        <motion.div 
+                        <motion.div
                             initial={{ y: '100%' }}
                             animate={{ y: 0 }}
                             exit={{ y: '100%' }}
@@ -372,7 +371,7 @@ export default function MessagesPage() {
                                     <UserPlus className="w-5 h-5 text-[var(--brand-pink)]" />
                                     <h2 className="text-lg font-bold text-[var(--foreground)]">Nueva conversación</h2>
                                 </div>
-                                <button 
+                                <button
                                     onClick={() => setShowNewConversationModal(false)}
                                     className="p-2 hover:bg-[var(--background-secondary)] rounded-full transition-colors"
                                 >
@@ -404,8 +403,8 @@ export default function MessagesPage() {
                                             >
                                                 <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 bg-[var(--background-secondary)]">
                                                     {followedUser.avatar_url ? (
-                                                        <img 
-                                                            src={followedUser.avatar_url} 
+                                                        <img
+                                                            src={followedUser.avatar_url}
                                                             alt={followedUser.username || 'User'}
                                                             className="w-full h-full object-cover"
                                                         />

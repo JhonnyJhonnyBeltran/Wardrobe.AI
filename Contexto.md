@@ -22,6 +22,7 @@ La interfaz debe sentirse "cara" y limpia.
     * *Headings:* Inter/San Francisco Bold.
     * *Body:* Inter Regular.
 * **Regla de Oro de Imagen:** Los recortes de prendas (Items) **SIEMPRE** deben tener un fondo `#FFFFFF` (Blanco) o `#F5F5F7` (Gris muy claro) dentro de su contenedor, incluso si la app está en modo oscuro. Esto garantiza contraste y visibilidad del producto.
+* **Consistencia Global (Strict Enforcement):** Todos los componentes (botones, modales, cards) deben compartir el mismo `border-radius` (ej. `rounded-xl` o `rounded-2xl`), las mismas sombras sutiles y los mismos márgenes. La app debe sentirse como un producto nativo pulido, no como una colección de páginas dispares. No se deben mezclar estilos ni usar paletas fuera del theme base.
 
 ### B. Componentes Clave
 * **Masonry Grid (Feed):** Grid asimétrico sin espacios excesivos (gap-2 o gap-4). Border-radius: `rounded-xl`.
@@ -30,23 +31,18 @@ La interfaz debe sentirse "cara" y limpia.
 
 ---
 
-## 3. FLUJO DE USUARIO: ONBOARDING (SMART PROFILING)
+## 3. FLUJO DE USUARIO: ONBOARDING (SMART PROFILING & ENTRY)
 
-### Estado de Interfaz
-* **Full Focus:** Durante todo este proceso, `Navbar` y `Tabbar` están **OCULTAS**.
+### A. Login & Entry Point (No Landing Page)
+* **First Screen:** La aplicación **NO** tiene una landing page promocional. Al abrir la ruta raíz (`/`), el usuario no autenticado es redirigido inmediatamente a `/auth?mode=signup` (o `/auth`), replicando la estrategia de retención de Pinterest o Instagram.
+* **Estilo Visual del Auth:** Limpio, directo. Un formulario minimalista, opción de "Sign in with Google/Apple", y foco total en la conversión. Nada de texto de relleno, solo el logo y el formulario.
 
-### Paso 1: Identidad (Género)
-* Selección visual mediante 3 tarjetas grandes con fotografía: [Hombre] [Mujer] [Unisex/Otro].
-* *Feedback:* Borde `Klozet Pink` al seleccionar.
-
-### Paso 2: Definición de Estilo (Data Driven)
-* **Fuente de Datos:** Los estilos NO están en el código. Se obtienen de `SELECT * FROM styles WHERE active = true`.
-* **UI:** Grid de burbujas o tarjetas seleccionables.
-* **Lógica:** El usuario puede marcar múltiples.
-
-### Paso 3: Calibración Visual
-* Tinder-style swipe o Grid de selección rápida: "¿Te pondrías esto?".
-* Ayuda a poblar la tabla `user_preferences`.
+### B. Onboarding: "Guided Tour"
+* En lugar de un cuestionario aburrido y largo que bloquea al usuario, el Onboarding debe sentirse como un *Tour Guiado* rápido y visual.
+* **Progressivo y Aislado:** Durante el tour, la `Navbar` y `Tabbar` están **OCULTAS**.
+* **Paso 1: Identidad (Género):** Selección visual mediante grandes tarjetas: [Hombre] [Mujer] [Unisex/Otro].
+* **Paso 2: Estilo Visual (Data Driven):** Un grid muy visual de estilos (`SELECT * FROM styles`) donde el usuario hace tap en los que le encajen (estilo burbujas interactivo).
+* **Paso 3: Fricción Mínima:** Pedir solo lo estrictamente necesario para que el feed inicial tenga sentido. Las preferencias de medidas exactas, colorimetría y morfología se pueden pedir más adelante dentro del flujo natural de la app o en Settings form.
 
 ---
 

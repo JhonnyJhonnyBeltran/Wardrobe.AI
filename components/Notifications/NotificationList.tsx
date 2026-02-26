@@ -135,7 +135,7 @@ export default function NotificationList({ compact = false, onClose }: Notificat
                     .eq('user_id', user.id);
 
                 if (myPosts && myPosts.length > 0) {
-                    const myPostIds = myPosts.map(p => p.id);
+                    const myPostIds = myPosts.map((p: any) => p.id);
                     const { data: likes } = await supabase
                         .from('likes')
                         .select(`
@@ -305,7 +305,7 @@ export default function NotificationList({ compact = false, onClose }: Notificat
                     <div className="space-y-4">
                         {activityNotifications.filter(n => n.type === 'follow').map((notif) => (
                             <div key={notif.id} className="flex items-center gap-3 group">
-                                <Link href={`/profile/${notif.actor!.username || notif.actor!.id}`} className="relative" onClick={onClose}>
+                                <Link href={`/profile/${notif.actor!.id}`} className="relative" onClick={onClose}>
                                     <div className="w-10 h-10 rounded-full overflow-hidden relative border border-[var(--border-color)]">
                                         <Image src={notif.actor!.avatar} alt={notif.actor!.name} fill className="object-cover" />
                                     </div>
@@ -314,7 +314,7 @@ export default function NotificationList({ compact = false, onClose }: Notificat
                                     </div>
                                 </Link>
                                 <div className="flex-1 text-sm">
-                                    <Link href={`/profile/${notif.actor!.username || notif.actor!.id}`} onClick={onClose} className="font-semibold text-[var(--foreground)] hover:underline">
+                                    <Link href={`/profile/${notif.actor!.id}`} onClick={onClose} className="font-semibold text-[var(--foreground)] hover:underline">
                                         {notif.actor!.name}
                                     </Link>
                                     <span className="text-[var(--foreground-secondary)]"> comenzó a seguirte.</span>
@@ -343,7 +343,7 @@ export default function NotificationList({ compact = false, onClose }: Notificat
                     <div className="space-y-4">
                         {activityNotifications.filter(n => n.type === 'like').map((notif) => (
                             <div key={notif.id} className="flex items-center gap-3 group">
-                                <Link href={`/profile/${notif.actor!.username || notif.actor!.id}`} className="relative" onClick={onClose}>
+                                <Link href={`/profile/${notif.actor!.id}`} className="relative" onClick={onClose}>
                                     <div className="w-10 h-10 rounded-full overflow-hidden relative border border-[var(--border-color)]">
                                         <Image src={notif.actor!.avatar} alt={notif.actor!.name} fill className="object-cover" />
                                     </div>
@@ -352,14 +352,14 @@ export default function NotificationList({ compact = false, onClose }: Notificat
                                     </div>
                                 </Link>
                                 <div className="flex-1 text-sm">
-                                    <Link href={`/profile/${notif.actor!.username || notif.actor!.id}`} onClick={onClose} className="font-semibold text-[var(--foreground)] hover:underline">
+                                    <Link href={`/profile/${notif.actor!.id}`} onClick={onClose} className="font-semibold text-[var(--foreground)] hover:underline">
                                         {notif.actor!.name}
                                     </Link>
                                     <span className="text-[var(--foreground-secondary)]"> le gustó tu post.</span>
                                     <span className="text-[var(--foreground-tertiary)] text-xs ml-2 block sm:inline">{notif.time}</span>
                                 </div>
                                 {notif.image && (
-                                    <Link href={`/feed?postId=${notif.postId}`} onClick={onClose} className="w-10 h-10 rounded-md overflow-hidden relative border border-[var(--border-color)] hover:opacity-80 transition-opacity shrink-0">
+                                    <Link href={`/post/${notif.postId}`} onClick={onClose} className="w-10 h-10 rounded-md overflow-hidden relative border border-[var(--border-color)] hover:opacity-80 transition-opacity shrink-0">
                                         <Image src={notif.image} alt="Post" fill className="object-cover" />
                                     </Link>
                                 )}

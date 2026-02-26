@@ -76,7 +76,7 @@ export function FilterBar({
                 <button
                     onClick={onFavoritesToggle}
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${showFavoritesOnly
-                        ? 'bg-[#FF69B4] text-white'
+                        ? 'bg-[var(--brand-pink)] text-white'
                         : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:bg-[var(--background-tertiary)]'
                         }`}
                 >
@@ -89,7 +89,7 @@ export function FilterBar({
                     <button
                         onClick={() => setShowColorPicker(!showColorPicker)}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${selectedColor
-                            ? 'bg-[#FF69B4] text-white'
+                            ? 'bg-[var(--brand-pink)] text-white'
                             : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:bg-[var(--background-tertiary)]'
                             }`}
                     >
@@ -132,8 +132,8 @@ export function FilterBar({
                     <button
                         onClick={() => setShowTypePicker(!showTypePicker)}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${selectedType
-                                ? 'bg-[#FF69B4] text-white'
-                                : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:bg-[var(--background-tertiary)]'
+                            ? 'bg-[var(--brand-pink)] text-white'
+                            : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:bg-[var(--background-tertiary)]'
                             }`}
                     >
                         {selectedType || 'Tipo'}
@@ -149,8 +149,8 @@ export function FilterBar({
                                         setShowTypePicker(false);
                                     }}
                                     className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition-colors ${(type === 'Todos' && !selectedType) || selectedType === type
-                                            ? 'bg-[#FF69B4] text-white'
-                                            : 'text-[var(--foreground)] hover:bg-[var(--background-secondary)]'
+                                        ? 'bg-[var(--brand-pink)] text-white'
+                                        : 'text-[var(--foreground)] hover:bg-[var(--background-secondary)]'
                                         }`}
                                 >
                                     {type}

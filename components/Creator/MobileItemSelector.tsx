@@ -92,7 +92,7 @@ export function MobileItemSelector({ title, items, selectedItems, onSelect }: Mo
                                 {/* Selection Indicator */}
                                 {isSelected && (
                                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                        <div className="w-16 h-16 rounded-full bg-[#FF69B4] flex items-center justify-center shadow-xl">
+                                        <div className="w-16 h-16 rounded-full bg-[var(--brand-pink)] flex items-center justify-center shadow-xl">
                                             <Check className="w-9 h-9 text-white" strokeWidth={3} />
                                         </div>
                                     </div>
@@ -141,7 +141,7 @@ export function MobileItemSelector({ title, items, selectedItems, onSelect }: Mo
                             key={idx}
                             onClick={() => setCurrentIndex(idx)}
                             className={`h-1.5 rounded-full transition-all ${idx === currentIndex
-                                ? 'w-6 bg-[#FF69B4]'
+                                ? 'w-6 bg-[var(--brand-pink)]'
                                 : 'w-1.5 bg-[var(--foreground-tertiary)]'
                                 }`}
                         />

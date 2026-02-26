@@ -16,11 +16,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const isOnboarding = pathname?.startsWith('/onboarding');
 
   // Redirect to onboarding if needed
-  useEffect(() => {
-    if (!isLoading && user && !user.styleCompleted && !isOnboarding) {
-      router.replace('/onboarding/preferences');
-    }
-  }, [user, isLoading, isOnboarding, router]);
+  // useEffect removed since styleCompleted check is faulty
 
   if (isLoading) {
     return (
@@ -49,9 +45,6 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   }
 
   // Prevent rendering protected content if we are about to redirect
-  if (user && !user.styleCompleted && !isOnboarding) {
-    return null;
-  }
 
   return <>{children}</>;
 }

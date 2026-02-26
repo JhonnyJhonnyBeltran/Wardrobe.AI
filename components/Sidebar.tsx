@@ -83,7 +83,7 @@ export default function Sidebar() {
                       })}
 
                       {badgeCount > 0 && (
-                        <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1.5 flex items-center justify-center bg-[#FF69B4] text-white text-[10px] font-bold rounded-full border-2 border-[var(--background)]">
+                        <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1.5 flex items-center justify-center bg-[var(--brand-pink)] text-white text-[10px] font-bold rounded-full border-2 border-[var(--background)]">
                           {badgeCount > 99 ? '+99' : badgeCount}
                         </span>
                       )}
@@ -126,7 +126,7 @@ export default function Sidebar() {
                           })}
 
                           {badgeCount > 0 && item.labelKey !== 'search' && (
-                            <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1.5 flex items-center justify-center bg-[#FF69B4] text-white text-[10px] font-bold rounded-full border-2 border-[var(--background)]">
+                            <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1.5 flex items-center justify-center bg-[var(--brand-pink)] text-white text-[10px] font-bold rounded-full border-2 border-[var(--background)]">
                               {badgeCount > 99 ? '+99' : badgeCount}
                             </span>
                           )}
@@ -149,7 +149,7 @@ export default function Sidebar() {
         <div className="pb-4">
           {!isPremium() ? (
             <Link href="/premium">
-              <div className="w-12 h-12 rounded-full bg-[#FF69B4] flex items-center justify-center text-white shadow-lg hover:scale-105 active:scale-95 transition-all group relative cursor-pointer">
+              <div className="w-12 h-12 rounded-full bg-[var(--brand-pink)] flex items-center justify-center text-white shadow-lg hover:scale-105 active:scale-95 transition-all group relative cursor-pointer">
                 <Crown className="w-5 h-5" />
                 <div className="absolute left-full ml-3 px-2 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50">
                   Get Premium
@@ -157,7 +157,7 @@ export default function Sidebar() {
               </div>
             </Link>
           ) : (
-            <div className="w-12 h-12 rounded-full bg-[var(--background-secondary)] flex items-center justify-center text-[#FF69B4] cursor-default">
+            <div className="w-12 h-12 rounded-full bg-[var(--background-secondary)] flex items-center justify-center text-[var(--brand-pink)] cursor-default">
               <Crown className="w-5 h-5" />
             </div>
           )}
