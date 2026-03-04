@@ -42,17 +42,17 @@ export default function SearchPage() {
   }, [query]);
 
   useEffect(() => {
+    setLoading(true);
     if (debouncedQuery.trim()) {
-      setLoading(true);
       // Unified search - fetch both posts and users simultaneously
       Promise.all([
         searchPosts(debouncedQuery),
         searchUsers(debouncedQuery)
       ]).finally(() => setLoading(false));
     } else {
-      setResults([]);
+      // Fetch default trending/popular posts when no query
       setUserResults([]);
-      setLoading(false);
+      searchPosts('').finally(() => setLoading(false));
     }
   }, [debouncedQuery]);
 
@@ -73,7 +73,7 @@ export default function SearchPage() {
           .select('id, username, full_name, avatar_url, bio, is_private')
           .ilike('full_name', `%${searchTerm}%`)
           .limit(20);
-        
+
         setUserResults(fullNameData || []);
       } else {
         // Also search by full_name and combine results
@@ -82,10 +82,10 @@ export default function SearchPage() {
           .select('id, username, full_name, avatar_url, bio, is_private')
           .ilike('full_name', `%${searchTerm}%`)
           .limit(20);
-        
+
         // Combine and deduplicate
-        const combined = [...(usernameData || []), ...(fullNameData || [])];
-        const unique = combined.filter((value, index, self) => 
+        const combined: UserProfile[] = [...((usernameData as any) || []), ...((fullNameData as any) || [])];
+        const unique = combined.filter((value, index, self) =>
           index === self.findIndex((t) => t.id === value.id)
         );
         setUserResults(unique);
@@ -99,14 +99,14 @@ export default function SearchPage() {
   // Follow/Unfollow user
   const handleFollow = async (targetUserId: string) => {
     if (!user) return;
-    
+
     const isFollowing = followingIds.has(targetUserId);
     const isPending = pendingRequestIds.has(targetUserId);
-    
+
     // Find the user in results to check if profile is private
     const targetUser = userResults.find(u => u.id === targetUserId);
     const isPrivate = targetUser?.is_private || false;
-    
+
     try {
       if (isFollowing || isPending) {
         // Unfollow or cancel request
@@ -117,7 +117,7 @@ export default function SearchPage() {
             .delete()
             .eq('follower_id', user.id)
             .eq('following_id', targetUserId);
-          
+
           setPendingRequestIds(prev => {
             const next = new Set(prev);
             next.delete(targetUserId);
@@ -130,7 +130,7 @@ export default function SearchPage() {
             .delete()
             .eq('follower_id', user.id)
             .eq('following_id', targetUserId);
-          
+
           setFollowingIds(prev => {
             const next = new Set(prev);
             next.delete(targetUserId);
@@ -148,7 +148,7 @@ export default function SearchPage() {
               following_id: targetUserId,
               status: 'pending'
             } as any);
-          
+
           setPendingRequestIds(prev => new Set(prev).add(targetUserId));
           alert('Solicitud de seguimiento enviada. El usuario debe aceptar tu solicitud.');
         } else {
@@ -160,7 +160,7 @@ export default function SearchPage() {
               following_id: targetUserId,
               status: 'accepted'
             } as any);
-          
+
           setFollowingIds(prev => new Set(prev).add(targetUserId));
         }
       }
@@ -174,7 +174,7 @@ export default function SearchPage() {
       let data: any[] | null = null;
 
       if (!searchTerm.trim()) {
-        // Default: Show recent posts if no query
+        // Default: Show most liked posts if no query
         const { data: recentData } = await supabase
           .from('posts')
           .select(`
@@ -197,10 +197,19 @@ export default function SearchPage() {
                         ),
                         likes (count)
                     `)
+          // In a real app we might order by likes count instead of created_at:
+          // .order('likes_count', { ascending: false }) but we need a view for that or handle it in client. For now let's just show recent ones and treat them as feed.
           .order('created_at', { ascending: false })
           .limit(20);
 
-        data = recentData;
+        // Client-side sort by likes to simulate "trending" if desired, although just recent is fine 
+        if (recentData) {
+          data = recentData.sort((a: any, b: any) => {
+            const aLikes = a.likes?.[0]?.count || 0;
+            const bLikes = b.likes?.[0]?.count || 0;
+            return bLikes - aLikes;
+          });
+        }
       } else {
         // Search posts by caption (description)
         const { data: searchData } = await supabase
@@ -240,7 +249,7 @@ export default function SearchPage() {
             .in('id', userIds);
 
           if (profilesData) {
-            profilesData.forEach(p => {
+            profilesData.forEach((p: any) => {
               profilesMap[p.id] = p;
             });
           }
@@ -296,10 +305,10 @@ export default function SearchPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 pb-20">
+    <div className="min-h-screen bg-[var(--background)] dark:bg-[var(--background-dark)] pb-20">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800">
-        <div className="max-w-2xl mx-auto px-4 pt-12 pb-4">
+        <div className="w-full max-w-full sm:max-w-[60%] mx-auto px-4 pt-12 pb-4">
           <div className="relative">
             <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
@@ -307,7 +316,7 @@ export default function SearchPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Buscar personas o posts..."
-              className="w-full bg-gray-100 dark:bg-gray-800 border-none rounded-xl py-3 pl-10 pr-10 text-gray-900 dark:text-white placeholder-gray-500 focus:ring-2 focus:ring-pink-500/20"
+              className="w-full bg-[var(--background-secondary)] dark:bg-[var(--background-secondary-dark)] border-none rounded-xl py-3 pl-10 pr-10 text-[var(--foreground)] dark:text-[var(--foreground)] placeholder-[var(--foreground-tertiary)] focus:ring-2 focus:ring-pink-500/20"
             />
             {query && (
               <button
@@ -358,13 +367,12 @@ export default function SearchPage() {
                         </p>
                       </div>
                     </Link>
-                    <button 
+                    <button
                       onClick={() => handleFollow(user.id)}
-                      className={`px-4 py-2 rounded-full text-sm font-medium transition-opacity ${
-                        followingIds.has(user.id) 
-                          ? 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300' 
-                          : 'bg-[var(--brand-pink)] text-white hover:opacity-90'
-                      }`}
+                      className={`px-4 py-2 rounded-full text-sm font-medium transition-opacity ${followingIds.has(user.id)
+                        ? 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                        : 'bg-[var(--brand-pink)] text-white hover:opacity-90'
+                        }`}
                     >
                       {followingIds.has(user.id) ? 'Siguiendo' : 'Seguir'}
                     </button>
@@ -374,8 +382,8 @@ export default function SearchPage() {
             )}
 
             {/* POST RESULTS - No title, just the grid */}
-            {results.length > 0 && (
-              <div className="grid grid-cols-2 gap-4 mt-6">
+            {query && results.length > 0 && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-6">
                 {results.map(post => (
                   <PostCard key={post.id} post={post} />
                 ))}
@@ -384,11 +392,35 @@ export default function SearchPage() {
 
             {/* Empty State / Initial Placeholders */}
             {!query && (
-              <div className="text-center py-20 opacity-50">
-                <div className="flex justify-center mb-4">
-                  <SearchIcon className="w-16 h-16 text-gray-300 dark:text-gray-700" />
+              <div className="space-y-6">
+                {/* Temas Populares Chips */}
+                <div className="w-full overflow-x-auto pb-2 scrollbar-hide">
+                  <div className="flex items-center gap-2 pl-1">
+                    {['#OOTD', 'Vintage', 'Streetwear', 'Y2K', 'Minimalista', 'Gorpcore', 'Verano'].map((topic) => (
+                      <button
+                        key={topic}
+                        onClick={() => setQuery(topic)}
+                        className="px-4 py-2 bg-[var(--background-secondary)] border border-[var(--border-color)] rounded-full text-sm font-medium text-[var(--foreground)] whitespace-nowrap hover:border-[var(--brand-pink)] transition-colors"
+                      >
+                        {topic}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <p className="text-gray-500 dark:text-gray-400">Busca usuarios, amigos y outfits</p>
+
+                {/* Título de sección si hay posts */}
+                {results.length > 0 && (
+                  <div>
+                    <h2 className="text-sm font-bold text-[var(--foreground-secondary)] uppercase tracking-wider mb-4">
+                      Populares en Klozet
+                    </h2>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                      {results.map(post => (
+                        <PostCard key={post.id} post={post} />
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </>

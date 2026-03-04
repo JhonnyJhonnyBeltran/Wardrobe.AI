@@ -65,9 +65,9 @@ export default function TabBar() {
     return 0;
   };
 
-  // Check if should show dot (for messages on mobile)
-  const shouldShowDot = (labelKey: string): boolean => {
-    return labelKey === 'messages' && messageBadgeVisible && messageUnreadCount > 0;
+  // Check if we should show a badge at all
+  const hasBadge = (labelKey: string): boolean => {
+    return getBadgeCount(labelKey) > 0 && labelKey !== 'search';
   };
 
   return (
@@ -123,23 +123,14 @@ export default function TabBar() {
                       className: `w-[30px] h-[30px]`
                     })}
 
-                    {/* Notification Badge - Red Dot for Messages, Count for others */}
+                    {/* Notification Badge */}
                     <AnimatePresence>
-                      {shouldShowDot(tab.labelKey) ? (
-                        // Mobile: Show only red dot for messages
+                      {hasBadge(tab.labelKey) && (
                         <motion.div
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
                           exit={{ scale: 0 }}
-                          className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-[#FF3040] rounded-full border-2 border-[var(--background)] z-20"
-                        />
-                      ) : badgeCount > 0 && tab.labelKey !== 'search' && (
-                        // Other badges show count (Safeguard: Never show on search)
-                        <motion.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          exit={{ scale: 0 }}
-                          className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-[3px] flex items-center justify-center bg-[#FF3040] text-white text-[10px] font-bold rounded-full border border-[var(--background)] leading-none z-20"
+                          className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-[3px] flex items-center justify-center bg-[var(--brand-pink)] text-white text-[10px] font-bold rounded-full leading-none z-20"
                         >
                           {badgeCount > 99 ? '+99' : badgeCount}
                         </motion.div>

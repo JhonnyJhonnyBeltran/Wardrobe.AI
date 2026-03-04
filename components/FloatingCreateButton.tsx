@@ -1,36 +1,156 @@
 'use client';
 
-import { Plus } from 'lucide-react';
+import { Plus, X, Image as ImageIcon, Shirt, Layers } from 'lucide-react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
-import { usePathname } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
+import { usePathname, useRouter } from 'next/navigation';
 import { triggerHaptic } from '@/lib/haptic';
+import { useState, useEffect } from 'react';
 
 export default function FloatingCreateButton() {
     const pathname = usePathname();
+    const router = useRouter();
+    const [isOpen, setIsOpen] = useState(false);
 
-    // Show on feed and profile pages (removed closet as it has its own button)
-    const showOnPages = ['/feed', '/profile'];
-    if (!showOnPages.includes(pathname) && !pathname.startsWith('/profile')) return null;
+    // Close on route change
+    useEffect(() => {
+        setIsOpen(false);
+    }, [pathname]);
 
-    const handleClick = () => {
+    // Only show on feed and the root of profile, hide on other paths
+    const showOnPages = ['/feed'];
+    if (!showOnPages.includes(pathname) && pathname !== '/profile') return null;
+
+    const handleToggle = () => {
         triggerHaptic('medium');
+        setIsOpen(prev => !prev);
     };
 
-    // Hide on mobile if on feed (as per user request)
-    const isFeed = pathname === '/feed';
+    const handleActionClick = (path: string) => {
+        triggerHaptic('light');
+        setIsOpen(false);
+        router.push(path);
+    };
+
+    const actions = [
+        { id: 'post', label: 'Nuevo Post', icon: ImageIcon, path: '/create-post', color: 'bg-blue-500' },
+        { id: 'outfit', label: 'Nuevo Outfit', icon: Layers, path: '/create', color: 'bg-purple-500' },
+        { id: 'item', label: 'Nueva Prenda', icon: Shirt, path: '/closet?action=new-item', color: 'bg-pink-400' },
+    ];
+
+    // Animation variants for desktop speed dial
+    const containerVariants = {
+        hidden: { opacity: 0, transition: { staggerChildren: 0.05, staggerDirection: -1 } },
+        visible: { opacity: 1, transition: { staggerChildren: 0.05, delayChildren: 0.1 } }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, y: 10, scale: 0.8 },
+        visible: { opacity: 1, y: 0, scale: 1 }
+    };
 
     return (
-        <div className={`fixed bottom-8 right-8 z-50 ${isFeed ? 'hidden md:block' : ''}`}>
-            <Link href="/create-post" onClick={handleClick}>
-                <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="w-14 h-14 rounded-full bg-[var(--brand-pink)] flex items-center justify-center text-white shadow-2xl cursor-pointer hover:shadow-[0_0_30px_var(--shadow-glow-pink)] transition-all"
+        <>
+            {/* Desktop Speed Dial + Mobile FAB Wrapper */}
+            <div className="fixed bottom-24 md:bottom-8 right-6 md:right-8 z-50 flex flex-col items-end">
+                {/* Desktop Bubbles */}
+                <AnimatePresence>
+                    {isOpen && (
+                        <motion.div
+                            className="hidden md:flex flex-col items-end gap-3 mb-4 origin-bottom"
+                            variants={containerVariants}
+                            initial="hidden"
+                            animate="visible"
+                            exit="hidden"
+                        >
+                            {actions.map((action) => {
+                                const Icon = action.icon;
+                                return (
+                                    <motion.button
+                                        key={action.id}
+                                        variants={itemVariants}
+                                        onClick={() => handleActionClick(action.path)}
+                                        className="group flex items-center gap-3"
+                                    >
+                                        <span className="px-3 py-1.5 bg-[var(--card-bg)] text-[var(--foreground)] text-sm font-semibold rounded-lg shadow-md border border-[var(--border-color)] opacity-0 group-hover:opacity-100 transition-opacity">
+                                            {action.label}
+                                        </span>
+                                        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white shadow-lg transition-transform hover:scale-110 ${action.color}`}>
+                                            <Icon className="w-5 h-5" />
+                                        </div>
+                                    </motion.button>
+                                );
+                            })}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {/* Main FAB Trigger */}
+                <motion.button
+                    whileTap={{ scale: 0.9 }}
+                    onClick={handleToggle}
+                    className="w-14 h-14 rounded-full bg-[var(--brand-pink)] flex items-center justify-center text-white shadow-xl shadow-[var(--brand-pink)]/30 cursor-pointer overflow-hidden z-20 transition-all hover:bg-[var(--brand-pink-dark)]"
                 >
-                    <Plus className="w-7 h-7" strokeWidth={2.5} />
-                </motion.div>
-            </Link>
-        </div>
+                    <motion.div
+                        animate={{ rotate: isOpen ? 45 : 0 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                    >
+                        <Plus className="w-7 h-7" strokeWidth={2.5} />
+                    </motion.div>
+                </motion.button>
+            </div>
+
+            {/* Mobile Bottom Sheet Modal */}
+            <AnimatePresence>
+                {isOpen && (
+                    <motion.div
+                        className="fixed inset-0 z-[60] md:hidden flex flex-col justify-end"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                    >
+                        {/* Backdrop */}
+                        <div
+                            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                            onClick={() => setIsOpen(false)}
+                        />
+
+                        {/* Sheet */}
+                        <motion.div
+                            initial={{ y: "100%" }}
+                            animate={{ y: 0 }}
+                            exit={{ y: "100%" }}
+                            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                            className="relative bg-[var(--card-bg)] rounded-t-3xl pt-2 pb-safe border-t border-[var(--border-color)]"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="w-12 h-1.5 bg-[var(--border-color)] rounded-full mx-auto my-3" />
+                            <div className="px-4 pb-12">
+                                <h3 className="text-xl font-bold text-center text-[var(--foreground)] mb-6">Crear Nuevo</h3>
+                                <div className="space-y-3">
+                                    {actions.map((action) => {
+                                        const Icon = action.icon;
+                                        return (
+                                            <button
+                                                key={action.id}
+                                                onClick={() => handleActionClick(action.path)}
+                                                className="w-full bg-[var(--background-secondary)] hover:bg-[var(--border-color)] transition-colors p-4 rounded-2xl flex items-center gap-4"
+                                            >
+                                                <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white ${action.color}`}>
+                                                    <Icon className="w-6 h-6" />
+                                                </div>
+                                                <span className="text-[var(--foreground)] font-semibold text-lg">
+                                                    {action.label}
+                                                </span>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </>
     );
 }

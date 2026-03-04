@@ -1,11 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { PlusSquare, Send } from 'lucide-react';
+import { SquarePlus, Plus, PlusSquare, Send, Shirt, Layers, Image as ImageIcon } from 'lucide-react';
 import PostCard, { type Post } from '@/components/Feed/PostCard';
 import PremiumAdCard from '@/components/Feed/PremiumAdCard';
 import { LogoMark } from '@/components';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase/client';
 import { useSwipeNavigation } from '@/hooks/useSwipeNavigation';
 import { useMessageStore, selectTotalUnread, selectBadgeVisible } from '@/store/messageStore';
@@ -15,7 +17,9 @@ import { getFollowing } from '@/lib/services/followService';
 export default function FeedPage() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const { user } = useUser();
+  const router = useRouter();
 
   // Enable swipe navigation
   useSwipeNavigation();
@@ -72,7 +76,7 @@ export default function FeedPage() {
 
         if (postsData && isMounted) {
           // Manually fetch profiles for these posts
-          const userIds = [...new Set(postsData.map(p => p.user_id))];
+          const userIds = [...new Set((postsData as any[]).map(p => p.user_id))];
 
           let profilesMap: Record<string, any> = {};
 
@@ -83,7 +87,7 @@ export default function FeedPage() {
               .in('id', userIds);
 
             if (profilesData) {
-              profilesData.forEach(p => {
+              (profilesData as any[]).forEach(p => {
                 profilesMap[p.id] = p;
               });
             }
@@ -148,29 +152,31 @@ export default function FeedPage() {
       {/* Header Mejorado */}
       <header className="sticky top-0 z-30 bg-[var(--background)]/95 backdrop-blur-lg border-b border-[var(--border-color)]/50 md:hidden shadow-sm">
         <div className="px-5 h-16 flex items-center justify-between">
-          {/* Left: New Post Icon */}
-          <Link href="/create">
-            <button className="p-3 -ml-1 text-[var(--foreground)] hover:bg-[var(--background-secondary)] rounded-full transition-all duration-200 transform hover:scale-110">
-              <PlusSquare className="w-6 h-6" />
-            </button>
-          </Link>
+          {/* Left: Title instead of Logo */}
+          <h1 className="text-2xl font-bold tracking-tight text-[var(--foreground)]">Feed</h1>
 
-          {/* Center: Logo */}
-          <div className="w-10 h-10">
-            <LogoMark size="sm" />
+          {/* Right: Actions */}
+          <div className="flex items-center gap-1">
+            {/* New Post Modal Trigger */}
+            <button
+              onClick={() => setIsCreateModalOpen(true)}
+              className="p-2.5 text-[var(--foreground)] hover:bg-[var(--background-secondary)] rounded-full transition-all duration-200 transform hover:scale-110"
+            >
+              <Plus className="w-6 h-6" />
+            </button>
+
+            {/* Messages */}
+            <Link href="/messages">
+              <button className="p-2.5 -mr-1 text-[var(--foreground)] hover:bg-[var(--background-secondary)] rounded-full transition-all duration-200 transform hover:scale-110 relative">
+                <Send className="w-6 h-6" />
+                {messageBadgeVisible && messageUnreadCount > 0 && (
+                  <span className="absolute top-1 right-0.5 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-[var(--brand-pink)] text-white text-[10px] font-bold rounded-full border-2 border-[var(--background)] shadow-sm">
+                    {messageUnreadCount > 99 ? '+99' : messageUnreadCount}
+                  </span>
+                )}
+              </button>
+            </Link>
           </div>
-
-          {/* Right: Messages Icon */}
-          <Link href="/messages">
-            <button className="p-3 -mr-1 text-[var(--foreground)] hover:bg-[var(--background-secondary)] rounded-full transition-all duration-200 transform hover:scale-110 relative">
-              <Send className="w-6 h-6" />
-              {messageBadgeVisible && messageUnreadCount > 0 && (
-                <span className="absolute top-1 right-1 min-w-[20px] h-[20px] px-1.5 flex items-center justify-center bg-gradient-to-r from-[var(--brand-pink)] to-[var(--brand-purple)] text-white text-[10px] font-bold rounded-full border-2 border-[var(--background)] shadow-md">
-                  {messageUnreadCount > 99 ? '+99' : messageUnreadCount}
-                </span>
-              )}
-            </button>
-          </Link>
         </div>
       </header>
 
@@ -217,6 +223,59 @@ export default function FeedPage() {
           )
         }
       </div>
+
+      {/* Mobile Creation Bottom Sheet Modal */}
+      <AnimatePresence>
+        {isCreateModalOpen && (
+          <motion.div
+            className="fixed inset-0 z-[60] md:hidden flex flex-col justify-end"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            {/* Backdrop */}
+            <div
+              className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+              onClick={() => setIsCreateModalOpen(false)}
+            />
+
+            {/* Sheet */}
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              className="relative bg-[var(--card-bg)] rounded-t-3xl pt-2 pb-safe border-t border-[var(--border-color)]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="w-12 h-1.5 bg-[var(--border-color)] rounded-full mx-auto my-3" />
+              <div className="px-4 pb-12">
+                <h3 className="text-xl font-bold text-center text-[var(--foreground)] mb-6">Crear Nuevo</h3>
+                <div className="space-y-3">
+                  <button onClick={() => { setIsCreateModalOpen(false); router.push('/create-post') }} className="w-full bg-[var(--background-secondary)] hover:bg-[var(--border-color)] transition-colors p-4 rounded-2xl flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center text-white bg-blue-500">
+                      <ImageIcon className="w-6 h-6" />
+                    </div>
+                    <span className="text-[var(--foreground)] font-semibold text-lg">Nuevo Post</span>
+                  </button>
+                  <button onClick={() => { setIsCreateModalOpen(false); router.push('/create') }} className="w-full bg-[var(--background-secondary)] hover:bg-[var(--border-color)] transition-colors p-4 rounded-2xl flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center text-white bg-purple-500">
+                      <Layers className="w-6 h-6" />
+                    </div>
+                    <span className="text-[var(--foreground)] font-semibold text-lg">Nuevo Outfit</span>
+                  </button>
+                  <button onClick={() => { setIsCreateModalOpen(false); router.push('/closet?action=new-item') }} className="w-full bg-[var(--background-secondary)] hover:bg-[var(--border-color)] transition-colors p-4 rounded-2xl flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center text-white bg-pink-400">
+                      <Shirt className="w-6 h-6" />
+                    </div>
+                    <span className="text-[var(--foreground)] font-semibold text-lg">Nueva Prenda</span>
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <style jsx global>{`
         .masonry-grid {

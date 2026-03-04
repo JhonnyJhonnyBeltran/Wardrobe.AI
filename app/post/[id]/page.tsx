@@ -38,6 +38,7 @@ export default function PostDetailPage() {
     const [isSaved, setIsSaved] = useState(false);
     const [isFollowing, setIsFollowing] = useState(false);
     const [submittingComment, setSubmittingComment] = useState(false);
+    const [showMobileComments, setShowMobileComments] = useState(false);
 
     const commentInputRef = useRef<HTMLInputElement>(null);
 
@@ -114,8 +115,8 @@ export default function PostDetailPage() {
                     })));
                 }
 
-            } catch (error) {
-                console.error('Error fetching post:', error);
+            } catch (error: any) {
+                console.error('Error fetching post:', error?.message || error?.details || JSON.stringify(error));
             } finally {
                 setLoading(false);
             }
@@ -344,14 +345,13 @@ export default function PostDetailPage() {
             </button>
 
             {/* LEFT: Image Section */}
-            <div className="md:w-[60%] lg:w-[65%] h-[40vh] md:h-full bg-black relative flex items-center justify-center overflow-hidden">
-                {/* Mobile Header */}
-                <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center md:hidden z-20 bg-gradient-to-b from-black/60 to-transparent">
-                    <button onClick={handleBack} className="text-white p-2"><ArrowLeft /></button>
-                    <button className="text-white p-2"><MoreHorizontal /></button>
+            <div className="w-full md:w-[50%] lg:w-[55%] h-[60vh] md:h-full relative flex items-center justify-center overflow-hidden bg-white dark:bg-[#111] md:rounded-r-3xl md:shadow-2xl z-10">
+                {/* Mobile Header Overlay */}
+                <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center md:hidden z-20">
+                    <button onClick={handleBack} className="text-black dark:text-white p-2 bg-white/50 dark:bg-black/50 backdrop-blur-md rounded-full"><ArrowLeft className="w-5 h-5" /></button>
                 </div>
 
-                <div className="relative w-full h-full bg-black">
+                <div className="relative w-full h-full">
                     <Image
                         src={displayImage}
                         alt="Post"
@@ -360,14 +360,14 @@ export default function PostDetailPage() {
                         priority
                     />
 
-                    {/* Image Navigation Dots */}
+                    {/* Image Navigation Dots for multiple items */}
                     {safeImages.length > 1 && (
                         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
                             {safeImages.map((_, idx) => (
                                 <button
                                     key={idx}
                                     onClick={() => setActiveImage(idx)}
-                                    className={`h-2 rounded-full transition-all duration-300 ${activeImage === idx ? 'bg-white w-6' : 'bg-white/40 w-2 hover:bg-white/60'}`}
+                                    className={`h-2 rounded-full transition-all duration-300 ${activeImage === idx ? 'bg-[var(--brand-pink)] w-6' : 'bg-gray-300 dark:bg-gray-700 w-2 hover:bg-[var(--brand-pink)]/50'}`}
                                 />
                             ))}
                         </div>
@@ -375,186 +375,229 @@ export default function PostDetailPage() {
                 </div>
             </div>
 
-            {/* RIGHT: Interaction Section */}
-            <div className="md:w-[40%] lg:w-[35%] h-[60vh] md:h-full bg-[var(--background)] flex flex-col border-l border-[var(--border-color)]">
+            {/* RIGHT: Interaction Section (Desktop) / Bottom Section (Mobile) */}
+            <div className={`md:w-[50%] lg:w-[45%] h-[40vh] md:h-full bg-[var(--background)] flex flex-col pt-4 md:pt-10 px-6 md:px-12 overflow-y-auto ${showMobileComments ? 'pb-32' : ''}`}>
 
-                {/* Header (User Info) */}
-                <div className="p-4 border-b border-[var(--border-color)] flex items-center justify-between shadow-sm z-10">
-                    <Link href={`/profile/${author.id}`} className="flex items-center gap-3 group">
-                        <div className="w-10 h-10 rounded-full bg-[var(--brand-pink)] p-[2px]">
-                            <div className="w-full h-full rounded-full bg-[var(--background)] overflow-hidden">
-                                <Image
-                                    src={author.avatar_url || 'https://i.pravatar.cc/150?u=default'}
-                                    alt={author.username || 'User'}
-                                    fill
-                                    className="object-cover"
-                                />
-                            </div>
+                {/* INTERACTION ROW (Pinterest Style) */}
+                <div className="flex flex-col gap-6 flex-shrink-0">
+                    <div className="flex items-center justify-between w-full">
+                        <div className="flex items-center gap-6 text-[var(--foreground)]">
+                            <button onClick={toggleLike} className="flex items-center gap-2 font-bold hover:opacity-80 transition-opacity">
+                                <Heart className={`w-7 h-7 ${isLiked ? 'fill-[var(--brand-pink)] text-[var(--brand-pink)]' : ''}`} strokeWidth={2.5} />
+                                <span className="text-lg">{likesCount}</span>
+                            </button>
+                            <button onClick={() => { if (window.innerWidth < 768) setShowMobileComments(true); else commentInputRef.current?.focus(); }} className="flex items-center gap-2 font-bold hover:opacity-80 transition-opacity">
+                                <MessageCircle className="w-7 h-7" strokeWidth={2.5} />
+                                <span className="text-lg">{comments.length}</span>
+                            </button>
+                            <button className="flex items-center gap-2 hover:opacity-80 transition-opacity hidden sm:flex">
+                                <Share2 className="w-7 h-7" strokeWidth={2.5} />
+                            </button>
+                            <button className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                                <MoreHorizontal className="w-7 h-7" strokeWidth={2.5} />
+                            </button>
                         </div>
-                        <div>
-                            <p className="font-bold text-sm text-[var(--foreground)] group-hover:text-[var(--brand-pink)] transition-colors">{author.username}</p>
-                            {/* @ts-ignore */}
-                            {post.outfits?.name && <p className="text-xs text-[var(--foreground-secondary)] line-clamp-1">{post.outfits.name}</p>}
-                        </div>
-                    </Link>
-
-                    {/* @ts-ignore */}
-                    {user?.id !== post.user_id && (
-                        <button
-                            onClick={toggleFollow}
-                            className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${isFollowing
-                                    ? 'bg-[var(--background-secondary)] text-[var(--foreground)]'
-                                    : 'bg-[var(--brand-pink)] text-white hover:bg-[var(--brand-pink-dark)]'
-                                }`}
-                        >
-                            {isFollowing ? 'Siguiendo' : 'Seguir'}
+                        <button onClick={toggleSave} className={`px-6 py-3 rounded-full font-bold text-white transition-colors text-lg ${isSaved ? 'bg-[var(--background-secondary)] text-[var(--foreground)]' : 'bg-[#FF3040] hover:bg-red-600'}`}>
+                            {isSaved ? 'Guardado' : 'Guardar'}
                         </button>
-                    )}
-                </div>
+                    </div>
 
-                {/* Content: Caption & Comments */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-6 custom-scrollbar">
-
-                    {/* Caption */}
-                    {/* @ts-ignore */}
-                    {post.caption && (
-                        <div className="space-y-2 pb-4 border-b border-[var(--border-color)]/30">
-                            <div className="flex gap-3">
-                                <Link href={`/profile/${author.id}`} className="font-bold text-sm text-[var(--foreground)] hover:underline whitespace-nowrap">
-                                    {author.username}
-                                </Link>
-                                <p className="text-[var(--foreground)] text-sm leading-relaxed whitespace-pre-wrap">
-                                    {/* @ts-ignore */}
-                                    {post.caption}
-                                </p>
+                    <div className="flex items-center justify-between">
+                        <Link href={`/profile/${author.id}`} className="flex items-center gap-3">
+                            <div className="relative w-10 h-10 rounded-full overflow-hidden bg-gray-200 border border-[var(--border-color)]">
+                                <Image src={author.avatar_url || 'https://i.pravatar.cc/150'} alt={author.username} fill className="object-cover" />
                             </div>
-                            {/* @ts-ignore */}
-                            <p className="text-xs text-[var(--foreground-tertiary)] uppercase">{new Date(post.created_at).toLocaleDateString()}</p>
-                        </div>
-                    )}
-
-                    {/* Outfit Items (Grid) */}
-                    {/* @ts-ignore */}
-                    {post.outfits?.outfit_items?.length > 0 && (
-                        <div className="space-y-3">
-                            <h3 className="font-bold text-xs text-[var(--foreground-secondary)] uppercase tracking-wider flex items-center gap-2">
-                                <span className="w-1 h-4 bg-[var(--brand-pink)] rounded-full"></span>
-                                Prendas del look
-                            </h3>
-                            <div className="grid grid-cols-1 gap-2">
+                            <div>
+                                <span className="font-bold text-[var(--foreground)] text-lg hover:underline">{author.username}</span>
                                 {/* @ts-ignore */}
-                                {post.outfits.outfit_items.map((item: any) => {
-                                    const clothing = item.clothing_items;
-                                    if (!clothing) return null;
-                                    return (
-                                        <Link href={`/closet?item=${clothing.id}`} key={clothing.id} className="flex items-center gap-3 p-2 rounded-xl hover:bg-[var(--background-secondary)] transition-colors group border border-transparent hover:border-[var(--border-color)]">
-                                            <div className="w-10 h-10 bg-white rounded-lg overflow-hidden relative border border-[var(--border-color)]">
-                                                <Image src={clothing.image_url || '/placeholder.png'} alt={clothing.name} fill className="object-cover" />
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-medium text-[var(--foreground)] truncate group-hover:text-[var(--brand-pink)] transition-colors">{clothing.name}</p>
-                                                <p className="text-[10px] text-[var(--foreground-secondary)]">{clothing.brand || 'Sin marca'}</p>
-                                            </div>
-                                        </Link>
-                                    );
-                                })}
+                                {post.outfits?.name && <p className="text-xs text-[var(--foreground-secondary)] line-clamp-1">{post.outfits.name}</p>}
                             </div>
-                        </div>
-                    )}
-
-                    {/* Comments List */}
-                    <div className="space-y-4 pt-2">
-                        <p className="text-sm font-bold text-[var(--foreground)] sticky top-0 bg-[var(--background)] z-10 py-2">Comentarios ({comments.length})</p>
-
-                        {comments.length === 0 ? (
-                            <div className="text-center py-8 text-[var(--foreground-tertiary)] text-xs">
-                                <MessageCircle className="w-8 h-8 mx-auto mb-2 opacity-20" />
-                                Sé el primero en comentar
-                            </div>
-                        ) : (
-                            <div className="space-y-4">
-                                {comments.map((comment) => (
-                                    <div key={comment.id} className="flex gap-3 group">
-                                        <Link href={`/profile/${comment.user.id}`} className="min-w-[32px]">
-                                            <div className="w-8 h-8 rounded-full bg-[var(--background-secondary)] overflow-hidden relative">
-                                                <Image src={comment.user.avatar_url} alt={comment.user.username} fill className="object-cover" />
-                                            </div>
-                                        </Link>
-                                        <div className="flex-1 space-y-1">
-                                            <div className="text-sm">
-                                                <Link href={`/profile/${comment.user.id}`} className="font-bold text-[var(--foreground)] mr-2 hover:underline">
-                                                    {comment.user.username}
-                                                </Link>
-                                                <span className="text-[var(--foreground-secondary)]">{comment.content}</span>
-                                            </div>
-                                            <div className="flex gap-4 text-[10px] text-[var(--foreground-tertiary)]">
-                                                <span>{new Date(comment.created_at).toLocaleDateString()}</span>
-                                                <button className="font-semibold hover:text-[var(--foreground-secondary)]">Responder</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+                        </Link>
+                        {/* @ts-ignore */}
+                        {user?.id !== post.user_id && (
+                            <button onClick={toggleFollow} className={`px-4 py-2 rounded-full font-bold text-sm transition-all ${isFollowing ? 'bg-[var(--background-secondary)] text-[var(--foreground)]' : 'bg-gray-200 dark:bg-gray-800 text-[var(--foreground)] hover:bg-gray-300 dark:hover:bg-gray-700'}`}>
+                                {isFollowing ? 'Siguiendo' : 'Seguir'}
+                            </button>
                         )}
                     </div>
                 </div>
 
-                {/* Footer: Actions & Input */}
-                <div className="p-4 border-t border-[var(--border-color)] bg-[var(--background)] supports-[backdrop-filter]:bg-[var(--background)]/80 backdrop-blur-md">
+                {/* Caption (Title/Description) */}
+                {/* @ts-ignore */}
+                {post.caption && (
+                    <div className="mt-6 mb-2">
+                        {/* @ts-ignore */}
+                        <h1 className="font-bold text-2xl text-[var(--foreground)] leading-tight whitespace-pre-wrap">{post.caption}</h1>
+                    </div>
+                )}
+
+                {/* Desk-only comment display or Mobile-when-opened */}
+                <div className={`mt-6 flex-1 flex flex-col overflow-hidden ${showMobileComments ? 'flex' : 'hidden md:flex'}`}>
                     <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-4">
-                            <button
-                                onClick={toggleLike}
-                                className="group hover:scale-110 transition-transform"
-                            >
-                                <Heart className={`w-7 h-7 transition-colors ${isLiked ? 'fill-[var(--brand-pink)] text-[var(--brand-pink)]' : 'text-[var(--foreground)] group-hover:text-[var(--brand-pink)]'}`} />
+                        <h2 className="font-bold text-xl text-[var(--foreground)]">Comentarios</h2>
+                        {showMobileComments && (
+                            <button onClick={() => setShowMobileComments(false)} className="md:hidden p-2 bg-[var(--background-secondary)] rounded-full">
+                                <X className="w-5 h-5" />
                             </button>
-                            <button
-                                onClick={() => commentInputRef.current?.focus()}
-                                className="group hover:scale-110 transition-transform"
-                            >
-                                <MessageCircle className="w-7 h-7 text-[var(--foreground)] group-hover:text-[var(--brand-purple)]" />
-                            </button>
-                            <button className="group hover:scale-110 transition-transform">
-                                <Share2 className="w-7 h-7 text-[var(--foreground)] group-hover:text-blue-500" />
-                            </button>
+                        )}
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto space-y-6 pr-2 custom-scrollbar pb-6">
+                        {comments.length === 0 ? (
+                            <div className="text-center py-10 text-[var(--foreground-tertiary)]">
+                                <MessageCircle className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                                <p>Sé el primero en comentar</p>
+                            </div>
+                        ) : (
+                            comments.map((comment) => (
+                                <div key={comment.id} className="flex gap-4">
+                                    <Link href={`/profile/${comment.user.id}`} className="flex-shrink-0">
+                                        <div className="w-10 h-10 rounded-full bg-[var(--background-secondary)] overflow-hidden relative">
+                                            <Image src={comment.user.avatar_url} alt={comment.user.username} fill className="object-cover" />
+                                        </div>
+                                    </Link>
+                                    <div className="flex-1">
+                                        <div className="flex gap-2 items-baseline">
+                                            <Link href={`/profile/${comment.user.id}`} className="font-bold text-[var(--foreground)] text-[15px] hover:underline">
+                                                {comment.user.username}
+                                            </Link>
+                                            <span className="text-[var(--foreground)] text-[15px] leading-tight">{comment.content}</span>
+                                        </div>
+                                        <div className="flex gap-4 mt-2 text-xs font-bold text-[var(--foreground-tertiary)]">
+                                            <span>{new Date(comment.created_at).toLocaleDateString()}</span>
+                                            <button className="hover:text-[var(--foreground-secondary)]">Responder</button>
+                                        </div>
+                                    </div>
+                                    <button className="flex-shrink-0 self-start mt-1 cursor-pointer hover:opacity-70">
+                                        <Heart className="w-4 h-4 text-[var(--foreground-tertiary)]" />
+                                    </button>
+                                </div>
+                            ))
+                        )}
+                    </div>
+
+                    {/* Add Comment Input */}
+                    <form onSubmit={handleAddComment} className={`bg-[var(--background)] py-4 backdrop-blur-md z-30 flex gap-3 items-center sticky bottom-0 ${showMobileComments ? 'md:relative' : ''}`}>
+                        <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden relative flex-shrink-0 border border-[var(--border-color)]">
+                            <Image src={user?.avatar_url || 'https://i.pravatar.cc/150'} alt="Tú" fill className="object-cover" />
                         </div>
-                        <button
-                            onClick={toggleSave}
-                            className="group hover:scale-110 transition-transform"
-                        >
-                            <Bookmark className={`w-7 h-7 transition-colors ${isSaved ? 'fill-[var(--foreground)] text-[var(--foreground)]' : 'text-[var(--foreground)] group-hover:text-yellow-500'}`} />
-                        </button>
-                    </div>
-
-                    <div className="font-bold text-sm text-[var(--foreground)] mb-3 cursor-pointer hover:underline">
-                        {likesCount} Me gusta
-                    </div>
-
-                    <form onSubmit={handleAddComment} className="flex gap-2 items-center">
                         <div className="relative flex-1">
                             <input
                                 ref={commentInputRef}
                                 type="text"
-                                placeholder={comments.length === 0 ? "Escribe el primer comentario..." : "Añade un comentario..."}
-                                className="w-full bg-[var(--background-secondary)] rounded-2xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[var(--brand-pink)]/50 transition-all placeholder:text-[var(--foreground-tertiary)]"
+                                placeholder="Añadir comentario..."
+                                className="w-full bg-[var(--background-secondary)] rounded-full px-5 py-3.5 text-[15px] font-medium outline-none focus:ring-2 focus:ring-gray-200 dark:focus:ring-gray-700 transition-all placeholder:text-[var(--foreground-tertiary)]"
                                 value={newComment}
                                 onChange={(e) => setNewComment(e.target.value)}
                             />
-                            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                                <button type="button" onClick={() => setNewComment(prev => prev + '@')} className="text-xs text-[var(--brand-pink)] font-bold hover:bg-[var(--brand-pink)]/10 px-1.5 py-0.5 rounded transition-colors">@</button>
-                            </div>
                         </div>
                         <button
                             type="submit"
                             disabled={!newComment.trim() || submittingComment}
-                            className="p-3 bg-[var(--brand-pink)] text-white rounded-xl hover:bg-[var(--brand-pink-dark)] disabled:opacity-50 disabled:hover:bg-[var(--brand-pink)] transition-colors shadow-lg shadow-[var(--brand-pink)]/20"
+                            className="p-3.5 bg-gray-200 dark:bg-gray-800 text-[var(--foreground)] rounded-full hover:bg-gray-300 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors"
                         >
-                            <Send className="w-4 h-4" />
+                            <Send className="w-5 h-5 ml-0.5" />
                         </button>
                     </form>
                 </div>
+
+                {/* Outfit Items Overview (placed dynamically at bottom on mobile unless comments open) */}
+                {/* @ts-ignore */}
+                {!showMobileComments && post.outfits?.outfit_items?.length > 0 && (
+                    <div className="mt-8 space-y-4 pb-8">
+                        <h3 className="font-bold text-lg text-[var(--foreground)]">Prendas usadas en este look</h3>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                            {/* @ts-ignore */}
+                            {post.outfits.outfit_items.map((item: any) => {
+                                const clothing = item.clothing_items;
+                                if (!clothing) return null;
+                                return (
+                                    <Link href={`/closet?item=${clothing.id}`} key={clothing.id} className="block group">
+                                        <div className="aspect-square bg-gray-100 dark:bg-[#222] rounded-2xl overflow-hidden relative mb-2">
+                                            <Image src={clothing.image_url || '/placeholder.png'} alt={clothing.name} fill className="object-cover group-hover:scale-105 transition-transform duration-300" />
+                                        </div>
+                                        <p className="text-[13px] font-bold text-[var(--foreground)] truncate px-1">{clothing.name}</p>
+                                        <p className="text-[11px] text-[var(--foreground-secondary)] px-1">{clothing.brand || 'Sin marca'}</p>
+                                    </Link>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
             </div>
+
+            {/* Mobile Comments overlay full sheet */}
+            {showMobileComments && (
+                <div className="fixed inset-0 bg-black/50 z-40 md:hidden flex items-end">
+                    <div className="w-full h-[80vh] bg-[var(--background)] rounded-t-3xl pt-2 px-0 flex flex-col shadow-2xl animate-in slide-in-from-bottom duration-300">
+                        {/* Drag Handle */}
+                        <div className="w-full flex justify-center pb-2 pt-2 cursor-pointer" onClick={() => setShowMobileComments(false)}>
+                            <div className="w-12 h-1.5 bg-gray-300 dark:bg-gray-700 rounded-full" />
+                        </div>
+
+                        <div className="flex items-center justify-between px-6 mb-4">
+                            <h2 className="font-bold text-xl text-[var(--foreground)]">Comentarios</h2>
+                            <button onClick={() => setShowMobileComments(false)} className="p-2 bg-[var(--background-secondary)] rounded-full">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        {/* Embed duplicated comment logic here to allow natural scrolling inside sheet */}
+                        <div className="flex-1 overflow-y-auto space-y-6 px-6 custom-scrollbar pb-6 relative">
+                            {comments.length === 0 ? (
+                                <div className="text-center py-10 text-[var(--foreground-tertiary)]">
+                                    <MessageCircle className="w-12 h-12 mx-auto mb-3 opacity-20" />
+                                    <p>Sé el primero en comentar</p>
+                                </div>
+                            ) : (
+                                comments.map((comment) => (
+                                    <div key={comment.id} className="flex gap-4">
+                                        <Link href={`/profile/${comment.user.id}`} className="flex-shrink-0">
+                                            <div className="w-10 h-10 rounded-full bg-[var(--background-secondary)] overflow-hidden relative">
+                                                <Image src={comment.user.avatar_url} alt={comment.user.username} fill className="object-cover" />
+                                            </div>
+                                        </Link>
+                                        <div className="flex-1">
+                                            <div className="flex gap-2 items-baseline">
+                                                <Link href={`/profile/${comment.user.id}`} className="font-bold text-[var(--foreground)] text-[15px] hover:underline">
+                                                    {comment.user.username}
+                                                </Link>
+                                                <span className="text-[var(--foreground)] text-[15px] leading-tight">{comment.content}</span>
+                                            </div>
+                                            <div className="flex gap-4 mt-2 text-xs font-bold text-[var(--foreground-tertiary)]">
+                                                <span>{new Date(comment.created_at).toLocaleDateString()}</span>
+                                                <button className="hover:text-[var(--foreground-secondary)]">Responder</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+
+                        <form onSubmit={handleAddComment} className="bg-[var(--background)] py-4 backdrop-blur-md z-30 flex gap-3 items-center sticky bottom-0 border-t border-[var(--border-color)] px-6">
+                            <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden relative flex-shrink-0 border border-[var(--border-color)]">
+                                <Image src={user?.avatar_url || 'https://i.pravatar.cc/150'} alt="Tú" fill className="object-cover" />
+                            </div>
+                            <div className="relative flex-1">
+                                <input
+                                    type="text"
+                                    placeholder="Añadir comentario..."
+                                    className="w-full bg-[var(--background-secondary)] rounded-full px-5 py-3.5 text-[15px] font-medium outline-none focus:ring-2 focus:ring-gray-200 dark:focus:ring-gray-700 transition-all placeholder:text-[var(--foreground-tertiary)]"
+                                    value={newComment}
+                                    onChange={(e) => setNewComment(e.target.value)}
+                                />
+                            </div>
+                            <button
+                                type="submit"
+                                disabled={!newComment.trim() || submittingComment}
+                                className="p-3.5 bg-[var(--brand-pink)] text-white rounded-full hover:bg-[var(--brand-pink-dark)] disabled:opacity-50 transition-colors shadow-[0_4px_10px_rgba(255,102,196,0.2)]"
+                            >
+                                <Send className="w-5 h-5 ml-0.5" />
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

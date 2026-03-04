@@ -43,7 +43,16 @@ export default function ProfilePage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabType>('posts');
 
-  useSwipeNavigation();
+  useSwipeNavigation({
+    onSwipeRight: () => router.push('/notifications'),
+    onSwipeLeft: () => {
+      if (activeTab === 'posts') {
+        setActiveTab('saved');
+      } else {
+        // Option to swipe further right? They didn't ask, but safe to do nothing.
+      }
+    }
+  });
 
   // Real data state
   const [profileStats, setProfileStats] = useState({
@@ -151,7 +160,7 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-[var(--background)] pb-24">
       {/* Header - Nuevo diseño: (+) a la izquierda, username centrado */}
-      <header className="sticky top-0 z-30 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-color)]/50 supports-[ios]:pt-safe-top">
+      <header className="hidden md:flex sticky top-0 z-30 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-color)]/50 supports-[ios]:pt-safe-top">
         <div className="flex items-center justify-between px-4 h-14 w-full md:max-w-[60%] mx-auto">
           {/* Centro: Username centrado */}
           <span className="font-bold text-[var(--foreground)] truncate max-w-[200px] sm:max-w-[280px] px-2 ml-4">
@@ -168,6 +177,17 @@ export default function ProfilePage() {
           </Link>
         </div>
       </header>
+
+      {/* Mobile Settings Button (since we hide the header on mobile) */}
+      <div className="md:hidden absolute top-4 right-4 z-30">
+        <Link
+          href="/profile/settings"
+          className="p-2 bg-[var(--background-secondary)]/50 backdrop-blur-md rounded-full transition-colors block"
+          aria-label="Configuración"
+        >
+          <Menu className="w-6 h-6 text-[var(--foreground)]" />
+        </Link>
+      </div>
 
       <main className="w-full md:max-w-[60%] mx-auto">
         {/* Profile Info */}

@@ -7,7 +7,8 @@ import { supabase } from '@/lib/supabase/client';
 import { ArrowLeft, Send, MoreVertical, Image as ImageIcon, Smile } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { useSwipe } from '@/hooks/useSwipe';
+import { useSwipeNavigation } from '@/hooks/useSwipeNavigation';
+import { useMessageStore } from '@/store/messageStore';
 
 // Types
 interface Message {
@@ -37,6 +38,18 @@ export default function ChatPage() {
     const [newMessage, setNewMessage] = useState('');
     const [loading, setLoading] = useState(true);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const markConversationAsRead = useMessageStore(state => state.markConversationAsRead);
+
+    // Swipe back to messages list
+    useSwipeNavigation({
+        onSwipeRight: () => router.push('/messages')
+    });
+
+    useEffect(() => {
+        if (targetUserId) {
+            markConversationAsRead(targetUserId);
+        }
+    }, [targetUserId, markConversationAsRead]);
 
     // Scroll to bottom
     const scrollToBottom = () => {
@@ -196,14 +209,8 @@ export default function ChatPage() {
         }
     };
 
-    // Swipe Logic -> Go back to Inbox
-    const swipeHandlers = useSwipe({
-        onSwipeRight: () => router.push('/messages')
-    });
-
     return (
         <div
-            {...swipeHandlers}
             className="flex flex-col h-screen md:h-full bg-[var(--background)]"
         >
             {/* Header */}

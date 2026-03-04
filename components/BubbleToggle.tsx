@@ -34,19 +34,19 @@ import type { LucideIcon } from 'lucide-react';
 const SPRING = { type: 'spring', stiffness: 300, damping: 25 } as const;
 
 const triggerVariants: Variants = {
-  hidden:  { scale: 0, opacity: 0 },
+  hidden: { scale: 0, opacity: 0 },
   visible: { scale: 1, opacity: 1, transition: SPRING },
-  exit:    { scale: 0, opacity: 0, transition: { duration: 0.15, ease: 'easeIn' } },
+  exit: { scale: 0, opacity: 0, transition: { duration: 0.15, ease: 'easeIn' } },
 };
 
 const panelVariants: Variants = {
-  hidden:  { scale: 0.3, opacity: 0 },
+  hidden: { scale: 0.3, opacity: 0 },
   visible: { scale: 1, opacity: 1, transition: SPRING },
-  exit:    { scale: 0.3, opacity: 0, transition: { duration: 0.2, ease: 'easeIn' } },
+  exit: { scale: 0.3, opacity: 0, transition: { duration: 0.2, ease: 'easeIn' } },
 };
 
 const badgeVariants: Variants = {
-  hidden:  { scale: 0 },
+  hidden: { scale: 0 },
   visible: { scale: 1, transition: { ...SPRING, delay: 0.1 } },
 };
 
@@ -71,6 +71,8 @@ export interface BubbleToggleProps {
   className?: string;
   /** CSS transform-origin for the expand animation */
   origin?: string;
+  /** Optional text label to display next to the icon on desktop sizes */
+  label?: string;
 }
 
 // ─── Component ────────────────────────────────────────────────────
@@ -85,6 +87,7 @@ const BubbleToggle = memo(function BubbleToggle({
   size = 56,
   className = '',
   origin = 'bottom left',
+  label,
 }: BubbleToggleProps) {
   return (
     <div className={className}>
@@ -97,15 +100,25 @@ const BubbleToggle = memo(function BubbleToggle({
             initial="hidden"
             animate="visible"
             exit="exit"
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={onToggle}
-            style={{ width: size, height: size }}
-            className="rounded-full bg-[var(--brand-pink)] shadow-lg shadow-[var(--brand-pink)]/40 flex items-center justify-center text-white hover:bg-[var(--brand-pink-dark)] transition-colors focus:outline-none focus:ring-4 focus:ring-[var(--brand-pink)]/30 relative"
+            style={{
+              height: size,
+              minWidth: size,
+              width: label ? undefined : size
+            }}
+            className={`rounded-full bg-[var(--brand-pink)] shadow-lg shadow-[var(--brand-pink)]/40 flex items-center justify-center text-white hover:bg-[var(--brand-pink-dark)] transition-all focus:outline-none relative cursor-pointer ${label ? 'md:px-5 gap-2' : ''}`}
             aria-label={ariaLabel}
             aria-expanded={false}
           >
-            <Icon className="w-7 h-7" />
+            <Icon className="w-6 h-6 ml-0.5" />
+
+            {label && (
+              <span className="hidden md:block font-bold text-[15px] whitespace-nowrap pr-1">
+                {label}
+              </span>
+            )}
 
             {activeCount > 0 && (
               <motion.span

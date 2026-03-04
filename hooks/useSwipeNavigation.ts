@@ -5,15 +5,17 @@ interface SwipeNavigationConfig {
     enabled?: boolean;
     threshold?: number; // Minimum distance in pixels to trigger navigation
     velocity?: number; // Minimum velocity to trigger navigation
+    onSwipeLeft?: () => void;
+    onSwipeRight?: () => void;
 }
-
-const SCREEN_ORDER = ['/feed', '/search', '/closet', '/messages', '/profile'];
 
 export function useSwipeNavigation(config: SwipeNavigationConfig = {}) {
     const {
         enabled = true,
         threshold = 50,
-        velocity = 0.3
+        velocity = 0.3,
+        onSwipeLeft,
+        onSwipeRight
     } = config;
 
     const router = useRouter();
@@ -21,6 +23,21 @@ export function useSwipeNavigation(config: SwipeNavigationConfig = {}) {
     const touchStartX = useRef<number>(0);
     const touchStartY = useRef<number>(0);
     const touchStartTime = useRef<number>(0);
+
+    // Default global navigation if no specific callbacks are provided
+    const handleGlobalSwipe = (direction: 'left' | 'right') => {
+        // Fallback or specific hardcoded paths for pages that don't pass callbacks
+        if (direction === 'left') {
+            // Swipe Left -> going to next screen
+            if (pathname === '/feed') router.push('/search');
+            else if (pathname === '/search') router.push('/closet');
+            else if (pathname === '/closet') router.push('/messages'); // Wait, let's keep the user request logic explicit in the pages
+        } else {
+            // Swipe Right -> going to previous screen
+            if (pathname === '/search') router.push('/feed');
+            else if (pathname === '/closet') router.push('/search');
+        }
+    };
 
     useEffect(() => {
         if (!enabled) return;
@@ -45,23 +62,14 @@ export function useSwipeNavigation(config: SwipeNavigationConfig = {}) {
 
             // Only trigger if horizontal swipe is more dominant than vertical
             if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > threshold && swipeVelocity > velocity) {
-                const currentIndex = SCREEN_ORDER.indexOf(pathname);
-
-                if (currentIndex === -1) return;
-
-                let targetIndex = currentIndex;
-
                 if (deltaX > 0) {
-                    // Swipe right -> go to previous screen (left)
-                    targetIndex = currentIndex - 1;
+                    // Swipe right -> normally means "go back" or visual left
+                    if (onSwipeRight) onSwipeRight();
+                    else handleGlobalSwipe('right');
                 } else {
-                    // Swipe left -> go to next screen (right)
-                    targetIndex = currentIndex + 1;
-                }
-
-                // Check bounds
-                if (targetIndex >= 0 && targetIndex < SCREEN_ORDER.length) {
-                    router.push(SCREEN_ORDER[targetIndex]);
+                    // Swipe left -> normally means "go forward" or visual right
+                    if (onSwipeLeft) onSwipeLeft();
+                    else handleGlobalSwipe('left');
                 }
             }
         };
@@ -73,5 +81,5 @@ export function useSwipeNavigation(config: SwipeNavigationConfig = {}) {
             document.removeEventListener('touchstart', handleTouchStart);
             document.removeEventListener('touchend', handleTouchEnd);
         };
-    }, [enabled, threshold, velocity, pathname, router]);
+    }, [enabled, threshold, velocity, pathname, router, onSwipeLeft, onSwipeRight]);
 }

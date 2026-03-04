@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Heart, Grid3x3, List, Search, Filter, Plus, Wand2, X, Shirt, Layers, Share2, Trash2
@@ -22,6 +22,7 @@ import { useUser } from '@/store';
 import { useUiStore } from '@/store/uiStore';
 import { useWardrobe } from '@/lib/hooks/useWardrobe';
 import { useBodyScrollLock } from '@/lib/hooks';
+import { useSwipeNavigation } from '@/hooks/useSwipeNavigation';
 import { useTranslation } from '@/lib/i18n';
 import Link from 'next/link';
 import { OutfitItem } from '@/lib/fashion/outfitGenerator';
@@ -30,25 +31,51 @@ import Image from 'next/image';
 
 export default function ClosetPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { isPremium, user, setUser, isLoading } = useUser();
   const { t } = useTranslation();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+
+  // Auto-open Add Item Modal based on query param
+  useEffect(() => {
+    if (searchParams.get('action') === 'new-item') {
+      setShowAddModal(true);
+      // Clean up the URL
+      router.replace('/closet', { scroll: false });
+    }
+  }, [searchParams, router]);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchExpanded, setSearchExpanded] = useState(false);
   const [filterType, setFilterType] = useState<string | null>(null);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
-  const [showAddModal, setShowAddModal] = useState(false);
   const [editingItem, setEditingItem] = useState<ClothingItemType | null>(null);
   const { items, loading, addItem, updateItem, deleteItem, refresh } = useWardrobe();
+
+  // Outfits State
+  const [activeTab, setActiveTab] = useState<'items' | 'outfits'>('items');
+
+  useSwipeNavigation({
+    onSwipeRight: () => {
+      // Swipe Right -> Goes "Back" geographically -> Search
+      router.push('/search');
+    },
+    onSwipeLeft: () => {
+      // Swipe Left -> Goes "Forward" geographically -> Outfits or Notifications
+      if (activeTab === 'items') {
+        setActiveTab('outfits');
+      } else {
+        router.push('/notifications');
+      }
+    }
+  });
 
   // Lock body scroll when filter panel is open
   useBodyScrollLock(showFilters);
 
-  // Outfits State
-  const [activeTab, setActiveTab] = useState<'items' | 'outfits'>('items');
   const [outfits, setOutfits] = useState<any[]>([]);
   const [outfitsLoading, setOutfitsLoading] = useState(false);
 
@@ -624,7 +651,7 @@ export default function ClosetPage() {
       />
 
       {/* FAB stack: Filter + Add — always stacked, fully responsive */}
-      {activeTab === 'items' && !showAddModal && !selectedItem && (
+      {!showAddModal && !selectedItem && (
         <div className="fixed bottom-24 md:bottom-6 right-6 z-[5005] flex flex-col items-end gap-3">
           {/* Filter Bubble */}
           <BubbleToggle
@@ -634,6 +661,7 @@ export default function ClosetPage() {
             activeCount={activeFilterCount}
             ariaLabel="Filtros"
             origin="bottom right"
+            label="Filtrar"
           >
             <div className="w-[calc(100vw-3rem)] max-w-sm bg-[var(--card-bg)] rounded-3xl border border-[var(--border-color)] shadow-2xl p-4 max-h-[70vh] overflow-auto">
               {/* Header */}
@@ -728,10 +756,19 @@ export default function ClosetPage() {
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => setShowAddModal(true)}
-            className="w-14 h-14 rounded-full bg-[var(--brand-pink)] flex items-center justify-center text-white shadow-xl hover:shadow-[0_0_20px_rgba(236,72,153,0.5)] transition-all cursor-pointer"
+            onClick={() => {
+              if (activeTab === 'items') {
+                setShowAddModal(true);
+              } else {
+                router.push('/create');
+              }
+            }}
+            className="h-14 min-w-[56px] px-0 md:px-6 rounded-full bg-[var(--brand-pink)] flex items-center justify-center text-white shadow-xl hover:shadow-[0_0_20px_rgba(236,72,153,0.5)] transition-all cursor-pointer group"
           >
             <Plus className="w-7 h-7" />
+            <span className="hidden md:block font-bold whitespace-nowrap text-[15px] ml-1 pr-1">
+              {activeTab === 'items' ? 'Nueva Prenda' : 'Nuevo Outfit'}
+            </span>
           </motion.button>
         </div>
       )}
