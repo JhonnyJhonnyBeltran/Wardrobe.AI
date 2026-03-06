@@ -12,6 +12,13 @@ interface SystemMessage {
     cancelText?: string;
 }
 
+export interface PendingUploadItem {
+    formData?: any;
+    image?: string | null;
+    originalImage?: string | null;
+    processedImage?: string | null;
+}
+
 interface UiStore {
     modal: SystemMessage | null;
     showModal: (message: SystemMessage) => void;
@@ -31,6 +38,11 @@ interface UiStore {
     searchQuery: string;
     setSearchQuery: (query: string) => void;
     setDoorsOpen: (isOpen: boolean) => void;
+
+    // Add Item Pendency
+    pendingUploadItem: PendingUploadItem | null;
+    setPendingUploadItem: (item: PendingUploadItem | null) => void;
+    clearPendingUploadItem: () => void;
 }
 
 export const useUiStore = create<UiStore>((set) => ({
@@ -52,4 +64,8 @@ export const useUiStore = create<UiStore>((set) => ({
     setDoorsOpen: (isOpen) => set({ isDoorsOpen: isOpen }),
     searchQuery: '',
     setSearchQuery: (query) => set({ searchQuery: query }),
+
+    pendingUploadItem: null,
+    setPendingUploadItem: (item) => set({ pendingUploadItem: item }),
+    clearPendingUploadItem: () => set({ pendingUploadItem: null }),
 }));

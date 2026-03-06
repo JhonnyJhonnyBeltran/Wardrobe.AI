@@ -199,7 +199,7 @@ export default function FeedPage() {
               <p className="text-[var(--foreground-secondary)] text-lg font-medium">No hay publicaciones aún.</p>
               <p className="text-[var(--foreground-tertiary)] text-sm mt-2 max-w-xs mx-auto">Sé el primero en compartir tu estilo con la comunidad.</p>
               <Link href="/create" className="mt-8">
-                <button className="text-white font-bold px-8 py-3 rounded-full bg-gradient-to-r from-[var(--brand-pink)] to-[var(--brand-purple)] hover:from-[var(--brand-purple)] hover:to-[var(--brand-pink)] transition-all duration-300 transform hover:scale-105 shadow-lg">
+                <button className="text-white font-bold px-8 py-3 rounded-full bg-[var(--brand-pink)] hover:bg-[var(--brand-pink-dark)] transition-all duration-300 transform hover:scale-105 shadow-lg shadow-[var(--brand-pink)]/20">
                   Crear Outfit
                 </button>
               </Link>

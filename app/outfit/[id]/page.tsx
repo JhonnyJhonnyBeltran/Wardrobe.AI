@@ -7,6 +7,7 @@ import { ArrowLeft, Edit2, Trash2, Share2, Heart, MessageCircle, Send } from 'lu
 import { supabase } from '@/lib/supabase/client';
 import { useUser } from '@/store/userStore';
 import { haptics } from '@/lib/haptic';
+import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 
 interface OutfitItem {
   id: string;
@@ -42,6 +43,7 @@ export default function OutfitDetailPage() {
   const [selectedItem, setSelectedItem] = useState<OutfitItem | null>(null);
 
   const outfitId = params.id as string;
+  useBodyScrollLock(!!selectedItem);
 
   useEffect(() => {
     if (!outfitId) return;
@@ -151,7 +153,7 @@ export default function OutfitDetailPage() {
         >
           <ArrowLeft className="w-5 h-5 text-[var(--foreground)]" />
         </button>
-        
+
         <h1 className="text-lg font-semibold text-[var(--foreground)] truncate max-w-[200px]">
           {outfit.name}
         </h1>
@@ -268,11 +270,11 @@ export default function OutfitDetailPage() {
       {/* Item Detail Modal */}
       {selectedItem && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
           onClick={() => setSelectedItem(null)}
         >
           <div
-            className="bg-[var(--card-bg)] rounded-2xl max-w-md w-full p-6 space-y-4"
+            className="bg-[var(--card-bg)] rounded-3xl max-w-md w-full p-6 space-y-4 mb-16 md:mb-0 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="relative aspect-square rounded-xl overflow-hidden bg-[var(--background-secondary)]">

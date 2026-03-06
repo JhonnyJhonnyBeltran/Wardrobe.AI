@@ -8,7 +8,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ExternalLink, Heart, Share2, ShoppingBag, Shirt } from 'lucide-react';
 import { MockOutfit } from '@/data/mockOutfits';
-import { useBodyScrollLock } from '@/lib/hooks';
+import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 
 interface ItemDetailModalProps {
     outfit: MockOutfit | null;
@@ -50,7 +50,7 @@ export default function ItemDetailModal({ outfit, isOpen, onClose }: ItemDetailM
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: '100%' }}
                         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                        className="fixed inset-x-0 bottom-0 z-[60] max-h-[90vh] overflow-hidden rounded-t-3xl bg-white dark:bg-gray-900 md:inset-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:max-w-lg md:rounded-3xl md:max-h-[85vh]"
+                        className="fixed inset-x-0 bottom-0 z-[60] max-h-[90vh] overflow-hidden rounded-t-3xl bg-white dark:bg-gray-900 mb-16 md:mb-0 md:inset-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:max-w-lg md:rounded-3xl md:max-h-[85vh]"
                     >
                         {/* Header */}
                         <div className="sticky top-0 z-10 flex items-center justify-between p-4 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800">
@@ -87,7 +87,7 @@ export default function ItemDetailModal({ outfit, isOpen, onClose }: ItemDetailM
                         {/* Content */}
                         <div className="overflow-y-auto p-4 space-y-4 max-h-[calc(85vh-120px)] hide-scrollbar">
                             {/* AI Description */}
-                            <div className="bg-gradient-to-br from-pink-50 to-violet-50 dark:from-pink-950/30 dark:to-violet-950/30 rounded-2xl p-4">
+                            <div className="bg-pink-50 dark:bg-[var(--brand-pink)]/10 rounded-2xl p-4">
                                 <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
                                     {outfit.description}
                                 </p>
@@ -153,7 +153,7 @@ export default function ItemDetailModal({ outfit, isOpen, onClose }: ItemDetailM
                                                 rel="noopener noreferrer"
                                                 whileHover={{ scale: 1.1 }}
                                                 whileTap={{ scale: 0.9 }}
-                                                className="flex items-center gap-1 px-3 py-2 rounded-full bg-gradient-to-r from-pink-500 to-violet-500 text-white text-xs font-medium shadow-md hover:shadow-lg transition-all"
+                                                className="flex items-center gap-1 px-3 py-2 rounded-full bg-[var(--brand-pink)] hover:bg-[var(--brand-pink-dark)] text-white text-xs font-medium shadow-md hover:shadow-lg transition-all"
                                                 onClick={(e) => e.stopPropagation()}
                                             >
                                                 <ShoppingBag className="w-3 h-3" />

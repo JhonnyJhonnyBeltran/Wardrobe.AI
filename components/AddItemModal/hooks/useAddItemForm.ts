@@ -10,6 +10,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { processClothingImage, type ProcessingStage, STAGE_MESSAGES } from '@/lib/imageProcessing';
 import { extractDominantColor, hexToRgb, rgbToColorName } from '@/lib/utils/colorUtils';
 import { DEFAULT_FORM_DATA } from '../constants';
+import { useUiStore } from '@/store/uiStore';
 import type { ItemFormData, FormMode, InputMethod } from '../types';
 import type { ClothingItem } from '@/types/clothing';
 
@@ -109,9 +110,16 @@ export function useAddItemForm({
                     season: (initialData.season?.[0] as any) || 'spring',
                     sourceUrl: (initialData as any).sourceUrl || '',
                 });
-            } else {
-                // Add mode reset
-                resetForm();
+                // Read from pending store
+                const pendingItem = useUiStore.getState().pendingUploadItem;
+                if (pendingItem) {
+                    setFormData(pendingItem.formData || DEFAULT_FORM_DATA);
+                    setImage(pendingItem.image || null);
+                    setOriginalImage(pendingItem.originalImage || null);
+                    setProcessedImage(pendingItem.processedImage || null);
+                } else {
+                    resetForm();
+                }
             }
         }
     }, [isOpen, initialData]);
@@ -165,7 +173,7 @@ export function useAddItemForm({
         // which means processing happens in a Web Worker, not blocking the main thread
         try {
             const processResult = await processClothingImage(
-                file, 
+                file,
                 {
                     normalize: true,
                     canvasWidth: 1200,
@@ -179,7 +187,7 @@ export function useAddItemForm({
             if (processResult.success && processResult.imageUrl) {
                 // Yield to browser before updating state with processed image
                 await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
-                
+
                 setProcessedImage(processResult.imageUrl);
                 setImage(processResult.imageUrl);
                 setProcessingStage('complete');
@@ -232,7 +240,7 @@ export function useAddItemForm({
 
         setIsProcessing(true);
         setProcessingStage('compressing');
-        
+
         try {
             const source = selectedFile || image;
 
@@ -242,7 +250,7 @@ export function useAddItemForm({
             }
 
             const result = await processClothingImage(
-                source, 
+                source,
                 {
                     normalize: true,
                     canvasWidth: 1200,

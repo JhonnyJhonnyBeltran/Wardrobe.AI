@@ -59,37 +59,17 @@ export default function SearchPage() {
 
   const searchUsers = async (searchTerm: string) => {
     try {
-      // Search by username first
-      const { data: usernameData, error: usernameError } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
         .select('id, username, full_name, avatar_url, bio, is_private')
-        .ilike('username', `%${searchTerm}%`)
+        .or(`username.ilike.%${searchTerm}%,full_name.ilike.%${searchTerm}%`)
         .limit(20);
 
-      // If no results from username, try full_name
-      if (!usernameData || usernameData.length === 0) {
-        const { data: fullNameData } = await supabase
-          .from('profiles')
-          .select('id, username, full_name, avatar_url, bio, is_private')
-          .ilike('full_name', `%${searchTerm}%`)
-          .limit(20);
-
-        setUserResults(fullNameData || []);
-      } else {
-        // Also search by full_name and combine results
-        const { data: fullNameData } = await supabase
-          .from('profiles')
-          .select('id, username, full_name, avatar_url, bio, is_private')
-          .ilike('full_name', `%${searchTerm}%`)
-          .limit(20);
-
-        // Combine and deduplicate
-        const combined: UserProfile[] = [...((usernameData as any) || []), ...((fullNameData as any) || [])];
-        const unique = combined.filter((value, index, self) =>
-          index === self.findIndex((t) => t.id === value.id)
-        );
-        setUserResults(unique);
+      if (error) {
+        throw error;
       }
+
+      setUserResults(data || []);
     } catch (error) {
       console.error('Error searching users:', error);
       setUserResults([]);
@@ -305,32 +285,32 @@ export default function SearchPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--background)] dark:bg-[var(--background-dark)] pb-20">
+    <div className="min-h-screen bg-[var(--background)] pb-20">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-100 dark:border-gray-800">
-        <div className="w-full max-w-full sm:max-w-[60%] mx-auto px-4 pt-12 pb-4">
+      <div className="sticky top-0 z-10 bg-[var(--background)]/90 backdrop-blur-md border-b border-[var(--border-color)]">
+        <div className="w-full md:w-[60%] mx-auto px-4 pt-12 pb-4">
           <div className="relative">
-            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--foreground-secondary)]" />
             <input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Buscar personas o posts..."
-              className="w-full bg-[var(--background-secondary)] dark:bg-[var(--background-secondary-dark)] border-none rounded-xl py-3 pl-10 pr-10 text-[var(--foreground)] dark:text-[var(--foreground)] placeholder-[var(--foreground-tertiary)] focus:ring-2 focus:ring-pink-500/20"
+              className="w-full bg-[var(--background-secondary)] border-none rounded-xl py-3 pl-12 pr-10 text-[var(--foreground)] placeholder-[var(--foreground-tertiary)] focus:ring-2 focus:ring-[var(--brand-pink)] outline-none"
             />
             {query && (
               <button
                 onClick={() => setQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 bg-gray-200 dark:bg-gray-700 rounded-full"
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 bg-[var(--background)] rounded-full hover:scale-110 transition-transform"
               >
-                <X className="w-3 h-3 text-gray-500 dark:text-gray-400" />
+                <X className="w-3 h-3 text-[var(--foreground-secondary)]" />
               </button>
             )}
           </div>
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 py-6 space-y-8">
+      <div className="w-full md:w-[60%] mx-auto px-4 py-6 space-y-8">
         {loading ? (
           <div className="flex justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-500"></div>
@@ -344,25 +324,25 @@ export default function SearchPage() {
               </div>
             )}
 
-            {/* USER RESULTS - No title, just the list */}
+            {/* USER RESULTS */}
             {userResults.length > 0 && (
               <div className="space-y-3">
                 {userResults.map(user => (
                   <div
                     key={user.id}
-                    className="flex items-center gap-4 p-3 bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800"
+                    className="flex items-center gap-4 p-3 bg-[var(--background-secondary)] rounded-xl border border-[var(--border-color)]"
                   >
                     <Link href={`/profile/${user.id}`} className="flex items-center gap-4 flex-1">
                       <img
                         src={user.avatar_url || 'https://i.pravatar.cc/150?u=default'}
                         alt={user.username}
-                        className="w-12 h-12 rounded-full object-cover border-2 border-white dark:border-gray-800"
+                        className="w-12 h-12 rounded-full object-cover border-2 border-[var(--background)]"
                       />
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-gray-900 dark:text-white truncate">
+                        <h3 className="font-semibold text-[var(--foreground)] truncate">
                           {user.full_name || user.username}
                         </h3>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                        <p className="text-sm text-[var(--foreground-secondary)] truncate">
                           @{user.username}
                         </p>
                       </div>
@@ -370,7 +350,7 @@ export default function SearchPage() {
                     <button
                       onClick={() => handleFollow(user.id)}
                       className={`px-4 py-2 rounded-full text-sm font-medium transition-opacity ${followingIds.has(user.id)
-                        ? 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                        ? 'bg-[var(--background)] text-[var(--foreground)] border border-[var(--border-color)]'
                         : 'bg-[var(--brand-pink)] text-white hover:opacity-90'
                         }`}
                     >
@@ -381,11 +361,13 @@ export default function SearchPage() {
               </div>
             )}
 
-            {/* POST RESULTS - No title, just the grid */}
+            {/* POST RESULTS */}
             {query && results.length > 0 && (
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-6">
+              <div className="columns-2 md:columns-3 gap-4 space-y-4 mt-6">
                 {results.map(post => (
-                  <PostCard key={post.id} post={post} />
+                  <div key={post.id} className="break-inside-avoid">
+                    <PostCard post={post} />
+                  </div>
                 ))}
               </div>
             )}
@@ -414,9 +396,11 @@ export default function SearchPage() {
                     <h2 className="text-sm font-bold text-[var(--foreground-secondary)] uppercase tracking-wider mb-4">
                       Populares en Klozet
                     </h2>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    <div className="columns-2 md:columns-3 gap-4 space-y-4">
                       {results.map(post => (
-                        <PostCard key={post.id} post={post} />
+                        <div key={post.id} className="break-inside-avoid">
+                          <PostCard post={post} />
+                        </div>
                       ))}
                     </div>
                   </div>

@@ -152,11 +152,11 @@ const Toast = memo(function Toast({
       {link ? (
         <Link href={link} onClick={handleClick}>
           <div className="
-            bg-white dark:bg-gray-800 
-            rounded-lg shadow-lg 
-            border border-gray-200 dark:border-gray-700
-            p-4 max-w-sm w-full
-            cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-750
+            bg-[var(--card-bg)]
+            rounded-full shadow-lg 
+            border border-[var(--border-color)]
+            px-5 py-3 max-w-sm w-full
+            cursor-pointer hover:bg-[var(--background-secondary)]
             transition-colors
           ">
             {content}
@@ -166,11 +166,11 @@ const Toast = memo(function Toast({
         <div
           onClick={handleClick}
           className="
-            bg-white dark:bg-gray-800 
-            rounded-lg shadow-lg 
-            border border-gray-200 dark:border-gray-700
-            p-4 max-w-sm w-full
-            cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-750
+            bg-[var(--card-bg)]
+            rounded-full shadow-lg 
+            border border-[var(--border-color)]
+            px-5 py-3 max-w-sm w-full
+            cursor-pointer hover:bg-[var(--background-secondary)]
             transition-colors
           "
         >

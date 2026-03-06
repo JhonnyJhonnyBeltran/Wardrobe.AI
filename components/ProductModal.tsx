@@ -9,6 +9,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ExternalLink, ShoppingBag, Tag, Store, Sparkles, Heart, Edit2, Trash2 } from 'lucide-react';
 import { OutfitItem } from '@/lib/fashion/outfitGenerator';
+import { useBodyScrollLock } from '@/lib/hooks';
 
 // Extended OutfitItem to support sourceUrl from scraped items
 interface ExtendedOutfitItem extends OutfitItem {
@@ -32,6 +33,8 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
         if (item) lastItemRef.current = item;
     }, [item]);
     const displayItem = item || lastItemRef.current;
+
+    useBodyScrollLock(isOpen);
 
     if (!displayItem) return null;
 
@@ -80,7 +83,7 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
                                 stiffness: 300,
                             }}
                             onClick={(e) => e.stopPropagation()}
-                            className="relative w-full max-w-md max-h-[90vh] bg-white dark:bg-gray-900 rounded-3xl overflow-hidden shadow-2xl flex flex-col"
+                            className="relative w-full max-w-md max-h-[82vh] md:max-h-[90vh] bg-[var(--card-bg)] rounded-3xl overflow-hidden shadow-2xl flex flex-col mb-16 md:mb-0"
                         >
                             {/* Close Button */}
                             <motion.button
@@ -123,10 +126,10 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
                                         initial={{ x: -100, opacity: 0 }}
                                         animate={{ x: 0, opacity: 1 }}
                                         transition={{ delay: 0.3, type: 'spring' }}
-                                        className="absolute top-4 left-4 px-3 py-1.5 bg-gradient-to-r from-pink-500 to-fuchsia-500 rounded-full flex items-center gap-1.5 shadow-lg"
+                                        className="absolute top-4 left-4 px-3 py-1.5 bg-[var(--brand-pink)] rounded-full flex items-center gap-1.5 shadow-lg"
                                     >
-                                        <Sparkles className="w-3.5 h-3.5 text-white" />
-                                        <span className="text-xs font-semibold text-white">Trending</span>
+                                        <Sparkles className="w-4 h-4 text-white" />
+                                        <span className="text-white text-xs font-bold leading-none">Tendencia</span>
                                     </motion.div>
                                 )}
 
@@ -159,45 +162,38 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
                                 {/* Details Grid */}
                                 <div className="grid grid-cols-2 gap-3 mb-6">
                                     {/* Type */}
-                                    <div className="flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                                        <Tag className="w-4 h-4 text-gray-400" />
+                                    <div className="flex items-center gap-2 p-3 bg-[var(--background-secondary)] rounded-xl">
+                                        <Tag className="w-4 h-4 text-[var(--foreground-tertiary)]" />
                                         <div>
-                                            <p className="text-xs text-gray-500 dark:text-gray-400">Tipo</p>
-                                            <p className="text-sm font-medium text-gray-900 dark:text-white capitalize">{displayItem.type}</p>
+                                            <p className="text-xs text-[var(--foreground-tertiary)]">Tipo</p>
+                                            <p className="text-sm font-medium text-[var(--foreground)] capitalize">{displayItem.type}</p>
                                         </div>
                                     </div>
 
-                                    {/* Source */}
-                                    <div className="flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                                        <Store className="w-4 h-4 text-gray-400" />
-                                        <div>
-                                            <p className="text-xs text-gray-500 dark:text-gray-400">Fuente</p>
-                                            <p className="text-sm font-medium text-gray-900 dark:text-white">{displayItem.source}</p>
-                                        </div>
-                                    </div>
-
-                                    {/* Color */}
-                                    {displayItem.color && (
-                                        <div className="flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                                            <div
-                                                className="w-4 h-4 rounded-full border-2 border-white shadow-sm"
-                                                style={{ backgroundColor: displayItem.colorHex || '#ccc' }}
-                                            />
+                                    {/* Brand / Source */}
+                                    {(displayItem.brand || displayItem.source) && (displayItem.brand !== 'Unknown' && displayItem.source !== 'Unknown') && (
+                                        <div className="flex items-center gap-2 p-3 bg-[var(--background-secondary)] rounded-xl">
+                                            <Store className="w-4 h-4 text-[var(--foreground-tertiary)]" />
                                             <div>
-                                                <p className="text-xs text-gray-500 dark:text-gray-400">Color</p>
-                                                <p className="text-sm font-medium text-gray-900 dark:text-white">{displayItem.color}</p>
+                                                <p className="text-xs text-[var(--foreground-tertiary)]">Marca</p>
+                                                <p className="text-sm font-medium text-[var(--foreground)]">{displayItem.brand || displayItem.source}</p>
                                             </div>
                                         </div>
                                     )}
 
-                                    {/* Match Score */}
-                                    <div className="flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-xl">
-                                        <Sparkles className="w-4 h-4 text-pink-400" />
-                                        <div>
-                                            <p className="text-xs text-gray-500 dark:text-gray-400">Match</p>
-                                            <p className="text-sm font-medium text-gray-900 dark:text-white">{Math.round(displayItem.matchScore)}%</p>
+                                    {/* Color */}
+                                    {displayItem.color && (
+                                        <div className="flex items-center gap-2 p-3 bg-[var(--background-secondary)] rounded-xl">
+                                            <div
+                                                className="w-4 h-4 rounded-full border-2 border-[var(--card-bg)] shadow-sm"
+                                                style={{ backgroundColor: displayItem.colorHex || '#ccc' }}
+                                            />
+                                            <div>
+                                                <p className="text-xs text-[var(--foreground-tertiary)]">Color</p>
+                                                <p className="text-sm font-medium text-[var(--foreground)] capitalize">{displayItem.color}</p>
+                                            </div>
                                         </div>
-                                    </div>
+                                    )}
                                 </div>
 
                                 {/* Action Buttons */}
@@ -208,7 +204,7 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
                                             whileHover={{ scale: 1.02 }}
                                             whileTap={{ scale: 0.98 }}
                                             onClick={handleViewInStore}
-                                            className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl font-medium transition-all duration-300 bg-gradient-to-r from-pink-500 to-fuchsia-500 text-white shadow-lg hover:shadow-xl hover:shadow-pink-500/25"
+                                            className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl font-medium transition-all duration-300 bg-[var(--brand-pink)] text-white shadow-lg hover:shadow-xl hover:shadow-pink-500/25"
                                         >
                                             <ExternalLink className="w-5 h-5" />
                                             <span>Ver en tienda</span>
@@ -220,13 +216,13 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
                                             whileHover={{ scale: 1.02 }}
                                             whileTap={{ scale: 0.98 }}
                                             onClick={() => onFavoriteToggle?.(displayItem.id)}
-                                            className={`flex-1 flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl font-medium transition-all duration-300 border-2 min-w-[100px] h-[56px] ${isFavorite
-                                                ? 'bg-gradient-to-r from-pink-500/20 to-fuchsia-500/20 text-pink-500 border-pink-500/50'
-                                                : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 border-transparent'
+                                            className={`flex-1 flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl font-bold transition-all duration-300 border min-w-[100px] h-[52px] ${isFavorite
+                                                ? 'bg-[var(--brand-pink)] text-white border-transparent shadow-md shadow-[var(--brand-pink)]/20'
+                                                : 'bg-pink-50 dark:bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] border-pink-200 dark:border-[var(--brand-pink)]/20 hover:bg-pink-100 dark:hover:bg-[var(--brand-pink)]/20'
                                                 }`}
                                         >
-                                            <Heart className={`w-5 h-5 transition-all ${isFavorite ? 'fill-pink-500 text-pink-500' : ''}`} />
-                                            <span className="min-w-[50px] text-center">{isFavorite ? 'Fav' : 'Guardar'}</span>
+                                            <Heart className={`w-5 h-5 transition-all ${isFavorite ? 'fill-white text-white' : 'text-[var(--brand-pink)]'}`} />
+                                            <span className="min-w-[50px] text-center">{isFavorite ? 'Liked' : 'Like'}</span>
                                         </motion.button>
 
                                         {onEdit && (
@@ -237,7 +233,7 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
                                                     if (onClose) onClose();
                                                     setTimeout(() => onEdit(displayItem.id), 100);
                                                 }}
-                                                className="flex-1 flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl font-medium transition-all duration-300 border-2 border-transparent bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 min-w-[90px] h-[56px]"
+                                                className="flex-1 flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl font-medium transition-all duration-300 bg-[var(--background-secondary)] text-[var(--foreground)] border border-[var(--border-color)] hover:bg-[var(--foreground)] hover:text-[var(--background)] min-w-[90px] h-[52px]"
                                             >
                                                 <Edit2 className="w-5 h-5" />
                                                 <span className="text-center">Editar</span>

@@ -9,13 +9,34 @@ import TabBar from './TabBar';
 import Sidebar from './Sidebar';
 import AuthGuard from './AuthGuard';
 import FloatingCreateButton from './FloatingCreateButton';
-
+import { useUiStore } from '@/store/uiStore';
+import { UploadCloud, X } from 'lucide-react';
+import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface AppLayoutProps {
   children: ReactNode;
 }
 
 export default function AppLayout({ children }: AppLayoutProps) {
+  const { pendingUploadItem, clearPendingUploadItem, showModal } = useUiStore();
+
+  const handleCancelPending = (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent Link navigation
+    e.stopPropagation();
+
+    showModal({
+      title: '¿Cancelar subida?',
+      message: 'Se perderán los datos de la prenda que estabas añadiendo. ¿Estás seguro?',
+      type: 'warning',
+      confirmText: 'Sí, cancelar',
+      cancelText: 'Seguir editando',
+      onConfirm: () => {
+        clearPendingUploadItem();
+      }
+    });
+  };
+
   return (
     <div className="flex min-h-screen bg-[var(--background)]">
       {/* Desktop Sidebar */}
@@ -33,6 +54,33 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
       {/* Floating Create Button (Desktop only) */}
       <FloatingCreateButton />
+
+      {/* Floating Pending Upload Bubble */}
+      <AnimatePresence>
+        {pendingUploadItem && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            className="fixed bottom-20 md:bottom-8 left-1/2 -translate-x-1/2 md:translate-x-0 md:left-auto md:right-24 z-[70] shadow-xl flex items-center bg-[var(--background)] border-2 border-[var(--brand-pink)] rounded-full overflow-hidden"
+          >
+            <Link
+              href="/closet?action=new-item"
+              className="flex items-center gap-2 px-4 py-2.5 text-[var(--foreground)] hover:bg-[var(--background-secondary)] transition-colors"
+            >
+              <UploadCloud className="w-5 h-5 text-[var(--brand-pink)] animate-pulse" />
+              <span className="font-semibold text-sm">Prenda Pendiente</span>
+            </Link>
+            <button
+              onClick={handleCancelPending}
+              className="p-3 border-l text-[var(--foreground-secondary)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 border-[var(--border-color)] transition-colors"
+              title="Cancelar subida"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Onboarding Modal (Global) */}
 

@@ -70,33 +70,33 @@ export default function OutfitCard({ outfit, isLocked = false, onClick, onEdit, 
                 scale: 1.03,
                 transition: { duration: 0.2 }
             } : {}}
-            className={`relative overflow-hidden rounded-[20px] bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 card-apple ${isLocked ? 'cursor-not-allowed' : 'cursor-pointer'
+            className={`relative overflow-hidden rounded-[20px] bg-white dark:bg-gray-900 shadow-sm ${isLocked ? 'cursor-not-allowed' : 'cursor-pointer'
                 }`}
         >
             {/* Clickable Area */}
             <div onClick={!isLocked ? onClick : undefined} className="cursor-pointer">
                 {/* Outfit Preview */}
                 <div
-                    className={`relative bg-gray-50 dark:bg-gray-800 p-0 flex flex-col ${isLocked ? 'blur-sm' : ''
+                    className={`relative bg-gray-50 dark:bg-[#111] p-0 flex flex-col ${isLocked ? 'blur-sm' : ''
                         }`}
                     style={{ minHeight: '200px' }}
                 >
                     {outfitPreviewImage ? (
-                        <div className="w-full h-full relative">
+                        <div className="w-full h-[240px] relative mt-1">
                             <img
                                 src={outfitPreviewImage}
                                 alt={outfit.name}
-                                className="w-full h-auto object-contain p-2"
+                                className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal"
                                 loading="lazy"
                             />
                         </div>
                     ) : (
                         /* Items Grid - With Images (Fallback) */
-                        <div className="grid grid-cols-2 gap-2 flex-1 p-3">
+                        <div className="grid grid-cols-2 gap-[1px] flex-1 bg-gray-200 dark:bg-gray-700">
                             {(outfit.items || []).slice(0, 4).map((item: any, i: number) => (
                                 <motion.div
                                     key={item.id || i}
-                                    className="relative rounded-xl overflow-hidden bg-white dark:bg-gray-700 aspect-square border border-gray-100 dark:border-gray-600"
+                                    className="relative bg-white dark:bg-[#222] aspect-square overflow-hidden"
                                 >
                                     {getItemImage(item) ? (
                                         <img

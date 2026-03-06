@@ -45,11 +45,7 @@ export default function ChatPage() {
         onSwipeRight: () => router.push('/messages')
     });
 
-    useEffect(() => {
-        if (targetUserId) {
-            markConversationAsRead(targetUserId);
-        }
-    }, [targetUserId, markConversationAsRead]);
+    // Removed incorrect markConversationAsRead call from here, moving it to fetchMessages
 
     // Scroll to bottom
     const scrollToBottom = () => {
@@ -73,6 +69,19 @@ export default function ChatPage() {
         if (data) {
             setMessages(data as any[]);
             setLoading(false);
+
+            // Mark any unread messages from them to us as read in Supabase
+            await (supabase.from('messages') as any)
+                .update({ is_read: true })
+                .eq('sender_id', targetUserId)
+                .eq('receiver_id', user.id)
+                .eq('is_read', false);
+
+            // Update local badge state utilizing the correct conversation ID
+            if (data.length > 0) {
+                const convId = (data as any[])[0].conversation_id;
+                if (convId) markConversationAsRead(convId);
+            }
         }
     };
 

@@ -8,14 +8,16 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRef } from 'react';
 import {
-  Heart, Grid3x3, List, Search, Filter, Plus, Wand2, X, Shirt, Layers, Share2, Trash2
+  Heart, Grid3x3, List, Search, Filter, Plus, Wand2, X, Shirt, Layers, Share2, Trash2, Check
 } from 'lucide-react';
 import { Card, Button, ClothingItem, LogoMark } from '@/components';
 import AddItemModal from '@/components/AddItemModal';
 import ProductModal from '@/components/ProductModal';
 import BubbleToggle from '@/components/BubbleToggle';
 import OutfitCard from '@/components/OutfitCard';
+import { OutfitDetailModal } from '@/components/OutfitDetailModal';
 import type { Outfit } from '@/types/outfit';
 import type { ClothingItem as ClothingItemType } from '@/types/clothing';
 import { useUser } from '@/store';
@@ -38,6 +40,32 @@ export default function ClosetPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
 
+  // Auto-hide Header State
+  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+  const lastScrollY = useRef(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+
+      // If pulled past top (iOS bounce) or at very top, show header
+      if (currentScrollY <= 0) {
+        setIsHeaderVisible(true);
+      } else if (currentScrollY > lastScrollY.current + 5) {
+        // Scrolling down
+        setIsHeaderVisible(false);
+      } else if (currentScrollY < lastScrollY.current - 5) {
+        // Scrolling up
+        setIsHeaderVisible(true);
+      }
+
+      lastScrollY.current = currentScrollY;
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   // Auto-open Add Item Modal based on query param
   useEffect(() => {
     if (searchParams.get('action') === 'new-item') {
@@ -54,6 +82,33 @@ export default function ClosetPage() {
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [editingItem, setEditingItem] = useState<ClothingItemType | null>(null);
   const { items, loading, addItem, updateItem, deleteItem, refresh } = useWardrobe();
+
+  // Selection Mode State
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const touchTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const toggleSelection = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleTouchStart = (id: string) => {
+    if (selectionMode) return; // if already in selection mode, just ignore long press
+    touchTimerRef.current = setTimeout(() => {
+      setSelectionMode(true);
+      toggleSelection(id);
+      if (navigator.vibrate) navigator.vibrate(50);
+    }, 500); // 500ms long press sets selection mode
+  };
+
+  const handleTouchEnd = () => {
+    if (touchTimerRef.current) clearTimeout(touchTimerRef.current);
+  };
 
   // Outfits State
   const [activeTab, setActiveTab] = useState<'items' | 'outfits'>('items');
@@ -143,6 +198,9 @@ export default function ClosetPage() {
   const [selectedProduct, setSelectedProduct] = useState<(OutfitItem & { sourceUrl?: string }) | null>(null);
   const [showProductModal, setShowProductModal] = useState(false);
   const [shareOutfit, setShareOutfit] = useState<any | null>(null); // State for sharing outfit
+
+  // Outfit Detail Modal State
+  const [selectedOutfit, setSelectedOutfit] = useState<Outfit | null>(null);
 
   const handleFavoriteToggle = async (id: string) => {
     const isFav = favorites.has(id);
@@ -327,7 +385,7 @@ export default function ClosetPage() {
 
   return (
     <motion.div
-      className="min-h-screen bg-[var(--background)] pb-24 md:pb-8 pt-4 relative overflow-hidden touch-pan-y"
+      className="min-h-screen bg-[var(--background)] pb-24 md:pb-8 relative overflow-hidden touch-pan-y"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -338,8 +396,8 @@ export default function ClosetPage() {
       onDragEnd={handleDragEnd}
     >
 
-      {/* Header Fixed */}
-      <header className="fixed top-0 left-0 right-0 z-40 bg-[var(--background)]/95 backdrop-blur-md pb-2 transition-all supports-[ios]:pt-safe-top">
+      {/* Header Sticky & Auto-hide */}
+      <header className={`sticky top-0 z-40 bg-[var(--background)]/95 backdrop-blur-md pb-2 transition-transform duration-300 supports-[ios]:pt-safe-top ${isHeaderVisible ? 'translate-y-0' : '-translate-y-full'}`}>
         <div className="max-w-7xl mx-auto px-4 pt-4 space-y-4">
 
           {/* Top Actions: Create & AI */}
@@ -405,10 +463,9 @@ export default function ClosetPage() {
 
 
 
-      <main className="max-w-7xl mx-auto pt-36 sm:pt-24 pb-4 relative">
+      <main className="max-w-7xl mx-auto pt-4 pb-4 relative">
 
-        {/* Spacer for filter button area — keeps consistent top margin */}
-        <div className="h-16" />
+        {/* Spacer removed because header is in flow now */}
 
         {/* TABS CONTENT */}
         <AnimatePresence mode="wait">
@@ -477,13 +534,29 @@ export default function ClosetPage() {
                           whileHover={{ scale: 1.03 }}
                           transition={{ duration: 0.2 }}
                           className="relative"
+                          onTouchStart={() => handleTouchStart(item.id)}
+                          onTouchEnd={handleTouchEnd}
+                          onTouchCancel={handleTouchEnd}
                         >
                           <Card
                             key={item.id}
                             variant="default"
-                            className="group relative overflow-hidden bg-[var(--card-bg)] border-none shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
-                            onClick={() => setSelectedItem(item)}
+                            className={`group relative overflow-hidden bg-[var(--card-bg)] border-none shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer ${selectionMode && selectedIds.has(item.id) ? 'ring-4 ring-[var(--brand-pink)] ring-inset' : ''}`}
+                            onClick={() => {
+                              if (selectionMode) {
+                                toggleSelection(item.id);
+                              } else {
+                                setSelectedItem(item);
+                              }
+                            }}
                           >
+                            {/* Selection Checkmark */}
+                            {selectionMode && selectedIds.has(item.id) && (
+                              <div className="absolute top-2 right-2 z-10 bg-[var(--brand-pink)] rounded-full p-1 text-white shadow-md">
+                                <Check className="w-4 h-4" />
+                              </div>
+                            )}
+
                             <div className="relative aspect-[3/4] overflow-hidden bg-[var(--background-secondary)]">
                               {item.imageUrl ? (
                                 <img
@@ -581,12 +654,31 @@ export default function ClosetPage() {
                   : 'space-y-4' // List for outfits
                   }`}>
                   {(filteredContent as Outfit[]).map((outfit) => (
-                    <div key={outfit.id}>
+                    <div
+                      key={outfit.id}
+                      className="relative"
+                      onTouchStart={() => handleTouchStart(outfit.id)}
+                      onTouchEnd={handleTouchEnd}
+                      onTouchCancel={handleTouchEnd}
+                    >
+                      {/* Interceptor overlay during multi-select mode */}
+                      {selectionMode && (
+                        <div
+                          className="absolute inset-0 z-10 cursor-pointer"
+                          onClick={() => toggleSelection(outfit.id)}
+                        />
+                      )}
+                      {/* Selection Checkmark */}
+                      {selectionMode && selectedIds.has(outfit.id) && (
+                        <div className="absolute top-2 right-2 z-20 bg-[var(--brand-pink)] rounded-full p-1 text-white shadow-md">
+                          <Check className="w-4 h-4" />
+                        </div>
+                      )}
                       <OutfitCard
                         outfit={outfit}
                         index={0}
                         onClick={() => {
-                          router.push(`/outfit/${outfit.id}`);
+                          setSelectedOutfit(outfit);
                         }}
                         onEdit={(outfit) => {
                           router.push(`/create?outfitId=${outfit.id}`);
@@ -650,9 +742,32 @@ export default function ClosetPage() {
         }}
       />
 
+      <OutfitDetailModal
+        isOpen={!!selectedOutfit}
+        onClose={() => setSelectedOutfit(null)}
+        // @ts-ignore
+        outfit={selectedOutfit}
+      />
+
       {/* FAB stack: Filter + Add — always stacked, fully responsive */}
       {!showAddModal && !selectedItem && (
         <div className="fixed bottom-24 md:bottom-6 right-6 z-[5005] flex flex-col items-end gap-3">
+          {/* Desktop Select Button */}
+          <button
+            onClick={() => {
+              if (selectionMode) {
+                setSelectionMode(false);
+                setSelectedIds(new Set());
+              } else {
+                setSelectionMode(true);
+              }
+            }}
+            className="hidden md:flex items-center gap-2 bg-[var(--card-bg)] px-4 py-2.5 rounded-full shadow-lg font-medium text-[var(--foreground)] border border-[var(--border-color)] hover:bg-[var(--background-secondary)] transition-colors"
+          >
+            <Check className="w-5 h-5" />
+            {selectionMode ? 'Cancelar' : 'Seleccionar'}
+          </button>
+
           {/* Filter Bubble */}
           <BubbleToggle
             isOpen={showFilters}
@@ -816,6 +931,58 @@ export default function ClosetPage() {
                 </button>
               </div>
             </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Floating Delete Pill for Bulk Action */}
+      <AnimatePresence>
+        {selectionMode && (
+          <motion.div
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 100, opacity: 0 }}
+            className="fixed bottom-24 md:bottom-8 left-1/2 -translate-x-1/2 z-[5010] bg-[var(--card-bg)] border border-[var(--border-color)] rounded-full shadow-2xl flex items-center p-2 gap-4"
+          >
+            <span className="font-semibold px-4 text-[var(--foreground)]">{selectedIds.size} seleccionados</span>
+            <button
+              onClick={() => {
+                if (selectedIds.size === 0) return;
+                useUiStore.getState().showModal({
+                  title: 'Eliminar en lote',
+                  message: `¿Seguro que quieres eliminar ${selectedIds.size} ${activeTab === 'outfits' ? 'outfit(s)' : 'prenda(s)'}? Esta acción no se puede deshacer.`,
+                  type: 'warning',
+                  confirmText: 'Sí, eliminar',
+                  cancelText: 'Cancelar',
+                  onConfirm: async () => {
+                    try {
+                      const idsArray = Array.from(selectedIds);
+                      if (activeTab === 'items') {
+                        for (const id of idsArray) { await deleteItem(id); }
+                        refresh(); // Reload wardrobe
+                      } else {
+                        for (const id of idsArray) { await supabase.from('outfits').delete().eq('id', id); }
+                        // For outfits, toggle tab quickly to force reload or just use local state refetch
+                        setActiveTab('items'); setTimeout(() => setActiveTab('outfits'), 10);
+                      }
+                      setSelectionMode(false);
+                      setSelectedIds(new Set());
+                    } catch (err) {
+                      console.error('Error in bulk delete:', err);
+                    }
+                  }
+                });
+              }}
+              className={`px-4 py-2 rounded-full font-medium transition-colors ${selectedIds.size > 0 ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-[var(--background-secondary)] text-[var(--foreground-tertiary)] cursor-not-allowed'}`}
+            >
+              Eliminar
+            </button>
+            <button
+              onClick={() => { setSelectionMode(false); setSelectedIds(new Set()); }}
+              className="p-2 text-[var(--foreground-secondary)] hover:text-[var(--foreground)] bg-[var(--background-secondary)] rounded-full"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </motion.div>
         )}
       </AnimatePresence>
