@@ -75,7 +75,7 @@ export const FreeDragCanvas = forwardRef<FreeDragCanvasRef, FreeDragCanvasProps>
                     allowTaint: true,
                     logging: false,
                 });
-                return canvas.toDataURL('image/png', 1.0);
+                return canvas.toDataURL('image/jpeg', 0.8);
             } catch (error) {
                 console.error('Canvas export failed:', error);
                 return null;

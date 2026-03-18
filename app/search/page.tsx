@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase/client';
 import { useSwipeNavigation } from '@/hooks/useSwipeNavigation';
 import { useUser } from '@/store/userStore';
 import Link from 'next/link';
+import { useRef, useCallback } from 'react';
 
 interface UserProfile {
   id: string;
@@ -16,7 +17,6 @@ interface UserProfile {
   bio?: string;
   followers_count?: number;
   following_count?: number;
-  is_private?: boolean;
 }
 
 export default function SearchPage() {
@@ -28,6 +28,20 @@ export default function SearchPage() {
   const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
   const [pendingRequestIds, setPendingRequestIds] = useState<Set<string>>(new Set());
   const { user } = useUser();
+
+  // Pagination states
+  const [postsLoadingMore, setPostsLoadingMore] = useState(false);
+  const [usersLoadingMore, setUsersLoadingMore] = useState(false);
+  const [postsHasMore, setPostsHasMore] = useState(true);
+  const [usersHasMore, setUsersHasMore] = useState(true);
+
+  const postsPageRef = useRef(0);
+  const usersPageRef = useRef(0);
+  const POSTS_PER_PAGE = 8;
+  const USERS_PER_PAGE = 10;
+
+  const postsObserverElement = useRef<HTMLDivElement | null>(null);
+  const usersObserverElement = useRef<HTMLDivElement | null>(null);
 
   // Enable swipe navigation
   useSwipeNavigation();
@@ -41,40 +55,56 @@ export default function SearchPage() {
     return () => clearTimeout(handler);
   }, [query]);
 
+  // Initial load
   useEffect(() => {
     setLoading(true);
     if (debouncedQuery.trim()) {
       // Unified search - fetch both posts and users simultaneously
+      const cleanQuery = debouncedQuery.trim();
       Promise.all([
-        searchPosts(debouncedQuery),
-        searchUsers(debouncedQuery)
+        searchPosts(cleanQuery, false),
+        searchUsers(cleanQuery, false)
       ]).finally(() => setLoading(false));
     } else {
       // Fetch default trending/popular posts when no query
       setUserResults([]);
-      searchPosts('').finally(() => setLoading(false));
+      searchPosts('', false).finally(() => setLoading(false));
     }
   }, [debouncedQuery]);
 
 
-  const searchUsers = async (searchTerm: string) => {
+  const searchUsers = useCallback(async (searchTerm: string, isLoadMore = false) => {
+    const currentPage = isLoadMore ? usersPageRef.current + 1 : 0;
+    const from = currentPage * USERS_PER_PAGE;
+    const to = from + USERS_PER_PAGE - 1;
+
     try {
+      if (isLoadMore) setUsersLoadingMore(true);
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, username, full_name, avatar_url, bio, is_private')
+        .select('id, username, full_name, avatar_url, bio')
         .or(`username.ilike.%${searchTerm}%,full_name.ilike.%${searchTerm}%`)
-        .limit(20);
+        .range(from, to);
 
       if (error) {
         throw error;
       }
 
-      setUserResults(data || []);
+      const newData = data || [];
+      if (isLoadMore) {
+        setUserResults(prev => [...prev, ...newData]);
+      } else {
+        setUserResults(newData);
+      }
+      setUsersHasMore(newData.length === USERS_PER_PAGE);
+      usersPageRef.current = currentPage;
     } catch (error) {
       console.error('Error searching users:', error);
-      setUserResults([]);
+      if (!isLoadMore) setUserResults([]);
+    } finally {
+      if (isLoadMore) setUsersLoadingMore(false);
     }
-  };
+  }, []);
 
   // Follow/Unfollow user
   const handleFollow = async (targetUserId: string) => {
@@ -85,7 +115,7 @@ export default function SearchPage() {
 
     // Find the user in results to check if profile is private
     const targetUser = userResults.find(u => u.id === targetUserId);
-    const isPrivate = targetUser?.is_private || false;
+    const isPrivate = false; // is_private column doesn't exist
 
     try {
       if (isFollowing || isPending) {
@@ -149,8 +179,13 @@ export default function SearchPage() {
     }
   };
 
-  const searchPosts = async (searchTerm: string) => {
+  const searchPosts = useCallback(async (searchTerm: string, isLoadMore = false) => {
+    const currentPage = isLoadMore ? postsPageRef.current + 1 : 0;
+    const from = currentPage * POSTS_PER_PAGE;
+    const to = from + POSTS_PER_PAGE - 1;
+
     try {
+      if (isLoadMore) setPostsLoadingMore(true);
       let data: any[] | null = null;
 
       if (!searchTerm.trim()) {
@@ -177,12 +212,9 @@ export default function SearchPage() {
                         ),
                         likes (count)
                     `)
-          // In a real app we might order by likes count instead of created_at:
-          // .order('likes_count', { ascending: false }) but we need a view for that or handle it in client. For now let's just show recent ones and treat them as feed.
           .order('created_at', { ascending: false })
-          .limit(20);
+          .range(from, to);
 
-        // Client-side sort by likes to simulate "trending" if desired, although just recent is fine 
         if (recentData) {
           data = recentData.sort((a: any, b: any) => {
             const aLikes = a.likes?.[0]?.count || 0;
@@ -212,7 +244,7 @@ export default function SearchPage() {
         `)
           .ilike('caption', `%${searchTerm}%`)
           .order('created_at', { ascending: false })
-          .limit(20);
+          .range(from, to);
 
         data = searchData;
       }
@@ -239,7 +271,7 @@ export default function SearchPage() {
           let displayImage = item.image_url;
           let title = item.caption || 'Sin título';
           let authorName = 'Usuario';
-          let authorAvatar = 'https://i.pravatar.cc/150?u=default';
+          let authorAvatar = '/placeholder-avatar.png';
           let likesCount = 0;
 
           // Get profile from map
@@ -274,29 +306,70 @@ export default function SearchPage() {
             description: item.caption // Added description
           };
         });
-        setResults(formattedPosts);
+
+        if (isLoadMore) {
+          setResults(prev => [...prev, ...formattedPosts]);
+        } else {
+          setResults(formattedPosts);
+        }
+
+        setPostsHasMore(data.length === POSTS_PER_PAGE);
+        postsPageRef.current = currentPage;
+      } else if (!isLoadMore) {
+        setResults([]);
+        setPostsHasMore(false);
       }
 
     } catch (error) {
       console.error('Error searching:', error);
     } finally {
-      setLoading(false);
+      if (isLoadMore) setPostsLoadingMore(false);
     }
-  };
+  }, []);
+
+  const loadMoreUsers = useCallback(() => {
+    if (loading || usersLoadingMore || !usersHasMore) return;
+    searchUsers(debouncedQuery, true);
+  }, [loading, usersLoadingMore, usersHasMore, debouncedQuery, searchUsers]);
+
+  const loadMorePosts = useCallback(() => {
+    if (loading || postsLoadingMore || !postsHasMore) return;
+    searchPosts(debouncedQuery, true);
+  }, [loading, postsLoadingMore, postsHasMore, debouncedQuery, searchPosts]);
+
+  // Infinite Scroll Observers
+  useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          if (entry.target === usersObserverElement.current && usersHasMore && !usersLoadingMore && !loading) {
+            loadMoreUsers();
+          } else if (entry.target === postsObserverElement.current && postsHasMore && !postsLoadingMore && !loading) {
+            loadMorePosts();
+          }
+        }
+      });
+    }, { threshold: 0.1 });
+
+    if (usersObserverElement.current) observer.observe(usersObserverElement.current);
+    if (postsObserverElement.current) observer.observe(postsObserverElement.current);
+
+    return () => observer.disconnect();
+  }, [loadMoreUsers, loadMorePosts, usersHasMore, postsHasMore, usersLoadingMore, postsLoadingMore, loading]);
 
   return (
-    <div className="min-h-screen bg-[var(--background)] pb-20">
+    <div className="min-h-[100dvh] w-full overflow-x-hidden bg-[var(--background)] pb-24">
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-[var(--background)]/90 backdrop-blur-md border-b border-[var(--border-color)]">
-        <div className="w-full md:w-[60%] mx-auto px-4 pt-12 pb-4">
+      <div className="sticky top-0 z-30 bg-[var(--background)]/90 backdrop-blur-md border-b border-[var(--border-color)]">
+        <div className="w-full max-w-3xl mx-auto px-4 pt-12 pb-4">
           <div className="relative">
             <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--foreground-secondary)]" />
             <input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Buscar personas o posts..."
-              className="w-full bg-[var(--background-secondary)] border-none rounded-xl py-3 pl-12 pr-10 text-[var(--foreground)] placeholder-[var(--foreground-tertiary)] focus:ring-2 focus:ring-[var(--brand-pink)] outline-none"
+              placeholder="Buscar personas o descripciones de posts..."
+              className="w-full bg-[var(--background-secondary)] border-none rounded-xl py-3 pl-12 pr-10 text-base text-[var(--foreground)] placeholder-[var(--foreground-tertiary)] focus:ring-2 focus:ring-[var(--brand-pink)] outline-none"
             />
             {query && (
               <button
@@ -310,7 +383,7 @@ export default function SearchPage() {
         </div>
       </div>
 
-      <div className="w-full md:w-[60%] mx-auto px-4 py-6 space-y-8">
+      <div className="w-full max-w-3xl mx-auto px-4 py-6 flex flex-col gap-8">
         {loading ? (
           <div className="flex justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-500"></div>
@@ -334,7 +407,7 @@ export default function SearchPage() {
                   >
                     <Link href={`/profile/${user.id}`} className="flex items-center gap-4 flex-1">
                       <img
-                        src={user.avatar_url || 'https://i.pravatar.cc/150?u=default'}
+                        src={user.avatar_url || '/placeholder-avatar.png'}
                         alt={user.username}
                         className="w-12 h-12 rounded-full object-cover border-2 border-[var(--background)]"
                       />
@@ -358,17 +431,33 @@ export default function SearchPage() {
                     </button>
                   </div>
                 ))}
+
+                {/* Users Loading More Trigger */}
+                {!loading && (
+                  <div ref={usersObserverElement} className="flex justify-center py-2 h-8">
+                    {usersLoadingMore && <div className="animate-spin w-5 h-5 border-2 border-[var(--brand-pink)] border-t-transparent rounded-full" />}
+                  </div>
+                )}
               </div>
             )}
 
             {/* POST RESULTS */}
             {query && results.length > 0 && (
-              <div className="columns-2 md:columns-3 gap-4 space-y-4 mt-6">
-                {results.map(post => (
-                  <div key={post.id} className="break-inside-avoid">
-                    <PostCard post={post} />
+              <div className="mt-2">
+                <div className="columns-2 md:columns-3 gap-4">
+                  {results.map(post => (
+                    <div key={post.id} className="break-inside-avoid">
+                      <PostCard post={post} />
+                    </div>
+                  ))}
+                </div>
+
+                {/* Posts Loading More Trigger (Search) */}
+                {!loading && (
+                  <div ref={postsObserverElement} className="flex justify-center py-6 h-12">
+                    {postsLoadingMore && <div className="animate-spin w-6 h-6 border-2 border-[var(--brand-pink)] border-t-transparent rounded-full" />}
                   </div>
-                ))}
+                )}
               </div>
             )}
 
@@ -377,7 +466,7 @@ export default function SearchPage() {
               <div className="space-y-6">
                 {/* Temas Populares Chips */}
                 <div className="w-full overflow-x-auto pb-2 scrollbar-hide">
-                  <div className="flex items-center gap-2 pl-1">
+                  <div className="flex items-center gap-2 w-max pl-1 pr-4">
                     {['#OOTD', 'Vintage', 'Streetwear', 'Y2K', 'Minimalista', 'Gorpcore', 'Verano'].map((topic) => (
                       <button
                         key={topic}
@@ -392,17 +481,24 @@ export default function SearchPage() {
 
                 {/* Título de sección si hay posts */}
                 {results.length > 0 && (
-                  <div>
+                  <div className="mt-2">
                     <h2 className="text-sm font-bold text-[var(--foreground-secondary)] uppercase tracking-wider mb-4">
                       Populares en Klozet
                     </h2>
-                    <div className="columns-2 md:columns-3 gap-4 space-y-4">
+                    <div className="columns-2 md:columns-3 gap-4">
                       {results.map(post => (
                         <div key={post.id} className="break-inside-avoid">
                           <PostCard post={post} />
                         </div>
                       ))}
                     </div>
+
+                    {/* Posts Loading More Trigger (Trending) */}
+                    {!loading && (
+                      <div ref={postsObserverElement} className="flex justify-center py-6 h-12">
+                        {postsLoadingMore && <div className="animate-spin w-6 h-6 border-2 border-[var(--brand-pink)] border-t-transparent rounded-full" />}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

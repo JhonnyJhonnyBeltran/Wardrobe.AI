@@ -19,6 +19,12 @@ export interface PendingUploadItem {
     processedImage?: string | null;
 }
 
+export interface SaveToast {
+    message: string;
+    actionLabel?: string;
+    onAction?: () => void;
+}
+
 interface UiStore {
     modal: SystemMessage | null;
     showModal: (message: SystemMessage) => void;
@@ -43,6 +49,16 @@ interface UiStore {
     pendingUploadItem: PendingUploadItem | null;
     setPendingUploadItem: (item: PendingUploadItem | null) => void;
     clearPendingUploadItem: () => void;
+
+    // Global Save Toast
+    saveToast: SaveToast | null;
+    showSaveToast: (toast: SaveToast) => void;
+    hideSaveToast: () => void;
+
+    // Folder Modal
+    folderModalPostId: string | null;
+    openFolderModal: (postId: string) => void;
+    closeFolderModal: () => void;
 }
 
 export const useUiStore = create<UiStore>((set) => ({
@@ -68,4 +84,12 @@ export const useUiStore = create<UiStore>((set) => ({
     pendingUploadItem: null,
     setPendingUploadItem: (item) => set({ pendingUploadItem: item }),
     clearPendingUploadItem: () => set({ pendingUploadItem: null }),
+
+    saveToast: null,
+    showSaveToast: (toast) => set({ saveToast: toast }),
+    hideSaveToast: () => set({ saveToast: null }),
+
+    folderModalPostId: null,
+    openFolderModal: (postId) => set({ folderModalPostId: postId }),
+    closeFolderModal: () => set({ folderModalPostId: null }),
 }));

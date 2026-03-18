@@ -17,11 +17,17 @@ import {
   Menu,
   Grid3x3,
   Bookmark,
-  Shirt,
-  UserCircle,
-  Palette
+  FolderPlus,
+  Folder,
+  X,
+  Plus,
+  Trash2,
+  Lock,
+  Loader2
 } from 'lucide-react';
 import { useSwipeNavigation } from '@/hooks/useSwipeNavigation';
+import FolderPreview from '@/components/FolderPreview';
+import { useUiStore } from '@/store/uiStore';
 
 // Simple Button Component Local
 function Button({ className, children, ...props }: any) {
@@ -37,19 +43,34 @@ function Button({ className, children, ...props }: any) {
 
 type TabType = 'posts' | 'saved';
 
+interface SaveFolder {
+  id: string;
+  name: string;
+  icon?: string;
+  color?: string;
+  preview_images?: string[];
+}
+
 export default function ProfilePage() {
   const { user } = useUser();
   const { t } = useTranslation();
   const router = useRouter();
+  const { openFolderModal } = useUiStore();
   const [activeTab, setActiveTab] = useState<TabType>('posts');
+
+  // Folder state
+  const [folders, setFolders] = useState<SaveFolder[]>([]);
+  const [selectedFolder, setSelectedFolder] = useState<SaveFolder | null>(null);
+  const [showCreateFolder, setShowCreateFolder] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
+  const [isCreatingFolder, setIsCreatingFolder] = useState(false);
+  const [savedPostsWithoutFolder, setSavedPostsWithoutFolder] = useState<any[]>([]);
 
   useSwipeNavigation({
     onSwipeRight: () => router.push('/notifications'),
     onSwipeLeft: () => {
       if (activeTab === 'posts') {
         setActiveTab('saved');
-      } else {
-        // Option to swipe further right? They didn't ask, but safe to do nothing.
       }
     }
   });
@@ -63,6 +84,62 @@ export default function ProfilePage() {
   const [posts, setPosts] = useState<any[]>([]);
   const [savedPosts, setSavedPosts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  const fetchFolders = async () => {
+    try {
+      const response = await fetch('/api/save-folders');
+      const data = await response.json();
+      if (data.folders) {
+        setFolders(data.folders);
+      }
+    } catch (error) {
+      console.error('Error fetching folders:', error);
+    }
+  };
+
+  // Create folder
+  const createFolder = async () => {
+    if (!newFolderName.trim()) return;
+
+    setIsCreatingFolder(true);
+    try {
+      const response = await fetch('/api/save-folders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newFolderName.trim() })
+      });
+      const data = await response.json();
+      if (data.folder) {
+        setFolders([{ ...data.folder, preview_posts: [] }, ...folders]);
+        setNewFolderName('');
+        setShowCreateFolder(false);
+      }
+    } catch (error) {
+      console.error('Error creating folder:', error);
+    } finally {
+      setIsCreatingFolder(false);
+    }
+  };
+
+  // Delete folder
+  const deleteFolder = async (folderId: string) => {
+    if (!confirm('¿Eliminar esta carpeta?')) return;
+
+    try {
+      const response = await fetch(`/api/save-folders?id=${folderId}`, {
+        method: 'DELETE'
+      });
+      const data = await response.json();
+      if (data.success) {
+        setFolders(folders.filter(f => f.id !== folderId));
+        if (selectedFolder?.id === folderId) {
+          setSelectedFolder(null);
+        }
+      }
+    } catch (error) {
+      console.error('Error deleting folder:', error);
+    }
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -91,7 +168,6 @@ export default function ProfilePage() {
           .abortSignal(controller.signal);
 
         const followersCount = await followService.getFollowersCount(user.id);
-
         const followingCount = await followService.getFollowingCount(user.id);
 
         if (isMounted) {
@@ -111,7 +187,6 @@ export default function ProfilePage() {
         }
 
         // 3. Fetch SAVED Posts (Posts saved by user)
-        // We join with posts table
         const { data: savesData } = await supabase
           .from('saves')
           .select(`
@@ -120,18 +195,23 @@ export default function ProfilePage() {
             posts (*)
           `)
           .eq('user_id', user.id)
-          .not('post_id', 'is', null) // Only fetch saved posts, not outfits
           .order('created_at', { ascending: false })
           .abortSignal(controller.signal);
 
         // Extract posts from the join
         const formattedSavedPosts = (savesData || [])
-          .map((save: any) => save.posts)
-          .filter((post: any) => post !== null); // Ensure no nulls
+          .map((save: any) => ({
+            ...save.posts,
+            save_id: save.id
+          }))
+          .filter((post: any) => post !== null);
 
         if (isMounted) {
           setSavedPosts(formattedSavedPosts);
         }
+
+        // 4. Fetch folders
+        await fetchFolders();
 
       } catch (error: any) {
         console.error('Error fetching profile:', error);
@@ -155,19 +235,120 @@ export default function ProfilePage() {
     };
   }, [user]);
 
+  // Fetch saved posts when folder is selected
+  useEffect(() => {
+    const fetchSavedData = async () => {
+      if (!user || activeTab !== 'saved') return;
+
+      try {
+        if (selectedFolder) {
+          // Get saves in a specific folder
+          const response = await fetch(`/api/saves?folder_id=${selectedFolder.id}`);
+          const data = await response.json();
+          if (data.saves) {
+            setSavedPosts(data.saves.map((save: any) => ({
+              ...save.posts,
+              save_id: save.id
+            })));
+          }
+        } else {
+          // Get all saves without folder
+          const response = await fetch('/api/saves');
+          const data = await response.json();
+          if (data.saves) {
+            setSavedPosts(data.saves.map((save: any) => ({
+              ...save.posts,
+              save_id: save.id
+            })));
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching saved posts:', error);
+      }
+    };
+
+    fetchSavedData();
+  }, [selectedFolder, activeTab, user]);
+
+  // Open save modal
+  const handleSaveClick = (postId: string) => {
+    openFolderModal(postId);
+  };
+
   if (!user) return null;
 
   return (
     <div className="min-h-screen bg-[var(--background)] pb-24">
-      {/* Header - Nuevo diseño: (+) a la izquierda, username centrado */}
-      <header className="hidden md:flex sticky top-0 z-30 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-color)]/50 supports-[ios]:pt-safe-top">
+
+      {/* Create Folder Modal */}
+      <AnimatePresence>
+        {showCreateFolder && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+              onClick={() => { setShowCreateFolder(false); setNewFolderName(''); }}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-sm bg-[var(--background)] rounded-3xl shadow-2xl overflow-hidden border border-[var(--border-color)]/30"
+            >
+              <div className="flex items-center justify-between p-5 border-b border-[var(--border-color)]">
+                <h2 className="text-lg font-bold">Nueva carpeta</h2>
+                <button
+                  onClick={() => { setShowCreateFolder(false); setNewFolderName(''); }}
+                  className="p-2 -mr-2 hover:bg-[var(--background-secondary)] rounded-full transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="p-5">
+                <input
+                  type="text"
+                  value={newFolderName}
+                  onChange={(e) => setNewFolderName(e.target.value)}
+                  placeholder="Nombre de la carpeta"
+                  className="w-full px-4 py-3 bg-[var(--background-secondary)] border border-[var(--border-color)] rounded-xl text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)]/50 transition-all font-medium"
+                  autoFocus
+                  onKeyDown={(e) => e.key === 'Enter' && createFolder()}
+                />
+              </div>
+
+              <div className="p-5 pt-0 flex gap-3">
+                <button
+                  onClick={() => { setShowCreateFolder(false); setNewFolderName(''); }}
+                  className="flex-1 py-3 px-4 bg-[var(--background-secondary)] text-[var(--foreground)] rounded-xl font-medium transition-colors hover:bg-[var(--border-color)]"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={createFolder}
+                  disabled={isCreatingFolder || !newFolderName.trim()}
+                  className="flex-1 py-3 px-4 bg-[var(--brand-pink)] text-white rounded-xl font-semibold disabled:opacity-50 hover:opacity-90 transition-colors flex items-center justify-center"
+                >
+                  {isCreatingFolder ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    'Crear'
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Header */}
+      <header className="hidden md:flex sticky top-0 z-30 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-color)]/50">
         <div className="flex items-center justify-between px-4 h-14 w-full md:max-w-[60%] mx-auto">
-          {/* Centro: Username centrado */}
           <span className="font-bold text-[var(--foreground)] truncate max-w-[200px] sm:max-w-[280px] px-2 ml-4">
             {user.username || user.name || user.email?.split('@')[0] || 'Perfil'}
           </span>
-
-          {/* Derecha: Menú hamburguesa (Configuración) */}
           <Link
             href="/profile/settings"
             className="p-2 hover:bg-[var(--background-secondary)] rounded-full transition-colors flex-shrink-0"
@@ -178,12 +359,11 @@ export default function ProfilePage() {
         </div>
       </header>
 
-      {/* Mobile Settings Button (since we hide the header on mobile) */}
+      {/* Mobile Settings Button */}
       <div className="md:hidden absolute top-4 right-4 z-30">
         <Link
           href="/profile/settings"
           className="p-2 bg-[var(--background-secondary)]/50 backdrop-blur-md rounded-full transition-colors block"
-          aria-label="Configuración"
         >
           <Menu className="w-6 h-6 text-[var(--foreground)]" />
         </Link>
@@ -191,9 +371,8 @@ export default function ProfilePage() {
 
       <main className="w-full md:max-w-[60%] mx-auto">
         {/* Profile Info */}
-        <div className="px-5 pt-6"> {/* Removed pb-6 to minimize space to tabs */}
+        <div className="px-5 pt-6">
           <div className="flex items-center gap-8 mb-6">
-            {/* Avatar */}
             <div className="w-24 h-24 rounded-full bg-gray-200 p-0.5 shadow-lg">
               <div className="w-full h-full rounded-full bg-[var(--background)] p-0.5">
                 <img
@@ -204,7 +383,6 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            {/* Stats */}
             <div className="flex-1 flex justify-around text-center">
               <div>
                 <div className="font-bold text-lg">{profileStats.posts}</div>
@@ -221,18 +399,13 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Bio */}
           <div className="pb-6 border-b border-[var(--border-color)]">
             <h2 className="font-bold text-sm">{user.name}</h2>
             <p className="text-sm text-[var(--foreground-secondary)] whitespace-pre-wrap">{user.bio || 'Amante de la moda ✨'}</p>
             <div className="flex flex-wrap gap-2 mt-4">
               <Link href="/profile/settings" className="flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--background-secondary)] border border-[var(--border-color)] text-sm font-medium text-[var(--foreground)] hover:bg-[var(--card-hover)] transition-colors">
-                <UserCircle className="w-4 h-4 text-[var(--brand-pink)]" />
+                <Menu className="w-4 h-4 text-[var(--brand-pink)]" />
                 Editar perfil
-              </Link>
-              <Link href="/onboarding/preferences" className="flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--background-secondary)] border border-[var(--border-color)] text-sm font-medium text-[var(--foreground)] hover:bg-[var(--card-hover)] transition-colors">
-                <Palette className="w-4 h-4 text-[var(--brand-pink)]" />
-                Editar preferencias
               </Link>
             </div>
           </div>
@@ -242,14 +415,13 @@ export default function ProfilePage() {
         <div className="sticky top-14 z-20 bg-[var(--background)]">
           <div className="flex">
             <button
-              onClick={() => setActiveTab('posts')}
+              onClick={() => { setActiveTab('posts'); setSelectedFolder(null); }}
               className={`flex-1 flex items-center justify-center py-3 border-b-2 transition-colors ${activeTab === 'posts'
                 ? 'border-[var(--brand-pink)] text-[var(--foreground)]'
                 : 'border-transparent text-[var(--foreground-tertiary)]'
                 }`}
             >
               <Grid3x3 className={`w-6 h-6 ${activeTab === 'posts' ? 'text-[var(--brand-pink)]' : ''}`} />
-              <span className="sr-only">Publicaciones</span>
             </button>
             <button
               onClick={() => setActiveTab('saved')}
@@ -259,7 +431,6 @@ export default function ProfilePage() {
                 }`}
             >
               <Bookmark className={`w-6 h-6 ${activeTab === 'saved' ? 'text-[var(--brand-pink)]' : ''}`} />
-              <span className="sr-only">Guardados</span>
             </button>
           </div>
         </div>
@@ -291,9 +462,13 @@ export default function ProfilePage() {
                 ) : (
                   <div className="grid grid-cols-3 gap-0.5">
                     {posts.map((post) => (
-                      <div key={post.id} className="aspect-square bg-[var(--background-secondary)] relative group cursor-pointer overflow-hidden">
+                      <Link
+                        key={post.id}
+                        href={`/post/${post.id}`}
+                        className="aspect-square bg-[var(--background-secondary)] relative group cursor-pointer overflow-hidden"
+                      >
                         <img src={post.image_url} alt="Post" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
-                      </div>
+                      </Link>
                     ))}
                   </div>
                 )}
@@ -305,33 +480,93 @@ export default function ProfilePage() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                className="p-0.5"
               >
-                {isLoading ? (
-                  <div className="text-center py-10 text-[var(--foreground-tertiary)]">Cargando...</div>
-                ) : savedPosts.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-16 text-center">
-                    <div className="w-16 h-16 bg-[var(--background-secondary)] rounded-full flex items-center justify-center mb-4">
-                      <Bookmark className="w-8 h-8 text-[var(--foreground-tertiary)]" />
-                    </div>
-                    <h3 className="text-lg font-semibold mb-2">No hay guardados</h3>
-                    <p className="text-[var(--foreground-secondary)] text-sm max-w-xs mx-auto">
-                      Guarda las publicaciones que te inspiren.
-                    </p>
+                {/* Folders Section with Previews */}
+                <div className="p-4 border-b border-[var(--border-color)]">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold text-sm text-[var(--foreground)]">Carpetas</h3>
                   </div>
-                ) : (
-                  <div className="grid grid-cols-3 gap-0.5">
-                    {savedPosts.map((post) => (
-                      <div key={post.id} className="aspect-square bg-[var(--background-secondary)] relative group cursor-pointer overflow-hidden">
-                        <img src={post.image_url} alt="Saved Post" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
-                        {/* Optional visual indicator for saved items */}
-                        <div className="absolute top-1 right-1 bg-black/50 p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Bookmark className="w-3 h-3 text-white fill-current" />
-                        </div>
+
+
+
+                  {/* Folders Grid with 4-post preview */}
+                  <div className="grid grid-cols-3 gap-2">
+                    {/* Create Folder Placeholder - Always First */}
+                    <button
+                      onClick={() => setShowCreateFolder(true)}
+                      className="aspect-square rounded-lg border-2 border-dashed border-[var(--border-color)] flex flex-col items-center justify-center gap-1 hover:border-[var(--brand-pink)] hover:bg-[var(--brand-pink)]/5 transition-colors"
+                    >
+                      <Plus className="w-8 h-8 text-[var(--brand-pink)]" />
+                      <span className="text-xs text-[var(--brand-pink)] font-medium">Crear</span>
+                    </button>
+
+                    {/* Existing Folders */}
+                    {folders.map((folder) => (
+                      <div key={folder.id} className="relative">
+                        <button
+                          onClick={() => setSelectedFolder(selectedFolder?.id === folder.id ? null : folder)}
+                          className={`w-full aspect-square rounded-lg overflow-hidden relative group ${selectedFolder?.id === folder.id ? 'ring-2 ring-[var(--brand-pink)]' : ''
+                            }`}
+                        >
+                          {folder.preview_images && folder.preview_images.length > 0 ? (
+                            <FolderPreview images={folder.preview_images} />
+                          ) : (
+                            <div className="w-full h-full bg-[var(--background-secondary)] flex items-center justify-center">
+                              <Folder className="w-8 h-8 text-[var(--foreground-tertiary)]" />
+                            </div>
+                          )}
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <span className="text-white font-medium text-sm">{folder.name}</span>
+                          </div>
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); deleteFolder(folder.id); }}
+                          className="absolute top-1 right-1 p-1 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <Trash2 className="w-3 h-3 text-white" />
+                        </button>
                       </div>
                     ))}
                   </div>
-                )}
+                </div>
+
+                {/* Saved Posts without Folder */}
+                <div className="p-4">
+                  <h3 className="font-semibold text-sm text-[var(--foreground)] mb-3">
+                    {selectedFolder ? `${selectedFolder.name}` : 'Guardados'}
+                  </h3>
+
+                  {isLoading ? (
+                    <div className="text-center py-10 text-[var(--foreground-tertiary)]">Cargando...</div>
+                  ) : savedPosts.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-16 text-center">
+                      <div className="w-16 h-16 bg-[var(--background-secondary)] rounded-full flex items-center justify-center mb-4">
+                        <Bookmark className="w-8 h-8 text-[var(--foreground-tertiary)]" />
+                      </div>
+                      <h3 className="text-lg font-semibold mb-2">No hay guardados</h3>
+                      <p className="text-[var(--foreground-secondary)] text-sm max-w-xs mx-auto">
+                        {selectedFolder
+                          ? `No hay publicaciones en "${selectedFolder.name}"`
+                          : 'Guarda las publicaciones que te inspiren.'}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-3 gap-0.5">
+                      {savedPosts.map((post) => (
+                        <Link
+                          key={post.id}
+                          href={`/post/${post.id}`}
+                          className="aspect-square bg-[var(--background-secondary)] relative group cursor-pointer overflow-hidden"
+                        >
+                          <img src={post.image_url} alt="Saved Post" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
+                          <div className="absolute top-1 right-1 bg-black/50 p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Bookmark className="w-3 h-3 text-white fill-current" />
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </motion.div>
             )}
           </AnimatePresence>

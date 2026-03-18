@@ -25,33 +25,53 @@ type ClothingItemRow = Database['public']['Tables']['clothing_items']['Row'];
 interface UseWardrobeReturn {
   items: ClothingItem[];
   loading: boolean;
+  loadingMore: boolean;
+  hasMore: boolean;
   error: string | null;
   addItem: (item: Omit<ClothingItem, 'id' | 'createdAt'>) => Promise<ClothingItem | null>;
   updateItem: (id: string, updates: Partial<ClothingItem>) => Promise<boolean>;
   deleteItem: (id: string) => Promise<boolean>;
   toggleFavorite: (id: string) => Promise<boolean>;
   refresh: () => Promise<void>;
+  loadMore: () => Promise<void>;
 }
 
 export function useWardrobe(): UseWardrobeReturn {
   const [items, setItems] = useState<ClothingItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { user } = useUser();
   const mountedRef = useRef(true);
   const fetchIdRef = useRef(0); // Para cancelar fetches obsoletos
+  const pageRef = useRef(0);
+  // More items per page on desktop for full scroll
+  const ITEMS_PER_PAGE = 24;
 
   // Fetch items — usa getSession() (local) en vez de getUser() (red)
   // para evitar fallos intermitentes por latencia o token refresh
-  const fetchItems = useCallback(async () => {
+  const fetchItems = useCallback(async (isLoadMore = false) => {
     const currentFetchId = ++fetchIdRef.current;
-    try {
-      setLoading(true);
-      setError(null);
 
+    if (isLoadMore) {
+      setLoadingMore(true);
+    } else {
+      setLoading(true);
+    }
+    setError(null);
+
+    const currentPage = isLoadMore ? pageRef.current + 1 : 0;
+    const from = currentPage * ITEMS_PER_PAGE;
+    const to = from + ITEMS_PER_PAGE - 1;
+
+    try {
       if (!user) {
         if (mountedRef.current && currentFetchId === fetchIdRef.current) {
           setItems([]);
+          setHasMore(false);
+          setLoading(false);
+          setLoadingMore(false);
         }
         return;
       }
@@ -60,7 +80,8 @@ export function useWardrobe(): UseWardrobeReturn {
         .from('clothing_items')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .range(from, to);
 
       if (fetchError) throw fetchError;
 
@@ -87,7 +108,14 @@ export function useWardrobe(): UseWardrobeReturn {
         fabric: item.fabric || undefined,
       }));
 
-      setItems(formattedItems);
+      if (isLoadMore) {
+        setItems(prev => [...prev, ...formattedItems]);
+      } else {
+        setItems(formattedItems);
+      }
+
+      setHasMore((data || []).length === ITEMS_PER_PAGE);
+      pageRef.current = currentPage;
     } catch (err) {
       if (!mountedRef.current || currentFetchId !== fetchIdRef.current) return;
       console.error('Error fetching wardrobe:', err);
@@ -95,9 +123,10 @@ export function useWardrobe(): UseWardrobeReturn {
     } finally {
       if (mountedRef.current && currentFetchId === fetchIdRef.current) {
         setLoading(false);
+        setLoadingMore(false);
       }
     }
-  }, []);
+  }, [user?.id]);
 
   // Add item — usa getSession() (local) para consistencia
   const addItem = async (item: Omit<ClothingItem, 'id' | 'createdAt'>): Promise<ClothingItem | null> => {
@@ -287,8 +316,7 @@ export function useWardrobe(): UseWardrobeReturn {
       // TODO: Descomentar cuando se añada columna source_url en Supabase
       // if ((updates as any).sourceUrl !== undefined) dbUpdates.source_url = (updates as any).sourceUrl;
 
-      const { error: updateError } = await supabase
-        .from('clothing_items')
+      const { error: updateError } = await (supabase.from('clothing_items') as any)
         .update(dbUpdates)
         .eq('id', id);
 
@@ -355,7 +383,12 @@ export function useWardrobe(): UseWardrobeReturn {
 
   // Refresh
   const refresh = async () => {
-    await fetchItems();
+    await fetchItems(false);
+  };
+
+  const loadMore = async () => {
+    if (loading || loadingMore || !hasMore) return;
+    await fetchItems(true);
   };
 
   // Fetch on mount and auth changes
@@ -375,7 +408,7 @@ export function useWardrobe(): UseWardrobeReturn {
         return;
       }
       // TOKEN_REFRESHED, SIGNED_IN, etc → refrescar items
-      fetchItems();
+      fetchItems(false);
     });
 
     return () => {
@@ -387,11 +420,14 @@ export function useWardrobe(): UseWardrobeReturn {
   return {
     items,
     loading,
+    loadingMore,
+    hasMore,
     error,
     addItem,
     updateItem,
     deleteItem,
     toggleFavorite,
     refresh,
+    loadMore,
   };
 }

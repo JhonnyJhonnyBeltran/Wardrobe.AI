@@ -77,19 +77,16 @@ export default function OutfitCard({ outfit, isLocked = false, onClick, onEdit, 
             <div onClick={!isLocked ? onClick : undefined} className="cursor-pointer">
                 {/* Outfit Preview */}
                 <div
-                    className={`relative bg-gray-50 dark:bg-[#111] p-0 flex flex-col ${isLocked ? 'blur-sm' : ''
+                    className={`relative w-full aspect-[4/5] bg-white dark:bg-[#111] overflow-hidden ${isLocked ? 'blur-sm' : ''
                         }`}
-                    style={{ minHeight: '200px' }}
                 >
                     {outfitPreviewImage ? (
-                        <div className="w-full h-[240px] relative mt-1">
-                            <img
-                                src={outfitPreviewImage}
-                                alt={outfit.name}
-                                className="w-full h-full object-contain mix-blend-multiply dark:mix-blend-normal"
-                                loading="lazy"
-                            />
-                        </div>
+                        <img
+                            src={outfitPreviewImage}
+                            alt={outfit.name}
+                            className="w-full h-full object-cover dark:mix-blend-normal"
+                            loading="lazy"
+                        />
                     ) : (
                         /* Items Grid - With Images (Fallback) */
                         <div className="grid grid-cols-2 gap-[1px] flex-1 bg-gray-200 dark:bg-gray-700">

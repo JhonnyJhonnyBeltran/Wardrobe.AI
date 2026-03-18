@@ -71,6 +71,9 @@ export default function AddItemModal({
     // Fetch categories and brands from database
     const { categories, brands, isLoading: isOptionsLoading } = useCategoriesAndBrands();
 
+    // Prevent duplicate submissions
+    const [isSubmitting, setIsSubmitting] = React.useState(false);
+
     // Advisor modal state (kept here as it's UI-specific)
     const [showAdvisor, setShowAdvisor] = React.useState(false);
 
@@ -88,34 +91,39 @@ export default function AddItemModal({
     };
 
     const handleSubmit = async () => {
-        if (isProcessing) {
-            console.log('Still processing image, wait...');
+        if (isProcessing || isSubmitting) {
+            console.log('Still processing image or submitting, wait...');
             return;
         }
 
-        const payload = buildPayload();
-        await onAdd(payload);
+        setIsSubmitting(true);
+        try {
+            const payload = buildPayload();
+            await onAdd(payload);
 
-        // Clear pending item on success
-        if (!isEditing) {
-            useUiStore.getState().clearPendingUploadItem();
-            useUiStore.getState().showModal({
-                title: '¡Prenda guardada!',
-                message: 'Tu prenda se ha añadido correctamente a tu armario.',
-                type: 'success',
-                confirmText: 'Genial'
-            });
-            resetForm();
-        } else {
-            useUiStore.getState().showModal({
-                title: '¡Prenda actualizada!',
-                message: 'Los cambios se han guardado correctamente.',
-                type: 'success',
-                confirmText: 'Genial'
-            });
+            // Clear pending item on success
+            if (!isEditing) {
+                useUiStore.getState().clearPendingUploadItem();
+                useUiStore.getState().showModal({
+                    title: '¡Prenda guardada!',
+                    message: 'Tu prenda se ha añadido correctamente a tu armario.',
+                    type: 'success',
+                    confirmText: 'Genial'
+                });
+                resetForm();
+            } else {
+                useUiStore.getState().showModal({
+                    title: '¡Prenda actualizada!',
+                    message: 'Los cambios se han guardado correctamente.',
+                    type: 'success',
+                    confirmText: 'Genial'
+                });
+            }
+
+            onClose();
+        } finally {
+            setIsSubmitting(false);
         }
-
-        onClose();
     };
 
     const saveToPending = () => {
@@ -379,11 +387,16 @@ export default function AddItemModal({
                         <div className="flex-shrink-0 p-4 pt-2 pb-3 bg-[var(--background)] border-t border-[var(--border-color)]">
                             <Button
                                 onClick={handleSubmit}
-                                disabled={!image || isProcessing}
+                                disabled={!image || isProcessing || isSubmitting}
                                 className="w-full"
-                                glow={!!image && !isProcessing}
+                                glow={!!image && !isProcessing && !isSubmitting}
                             >
-                                {isProcessing ? (
+                                {isSubmitting ? (
+                                    <>
+                                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                                        {isEditing ? 'Guardando...' : 'Añadiendo...'}
+                                    </>
+                                ) : isProcessing ? (
                                     <>
                                         <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                                         {processingMessage || 'Procesando...'}

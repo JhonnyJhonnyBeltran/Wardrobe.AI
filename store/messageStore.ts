@@ -50,6 +50,9 @@ interface MessageStore {
   setUnreadState: (state: Record<string, ConversationUnreadState>) => void;
   removeConversation: (conversationId: string) => void;
   
+  // Actions - Sync with database
+  syncUnreadCount: (userId: string) => Promise<void>;
+  
   // Selectors
   getUnreadCount: (conversationId: string) => number;
   hasUnread: (conversationId: string) => boolean;
@@ -187,6 +190,28 @@ export const useMessageStore = create<MessageStore>()(
             totalUnreadCount: calculateTotalUnread(rest),
           };
         });
+      },
+
+      // ============================================
+      // SYNC WITH DATABASE
+      // ============================================
+
+      syncUnreadCount: async (userId: string) => {
+        const { supabase } = await import('@/lib/supabase/client');
+        
+        // Get unread messages count from database
+        const { count, error } = await supabase
+          .from('messages')
+          .select('*', { count: 'exact', head: true })
+          .eq('receiver_id', userId)
+          .eq('is_read', false);
+
+        if (!error && count !== null) {
+          set({ 
+            totalUnreadCount: count,
+            badgeVisible: count > 0
+          });
+        }
       },
 
       // ============================================

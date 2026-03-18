@@ -360,6 +360,107 @@ export interface Database {
           updated_at?: string;
         };
       };
+      posts: {
+        Row: {
+          id: string;
+          user_id: string;
+          image_url: string;
+          caption: string | null;
+          likes: number;
+          comments: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          image_url: string;
+          caption?: string | null;
+          likes?: number;
+          comments?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          image_url?: string;
+          caption?: string | null;
+          likes?: number;
+          comments?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      saves: {
+        Row: {
+          id: string;
+          user_id: string;
+          post_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          post_id: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          post_id?: string;
+          created_at?: string;
+        };
+      };
+      save_folders: {
+        Row: {
+          id: string;
+          user_id: string;
+          name: string;
+          icon: string | null;
+          color: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          name: string;
+          icon?: string | null;
+          color?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          name?: string;
+          icon?: string | null;
+          color?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+      save_folder_items: {
+        Row: {
+          id: string;
+          folder_id: string;
+          save_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          folder_id: string;
+          save_id: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          folder_id?: string;
+          save_id?: string;
+          created_at?: string;
+        };
+      };
     };
     Views: {
       [_ in never]: never;

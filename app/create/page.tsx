@@ -214,10 +214,10 @@ export default function CreateOutfitPage() {
             if (selectedColor && item.color?.toLowerCase() !== selectedColor.toLowerCase()) {
                 return false;
             }
-            if (selectedType && item.type?.toLowerCase() !== selectedType.toLowerCase()) {
+            if (selectedType && item.category?.toLowerCase() !== selectedType.toLowerCase()) {
                 return false;
             }
-            if (showFavoritesOnly && !item.isFavorite) {
+            if (showFavoritesOnly && !item.favorite) {
                 return false;
             }
             return true;
@@ -571,9 +571,9 @@ export default function CreateOutfitPage() {
                                                     <div
                                                         key={item.id}
                                                         onClick={() => handleSelect(slot, item)}
-                                                        className={`cursor-pointer group relative aspect-[3/4] rounded-2xl overflow-hidden bg-[var(--card-bg)] border transition-all ${isSelected
-                                                            ? 'border-[var(--brand-pink)] ring-2 ring-[var(--brand-pink)] ring-opacity-50'
-                                                            : 'border-[var(--border-color)]'
+                                                        className={`cursor-pointer group relative aspect-[3/4] rounded-2xl overflow-hidden bg-[var(--card-bg)] transition-all ${isSelected
+                                                            ? 'ring-2 ring-inset ring-[var(--brand-pink)]'
+                                                            : 'ring-1 ring-inset ring-[var(--border-color)]'
                                                             }`}
                                                     >
                                                         <img
@@ -723,9 +723,9 @@ export default function CreateOutfitPage() {
                                             <div
                                                 key={item.id}
                                                 onClick={() => handleSelect(slot, item)}
-                                                className={`cursor-pointer group relative aspect-[3/4] rounded-2xl overflow-hidden bg-[var(--card-bg)] border transition-all duration-300 ${isSelected
-                                                    ? 'border-[var(--brand-pink)] ring-4 ring-[var(--brand-pink)] ring-opacity-30 transform scale-95'
-                                                    : 'border-[var(--border-color)]'
+                                                className={`cursor-pointer group relative aspect-[3/4] rounded-2xl overflow-hidden bg-[var(--card-bg)] transition-all duration-300 ${isSelected
+                                                    ? 'ring-2 ring-inset ring-[var(--brand-pink)]'
+                                                    : 'ring-1 ring-inset ring-[var(--border-color)]'
                                                     }`}
                                             >
                                                 <img

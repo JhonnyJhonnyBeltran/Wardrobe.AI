@@ -1,0 +1,40 @@
+-- ============================================
+-- SAVE FOLDERS - New tables for organizing saved posts
+-- COPY AND PASTE EACH COMMAND SEPARATELY IN SUPABASE SQL EDITOR
+-- ============================================
+
+-- COMMAND 1: Add ID column to saves table
+ALTER TABLE public.saves ADD COLUMN id UUID;
+
+-- COMMAND 2: Update existing rows with UUIDs
+UPDATE public.saves SET id = gen_random_uuid() WHERE id IS NULL;
+
+-- COMMAND 3: Set ID as primary key
+ALTER TABLE public.saves DROP CONSTRAINT IF EXISTS saves_pkey;
+ALTER TABLE public.saves ALTER COLUMN id SET NOT NULL;
+ALTER TABLE public.saves ADD PRIMARY KEY (id);
+
+-- COMMAND 4: Create save_folders table
+CREATE TABLE public.save_folders (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  name TEXT NOT NULL,
+  icon TEXT,
+  color TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- COMMAND 5: Create save_folder_items table
+CREATE TABLE public.save_folder_items (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  folder_id UUID REFERENCES public.save_folders(id) ON DELETE CASCADE NOT NULL,
+  save_id UUID REFERENCES public.saves(id) ON DELETE CASCADE NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (folder_id, save_id)
+);
+
+-- COMMAND 6: Create indexes
+CREATE INDEX idx_save_folders_user ON public.save_folders(user_id);
+CREATE INDEX idx_save_folder_items_folder ON public.save_folder_items(folder_id);
+CREATE INDEX idx_save_folder_items_save ON public.save_folder_items(save_id);

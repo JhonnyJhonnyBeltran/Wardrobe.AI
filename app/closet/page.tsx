@@ -5,7 +5,7 @@
  * Search expands, buttons icon-only on mobile
  */
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRef } from 'react';
@@ -81,12 +81,20 @@ export default function ClosetPage() {
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [editingItem, setEditingItem] = useState<ClothingItemType | null>(null);
-  const { items, loading, addItem, updateItem, deleteItem, refresh } = useWardrobe();
+  const { items, loading, loadingMore, hasMore, loadMore, addItem, updateItem, deleteItem, refresh } = useWardrobe();
 
   // Selection Mode State
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const fetchIdRef = useRef(0); // Para cancelar fetches obsoletos
   const touchTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Mounted ref for outfits fetching matching items pattern
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; }
+  }, []);
 
   const toggleSelection = (id: string) => {
     setSelectedIds(prev => {
@@ -133,54 +141,106 @@ export default function ClosetPage() {
 
   const [outfits, setOutfits] = useState<any[]>([]);
   const [outfitsLoading, setOutfitsLoading] = useState(false);
+  const [outfitsLoadingMore, setOutfitsLoadingMore] = useState(false);
+  const [outfitsHasMore, setOutfitsHasMore] = useState(true);
+  const outfitsPageRef = useRef(0);
+  // More items per page on desktop for full scroll
+  const OUTFITS_PER_PAGE = 16;
 
-  // Fetch Outfits
-  useEffect(() => {
-    let mounted = true;
+  const fetchOutfits = useCallback(async (isLoadMore = false) => {
+    if (!user) return;
 
-    async function fetchOutfits() {
-      if (!user) return;
+    if (isLoadMore) {
+      setOutfitsLoadingMore(true);
+    } else {
       setOutfitsLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from('outfits')
-          .select(`
-            *,
-            outfit_items (
-              clothing_item:clothing_items (*)
-            )
-          `)
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
+    }
 
-        if (error) throw error;
+    const currentPage = isLoadMore ? outfitsPageRef.current + 1 : 0;
+    const from = currentPage * OUTFITS_PER_PAGE;
+    const to = from + OUTFITS_PER_PAGE - 1;
 
-        if (mounted) {
-          // Transform data to match Outfit type
-          const formattedOutfits = (data || []).map((o: any) => ({
-            ...o,
-            createdAt: new Date(o.created_at),
-            occasion: o.occasion,
-            items: o.outfit_items.map((oi: any) => oi.clothing_item).filter(Boolean),
-            style: o.occasion, // map occasion to style for UI
-            date: new Date(o.created_at).toLocaleDateString(),
-          }));
+    try {
+      const { data, error } = await supabase
+        .from('outfits')
+        .select(`
+          *,
+          outfit_items (
+            clothing_item:clothing_items (*)
+          )
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .range(from, to);
 
-          setOutfits(formattedOutfits);
-        }
-      } catch (err) {
-        console.error('Error fetching outfits:', err);
-      } finally {
-        if (mounted) setOutfitsLoading(false);
+      if (error) throw error;
+
+      // Transform data to match Outfit type
+      const formattedOutfits = (data || []).map((o: any) => ({
+        ...o,
+        createdAt: new Date(o.created_at),
+        occasion: o.occasion,
+        items: o.outfit_items.map((oi: any) => oi.clothing_item).filter(Boolean),
+        style: o.occasion, // map occasion to style for UI
+        date: new Date(o.created_at).toLocaleDateString(),
+      }));
+
+      if (isLoadMore) {
+        setOutfits(prev => [...prev, ...formattedOutfits]);
+      } else {
+        setOutfits(formattedOutfits);
+      }
+
+      setOutfitsHasMore((data || []).length === OUTFITS_PER_PAGE);
+      outfitsPageRef.current = currentPage;
+
+    } catch (err) {
+      console.error('Error fetching outfits:', err);
+    } finally {
+      if (mountedRef.current) {
+        setOutfitsLoading(false);
+        setOutfitsLoadingMore(false);
       }
     }
+  }, [user]);
 
-    if (activeTab === 'outfits') {
-      fetchOutfits();
+  const loadMoreOutfits = useCallback(() => {
+    if (outfitsLoading || outfitsLoadingMore || !outfitsHasMore) return;
+    fetchOutfits(true);
+  }, [outfitsLoading, outfitsLoadingMore, outfitsHasMore, fetchOutfits]);
+
+  // Infinite Scroll Observers
+  const itemsObserverElement = useRef<HTMLDivElement | null>(null);
+  const outfitsObserverElement = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          if (activeTab === 'items' && hasMore && !loadingMore) {
+            loadMore();
+          } else if (activeTab === 'outfits' && outfitsHasMore && !outfitsLoadingMore) {
+            loadMoreOutfits();
+          }
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (activeTab === 'items' && itemsObserverElement.current) observer.observe(itemsObserverElement.current);
+    if (activeTab === 'outfits' && outfitsObserverElement.current) observer.observe(outfitsObserverElement.current);
+
+    return () => observer.disconnect();
+  }, [activeTab, hasMore, loadingMore, outfitsHasMore, outfitsLoadingMore, loadMore, loadMoreOutfits]);
+
+  // Fetch Outfits - fetch when user is available
+  useEffect(() => {
+    mountedRef.current = true;
+    if (user && activeTab === 'outfits') {
+      fetchOutfits(false);
     }
-
-    return () => { mounted = false; };
-  }, [user, activeTab]);
+    return () => { mountedRef.current = false; };
+  }, [user, activeTab, fetchOutfits]);
 
   // Sync favorites from items
   useEffect(() => {
@@ -609,6 +669,12 @@ export default function ClosetPage() {
                       )}
                     </div>
                   ))}
+                  {/* Infinite Scroll Trigger - Items */}
+                  {items.length > 0 && !loading && (
+                    <div ref={itemsObserverElement} className="h-10 w-full flex items-center justify-center pt-4">
+                      {loadingMore && <div className="animate-spin w-6 h-6 border-2 border-[var(--brand-pink)] border-t-transparent flex-shrink-0 animate-spin transition-colors rounded-full" />}
+                    </div>
+                  )}
                 </div>
               )}
             </motion.div>

@@ -8,7 +8,7 @@ import { useRealtimeStore } from '@/store/realtimeStore';
 import Image from 'next/image';
 import { supabase } from '@/lib/supabase/client';
 import { getRecentFollowActivity, followUser, unfollowUser, getMyFollowStatusMap, getFollowStatus } from '@/lib/services/followService';
-import { LogoMark } from '@/components';
+import { LogoMark, Avatar } from '@/components';
 import Link from 'next/link';
 import { useWardrobe } from '@/lib/hooks/useWardrobe';
 import { useRouter } from 'next/navigation';
@@ -120,7 +120,7 @@ export default function NotificationList({ compact = false, onClose }: Notificat
                                 id: f.follower_id,
                                 username: f.follower?.username || '',
                                 name: f.follower?.full_name || f.follower?.username || 'Usuario',
-                                avatar: f.follower?.avatar_url || 'https://i.pravatar.cc/150?u=default'
+                                avatar: f.follower?.avatar_url || null
                             },
                             time: new Date(f.created_at).toLocaleDateString(),
                             timestamp: new Date(f.created_at).getTime(),
@@ -156,7 +156,7 @@ export default function NotificationList({ compact = false, onClose }: Notificat
                                     id: l.user_id,
                                     username: l.user?.username || '',
                                     name: l.user?.full_name || l.user?.username || 'Usuario',
-                                    avatar: l.user?.avatar_url || 'https://i.pravatar.cc/150?u=default'
+                                    avatar: l.user?.avatar_url || null
                                 },
                                 time: new Date(l.created_at).toLocaleDateString(),
                                 timestamp: new Date(l.created_at).getTime(),
@@ -306,9 +306,7 @@ export default function NotificationList({ compact = false, onClose }: Notificat
                         {activityNotifications.filter(n => n.type === 'follow').map((notif) => (
                             <div key={notif.id} className="flex items-center gap-3 group">
                                 <Link href={`/profile/${notif.actor!.id}`} className="relative" onClick={onClose}>
-                                    <div className="w-10 h-10 rounded-full overflow-hidden relative border border-[var(--border-color)]">
-                                        <Image src={notif.actor!.avatar} alt={notif.actor!.name} fill className="object-cover" />
-                                    </div>
+                                    <Avatar src={notif.actor?.avatar || null} alt={notif.actor!.name} size="md" />
                                     <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-[var(--background)] flex items-center justify-center text-white bg-[var(--brand-pink)]">
                                         <UserPlus className="w-2.5 h-2.5" />
                                     </div>
@@ -344,9 +342,7 @@ export default function NotificationList({ compact = false, onClose }: Notificat
                         {activityNotifications.filter(n => n.type === 'like').map((notif) => (
                             <div key={notif.id} className="flex items-center gap-3 group">
                                 <Link href={`/profile/${notif.actor!.id}`} className="relative" onClick={onClose}>
-                                    <div className="w-10 h-10 rounded-full overflow-hidden relative border border-[var(--border-color)]">
-                                        <Image src={notif.actor!.avatar} alt={notif.actor!.name} fill className="object-cover" />
-                                    </div>
+                                    <Avatar src={notif.actor?.avatar || null} alt={notif.actor!.name} size="md" />
                                     <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-[var(--background)] flex items-center justify-center text-white bg-[#FF3040]">
                                         <Heart className="w-2.5 h-2.5 fill-current" />
                                     </div>

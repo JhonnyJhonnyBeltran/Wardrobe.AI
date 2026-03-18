@@ -4,11 +4,12 @@
  * AppLayout - Responsive layout with TabBar and Sidebar
  */
 
-import React, { ReactNode } from 'react';
+import React, { ReactNode, useEffect } from 'react';
 import TabBar from './TabBar';
 import Sidebar from './Sidebar';
 import AuthGuard from './AuthGuard';
 import FloatingCreateButton from './FloatingCreateButton';
+import SaveModal from './SaveModal';
 import { useUiStore } from '@/store/uiStore';
 import { UploadCloud, X } from 'lucide-react';
 import Link from 'next/link';
@@ -19,7 +20,16 @@ interface AppLayoutProps {
 }
 
 export default function AppLayout({ children }: AppLayoutProps) {
-  const { pendingUploadItem, clearPendingUploadItem, showModal } = useUiStore();
+  const { pendingUploadItem, clearPendingUploadItem, showModal, saveToast, hideSaveToast } = useUiStore();
+
+  useEffect(() => {
+    if (saveToast) {
+      const timer = setTimeout(() => {
+        hideSaveToast();
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [saveToast, hideSaveToast]);
 
   const handleCancelPending = (e: React.MouseEvent) => {
     e.preventDefault(); // Prevent Link navigation
@@ -82,8 +92,33 @@ export default function AppLayout({ children }: AppLayoutProps) {
         )}
       </AnimatePresence>
 
-      {/* Onboarding Modal (Global) */}
+      {/* Global Modals */}
+      <SaveModal />
 
+      {/* Global Save Toast */}
+      <AnimatePresence>
+        {saveToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.9 }}
+            className="fixed bottom-24 md:bottom-12 left-1/2 -translate-x-1/2 z-[9999] min-w-[320px] max-w-[90vw] flex items-center justify-between gap-4 px-5 py-3.5 bg-[#1a1a1a] backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl"
+          >
+            <span className="text-white font-medium text-sm">{saveToast.message}</span>
+            {saveToast.actionLabel && (
+              <button
+                onClick={() => {
+                  saveToast.onAction?.();
+                  hideSaveToast();
+                }}
+                className="text-[var(--brand-pink)] font-bold text-sm tracking-wide hover:text-pink-400 transition-colors bg-[var(--brand-pink)]/10 px-4 py-1.5 rounded-full"
+              >
+                {saveToast.actionLabel}
+              </button>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

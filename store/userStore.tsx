@@ -4,7 +4,7 @@
  * User Store - State management for user subscription and profile
  */
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
 import { UserProfile, SubscriptionTier, UserPreferences } from '@/types';
 import { supabase } from '@/lib/supabase/client';
 import { User as SupabaseUser } from '@supabase/supabase-js';
@@ -103,34 +103,39 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const userIdRef = useRef<string | null>(null);
+
   useEffect(() => {
+    let isMounted = true;
+
     // 1. Check active session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
-        fetchUserProfile(session.user);
+        userIdRef.current = session.user.id;
+        await fetchUserProfile(session.user);
       } else {
-        setUser(null);
+        if (isMounted) setUser(null);
       }
-      setIsLoading(false);
+      if (isMounted) setIsLoading(false);
     });
 
     // 2. Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
-        // Only fetch if user ID changed or we don't have a user yet
-        // OR simply fetch every time to be safe/fresh
-        // To avoid loops/over-fetching, we can check IDs. 
-        // But simply calling fetchUserProfile is usually fine on auth state change.
-        if (session.user.id !== user?.id) {
+        // Track the current session.user.id via ref to avoid stale closures
+        if (session.user.id !== userIdRef.current || !user) {
+          userIdRef.current = session.user.id;
           await fetchUserProfile(session.user);
         }
       } else {
-        setUser(null);
+        userIdRef.current = null;
+        if (isMounted) setUser(null);
       }
-      setIsLoading(false);
+      if (isMounted) setIsLoading(false);
     });
 
     return () => {
+      isMounted = false;
       subscription.unsubscribe();
     };
   }, []);

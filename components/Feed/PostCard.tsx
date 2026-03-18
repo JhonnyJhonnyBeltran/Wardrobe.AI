@@ -3,8 +3,10 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Heart } from 'lucide-react';
+import { Heart, Bookmark } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import Avatar from '@/components/Avatar';
+import { useUiStore } from '@/store/uiStore';
 
 export interface Post {
     id: string;
@@ -32,6 +34,46 @@ interface PostCardProps {
  */
 export default function PostCard({ post, onClick }: PostCardProps) {
     const [isHovered, setIsHovered] = useState(false);
+    const [isSavedState, setIsSavedState] = useState(post.isSaved || false);
+    const { showSaveToast, openFolderModal } = useUiStore();
+
+    const toggleQuickSave = async (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const previousState = isSavedState;
+        setIsSavedState(!previousState);
+
+        if (!previousState) {
+            // Optimistic save
+            showSaveToast({
+                message: "Guardado",
+                actionLabel: "Añadir a carpeta",
+                onAction: () => openFolderModal(post.id)
+            });
+
+            try {
+                const res = await fetch('/api/saves', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ post_id: post.id })
+                });
+                if (!res.ok) throw new Error('Save failed');
+            } catch (err) {
+                console.error(err);
+                setIsSavedState(previousState);
+            }
+        } else {
+            // Unsave
+            try {
+                const res = await fetch(`/api/saves?post_id=${post.id}`, { method: 'DELETE' });
+                if (!res.ok) throw new Error('Unsave failed');
+            } catch (err) {
+                console.error(err);
+                setIsSavedState(previousState);
+            }
+        }
+    };
 
     // If no image, show text card
     if (!post.imageUrl) {
@@ -41,9 +83,7 @@ export default function PostCard({ post, onClick }: PostCardProps) {
                     className="break-inside-avoid mb-6 group relative rounded-2xl overflow-hidden bg-[var(--card-bg)] shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer p-6 flex flex-col gap-4 border border-[var(--border-color)]"
                 >
                     <div className="flex items-center gap-2">
-                        <div className="relative w-6 h-6 rounded-full overflow-hidden">
-                            <Image src={post.author.avatar || '/placeholder-avatar.png'} alt={post.author.name} fill className="object-cover" />
-                        </div>
+                        <Avatar src={post.author.avatar || null} alt={post.author.name} size="sm" />
                         <span className="text-xs font-medium text-[var(--foreground-secondary)]">{post.author.name}</span>
                     </div>
                     <p className="text-[var(--foreground)] font-serif text-lg leading-relaxed line-clamp-4">
@@ -61,11 +101,11 @@ export default function PostCard({ post, onClick }: PostCardProps) {
     return (
         <Link href={`/post/${post.id}`}>
             <div
-                className="break-inside-avoid mb-6 group relative rounded-2xl overflow-hidden bg-[var(--card-bg)] shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer"
+                className="break-inside-avoid mb-6 group relative rounded-2xl overflow-hidden bg-[var(--card-bg)] shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer h-full"
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
             >
-                <div className="relative w-full">
+                <div className="relative w-full h-full flex flex-col">
                     <Image
                         src={post.imageUrl}
                         alt={post.title}
@@ -78,12 +118,19 @@ export default function PostCard({ post, onClick }: PostCardProps) {
                     {/* Gradient Overlay - Always visible for text readability or removed if user wants clean */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-60" />
 
+                    {/* Add Save Quick Action to PostCard */}
+                    <button
+                        onClick={toggleQuickSave}
+                        className={`absolute top-3 right-3 p-2.5 rounded-full backdrop-blur-md transition-all duration-300 md:opacity-0 md:group-hover:opacity-100 ${isSavedState ? 'bg-[var(--brand-pink)] shadow-[var(--brand-pink)]/40 opacity-100' : 'bg-black/40 hover:bg-black/60 opacity-0'
+                            }`}
+                    >
+                        <Bookmark className={`w-5 h-5 ${isSavedState ? 'fill-white text-white' : 'text-white'}`} strokeWidth={isSavedState ? 2 : 2.5} />
+                    </button>
+
                     {/* Minimal Info on Hover */}
                     <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                         <div className="flex items-center gap-2 text-white/90">
-                            <div className="relative w-5 h-5 rounded-full overflow-hidden border border-white/20">
-                                <Image src={post.author.avatar || '/placeholder-avatar.png'} alt={post.author.name} fill className="object-cover" />
-                            </div>
+                            <Avatar src={post.author.avatar || null} alt={post.author.name} size="xs" className="border border-white/20" />
                             <span className="text-xs font-medium truncate max-w-[100px]">{post.author.name}</span>
                         </div>
                         {post.likes > 0 && (

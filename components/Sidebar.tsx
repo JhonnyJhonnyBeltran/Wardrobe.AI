@@ -1,5 +1,5 @@
 // ... imports
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
@@ -20,7 +20,15 @@ interface NavItem {
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const { isPremium } = useUser();
+  const { isPremium, user } = useUser();
+  const syncUnreadCount = useMessageStore(state => state.syncUnreadCount);
+
+  // Sync unread count on mount and when user changes
+  useEffect(() => {
+    if (user?.id) {
+      syncUnreadCount(user.id);
+    }
+  }, [user?.id, syncUnreadCount]);
 
   // State for popover
   const [showNotifications, setShowNotifications] = useState(false);

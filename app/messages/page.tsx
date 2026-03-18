@@ -183,7 +183,7 @@ export default function MessagesPage() {
                                     id: profile.id,
                                     username: profile.username || 'Usuario',
                                     full_name: profile.full_name,
-                                    avatar_url: profile.avatar_url || 'https://i.pravatar.cc/150?u=default'
+                                    avatar_url: profile.avatar_url || null
                                 }
                             });
                         }

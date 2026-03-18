@@ -15,7 +15,6 @@ import { useParams, useRouter } from 'next/navigation';
 import {
   ArrowLeft,
   Grid3x3,
-  Shirt,
   Heart,
   MessageCircle,
   UserPlus,
@@ -26,7 +25,7 @@ import {
   Send
 } from 'lucide-react';
 
-type TabType = 'posts' | 'outfits';
+type TabType = 'posts';
 
 interface Profile {
   id: string;
@@ -58,7 +57,6 @@ export default function PublicProfilePage() {
     following: 0
   });
   const [posts, setPosts] = useState<any[]>([]);
-  const [outfits, setOutfits] = useState<any[]>([]);
 
   // Check if viewing own profile
   const isOwnProfile = currentUser?.id === profileId;
@@ -115,23 +113,13 @@ export default function PublicProfilePage() {
 
       setPosts(postsData || []);
 
-      // 4. Fetch public outfits
-      const { data: outfitsData } = await supabase
-        .from('outfits')
-        .select('*')
-        .eq('user_id', profileId)
-        .eq('is_public', true)
-        .order('created_at', { ascending: false });
-
-      setOutfits(outfitsData || []);
-
-      // 5. Check follow status
+      // 4. Check follow status
       if (currentUser) {
         const status = await followService.getFollowStatus(currentUser.id, profileId);
         setFollowStatus(status);
         setIsFollowedByMe(status === 'accepted');
         
-        // 6. Check if user is blocked
+        // 5. Check if user is blocked
         const blocked = await followService.isBlocked(currentUser.id, profileId);
         setIsBlocked(blocked);
       }
@@ -400,7 +388,7 @@ export default function PublicProfilePage() {
           </div>
         </div>
 
-        {/* Tabs */}
+        {/* Tabs - Only Posts */}
         <div className="border-t border-[var(--border-color)] mb-6">
           <div className="flex">
             <button
@@ -413,80 +401,42 @@ export default function PublicProfilePage() {
               <Grid3x3 className="w-5 h-5" />
               <span className="text-sm font-semibold uppercase tracking-wide">{t.profile.posts}</span>
             </button>
-            <button
-              onClick={() => setActiveTab('outfits')}
-              className={`flex-1 flex items-center justify-center gap-2 py-4 border-t-2 transition-colors ${activeTab === 'outfits'
-                ? 'border-[var(--brand-pink)] text-[var(--foreground)]'
-                : 'border-transparent text-[var(--foreground-tertiary)]'
-                }`}
-            >
-              <Shirt className="w-5 h-5" />
-              <span className="text-sm font-semibold uppercase tracking-wide">{t.profile.outfits}</span>
-            </button>
           </div>
         </div>
 
-        {/* Content Grid */}
-        {activeTab === 'posts' ? (
-          <div className="grid grid-cols-3 gap-1 md:gap-2">
-            {posts.length === 0 ? (
-              <div className="col-span-3 text-center py-16">
-                <Grid3x3 className="w-12 h-12 mx-auto mb-4 text-[var(--foreground-tertiary)]" />
-                <p className="text-[var(--foreground-secondary)]">Sin publicaciones</p>
-              </div>
-            ) : (
-              posts.map((post) => (
-                <motion.div
-                  key={post.id}
-                  whileHover={{ scale: 1.02 }}
-                  className="relative aspect-square bg-gradient-to-br from-[var(--background-secondary)] to-[var(--background-tertiary)] rounded-lg overflow-hidden cursor-pointer group"
-                >
-                  {post.image_url ? (
-                    <img src={post.image_url} alt="Post" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-4xl">👗</div>
-                  )}
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
-                    <div className="flex items-center gap-1 text-white">
-                      <Heart className="w-5 h-5 fill-white" />
-                      <span className="font-semibold">{post.likes || 0}</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-white">
-                      <MessageCircle className="w-5 h-5 fill-white" />
-                      <span className="font-semibold">{post.comments || 0}</span>
-                    </div>
+        {/* Content Grid - Only Posts */}
+        <div className="grid grid-cols-3 gap-1 md:gap-2">
+          {posts.length === 0 ? (
+            <div className="col-span-3 text-center py-16">
+              <Grid3x3 className="w-12 h-12 mx-auto mb-4 text-[var(--foreground-tertiary)]" />
+              <p className="text-[var(--foreground-secondary)]">Sin publicaciones</p>
+            </div>
+          ) : (
+            posts.map((post) => (
+              <Link
+                href={`/post/${post.id}`}
+                key={post.id}
+                className="relative aspect-square bg-gradient-to-br from-[var(--background-secondary)] to-[var(--background-tertiary)] rounded-lg overflow-hidden cursor-pointer group"
+              >
+                {post.image_url ? (
+                  <img src={post.image_url} alt="Post" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-4xl">👗</div>
+                )}
+                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
+                  <div className="flex items-center gap-1 text-white">
+                    <Heart className="w-5 h-5 fill-white" />
+                    <span className="font-semibold">{post.likes || 0}</span>
                   </div>
-                </motion.div>
-              ))
-            )}
-          </div>
-        ) : (
-          <div className="grid grid-cols-3 gap-1 md:gap-2">
-            {outfits.length === 0 ? (
-              <div className="col-span-3 text-center py-16">
-                <Shirt className="w-12 h-12 mx-auto mb-4 text-[var(--foreground-tertiary)]" />
-                <p className="text-[var(--foreground-secondary)]">Sin outfits públicos</p>
-              </div>
-            ) : (
-              outfits.map((outfit) => (
-                <motion.div
-                  key={outfit.id}
-                  whileHover={{ scale: 1.02 }}
-                  className="relative aspect-square bg-gradient-to-br from-[var(--background-secondary)] to-[var(--background-tertiary)] rounded-lg overflow-hidden cursor-pointer group"
-                >
-                  {outfit.image_url ? (
-                    <img src={outfit.image_url} alt={outfit.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-4xl">👔</div>
-                  )}
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <p className="text-white font-semibold text-sm px-2 text-center">{outfit.name}</p>
+                  <div className="flex items-center gap-1 text-white">
+                    <MessageCircle className="w-5 h-5 fill-white" />
+                    <span className="font-semibold">{post.comments || 0}</span>
                   </div>
-                </motion.div>
-              ))
-            )}
-          </div>
-        )}
+                </div>
+              </Link>
+            ))
+          )}
+        </div>
       </motion.div>
     </div>
   );

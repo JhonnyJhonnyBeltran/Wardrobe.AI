@@ -13,7 +13,7 @@ interface DraggableItemProps {
     onSelect: () => void;
     onChange: (updates: Partial<{ x: number; y: number; scale: number; rotation: number; zIndex: number }>) => void;
     onRemove: () => void;
-    containerRef: React.RefObject<HTMLDivElement>;
+    containerRef: React.RefObject<HTMLDivElement | null>;
 }
 
 export const DraggableItem = ({
