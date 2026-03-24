@@ -141,13 +141,21 @@ export default function PublicProfilePage() {
     if (!currentUser || !profileId) return;
 
     // Optimistic update
-    setFollowStatus('pending');
+    setFollowStatus('accepted');
+    setIsFollowedByMe(true);
 
     const result = await followService.followUser(currentUser.id, profileId);
 
     if (!result.success) {
       setFollowStatus('none');
+      setIsFollowedByMe(false);
       console.error('Error following:', result.error);
+    } else {
+      // Update follower count
+      setProfileStats(prev => ({
+        ...prev,
+        followers: prev.followers + 1
+      }));
     }
   };
 

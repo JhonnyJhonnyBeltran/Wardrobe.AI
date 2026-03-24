@@ -96,6 +96,21 @@ export default function SearchPage() {
       } else {
         setUserResults(newData);
       }
+      
+      // Update followingIds
+      if (user && newData.length > 0) {
+        const statuses = await import('@/lib/services/followService').then(m => m.getMyFollowStatusMap(user.id));
+        setFollowingIds(prev => {
+          const next = new Set(prev);
+          newData.forEach((u: any) => {
+            if (statuses[u.id] === 'accepted') {
+              next.add(u.id);
+            }
+          });
+          return next;
+        });
+      }
+
       setUsersHasMore(newData.length === USERS_PER_PAGE);
       usersPageRef.current = currentPage;
     } catch (error) {

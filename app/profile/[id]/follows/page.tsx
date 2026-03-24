@@ -86,7 +86,7 @@ export default function FollowListPage() {
   const handleFollow = async (userId: string) => {
     if (!currentUser) return;
 
-    setMyFollowStatus(prev => ({ ...prev, [userId]: 'pending' }));
+    setMyFollowStatus(prev => ({ ...prev, [userId]: 'accepted' }));
 
     const result = await followService.followUser(currentUser.id, userId);
 
