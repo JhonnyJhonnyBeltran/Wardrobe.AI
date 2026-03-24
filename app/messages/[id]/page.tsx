@@ -191,10 +191,10 @@ export default function ChatPage() {
         const content = newMessage.trim();
         setNewMessage(''); // Optimistic clear
 
-        // Optimistic UI Update with real UUID
-        const realId = crypto.randomUUID();
+        // Optimistic UI Update with fallback UUID generator to support testing on non-https mobile connections
+        const tempId = `temp_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
         const optimisticMsg: Message = {
-            id: realId,
+            id: tempId,
             sender_id: user.id,
             receiver_id: targetUserId,
             content: content,
@@ -233,31 +233,38 @@ export default function ChatPage() {
                 conversationId = (newConv as any)?.id;
             }
 
-            // Now insert the message using the exact same UUID
-            const { error } = await supabase
+            // Now insert the message
+            const { data: insertedMsg, error } = await supabase
                 .from('messages')
                 .insert({
-                    id: realId,
                     conversation_id: conversationId,
                     sender_id: user.id,
                     receiver_id: targetUserId,
                     content: content,
-                } as any);
+                } as any)
+                .select()
+                .single();
 
             if (error) {
                 console.error('Error inserting message:', error);
                 throw error;
             }
             
-            // Note: We don't need to manually replace the optimistic message anymore! 
-            // The ID is the same, so postgres_changes will safely update it.
+            if (insertedMsg) {
+                setMessages(prev => {
+                    if (prev.some(m => m.id === insertedMsg.id)) {
+                        return prev.filter(m => m.id !== tempId);
+                    }
+                    return prev.map(m => m.id === tempId ? { ...(insertedMsg as Message) } : m);
+                });
+            }
 
         } catch (error) {
             console.error('Error sending message:', error);
             // Restore message if failed
             setNewMessage(content);
             // Remove optimistic message
-            setMessages(prev => prev.filter(m => m.id !== realId));
+            setMessages(prev => prev.filter(m => m.id !== tempId));
         }
     };
 
