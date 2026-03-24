@@ -123,7 +123,7 @@ export default function ChatPage() {
         };
 
         initChat();
-    }, [user, targetUserId]);
+    }, [user?.id, targetUserId]);
 
     // Setup Realtime Subscription
     useEffect(() => {
@@ -183,7 +183,7 @@ export default function ChatPage() {
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [user, targetUserId]);
+    }, [user?.id, targetUserId]);
 
     const sendMessage = async () => {
         if (!newMessage.trim() || !user || !targetUserId) return;
@@ -251,11 +251,11 @@ export default function ChatPage() {
             }
             
             if (insertedMsg) {
-                setMessages(prev => {
-                    if (prev.some(m => m.id === insertedMsg.id)) {
-                        return prev.filter(m => m.id !== tempId);
+                setMessages((prev: Message[]) => {
+                    if (prev.some((m: Message) => m.id === insertedMsg.id)) {
+                        return prev.filter((m: Message) => m.id !== tempId);
                     }
-                    return prev.map(m => m.id === tempId ? { ...(insertedMsg as Message) } : m);
+                    return prev.map((m: Message) => m.id === tempId ? { ...(insertedMsg as Message) } : m);
                 });
             }
 
@@ -264,7 +264,7 @@ export default function ChatPage() {
             // Restore message if failed
             setNewMessage(content);
             // Remove optimistic message
-            setMessages(prev => prev.filter(m => m.id !== tempId));
+            setMessages((prev: Message[]) => prev.filter(m => m.id !== tempId));
         }
     };
 
