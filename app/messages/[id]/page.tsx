@@ -146,7 +146,7 @@ export default function ChatPage() {
 
                 if (isRelevant) {
                     setMessages(prev => {
-                        const existsIndex = prev.findIndex(m => m.id === newMsg.id || (m as any).temp_id === (newMsg as any).temp_id);
+                        const existsIndex = prev.findIndex(m => m.id === newMsg.id);
                         if (existsIndex >= 0) {
                             // Update existing message (e.g., marked as read, or server confirmed)
                             const newArr = [...prev];
@@ -375,9 +375,9 @@ export default function ChatPage() {
                             <p className="text-sm text-[var(--foreground-tertiary)]">Envía un mensaje para comenzar la conversación</p>
                         </div>
                     ) : (
-                        messages.map((msg, idx) => {
+                        Array.from(new Map(messages.map(m => [m.id, m])).values()).map((msg, idx, arr) => {
                             const isMe = msg.sender_id === user?.id;
-                            const prevMsg = idx > 0 ? messages[idx - 1] : null;
+                            const prevMsg = idx > 0 ? arr[idx - 1] : null;
                             const showAvatar = !prevMsg || prevMsg.sender_id !== msg.sender_id;
 
                             // Check if message is a shared post

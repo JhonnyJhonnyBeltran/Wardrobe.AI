@@ -372,12 +372,15 @@ CREATE POLICY "Users can delete own comments" ON public.comments FOR DELETE USIN
 -- Conversations policies
 CREATE POLICY "Users view own conversations" ON public.conversations FOR SELECT USING (auth.uid() = participant1_id OR auth.uid() = participant2_id);
 CREATE POLICY "Users create conversations" ON public.conversations FOR INSERT WITH CHECK (auth.uid() = participant1_id OR auth.uid() = participant2_id);
+CREATE POLICY "Users delete own conversations" ON public.conversations FOR DELETE USING (auth.uid() = participant1_id OR auth.uid() = participant2_id);
 
 -- Messages policies
 CREATE POLICY "Users view own messages" ON public.messages FOR SELECT USING (
   EXISTS (SELECT 1 FROM public.conversations WHERE id = conversation_id AND (participant1_id = auth.uid() OR participant2_id = auth.uid()))
 );
 CREATE POLICY "Users send messages" ON public.messages FOR INSERT WITH CHECK (auth.uid() = sender_id);
+CREATE POLICY "Users can mark received messages as read" ON public.messages FOR UPDATE USING (auth.uid() = receiver_id);
+CREATE POLICY "Users delete own messages" ON public.messages FOR DELETE USING (auth.uid() = sender_id OR auth.uid() = receiver_id);
 
 -- Saves policies
 CREATE POLICY "Users view own saves" ON public.saves FOR SELECT USING (auth.uid() = user_id);

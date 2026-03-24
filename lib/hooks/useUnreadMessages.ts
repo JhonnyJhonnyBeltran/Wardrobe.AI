@@ -113,37 +113,19 @@ export function useUnreadMessages(options: UseUnreadMessagesOptions = {}) {
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*',
           schema: 'public',
           table: 'messages',
-          filter: `receiver_id=eq.${user.id}`,
         },
-        (payload) => {
-          const newMessage = payload.new as UnreadMessageData & { receiver_id: string };
+        async (payload) => {
+          const newOrUpdatedMessage = (payload.new || payload.old) as any;
+          
+          if (!newOrUpdatedMessage) return;
 
-          // Only add if it's a message for us and not from us
-          if (newMessage.receiver_id === user.id && newMessage.sender_id !== user.id) {
-            addUnreadMessage(
-              newMessage.conversation_id,
-              newMessage.id,
-              newMessage.sender_id
-            );
-          }
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'messages',
-          filter: `receiver_id=eq.${user.id}`,
-        },
-        (payload) => {
-          // If message was marked as read, refetch to update state
-          const updatedMessage = payload.new as UnreadMessageData & { is_read: boolean };
-          if (updatedMessage.is_read) {
-            // Optimistically handled by markConversationAsRead
+          // If the message is for us, sync global count from DB directly
+          // This guarantees 100% accuracy independent of local store state mutations
+          if (newOrUpdatedMessage.receiver_id === user.id || newOrUpdatedMessage.sender_id === user.id) {
+             useMessageStore.getState().syncUnreadCount(user.id);
           }
         }
       )
