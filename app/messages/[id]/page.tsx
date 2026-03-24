@@ -70,18 +70,25 @@ export default function ChatPage() {
             setMessages(data as any[]);
             setLoading(false);
 
-            // Mark any unread messages from them to us as read in Supabase
-            await (supabase.from('messages') as any)
+            // Update read state in Supabase
+            const { error: updateError } = await (supabase.from('messages') as any)
                 .update({ is_read: true })
                 .eq('sender_id', targetUserId)
                 .eq('receiver_id', user.id)
                 .eq('is_read', false);
 
-            // Update local badge state utilizing the correct conversation ID
-            if (data.length > 0) {
-                const convId = (data as any[])[0].conversation_id;
-                if (convId) markConversationAsRead(convId);
+            // Directly sync global unread count right after updating DB
+            // This ensures the badge updates INSTANTLY
+            if (!updateError) {
+                useMessageStore.getState().syncUnreadCount(user.id);
             }
+
+            // Also proactively clear this conversation's unread from the local store
+            // if we have its conversation_id handy.
+            const conversationIds = Array.from(new Set(data.map((m: any) => m.conversation_id).filter(Boolean)));
+            conversationIds.forEach((id: any) => {
+                markConversationAsRead(id);
+            });
         }
     };
 
@@ -127,7 +134,7 @@ export default function ChatPage() {
                 event: '*',
                 schema: 'public',
                 table: 'messages',
-            }, (payload) => {
+            }, async (payload) => {
                 // If it's a delete, new might be null.
                 if (!payload.new || Object.keys(payload.new).length === 0) return;
 
@@ -142,6 +149,24 @@ export default function ChatPage() {
                         if (prev.some(m => m.id === newMsg.id)) return prev;
                         return [...prev, newMsg];
                     });
+
+                    // If we receive a message from the target user while we are in this chat,
+                    // we should instantly mark it as read to avoid the badge flashing or incrementing incorrectly.
+                    if (newMsg.sender_id === targetUserId && newMsg.receiver_id === user.id && !newMsg.is_read) {
+                        try {
+                            await (supabase.from('messages') as any)
+                                .update({ is_read: true })
+                                .eq('id', newMsg.id);
+                            
+                            // Remove from local badge state instantly
+                            if ((newMsg as any).conversation_id) {
+                                useMessageStore.getState().markConversationAsRead((newMsg as any).conversation_id);
+                            }
+                            useMessageStore.getState().syncUnreadCount(user.id);
+                        } catch (e) {
+                            console.error('Error auto-reading new message:', e);
+                        }
+                    }
                 }
             })
             .subscribe((status, err) => {
