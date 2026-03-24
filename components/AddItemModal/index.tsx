@@ -171,7 +171,7 @@ export default function AddItemModal({
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.25 }}
-                        className="fixed inset-0 bg-black/50 z-[80] flex items-end md:items-center justify-center p-0 md:p-4"
+                        className="fixed inset-0 bg-black/50 z-[80] flex items-end md:items-center justify-center px-3 pb-0 md:p-4"
                         onClick={handleBackdropClick}
                     >
                         <motion.div
@@ -181,7 +181,7 @@ export default function AddItemModal({
                             exit={{ y: '100%', opacity: 0 }}
                             transition={{ type: 'spring', damping: 28, stiffness: 300 }}
                             onClick={(e) => e.stopPropagation()}
-                            className="w-full md:max-w-lg bg-[var(--background)] rounded-t-3xl md:rounded-3xl overflow-hidden max-h-[85vh] md:h-auto md:max-h-[85vh] mb-16 md:mb-0 flex flex-col"
+                            className="w-full md:max-w-lg bg-[var(--background)] rounded-3xl overflow-hidden max-h-[calc(100vh-80px)] md:max-h-[85vh] mb-[72px] md:mb-0 flex flex-col"
                         >
                             {/* ── Floating Close Button ── */}
                             <div className="sticky top-0 z-50 flex justify-end px-4 pt-4">
