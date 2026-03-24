@@ -21,6 +21,7 @@ interface Conversation {
     last_message_text: string | null;
     last_message_at: string | null;
     last_message_sender: string | null;
+    unreadCount: number;
     other_user?: {
         id: string;
         username: string;
@@ -141,6 +142,7 @@ export default function MessagesPage() {
 
                 // 2. Group by the OTHER user ID
                 const convMap = new Map<string, any>();
+                const unreadCounts = new Map<string, number>();
 
                 myMessages.forEach((msg: any) => {
                     const otherId = msg.sender_id === user.id ? msg.receiver_id : msg.sender_id;
@@ -151,6 +153,11 @@ export default function MessagesPage() {
                     // We only want the LATEST message for each partner
                     if (!convMap.has(otherId)) {
                         convMap.set(otherId, msg);
+                    }
+
+                    // Count unread messages where the current user is the receiver
+                    if (!msg.is_read && msg.receiver_id === user.id) {
+                        unreadCounts.set(otherId, (unreadCounts.get(otherId) || 0) + 1);
                     }
                 });
 
@@ -179,6 +186,7 @@ export default function MessagesPage() {
                                 last_message_text: lastMsg.content,
                                 last_message_at: lastMsg.created_at,
                                 last_message_sender: lastMsg.sender_id === user.id ? 'me' : 'other',
+                                unreadCount: unreadCounts.get(otherId) || 0,
                                 other_user: {
                                     id: profile.id,
                                     username: profile.username || 'Usuario',
@@ -288,6 +296,7 @@ export default function MessagesPage() {
                                     lastMessageText={conv.last_message_text}
                                     lastMessageAt={conv.last_message_at}
                                     lastMessageSender={conv.last_message_sender}
+                                    unreadCount={conv.unreadCount}
                                     currentUserId={user?.id || 'me'}
                                     onClick={() => handleConversationClick(conv.id, conv.id)}
                                     onReport={() => alert("Usuario reportado.")}

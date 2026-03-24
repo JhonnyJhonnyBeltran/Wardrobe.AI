@@ -8,7 +8,6 @@
 
 import { memo } from 'react';
 import { motion } from 'framer-motion';
-import { useMessageStore } from '@/store/messageStore';
 import { AvatarWithStatus } from '@/components/OnlineIndicator';
 
 // ============================================
@@ -28,6 +27,7 @@ interface ConversationItemProps {
   lastMessageText: string | null;
   lastMessageAt: string | null;
   lastMessageSender: string | null;
+  unreadCount?: number;
   currentUserId: string;
   onClick: () => void;
   onDelete?: () => void;
@@ -67,12 +67,13 @@ export const ConversationItem = memo(function ConversationItem({
   lastMessageAt,
   lastMessageSender,
   currentUserId,
+  unreadCount = 0,
   onClick,
   onDelete,
   onReport,
 }: ConversationItemProps) {
   // Check if this conversation has unread messages
-  const hasUnread = useMessageStore((state) => state.hasUnread(conversationId));
+  const hasUnread = unreadCount > 0;
 
   if (!otherUser) return null;
 
@@ -160,12 +161,14 @@ export const ConversationItem = memo(function ConversationItem({
 
           {/* Unread indicator dot aligned with text */}
           {hasUnread && (
-            <div className="flex-shrink-0 pl-1">
+            <div className="flex-shrink-0 pl-2">
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                className="w-2 h-2 rounded-full bg-[var(--brand-pink)]"
-              />
+                className="min-w-[20px] h-[20px] px-1.5 flex justify-center items-center rounded-full bg-[var(--brand-pink)] text-white text-[11px] font-bold"
+              >
+                {unreadCount > 99 ? '+99' : unreadCount}
+              </motion.div>
             </div>
           )}
         </div>
