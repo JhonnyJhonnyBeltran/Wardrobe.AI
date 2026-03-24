@@ -37,7 +37,12 @@ export default function ChatPage() {
     const [messages, setMessages] = useState<Message[]>([]);
     const [newMessage, setNewMessage] = useState('');
     const [loading, setLoading] = useState(true);
+    const [isTyping, setIsTyping] = useState(false);
+    
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const typingTimeoutRef = useRef<any>(null);
+    const channelRef = useRef<any>(null);
+    
     const markConversationAsRead = useMessageStore(state => state.markConversationAsRead);
 
     // Swipe back to messages list
@@ -55,6 +60,73 @@ export default function ChatPage() {
     useEffect(() => {
         scrollToBottom();
     }, [messages]);
+
+    // Unified Realtime + Broadcasting System
+    useEffect(() => {
+        if (!user?.id || !targetUserId) return;
+
+        // Custom room guaranteed for these two users
+        const roomId = [user.id, targetUserId].sort().join('-');
+        const channel = supabase.channel(`chat_room:${roomId}`, {
+            config: { broadcast: { self: false } }
+        });
+
+        channel.on('broadcast', { event: 'typing' }, (payload) => {
+            if (payload.payload.userId === targetUserId) {
+                setIsTyping(payload.payload.isTyping);
+                clearTimeout(typingTimeoutRef.current);
+                if (payload.payload.isTyping) {
+                    typingTimeoutRef.current = setTimeout(() => setIsTyping(false), 3000);
+                }
+            }
+        });
+
+        channel.on('postgres_changes', {
+            event: '*',
+            schema: 'public',
+            table: 'messages',
+        }, async (payload) => {
+            if (!payload.new || Object.keys(payload.new).length === 0) return;
+            const newMsg = payload.new as Message;
+            
+            const isRelevant = 
+                (newMsg.sender_id === user.id && newMsg.receiver_id === targetUserId) ||
+                (newMsg.sender_id === targetUserId && newMsg.receiver_id === user.id);
+                
+            if (isRelevant) {
+                setMessages((prev: Message[]) => {
+                    const existsIndex = prev.findIndex(m => m.id === newMsg.id);
+                    if (existsIndex >= 0) {
+                        const newArr = [...prev];
+                        newArr[existsIndex] = { ...newArr[existsIndex], ...newMsg };
+                        return newArr;
+                    }
+                    return [...prev, newMsg];
+                });
+
+                if (newMsg.sender_id === targetUserId && newMsg.receiver_id === user.id && !newMsg.is_read) {
+                     try {
+                          await (supabase.from('messages') as any)
+                              .update({ is_read: true })
+                              .eq('id', newMsg.id);
+                          
+                          useMessageStore.getState().syncUnreadCount(user.id);
+                          if ((newMsg as any).conversation_id) {
+                              useMessageStore.getState().markConversationAsRead((newMsg as any).conversation_id);
+                          }
+                     } catch (e) { console.error('Auto-read error', e); }
+                }
+            }
+        });
+
+        channel.subscribe();
+        channelRef.current = channel;
+
+        return () => {
+            supabase.removeChannel(channel);
+            clearTimeout(typingTimeoutRef.current);
+        };
+    }, [user?.id, targetUserId]);
 
     const fetchMessages = async () => {
         if (!user || !targetUserId) return;
@@ -164,7 +236,7 @@ export default function ChatPage() {
                             await (supabase.from('messages') as any)
                                 .update({ is_read: true })
                                 .eq('id', newMsg.id);
-                            
+
                             // Remove from local badge state instantly
                             if ((newMsg as any).conversation_id) {
                                 useMessageStore.getState().markConversationAsRead((newMsg as any).conversation_id);
@@ -201,7 +273,7 @@ export default function ChatPage() {
             created_at: new Date().toISOString(),
             is_read: false
         };
-        
+
         setMessages(prev => [...prev, optimisticMsg]);
         scrollToBottom();
 
@@ -249,7 +321,7 @@ export default function ChatPage() {
                 console.error('Error inserting message:', error);
                 throw error;
             }
-            
+
             if (insertedMsg) {
                 setMessages((prev: Message[]) => {
                     if (prev.some((m: Message) => m.id === insertedMsg.id)) {
@@ -269,6 +341,17 @@ export default function ChatPage() {
     };
 
 
+
+    const handleTyping = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        setNewMessage(e.target.value);
+        if (channelRef.current && user) {
+            channelRef.current.send({
+                type: 'broadcast',
+                event: 'typing',
+                payload: { userId: user.id, isTyping: e.target.value.length > 0 }
+            });
+        }
+    };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -304,7 +387,13 @@ export default function ChatPage() {
                             </div>
                             <div>
                                 <h2 className="text-[16px] font-bold text-[var(--foreground)] leading-tight">{targetUser.username}</h2>
-                                <p className="text-xs text-[var(--foreground-secondary)]">Activo ahora</p>
+                                <p className="text-xs text-[var(--foreground-secondary)] h-4">
+                                {isTyping ? (
+                                    <span className="text-[var(--brand-pink)] font-medium text-[13px] animate-pulse">escribiendo...</span>
+                                ) : (
+                                    'Activo ahora'
+                                )}
+                                </p>
                             </div>
                         </Link>
                     ) : (
@@ -368,7 +457,7 @@ export default function ChatPage() {
 
             {/* Messages Area */}
             <div className="flex-1 overflow-y-auto px-4 py-4 pb-safe flex flex-col">
-                <div className="w-full md:w-[60%] mx-auto flex flex-col space-y-3 flex-1 justify-end">
+                <div className="w-full flex flex-col space-y-3 flex-1 justify-end">
                     {loading ? (
                         <div className="flex justify-center py-20">
                             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--brand-pink)]"></div>
@@ -443,37 +532,28 @@ export default function ChatPage() {
                 </div>
             </div>
 
-            {/* Input Area - Fixed at bottom where TabBar would be */}
-            <div className="fixed bottom-0 left-0 right-0 bg-[var(--background)]/95 backdrop-blur-xl border-t border-[var(--border-color)] safe-area-bottom md:relative md:bottom-auto md:left-auto md:right-auto flex justify-center">
-                <div className="px-4 py-3 w-full md:w-[60%]">
+            {/* Input Area - Clean & Modern */}
+            <div className="bg-[var(--background)]/95 backdrop-blur-xl border-t border-[var(--border-color)] pb-safe-offset-2 flex justify-center">
+                <div className="px-4 md:px-6 py-3 w-full">
                     <div className="flex items-end gap-2">
-                        <button className="p-2 text-[var(--brand-pink)] hover:text-[#FF1493] hover:bg-[var(--background-secondary)] rounded-full transition-colors flex-shrink-0">
-                            <ImageIcon className="w-6 h-6" />
-                        </button>
-
-                        <div className="flex-1 bg-[var(--background-secondary)] rounded-3xl border border-[var(--border-color)] transition-colors">
+                        <div className="flex-1 bg-[var(--background-secondary)] rounded-full border border-[var(--border-color)] flex items-center pr-1.5 pl-4">
                             <textarea
                                 value={newMessage}
-                                onChange={(e) => setNewMessage(e.target.value)}
+                                onChange={handleTyping}
                                 onKeyDown={handleKeyDown}
                                 placeholder="Mensaje..."
-                                className="w-full bg-transparent max-h-32 min-h-[44px] py-2.5 px-4 outline-none focus:outline-none focus:ring-0 focus:border-transparent text-[15px] resize-none text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)]"
+                                className="w-full bg-transparent max-h-32 min-h-[44px] py-3 outline-none focus:outline-none focus:ring-0 focus:border-transparent text-[15px] resize-none text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)]"
                                 rows={1}
                             />
+                            {newMessage.trim() && (
+                                <button
+                                    onClick={sendMessage}
+                                    className="p-1.5 mb-1.5 text-white bg-[var(--brand-pink)] rounded-full flex-shrink-0 shadow-md"
+                                >
+                                    <Send className="w-5 h-5 pl-0.5" />
+                                </button>
+                            )}
                         </div>
-
-                        {newMessage.trim() ? (
-                            <button
-                                onClick={sendMessage}
-                                className="p-2.5 text-[var(--brand-pink)] hover:bg-[var(--brand-pink)]/10 rounded-full transition-all flex-shrink-0 font-semibold"
-                            >
-                                Enviar
-                            </button>
-                        ) : (
-                            <button className="p-2 text-[var(--brand-pink)] hover:text-[#FF1493] hover:bg-[var(--background-secondary)] rounded-full transition-colors flex-shrink-0">
-                                <Smile className="w-6 h-6" />
-                            </button>
-                        )}
                     </div>
                 </div>
             </div>
