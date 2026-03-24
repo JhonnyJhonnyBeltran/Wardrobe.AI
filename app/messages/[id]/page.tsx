@@ -146,7 +146,14 @@ export default function ChatPage() {
 
                 if (isRelevant) {
                     setMessages(prev => {
-                        if (prev.some(m => m.id === newMsg.id)) return prev;
+                        const existsIndex = prev.findIndex(m => m.id === newMsg.id || (m as any).temp_id === (newMsg as any).temp_id);
+                        if (existsIndex >= 0) {
+                            // Update existing message (e.g., marked as read, or server confirmed)
+                            const newArr = [...prev];
+                            newArr[existsIndex] = { ...newArr[existsIndex], ...newMsg };
+                            return newArr;
+                        }
+                        // Insert new message
                         return [...prev, newMsg];
                     });
 
@@ -184,6 +191,20 @@ export default function ChatPage() {
         const content = newMessage.trim();
         setNewMessage(''); // Optimistic clear
 
+        // Optimistic UI Update with real UUID
+        const realId = crypto.randomUUID();
+        const optimisticMsg: Message = {
+            id: realId,
+            sender_id: user.id,
+            receiver_id: targetUserId,
+            content: content,
+            created_at: new Date().toISOString(),
+            is_read: false
+        };
+        
+        setMessages(prev => [...prev, optimisticMsg]);
+        scrollToBottom();
+
         try {
             // First, find or create conversation
             let { data: existingConv } = await supabase
@@ -212,10 +233,11 @@ export default function ChatPage() {
                 conversationId = (newConv as any)?.id;
             }
 
-            // Now insert the message
+            // Now insert the message using the exact same UUID
             const { error } = await supabase
                 .from('messages')
                 .insert({
+                    id: realId,
                     conversation_id: conversationId,
                     sender_id: user.id,
                     receiver_id: targetUserId,
@@ -226,11 +248,16 @@ export default function ChatPage() {
                 console.error('Error inserting message:', error);
                 throw error;
             }
+            
+            // Note: We don't need to manually replace the optimistic message anymore! 
+            // The ID is the same, so postgres_changes will safely update it.
 
         } catch (error) {
             console.error('Error sending message:', error);
             // Restore message if failed
             setNewMessage(content);
+            // Remove optimistic message
+            setMessages(prev => prev.filter(m => m.id !== realId));
         }
     };
 

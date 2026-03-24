@@ -212,8 +212,25 @@ export default function MessagesPage() {
 
         fetchConversations();
 
+        // Suscripción a WebSockets para actualizar la lista en tiempo real
+        const channel = supabase.channel('conversations-realtime')
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'messages',
+            }, (payload) => {
+                if (!user) return;
+                const newMsg = payload.new as any;
+                // Si el mensaje es para nosotros o nuestro, recargamos la lista
+                if (newMsg && (newMsg.sender_id === user.id || newMsg.receiver_id === user.id)) {
+                    fetchConversations();
+                }
+            })
+            .subscribe();
+
         return () => {
             isMounted = false;
+            supabase.removeChannel(channel);
         };
     }, [user]);
 
