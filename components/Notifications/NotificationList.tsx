@@ -150,7 +150,7 @@ export default function NotificationList({ compact = false, onClose }: Notificat
                     if (likes) {
                         likes.forEach((l: any) => {
                             realNotifications.push({
-                                id: `like_${l.user_id}_${l.post_id}`,
+                                id: `like_${l.user_id}_${l.post_id}_${l.created_at}`,
                                 type: 'like',
                                 actor: {
                                     id: l.user_id,
@@ -323,7 +323,7 @@ export default function NotificationList({ compact = false, onClose }: Notificat
                                     className={`px-3 py-1 rounded-full text-xs font-semibold hover:opacity-90 transition-opacity whitespace-nowrap
                       ${(followMap[notif.actor!.id] === 'accepted' || followMap[notif.actor!.id] === 'pending')
                                             ? 'bg-[var(--background-secondary)] text-[var(--foreground)] border border-[var(--border-color)]'
-                                            : 'bg-[var(--foreground)] text-[var(--background)]'}`}
+                                            : 'bg-[var(--brand-pink)] text-white'}`}
                                 >
                                     {followMap[notif.actor!.id] === 'accepted' ? 'Siguiendo' :
                                         followMap[notif.actor!.id] === 'pending' ? 'Solicitado' : 'Seguir'}

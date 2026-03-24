@@ -2,9 +2,10 @@
 
 /**
  * Public Profile Page - View another user's profile
+ * Styled exactly like "My Profile"
  */
 
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useUser } from '@/store/userStore';
 import { useTranslation } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase/client';
@@ -12,17 +13,17 @@ import * as followService from '@/lib/services/followService';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { useSwipeNavigation } from '@/hooks/useSwipeNavigation';
 import {
   ArrowLeft,
   Grid3x3,
-  Heart,
-  MessageCircle,
   UserPlus,
-  UserCheck,
   UserMinus,
   Clock,
   MoreHorizontal,
-  Send
+  Send,
+  Loader2,
+  Lock
 } from 'lucide-react';
 
 type TabType = 'posts';
@@ -49,6 +50,7 @@ export default function PublicProfilePage() {
   const [isFollowedByMe, setIsFollowedByMe] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
   const [isBlocking, setIsBlocking] = useState(false);
+  const [showOptions, setShowOptions] = useState(false);
 
   // Stats
   const [profileStats, setProfileStats] = useState({
@@ -60,6 +62,10 @@ export default function PublicProfilePage() {
 
   // Check if viewing own profile
   const isOwnProfile = currentUser?.id === profileId;
+
+  useSwipeNavigation({
+    onSwipeRight: () => router.back(),
+  });
 
   useEffect(() => {
     if (isOwnProfile) {
@@ -201,12 +207,13 @@ export default function PublicProfilePage() {
     }
     
     setIsBlocking(false);
+    setShowOptions(false);
   };
 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[var(--background)] flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-[var(--brand-pink)] border-t-transparent rounded-full animate-spin" />
+        <Loader2 className="w-8 h-8 animate-spin text-[var(--brand-pink)]" />
       </div>
     );
   }
@@ -214,35 +221,55 @@ export default function PublicProfilePage() {
   if (!profile) return null;
 
   return (
-    <div className="min-h-screen bg-[var(--background)] pb-24 md:pb-8">
+    <div className="min-h-screen bg-[var(--background)] pb-24">
       {/* Header */}
-      <div className="sticky top-0 z-20 bg-[var(--background)] border-b border-[var(--border-color)]">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+      <header className="sticky top-0 z-30 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-color)]/50">
+        <div className="flex items-center justify-between px-4 h-14 w-full md:max-w-[60%] mx-auto">
           <div className="flex items-center gap-3">
-            <button onClick={() => router.back()} className="p-1">
+            <button onClick={() => router.back()} className="p-1 -ml-1 hover:bg-[var(--background-secondary)] rounded-full transition-colors">
               <ArrowLeft className="w-6 h-6 text-[var(--foreground)]" />
             </button>
-            <h1 className="text-lg font-bold text-[var(--foreground)]">
-              @{profile.username}
-            </h1>
+            <span className="font-bold text-[var(--foreground)] truncate max-w-[200px] sm:max-w-[280px]">
+              {profile.username || 'Perfil'}
+            </span>
           </div>
-          <button className="p-2">
-            <MoreHorizontal className="w-5 h-5 text-[var(--foreground)]" />
+          <button 
+            onClick={() => setShowOptions(!showOptions)}
+            className="p-2 -mr-2 hover:bg-[var(--background-secondary)] rounded-full transition-colors relative"
+          >
+            <MoreHorizontal className="w-6 h-6 text-[var(--foreground)]" />
+            
+            {showOptions && (
+              <div className="absolute right-0 top-full mt-2 w-48 bg-[var(--background)] border border-[var(--border-color)] rounded-xl shadow-xl overflow-hidden">
+                <button
+                  onClick={handleBlock}
+                  disabled={isBlocking}
+                  className="w-full px-4 py-3 text-left text-sm font-semibold flex items-center gap-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                >
+                   {isBlocking ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : isBlocked ? (
+                    <>Desbloquear usuario</>
+                  ) : (
+                    <>
+                      <Lock className="w-4 h-4" />
+                      Bloquear usuario
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
           </button>
         </div>
-      </div>
+      </header>
 
-      <motion.div
-        className="max-w-4xl mx-auto px-4 py-6"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-      >
-        {/* Profile Header */}
-        <div className="mb-6">
-          <div className="flex items-start gap-4 mb-4">
-            {/* Avatar */}
-            <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-gradient-to-br from-[var(--brand-pink)] to-[var(--brand-pink-dark)] p-[3px] shadow-lg flex-shrink-0">
-              <div className="w-full h-full rounded-full bg-[var(--card-bg)] flex items-center justify-center overflow-hidden">
+      <main className="w-full md:max-w-[60%] mx-auto">
+        {/* Profile Info */}
+        <div className="px-5 pt-6">
+          <div className="flex items-center gap-8 mb-6">
+            {/* Avatar - Exact Style */}
+            <div className="w-24 h-24 rounded-full bg-gray-200 p-0.5 shadow-lg flex-shrink-0">
+              <div className="w-full h-full rounded-full bg-[var(--background)] p-0.5">
                 {profile.avatar_url ? (
                   <img
                     src={profile.avatar_url}
@@ -250,194 +277,150 @@ export default function PublicProfilePage() {
                     className="w-full h-full rounded-full object-cover"
                   />
                 ) : (
-                  <span className="text-3xl md:text-4xl font-bold bg-gradient-to-br from-[var(--brand-pink)] to-[var(--brand-pink-dark)] bg-clip-text text-transparent">
-                    {(profile.full_name || profile.username || '?')[0].toUpperCase()}
-                  </span>
+                  <div className="w-full h-full rounded-full bg-gradient-to-br from-[var(--brand-pink)] to-[var(--brand-pink-dark)] flex items-center justify-center">
+                    <span className="text-3xl md:text-4xl font-bold text-white">
+                      {(profile.full_name || profile.username || '?')[0].toUpperCase()}
+                    </span>
+                  </div>
                 )}
               </div>
             </div>
 
-            {/* Stats */}
-            <div className="flex-1 pt-1">
-              <div className="flex justify-around items-center mb-4">
-                <div className="text-center">
-                  <div className="text-lg font-bold text-[var(--foreground)]">
-                    {profileStats.posts}
+            {/* Stats - Exact Style */}
+            <div className="flex-1 flex justify-around text-center">
+              <div>
+                <div className="font-bold text-lg">{profileStats.posts}</div>
+                <div className="text-xs text-[var(--foreground-secondary)]">Posts</div>
+              </div>
+              <div>
+                {isFollowedByMe ? (
+                  <Link href={`/profile/${profileId}/follows?tab=followers`} className="block hover:opacity-80 transition-opacity">
+                    <div className="font-bold text-lg">{profileStats.followers}</div>
+                    <div className="text-xs text-[var(--foreground-secondary)]">{t.profile.followers || 'Seguidores'}</div>
+                  </Link>
+                ) : (
+                  <div>
+                    <div className="font-bold text-lg">{profileStats.followers}</div>
+                    <div className="text-xs text-[var(--foreground-secondary)]">{t.profile.followers || 'Seguidores'}</div>
                   </div>
-                  <div className="text-xs text-[var(--foreground-tertiary)]">
-                    Posts
+                )}
+              </div>
+              <div>
+                {isFollowedByMe ? (
+                  <Link href={`/profile/${profileId}/follows?tab=following`} className="block hover:opacity-80 transition-opacity">
+                    <div className="font-bold text-lg">{profileStats.following}</div>
+                    <div className="text-xs text-[var(--foreground-secondary)]">{t.profile.following || 'Seguidos'}</div>
+                  </Link>
+                ) : (
+                  <div>
+                    <div className="font-bold text-lg">{profileStats.following}</div>
+                    <div className="text-xs text-[var(--foreground-secondary)]">{t.profile.following || 'Seguidos'}</div>
                   </div>
-                </div>
-                <div className="text-center">
-                  {isFollowedByMe ? (
-                    <Link href={`/profile/${profileId}/follows?tab=followers`} className="block hover:opacity-80 transition-opacity">
-                      <div className="text-lg font-bold text-[var(--foreground)]">
-                        {profileStats.followers}
-                      </div>
-                      <div className="text-xs text-[var(--foreground-tertiary)]">
-                        {t.profile.followers}
-                      </div>
-                    </Link>
-                  ) : (
-                    <div>
-                      <div className="text-lg font-bold text-[var(--foreground)]">
-                        {profileStats.followers}
-                      </div>
-                      <div className="text-xs text-[var(--foreground-tertiary)]">
-                        {t.profile.followers}
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <div className="text-center">
-                  {isFollowedByMe ? (
-                    <Link href={`/profile/${profileId}/follows?tab=following`} className="block hover:opacity-80 transition-opacity">
-                      <div className="text-lg font-bold text-[var(--foreground)]">
-                        {profileStats.following}
-                      </div>
-                      <div className="text-xs text-[var(--foreground-tertiary)]">
-                        {t.profile.following}
-                      </div>
-                    </Link>
-                  ) : (
-                    <div>
-                      <div className="text-lg font-bold text-[var(--foreground)]">
-                        {profileStats.following}
-                      </div>
-                      <div className="text-xs text-[var(--foreground-tertiary)]">
-                        {t.profile.following}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                )}
               </div>
             </div>
           </div>
 
-          {/* Name & Bio */}
-          <div className="mb-4">
-            <h2 className="font-bold text-[var(--foreground)] text-sm">
-              {profile.full_name || profile.username}
-            </h2>
+          <div className="pb-6 border-b border-[var(--border-color)]">
+            <h2 className="font-bold text-sm">{profile.full_name || profile.username}</h2>
             {profile.bio && (
               <p className="text-sm text-[var(--foreground-secondary)] whitespace-pre-wrap mt-1">
                 {profile.bio}
               </p>
             )}
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex gap-2">
-            {followStatus === 'none' ? (
-              <button
-                onClick={handleFollow}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[var(--brand-pink)] text-white font-semibold text-sm hover:opacity-90 transition-opacity"
-              >
-                <UserPlus className="w-4 h-4" />
-                Seguir
-              </button>
-            ) : followStatus === 'pending' ? (
-              <button
-                onClick={handleUnfollow}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[var(--background-secondary)] text-[var(--foreground)] font-semibold text-sm border border-[var(--border-color)] hover:bg-red-50 hover:text-red-500 hover:border-red-200 dark:hover:bg-red-900/20 transition-colors"
-              >
-                <Clock className="w-4 h-4" />
-                Pendiente
-              </button>
-            ) : (
-              <button
-                onClick={handleUnfollow}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[var(--background-secondary)] text-[var(--foreground)] font-semibold text-sm border border-[var(--border-color)] hover:bg-red-50 hover:text-red-500 hover:border-red-200 dark:hover:bg-red-900/20 transition-colors"
-              >
-                <UserMinus className="w-4 h-4" />
-                Dejar de seguir
-              </button>
-            )}
-
-            <button
-              onClick={navigateToChat}
-              className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[var(--background-secondary)] text-[var(--foreground)] font-semibold text-sm border border-[var(--border-color)] hover:bg-[var(--background-tertiary)] transition-colors"
-            >
-              <Send className="w-4 h-4 -rotate-45" />
-            </button>
-
-            <button
-              onClick={handleBlock}
-              disabled={isBlocking}
-              className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm border transition-colors ${
-                isBlocked
-                  ? 'bg-red-50 border-red-200 text-red-500 dark:bg-red-900/20'
-                  : 'bg-[var(--background-secondary)] text-[var(--foreground)] border-[var(--border-color)] hover:bg-red-50 hover:text-red-500 hover:border-red-200 dark:hover:bg-red-900/20'
-              }`}
-            >
-              {isBlocking ? (
-                <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
-              ) : isBlocked ? (
-                <>
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  Bloqueado
-                </>
+            
+            {/* Action Buttons - Similar to Edit Profile button style */}
+            <div className="flex flex-wrap gap-2 mt-4">
+              {followStatus === 'none' ? (
+                <button
+                  onClick={handleFollow}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[var(--brand-pink)] text-white font-semibold text-sm hover:opacity-90 transition-opacity"
+                >
+                  <UserPlus className="w-4 h-4" />
+                  Seguir
+                </button>
+              ) : followStatus === 'pending' ? (
+                <button
+                  onClick={handleUnfollow}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[var(--background-secondary)] border border-[var(--border-color)] text-sm font-medium text-[var(--foreground)] hover:bg-[var(--card-hover)] transition-colors"
+                >
+                  <Clock className="w-4 h-4" />
+                  Pendiente
+                </button>
               ) : (
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                </svg>
+                <button
+                  onClick={handleUnfollow}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[var(--background-secondary)] border border-[var(--border-color)] text-sm font-medium text-[var(--foreground)] hover:bg-[var(--card-hover)] transition-colors"
+                >
+                  Siguiendo
+                </button>
               )}
-            </button>
+
+              <button
+                onClick={navigateToChat}
+                className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[var(--background-secondary)] border border-[var(--border-color)] text-sm font-medium text-[var(--foreground)] hover:bg-[var(--card-hover)] transition-colors"
+              >
+                Mensaje
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Tabs - Only Posts */}
-        <div className="border-t border-[var(--border-color)] mb-6">
+        {/* Tabs - Exact Style */}
+        <div className="sticky top-14 z-20 bg-[var(--background)]">
           <div className="flex">
             <button
               onClick={() => setActiveTab('posts')}
-              className={`flex-1 flex items-center justify-center gap-2 py-4 border-t-2 transition-colors ${activeTab === 'posts'
+              className={`flex-1 flex items-center justify-center py-3 border-b-2 transition-colors ${activeTab === 'posts'
                 ? 'border-[var(--brand-pink)] text-[var(--foreground)]'
                 : 'border-transparent text-[var(--foreground-tertiary)]'
                 }`}
             >
-              <Grid3x3 className="w-5 h-5" />
-              <span className="text-sm font-semibold uppercase tracking-wide">{t.profile.posts}</span>
+              <Grid3x3 className={`w-6 h-6 ${activeTab === 'posts' ? 'text-[var(--brand-pink)]' : ''}`} />
             </button>
           </div>
         </div>
 
-        {/* Content Grid - Only Posts */}
-        <div className="grid grid-cols-3 gap-1 md:gap-2">
-          {posts.length === 0 ? (
-            <div className="col-span-3 text-center py-16">
-              <Grid3x3 className="w-12 h-12 mx-auto mb-4 text-[var(--foreground-tertiary)]" />
-              <p className="text-[var(--foreground-secondary)]">Sin publicaciones</p>
-            </div>
-          ) : (
-            posts.map((post) => (
-              <Link
-                href={`/post/${post.id}`}
-                key={post.id}
-                className="relative aspect-square bg-gradient-to-br from-[var(--background-secondary)] to-[var(--background-tertiary)] rounded-lg overflow-hidden cursor-pointer group"
-              >
-                {post.image_url ? (
-                  <img src={post.image_url} alt="Post" className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-4xl">👗</div>
-                )}
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
-                  <div className="flex items-center gap-1 text-white">
-                    <Heart className="w-5 h-5 fill-white" />
-                    <span className="font-semibold">{post.likes || 0}</span>
+        {/* Content Grid - Exact Style */}
+        <div className="min-h-[40vh]">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key="posts"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="p-0.5"
+            >
+              {posts.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 text-center">
+                  <div className="w-16 h-16 bg-[var(--background-secondary)] rounded-full flex items-center justify-center mb-4">
+                    <Grid3x3 className="w-8 h-8 text-[var(--foreground-tertiary)]" />
                   </div>
-                  <div className="flex items-center gap-1 text-white">
-                    <MessageCircle className="w-5 h-5 fill-white" />
-                    <span className="font-semibold">{post.comments || 0}</span>
-                  </div>
+                  <h3 className="text-lg font-semibold mb-2">Aún no hay publicaciones</h3>
                 </div>
-              </Link>
-            ))
-          )}
+              ) : (
+                <div className="grid grid-cols-3 gap-0.5">
+                  {posts.map((post) => (
+                    <Link
+                      key={post.id}
+                      href={`/post/${post.id}`}
+                      className="aspect-square bg-[var(--background-secondary)] relative group cursor-pointer overflow-hidden"
+                    >
+                      {post.image_url ? (
+                        <img src={post.image_url} alt="Post" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-4xl group-hover:scale-110 transition-transform duration-300">👗</div>
+                      )}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          </AnimatePresence>
         </div>
-      </motion.div>
+      </main>
     </div>
   );
 }
+
