@@ -182,7 +182,7 @@ export default function NotificationList({ compact = false, onClose }: Notificat
                         .limit(10);
 
                     if (comments) {
-                         comments.forEach((c: any) => {
+                        comments.forEach((c: any) => {
                             realNotifications.push({
                                 id: `comment_${c.id}`,
                                 type: 'comment',
