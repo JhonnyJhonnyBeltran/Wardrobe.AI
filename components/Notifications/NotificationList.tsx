@@ -16,7 +16,7 @@ import { useRouter } from 'next/navigation';
 // Types
 export interface Notification {
     id: string;
-    type: 'like' | 'follow' | 'system';
+    type: 'like' | 'follow' | 'system' | 'comment';
     actor?: {
         id: string;
         username: string;
@@ -136,6 +136,7 @@ export default function NotificationList({ compact = false, onClose }: Notificat
 
                 if (myPosts && myPosts.length > 0) {
                     const myPostIds = myPosts.map((p: any) => p.id);
+                    // LIKES
                     const { data: likes } = await supabase
                         .from('likes')
                         .select(`
@@ -144,6 +145,7 @@ export default function NotificationList({ compact = false, onClose }: Notificat
                   post:post_id(image_url)
                `)
                         .in('post_id', myPostIds)
+                        .neq('user_id', user.id) // Avoid self-likes
                         .order('created_at', { ascending: false })
                         .limit(10);
 
@@ -162,6 +164,39 @@ export default function NotificationList({ compact = false, onClose }: Notificat
                                 timestamp: new Date(l.created_at).getTime(),
                                 image: l.post?.image_url,
                                 postId: l.post_id
+                            });
+                        });
+                    }
+
+                    // COMMENTS
+                    const { data: comments } = await supabase
+                        .from('comments' as any)
+                        .select(`
+                  id, user_id, post_id, created_at, content,
+                  user:user_id(id, full_name, username, avatar_url),
+                  post:post_id(image_url)
+               `)
+                        .in('post_id', myPostIds)
+                        .neq('user_id', user.id) // Avoid self-comments
+                        .order('created_at', { ascending: false })
+                        .limit(10);
+
+                    if (comments) {
+                         comments.forEach((c: any) => {
+                            realNotifications.push({
+                                id: `comment_${c.id}`,
+                                type: 'comment',
+                                actor: {
+                                    id: c.user_id,
+                                    username: c.user?.username || '',
+                                    name: c.user?.full_name || c.user?.username || 'Usuario',
+                                    avatar: c.user?.avatar_url || null
+                                },
+                                content: c.content, // reuse content for comment text
+                                time: new Date(c.created_at).toLocaleDateString(),
+                                timestamp: new Date(c.created_at).getTime(),
+                                image: c.post?.image_url,
+                                postId: c.post_id
                             });
                         });
                     }
@@ -352,6 +387,37 @@ export default function NotificationList({ compact = false, onClose }: Notificat
                                         {notif.actor!.name}
                                     </Link>
                                     <span className="text-[var(--foreground-secondary)]"> le gustó tu post.</span>
+                                    <span className="text-[var(--foreground-tertiary)] text-xs ml-2 block sm:inline">{notif.time}</span>
+                                </div>
+                                {notif.image && (
+                                    <Link href={`/post/${notif.postId}`} onClick={onClose} className="w-10 h-10 rounded-md overflow-hidden relative border border-[var(--border-color)] hover:opacity-80 transition-opacity shrink-0">
+                                        <Image src={notif.image} alt="Post" fill className="object-cover" />
+                                    </Link>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            )}
+
+            {/* Comentarios */}
+            {activityNotifications.filter(n => n.type === 'comment').length > 0 && (
+                <section className="space-y-3">
+                    <h2 className="text-xs font-bold text-[var(--foreground-secondary)] uppercase tracking-wider">Comentarios</h2>
+                    <div className="space-y-4">
+                        {activityNotifications.filter(n => n.type === 'comment').map((notif) => (
+                            <div key={notif.id} className="flex items-center gap-3 group">
+                                <Link href={`/profile/${notif.actor!.id}`} className="relative" onClick={onClose}>
+                                    <Avatar src={notif.actor?.avatar || null} alt={notif.actor!.name} size="md" />
+                                    <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-[var(--background)] flex items-center justify-center text-[var(--foreground)] bg-[var(--background-secondary)]">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-message-circle"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" /></svg>
+                                    </div>
+                                </Link>
+                                <div className="flex-1 text-sm">
+                                    <Link href={`/profile/${notif.actor!.id}`} onClick={onClose} className="font-semibold text-[var(--foreground)] hover:underline">
+                                        {notif.actor!.name}
+                                    </Link>
+                                    <span className="text-[var(--foreground-secondary)]"> comentó: "{notif.content}"</span>
                                     <span className="text-[var(--foreground-tertiary)] text-xs ml-2 block sm:inline">{notif.time}</span>
                                 </div>
                                 {notif.image && (
