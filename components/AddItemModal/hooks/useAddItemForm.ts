@@ -84,45 +84,49 @@ export function useAddItemForm({
 
     // Initialize form when modal opens
     useEffect(() => {
-        if (isOpen) {
-            if (initialData) {
-                // Editing mode setup
-                setMode('complete');
-                setImage(initialData.imageUrl || null);
+        if (!isOpen) return;
 
-                if (initialData.isAiProcessed) {
-                    setProcessedImage(initialData.imageUrl || null);
-                    setOriginalImage(initialData.originalImageUrl || initialData.imageUrl || null);
-                } else {
-                    setProcessedImage(null);
-                    setOriginalImage(initialData.imageUrl || initialData.originalImageUrl || null);
-                }
+        if (isEditing && initialData) {
+            // ── Edit mode: always load the item's stored data ──
+            setMode('complete');
 
-                setFormData({
-                    name: initialData.name,
-                    brand: initialData.brand || '',
-                    type: (initialData.category as any) || 'top',
-                    color: initialData.color || '',
-                    colorHex: (initialData as any).colorHex || '#000000',
-                    size: (initialData as any).size || '',
-                    reference: (initialData as any).reference || '',
-                    fabric: (initialData as any).fabric || '',
-                    season: (initialData.season?.[0] as any) || 'spring',
-                    sourceUrl: (initialData as any).sourceUrl || '',
-                });
-                // Read from pending store
-                const pendingItem = useUiStore.getState().pendingUploadItem;
-                if (pendingItem) {
-                    setFormData(pendingItem.formData || DEFAULT_FORM_DATA);
-                    setImage(pendingItem.image || null);
-                    setOriginalImage(pendingItem.originalImage || null);
-                    setProcessedImage(pendingItem.processedImage || null);
-                } else {
-                    resetForm();
-                }
+            // Image state
+            setImage(initialData.imageUrl || null);
+            if (initialData.isAiProcessed) {
+                setProcessedImage(initialData.imageUrl || null);
+                setOriginalImage(initialData.originalImageUrl || initialData.imageUrl || null);
+            } else {
+                setProcessedImage(null);
+                setOriginalImage(initialData.imageUrl || initialData.originalImageUrl || null);
+            }
+
+            // Form data – always from initialData in edit mode
+            setFormData({
+                name: initialData.name || '',
+                brand: initialData.brand || '',
+                type: (initialData.category as any) || 'top',
+                color: initialData.color || '',
+                colorHex: (initialData as any).colorHex || '#000000',
+                size: (initialData as any).size || '',
+                reference: (initialData as any).reference || '',
+                fabric: (initialData as any).fabric || '',
+                season: (initialData.season?.[0] as any) || 'spring',
+                sourceUrl: (initialData as any).sourceUrl || '',
+            });
+        } else {
+            // ── Create mode: restore from pending store or start fresh ──
+            const pendingItem = useUiStore.getState().pendingUploadItem;
+            if (pendingItem) {
+                setFormData(pendingItem.formData || DEFAULT_FORM_DATA);
+                setImage(pendingItem.image || null);
+                setOriginalImage(pendingItem.originalImage || null);
+                setProcessedImage(pendingItem.processedImage || null);
+            } else {
+                resetForm();
             }
         }
-    }, [isOpen, initialData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isOpen, isEditing, initialData]);
 
     // Reset form to initial state
     const resetForm = useCallback(() => {
