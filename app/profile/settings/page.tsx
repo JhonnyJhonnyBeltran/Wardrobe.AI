@@ -5,10 +5,11 @@
  * Todas las opciones expandidas sin navegación
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUser } from '@/store/userStore';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { supabase } from '@/lib/supabase/client';
 import { Card, Button } from '@/components';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -39,6 +40,50 @@ export default function SettingsPage() {
     const { t } = useTranslation();
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [showStyleForm, setShowStyleForm] = useState(false);
+    const [styleNames, setStyleNames] = useState<Record<string, string>>({});
+
+    useEffect(() => {
+        const fetchStyles = async () => {
+            const allStyleIds = [
+                ...(user?.preferredStyles || []),
+                ...(user?.visualStylePreferences || [])
+            ];
+            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+            const validUuids = allStyleIds.filter(id => uuidRegex.test(id));
+            
+            // Map de soporte para IDs antiguos pre-DB
+            const map: Record<string, string> = {
+                'casual': 'Casual',
+                'street': 'Streetwear',
+                'elegant': 'Elegante',
+                'boho': 'Boho Chic',
+                'minimal': 'Minimalista',
+                'vintage': 'Vintage',
+                'sporty': 'Deportivo'
+            };
+
+            if (validUuids.length > 0) {
+                try {
+                    const { data, error } = await supabase
+                        .from('style_options')
+                        .select('id, name')
+                        .in('id', validUuids);
+                    
+                    if (data && !error) {
+                        data.forEach((style: {id: string; name: string}) => {
+                            map[style.id] = style.name;
+                        });
+                    }
+                } catch (err) {
+                    console.error('Error fetching style names:', err);
+                }
+            }
+            setStyleNames(map);
+        };
+        if (user) {
+            fetchStyles();
+        }
+    }, [user?.preferredStyles, user?.visualStylePreferences]);
 
     const handleLogout = async () => {
         await signOut();
@@ -323,7 +368,7 @@ export default function SettingsPage() {
                                                     key={idx}
                                                     className="px-3 py-1.5 rounded-full bg-[var(--brand-pink)]/8 text-[var(--brand-pink)] text-xs font-medium"
                                                 >
-                                                    {style}
+                                                    {styleNames[style] || style}
                                                 </span>
                                             ))}
                                         </div>
@@ -342,7 +387,7 @@ export default function SettingsPage() {
                                                     key={idx}
                                                     className="px-3 py-1.5 rounded-full bg-[var(--background-tertiary)] text-[var(--foreground-secondary)] text-xs font-medium"
                                                 >
-                                                    {pref}
+                                                    {styleNames[pref] || pref}
                                                 </span>
                                             ))}
                                         </div>

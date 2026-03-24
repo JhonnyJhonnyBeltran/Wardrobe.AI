@@ -33,7 +33,7 @@ const FALLBACK_STYLES = [
 
 export default function PreferencesPage() {
     const router = useRouter();
-    const { user, setUser } = useUser();
+    const { user, setUser, isLoading: isLoadingUser } = useUser();
 
     // Core state
     const [step, setStep] = useState(0);
@@ -47,6 +47,8 @@ export default function PreferencesPage() {
     const [isEditing, setIsEditing] = useState(false);
 
     useEffect(() => {
+        if (isLoadingUser) return;
+        
         if (!user) {
             router.push('/auth');
             return;
@@ -54,6 +56,10 @@ export default function PreferencesPage() {
 
         if (user.styleCompleted) {
             setIsEditing(true);
+            setGender(prev => prev || user.gender || '');
+            if (Array.isArray(user.preferredStyles)) {
+                setSelectedStyles(prev => prev.length ? prev : user.preferredStyles!);
+            }
         }
 
         const loadStyles = async () => {
@@ -65,7 +71,7 @@ export default function PreferencesPage() {
         };
 
         loadStyles();
-    }, [user, router]);
+    }, [user, router, isLoadingUser]);
 
     const handleNext = () => {
         if (step === 0 && !gender) return;
