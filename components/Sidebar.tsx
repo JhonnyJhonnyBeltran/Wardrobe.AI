@@ -101,7 +101,7 @@ export default function Sidebar() {
                   <Link
                     href={item.href}
                     className={`flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-200 
-                        ${isActive
+                        ${(isActive || item.labelKey === 'messages')
                         ? 'text-[var(--brand-pink)]'
                         : 'text-black dark:text-white'
                       }`}

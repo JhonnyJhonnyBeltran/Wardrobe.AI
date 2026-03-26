@@ -192,7 +192,7 @@ export default function FeedPage() {
           <div className="flex items-center gap-1">
             {/* Messages */}
             <Link href="/messages">
-              <button className="p-2.5 -mr-1 text-[var(--foreground)] hover:bg-[var(--background-secondary)] rounded-full transition-all duration-200 transform hover:scale-110 relative">
+              <button className="p-2.5 -mr-1 text-[var(--brand-pink)] hover:bg-[var(--background-secondary)] rounded-full transition-all duration-200 transform hover:scale-110 relative">
                 <Send className="w-6 h-6" />
                 {messageBadgeVisible && messageUnreadCount > 0 && (
                   <span className="absolute top-1 right-0.5 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-[var(--brand-pink)] text-white text-[10px] font-bold rounded-full border-2 border-[var(--background)] shadow-sm">
