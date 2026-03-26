@@ -271,6 +271,7 @@ class RealtimeManager {
         message_id: message.id,
         conversation_id: message.conversation_id,
         sender_id: message.sender_id,
+        message: message,
       },
       sender_id: message.sender_id as string,
       sender: senderData || undefined,

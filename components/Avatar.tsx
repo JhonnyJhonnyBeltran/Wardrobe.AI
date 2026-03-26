@@ -28,8 +28,8 @@ export default function Avatar({ src, alt = 'Usuario', size = 'md', className = 
   // Check if src is valid (not null, undefined, or empty string)
   const hasValidSrc = src && src.trim() !== '' && !src.startsWith('https://i.pravatar.cc') && !src.startsWith('https://robohash.org');
 
-  // Use user_icon_149851.svg as default placeholder (elegant minimal avatar)
-  const defaultAvatar = '/user_icon_149851.svg';
+  // Use the default user image as placeholder for new users
+  const defaultAvatar = '/default user.png';
 
   if (hasValidSrc) {
     return (

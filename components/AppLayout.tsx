@@ -13,6 +13,7 @@ import SaveModal from './SaveModal';
 import { useUiStore } from '@/store/uiStore';
 import { UploadCloud, X } from 'lucide-react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface AppLayoutProps {
@@ -47,13 +48,19 @@ export default function AppLayout({ children }: AppLayoutProps) {
     });
   };
 
+  const pathname = usePathname();
+  const hideTabBar =
+    (pathname.startsWith('/messages/') && pathname !== '/messages') ||
+    pathname === '/create' ||
+    pathname.startsWith('/profile/settings');
+
   return (
     <div className="flex min-h-screen bg-[var(--background)]">
       {/* Desktop Sidebar */}
       <Sidebar />
 
       {/* Main Content */}
-      <main className="flex-1 pb-28 md:pb-0">
+      <main className={`flex-1 ${hideTabBar ? 'pb-0' : 'pb-28 md:pb-0'}`}>
         <AuthGuard>
           {children}
         </AuthGuard>
