@@ -119,7 +119,7 @@ export default function SearchPage() {
     } finally {
       if (isLoadMore) setUsersLoadingMore(false);
     }
-  }, []);
+  }, [user?.id]);
 
   // Follow/Unfollow user
   const handleFollow = async (targetUserId: string) => {
