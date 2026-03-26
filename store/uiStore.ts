@@ -59,6 +59,11 @@ interface UiStore {
     folderModalPostId: string | null;
     openFolderModal: (postId: string) => void;
     closeFolderModal: () => void;
+
+    // Create Menu
+    isCreateMenuOpen: boolean;
+    setCreateMenuOpen: (isOpen: boolean) => void;
+    toggleCreateMenu: () => void;
 }
 
 export const useUiStore = create<UiStore>((set) => ({
@@ -92,4 +97,9 @@ export const useUiStore = create<UiStore>((set) => ({
     folderModalPostId: null,
     openFolderModal: (postId) => set({ folderModalPostId: postId }),
     closeFolderModal: () => set({ folderModalPostId: null }),
+
+    // Create Menu
+    isCreateMenuOpen: false,
+    setCreateMenuOpen: (isOpen: boolean) => set({ isCreateMenuOpen: isOpen }),
+    toggleCreateMenu: () => set((state: any) => ({ isCreateMenuOpen: !state.isCreateMenuOpen })),
 }));

@@ -6,29 +6,30 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { usePathname, useRouter } from 'next/navigation';
 import { triggerHaptic } from '@/lib/haptic';
 import { useState, useEffect } from 'react';
+import { useUiStore } from '@/store/uiStore';
 
 export default function FloatingCreateButton() {
     const pathname = usePathname();
     const router = useRouter();
-    const [isOpen, setIsOpen] = useState(false);
+    const { isCreateMenuOpen, setCreateMenuOpen, toggleCreateMenu } = useUiStore();
 
     // Close on route change
     useEffect(() => {
-        setIsOpen(false);
-    }, [pathname]);
+        setCreateMenuOpen(false);
+    }, [pathname, setCreateMenuOpen]);
 
     // Only show on feed and the root of profile, hide on other paths
-    const showOnPages = ['/feed'];
+    const showOnPages: string[] = ['/feed'];
     if (!showOnPages.includes(pathname) && pathname !== '/profile') return null;
 
     const handleToggle = () => {
         triggerHaptic('medium');
-        setIsOpen(prev => !prev);
+        toggleCreateMenu();
     };
 
     const handleActionClick = (path: string) => {
         triggerHaptic('light');
-        setIsOpen(false);
+        setCreateMenuOpen(false);
         router.push(path);
     };
 
@@ -51,58 +52,60 @@ export default function FloatingCreateButton() {
 
     return (
         <>
-            {/* Desktop Speed Dial + Mobile FAB Wrapper */}
-            <div className="fixed bottom-24 md:bottom-8 right-6 md:right-8 z-50 flex flex-col items-end">
-                {/* Desktop Bubbles */}
-                <AnimatePresence>
-                    {isOpen && (
-                        <motion.div
-                            className="hidden md:flex flex-col items-end gap-3 mb-4 origin-bottom"
-                            variants={containerVariants}
-                            initial="hidden"
-                            animate="visible"
-                            exit="hidden"
-                        >
-                            {actions.map((action) => {
-                                const Icon = action.icon;
-                                return (
-                                    <motion.button
-                                        key={action.id}
-                                        variants={itemVariants}
-                                        onClick={() => handleActionClick(action.path)}
-                                        className="group flex items-center gap-3"
-                                    >
-                                        <span className="px-3 py-1.5 bg-[var(--card-bg)] text-[var(--foreground)] text-sm font-semibold rounded-lg shadow-md border border-[var(--border-color)] opacity-0 group-hover:opacity-100 transition-opacity">
-                                            {action.label}
-                                        </span>
-                                        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white shadow-lg transition-transform hover:scale-110 ${action.color}`}>
-                                            <Icon className="w-5 h-5" />
-                                        </div>
-                                    </motion.button>
-                                );
-                            })}
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+            {/* Desktop Speed Dial + Mobile FAB Wrapper - Oculto en el Feed por User Request */}
+            {pathname !== '/feed' && (
+                <div className="fixed bottom-24 md:bottom-8 right-6 md:right-8 z-50 flex flex-col items-end">
+                    {/* Desktop Bubbles */}
+                    <AnimatePresence>
+                        {isCreateMenuOpen && (
+                            <motion.div
+                                className="hidden md:flex flex-col items-end gap-3 mb-4 origin-bottom"
+                                variants={containerVariants}
+                                initial="hidden"
+                                animate="visible"
+                                exit="hidden"
+                            >
+                                {actions.map((action) => {
+                                    const Icon = action.icon;
+                                    return (
+                                        <motion.button
+                                            key={action.id}
+                                            variants={itemVariants}
+                                            onClick={() => handleActionClick(action.path)}
+                                            className="group flex items-center gap-3"
+                                        >
+                                            <span className="px-3 py-1.5 bg-[var(--card-bg)] text-[var(--foreground)] text-sm font-semibold rounded-lg shadow-md border border-[var(--border-color)] opacity-0 group-hover:opacity-100 transition-opacity">
+                                                {action.label}
+                                            </span>
+                                            <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white shadow-lg transition-transform hover:scale-110 ${action.color}`}>
+                                                <Icon className="w-5 h-5" />
+                                            </div>
+                                        </motion.button>
+                                    );
+                                })}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
 
-                {/* Main FAB Trigger */}
-                <motion.button
-                    whileTap={{ scale: 0.9 }}
-                    onClick={handleToggle}
-                    className="w-14 h-14 rounded-full bg-[var(--brand-pink)] flex items-center justify-center text-white shadow-xl shadow-[var(--brand-pink)]/30 cursor-pointer overflow-hidden z-20 transition-all hover:bg-[var(--brand-pink-dark)]"
-                >
-                    <motion.div
-                        animate={{ rotate: isOpen ? 45 : 0 }}
-                        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                    {/* Main FAB Trigger */}
+                    <motion.button
+                        whileTap={{ scale: 0.9 }}
+                        onClick={handleToggle}
+                        className="w-14 h-14 rounded-full bg-[var(--brand-pink)] flex items-center justify-center text-white shadow-xl shadow-[var(--brand-pink)]/30 cursor-pointer overflow-hidden z-20 transition-all hover:bg-[var(--brand-pink-dark)]"
                     >
-                        <Plus className="w-7 h-7" strokeWidth={2.5} />
-                    </motion.div>
-                </motion.button>
-            </div>
+                        <motion.div
+                            animate={{ rotate: isCreateMenuOpen ? 45 : 0 }}
+                            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                        >
+                            <Plus className="w-7 h-7" strokeWidth={2.5} />
+                        </motion.div>
+                    </motion.button>
+                </div>
+            )}
 
             {/* Mobile Bottom Sheet Modal */}
             <AnimatePresence>
-                {isOpen && (
+                {isCreateMenuOpen && (
                     <motion.div
                         className="fixed inset-0 z-[60] md:hidden flex flex-col justify-end"
                         initial={{ opacity: 0 }}
@@ -112,7 +115,7 @@ export default function FloatingCreateButton() {
                         {/* Backdrop */}
                         <div
                             className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-                            onClick={() => setIsOpen(false)}
+                            onClick={() => setCreateMenuOpen(false)}
                         />
 
                         {/* Sheet */}

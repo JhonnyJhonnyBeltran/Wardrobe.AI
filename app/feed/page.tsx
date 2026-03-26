@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRef, useCallback } from 'react';
+import { useUiStore } from '@/store/uiStore';
 import { supabase } from '@/lib/supabase/client';
 import { useSwipeNavigation } from '@/hooks/useSwipeNavigation';
 import { useMessageStore, selectTotalUnread, selectBadgeVisible } from '@/store/messageStore';
@@ -22,6 +23,7 @@ export default function FeedPage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const { user } = useUser();
+  const { toggleCreateMenu } = useUiStore();
   const router = useRouter();
 
   const pageRef = useRef(0);
@@ -185,8 +187,16 @@ export default function FeedPage() {
       {/* Header Mejorado */}
       <header className="sticky top-0 z-30 bg-[var(--background)]/95 backdrop-blur-lg border-b border-[var(--border-color)]/50 md:hidden shadow-sm">
         <div className="px-5 h-16 flex items-center justify-between">
-          {/* Left: Title instead of Logo */}
-          <h1 className="text-2xl font-bold tracking-tight text-[var(--foreground)]">Feed</h1>
+          {/* Left: + Button instead of Logo */}
+          <button
+            onClick={toggleCreateMenu}
+            className="p-2.5 -ml-2 text-[var(--brand-pink)] hover:bg-[var(--background-secondary)] rounded-full transition-all duration-200 transform hover:scale-110"
+          >
+            <Plus className="w-6 h-6" />
+          </button>
+
+          {/* Center: Title */}
+          <h1 className="text-xl font-bold tracking-tight text-[var(--foreground)] absolute left-1/2 -translate-x-1/2">Para ti</h1>
 
           {/* Right: Actions */}
           <div className="flex items-center gap-1">
