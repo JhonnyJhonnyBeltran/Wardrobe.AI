@@ -324,6 +324,7 @@ export async function getRecentFollowActivity(
       follower:profiles!follower_id(${PROFILE_JOIN_COLUMNS})
     `)
     .eq('following_id', userId)
+    .neq('follower_id', userId)
     .eq('status', 'accepted')
     .order('created_at', { ascending: false })
     .limit(limit);

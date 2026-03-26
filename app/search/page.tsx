@@ -6,6 +6,7 @@ import PostCard, { type Post } from '@/components/Feed/PostCard';
 import { supabase } from '@/lib/supabase/client';
 import { useSwipeNavigation } from '@/hooks/useSwipeNavigation';
 import { useUser } from '@/store/userStore';
+import { useUiStore } from '@/store/uiStore';
 import Link from 'next/link';
 import { useRef, useCallback } from 'react';
 
@@ -28,6 +29,7 @@ export default function SearchPage() {
   const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
   const [pendingRequestIds, setPendingRequestIds] = useState<Set<string>>(new Set());
   const { user } = useUser();
+  const { showModal } = useUiStore();
 
   // Pagination states
   const [postsLoadingMore, setPostsLoadingMore] = useState(false);
@@ -80,11 +82,17 @@ export default function SearchPage() {
 
     try {
       if (isLoadMore) setUsersLoadingMore(true);
-      const { data, error } = await supabase
+      let query = supabase
         .from('profiles')
         .select('id, username, full_name, avatar_url, bio')
         .or(`username.ilike.%${searchTerm}%,full_name.ilike.%${searchTerm}%`)
         .range(from, to);
+
+      if (user?.id) {
+        query = query.neq('id', user.id);
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         throw error;
@@ -132,36 +140,48 @@ export default function SearchPage() {
     const targetUser = userResults.find(u => u.id === targetUserId);
     const isPrivate = false; // is_private column doesn't exist
 
-    try {
-      if (isFollowing || isPending) {
-        // Unfollow or cancel request
-        if (isPending) {
-          // Cancel follow request
-          await supabase
-            .from('follow_requests')
-            .delete()
-            .eq('follower_id', user.id)
-            .eq('following_id', targetUserId);
+    if (isFollowing) {
+      showModal({
+        title: 'Dejar de seguir',
+        message: `¿Estás seguro que quieres dejar de seguir a @${targetUser?.username || 'este usuario'}?`,
+        type: 'confirm',
+        confirmText: 'Dejar de seguir',
+        cancelText: 'Cancelar',
+        onConfirm: async () => {
+          try {
+            await supabase
+              .from('follows')
+              .delete()
+              .eq('follower_id', user.id)
+              .eq('following_id', targetUserId);
 
-          setPendingRequestIds(prev => {
-            const next = new Set(prev);
-            next.delete(targetUserId);
-            return next;
-          });
-        } else {
-          // Unfollow
-          await supabase
-            .from('follows')
-            .delete()
-            .eq('follower_id', user.id)
-            .eq('following_id', targetUserId);
-
-          setFollowingIds(prev => {
-            const next = new Set(prev);
-            next.delete(targetUserId);
-            return next;
-          });
+            setFollowingIds(prev => {
+              const next = new Set(prev);
+              next.delete(targetUserId);
+              return next;
+            });
+          } catch (error) {
+            console.error('Error unfollowing:', error);
+          }
         }
+      });
+      return;
+    }
+
+    try {
+      if (isPending) {
+        // Cancel follow request
+        await supabase
+          .from('follow_requests')
+          .delete()
+          .eq('follower_id', user.id)
+          .eq('following_id', targetUserId);
+
+        setPendingRequestIds(prev => {
+          const next = new Set(prev);
+          next.delete(targetUserId);
+          return next;
+        });
       } else {
         // Follow - check if profile is private
         if (isPrivate) {
@@ -384,7 +404,7 @@ export default function SearchPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Buscar en Klozet..."
-              className="w-full min-w-0 bg-[var(--background-secondary)] border border-transparent focus:border-[var(--border-color)] rounded-xl py-3 pl-12 pr-10 text-base text-[var(--foreground)] placeholder-[var(--foreground-tertiary)] outline-none transition-colors"
+              className="search-input-no-outline w-full min-w-0 bg-[var(--background-secondary)] rounded-xl py-3 pl-12 pr-10 text-base text-[var(--foreground)] placeholder-[var(--foreground-tertiary)] transition-colors"
             />
             {query && (
               <button
@@ -523,6 +543,17 @@ export default function SearchPage() {
       </div>
 
       <style jsx global>{`
+        .search-input-no-outline {
+          outline: none !important;
+          border: none !important;
+          box-shadow: none !important;
+        }
+        .search-input-no-outline:focus-visible,
+        .search-input-no-outline:focus {
+          outline: none !important;
+          border: none !important;
+          box-shadow: none !important;
+        }
         .masonry-grid {
           column-count: 2;
           column-gap: 0.5rem;
