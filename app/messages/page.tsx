@@ -240,7 +240,7 @@ export default function MessagesPage() {
     );
 
     return (
-        <div className="min-h-screen bg-[var(--background)] pb-20 md:pb-0">
+        <div className="min-h-[100dvh] bg-[var(--background)]">
             {/* Mobile: Header + Search + List. Desktop: layout shows list; this page is only for placeholder when no chat selected. */}
             <div className="md:hidden">
                 <header className="sticky top-0 z-30 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-color)]">

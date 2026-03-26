@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { useSwipeNavigation } from '@/hooks/useSwipeNavigation';
 import { useMessageStore } from '@/store/messageStore';
+import { realtimeManager } from '@/lib/realtime/RealtimeManager';
 
 // Types
 interface Message {
@@ -38,6 +39,7 @@ export default function ChatPage() {
     const [newMessage, setNewMessage] = useState('');
     const [loading, setLoading] = useState(true);
     const [isTyping, setIsTyping] = useState(false);
+    const [isOnline, setIsOnline] = useState(false);
     
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const typingTimeoutRef = useRef<any>(null);
@@ -61,11 +63,17 @@ export default function ChatPage() {
         scrollToBottom();
     }, [messages]);
 
-    // Unified Realtime + Broadcasting System
+    // Centralized Realtime Presence & Verified Message Updates
     useEffect(() => {
         if (!user?.id || !targetUserId) return;
 
-        // Custom room guaranteed for these two users
+        // Maintain Presence/Online Status via global RealtimeManager
+        setIsOnline(realtimeManager.isUserOnline(targetUserId));
+        const unsubOnline = realtimeManager.onOnlineUsersChange((userIds) => {
+            setIsOnline(userIds.includes(targetUserId));
+        });
+
+        // Custom room for typing indicator only
         const roomId = [user.id, targetUserId].sort().join('-');
         const channel = supabase.channel(`chat_room:${roomId}`, {
             config: { broadcast: { self: false } }
@@ -81,50 +89,40 @@ export default function ChatPage() {
             }
         });
 
-        channel.on('postgres_changes', {
-            event: '*',
-            schema: 'public',
-            table: 'messages',
-        }, async (payload) => {
-            if (!payload.new || Object.keys(payload.new).length === 0) return;
-            const newMsg = payload.new as Message;
-            
-            const isRelevant = 
-                (newMsg.sender_id === user.id && newMsg.receiver_id === targetUserId) ||
-                (newMsg.sender_id === targetUserId && newMsg.receiver_id === user.id);
-                
-            if (isRelevant) {
-                setMessages((prev: Message[]) => {
-                    const existsIndex = prev.findIndex(m => m.id === newMsg.id);
-                    if (existsIndex >= 0) {
-                        const newArr = [...prev];
-                        newArr[existsIndex] = { ...newArr[existsIndex], ...newMsg };
-                        return newArr;
-                    }
-                    return [...prev, newMsg];
-                });
-
-                if (newMsg.sender_id === targetUserId && newMsg.receiver_id === user.id && !newMsg.is_read) {
-                     try {
-                          await (supabase.from('messages') as any)
-                              .update({ is_read: true })
-                              .eq('id', newMsg.id);
-                          
-                          useMessageStore.getState().syncUnreadCount(user.id);
-                          if ((newMsg as any).conversation_id) {
-                              useMessageStore.getState().markConversationAsRead((newMsg as any).conversation_id);
-                          }
-                     } catch (e) { console.error('Auto-read error', e); }
-                }
-            }
-        });
-
         channel.subscribe();
         channelRef.current = channel;
+
+        channel.on('broadcast', { event: 'new_message' }, async (payload) => {
+            const newMsg = payload.payload.message as Message;
+            
+            setMessages((prev: Message[]) => {
+                const existsIndex = prev.findIndex(m => m.id === newMsg.id);
+                if (existsIndex >= 0) {
+                    const newArr = [...prev];
+                    newArr[existsIndex] = { ...newArr[existsIndex], ...newMsg };
+                    return newArr;
+                }
+                return [...prev, newMsg];
+            });
+
+            if (newMsg.sender_id === targetUserId && newMsg.receiver_id === user.id && !newMsg.is_read) {
+                try {
+                    await (supabase.from('messages') as any)
+                        .update({ is_read: true })
+                        .eq('id', newMsg.id);
+                    
+                    useMessageStore.getState().syncUnreadCount(user.id);
+                    if ((newMsg as any).conversation_id) {
+                        useMessageStore.getState().markConversationAsRead((newMsg as any).conversation_id);
+                    }
+                } catch (e) { console.error('Auto-read error', e); }
+            }
+        });
 
         return () => {
             supabase.removeChannel(channel);
             clearTimeout(typingTimeoutRef.current);
+            unsubOnline();
         };
     }, [user?.id, targetUserId]);
 
@@ -197,71 +195,17 @@ export default function ChatPage() {
         initChat();
     }, [user?.id, targetUserId]);
 
-    // Setup Realtime Subscription
-    useEffect(() => {
-        if (!user || !targetUserId) return;
-
-        const channel = supabase.channel(`chat:${targetUserId}`)
-            .on('postgres_changes', {
-                event: '*',
-                schema: 'public',
-                table: 'messages',
-            }, async (payload) => {
-                // If it's a delete, new might be null.
-                if (!payload.new || Object.keys(payload.new).length === 0) return;
-
-                const newMsg = payload.new as Message;
-
-                const isRelevant =
-                    (newMsg.sender_id === user.id && newMsg.receiver_id === targetUserId) ||
-                    (newMsg.sender_id === targetUserId && newMsg.receiver_id === user.id);
-
-                if (isRelevant) {
-                    setMessages(prev => {
-                        const existsIndex = prev.findIndex(m => m.id === newMsg.id);
-                        if (existsIndex >= 0) {
-                            // Update existing message (e.g., marked as read, or server confirmed)
-                            const newArr = [...prev];
-                            newArr[existsIndex] = { ...newArr[existsIndex], ...newMsg };
-                            return newArr;
-                        }
-                        // Insert new message
-                        return [...prev, newMsg];
-                    });
-
-                    // If we receive a message from the target user while we are in this chat,
-                    // we should instantly mark it as read to avoid the badge flashing or incrementing incorrectly.
-                    if (newMsg.sender_id === targetUserId && newMsg.receiver_id === user.id && !newMsg.is_read) {
-                        try {
-                            await (supabase.from('messages') as any)
-                                .update({ is_read: true })
-                                .eq('id', newMsg.id);
-
-                            // Remove from local badge state instantly
-                            if ((newMsg as any).conversation_id) {
-                                useMessageStore.getState().markConversationAsRead((newMsg as any).conversation_id);
-                            }
-                            useMessageStore.getState().syncUnreadCount(user.id);
-                        } catch (e) {
-                            console.error('Error auto-reading new message:', e);
-                        }
-                    }
-                }
-            })
-            .subscribe((status, err) => {
-                console.log(`Supabase Realtime status: ${status}`, err || '');
-            });
-
-        return () => {
-            supabase.removeChannel(channel);
-        };
-    }, [user?.id, targetUserId]);
+    // We use unified broadcast instead of postgres_changes.
 
     const sendMessage = async () => {
         if (!newMessage.trim() || !user || !targetUserId) return;
 
         const content = newMessage.trim();
         setNewMessage(''); // Optimistic clear
+        
+        // Reset textarea height
+        const textarea = document.getElementById('chat-input') as HTMLTextAreaElement;
+        if (textarea) textarea.style.height = 'auto';
 
         // Optimistic UI Update with fallback UUID generator to support testing on non-https mobile connections
         const tempId = `temp_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
@@ -329,6 +273,14 @@ export default function ChatPage() {
                     }
                     return prev.map((m: Message) => m.id === tempId ? { ...(insertedMsg as Message) } : m);
                 });
+                
+                if (channelRef.current) {
+                    channelRef.current.send({
+                        type: 'broadcast',
+                        event: 'new_message',
+                        payload: { message: insertedMsg }
+                    });
+                }
             }
 
         } catch (error) {
@@ -344,6 +296,11 @@ export default function ChatPage() {
 
     const handleTyping = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         setNewMessage(e.target.value);
+        
+        // Auto-resize logic
+        e.target.style.height = 'auto';
+        e.target.style.height = `${e.target.scrollHeight}px`;
+
         if (channelRef.current && user) {
             channelRef.current.send({
                 type: 'broadcast',
@@ -362,17 +319,16 @@ export default function ChatPage() {
 
     return (
         <div
-            className="flex flex-col h-screen md:h-full bg-[var(--background)]"
+            className="flex flex-col h-[100dvh] md:h-full bg-[var(--background)]"
         >
             {/* Header */}
-            <div className="sticky top-0 z-30 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-color)] px-4 py-3 flex items-center justify-between">
+            <div className="sticky top-0 z-30 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-color)] min-h-[64px] w-full px-4 md:px-6 py-2 flex items-center justify-between flex-shrink-0">
                 <div className="flex items-center gap-3">
-                    <button onClick={() => router.back()} className="p-1 -ml-1 text-[var(--foreground)] hover:bg-[var(--background-secondary)] rounded-full transition-colors md:hidden">
+                    <button onClick={() => router.push('/messages')} className="p-2 -ml-2 text-[var(--foreground)] hover:bg-[var(--background-secondary)] rounded-full transition-colors md:hidden">
                         <ArrowLeft className="w-6 h-6" />
                     </button>
-
                     {targetUser ? (
-                        <Link href={`/profile/${targetUserId}`} className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                        <div className="flex items-center gap-3 cursor-pointer" onClick={() => router.push(`/profile/${targetUser.id}`)}>
                             <div className="relative">
                                 <div className="w-10 h-10 rounded-full bg-[var(--background-secondary)] overflow-hidden border border-[var(--border-color)]">
                                     {targetUser.avatar_url ? (
@@ -383,7 +339,9 @@ export default function ChatPage() {
                                         </div>
                                     )}
                                 </div>
-                                <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-[var(--background)]" />
+                                {isOnline && (
+                                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-[var(--background)]" />
+                                )}
                             </div>
                             <div>
                                 <h2 className="text-[16px] font-bold text-[var(--foreground)] leading-tight">{targetUser.username}</h2>
@@ -391,14 +349,14 @@ export default function ChatPage() {
                                 {isTyping ? (
                                     <span className="text-[var(--brand-pink)] font-medium text-[13px] animate-pulse">escribiendo...</span>
                                 ) : (
-                                    'Activo ahora'
+                                    isOnline ? 'Activo ahora' : 'Desconectado'
                                 )}
                                 </p>
                             </div>
-                        </Link>
+                        </div>
                     ) : (
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-[var(--background-secondary)] animate-pulse" />
+                            <div className="w-9 h-9 rounded-full bg-[var(--background-secondary)] animate-pulse" />
                             <div className="h-4 w-24 bg-[var(--background-secondary)] rounded animate-pulse" />
                         </div>
                     )}
@@ -456,8 +414,8 @@ export default function ChatPage() {
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto px-4 py-4 pb-safe flex flex-col">
-                <div className="w-full flex flex-col space-y-3 flex-1 justify-end">
+            <div className="flex-1 overflow-y-auto px-4 md:px-6 py-4 flex flex-col items-center">
+                <div className="w-full max-w-3xl lg:max-w-2xl flex flex-col space-y-3 flex-1 justify-end">
                     {loading ? (
                         <div className="flex justify-center py-20">
                             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--brand-pink)]"></div>
@@ -474,7 +432,23 @@ export default function ChatPage() {
                         Array.from(new Map(messages.map(m => [m.id, m])).values()).map((msg, idx, arr) => {
                             const isMe = msg.sender_id === user?.id;
                             const prevMsg = idx > 0 ? arr[idx - 1] : null;
-                            const showAvatar = !prevMsg || prevMsg.sender_id !== msg.sender_id;
+                            const nextMsg = idx < arr.length - 1 ? arr[idx + 1] : null;
+
+                            // Grouping logic for balloons
+                            const isFirstInGroup = !prevMsg || prevMsg.sender_id !== msg.sender_id;
+                            const isLastInGroup = !nextMsg || nextMsg.sender_id !== msg.sender_id;
+
+                            // We only show avatar on the last message of the person's block (iMessage style)
+                            const showAvatar = !isMe && isLastInGroup;
+                            
+                            let borderRadiusClass = 'rounded-[22px]';
+                            if (isMe) {
+                                borderRadiusClass = `rounded-l-[22px] ${isFirstInGroup ? 'rounded-tr-[22px]' : 'rounded-tr-[8px]'} ${isLastInGroup ? 'rounded-br-[22px]' : 'rounded-br-[8px]'}`;
+                            } else {
+                                borderRadiusClass = `rounded-r-[22px] ${isFirstInGroup ? 'rounded-tl-[22px]' : 'rounded-tl-[8px]'} ${isLastInGroup ? 'rounded-bl-[22px]' : 'rounded-bl-[8px]'}`;
+                            }
+                            
+                            const marginTop = isFirstInGroup && idx !== 0 ? 'mt-4' : 'mt-[3px]';
 
                             // Check if message is a shared post
                             let isSharedPost = false;
@@ -491,20 +465,22 @@ export default function ChatPage() {
                                     key={msg.id}
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    className={`flex w-full ${isMe ? 'justify-end' : 'justify-start'}`}
+                                    className={`flex w-full ${marginTop} ${isMe ? 'justify-end' : 'justify-start'}`}
                                 >
-                                    <div className={`flex w-fit max-w-[85%] md:max-w-[340px] xl:max-w-[420px] items-end gap-2 ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
+                                    <div className={`flex w-fit max-w-[85%] sm:max-w-[75%] md:max-w-[400px] xl:max-w-[480px] min-w-0 items-end gap-2 ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
                                         {/* Avatar placeholder for alignment */}
                                         {!isMe && (
-                                            <div className="w-8 h-8 flex-shrink-0">
-                                                {showAvatar && (
-                                                    <img src={targetUser?.avatar_url || ''} className="w-8 h-8 rounded-full object-cover border border-[var(--border-color)]" />
+                                            <div className="w-8 h-8 flex-shrink-0 group relative">
+                                                {showAvatar ? (
+                                                    <img src={targetUser?.avatar_url || ''} className="w-8 h-8 rounded-full object-cover shadow-sm bg-[var(--background-secondary)]" />
+                                                ) : (
+                                                    <div className="w-8 h-8" />
                                                 )}
                                             </div>
                                         )}
 
                                         {isSharedPost && sharedPostData ? (
-                                            <div className={`overflow-hidden rounded-2xl border ${isMe ? 'border-[var(--brand-pink)] bg-[var(--brand-pink)]/5' : 'border-[var(--border-color)] bg-[var(--card-bg)]'}`}>
+                                            <div className={`overflow-hidden border ${borderRadiusClass} ${isMe ? 'border-[var(--brand-pink)] bg-[var(--brand-pink)]/5' : 'border-[var(--border-color)] bg-[var(--card-bg)]'}`}>
                                                 <div className="relative aspect-[3/4] w-48 bg-gray-100">
                                                     <img src={sharedPostData.image} className="w-full h-full object-cover" />
                                                 </div>
@@ -515,11 +491,12 @@ export default function ChatPage() {
                                             </div>
                                         ) : (
                                             <div className={`
-                                            px-4 py-2.5 rounded-[22px] text-[15px] leading-relaxed break-all
-                                            ${isMe
-                                                    ? 'bg-[var(--brand-pink)] text-white rounded-br-sm'
-                                                    : 'bg-[var(--background-secondary)] text-[var(--foreground)] rounded-bl-sm'}
-                                        `}>
+                                                min-w-0 px-4 py-2 text-[15px] leading-relaxed break-words break-all whitespace-pre-wrap shadow-sm
+                                                ${borderRadiusClass}
+                                                ${isMe
+                                                    ? 'bg-[var(--brand-pink)] text-white font-medium'
+                                                    : 'bg-[var(--background-secondary)] text-[var(--foreground)]'}
+                                            `}>
                                                 {msg.content}
                                             </div>
                                         )}
@@ -533,22 +510,24 @@ export default function ChatPage() {
             </div>
 
             {/* Input Area - Clean & Modern */}
-            <div className="bg-[var(--background)]/95 backdrop-blur-xl border-t border-[var(--border-color)] pb-safe-offset-2 flex justify-center">
-                <div className="px-4 md:px-6 py-3 w-full">
+            <div className="bg-[var(--background)]/95 backdrop-blur-xl border-t border-[var(--border-color)] pb-[max(env(safe-area-inset-bottom),0.5rem)] px-2 md:px-0 flex justify-center shrink-0">
+                <div className="px-2 md:px-6 py-3 w-full max-w-3xl lg:max-w-2xl">
                     <div className="flex items-end gap-2">
-                        <div className="flex-1 bg-[var(--background-secondary)] rounded-full border border-[var(--border-color)] flex items-center pr-1.5 pl-4">
+                        <div className="flex-1 bg-[var(--background-secondary)] rounded-[22px] border border-[var(--border-color)] flex items-end pr-1.5 pl-4 relative">
                             <textarea
+                                id="chat-input"
                                 value={newMessage}
                                 onChange={handleTyping}
                                 onKeyDown={handleKeyDown}
                                 placeholder="Mensaje..."
-                                className="w-full bg-transparent max-h-32 min-h-[44px] py-3 outline-none focus:outline-none focus:ring-0 focus:border-transparent text-[15px] resize-none text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)]"
+                                className="w-full bg-transparent max-h-32 min-h-[44px] py-3 text-[15px] resize-none text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] !outline-none !ring-0 focus:!outline-none focus:!ring-0 border-none !border-transparent focus:!border-transparent !shadow-none focus:!shadow-none"
+                                style={{ outline: 'none', boxShadow: 'none' }}
                                 rows={1}
                             />
                             {newMessage.trim() && (
                                 <button
                                     onClick={sendMessage}
-                                    className="p-1.5 mb-1.5 text-white bg-[var(--brand-pink)] rounded-full flex-shrink-0 shadow-md"
+                                    className="p-1.5 mb-1.5 ml-2 text-white bg-[var(--brand-pink)] rounded-full flex-shrink-0 shadow-md transition-transform active:scale-95"
                                 >
                                     <Send className="w-5 h-5 pl-0.5" />
                                 </button>

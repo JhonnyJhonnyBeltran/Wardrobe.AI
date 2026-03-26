@@ -153,7 +153,7 @@ export default function MessagesLayout({ children }: { children: React.ReactNode
             </div>
 
             {/* Desktop View - Split Layout */}
-            <div className="hidden md:flex h-screen bg-[var(--background)]">
+            <div className="hidden md:flex h-[100dvh] bg-[var(--background)]">
                 {/* Left Sidebar - Conversation List */}
                 <div className="w-[380px] border-r border-[var(--border-color)] flex flex-col bg-[var(--background)]">
                     {/* Header */}
