@@ -373,18 +373,18 @@ export default function SearchPage() {
   }, [loadMoreUsers, loadMorePosts, usersHasMore, postsHasMore, usersLoadingMore, postsLoadingMore, loading]);
 
   return (
-    <div className="min-h-[100dvh] w-full overflow-x-hidden bg-[var(--background)] pb-24">
+    <div className="min-h-[100dvh] w-full max-w-[100vw] overflow-x-hidden bg-[var(--background)] pb-24">
       {/* Header */}
-      <div className="sticky top-0 z-30 bg-[var(--background)]/90 backdrop-blur-md border-b border-[var(--border-color)]">
-        <div className="w-full max-w-3xl mx-auto px-4 pt-12 pb-4">
-          <div className="relative">
+      <div className="sticky top-0 z-30 w-full min-w-0 bg-[var(--background)]/90 backdrop-blur-md border-b border-[var(--border-color)]">
+        <div className="w-full max-w-3xl mx-auto px-4 py-3 sm:py-4">
+          <div className="relative w-full min-w-0">
             <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--foreground-secondary)]" />
             <input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Buscar personas o descripciones de posts..."
-              className="w-full bg-[var(--background-secondary)] border-none rounded-xl py-3 pl-12 pr-10 text-base text-[var(--foreground)] placeholder-[var(--foreground-tertiary)] focus:ring-2 focus:ring-[var(--brand-pink)] outline-none"
+              placeholder="Buscar en Klozet..."
+              className="w-full min-w-0 bg-[var(--background-secondary)] border border-transparent focus:border-[var(--border-color)] rounded-xl py-3 pl-12 pr-10 text-base text-[var(--foreground)] placeholder-[var(--foreground-tertiary)] outline-none transition-colors"
             />
             {query && (
               <button
@@ -398,7 +398,7 @@ export default function SearchPage() {
         </div>
       </div>
 
-      <div className="w-full max-w-3xl mx-auto px-4 py-6 flex flex-col gap-8">
+      <div className="w-full max-w-3xl mx-auto px-4 py-4 sm:py-6 flex flex-col gap-6 sm:gap-8 min-w-0">
         {loading ? (
           <div className="flex justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-500"></div>
@@ -418,13 +418,13 @@ export default function SearchPage() {
                 {userResults.map(user => (
                   <div
                     key={user.id}
-                    className="flex items-center gap-4 p-3 bg-[var(--background-secondary)] rounded-xl border border-[var(--border-color)]"
+                    className="flex items-center gap-4 p-3 bg-[var(--background-secondary)] rounded-xl border border-[var(--border-color)] overflow-hidden"
                   >
-                    <Link href={`/profile/${user.id}`} className="flex items-center gap-4 flex-1">
+                    <Link href={`/profile/${user.id}`} className="flex items-center gap-4 flex-1 min-w-0">
                       <img
                         src={user.avatar_url || '/placeholder-avatar.png'}
                         alt={user.username}
-                        className="w-12 h-12 rounded-full object-cover border-2 border-[var(--background)]"
+                        className="w-12 h-12 rounded-full object-cover border-2 border-[var(--background)] flex-shrink-0"
                       />
                       <div className="flex-1 min-w-0">
                         <h3 className="font-semibold text-[var(--foreground)] truncate">
@@ -437,7 +437,7 @@ export default function SearchPage() {
                     </Link>
                     <button
                       onClick={() => handleFollow(user.id)}
-                      className={`px-4 py-2 rounded-full text-sm font-medium transition-opacity ${followingIds.has(user.id)
+                      className={`px-4 py-2 rounded-full text-sm font-medium transition-opacity flex-shrink-0 ${followingIds.has(user.id)
                         ? 'bg-[var(--background)] text-[var(--foreground)] border border-[var(--border-color)]'
                         : 'bg-[var(--brand-pink)] text-white hover:opacity-90'
                         }`}
@@ -459,9 +459,9 @@ export default function SearchPage() {
             {/* POST RESULTS */}
             {query && results.length > 0 && (
               <div className="mt-2">
-                <div className="columns-2 md:columns-3 gap-4">
+                <div className="masonry-grid">
                   {results.map(post => (
-                    <div key={post.id} className="break-inside-avoid">
+                    <div key={post.id} className="contents break-inside-avoid">
                       <PostCard post={post} />
                     </div>
                   ))}
@@ -500,9 +500,9 @@ export default function SearchPage() {
                     <h2 className="text-sm font-bold text-[var(--foreground-secondary)] uppercase tracking-wider mb-4">
                       Populares en Klozet
                     </h2>
-                    <div className="columns-2 md:columns-3 gap-4">
+                    <div className="masonry-grid">
                       {results.map(post => (
-                        <div key={post.id} className="break-inside-avoid">
+                        <div key={post.id} className="contents break-inside-avoid">
                           <PostCard post={post} />
                         </div>
                       ))}
@@ -521,6 +521,30 @@ export default function SearchPage() {
           </>
         )}
       </div>
+
+      <style jsx global>{`
+        .masonry-grid {
+          column-count: 2;
+          column-gap: 0.5rem;
+        }
+        @media (min-width: 768px) {
+          .masonry-grid {
+            column-count: 3;
+            column-gap: 1rem;
+          }
+        }
+        @media (min-width: 1024px) {
+          .masonry-grid {
+            column-count: 4;
+            column-gap: 1rem;
+          }
+        }
+        @media (min-width: 1440px) {
+          .masonry-grid {
+            column-count: 5;
+          }
+        }
+      `}</style>
     </div>
   );
 }
