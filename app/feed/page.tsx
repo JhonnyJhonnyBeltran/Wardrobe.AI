@@ -7,7 +7,6 @@ import PremiumAdCard from '@/components/Feed/PremiumAdCard';
 import { LogoMark } from '@/components';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { revalidatePath } from 'next/cache';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRef, useCallback } from 'react';
 import { useUiStore } from '@/store/uiStore';
