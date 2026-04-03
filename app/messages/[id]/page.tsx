@@ -250,7 +250,7 @@ export default function ChatPage() {
             }
 
             // Now insert the message
-            const { data: insertedMsg, error } = await supabase
+            const { data, error } = await supabase
                 .from('messages')
                 .insert({
                     conversation_id: conversationId,
@@ -260,6 +260,8 @@ export default function ChatPage() {
                 } as any)
                 .select()
                 .single();
+            
+            const insertedMsg = data as any;
 
             if (error) {
                 console.error('Error inserting message:', error);
