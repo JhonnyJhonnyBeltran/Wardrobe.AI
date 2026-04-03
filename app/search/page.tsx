@@ -57,7 +57,7 @@ export default function SearchPage() {
     return () => clearTimeout(handler);
   }, [query]);
 
-  // Initial load
+  // Initial load 
   useEffect(() => {
     setLoading(true);
     if (debouncedQuery.trim()) {
@@ -104,7 +104,7 @@ export default function SearchPage() {
       } else {
         setUserResults(newData);
       }
-      
+
       // Update followingIds
       if (user && newData.length > 0) {
         const statuses = await import('@/lib/services/followService').then(m => m.getMyFollowStatusMap(user.id));
