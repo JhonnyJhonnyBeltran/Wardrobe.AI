@@ -32,8 +32,7 @@ export function useSocial() {
     setError(null);
 
     try {
-      const { data, error } = await supabase
-        .from('profiles')
+      const { data, error } = await (supabase.from('profiles') as any)
         .select('*')
         .or(`username.ilike.%${query}%,full_name.ilike.%${query}%`)
         .limit(20);
@@ -41,7 +40,7 @@ export function useSocial() {
       if (error) throw error;
 
       // Filter out current user
-      return data.filter(p => p.id !== user?.id) as Profile[];
+      return data.filter((p: any) => p.id !== user?.id) as Profile[];
     } catch (err: any) {
       console.error('Error searching users:', err);
       setError(err.message);
@@ -56,8 +55,7 @@ export function useSocial() {
     if (!username || username.length < 3) return false;
 
     try {
-      const { data, error } = await supabase
-        .from('profiles')
+      const { data, error } = await (supabase.from('profiles') as any)
         .select('id')
         .eq('username', username)
         .eq('username', username)
@@ -79,7 +77,7 @@ export function useSocial() {
 
     try {
       // Use RPC to check if email exists in DB
-      const { data, error } = await supabase.rpc('check_email_exists', {
+      const { data, error } = await (supabase.rpc as any)('check_email_exists', {
         email_to_check: email
       });
 
@@ -214,8 +212,7 @@ export function useSocial() {
     setLoading(true);
 
     try {
-      const { error } = await supabase
-        .from('profiles')
+      const { error } = await (supabase.from('profiles') as any)
         .update(updates)
         .eq('id', user.id);
 
