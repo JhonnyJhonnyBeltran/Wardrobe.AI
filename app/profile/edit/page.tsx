@@ -46,8 +46,7 @@ export default function EditProfilePage() {
 
       // Fetch full profile data (username, bio)
       const fetchProfile = async () => {
-        const { data } = await supabase
-          .from('profiles')
+        const { data } = await (supabase.from('profiles') as any)
           .select('username, bio')
           .eq('id', authUser.id)
           .single();
@@ -163,8 +162,7 @@ export default function EditProfilePage() {
       }
 
       // 2. Update Profile in DB (New Table)
-      const { error } = await supabase
-        .from('profiles')
+      const { error } = await (supabase.from('profiles') as any)
         .upsert({
           id: authUser.id,
           full_name: name,
@@ -182,7 +180,7 @@ export default function EditProfilePage() {
       }
 
       // 2.5 Sync with Legacy 'users' table just in case (optional but safe)
-      await supabase.from('users').update({
+      await (supabase.from('users') as any).update({
         name: name,
         avatar: avatarUrl
       }).eq('id', authUser.id);

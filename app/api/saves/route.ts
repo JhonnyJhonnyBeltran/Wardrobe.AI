@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
         // If they chose a folder but it was already quick-saved, assign it to the folder
         await supabase.from('save_folder_items').delete().eq('save_id', existing.id);
 
-        const { error: insertError } = await supabase.from('save_folder_items').insert({ folder_id, save_id: existing.id });
+        const { error: insertError } = await (supabase.from('save_folder_items') as any).insert({ folder_id, save_id: existing.id });
         if (insertError) {
           if (insertError.code === '23505') {
             // Already assigned to this folder
@@ -124,8 +124,7 @@ export async function POST(request: NextRequest) {
 
     // Create the save
     const newId = randomUUID();
-    const { data: save, error } = await supabase
-      .from('saves')
+    const { data: save, error } = await (supabase.from('saves') as any)
       .insert({
         id: newId,
         user_id: user.id,
@@ -145,8 +144,7 @@ export async function POST(request: NextRequest) {
 
     // If folder_id is provided, add to folder
     if (folder_id) {
-      await supabase
-        .from('save_folder_items')
+      await (supabase.from('save_folder_items') as any)
         .insert({
           folder_id,
           save_id: save.id,
@@ -234,8 +232,7 @@ export async function PUT(request: NextRequest) {
 
     // If folder_id is provided, add to new folder
     if (folder_id) {
-      await supabase
-        .from('save_folder_items')
+      await (supabase.from('save_folder_items') as any)
         .insert({
           folder_id,
           save_id,

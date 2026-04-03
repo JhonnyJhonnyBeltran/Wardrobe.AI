@@ -347,7 +347,7 @@ export default function CreateOutfitPage() {
             });
 
             if (outfitItemsArr.length > 0) {
-                await supabase.from('outfit_items').insert(outfitItemsArr as any);
+                await (supabase.from('outfit_items') as any).insert(outfitItemsArr as any);
             }
 
             return newOutfitId;

@@ -57,7 +57,7 @@ export default function MessagesPage() {
 
                 if (convError || !conversationId) throw convError || new Error('Could not get conversation');
 
-                await supabase.from('messages').insert({
+                await (supabase.from('messages') as any).insert({
                     conversation_id: conversationId,
                     sender_id: user.id,
                     receiver_id: otherUserId,
