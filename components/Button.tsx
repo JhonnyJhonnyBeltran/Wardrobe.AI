@@ -12,7 +12,7 @@ import { haptics } from '@/lib/haptic';
 
 interface ButtonProps extends Omit<HTMLMotionProps<'button'>, 'children'> {
   children: ReactNode;
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'glass';
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'glass' | 'destructive';
   size?: 'sm' | 'md' | 'lg' | 'xl';
   fullWidth?: boolean;
   glow?: boolean;
@@ -42,6 +42,13 @@ export default function Button({
       bg-[var(--brand-pink)] text-white
       shadow-[var(--shadow-float)]
       hover:bg-[var(--brand-pink-dark)]
+      hover:shadow-[var(--shadow-float-hover)]
+      active:shadow-[var(--shadow-float)]
+    `,
+    destructive: `
+      bg-red-500 text-white
+      shadow-[var(--shadow-float)]
+      hover:bg-red-600
       hover:shadow-[var(--shadow-float-hover)]
       active:shadow-[var(--shadow-float)]
     `,
