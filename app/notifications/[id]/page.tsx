@@ -159,8 +159,7 @@ export default function ChatPage() {
       setIsMutualFollow(mutual);
 
       // 3. Get or check for existing conversation
-      const { data: existingConv, error: convError } = await supabase
-        .from('conversations' as any)
+      const { data: existingConv, error: convError } = await (supabase.from('conversations') as any)
         .select('*')
         .or(`and(participant_1.eq.${user.id},participant_2.eq.${targetUserId}),and(participant_1.eq.${targetUserId},participant_2.eq.${user.id})`)
         .single();
@@ -177,8 +176,7 @@ export default function ChatPage() {
         // If pending and I didn't initiate, and there's already a message from them, I can't send more
         if (conv.status === 'pending' && conv.initiated_by === user.id) {
           // Check how many messages I sent
-          const { count } = await supabase
-            .from('messages' as any)
+          const { count } = await (supabase.from('messages') as any)
             .select('*', { count: 'exact', head: true })
             .eq('conversation_id', conv.id)
             .eq('sender_id', user.id);
@@ -189,8 +187,7 @@ export default function ChatPage() {
         }
 
         // 4. Get messages
-        const { data: msgs } = await supabase
-          .from('messages' as any)
+        const { data: msgs } = await (supabase.from('messages') as any)
           .select('*')
           .eq('conversation_id', conv.id)
           .order('created_at', { ascending: true });
@@ -207,9 +204,8 @@ export default function ChatPage() {
         }
 
         // 6. Mark messages as read
-        await supabase
-          .from('messages' as any)
-          .update({ read_at: new Date().toISOString() } as any)
+        await (supabase.from('messages') as any)
+          .update({ read_at: new Date().toISOString() })
           .eq('conversation_id', conv.id)
           .eq('receiver_id', user.id)
           .is('read_at', null);
@@ -247,9 +243,8 @@ export default function ChatPage() {
         if (newMsg.sender_id === targetUserId) {
           setMessages(prev => [...prev, newMsg]);
           // Mark as read
-          supabase
-            .from('messages' as any)
-            .update({ read_at: new Date().toISOString() } as any)
+          (supabase.from('messages') as any)
+            .update({ read_at: new Date().toISOString() })
             .eq('id', newMsg.id);
         }
       })
@@ -275,8 +270,7 @@ export default function ChatPage() {
         const p1 = user.id < targetUserId ? user.id : targetUserId;
         const p2 = user.id < targetUserId ? targetUserId : user.id;
 
-        const { data: newConv, error: convError } = await supabase
-          .from('conversations' as any)
+        const { data: newConv, error: convError } = await (supabase.from('conversations') as any)
           .insert({
             participant_1: p1,
             participant_2: p2,
@@ -308,8 +302,7 @@ export default function ChatPage() {
       setMessages(prev => [...prev, newMessage]);
 
       // Send to database
-      const { data, error } = await supabase
-        .from('messages' as any)
+      const { data, error } = await (supabase.from('messages') as any)
         .insert({
           conversation_id: convId,
           sender_id: user.id,
@@ -351,9 +344,8 @@ export default function ChatPage() {
   const acceptRequest = async () => {
     if (!conversation) return;
 
-    await supabase
-      .from('conversations' as any)
-      .update({ status: 'active' } as any)
+    await (supabase.from('conversations') as any)
+      .update({ status: 'active' })
       .eq('id', conversation.id);
 
     setConversation({ ...conversation, status: 'active' });
@@ -365,9 +357,8 @@ export default function ChatPage() {
   const restrictUser = async () => {
     if (!conversation) return;
 
-    await supabase
-      .from('conversations' as any)
-      .update({ status: 'restricted' } as any)
+    await (supabase.from('conversations') as any)
+      .update({ status: 'restricted' })
       .eq('id', conversation.id);
 
     router.back();
