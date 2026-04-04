@@ -73,7 +73,7 @@ export default function PostDetailPage() {
                         outfits (
                             id, name, image_url,
                             outfit_items (
-                                clothing_items (id, name, brand, image_url, color, category)
+                                clothing_items (id, name, brand, image_url, color, category, size, reference)
                             )
                         )
                     `)
@@ -277,6 +277,23 @@ export default function PostDetailPage() {
         }
     };
 
+    const handleShare = async () => {
+        try {
+            if (navigator.share) {
+                await navigator.share({
+                    title: 'Wardrobe.AI',
+                    text: 'Mira esta publicación en Wardrobe.AI',
+                    url: window.location.href,
+                });
+            } else {
+                await navigator.clipboard.writeText(window.location.href);
+                showSaveToast({ message: "Enlace copiado", actionLabel: "" });
+            }
+        } catch (error) {
+            console.log('Error sharing:', error);
+        }
+    };
+
     const toggleFollow = async () => {
         if (!user) {
             router.push('/login');
@@ -324,12 +341,7 @@ export default function PostDetailPage() {
                     user_id: user.id,
                     content: commentText
                 })
-                .select(`
-                    id, 
-                    content, 
-                    created_at,
-                    profiles:user_id (id, username, avatar_url)
-                `)
+                .select('id, content, created_at')
                 .single();
 
             if (error) throw error;
@@ -340,8 +352,8 @@ export default function PostDetailPage() {
                 created_at: data.created_at,
                 user: {
                     id: user.id,
-                    username: data.profiles?.username || user.username,
-                    avatar_url: data.profiles?.avatar_url || user.avatar
+                    username: user.username || 'Usuario',
+                    avatar_url: user.avatar || ''
                 }
             }]);
             setNewComment('');
@@ -382,9 +394,9 @@ export default function PostDetailPage() {
     if (!post) return <div className="min-h-screen flex items-center justify-center bg-white dark:bg-black text-gray-900 dark:text-white">Publicación no encontrada</div>;
 
     return (
-        <div className="min-h-screen bg-white dark:bg-black flex flex-col">
+        <div className="min-h-screen w-full bg-white dark:bg-black flex flex-col">
             {/* HEADER - White background like /profile */}
-            <header className="sticky top-0 z-50 bg-white dark:bg-black border-b border-gray-100 dark:border-gray-800 h-16 flex items-center justify-between px-4">
+            <header className="sticky top-0 z-50 w-full max-w-[1000px] mx-auto bg-white dark:bg-black border-b border-gray-100 dark:border-gray-800 h-16 flex items-center justify-between px-4">
                 {/* Left: Back Button */}
                 <button onClick={handleBack} className="p-2 -ml-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
                     <ArrowLeft className="w-6 h-6 text-gray-900 dark:text-white" />
@@ -407,10 +419,13 @@ export default function PostDetailPage() {
                 </div>
             </header>
 
+            {/* Desktop Container */}
+            <div className="flex flex-col md:flex-row w-full max-w-[1000px] mx-auto flex-1 md:h-[calc(100vh-64px)]">
+
             {/* IMAGE CAROUSEL - Swipeable */}
             <div
                 ref={slideRef}
-                className="relative w-full aspect-[4/5] bg-white dark:bg-black cursor-grab active:cursor-grabbing"
+                className="relative w-full aspect-[4/5] md:aspect-auto md:w-[60%] md:h-[calc(100vh-64px)] bg-white md:bg-gray-50 dark:bg-black dark:md:bg-[#0a0a0a] cursor-grab active:cursor-grabbing border-r-0 md:border-r border-gray-100 dark:border-gray-800 flex-shrink-0"
                 onTouchStart={handleTouchStart}
                 onTouchEnd={handleTouchEnd}
                 onMouseDown={handleTouchStart}
@@ -464,7 +479,7 @@ export default function PostDetailPage() {
                     <>
                         <button
                             onClick={(e) => { e.stopPropagation(); setActiveSlide(prev => prev === 0 ? slides.length - 1 : prev - 1); }}
-                            className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 hover:bg-white dark:bg-black/60 dark:hover:bg-black flex items-center justify-center shadow-lg z-10 transition-all"
+                            className="hidden md:flex absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 hover:bg-white dark:bg-black/60 dark:hover:bg-black items-center justify-center shadow-lg z-10 transition-all"
                         >
                             <ChevronLeft className="w-6 h-6 text-gray-900 dark:text-white" />
                         </button>
@@ -472,7 +487,7 @@ export default function PostDetailPage() {
                         {/* Navigation Arrows - Right */}
                         <button
                             onClick={(e) => { e.stopPropagation(); setActiveSlide(prev => prev === slides.length - 1 ? 0 : prev + 1); }}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 hover:bg-white dark:bg-black/60 dark:hover:bg-black flex items-center justify-center shadow-lg z-10 transition-all"
+                            className="hidden md:flex absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 hover:bg-white dark:bg-black/60 dark:hover:bg-black items-center justify-center shadow-lg z-10 transition-all"
                         >
                             <ChevronRight className="w-6 h-6 text-gray-900 dark:text-white" />
                         </button>
@@ -483,7 +498,7 @@ export default function PostDetailPage() {
                                 <button
                                     key={idx}
                                     onClick={(e) => { e.stopPropagation(); setActiveSlide(idx); }}
-                                    className={`h-2 rounded-full transition-all duration-300 ${activeSlide === idx ? 'bg-gray-900 dark:bg-white w-6' : 'bg-gray-400 dark:bg-gray-600 w-2'}`}
+                                    className={`rounded-full transition-all duration-300 ${activeSlide === idx ? 'bg-[var(--brand-pink)] w-4 h-1.5' : 'bg-gray-300 dark:bg-gray-600/60 w-1.5 h-1.5'}`}
                                     aria-label={`View slide ${idx + 1}`}
                                 />
                             ))}
@@ -492,36 +507,31 @@ export default function PostDetailPage() {
                 )}
             </div>
 
-            {/* ACTION BAR - Below image */}
-            <div className="border-b border-gray-100 dark:border-gray-800 px-4 py-3 flex items-center justify-between">
-                <div className="flex items-center gap-5">
-                    <button onClick={toggleLike} className="flex items-center gap-1.5 font-bold hover:opacity-70 transition-opacity">
-                        <Heart className={`w-6 h-6 transition-colors ${isLiked ? 'fill-[var(--brand-pink)] text-[var(--brand-pink)]' : 'text-gray-900 dark:text-white'}`} strokeWidth={2.5} />
-                        <span className="text-[15px] text-gray-900 dark:text-white">{likesCount}</span>
-                    </button>
-                    <button
-                        onClick={() => setShowMobileComments(true)}
-                        className="flex items-center gap-1.5 font-bold hover:opacity-70 transition-opacity"
-                    >
-                        <MessageCircle className="w-6 h-6 text-gray-900 dark:text-white" strokeWidth={2.5} />
-                        <span className="text-[15px] text-gray-900 dark:text-white">{comments.length}</span>
-                    </button>
-                    <button className="flex items-center gap-1.5 hover:opacity-70 transition-opacity">
-                        <Share2 className="w-6 h-6 text-gray-900 dark:text-white" strokeWidth={2.5} />
+            {/* RIGHT COLUMN: Actions, Details, Comments */}
+            <div className="flex flex-col w-full min-w-0 md:w-[40%] md:h-[calc(100vh-64px)] bg-white dark:bg-black overflow-x-hidden pb-[72px] md:pb-0">
+                {/* ACTION BAR - Below image */}
+                <div className="border-b border-gray-100 dark:border-gray-800 px-4 py-3 flex items-center justify-between flex-shrink-0">
+                    <div className="flex items-center gap-5">
+                        <button onClick={toggleLike} className="flex items-center gap-1.5 font-bold hover:opacity-70 transition-opacity">
+                            <Heart className={`w-6 h-6 transition-colors ${isLiked ? 'fill-[var(--brand-pink)] text-[var(--brand-pink)]' : 'text-gray-900 dark:text-white'}`} strokeWidth={2.5} />
+                            <span className="text-[15px] text-gray-900 dark:text-white">{likesCount}</span>
+                        </button>
+                        <button onClick={handleShare} className="flex items-center gap-1.5 hover:opacity-70 transition-opacity">
+                            <Share2 className="w-6 h-6 text-gray-900 dark:text-white" strokeWidth={2.5} />
+                        </button>
+                    </div>
+                    <button onClick={toggleSave} className="p-2 -mr-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
+                        <Bookmark className={`w-7 h-7 transition-colors duration-200 ${isSaved ? 'fill-[var(--brand-pink)] text-[var(--brand-pink)]' : 'text-gray-900 dark:text-white'}`} strokeWidth={isSaved ? 2 : 2.5} />
                     </button>
                 </div>
-                <button onClick={toggleSave} className="p-2 -mr-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
-                    <Bookmark className={`w-7 h-7 transition-colors duration-200 ${isSaved ? 'fill-[var(--brand-pink)] text-[var(--brand-pink)]' : 'text-gray-900 dark:text-white'}`} strokeWidth={isSaved ? 2 : 2.5} />
-                </button>
-            </div>
 
-            {/* SCROLLABLE CONTENT */}
-            <div className="flex-1 overflow-y-auto">
+                {/* SCROLLABLE CONTENT */}
+                <div className="flex-1 overflow-y-auto no-scrollbar">
                 {/* Caption - h6 instead of h3 */}
                 {/* @ts-ignore */}
                 {post.caption && (
-                    <div className="px-4 py-4">
-                        <h6 className="text-[14px] text-gray-900 dark:text-white whitespace-pre-wrap leading-relaxed">{post.caption}</h6>
+                    <div className="px-4 py-4 w-full">
+                        <h6 className="text-[14px] text-gray-900 dark:text-white whitespace-pre-wrap leading-relaxed break-words break-all">{post.caption}</h6>
                     </div>
                 )}
 
@@ -567,40 +577,46 @@ export default function PostDetailPage() {
                 )}
 
                 {/* COMMENTS SECTION - Below description */}
-                <div className="px-4 py-4 border-t border-gray-100 dark:border-gray-800">
-                    <h3 className="font-bold text-[15px] text-gray-900 dark:text-white mb-4">Comentarios</h3>
+                {currentSlide.type !== 'outfit' && (
+                    <>
+                        <div className="px-4 py-4 border-t border-gray-100 dark:border-gray-800">
+                            <h3 className="font-bold text-[15px] text-gray-900 dark:text-white mb-4">Comentarios ({comments.length})</h3>
 
-                    {comments.length === 0 ? (
-                        <div className="text-center py-6 text-gray-400">
-                            <p className="text-sm">Sé el primero en comentar.</p>
-                        </div>
-                    ) : (
-                        <div className="space-y-4">
-                            {comments.map((comment) => (
-                                <div key={comment.id} className="flex gap-3">
-                                    <Link href={`/profile/${comment.user.id}`} className="flex-shrink-0">
-                                        <Avatar src={comment.user.avatar_url || null} alt={comment.user.username} size="sm" />
-                                    </Link>
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex gap-2 items-baseline flex-wrap">
-                                            <Link href={`/profile/${comment.user.id}`} className="font-bold text-[14px] text-gray-900 dark:text-white hover:underline">
-                                                {comment.user.username}
-                                            </Link>
-                                            <span className="text-[14px] text-gray-900 dark:text-white break-words">{comment.content}</span>
-                                        </div>
-                                        <div className="flex gap-3 mt-1 text-[11px] font-medium text-gray-400">
-                                            <span>{new Date(comment.created_at).toLocaleDateString()}</span>
-                                            <button className="hover:text-gray-600">Responder</button>
-                                        </div>
-                                    </div>
+                            {comments.length === 0 ? (
+                                <div className="text-center py-6 text-gray-400">
+                                    <p className="text-sm">Sé el primero en comentar.</p>
                                 </div>
-                            ))}
+                            ) : (
+                                <div className="space-y-4">
+                                    {comments.map((comment) => (
+                                        <div key={comment.id} className="flex gap-3">
+                                            <Link href={`/profile/${comment.user.id}`} className="flex-shrink-0">
+                                                <Avatar src={comment.user.avatar_url || null} alt={comment.user.username} size="sm" />
+                                            </Link>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex gap-2 items-baseline flex-wrap">
+                                                    <Link href={`/profile/${comment.user.id}`} className="font-bold text-[14px] text-gray-900 dark:text-white hover:underline">
+                                                        {comment.user.username}
+                                                    </Link>
+                                                    <span className="text-[14px] text-gray-900 dark:text-white break-words">{comment.content}</span>
+                                                </div>
+                                                <div className="flex gap-3 mt-1 text-[11px] font-medium text-gray-400">
+                                                    <span>{new Date(comment.created_at).toLocaleDateString()}</span>
+                                                    <button className="hover:text-gray-600">Responder</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
-                    )}
-                </div>
+                    </>
+                )}
+            </div>
 
-                {/* Add Comment Input - Always visible at bottom of scroll */}
-                <form onSubmit={handleAddComment} className="px-4 py-4 border-t border-gray-100 dark:border-gray-800 flex gap-3 items-center sticky bottom-0 bg-white dark:bg-black">
+            {/* Add Comment Input - Always visible at bottom of scroll inside right col */}
+            {currentSlide.type !== 'outfit' && (
+                <form onSubmit={handleAddComment} className="px-4 py-4 border-t border-gray-100 dark:border-gray-800 flex gap-3 items-center sticky bottom-[64px] md:bottom-0 bg-white dark:bg-black flex-shrink-0 w-full z-10">
                     <Avatar src={user?.avatar || null} alt="Tú" size="sm" />
                     <div className="flex-1">
                         <input
@@ -619,11 +635,14 @@ export default function PostDetailPage() {
                         Publicar
                     </button>
                 </form>
-            </div>
+            )}
+
+            </div> {/* End Right Column */}
+            </div> {/* End Desktop Container */}
 
             {/* Mobile Comments Overlay */}
             {showMobileComments && (
-                <div className="fixed inset-0 bg-black/50 z-40 md:hidden flex items-end">
+                <div className="fixed inset-0 bg-black/50 z-[100] md:hidden flex items-end">
                     <div className="w-full h-[80vh] bg-white dark:bg-black rounded-t-3xl pt-2 flex flex-col shadow-2xl animate-in slide-in-from-bottom duration-300">
                         {/* Drag Handle */}
                         <div className="w-full flex justify-center pb-2 cursor-pointer" onClick={() => setShowMobileComments(false)}>
@@ -721,24 +740,31 @@ export default function PostDetailPage() {
                                 <p className="text-sm text-gray-400 uppercase tracking-wider mt-2">{selectedItem.category}</p>
                             )}
 
-                            {selectedItem.color && (
-                                <div className="flex items-center gap-2 mt-3 p-3 bg-gray-100 dark:bg-gray-800 rounded-xl w-fit">
-                                    <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">Color:</span>
-                                    <div
-                                        className="w-4 h-4 rounded-full border border-gray-300 dark:border-gray-600"
-                                        style={{ backgroundColor: selectedItem.color }}
-                                    />
-                                    <span className="text-xs text-gray-600 dark:text-gray-300 capitalize">{selectedItem.color}</span>
-                                </div>
-                            )}
+                            <div className="flex flex-wrap items-center gap-2 mt-3">
+                                {selectedItem.color && (
+                                    <div className="flex items-center gap-2 p-2 px-3 bg-gray-100 dark:bg-gray-800 rounded-xl w-fit">
+                                        <div
+                                            className="w-3.5 h-3.5 rounded-full border border-gray-300 dark:border-gray-600"
+                                            style={{ backgroundColor: selectedItem.color }}
+                                        />
+                                        <span className="text-[13px] font-medium text-gray-600 dark:text-gray-300 capitalize">{selectedItem.color}</span>
+                                    </div>
+                                )}
+                                {selectedItem.size && (
+                                    <div className="flex items-center gap-2 p-2 px-3 bg-gray-100 dark:bg-gray-800 rounded-xl w-fit">
+                                        <span className="text-[13px] font-medium text-gray-500 dark:text-gray-400">Talla:</span>
+                                        <span className="text-[13px] font-semibold text-gray-900 dark:text-white">{selectedItem.size}</span>
+                                    </div>
+                                )}
+                                {selectedItem.reference && (
+                                    <div className="flex items-center gap-2 p-2 px-3 bg-gray-100 dark:bg-gray-800 rounded-xl w-fit">
+                                        <span className="text-[13px] font-medium text-gray-500 dark:text-gray-400">Ref:</span>
+                                        <span className="text-[13px] font-semibold text-gray-900 dark:text-white">{selectedItem.reference}</span>
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
-                        <button
-                            onClick={() => router.push(`/closet?item=${selectedItem.id}`)}
-                            className="w-full py-3.5 mt-2 rounded-full bg-[var(--brand-pink)] text-white font-bold hover:bg-[var(--brand-pink-dark)] transition-colors"
-                        >
-                            Ver en mi armario
-                        </button>
                     </div>
                 </div>
             )}

@@ -112,7 +112,7 @@ export default function SaveModal() {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: "100%", opacity: 0 }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          className="relative w-full max-w-md bg-white dark:bg-black rounded-t-3xl md:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] md:max-h-[70vh] border border-[var(--border-color)] mx-auto"
+          className="relative w-full max-w-md bg-[var(--background)] rounded-t-3xl md:rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] md:max-h-[70vh] border border-[var(--border-color)] mx-auto"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Drag Handle (Mobile) */}
@@ -132,7 +132,7 @@ export default function SaveModal() {
           </div>
 
           {/* Fixed Top Action: Create Folder */}
-          <div className="p-4 border-b border-[var(--border-color)] shrink-0 bg-white dark:bg-black">
+          <div className="p-4 border-b border-[var(--border-color)] shrink-0 bg-[var(--background)]">
             {showCreateFolder ? (
               <div className="flex items-center gap-2">
                 <input

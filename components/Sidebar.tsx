@@ -101,7 +101,7 @@ export default function Sidebar() {
                   <Link
                     href={item.href}
                     className={`flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-200 
-                        ${(isActive || item.labelKey === 'messages')
+                        ${isActive
                         ? 'text-[var(--brand-pink)]'
                         : 'text-black dark:text-white'
                       }`}
@@ -110,10 +110,7 @@ export default function Sidebar() {
                       {item.isLogoMark ? (
                         <motion.div
                           whileTap={{ scale: 0.9 }}
-                          className={`
-                                w-[24px] h-[24px] transition-colors duration-200
-                                ${isActive ? 'bg-[var(--brand-pink)]' : 'bg-black dark:bg-white'}
-                            `}
+                          className="w-[27px] h-[27px] transition-colors duration-200 bg-[var(--brand-pink)]"
                           style={{
                             maskImage: `url(/klozet-logo-dark.png)`,
                             WebkitMaskImage: `url(/klozet-logo-dark.png)`,
