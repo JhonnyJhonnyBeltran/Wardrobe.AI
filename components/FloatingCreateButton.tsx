@@ -123,7 +123,7 @@ export default function FloatingCreateButton() {
                             animate={{ y: 0 }}
                             exit={{ y: "100%" }}
                             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                            className={`relative w-full bg-[var(--card-bg)] rounded-t-3xl pt-2 pb-safe border-t border-[var(--border-color)] ${pathname.startsWith('/profile') ? 'md:max-w-md md:rounded-3xl md:mb-8' : ''}`}
+                            className={`relative w-full bg-[var(--card-bg)] pt-2 pb-safe shadow-2xl border border-[var(--border-color)] overflow-hidden ${pathname.startsWith('/profile') ? 'md:max-w-md rounded-3xl md:mb-8' : 'rounded-3xl mb-[85px] mx-4 w-[calc(100%-32px)]'}`}
                             onClick={(e) => e.stopPropagation()}
                         >
                             <div className="w-12 h-1.5 bg-[var(--border-color)] rounded-full mx-auto my-3" />
