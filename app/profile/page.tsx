@@ -55,7 +55,7 @@ export default function ProfilePage() {
   const { user } = useUser();
   const { t } = useTranslation();
   const router = useRouter();
-  const { openFolderModal } = useUiStore();
+  const { openFolderModal, setCreateMenuOpen } = useUiStore();
   const [activeTab, setActiveTab] = useState<TabType>('posts');
 
   // Folder state
@@ -344,30 +344,34 @@ export default function ProfilePage() {
       </AnimatePresence>
 
       {/* Header */}
-      <header className="hidden md:flex sticky top-0 z-30 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-color)]/50">
+      <header className="sticky top-0 z-30 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-color)]/50">
         <div className="flex items-center justify-between px-4 h-14 w-full md:max-w-[60%] mx-auto">
-          <span className="font-bold text-[var(--foreground)] truncate max-w-[200px] sm:max-w-[280px] px-2 ml-4">
-            {user.username || user.name || user.email?.split('@')[0] || 'Perfil'}
-          </span>
+          {/* Left: Create Button */}
+          <button
+            onClick={() => setCreateMenuOpen(true)}
+            className="p-2 -ml-2 hover:bg-[var(--background-secondary)] rounded-full transition-colors flex-shrink-0"
+            aria-label="Crear publicación"
+          >
+            <Plus className="w-6 h-6 text-[var(--foreground)]" />
+          </button>
+
+          {/* Center: Username */}
+          <div className="flex-1 flex justify-center items-center px-2">
+            <span className="font-bold text-[var(--foreground)] truncate max-w-[180px] sm:max-w-[240px] text-center">
+              {user.username || user.name || user.email?.split('@')[0] || 'Perfil'}
+            </span>
+          </div>
+
+          {/* Right: Settings/Options Button */}
           <Link
             href="/profile/settings"
-            className="p-2 hover:bg-[var(--background-secondary)] rounded-full transition-colors flex-shrink-0"
+            className="p-2 -mr-2 hover:bg-[var(--background-secondary)] rounded-full transition-colors flex-shrink-0"
             aria-label="Configuración"
           >
             <Menu className="w-6 h-6 text-[var(--foreground)]" />
           </Link>
         </div>
       </header>
-
-      {/* Mobile Settings Button */}
-      <div className="md:hidden absolute top-4 right-4 z-30">
-        <Link
-          href="/profile/settings"
-          className="p-2 bg-[var(--background-secondary)]/50 backdrop-blur-md rounded-full transition-colors block"
-        >
-          <Menu className="w-6 h-6 text-[var(--foreground)]" />
-        </Link>
-      </div>
 
       <main className="w-full md:max-w-[60%] mx-auto">
         {/* Profile Info */}
@@ -403,8 +407,7 @@ export default function ProfilePage() {
             <h2 className="font-bold text-sm">{user.name}</h2>
             <p className="text-sm text-[var(--foreground-secondary)] whitespace-pre-wrap">{user.bio || 'Amante de la moda ✨'}</p>
             <div className="flex flex-wrap gap-2 mt-4">
-              <Link href="/profile/settings" className="flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--background-secondary)] border border-[var(--border-color)] text-sm font-medium text-[var(--foreground)] hover:bg-[var(--card-hover)] transition-colors">
-                <Menu className="w-4 h-4 text-[var(--brand-pink)]" />
+              <Link href="/profile/settings" className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[var(--brand-pink)] text-white font-semibold text-sm hover:opacity-90 transition-opacity">
                 Editar perfil
               </Link>
             </div>

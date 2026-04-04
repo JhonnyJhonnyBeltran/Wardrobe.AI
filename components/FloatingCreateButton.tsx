@@ -19,8 +19,7 @@ export default function FloatingCreateButton() {
     }, [pathname, setCreateMenuOpen]);
 
     // Only show on feed and the root of profile, hide on other paths
-    const showOnPages: string[] = ['/feed'];
-    if (!showOnPages.includes(pathname) && pathname !== '/profile') return null;
+    if (pathname !== '/feed' && !pathname.startsWith('/profile')) return null;
 
     const handleToggle = () => {
         triggerHaptic('medium');
@@ -53,7 +52,7 @@ export default function FloatingCreateButton() {
     return (
         <>
             {/* Desktop Speed Dial + Mobile FAB Wrapper - Oculto en el Feed por User Request */}
-            {pathname !== '/feed' && (
+            {(pathname !== '/feed' && !pathname.startsWith('/profile')) && (
                 <div className="fixed bottom-24 md:bottom-8 right-6 md:right-8 z-50 flex flex-col items-end">
                     {/* Desktop Bubbles */}
                     <AnimatePresence>
@@ -107,7 +106,7 @@ export default function FloatingCreateButton() {
             <AnimatePresence>
                 {isCreateMenuOpen && (
                     <motion.div
-                        className="fixed inset-0 z-[60] md:hidden flex flex-col justify-end"
+                        className={`fixed inset-0 z-[60] flex flex-col justify-end ${pathname.startsWith('/profile') ? 'md:items-center' : 'md:hidden'}`}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
@@ -124,7 +123,7 @@ export default function FloatingCreateButton() {
                             animate={{ y: 0 }}
                             exit={{ y: "100%" }}
                             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                            className="relative bg-[var(--card-bg)] rounded-t-3xl pt-2 pb-safe border-t border-[var(--border-color)]"
+                            className={`relative w-full bg-[var(--card-bg)] rounded-t-3xl pt-2 pb-safe border-t border-[var(--border-color)] ${pathname.startsWith('/profile') ? 'md:max-w-md md:rounded-3xl md:mb-8' : ''}`}
                             onClick={(e) => e.stopPropagation()}
                         >
                             <div className="w-12 h-1.5 bg-[var(--border-color)] rounded-full mx-auto my-3" />
