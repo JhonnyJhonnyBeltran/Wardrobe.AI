@@ -93,9 +93,9 @@ export default function AuthPage() {
             >
                 <div className="p-8 md:p-10">
                     {/* Logo Section */}
-                    <div className="flex justify-center mb-8">
+                    <div className="flex justify-center mb-10 pt-2 scale-110">
                         {/* Adapt Logo automatically to theme by not forcing text-white */}
-                        <LogoExtended size="lg" className="text-[var(--foreground)] drop-shadow-sm" />
+                        <LogoExtended size="xl" className="text-[var(--foreground)] drop-shadow-sm" />
                     </div>
 
                     <AnimatePresence mode="wait">

@@ -9,13 +9,14 @@ import Image from 'next/image';
 
 interface LogoExtendedProps {
     className?: string;
-    size?: 'sm' | 'md' | 'lg';
+    size?: 'sm' | 'md' | 'lg' | 'xl';
 }
 
 const sizeMap = {
     sm: { width: 80, height: 32, className: 'h-6' },
     md: { width: 120, height: 48, className: 'h-8' },
     lg: { width: 180, height: 72, className: 'h-12' },
+    xl: { width: 280, height: 112, className: 'h-20' },
 };
 
 export default function LogoExtended({ className = '', size = 'md' }: LogoExtendedProps) {
