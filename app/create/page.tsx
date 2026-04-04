@@ -61,6 +61,15 @@ export default function CreateOutfitPage() {
     const [previewLoading, setPreviewLoading] = useState(false);
     const savedOutfitIdRef = useRef<string | null>(null);
 
+    // Success Modal State
+    const [successModalConfig, setSuccessModalConfig] = useState<{
+        isOpen: boolean;
+        outfitName: string;
+        isUpdate: boolean;
+        savedOutfitId?: string | null;
+        returnTo?: string | null;
+    }>({ isOpen: false, outfitName: '', isUpdate: false });
+
     // Load outfit data if editing
     useEffect(() => {
         if (!outfitId) return;
@@ -475,15 +484,13 @@ export default function CreateOutfitPage() {
                 if (itemsError) throw itemsError;
             }
 
-            alert(`Outfit "${outfitName}" ${outfitId ? 'actualizado' : 'guardado'} correctamente!`);
-
-            const returnTo = searchParams.get('returnTo');
-            if (returnTo) {
-                const separator = returnTo.includes('?') ? '&' : '?';
-                router.push(`${returnTo}${separator}outfitId=${savedOutfitId}`);
-            } else {
-                router.push('/closet?tab=outfits'); // Redirect to outfits tab
-            }
+            setSuccessModalConfig({
+                isOpen: true,
+                outfitName,
+                isUpdate: !!outfitId,
+                savedOutfitId,
+                returnTo: searchParams.get('returnTo')
+            });
 
         } catch (error) {
             console.error('Error saving outfit:', error);
@@ -808,6 +815,49 @@ export default function CreateOutfitPage() {
                 </div>
 
             </main>
+
+            {/* Success Modal */}
+            <AnimatePresence>
+                {successModalConfig.isOpen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+                    >
+                         <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            className="bg-[var(--card-bg)] border border-[var(--border-color)] p-6 rounded-3xl shadow-xl w-full max-w-sm flex flex-col items-center text-center"
+                         >
+                              <div className="w-16 h-16 bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] rounded-full flex items-center justify-center mb-4">
+                                  <Check className="w-8 h-8" />
+                              </div>
+                              <h3 className="text-xl font-bold text-[var(--foreground)] mb-2">¡Outfit {successModalConfig.isUpdate ? 'actualizado' : 'creado'}!</h3>
+                              <p className="text-[var(--foreground-secondary)] text-sm mb-6">
+                                  El outfit "{successModalConfig.outfitName}" se ha {successModalConfig.isUpdate ? 'actualizado' : 'guardado'} correctamente.
+                              </p>
+                              <Button
+                                  onClick={() => {
+                                      setSuccessModalConfig({ ...successModalConfig, isOpen: false });
+                                      const rTo = successModalConfig.returnTo;
+                                      if (rTo) {
+                                          const separator = rTo.includes('?') ? '&' : '?';
+                                          router.push(`${rTo}${separator}outfitId=${successModalConfig.savedOutfitId}`);
+                                      } else {
+                                          router.push('/closet?tab=outfits');
+                                      }
+                                  }}
+                                  className="w-full rounded-xl py-3 font-semibold"
+                                  glow
+                              >
+                                  Ir al Armario
+                              </Button>
+                         </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Preview Modal */}
             <AnimatePresence>

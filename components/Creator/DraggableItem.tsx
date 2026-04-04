@@ -52,7 +52,6 @@ export const DraggableItem = ({
             drag
             dragMomentum={false}
             dragControls={controls}
-            dragConstraints={constraintsRef}
             onDragStart={onSelect} // Select on start dragging
             onTap={onSelect}
             // Animate only if not dragging to avoid jitter
