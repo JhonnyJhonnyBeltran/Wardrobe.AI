@@ -57,33 +57,28 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        transition={{ duration: 0.3, ease: 'easeInOut' }}
+                        transition={{ duration: 0.3 }}
                         onClick={onClose}
-                        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[80]"
+                        className="fixed inset-0 bg-black/60 shadow-2xl backdrop-blur-sm z-[80]"
                     />
 
-                    {/* Modal Container */}
+                    {/* Modal Content Wrapper - Standardized Bottom Offset */}
                     <motion.div
-                        key="product-container"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.25, ease: 'easeInOut' }}
-                        className="fixed inset-0 z-[80] flex items-center justify-center p-4"
-                        onClick={onClose}
+                        key="product-wrapper"
+                        initial={{ opacity: 0, y: 100 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 100 }}
+                        transition={{ 
+                            type: 'spring',
+                            damping: 28,
+                            stiffness: 300,
+                        }}
+                        className="fixed inset-0 z-[80] flex items-end md:items-center justify-center px-4 pb-[85px] md:pb-0 md:p-4 pointer-events-none"
                     >
                         {/* Modal Content */}
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.92, y: 40 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.92, y: 40 }}
-                            transition={{
-                                type: 'spring',
-                                damping: 28,
-                                stiffness: 300,
-                            }}
                             onClick={(e) => e.stopPropagation()}
-                            className="relative w-full max-w-md max-h-[82vh] md:max-h-[90vh] bg-[var(--card-bg)] rounded-3xl overflow-hidden shadow-2xl flex flex-col mb-16 md:mb-0"
+                            className="relative w-full max-w-md max-h-[calc(100vh-130px)] md:max-h-[85vh] bg-[var(--background)] rounded-3xl md:rounded-[32px] overflow-hidden shadow-2xl flex flex-col border border-[var(--border-color)] pointer-events-auto"
                         >
                             {/* Close Button */}
                             <motion.button
@@ -151,7 +146,7 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
                                 initial={{ y: 20, opacity: 0 }}
                                 animate={{ y: 0, opacity: 1 }}
                                 transition={{ delay: 0.2 }}
-                                className="p-6 overflow-y-auto flex-1"
+                                className="p-6 overflow-y-auto flex-1 custom-scrollbar"
                             >
                                 {/* Brand & Name */}
                                 <div className="mb-4">

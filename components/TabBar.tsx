@@ -71,11 +71,8 @@ export default function TabBar() {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 md:hidden z-[5000] h-[72px] min-h-[72px] flex-shrink-0">
-      {/* Minimal Glass Background */}
-      <div className="absolute inset-0 bg-[var(--background)]/80 backdrop-blur-xl border-t border-[var(--border-color)]/50" />
-
-      <div className="relative flex justify-between items-center h-full px-2 pb-safe">
+    <nav className="fixed bottom-0 left-0 right-0 md:hidden z-[5000] pb-safe bg-[var(--background)]/80 backdrop-blur-xl border-t border-[var(--border-color)]/50">
+      <div className="relative flex justify-between items-center h-[72px] px-2">
         {tabs.map((tab) => {
           const isActive = pathname === tab.href || (tab.href !== '/feed' && pathname.startsWith(tab.href + '/'));
           const badgeCount = getBadgeCount(tab.labelKey);

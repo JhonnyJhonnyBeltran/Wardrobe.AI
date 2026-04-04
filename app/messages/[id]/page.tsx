@@ -515,25 +515,33 @@ export default function ChatPage() {
             <div className="bg-[var(--background)]/95 backdrop-blur-xl border-t border-[var(--border-color)] pb-[max(env(safe-area-inset-bottom),0.5rem)] px-2 md:px-0 flex justify-center shrink-0">
                 <div className="px-2 md:px-6 py-3 w-full max-w-3xl lg:max-w-2xl">
                     <div className="flex items-end gap-2">
-                        <div className="flex-1 bg-[var(--background-secondary)] rounded-[22px] border border-[var(--border-color)] flex items-end pr-1.5 pl-4 relative">
+                        <div className="flex-1 bg-[var(--background-secondary)] rounded-[24px] border border-[var(--border-color)] flex items-end pr-1.5 pl-4 transition-all focus-within:border-[var(--brand-pink)]/50 focus-within:ring-1 focus-within:ring-[var(--brand-pink)]/20 shadow-sm">
                             <textarea
                                 id="chat-input"
                                 value={newMessage}
                                 onChange={handleTyping}
                                 onKeyDown={handleKeyDown}
-                                placeholder="Mensaje..."
-                                className="w-full bg-transparent max-h-32 min-h-[44px] py-3 text-[15px] resize-none text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] !outline-none !ring-0 focus:!outline-none focus:!ring-0 border-none !border-transparent focus:!border-transparent !shadow-none focus:!shadow-none"
-                                style={{ outline: 'none', boxShadow: 'none' }}
+                                placeholder="Escribe un mensaje..."
+                                className="w-full bg-transparent max-h-32 min-h-[46px] py-3 text-[15px] resize-none text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] !outline-none !ring-0 border-none !shadow-none"
                                 rows={1}
                             />
-                            {newMessage.trim() && (
-                                <button
-                                    onClick={sendMessage}
-                                    className="p-1.5 mb-1.5 ml-2 text-white bg-[var(--brand-pink)] rounded-full flex-shrink-0 shadow-md transition-transform active:scale-95"
-                                >
-                                    <Send className="w-5 h-5 pl-0.5" />
-                                </button>
-                            )}
+                            <div className="flex items-center h-[46px] flex-shrink-0">
+                                <AnimatePresence>
+                                    {newMessage.trim() && (
+                                        <motion.button
+                                            initial={{ scale: 0.5, opacity: 0 }}
+                                            animate={{ scale: 1, opacity: 1 }}
+                                            exit={{ scale: 0.5, opacity: 0 }}
+                                            whileHover={{ scale: 1.05 }}
+                                            whileTap={{ scale: 0.9 }}
+                                            onClick={sendMessage}
+                                            className="p-2.5 bg-[var(--brand-pink)] text-white rounded-full shadow-lg shadow-[var(--brand-pink)]/20 flex items-center justify-center transition-all"
+                                        >
+                                            <Send className="w-4.5 h-4.5" />
+                                        </motion.button>
+                                    )}
+                                </AnimatePresence>
+                            </div>
                         </div>
                     </div>
                 </div>

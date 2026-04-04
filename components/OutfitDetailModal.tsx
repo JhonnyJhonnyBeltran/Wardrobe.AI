@@ -3,7 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Heart, Share2, Briefcase, PartyPopper, Zap, Flower2, Snowflake, Circle, Layers, Sparkles } from 'lucide-react';
+import { X, Heart, Share2, Briefcase, PartyPopper, Zap, Flower2, Snowflake, Circle, Layers, Sparkles, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { Outfit } from '@/types/outfit';
@@ -12,6 +12,7 @@ interface OutfitDetailModalProps {
     isOpen: boolean;
     onClose: () => void;
     outfit: Outfit;
+    onDelete?: (id: string) => void;
 }
 
 const styleConfig: Record<string, { icon: React.ReactNode; label: string }> = {
@@ -24,7 +25,7 @@ const styleConfig: Record<string, { icon: React.ReactNode; label: string }> = {
     'everyday': { icon: <Sparkles className="w-4 h-4" />, label: 'Diario' },
 };
 
-export function OutfitDetailModal({ isOpen, onClose, outfit }: OutfitDetailModalProps) {
+export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete }: OutfitDetailModalProps) {
     useBodyScrollLock(isOpen);
 
     if (!isOpen || !outfit) return null;
@@ -43,15 +44,29 @@ export function OutfitDetailModal({ isOpen, onClose, outfit }: OutfitDetailModal
 
     return (
         <AnimatePresence>
-            <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
-                <motion.div
-                    initial={{ opacity: 0, y: 100 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 100 }}
-                    transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-                    className="w-full h-[85vh] md:h-auto md:max-h-[90vh] md:max-w-md bg-[var(--background)] rounded-t-[32px] md:rounded-[32px] flex flex-col overflow-hidden shadow-2xl relative"
-                    onClick={(e) => e.stopPropagation()}
-                >
+            {isOpen && (
+                <>
+                    {/* Backdrop */}
+                    <motion.div
+                        key="outfit-backdrop"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                        onClick={onClose}
+                        className="fixed inset-0 bg-black/60 shadow-2xl backdrop-blur-sm z-[100]"
+                    />
+
+                    {/* Modal Content Wrapper - Standardized Bottom Offset */}
+                    <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center px-4 pb-[85px] md:pb-0 md:p-4 pointer-events-none">
+                        <motion.div
+                            initial={{ opacity: 0, y: 100 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 100 }}
+                            transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+                            className="w-full max-h-[calc(100vh-130px)] md:max-h-[85vh] md:max-w-md bg-[var(--background)] rounded-3xl md:rounded-[32px] flex flex-col overflow-hidden shadow-2xl relative border border-[var(--border-color)] pointer-events-auto"
+                            onClick={(e) => e.stopPropagation()}
+                        >
                     {/* Header Handles / Close */}
                     <div className="absolute top-0 inset-x-0 z-20 flex justify-center py-3 md:hidden">
                         <div className="w-12 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-full" />
@@ -96,6 +111,17 @@ export function OutfitDetailModal({ isOpen, onClose, outfit }: OutfitDetailModal
                                 <button className="p-3 bg-white/90 dark:bg-black/50 backdrop-blur-md rounded-full shadow-lg hover:scale-105 transition-transform">
                                     <Share2 className="w-5 h-5 text-[var(--foreground)]" />
                                 </button>
+                                {onDelete && (
+                                    <button 
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onDelete(outfit.id);
+                                        }}
+                                        className="p-3 bg-red-500/10 dark:bg-red-500/20 backdrop-blur-md rounded-full shadow-lg hover:scale-105 transition-transform group/delete"
+                                    >
+                                        <Trash2 className="w-5 h-5 text-red-500 group-hover/delete:scale-110 transition-transform" />
+                                    </button>
+                                )}
                             </div>
                         </div>
 
@@ -143,8 +169,10 @@ export function OutfitDetailModal({ isOpen, onClose, outfit }: OutfitDetailModal
                             </div>
                         </div>
                     </div>
-                </motion.div>
-            </div>
+                        </motion.div>
+                    </div>
+                </>
+            )}
         </AnimatePresence>
     );
 }

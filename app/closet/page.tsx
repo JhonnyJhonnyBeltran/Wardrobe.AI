@@ -157,6 +157,50 @@ export default function ClosetPage() {
   const [outfitsLoadingMore, setOutfitsLoadingMore] = useState(false);
   const [outfitsHasMore, setOutfitsHasMore] = useState(true);
   const outfitsPageRef = useRef(0);
+
+  // 🗄️ Dependency Checking Helpers for Safe Delete
+  const checkItemUsage = async (ids: string[]) => {
+    try {
+      const { data, error } = await supabase
+        .from('outfit_items')
+        .select('clothing_item_id, outfit_id')
+        .in('clothing_item_id', ids);
+
+      if (error) throw error;
+
+      // Group by item ID
+      const usageMap: Record<string, number> = {};
+      (data as any[])?.forEach(row => {
+        usageMap[row.clothing_item_id] = (usageMap[row.clothing_item_id] || 0) + 1;
+      });
+      return usageMap;
+    } catch (err) {
+      console.error('Error checking item usage:', err);
+      return {};
+    }
+  };
+
+  const checkOutfitUsage = async (ids: string[]) => {
+    try {
+      const { data, error } = await supabase
+        .from('posts')
+        .select('outfit_id')
+        .in('outfit_id', ids);
+
+      if (error) throw error;
+
+      const usageMap: Record<string, number> = {};
+      (data as any[])?.forEach(row => {
+        if (row.outfit_id) {
+          usageMap[row.outfit_id] = (usageMap[row.outfit_id] || 0) + 1;
+        }
+      });
+      return usageMap;
+    } catch (err) {
+      console.error('Error checking outfit usage:', err);
+      return {};
+    }
+  };
   // More items per page on desktop for full scroll
   const OUTFITS_PER_PAGE = 16;
 
@@ -832,8 +876,34 @@ export default function ClosetPage() {
         onClose={() => setSelectedItem(null)}
         onEdit={handleEditItem}
         onDelete={async (id: string) => {
-          await deleteItem(id);
-          setSelectedItem(null);
+          const usage = await checkItemUsage([id]);
+          const count = usage[id] || 0;
+
+          if (count > 0) {
+            useUiStore.getState().showModal({
+              title: 'Prenda en uso',
+              message: `Esta prenda forma parte de ${count} outfit(s). Si la borras, esos outfits quedarán incompletos. ¿Estás seguro de que quieres eliminarla?`,
+              type: 'warning',
+              confirmText: 'Sí, eliminar',
+              cancelText: 'Cancelar',
+              onConfirm: async () => {
+                await deleteItem(id);
+                setSelectedItem(null);
+              }
+            });
+          } else {
+            useUiStore.getState().showModal({
+              title: 'Eliminar prenda',
+              message: '¿Estás seguro de que quieres eliminar esta prenda? Esta acción no se puede deshacer.',
+              type: 'warning',
+              confirmText: 'Eliminar',
+              cancelText: 'Cancelar',
+              onConfirm: async () => {
+                await deleteItem(id);
+                setSelectedItem(null);
+              }
+            });
+          }
         }}
       />
 
@@ -842,6 +912,44 @@ export default function ClosetPage() {
         onClose={() => setSelectedOutfit(null)}
         // @ts-ignore
         outfit={selectedOutfit}
+        onDelete={async (id) => {
+          const usage = await checkOutfitUsage([id]);
+          const count = usage[id] || 0;
+
+          if (count > 0) {
+            useUiStore.getState().showModal({
+              title: 'Outfit publicado',
+              message: `Este outfit forma parte de ${count} publicación(es). Si lo borras, las publicaciones podrían verse afectadas. ¿Estás seguro de que quieres eliminarlo?`,
+              type: 'warning',
+              confirmText: 'Sí, eliminar',
+              cancelText: 'Cancelar',
+              onConfirm: async () => {
+                await supabase.from('outfit_items').delete().eq('outfit_id', id);
+                const { error } = await supabase.from('outfits').delete().eq('id', id);
+                if (error) {
+                  console.error('Error deleting outfit:', error);
+                  return;
+                }
+                setOutfits(prev => prev.filter(o => o.id !== id));
+                setSelectedOutfit(null);
+              }
+            });
+          } else {
+            useUiStore.getState().showModal({
+              title: 'Eliminar outfit',
+              message: '¿Estás seguro de que quieres eliminar este outfit? Esta acción no se puede deshacer.',
+              type: 'warning',
+              confirmText: 'Eliminar',
+              cancelText: 'Cancelar',
+              onConfirm: async () => {
+                await supabase.from('outfit_items').delete().eq('outfit_id', id);
+                await supabase.from('outfits').delete().eq('id', id);
+                setOutfits(prev => prev.filter(o => o.id !== id));
+                setSelectedOutfit(null);
+              }
+            });
+          }
+        }}
       />
 
       {/* FAB stack: Filter + Add — always stacked, fully responsive */}
@@ -1056,25 +1164,44 @@ export default function ClosetPage() {
               </button>
             </div>
             <button
-              onClick={() => {
+              onClick={async () => {
                 if (selectedIds.size === 0) return;
+                
+                const idsArray = Array.from(selectedIds);
+                let message = `¿Seguro que quieres eliminar ${selectedIds.size} ${activeTab === 'outfits' ? 'outfit(s)' : 'prenda(s)'}? Esta acción no se puede deshacer.`;
+                let hasDependencies = false;
+
+                if (activeTab === 'items') {
+                  const usage = await checkItemUsage(idsArray);
+                  const itemsInUseCount = Object.keys(usage).length;
+                  if (itemsInUseCount > 0) {
+                    hasDependencies = true;
+                    message = `${itemsInUseCount} de las prendas seleccionadas están en uso en uno o más outfits. Si las borras, esos outfits se verán afectados. ¿Quieres continuar con la eliminación de los ${selectedIds.size} elementos?`;
+                  }
+                } else {
+                  const usage = await checkOutfitUsage(idsArray);
+                  const outfitsInPostsCount = Object.keys(usage).length;
+                  if (outfitsInPostsCount > 0) {
+                    hasDependencies = true;
+                    message = `${outfitsInPostsCount} de los outfits seleccionados están publicados en el feed. Si los borras, las publicaciones podrían verse afectadas. ¿Quieres continuar con la eliminación de los ${selectedIds.size} elementos?`;
+                  }
+                }
+
                 useUiStore.getState().showModal({
-                  title: 'Eliminar en lote',
-                  message: `¿Seguro que quieres eliminar ${selectedIds.size} ${activeTab === 'outfits' ? 'outfit(s)' : 'prenda(s)'}? Esta acción no se puede deshacer.`,
+                  title: hasDependencies ? 'Atención: Elementos en uso' : 'Confirmar eliminación',
+                  message,
                   type: 'warning',
-                  confirmText: 'Sí, eliminar',
+                  confirmText: 'Sí, eliminar todo',
                   cancelText: 'Cancelar',
                   onConfirm: async () => {
                     try {
-                      const idsArray = Array.from(selectedIds);
                       if (activeTab === 'items') {
                         // Borrado en paralelo para mayor velocidad
-                        // Nota: Si hay outfits que usan estas prendas, fallará si no hay cascada en DB
                         const results = await Promise.all(idsArray.map(id => deleteItem(id)));
                         const failures = results.filter(r => !r).length;
                         
                         if (failures > 0) {
-                          console.warn(`Falló la eliminación de ${failures} prendas. Puede que estén en uso en algún outfit.`);
+                          console.warn(`Falló la eliminación de ${failures} prendas.`);
                         }
                         refresh();
                       } else {
@@ -1086,7 +1213,6 @@ export default function ClosetPage() {
                         
                         if (itemsError) {
                           console.warn('Advertencia al borrar items de outfits:', itemsError);
-                          // Continuamos intentando borrar el outfit, a veces la cascada ya existe
                         }
 
                         // 2. Borrado de los outfits por lote
@@ -1099,14 +1225,15 @@ export default function ClosetPage() {
                         // Sincronización real con el servidor
                         fetchOutfits(false);
                       }
+                      
+                      // Limpiar selección después del éxito
                       setSelectionMode(false);
                       setSelectedIds(new Set());
                     } catch (err: any) {
                       console.error('Error in bulk delete:', err);
-                      // Mostrar error amigable al usuario
                       useUiStore.getState().showModal({
                         title: 'Error al eliminar',
-                        message: err?.message || 'No se pudieron eliminar todos los elementos seleccionados. Es posible que algunos estén siendo utilizados en otras partes de la aplicación.',
+                        message: err?.message || 'No se pudieron eliminar todos los elementos seleccionados.',
                         type: 'error',
                         confirmText: 'Entendido'
                       });
