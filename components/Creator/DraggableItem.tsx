@@ -30,8 +30,8 @@ export const DraggableItem = ({
     const [isRotating, setIsRotating] = useState(false);
     const itemRef = useRef<HTMLDivElement>(null);
 
-    // Initial drag constraint is the container
-    const constraintsRef = containerRef;
+    // Removed drag constraints to allow freedom outside canvas limits
+    const constraintsRef = { current: null }; 
 
     // Handle Drag End to update X/Y
     const handleDragEnd = (_: any, info: any) => {
@@ -39,7 +39,7 @@ export const DraggableItem = ({
 
         const containerRect = containerRef.current.getBoundingClientRect();
         // Convert pixel position to percentage relative to container
-        // We use the point relative to the container
+        // We use the point relative to the container center or top-left correctly
         const xPercent = (info.point.x - containerRect.left) / containerRect.width * 100;
         const yPercent = (info.point.y - containerRect.top) / containerRect.height * 100;
 
@@ -56,7 +56,7 @@ export const DraggableItem = ({
             onTap={onSelect}
             // Animate only if not dragging to avoid jitter
             animate={{
-                x: state.x, // We'll rely on absolute positioning or percentage if possible, but framer motion drag operates on transform
+                x: state.x,
                 y: state.y,
                 rotate: state.rotation,
                 scale: state.scale,
@@ -76,7 +76,7 @@ export const DraggableItem = ({
             }}
             className={`group relative select-none ${isSelected ? 'z-[1000]' : ''}`}
         >
-            <div className={`relative w-full h-full p-2`}>
+            <div className={`relative w-full h-full p-0`}>
                 {/* Image */}
                 <div className={`relative w-full h-full overflow-visible pointer-events-none`}>
                     {item.imageUrl && (

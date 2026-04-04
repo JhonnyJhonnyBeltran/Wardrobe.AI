@@ -644,8 +644,8 @@ export default function CreateOutfitPage() {
                                     />
                                 </div>
 
-                                {/* Canvas Preview */}
-                                <div className="w-full bg-[var(--card-bg)] rounded-3xl overflow-hidden border border-[var(--border-color)] aspect-[4/5]">
+                                {/* Canvas Preview - Border removed for cleaner look */}
+                                <div className="w-full bg-white overflow-hidden aspect-[4/5] shadow-sm">
                                     <FreeDragCanvas
                                         ref={canvasRef}
                                         items={flatItems}
@@ -775,8 +775,8 @@ export default function CreateOutfitPage() {
                             />
                         </div>
 
-                        {/* Canvas */}
-                        <div className="rounded-[32px] overflow-hidden shadow-md border border-[var(--border-color)] bg-white">
+                        {/* Canvas - Border removed per request */}
+                        <div className="overflow-hidden shadow-lg bg-white">
                             <FreeDragCanvas
                                 ref={canvasRef}
                                 items={flatItems}

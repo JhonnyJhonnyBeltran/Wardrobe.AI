@@ -492,13 +492,13 @@ export default function PostDetailPage() {
                             <ChevronRight className="w-6 h-6 text-gray-900 dark:text-white" />
                         </button>
 
-                        {/* Dots indicator */}
-                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+                        {/* Dots indicator - subtle and pink */}
+                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
                             {slides.map((_, idx) => (
                                 <button
                                     key={idx}
                                     onClick={(e) => { e.stopPropagation(); setActiveSlide(idx); }}
-                                    className={`rounded-full transition-all duration-300 ${activeSlide === idx ? 'bg-[var(--brand-pink)] w-4 h-1.5' : 'bg-gray-300 dark:bg-gray-600/60 w-1.5 h-1.5'}`}
+                                    className={`rounded-full transition-all duration-300 ${activeSlide === idx ? 'bg-[var(--brand-pink)] w-3 h-1.5' : 'bg-gray-300/60 dark:bg-gray-700/60 w-1.5 h-1.5'}`}
                                     aria-label={`View slide ${idx + 1}`}
                                 />
                             ))}
@@ -515,6 +515,19 @@ export default function PostDetailPage() {
                         <button onClick={toggleLike} className="flex items-center gap-1.5 font-bold hover:opacity-70 transition-opacity">
                             <Heart className={`w-6 h-6 transition-colors ${isLiked ? 'fill-[var(--brand-pink)] text-[var(--brand-pink)]' : 'text-gray-900 dark:text-white'}`} strokeWidth={2.5} />
                             <span className="text-[15px] text-gray-900 dark:text-white">{likesCount}</span>
+                        </button>
+                        <button 
+                            onClick={() => {
+                                if (window.innerWidth < 768) {
+                                    setShowMobileComments(true);
+                                } else {
+                                    commentInputRef.current?.focus();
+                                }
+                            }} 
+                            className="flex items-center gap-1.5 hover:opacity-70 transition-opacity"
+                        >
+                            <MessageCircle className="w-6 h-6 text-gray-900 dark:text-white" strokeWidth={2.5} />
+                            {comments.length > 0 && <span className="text-[15px] text-gray-900 dark:text-white">{comments.length}</span>}
                         </button>
                         <button onClick={handleShare} className="flex items-center gap-1.5 hover:opacity-70 transition-opacity">
                             <Share2 className="w-6 h-6 text-gray-900 dark:text-white" strokeWidth={2.5} />
@@ -620,6 +633,7 @@ export default function PostDetailPage() {
                     <Avatar src={user?.avatar || null} alt="Tú" size="sm" />
                     <div className="flex-1">
                         <input
+                            ref={commentInputRef}
                             type="text"
                             placeholder="Añadir comentario..."
                             className="w-full bg-gray-100 dark:bg-gray-800 rounded-full px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 outline-none focus:ring-2 focus:ring-gray-200 dark:focus:ring-gray-700"

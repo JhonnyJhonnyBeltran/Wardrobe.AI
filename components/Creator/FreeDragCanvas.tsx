@@ -100,7 +100,7 @@ export const FreeDragCanvas = forwardRef<FreeDragCanvasRef, FreeDragCanvasProps>
 
     return (
         <div
-            className="w-full h-full min-h-[500px] bg-[var(--background)] overflow-hidden relative touch-none"
+            className="w-full h-full min-h-[500px] bg-white overflow-hidden relative touch-none"
             ref={containerRef}
             onClick={() => setSelectedId(null)} // Click background to deselect
         >

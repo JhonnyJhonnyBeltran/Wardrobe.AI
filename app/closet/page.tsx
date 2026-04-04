@@ -66,10 +66,17 @@ export default function ClosetPage() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Auto-open Add Item Modal based on query param
+  // Auto-open Add Item Modal or switch Tab based on query param
   useEffect(() => {
-    if (searchParams.get('action') === 'new-item') {
+    const action = searchParams.get('action');
+    const tab = searchParams.get('tab');
+
+    if (action === 'new-item') {
       setShowAddModal(true);
+      // Clean up the URL
+      router.replace('/closet', { scroll: false });
+    } else if (tab === 'outfits') {
+      setActiveTab('outfits');
       // Clean up the URL
       router.replace('/closet', { scroll: false });
     }
@@ -138,6 +145,12 @@ export default function ClosetPage() {
 
   // Lock body scroll when filter panel is open
   useBodyScrollLock(showFilters);
+
+  // Clear selection when changing tabs
+  useEffect(() => {
+    setSelectionMode(false);
+    setSelectedIds(new Set());
+  }, [activeTab]);
 
   const [outfits, setOutfits] = useState<any[]>([]);
   const [outfitsLoading, setOutfitsLoading] = useState(false);
@@ -752,13 +765,29 @@ export default function ClosetPage() {
                         onShare={(outfit) => {
                           router.push(`/create-post?outfitId=${outfit.id}`);
                         }}
-                        onDelete={async (id) => {
-                          const confirmDelete = confirm('¿Seguro que quieres eliminar este outfit?');
-                          if (confirmDelete) {
-                            await supabase.from('outfits').delete().eq('id', id);
-                            // Refresh logic for outfits would go here
-                            setOutfits(prev => prev.filter(o => o.id !== id));
-                          }
+                        onDelete={(id) => {
+                          showModal({
+                            title: 'Eliminar outfit',
+                            message: `¿Seguro que quieres eliminar el outfit "${outfit.name}"? Esta acción no se puede deshacer.`,
+                            type: 'confirm',
+                            confirmText: 'Eliminar',
+                            cancelText: 'Cancelar',
+                            onConfirm: async () => {
+                              try {
+                                const { error } = await supabase.from('outfits').delete().eq('id', id);
+                                if (error) throw error;
+                                setOutfits(prev => prev.filter(o => o.id !== id));
+                                showModal({
+                                  title: 'Outfit eliminado',
+                                  message: 'El outfit se ha eliminado de tu armario.',
+                                  type: 'success',
+                                  confirmText: 'Entendido'
+                                });
+                              } catch (err) {
+                                console.error('Error deleting outfit:', err);
+                              }
+                            }
+                          });
                         }}
                       />
                     </div>
@@ -1008,9 +1037,24 @@ export default function ClosetPage() {
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
-            className="fixed bottom-24 md:bottom-8 left-1/2 -translate-x-1/2 z-[5010] bg-[var(--card-bg)] border border-[var(--border-color)] rounded-full shadow-2xl flex items-center p-2 gap-4"
+            className="fixed bottom-24 md:bottom-8 left-1/2 -translate-x-1/2 z-[5010] bg-[var(--card-bg)] border border-[var(--border-color)] rounded-full shadow-2xl flex items-center p-2 gap-4 whitespace-nowrap"
           >
-            <span className="font-semibold px-4 text-[var(--foreground)]">{selectedIds.size} seleccionados</span>
+            <div className="flex items-center gap-2 pl-4 mr-2">
+              <span className="font-semibold text-[var(--foreground)]">{selectedIds.size} seleccionados</span>
+              <button 
+                onClick={() => {
+                  const allVisibleIds = filteredContent.map(i => i.id);
+                  if (selectedIds.size === allVisibleIds.length) {
+                    setSelectedIds(new Set());
+                  } else {
+                    setSelectedIds(new Set(allVisibleIds));
+                  }
+                }}
+                className="text-xs text-[var(--brand-pink)] font-bold hover:underline"
+              >
+                {selectedIds.size === filteredContent.length ? 'Desmarcar todo' : 'Seleccionar todo'}
+              </button>
+            </div>
             <button
               onClick={() => {
                 if (selectedIds.size === 0) return;
@@ -1024,17 +1068,48 @@ export default function ClosetPage() {
                     try {
                       const idsArray = Array.from(selectedIds);
                       if (activeTab === 'items') {
-                        for (const id of idsArray) { await deleteItem(id); }
-                        refresh(); // Reload wardrobe
+                        // Borrado en paralelo para mayor velocidad
+                        // Nota: Si hay outfits que usan estas prendas, fallará si no hay cascada en DB
+                        const results = await Promise.all(idsArray.map(id => deleteItem(id)));
+                        const failures = results.filter(r => !r).length;
+                        
+                        if (failures > 0) {
+                          console.warn(`Falló la eliminación de ${failures} prendas. Puede que estén en uso en algún outfit.`);
+                        }
+                        refresh();
                       } else {
-                        for (const id of idsArray) { await supabase.from('outfits').delete().eq('id', id); }
-                        // For outfits, toggle tab quickly to force reload or just use local state refetch
-                        setActiveTab('items'); setTimeout(() => setActiveTab('outfits'), 10);
+                        // 1. Borrar primero las relaciones en outfit_items para evitar errores de FK
+                        const { error: itemsError } = await supabase
+                          .from('outfit_items')
+                          .delete()
+                          .in('outfit_id', idsArray);
+                        
+                        if (itemsError) {
+                          console.warn('Advertencia al borrar items de outfits:', itemsError);
+                          // Continuamos intentando borrar el outfit, a veces la cascada ya existe
+                        }
+
+                        // 2. Borrado de los outfits por lote
+                        const { error } = await supabase.from('outfits').delete().in('id', idsArray);
+                        if (error) throw error;
+                        
+                        // Actualización optimista del estado local
+                        setOutfits(prev => prev.filter(o => !selectedIds.has(o.id)));
+                        
+                        // Sincronización real con el servidor
+                        fetchOutfits(false);
                       }
                       setSelectionMode(false);
                       setSelectedIds(new Set());
-                    } catch (err) {
+                    } catch (err: any) {
                       console.error('Error in bulk delete:', err);
+                      // Mostrar error amigable al usuario
+                      useUiStore.getState().showModal({
+                        title: 'Error al eliminar',
+                        message: err?.message || 'No se pudieron eliminar todos los elementos seleccionados. Es posible que algunos estén siendo utilizados en otras partes de la aplicación.',
+                        type: 'error',
+                        confirmText: 'Entendido'
+                      });
                     }
                   }
                 });
