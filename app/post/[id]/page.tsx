@@ -11,6 +11,7 @@ import * as followService from '@/lib/services/followService';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import Avatar from '@/components/Avatar';
 import { useUiStore } from '@/store/uiStore';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface Comment {
     id: string;
@@ -34,8 +35,6 @@ export default function PostDetailPage() {
     const [newComment, setNewComment] = useState('');
     const [loading, setLoading] = useState(true);
     const [activeSlide, setActiveSlide] = useState(0);
-    const [isDragging, setIsDragging] = useState(false);
-    const [dragStart, setDragStart] = useState(0);
 
     // Interaction States
     const [isLiked, setIsLiked] = useState(false);
@@ -45,6 +44,7 @@ export default function PostDetailPage() {
     const [submittingComment, setSubmittingComment] = useState(false);
     const [showMobileComments, setShowMobileComments] = useState(false);
     const [showSaveModal, setShowSaveModal] = useState(false);
+    const [showSwipeHint, setShowSwipeHint] = useState(true);
 
     const { showSaveToast, openFolderModal } = useUiStore();
 
@@ -53,7 +53,6 @@ export default function PostDetailPage() {
     useBodyScrollLock(!!selectedItem);
 
     const commentInputRef = useRef<HTMLInputElement>(null);
-    const slideRef = useRef<HTMLDivElement>(null);
 
     // Fetch Post Data
     useEffect(() => {
@@ -68,7 +67,7 @@ export default function PostDetailPage() {
                 const { data: postData, error: postError } = await supabase
                     .from('posts')
                     .select(`
-                        id, caption, image_url, created_at, user_id,
+                        id, caption, image_url, created_at, user_id, likes_count, comments_count,
                         profiles (id, username, avatar_url),
                         outfits (
                             id, name, image_url,
@@ -88,16 +87,25 @@ export default function PostDetailPage() {
                 let likeRes: any = { data: [] }, saveRes: any = { data: [] }, followStatus = null;
 
                 if (user) {
+                    console.log('[PostDetail] Checking interactions for user:', user.id);
                     // 2. Fetch Interaction Status (Parallel)
                     const [l, s, f] = await Promise.all([
-                        supabase.from('likes' as any).select('id').eq('post_id', postId).eq('user_id', user.id),
-                        supabase.from('saves' as any).select('id').eq('post_id', postId).eq('user_id', user.id),
+                        supabase.from('likes' as any).select('user_id').eq('post_id', postId).eq('user_id', user.id),
+                        supabase.from('saves' as any).select('user_id').eq('post_id', postId).eq('user_id', user.id),
                         // @ts-ignore
                         followService.getFollowStatus(user.id, postData.user_id),
                     ]);
                     likeRes = l;
                     saveRes = s;
                     followStatus = f;
+                    console.log('[PostDetail] Interaction results:', { 
+                        liked: l.data && (l.data as any[]).length > 0,
+                        saved: s.data && (s.data as any[]).length > 0,
+                        likesError: l.error ? { message: l.error.message, details: l.error.details, code: l.error.code } : null,
+                        savesError: s.error ? { message: s.error.message, details: s.error.details, code: s.error.code } : null
+                    });
+                } else {
+                    console.log('[PostDetail] No user session found for interaction check');
                 }
 
                 // Comments
@@ -107,17 +115,11 @@ export default function PostDetailPage() {
                     .eq('post_id', postId)
                     .order('created_at', { ascending: true });
 
-                // 3. Get Total Likes
-                const { count: totalLikes } = await supabase
-                    .from('likes' as any)
-                    .select('id', { count: 'exact', head: true })
-                    .eq('post_id', postId);
-
                 setPost(postData);
-                setIsLiked(likeRes.data && likeRes.data.length > 0);
-                setIsSaved(saveRes.data && saveRes.data.length > 0);
+                setIsLiked(likeRes.data && (likeRes.data as any[]).length > 0);
+                setIsSaved(saveRes.data && (saveRes.data as any[]).length > 0);
                 setIsFollowing(followStatus === 'accepted');
-                setLikesCount(totalLikes || 0);
+                setLikesCount((postData as any)?.likes_count || 0);
 
                 // Format comments
                 if (commentsData) {
@@ -141,31 +143,8 @@ export default function PostDetailPage() {
         };
 
         fetchData();
-    }, [postId, user]);
+    }, [postId, user?.id]);
 
-    // Handle swipe/drag for carousel
-    const handleTouchStart = (e: React.TouchEvent | React.MouseEvent) => {
-        setIsDragging(true);
-        setDragStart('touches' in e ? e.touches[0].clientX : e.clientX);
-    };
-
-    const handleTouchEnd = (e: React.TouchEvent | React.MouseEvent) => {
-        if (!isDragging) return;
-        const endX = 'changedTouches' in e ? e.changedTouches[0].clientX : e.clientX;
-        const diff = dragStart - endX;
-
-        if (Math.abs(diff) > 50) {
-            const slides = getSlides();
-            if (diff > 0) {
-                // Swipe left - next
-                setActiveSlide(prev => Math.min(prev + 1, slides.length - 1));
-            } else {
-                // Swipe right - prev
-                setActiveSlide(prev => Math.max(prev - 1, 0));
-            }
-        }
-        setIsDragging(false);
-    };
 
     // Build Slides Array
     const getSlides = useCallback(() => {
@@ -212,13 +191,17 @@ export default function PostDetailPage() {
                 error = insertError;
 
                 // Notify Author (if not self and insert succeeded)
-                if (!insertError && post?.user_id !== user.id) {
-                    await (supabase.from('notifications') as any).insert({
-                        user_id: post.user_id,
-                        actor_id: user.id,
-                        type: 'like',
-                        entity_id: postId
-                    }).catch(console.error);
+                if (!insertError && (post as any)?.user_id !== user.id) {
+                    try {
+                        await (supabase.from('notifications') as any).insert({
+                            user_id: (post as any).user_id,
+                            actor_id: user.id,
+                            type: 'like',
+                            entity_id: postId
+                        });
+                    } catch (notificationError) {
+                        console.error('Notification error:', notificationError);
+                    }
                 }
             }
 
@@ -226,6 +209,12 @@ export default function PostDetailPage() {
                 console.error('Like error:', error);
                 throw error;
             }
+
+            // Sync total likes count in the 'posts' table for efficient popularity sorting
+            const newCount = previousState ? Math.max(0, (post?.likes_count || 0) - 1) : (post?.likes_count || 0) + 1;
+            await (supabase.from('posts') as any)
+                .update({ likes_count: newCount })
+                .eq('id', postId);
 
             router.refresh();
         } catch (error) {
@@ -369,6 +358,12 @@ export default function PostDetailPage() {
                 });
             }
 
+            // Sync total comments count in the 'posts' table
+            const newCommentCount = (post?.comments_count || 0) + 1;
+            await (supabase.from('posts') as any)
+                .update({ comments_count: newCommentCount })
+                .eq('id', postId);
+
         } catch (error) {
             console.error('Error adding comment:', error);
         } finally {
@@ -422,83 +417,115 @@ export default function PostDetailPage() {
             {/* Desktop Container */}
             <div className="flex flex-col md:flex-row w-full max-w-[1000px] mx-auto flex-1 md:h-[calc(100vh-64px)]">
 
-            {/* IMAGE CAROUSEL - Swipeable */}
-            <div
-                ref={slideRef}
-                className="relative w-full aspect-[4/5] md:aspect-auto md:w-[60%] md:h-[calc(100vh-64px)] bg-white md:bg-gray-50 dark:bg-black dark:md:bg-[#0a0a0a] cursor-grab active:cursor-grabbing border-r-0 md:border-r border-gray-100 dark:border-gray-800 flex-shrink-0"
-                onTouchStart={handleTouchStart}
-                onTouchEnd={handleTouchEnd}
-                onMouseDown={handleTouchStart}
-                onMouseUp={handleTouchEnd}
-                onMouseLeave={() => setIsDragging(false)}
-            >
-                {currentSlide.type === 'photo' ? (
-                    <Image
-                        src={currentSlide.url || '/placeholder.png'}
-                        alt="Post"
-                        fill
-                        className="object-contain"
-                        priority
-                    />
-                ) : (
-                    /* Outfit Preview - Like /closet OutfitCard */
-                    <div className="w-full h-full relative bg-white dark:bg-[#111]">
-                        {/* @ts-ignore */}
-                        {(currentSlide.outfit?.imageUrl || currentSlide.outfit?.image_url) ? (
+            {/* IMAGE CAROUSEL - Swipeable with Framer Motion */}
+            <div className="relative w-full aspect-[4/5] md:aspect-auto md:w-[60%] md:h-[calc(100vh-64px)] bg-white md:bg-gray-50 dark:bg-black dark:md:bg-[#0a0a0a] border-r-0 md:border-r border-gray-100 dark:border-gray-800 flex-shrink-0 overflow-hidden">
+                <AnimatePresence initial={false} mode="wait">
+                    <motion.div
+                        key={activeSlide}
+                        initial={{ x: 300, opacity: 0 }}
+                        animate={{ x: 0, opacity: 1 }}
+                        exit={{ x: -300, opacity: 0 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                        drag="x"
+                        dragConstraints={{ left: 0, right: 0 }}
+                        dragElastic={0.7}
+                        onDragEnd={(e, { offset, velocity }) => {
+                            const swipe = offset.x;
+                            if (swipe < -50 && activeSlide < slides.length - 1) {
+                                setActiveSlide(activeSlide + 1);
+                                setShowSwipeHint(false);
+                            } else if (swipe > 50 && activeSlide > 0) {
+                                setActiveSlide(activeSlide - 1);
+                                setShowSwipeHint(false);
+                            }
+                        }}
+                        className="w-full h-full relative cursor-grab active:cursor-grabbing"
+                    >
+                        {currentSlide.type === 'photo' ? (
                             <Image
-                                // @ts-ignore
-                                src={currentSlide.outfit.imageUrl || currentSlide.outfit.image_url}
-                                alt="Outfit Presentation"
+                                src={currentSlide.url || '/placeholder.png'}
+                                alt="Post"
                                 fill
-                                className="object-contain"
+                                className="object-cover"
                                 priority
+                                draggable={false}
                             />
                         ) : (
-                            /* Fallback: Grid of items like OutfitCard */
-                            <div className="w-full h-full grid grid-cols-2 gap-[1px] bg-gray-200 dark:bg-gray-700">
-                                {/* @ts-ignore */}
-                                {(currentSlide.outfit?.outfit_items || []).slice(0, 4).map((item: any, i: number) => {
-                                    const clothing = item.clothing_items;
-                                    return (
-                                        <div key={i} className="relative bg-white dark:bg-[#222] overflow-hidden aspect-square">
-                                            {clothing?.image_url ? (
-                                                <Image src={clothing.image_url} alt={clothing.name} fill className="object-cover" />
-                                            ) : (
-                                                <div className="w-full h-full flex items-center justify-center text-4xl" style={{ backgroundColor: clothing?.color || '#ccc' }}>👕</div>
-                                            )}
-                                        </div>
-                                    );
-                                })}
+                            <div className="w-full h-full relative bg-white dark:bg-[#111]">
+                                {(currentSlide.outfit?.imageUrl || currentSlide.outfit?.image_url) ? (
+                                    <Image
+                                        src={currentSlide.outfit.imageUrl || currentSlide.outfit.image_url}
+                                        alt="Outfit Presentation"
+                                        fill
+                                        className="object-cover"
+                                        priority
+                                        draggable={false}
+                                    />
+                                ) : (
+                                    <div className="w-full h-full grid grid-cols-2 gap-[1px] bg-gray-200 dark:bg-gray-700">
+                                        {(currentSlide.outfit?.outfit_items || []).slice(0, 4).map((item: any, i: number) => {
+                                            const clothing = item.clothing_items;
+                                            return (
+                                                <div key={i} className="relative bg-white dark:bg-[#222] overflow-hidden aspect-square">
+                                                    {clothing?.image_url ? (
+                                                        <Image src={clothing.image_url} alt={clothing.name} fill className="object-cover" draggable={false} />
+                                                    ) : (
+                                                        <div className="w-full h-full flex items-center justify-center text-4xl" style={{ backgroundColor: clothing?.color || '#ccc' }}>👕</div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
                             </div>
                         )}
-                    </div>
+                    </motion.div>
+                </AnimatePresence>
+
+                {/* Swipe Hint Indicator (Overlay) */}
+                {showSwipeHint && slides.length > 1 && activeSlide === 0 && (
+                    <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: [0, 1, 1, 0], x: [20, -20, -20, 20] }}
+                        transition={{ repeat: Infinity, duration: 2, times: [0, 0.2, 0.8, 1] }}
+                        className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2 pointer-events-none"
+                    >
+                        <div className="px-4 py-2 bg-black/60 backdrop-blur-md rounded-full text-white text-xs font-bold shadow-xl border border-white/10 flex items-center gap-2">
+                            <span>Desliza para ver el look</span>
+                            <ChevronRight className="w-4 h-4 animate-bounce-x" />
+                        </div>
+                    </motion.div>
                 )}
 
-                {/* Navigation Arrows - Left */}
+                {/* Navigation Arrows & Dots Indicator */}
                 {slides.length > 1 && (
                     <>
                         <button
-                            onClick={(e) => { e.stopPropagation(); setActiveSlide(prev => prev === 0 ? slides.length - 1 : prev - 1); }}
-                            className="hidden md:flex absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 hover:bg-white dark:bg-black/60 dark:hover:bg-black items-center justify-center shadow-lg z-10 transition-all"
+                            onClick={(e) => { e.stopPropagation(); setActiveSlide(prev => prev === 0 ? slides.length - 1 : prev - 1); setShowSwipeHint(false); }}
+                            className="hidden md:flex absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 hover:bg-white dark:bg-black/60 dark:hover:bg-black items-center justify-center shadow-lg z-30 transition-all"
                         >
                             <ChevronLeft className="w-6 h-6 text-gray-900 dark:text-white" />
                         </button>
 
-                        {/* Navigation Arrows - Right */}
                         <button
-                            onClick={(e) => { e.stopPropagation(); setActiveSlide(prev => prev === slides.length - 1 ? 0 : prev + 1); }}
-                            className="hidden md:flex absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 hover:bg-white dark:bg-black/60 dark:hover:bg-black items-center justify-center shadow-lg z-10 transition-all"
+                            onClick={(e) => { e.stopPropagation(); setActiveSlide(prev => prev === slides.length - 1 ? 0 : prev + 1); setShowSwipeHint(false); }}
+                            className="hidden md:flex absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 hover:bg-white dark:bg-black/60 dark:hover:bg-black items-center justify-center shadow-lg z-30 transition-all"
                         >
                             <ChevronRight className="w-6 h-6 text-gray-900 dark:text-white" />
                         </button>
 
-                        {/* Dots indicator - subtle and pink */}
-                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
+                        {/* Dots indicator - refined with morphing effect */}
+                        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2.5 z-30 bg-black/20 backdrop-blur-md px-3 py-2 rounded-full border border-white/5">
                             {slides.map((_, idx) => (
-                                <button
+                                <motion.button
                                     key={idx}
-                                    onClick={(e) => { e.stopPropagation(); setActiveSlide(idx); }}
-                                    className={`rounded-full transition-all duration-300 ${activeSlide === idx ? 'bg-[var(--brand-pink)] w-3 h-1.5' : 'bg-gray-300/60 dark:bg-gray-700/60 w-1.5 h-1.5'}`}
+                                    onClick={(e) => { e.stopPropagation(); setActiveSlide(idx); setShowSwipeHint(false); }}
+                                    animate={{
+                                        scale: activeSlide === idx ? 1.2 : 1,
+                                        width: activeSlide === idx ? 20 : 8,
+                                        backgroundColor: activeSlide === idx ? '#FF66C4' : 'rgba(255,255,255,0.4)'
+                                    }}
+                                    className="h-2 rounded-full cursor-pointer transition-colors"
                                     aria-label={`View slide ${idx + 1}`}
                                 />
                             ))}

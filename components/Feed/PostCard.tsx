@@ -89,9 +89,9 @@ export default function PostCard({ post, onClick }: PostCardProps) {
                     <p className="text-[var(--foreground)] font-serif text-lg leading-relaxed line-clamp-4">
                         {post.title || post.description}
                     </p>
-                    <div className="flex items-center gap-1 text-[var(--foreground-tertiary)] text-xs mt-auto">
-                        <Heart className="w-3 h-3" />
-                        <span>{post.likes}</span>
+                    <div className="flex items-center gap-1 text-xs mt-auto">
+                        <Heart className={cn("w-3 h-3 transition-colors", post.isLiked ? "fill-[var(--brand-pink)] text-[var(--brand-pink)]" : "text-[var(--foreground-tertiary)]")} />
+                        <span className={cn(post.isLiked ? "text-[var(--brand-pink)] font-medium" : "text-[var(--foreground-tertiary)]")}>{post.likes}</span>
                     </div>
                 </div>
             </Link>
@@ -133,10 +133,10 @@ export default function PostCard({ post, onClick }: PostCardProps) {
                             <Avatar src={post.author.avatar || null} alt={post.author.name} size="xs" className="border border-white/20" />
                             <span className="text-xs font-medium truncate max-w-[100px]">{post.author.name}</span>
                         </div>
-                        {post.likes > 0 && (
-                            <div className="flex items-center gap-1 text-white/90 bg-black/20 backdrop-blur-sm px-2 py-1 rounded-full">
-                                <Heart className="w-3 h-3 fill-white/50" />
-                                <span className="text-xs">{post.likes}</span>
+                        {(post.likes > 0 || post.isLiked) && (
+                            <div className="flex items-center gap-1 text-white/90 bg-black/20 backdrop-blur-sm px-2 py-1 rounded-full border border-white/5">
+                                <Heart className={cn("w-3 h-3 transition-colors", post.isLiked ? "fill-[var(--brand-pink)] text-[var(--brand-pink)]" : "fill-white/50 text-white/50")} />
+                                <span className={cn("text-xs font-medium", post.isLiked && "text-[var(--brand-pink)]")}>{post.likes}</span>
                             </div>
                         )}
                     </div>

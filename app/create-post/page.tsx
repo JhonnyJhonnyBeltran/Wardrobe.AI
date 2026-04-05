@@ -159,7 +159,7 @@ export default function CreatePostPage() {
                     <button
                         onClick={handlePublish}
                         disabled={publishing || !validatePost()}
-                        className="text-[var(--brand-pink)] font-bold text-sm disabled:opacity-50 px-2 py-1"
+                        className="md:hidden text-[var(--brand-pink)] font-bold text-sm disabled:opacity-50 px-2 py-1"
                     >
                         {publishing ? 'Publicando...' : 'Compartir'}
                     </button>
@@ -167,113 +167,132 @@ export default function CreatePostPage() {
             </header>
 
             {/* Main Content */}
-            <main className="flex-1 w-full max-w-2xl mx-auto">
+            <main className="flex-1 w-full max-w-5xl mx-auto">
 
                 {/* COMPOSE MODE */}
                 {mode === 'compose' && (
-                    <div className="p-4 space-y-6">
-
-                        {/* Media Section: Image OR Placeholder */}
-                        <div className="w-full aspect-[4/5] bg-[var(--card-bg)] rounded-2xl overflow-hidden border border-[var(--border-color)] relative group">
-                            {realImage ? (
-                                <>
-                                    <Image src={realImage} alt="Post preview" fill className="object-cover" />
-                                    <button
-                                        onClick={() => { setRealImage(null); setImageFile(null); }}
-                                        className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-full hover:bg-black/70"
-                                    >
-                                        <X className="w-4 h-4" />
-                                    </button>
-                                </>
-                            ) : (
-                                <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer hover:bg-[var(--background-secondary)] transition-colors gap-3">
-                                    <div className="w-16 h-16 rounded-full bg-[var(--background-secondary)] flex items-center justify-center">
-                                        <Camera className="w-8 h-8 text-[var(--foreground-secondary)]" />
-                                    </div>
-                                    <div className="text-center">
-                                        <p className="font-bold text-[var(--foreground)]">Añadir Foto</p>
-                                        <p className="text-sm text-[var(--foreground-tertiary)]">Opcional si usas Outfit</p>
-                                    </div>
-                                    <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-                                </label>
-                            )}
+                    <div className="p-4 flex flex-col md:grid md:grid-cols-2 md:gap-10">
+                        {/* LEFT COLUMN: Media Section */}
+                        <div className="space-y-6">
+                            <div className="w-full aspect-[4/5] bg-[var(--card-bg)] rounded-3xl overflow-hidden border border-[var(--border-color)] relative group shadow-sm transition-all hover:shadow-md">
+                                {realImage ? (
+                                    <>
+                                        <Image src={realImage} alt="Post preview" fill className="object-cover" />
+                                        <button
+                                            onClick={() => { setRealImage(null); setImageFile(null); }}
+                                            className="absolute top-4 right-4 p-2 bg-black/40 backdrop-blur-md text-white rounded-full hover:bg-black/60 shadow-lg border border-white/10"
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    </>
+                                ) : (
+                                    <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer hover:bg-[var(--background-secondary)] transition-colors gap-3">
+                                        <div className="w-16 h-16 rounded-full bg-[var(--background-secondary)] flex items-center justify-center">
+                                            <Camera className="w-8 h-8 text-[var(--foreground-secondary)]" />
+                                        </div>
+                                        <div className="text-center">
+                                            <p className="font-bold text-[var(--foreground)]">Añadir Foto</p>
+                                            <p className="text-sm text-[var(--foreground-tertiary)]">Opcional si usas Outfit</p>
+                                        </div>
+                                        <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+                                    </label>
+                                )}
+                            </div>
                         </div>
 
-                        {/* Outfit Section: Row Style */}
-                        <div className="space-y-2">
-                            <label className="text-sm font-bold text-[var(--foreground)] ml-1">Outfit</label>
-
-                            {selectedOutfit ? (
-                                <div className="flex items-center gap-4 p-3 bg-[var(--card-bg)] rounded-2xl border border-[var(--border-color)]">
-                                    <div className="w-12 h-12 bg-[var(--background-secondary)] rounded-lg relative overflow-hidden shrink-0">
-                                        {selectedOutfit.outfit_items?.[0]?.clothing_items?.image_url ? (
-                                            <Image
-                                                src={selectedOutfit.outfit_items[0].clothing_items.image_url}
-                                                alt={selectedOutfit.name}
-                                                fill
-                                                className="object-cover"
-                                            />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center">
-                                                <Shirt className="w-5 h-5 opacity-40" />
+                        {/* RIGHT COLUMN: Form & Logic */}
+                        <div className="space-y-8 flex flex-col justify-start h-full py-2">
+                            {/* Outfit Section */}
+                            <div className="space-y-3">
+                                <label className="text-sm font-bold tracking-wide text-[var(--foreground)] ml-1 uppercase opacity-60">Outfit</label>
+                                {selectedOutfit ? (
+                                    <div className="flex items-center gap-4 p-4 bg-[var(--card-bg)] rounded-2xl border border-[var(--border-color)] shadow-sm">
+                                        <div className="w-14 h-14 bg-[var(--background-secondary)] rounded-xl relative overflow-hidden shrink-0">
+                                            {selectedOutfit.outfit_items?.[0]?.clothing_items?.image_url ? (
+                                                <Image
+                                                    src={selectedOutfit.outfit_items[0].clothing_items.image_url}
+                                                    alt={selectedOutfit.name}
+                                                    fill
+                                                    className="object-cover"
+                                                />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center">
+                                                    <Shirt className="w-6 h-6 opacity-40" />
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-bold text-[var(--foreground)] truncate text-base">{selectedOutfit.name}</p>
+                                            <div className="flex gap-4 text-xs font-semibold mt-1">
+                                                <button
+                                                    onClick={() => {
+                                                        setMode('select-outfit');
+                                                        fetchOutfits();
+                                                    }}
+                                                    className="text-[var(--foreground-secondary)] hover:text-[var(--brand-pink)] transition-colors"
+                                                >
+                                                    Cambiar
+                                                </button>
+                                                <button
+                                                    onClick={() => router.push(`/create?outfitId=${selectedOutfit.id}&returnTo=/create-post`)}
+                                                    className="text-[var(--brand-pink)] hover:text-[var(--brand-pink)]/80 flex items-center"
+                                                >
+                                                    <Edit2 className="w-3.5 h-3.5 mr-1" />
+                                                    Editar
+                                                </button>
                                             </div>
-                                        )}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="font-medium text-[var(--foreground)] truncate">{selectedOutfit.name}</p>
-                                        <div className="flex gap-3 text-xs font-medium mt-0.5">
-                                            <button
-                                                onClick={() => {
-                                                    setMode('select-outfit');
-                                                    fetchOutfits();
-                                                }}
-                                                className="text-[var(--foreground-secondary)] hover:text-[var(--foreground)]"
-                                            >
-                                                Cambiar
-                                            </button>
-                                            <button
-                                                onClick={() => router.push(`/create?outfitId=${selectedOutfit.id}&returnTo=/create-post`)}
-                                                className="text-[var(--brand-pink)] hover:text-[var(--brand-pink)]/80 flex items-center"
-                                            >
-                                                <Edit2 className="w-3 h-3 mr-1" />
-                                                Editar
-                                            </button>
                                         </div>
+                                        <button
+                                            onClick={() => setSelectedOutfit(null)}
+                                            className="p-2 text-[var(--foreground-tertiary)] hover:text-red-500 transition-colors"
+                                        >
+                                            <X className="w-5 h-5" />
+                                        </button>
                                     </div>
-                                    <button
-                                        onClick={() => setSelectedOutfit(null)}
-                                        className="p-2 text-[var(--foreground-tertiary)] hover:text-red-500"
-                                    >
-                                        <X className="w-5 h-5" />
-                                    </button>
-                                </div>
-                            ) : (
-                                <button
-                                    onClick={() => { setMode('select-outfit'); fetchOutfits(); }}
-                                    className="w-full p-4 flex items-center justify-between bg-[var(--card-bg)] rounded-2xl border border-[var(--border-color)] hover:bg-[var(--background-secondary)] transition-colors group"
+                                ) : (
+                                    <>
+                                        <button
+                                            onClick={() => { setMode('select-outfit'); fetchOutfits(); }}
+                                            className="w-full p-5 flex items-center justify-between bg-[var(--card-bg)] rounded-3xl border border-[var(--border-color)] hover:bg-[var(--background-secondary)] transition-all group shadow-sm hover:shadow-md"
+                                        >
+                                            <div className="flex items-center gap-4">
+                                                <div className="w-12 h-12 rounded-full bg-[var(--brand-pink)]/10 flex items-center justify-center text-[var(--brand-pink)]">
+                                                    <Layers className="w-6 h-6" />
+                                                </div>
+                                                <span className="font-semibold text-lg text-[var(--foreground)]">Enlazar un Outfit</span>
+                                            </div>
+                                            <ChevronRight className="w-6 h-6 text-[var(--foreground-tertiary)] group-hover:translate-x-1 transition-transform" />
+                                        </button>
+                                        <p className="text-[11px] text-[var(--foreground-tertiary)] px-1">Enlaza tu outfit para que otros puedan ver las prendas que usas.</p>
+                                    </>
+                                )}
+                            </div>
+
+                            {/* Caption Section */}
+                            <div className="space-y-3">
+                                <label className="text-sm font-bold tracking-wide text-[var(--foreground)] ml-1 uppercase opacity-60">Descripción</label>
+                                <textarea
+                                    className="w-full p-5 rounded-3xl bg-[var(--card-bg)] border border-[var(--border-color)] outline-none focus:ring-2 focus:ring-[var(--brand-pink)]/50 resize-none h-40 transition-all placeholder:text-[var(--foreground-tertiary)] text-lg shadow-sm"
+                                    placeholder="¿Qué estás vistiendo hoy?..."
+                                    value={caption}
+                                    onChange={(e) => setCaption(e.target.value)}
+                                />
+                            </div>
+
+                            {/* Desktop Publish Button */}
+                            <div className="hidden md:block pt-4">
+                                <Button
+                                    onClick={handlePublish}
+                                    disabled={publishing || !validatePost()}
+                                    className="w-full h-16 rounded-3xl text-lg font-bold shadow-xl shadow-[var(--brand-pink)]/20"
                                 >
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-[var(--brand-pink)]/10 flex items-center justify-center text-[var(--brand-pink)]">
-                                            <Layers className="w-5 h-5" />
-                                        </div>
-                                        <span className="font-medium text-[var(--foreground)]">Enlazar un Outfit</span>
-                                    </div>
-                                    <ChevronRight className="w-5 h-5 text-[var(--foreground-tertiary)] group-hover:translate-x-1 transition-transform" />
-                                </button>
-                            )}
+                                    {publishing ? 'Publicando...' : 'Compartir con la comunidad'}
+                                </Button>
+                                <p className="text-center text-xs text-[var(--foreground-tertiary)] mt-4">
+                                    Al compartir, tu post será visible para tus seguidores y en el feed general.
+                                </p>
+                            </div>
                         </div>
-
-                        {/* Caption Section */}
-                        <div className="space-y-2">
-                            <label className="text-sm font-bold text-[var(--foreground)] ml-1">Descripción</label>
-                            <textarea
-                                className="w-full p-4 rounded-2xl bg-[var(--card-bg)] border border-[var(--border-color)] outline-none focus:ring-2 focus:ring-[var(--brand-pink)]/50 resize-none h-24 transition-all placeholder:text-[var(--foreground-tertiary)]"
-                                placeholder="Escribe un pie de foto..."
-                                value={caption}
-                                onChange={(e) => setCaption(e.target.value)}
-                            />
-                        </div>
-
                     </div>
                 )}
 

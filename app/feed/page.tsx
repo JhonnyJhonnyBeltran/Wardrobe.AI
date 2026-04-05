@@ -79,9 +79,11 @@ export default function FeedPage() {
                   )
               )
           ),
-            likes (count)
+            likes_count,
+            comments_count
         `)
         .in('user_id', targetIds)
+        .order('likes_count', { ascending: false })
         .order('created_at', { ascending: false })
         .range(from, to);
 
@@ -103,6 +105,20 @@ export default function FeedPage() {
             (profilesData as any[]).forEach(p => {
               profilesMap[p.id] = p;
             });
+          }
+        }
+
+        // Check which posts the current user has liked
+        let likedPostIds = new Set<string>();
+        if (postsData && (postsData as any[]).length > 0) {
+          const { data: userLikes, error: likesError } = await supabase
+            .from('likes' as any)
+            .select('post_id')
+            .eq('user_id', user.id)
+            .in('post_id', (postsData as any[]).map(p => p.id));
+          
+          if (!likesError && userLikes) {
+            (userLikes as any[]).forEach(l => likedPostIds.add(l.post_id));
           }
         }
 
@@ -133,9 +149,9 @@ export default function FeedPage() {
               name: profile?.username || 'Usuario',
               avatar: profile?.avatar_url || null
             },
-            likes: post.likes?.[0]?.count || 0,
-            comments: 0,
-            isLiked: false
+            likes: post.likes_count || 0,
+            comments: post.comments_count || 0,
+            isLiked: likedPostIds.has(post.id)
           };
         });
         if (isLoadMore) {
@@ -148,7 +164,7 @@ export default function FeedPage() {
         pageRef.current = currentPage;
       }
     } catch (error: any) {
-      console.error('Error fetching posts:', error);
+      console.error('Error fetching posts:', error.message || error);
       setPosts([]); // Set to empty on error
     } finally {
       setLoading(false);

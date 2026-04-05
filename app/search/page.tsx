@@ -396,7 +396,7 @@ export default function SearchPage() {
     <div className="min-h-[100dvh] w-full max-w-[100vw] overflow-x-hidden bg-[var(--background)] pb-24">
       {/* Header */}
       <div className="sticky top-0 z-30 w-full min-w-0 bg-[var(--background)]/90 backdrop-blur-md border-b border-[var(--border-color)]">
-        <div className="w-full max-w-3xl mx-auto px-4 py-3 sm:py-4">
+        <div className="w-full max-w-4xl mx-auto px-4 py-3 sm:py-4">
           <div className="relative w-full min-w-0">
             <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--foreground-secondary)]" />
             <input
@@ -418,7 +418,7 @@ export default function SearchPage() {
         </div>
       </div>
 
-      <div className="w-full max-w-3xl mx-auto px-4 py-4 sm:py-6 flex flex-col gap-6 sm:gap-8 min-w-0">
+      <div className="w-full max-w-4xl mx-auto px-4 py-4 sm:py-6 flex flex-col gap-6 sm:gap-8 min-w-0">
         {loading ? (
           <div className="flex justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-500"></div>

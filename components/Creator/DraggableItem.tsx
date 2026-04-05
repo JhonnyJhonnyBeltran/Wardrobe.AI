@@ -62,6 +62,12 @@ export const DraggableItem = ({
                 scale: state.scale,
                 zIndex: state.zIndex,
             }}
+            transition={{
+                x: { type: 'spring', damping: 25, stiffness: 300, mass: 0.5 },
+                y: { type: 'spring', damping: 25, stiffness: 300, mass: 0.5 },
+                rotate: { type: 'spring', damping: 20, stiffness: 200 },
+                scale: { type: 'spring', damping: 20, stiffness: 200 }
+            }}
             // Use style for initial position if needed, but Motion handles transform
             style={{
                 position: 'absolute',

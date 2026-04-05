@@ -104,7 +104,7 @@ export default function FloatingCreateButton() {
             <AnimatePresence>
                 {isCreateMenuOpen && (
                     <motion.div
-                        className="fixed inset-0 z-[60] flex flex-col justify-end md:hidden"
+                        className="fixed inset-0 z-[60] flex flex-col justify-end items-center md:hidden pb-[85px]"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
@@ -121,7 +121,7 @@ export default function FloatingCreateButton() {
                             animate={{ y: 0 }}
                             exit={{ y: "100%" }}
                             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                            className={`relative w-full bg-[var(--card-bg)] pt-2 pb-safe shadow-2xl border border-[var(--border-color)] overflow-hidden ${pathname.startsWith('/profile') ? 'md:max-w-md rounded-3xl md:mb-8' : 'rounded-3xl mb-[85px] mx-4 w-[calc(100%-32px)]'}`}
+                            className="relative w-[calc(100%-32px)] max-w-sm bg-[var(--card-bg)] pt-2 pb-safe shadow-2xl border border-[var(--border-color)] overflow-hidden rounded-3xl mx-4"
                             onClick={(e) => e.stopPropagation()}
                         >
                             <div className="w-12 h-1.5 bg-[var(--border-color)] rounded-full mx-auto my-3" />

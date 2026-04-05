@@ -775,8 +775,8 @@ export default function CreateOutfitPage() {
                             />
                         </div>
 
-                        {/* Canvas - Border removed per request */}
-                        <div className="overflow-hidden shadow-lg bg-white">
+                        {/* Canvas - Added border per request */}
+                        <div className="overflow-hidden shadow-lg bg-white border border-gray-200 rounded-2xl">
                             <FreeDragCanvas
                                 ref={canvasRef}
                                 items={flatItems}
@@ -873,7 +873,7 @@ export default function CreateOutfitPage() {
                             initial={{ scale: 0.9, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.9, opacity: 0 }}
-                            className="bg-white rounded-3xl overflow-hidden max-w-md w-full max-h-[90vh] flex flex-col"
+                            className="bg-white rounded-3xl overflow-hidden aspect-[4/5] w-auto h-auto max-h-[90vh] max-w-[90vw] flex flex-col shadow-2xl mx-auto"
                             onClick={(e) => e.stopPropagation()}
                         >
                             {/* Header */}
@@ -887,49 +887,22 @@ export default function CreateOutfitPage() {
                                 </button>
                             </div>
 
-                            {/* Preview Image */}
-                            <div className="flex-1 overflow-auto p-4 bg-gray-50">
+                            {/* Preview Image - FULL VIEW, NO SCROLL */}
+                            <div className="flex-1 flex items-center justify-center bg-white overflow-hidden p-0">
                                 {previewImage ? (
-                                    <div className="relative aspect-[3/4] mx-auto max-h-[50vh] rounded-2xl overflow-hidden bg-white shadow-lg">
-                                        <img
-                                            src={previewImage}
-                                            alt="Preview"
-                                            className="w-full h-full object-contain"
-                                        />
-                                    </div>
+                                    <img
+                                        src={previewImage}
+                                        alt="Preview"
+                                        className="max-w-full max-h-full object-contain"
+                                    />
                                 ) : (
-                                    <div className="flex items-center justify-center h-48 text-gray-400">
+                                    <div className="flex items-center justify-center p-12 text-gray-400">
                                         <p>No se pudo generar la preview</p>
                                     </div>
                                 )}
                             </div>
 
-                            {/* Action Buttons */}
-                            <div className="p-4 border-t border-gray-100 space-y-3">
-                                <Button
-                                    onClick={handlePublishToFeed}
-                                    disabled={!previewImage}
-                                    className="w-full rounded-full py-3 font-semibold"
-                                >
-                                    <Share2 className="w-5 h-5 mr-2" />
-                                    Crear Publicación
-                                </Button>
-                                <Button
-                                    onClick={handleAddToStories}
-                                    disabled={!previewImage}
-                                    className="w-full rounded-full py-3 font-semibold bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:opacity-90"
-                                >
-                                    <Camera className="w-5 h-5 mr-2" />
-                                    Añadir a Historias
-                                </Button>
-                                <Button
-                                    onClick={() => setShowPreview(false)}
-                                    variant="outline"
-                                    className="w-full rounded-full py-3"
-                                >
-                                    Cerrar
-                                </Button>
-                            </div>
+                            {/* Action Buttons Removed per request */}
                         </motion.div>
                     </motion.div>
                 )}

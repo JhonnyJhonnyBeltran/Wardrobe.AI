@@ -246,7 +246,7 @@ export default function MessagesPage() {
                 <header className="sticky top-0 z-30 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-color)]">
                     <div className="px-4 h-14 flex items-center justify-between">
                         <div className="flex items-center gap-4">
-                            <button onClick={() => router.back()} className="p-2 -ml-2 hover:bg-[var(--background-secondary)] rounded-full transition-colors">
+                            <button onClick={() => router.push('/feed')} className="p-2 -ml-2 hover:bg-[var(--background-secondary)] rounded-full transition-colors">
                                 <ChevronLeft className="w-6 h-6 text-[var(--foreground)]" />
                             </button>
                             <h1 className="text-lg font-bold text-[var(--foreground)]">Mensajes</h1>
