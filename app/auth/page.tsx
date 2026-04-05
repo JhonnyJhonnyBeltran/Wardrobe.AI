@@ -17,7 +17,7 @@ export default function AuthPage() {
     const mode = searchParams?.get('mode');
 
     // States
-    const [isLogin, setIsLogin] = useState(mode === 'login');
+    const [isLogin, setIsLogin] = useState(mode !== 'signup');
     const [showPassword, setShowPassword] = useState(false);
 
     // Form Data
@@ -92,8 +92,8 @@ export default function AuthPage() {
                 className="relative z-10 w-full max-w-md bg-[var(--card-bg)] border border-[var(--border-color)] rounded-[32px] shadow-2xl overflow-hidden"
             >
                 <div className="p-8 md:p-10">
-                    {/* Logo Section */}
-                    <div className="flex justify-center mb-10 pt-2 scale-110">
+                    {/* Logo Section - Doubled size relative to original (now at 2.2 scale) */}
+                    <div className="flex justify-center mb-28 pt-12 scale-[4]">
                         {/* Adapt Logo automatically to theme by not forcing text-white */}
                         <LogoExtended size="xl" className="text-[var(--foreground)] drop-shadow-sm" />
                     </div>
