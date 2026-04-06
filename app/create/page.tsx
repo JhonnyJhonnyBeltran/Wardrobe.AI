@@ -129,16 +129,15 @@ export default function CreateOutfitPage() {
 
                         // Determine slot (simple mapping based on category)
                         let slot = 'accessories';
-                        if (['top', 'shirt', 'blouse', 't-shirt'].includes(clothingItem.category)) slot = 'top';
-                        // Add other mappings as necessary, leveraging existing logic if possible. 
-                        // For simplicity, we trust the category from DB matches keys if perfect, 
-                        // but fallbacks are safer.
-                        if (clothingItem.category === 'top') slot = 'top';
-                        else if (clothingItem.category === 'bottom') slot = 'bottom';
-                        else if (clothingItem.category === 'shoes') slot = 'shoes';
-                        else if (clothingItem.category === 'outerwear') slot = 'layer';
-                        else if (clothingItem.category === 'accessory') {
-                            if (clothingItem.name.toLowerCase().includes('sombrero') || clothingItem.name.toLowerCase().includes('gorra') || clothingItem.name.toLowerCase().includes('gafas')) {
+                        const cat = clothingItem.category.toLowerCase();
+                        if (['top', 'shirt', 'blouse', 't-shirt', 'sweater', 'jersey'].includes(cat)) slot = 'top';
+                        else if (['bottom', 'pants', 'skirt', 'jeans', 'shorts', 'dress'].includes(cat)) slot = 'bottom';
+                        else if (['shoes', 'boots', 'sneakers', 'sandals'].includes(cat)) slot = 'shoes';
+                        else if (['outerwear', 'jacket', 'coat', 'blazer'].includes(cat)) slot = 'layer';
+                        else if (cat === 'accessory' || cat === 'headwear') {
+                            if (clothingItem.name.toLowerCase().includes('sombrero') || 
+                                clothingItem.name.toLowerCase().includes('gorra') || 
+                                clothingItem.name.toLowerCase().includes('gafas')) {
                                 slot = 'headwear';
                             } else {
                                 slot = 'accessories';
@@ -562,11 +561,12 @@ export default function CreateOutfitPage() {
                                             filteredItems.map(item => {
                                                 // Determine slot dynamically for selection checking
                                                 let slot = 'accessories';
-                                                if (['top', 'shirt', 'blouse', 't-shirt'].includes(item.category)) slot = 'top';
-                                                else if (['bottom', 'pants', 'skirt', 'jeans', 'shorts'].includes(item.category)) slot = 'bottom';
-                                                else if (['shoes', 'boots', 'sneakers', 'sandals'].includes(item.category)) slot = 'shoes';
-                                                else if (['outerwear', 'jacket', 'coat', 'blazer'].includes(item.category)) slot = 'layer';
-                                                else if (item.category === 'accessory') {
+                                                const cat = item.category?.toLowerCase() || '';
+                                                if (['top', 'shirt', 'blouse', 't-shirt', 'sweater', 'jersey'].includes(cat)) slot = 'top';
+                                                else if (['bottom', 'pants', 'skirt', 'jeans', 'shorts', 'dress'].includes(cat)) slot = 'bottom';
+                                                else if (['shoes', 'boots', 'sneakers', 'sandals'].includes(cat)) slot = 'shoes';
+                                                else if (['outerwear', 'jacket', 'coat', 'blazer'].includes(cat)) slot = 'layer';
+                                                else if (cat === 'accessory') {
                                                     if (item.name.toLowerCase().includes('sombrero') || item.name.toLowerCase().includes('gorra') || item.name.toLowerCase().includes('gafas')) {
                                                         slot = 'headwear';
                                                     }
@@ -714,11 +714,12 @@ export default function CreateOutfitPage() {
                                     filteredItems.map(item => {
                                         // Determine slot dynamically
                                         let slot = 'accessories';
-                                        if (['top', 'shirt', 'blouse', 't-shirt'].includes(item.category)) slot = 'top';
-                                        else if (['bottom', 'pants', 'skirt', 'jeans', 'shorts'].includes(item.category)) slot = 'bottom';
-                                        else if (['shoes', 'boots', 'sneakers', 'sandals'].includes(item.category)) slot = 'shoes';
-                                        else if (['outerwear', 'jacket', 'coat', 'blazer'].includes(item.category)) slot = 'layer';
-                                        else if (item.category === 'accessory') {
+                                        const cat = item.category?.toLowerCase() || '';
+                                        if (['top', 'shirt', 'blouse', 't-shirt', 'sweater', 'jersey'].includes(cat)) slot = 'top';
+                                        else if (['bottom', 'pants', 'skirt', 'jeans', 'shorts', 'dress'].includes(cat)) slot = 'bottom';
+                                        else if (['shoes', 'boots', 'sneakers', 'sandals'].includes(cat)) slot = 'shoes';
+                                        else if (['outerwear', 'jacket', 'coat', 'blazer'].includes(cat)) slot = 'layer';
+                                        else if (cat === 'accessory') {
                                             if (item.name.toLowerCase().includes('sombrero') || item.name.toLowerCase().includes('gorra') || item.name.toLowerCase().includes('gafas')) {
                                                 slot = 'headwear';
                                             }

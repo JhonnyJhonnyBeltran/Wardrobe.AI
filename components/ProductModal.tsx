@@ -7,7 +7,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ExternalLink, ShoppingBag, Tag, Store, Sparkles, Heart, Edit2, Trash2 } from 'lucide-react';
+import { X, ExternalLink, ShoppingBag, Shirt, Tag, Palette, Ruler, Layers, CalendarDays, Sparkles, Heart, Edit2, Trash2 } from 'lucide-react';
 import { OutfitItem } from '@/lib/fashion/outfitGenerator';
 import { useBodyScrollLock } from '@/lib/hooks';
 
@@ -158,17 +158,17 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
                                 <div className="grid grid-cols-2 gap-3 mb-6">
                                     {/* Type */}
                                     <div className="flex items-center gap-2 p-3 bg-[var(--background-secondary)] rounded-xl">
-                                        <Tag className="w-4 h-4 text-[var(--foreground-tertiary)]" />
+                                        <Shirt className="w-4 h-4 text-[var(--brand-pink)]" />
                                         <div>
                                             <p className="text-xs text-[var(--foreground-tertiary)]">Tipo</p>
                                             <p className="text-sm font-medium text-[var(--foreground)] capitalize">{displayItem.type}</p>
                                         </div>
                                     </div>
 
-                                    {/* Brand / Source */}
+                                    {/* Brand */}
                                     {(displayItem.brand || displayItem.source) && (displayItem.brand !== 'Unknown' && displayItem.source !== 'Unknown') && (
                                         <div className="flex items-center gap-2 p-3 bg-[var(--background-secondary)] rounded-xl">
-                                            <Store className="w-4 h-4 text-[var(--foreground-tertiary)]" />
+                                            <Tag className="w-4 h-4 text-[var(--brand-pink)]" />
                                             <div>
                                                 <p className="text-xs text-[var(--foreground-tertiary)]">Marca</p>
                                                 <p className="text-sm font-medium text-[var(--foreground)]">{displayItem.brand || displayItem.source}</p>
@@ -180,12 +180,47 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
                                     {displayItem.color && (
                                         <div className="flex items-center gap-2 p-3 bg-[var(--background-secondary)] rounded-xl">
                                             <div
-                                                className="w-4 h-4 rounded-full border-2 border-[var(--card-bg)] shadow-sm"
+                                                className="w-4 h-4 rounded-full border-2 border-[var(--border-color)] shadow-sm flex-shrink-0"
                                                 style={{ backgroundColor: displayItem.colorHex || '#ccc' }}
                                             />
                                             <div>
                                                 <p className="text-xs text-[var(--foreground-tertiary)]">Color</p>
                                                 <p className="text-sm font-medium text-[var(--foreground)] capitalize">{displayItem.color}</p>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Size */}
+                                    {(displayItem as any).size && (
+                                        <div className="flex items-center gap-2 p-3 bg-[var(--background-secondary)] rounded-xl">
+                                            <Ruler className="w-4 h-4 text-[var(--brand-pink)]" />
+                                            <div>
+                                                <p className="text-xs text-[var(--foreground-tertiary)]">Talla</p>
+                                                <p className="text-sm font-medium text-[var(--foreground)]">{(displayItem as any).size}</p>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Fabric */}
+                                    {(displayItem as any).fabric && (
+                                        <div className="flex items-center gap-2 p-3 bg-[var(--background-secondary)] rounded-xl">
+                                            <Layers className="w-4 h-4 text-[var(--brand-pink)]" />
+                                            <div>
+                                                <p className="text-xs text-[var(--foreground-tertiary)]">Tejido</p>
+                                                <p className="text-sm font-medium text-[var(--foreground)] capitalize">{(displayItem as any).fabric}</p>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Season */}
+                                    {(displayItem as any).season && (displayItem as any).season.length > 0 && (
+                                        <div className="flex items-center gap-2 p-3 bg-[var(--background-secondary)] rounded-xl">
+                                            <CalendarDays className="w-4 h-4 text-[var(--brand-pink)]" />
+                                            <div>
+                                                <p className="text-xs text-[var(--foreground-tertiary)]">Temporada</p>
+                                                <p className="text-sm font-medium text-[var(--foreground)] capitalize">
+                                                    {Array.isArray((displayItem as any).season) ? (displayItem as any).season.join(', ') : (displayItem as any).season}
+                                                </p>
                                             </div>
                                         </div>
                                     )}

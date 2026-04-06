@@ -51,8 +51,8 @@ export default function FloatingCreateButton() {
 
     return (
         <>
-            {/* Desktop Speed Dial + Mobile FAB Wrapper */}
-            <div className="fixed bottom-24 md:bottom-8 right-6 md:right-8 z-50 flex flex-col items-end">
+            {/* Desktop Speed Dial + Mobile FAB Wrapper - HIDDEN ON MOBILE AS REQUESTED */}
+            <div className="hidden md:flex fixed bottom-24 md:bottom-8 right-6 md:right-8 z-50 flex-col items-end">
                 {/* Desktop Bubbles */}
                 <AnimatePresence>
                     {isCreateMenuOpen && (

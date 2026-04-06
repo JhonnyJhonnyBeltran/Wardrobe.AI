@@ -633,3 +633,98 @@ INSERT INTO public.style_options (name, image_url, category) VALUES
 ('Preppy', 'https://images.unsplash.com/photo-1550614000-4b9519e6022e?w=600&q=80', 'visual'),
 ('Y2K', 'https://images.unsplash.com/photo-1616847231686-22a76203405c?w=600&q=80', 'visual')
 ON CONFLICT DO NOTHING;
+
+-- ============================================
+-- AMPLIACIÓN DE BASE DE DATOS KLOZET
+-- Ejecutar en conjunto para añadir nuevas categorías, marcas y estilos
+-- ============================================
+
+-- --------------------------------------------
+-- 1. NUEVAS CATEGORÍAS
+-- --------------------------------------------
+INSERT INTO public.categories (name, slug, icon, color, is_active, display_order) VALUES
+('Shorts / Pantalón corto', 'shorts', 'shorts', '#F39C12', true, 16),
+('Traje / Blazer', 'suit', 'briefcase', '#2C3E50', true, 17),
+('Mono / Peto', 'jumpsuit', 'clothing', '#8E44AD', true, 18),
+('Ropa Deportiva', 'activewear', 'activity', '#E67E22', true, 19),
+('Ropa de Baño', 'swimwear', 'water', '#00BCD4', true, 20),
+('Ropa Interior / Lencería', 'intimates', 'heart', '#E91E63', true, 21),
+('Pijama / Ropa de casa', 'sleepwear', 'moon', '#7F8C8D', true, 22),
+('Joyas (Collar / Anillo)', 'jewelry', 'diamond', '#F1C40F', true, 23),
+('Calcetines / Medias', 'hosiery', 'socks', '#95A5A6', true, 24)
+ON CONFLICT (slug) DO NOTHING;
+
+
+-- --------------------------------------------
+-- 2. NUEVAS MARCAS
+-- --------------------------------------------
+INSERT INTO public.brands (name, slug, logo_url, website, is_active, display_order) VALUES
+-- Luxury / High Fashion (Alta Costura)
+('Gucci', 'gucci', NULL, 'https://www.gucci.com', true, 101),
+('Prada', 'prada', NULL, 'https://www.prada.com', true, 102),
+('Balenciaga', 'balenciaga', NULL, 'https://www.balenciaga.com', true, 103),
+('Louis Vuitton', 'louisvuitton', NULL, 'https://eu.louisvuitton.com', true, 104),
+('Dior', 'dior', NULL, 'https://www.dior.com', true, 105),
+('Chanel', 'chanel', NULL, 'https://www.chanel.com', true, 106),
+('Yves Saint Laurent', 'ysl', NULL, 'https://www.ysl.com', true, 107),
+('Loewe', 'loewe', NULL, 'https://www.loewe.com', true, 108),
+('Jacquemus', 'jacquemus', NULL, 'https://www.jacquemus.com', true, 109),
+('Versace', 'versace', NULL, 'https://www.versace.com', true, 110),
+('Bottega Veneta', 'bottegaveneta', NULL, 'https://www.bottegaveneta.com', true, 111),
+('Miu Miu', 'miumiu', NULL, 'https://www.miumiu.com', true, 112),
+
+-- Sportswear & Activewear (Deporte)
+('New Balance', 'newbalance', NULL, 'https://www.newbalance.com', true, 121),
+('Puma', 'puma', NULL, 'https://www.puma.com', true, 122),
+('Reebok', 'reebok', NULL, 'https://www.reebok.com', true, 123),
+('Under Armour', 'underarmour', NULL, 'https://www.underarmour.com', true, 124),
+('Lululemon', 'lululemon', NULL, 'https://www.lululemon.com', true, 125),
+('Gymshark', 'gymshark', NULL, 'https://www.gymshark.com', true, 126),
+('Asics', 'asics', NULL, 'https://www.asics.com', true, 127),
+('Salomon', 'salomon', NULL, 'https://www.salomon.com', true, 128),
+('Oysho', 'oysho', NULL, 'https://www.oysho.com', true, 129),
+
+-- Global Streetwear / Outdoor
+('Supreme', 'supreme', NULL, 'https://www.supremenewyork.com', true, 131),
+('Off-White', 'offwhite', NULL, 'https://www.off---white.com', true, 132),
+('Stüssy', 'stussy', NULL, 'https://www.stussy.com', true, 133),
+('Carhartt WIP', 'carharttwip', NULL, 'https://www.carhartt-wip.com', true, 134),
+('Dickies', 'dickies', NULL, 'https://www.dickies.com', true, 135),
+('The North Face', 'thenorthface', NULL, 'https://www.thenorthface.com', true, 136),
+('Patagonia', 'patagonia', NULL, 'https://www.patagonia.com', true, 137),
+('Columbia', 'columbia', NULL, 'https://www.columbia.com', true, 138),
+
+-- Classics, Denim & Mid-Range
+('Polo Ralph Lauren', 'poloralphlauren', NULL, 'https://www.ralphlauren.com', true, 141),
+('Lacoste', 'lacoste', NULL, 'https://www.lacoste.com', true, 142),
+('Fred Perry', 'fredperry', NULL, 'https://www.fredperry.com', true, 143),
+('Diesel', 'diesel', NULL, 'https://www.diesel.com', true, 144),
+('Wrangler', 'wrangler', NULL, 'https://www.wrangler.com', true, 145),
+('Lee', 'lee', NULL, 'https://www.lee.com', true, 146),
+('Guess', 'guess', NULL, 'https://www.guess.com', true, 147),
+('Michael Kors', 'michaelkors', NULL, 'https://www.michaelkors.com', true, 148),
+('Vila', 'vila', NULL, 'https://www.vila.com', true, 149),
+('Jack & Jones', 'jackandjones', NULL, 'https://www.jackjones.com', true, 150),
+('Springfield', 'springfield', NULL, 'https://myspringfield.com', true, 151),
+
+-- Intimates & Sleepwear
+('Victoria''s Secret', 'victoriassecret', NULL, 'https://www.victoriassecret.com', true, 161),
+('Intimissimi', 'intimissimi', NULL, 'https://www.intimissimi.com', true, 162),
+('Calzedonia', 'calzedonia', NULL, 'https://www.calzedonia.com', true, 163),
+('Women''s Secret', 'womenssecret', NULL, 'https://womensecret.com', true, 164)
+ON CONFLICT (slug) DO NOTHING;
+
+
+-- --------------------------------------------
+-- 3. NUEVAS OPCIONES DE ESTILO
+-- --------------------------------------------
+INSERT INTO public.style_options (name, image_url, category) VALUES
+('Old Money / Quiet Luxury', 'https://images.unsplash.com/photo-1617114919297-3c8ddb01f599?w=600&q=80', 'visual'),
+('Business Casual', 'https://images.unsplash.com/photo-1548624149-f9b1859aa7d0?w=600&q=80', 'visual'),
+('Vintage / Retro', 'https://images.unsplash.com/photo-1546422904-90eab23c3d7e?w=600&q=80', 'visual'),
+('Cottagecore', 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=600&q=80', 'visual'),
+('Gótico / Alt', 'https://images.unsplash.com/photo-1503342394128-c104d54dba01?w=600&q=80', 'visual'),
+('Techwear / Utilitario', 'https://images.unsplash.com/photo-1511135232973-c3ee80040060?w=600&q=80', 'visual'),
+('Avant-Garde / High Fashion', 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=600&q=80', 'visual'),
+('E-Girl / E-Boy', 'https://images.unsplash.com/photo-1611042553365-9b101441c135?w=600&q=80', 'visual')
+ON CONFLICT DO NOTHING;

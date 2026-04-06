@@ -8,11 +8,12 @@
  * - Smooth spring scaleY+fade animation from the trigger
  * - Auto-detects available space and opens upward when needed
  * - Scroll-indicator gradients
+ * - Search functionality
  */
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, Check } from 'lucide-react';
+import { ChevronDown, Check, Search } from 'lucide-react';
 import type { CustomSelectProps } from '../types';
 
 // ─── Shared animation config ─────────────────────────────────────────────────
@@ -51,6 +52,7 @@ function dropdownVariants(openUpward: boolean) {
 
 export function CustomSelect({ label, value, onChange, options }: CustomSelectProps) {
     const [isOpen, setIsOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
     const [canScrollUp, setCanScrollUp] = useState(false);
     const [canScrollDown, setCanScrollDown] = useState(false);
     const [openUpward, setOpenUpward] = useState(false);
@@ -60,6 +62,10 @@ export function CustomSelect({ label, value, onChange, options }: CustomSelectPr
     const listRef = useRef<HTMLDivElement>(null);
 
     const selectedOption = options.find((opt) => opt.value === value);
+
+    const filteredOptions = options.filter(opt =>
+        opt.label.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
     // ── Scroll indicators ──────────────────────────────────────────────────
 
@@ -73,6 +79,8 @@ export function CustomSelect({ label, value, onChange, options }: CustomSelectPr
     useEffect(() => {
         if (isOpen) {
             requestAnimationFrame(updateScrollIndicators);
+        } else {
+            setSearchTerm('');
         }
     }, [isOpen, updateScrollIndicators]);
 
@@ -81,7 +89,7 @@ export function CustomSelect({ label, value, onChange, options }: CustomSelectPr
     const calculateOpenDirection = useCallback(() => {
         if (!buttonRef.current) return;
         const rect = buttonRef.current.getBoundingClientRect();
-        const DROPDOWN_HEIGHT = 220;
+        const DROPDOWN_HEIGHT = 280;
         const spaceBelow = window.innerHeight - rect.bottom;
         const spaceAbove = rect.top;
         setOpenUpward(spaceBelow < DROPDOWN_HEIGHT && spaceAbove > DROPDOWN_HEIGHT);
@@ -151,11 +159,29 @@ export function CustomSelect({ label, value, onChange, options }: CustomSelectPr
                         initial="hidden"
                         animate="visible"
                         exit="exit"
-                        style={{ originY: openUpward ? 1 : 0 }}
-                        className={`absolute z-[200] w-full rounded-2xl bg-[var(--background)] border border-[var(--border-color)] shadow-xl overflow-hidden will-change-transform ${
+                        style={{
+                            originY: openUpward ? 1 : 0,
+                            width: dropdownRef.current?.offsetWidth,
+                        }}
+                        className={`absolute z-[200] w-full rounded-2xl bg-[var(--background)] border border-[var(--border-color)] shadow-xl overflow-hidden will-change-transform flex flex-col ${
                             openUpward ? 'bottom-full mb-1' : 'top-full mt-1'
                         }`}
                     >
+                        {/* Search Input Container */}
+                        <div className="p-2 border-b border-[var(--border-color)] bg-[var(--background)]">
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--foreground-tertiary)]" />
+                                <input
+                                    type="text"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    placeholder="Buscar..."
+                                    className="w-full pl-9 pr-4 py-2 rounded-xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)]/30"
+                                    onClick={(e) => e.stopPropagation()}
+                                />
+                            </div>
+                        </div>
+
                         {/* Scroll-up gradient */}
                         <AnimatePresence>
                             {canScrollUp && (
@@ -164,7 +190,7 @@ export function CustomSelect({ label, value, onChange, options }: CustomSelectPr
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
                                     transition={{ duration: 0.18 }}
-                                    className="absolute top-0 left-0 right-0 h-7 bg-gradient-to-b from-[var(--background)] to-transparent pointer-events-none z-10 rounded-t-2xl"
+                                    className="absolute top-[53px] left-0 right-0 h-7 bg-gradient-to-b from-[var(--background)] to-transparent pointer-events-none z-10"
                                 />
                             )}
                         </AnimatePresence>
@@ -175,23 +201,29 @@ export function CustomSelect({ label, value, onChange, options }: CustomSelectPr
                             onScroll={updateScrollIndicators}
                             className="max-h-[220px] overflow-auto hide-scrollbar py-1"
                         >
-                            {options.map((option) => (
-                                <button
-                                    key={option.value}
-                                    type="button"
-                                    onClick={() => handleSelect(option.value)}
-                                    className={`w-full px-4 py-2.5 text-left text-sm flex items-center justify-between gap-2 transition-colors ${
-                                        value === option.value
-                                            ? 'text-[var(--brand-pink)] font-semibold bg-[var(--brand-pink)]/5'
-                                            : 'text-[var(--foreground)] hover:bg-[var(--background-secondary)]'
-                                    }`}
-                                >
-                                    <span className="truncate">{option.label}</span>
-                                    {value === option.value && (
-                                        <Check className="w-4 h-4 flex-shrink-0" />
-                                    )}
-                                </button>
-                            ))}
+                            {filteredOptions.length > 0 ? (
+                                filteredOptions.map((option) => (
+                                    <button
+                                        key={option.value}
+                                        type="button"
+                                        onClick={() => handleSelect(option.value)}
+                                        className={`w-full px-4 py-2.5 text-left text-sm flex items-center justify-between gap-2 transition-colors ${
+                                            value === option.value
+                                                ? 'text-[var(--brand-pink)] font-semibold bg-[var(--brand-pink)]/5'
+                                                : 'text-[var(--foreground)] hover:bg-[var(--background-secondary)]'
+                                        }`}
+                                    >
+                                        <span className="truncate">{option.label}</span>
+                                        {value === option.value && (
+                                            <Check className="w-4 h-4 flex-shrink-0" />
+                                        )}
+                                    </button>
+                                ))
+                            ) : (
+                                <div className="px-4 py-3 text-sm text-[var(--foreground-tertiary)] text-center">
+                                    No se encontraron resultados
+                                </div>
+                            )}
                         </div>
 
                         {/* Scroll-down gradient */}
@@ -202,7 +234,7 @@ export function CustomSelect({ label, value, onChange, options }: CustomSelectPr
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
                                     transition={{ duration: 0.18 }}
-                                    className="absolute bottom-0 left-0 right-0 h-7 bg-gradient-to-t from-[var(--background)] to-transparent pointer-events-none z-10 rounded-b-2xl"
+                                    className="absolute bottom-0 left-0 right-0 h-7 bg-gradient-to-t from-[var(--background)] to-transparent pointer-events-none z-10"
                                 />
                             )}
                         </AnimatePresence>

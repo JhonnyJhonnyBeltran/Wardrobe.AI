@@ -352,7 +352,7 @@ export default function ProfilePage() {
             className="p-2 -ml-2 hover:bg-[var(--background-secondary)] rounded-full transition-colors flex-shrink-0"
             aria-label="Crear publicación"
           >
-            <Plus className="w-6 h-6 text-[var(--foreground)]" />
+            <Plus className="w-6 h-6 text-[var(--brand-pink)]" />
           </button>
 
           {/* Center: Username */}

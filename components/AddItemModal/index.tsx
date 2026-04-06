@@ -20,6 +20,7 @@ import { X, Loader2, Check } from 'lucide-react';
 import { Button, AdvisorModal } from '@/components';
 import { useBodyScrollLock } from '@/lib/hooks';
 import { useUiStore } from '@/store/uiStore';
+import { normalizeBrand, generateSlug } from '@/lib/utils/string';
 
 // Local imports
 import { useAddItemForm } from './hooks/useAddItemForm';
@@ -61,15 +62,13 @@ export default function AddItemModal({
         handleImageUpload,
         handleColorSelect,
         handleColorPickerChange,
-        rotateImage,
-        scaleImage,
         buildPayload,
         resetForm,
         error,
     } = useAddItemForm({ isOpen, initialData, isEditing });
 
     // Fetch categories and brands from database
-    const { categories, brands } = useCategoriesAndBrands();
+    const { categories, brands, refetch: refetchBrands } = useCategoriesAndBrands();
 
     // Prevent duplicate submissions
     const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -85,7 +84,42 @@ export default function AddItemModal({
         setIsSubmitting(true);
         try {
             const payload = buildPayload();
-            await onAdd(payload);
+            
+            // Check if brand is new and needs to be added to global database
+            if (payload.brand) {
+                const normalizedBrand = normalizeBrand(payload.brand);
+                const brandExists = brands.some(b => normalizeBrand(b).toLowerCase() === normalizedBrand.toLowerCase());
+
+                if (!brandExists) {
+                    try {
+                        console.log(`[AddItemModal] Adding new brand to database: ${normalizedBrand}`);
+                        const response = await fetch('/api/brands', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                name: normalizedBrand,
+                                slug: generateSlug(normalizedBrand),
+                            }),
+                        });
+                        
+                        if (response.ok) {
+                            // Silently refetch brands so they are updated for the next item
+                            refetchBrands();
+                        }
+                    } catch (brandErr) {
+                        console.warn('[AddItemModal] Failed to add new brand to global list:', brandErr);
+                    }
+                }
+            }
+
+            const success = await onAdd(payload);
+
+            if (success === false) {
+                // If it explicitly returned false, something went wrong
+                // The store already sets the error, but we can set a local one too if needed
+                console.warn('[AddItemModal] Submission returned false');
+                return;
+            }
 
             if (!isEditing) {
                 useUiStore.getState().clearPendingUploadItem();
@@ -106,6 +140,8 @@ export default function AddItemModal({
             }
 
             onClose();
+        } catch (err) {
+            console.error('[AddItemModal] Error in handleSubmit:', err);
         } finally {
             setIsSubmitting(false);
         }
@@ -171,7 +207,7 @@ export default function AddItemModal({
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.25 }}
-                        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[80] flex items-end md:items-center justify-center px-4 pb-[85px] md:pb-0 md:p-4"
+                        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-end md:items-center justify-center px-4 pb-0 md:p-4"
                         onClick={handleBackdropClick}
                     >
                         <motion.div
@@ -181,7 +217,7 @@ export default function AddItemModal({
                             exit={{ y: '100%', opacity: 0 }}
                             transition={{ type: 'spring', damping: 28, stiffness: 300 }}
                             onClick={(e) => e.stopPropagation()}
-                            className="w-full md:max-w-2xl bg-[var(--background)] rounded-3xl overflow-hidden max-h-[calc(100vh-130px)] md:max-h-[85vh] md:mb-0 flex flex-col shadow-2xl border border-[var(--border-color)]"
+                            className="w-full md:max-w-2xl bg-[var(--background)] rounded-t-[32px] md:rounded-3xl overflow-hidden max-h-[95dvh] md:max-h-[85vh] md:mb-0 flex flex-col shadow-2xl border border-[var(--border-color)]"
                         >
                             {/* ── Floating Close Button ── */}
                             <div className="sticky top-0 z-50 flex justify-end px-4 pt-4">
@@ -211,7 +247,7 @@ export default function AddItemModal({
                             </div>
 
                             {/* ── Scrollable Content ── */}
-                            <div className="flex-1 overflow-y-auto overscroll-y-contain px-4 md:px-6 pb-4 custom-scrollbar scroll-smooth space-y-4">
+                            <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y px-4 md:px-6 pb-8 custom-scrollbar scroll-smooth space-y-4">
 
                                 {/* Mode Toggle — only relevant when CREATING a new item */}
                                 {!isEditing && (
@@ -271,8 +307,6 @@ export default function AddItemModal({
                                         isProcessing={isProcessing}
                                         processingMessage={processingMessage}
                                         onImageUpload={handleImageUpload}
-                                        onRotate={rotateImage}
-                                        onScale={scaleImage}
                                     />
                                 </div>
 
@@ -430,7 +464,7 @@ export default function AddItemModal({
                             </div>
 
                             {/* ── Submit Button — fixed at bottom ── */}
-                            <div className="flex-shrink-0 p-4 pt-2 pb-3 bg-[var(--background)] border-t border-[var(--border-color)]">
+                            <div className="flex-shrink-0 p-4 pt-2 pb-8 md:pb-3 bg-[var(--background)] border-t border-[var(--border-color)] safe-bottom">
                                 <Button
                                     onClick={handleSubmit}
                                     disabled={!canSubmit}

@@ -11,6 +11,7 @@ import { processClothingImage, type ProcessingStage, STAGE_MESSAGES } from '@/li
 import { extractDominantColor, hexToRgb, rgbToColorName } from '@/lib/utils/colorUtils';
 import { DEFAULT_FORM_DATA } from '../constants';
 import { useUiStore } from '@/store/uiStore';
+import { normalizeBrand } from '@/lib/utils/string';
 import type { ItemFormData, FormMode, InputMethod } from '../types';
 import type { ClothingItem } from '@/types/clothing';
 
@@ -43,8 +44,6 @@ interface UseAddItemFormReturn {
     handleManualProcess: () => Promise<void>;
     handleColorSelect: (colorOption: { name: string; hex: string }) => void;
     handleColorPickerChange: (hex: string) => void;
-    rotateImage: (degrees: number) => void;
-    scaleImage: (scale: number) => void;
 
     // Submit
     buildPayload: () => Partial<ClothingItem>;
@@ -80,6 +79,16 @@ export function useAddItemForm({
     // Progress callback for real-time updates
     const handleProgress = useCallback((stage: ProcessingStage, _progress: number, _message?: string) => {
         setProcessingStage(stage);
+    }, []);
+
+    // Reset form to initial state
+    const resetForm = useCallback(() => {
+        setMode('quick');
+        setImage(null);
+        setOriginalImage(null);
+        setProcessedImage(null);
+        setSelectedFile(null);
+        setFormData(DEFAULT_FORM_DATA);
     }, []);
 
     // Initialize form when modal opens
@@ -128,16 +137,6 @@ export function useAddItemForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isOpen, isEditing, initialData]);
 
-    // Reset form to initial state
-    const resetForm = useCallback(() => {
-        setMode('quick');
-        setImage(null);
-        setOriginalImage(null);
-        setProcessedImage(null);
-        setSelectedFile(null);
-        setFormData(DEFAULT_FORM_DATA);
-    }, []);
-
     // Handle image file upload - optimized for non-blocking UI
     const handleImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -157,13 +156,11 @@ export function useAddItemForm({
         setImage(originalDataUrl);
 
         // Set processing state AFTER showing the image
-        // This ensures the UI is fully updated before heavy processing starts
         setIsProcessing(true);
         setProcessingStage('compressing');
         setError(null);
 
-        // Use multiple frame delays to ensure React has fully rendered
-        // before starting heavy processing
+        // Delay to allow UI render
         await new Promise<void>(resolve => {
             requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
@@ -172,9 +169,6 @@ export function useAddItemForm({
             });
         });
 
-        // Process with AI in background - Web Worker handles the heavy lifting
-        // The processClothingImage function uses proxyToWorker: true
-        // which means processing happens in a Web Worker, not blocking the main thread
         try {
             const processResult = await processClothingImage(
                 file,
@@ -182,22 +176,19 @@ export function useAddItemForm({
                     normalize: true,
                     canvasWidth: 1200,
                     canvasHeight: 1500,
-                    quality: 'quality', // Best quality model for clean backgrounds
+                    quality: 'quality',
                     transparentBackground: true,
                 },
                 handleProgress
             );
 
             if (processResult.success && processResult.imageUrl) {
-                // Yield to browser before updating state with processed image
                 await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
 
                 setProcessedImage(processResult.imageUrl);
                 setImage(processResult.imageUrl);
                 setProcessingStage('complete');
 
-                // Detect dominant color in the next idle frame to not block UI
-                // Use setTimeout to schedule after React has updated
                 setTimeout(async () => {
                     try {
                         const dominantColor = await extractDominantColor(processResult.imageUrl!);
@@ -211,7 +202,6 @@ export function useAddItemForm({
                     }
                 }, 50);
             } else {
-                console.warn('Processing failed, keeping original:', processResult.error);
                 setProcessingStage('error');
                 if (processResult.error) {
                     setError(processResult.error);
@@ -222,7 +212,6 @@ export function useAddItemForm({
             setProcessingStage('error');
             setError(error instanceof Error ? error.message : 'Error al procesar la imagen');
         } finally {
-            // Ensure UI is responsive before clearing processing state
             await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
             setIsProcessing(false);
         }
@@ -296,108 +285,6 @@ export function useAddItemForm({
         }
     }, []);
 
-    // Rotate the current image
-    const rotateImage = useCallback((degrees: number) => {
-        if (!image) return;
-
-        const img = new Image();
-        img.crossOrigin = 'anonymous'; // Prevent tainted canvas
-        img.src = image;
-
-        img.onload = () => {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            if (!ctx) return;
-
-            const radians = (degrees * Math.PI) / 180;
-            const sin = Math.abs(Math.sin(radians));
-            const cos = Math.abs(Math.cos(radians));
-
-            canvas.width = img.width * cos + img.height * sin;
-            canvas.height = img.width * sin + img.height * cos;
-
-            ctx.translate(canvas.width / 2, canvas.height / 2);
-            ctx.rotate(radians);
-            ctx.drawImage(img, -img.width / 2, -img.height / 2);
-
-            canvas.toBlob((blob) => {
-                if (blob) {
-                    const newImageUrl = URL.createObjectURL(blob);
-
-                    if (processedImage && image === processedImage) {
-                        setProcessedImage(newImageUrl);
-                        setImage(newImageUrl);
-                    } else {
-                        setOriginalImage(newImageUrl);
-                        setImage(newImageUrl);
-                    }
-                }
-            }, 'image/png');
-        };
-
-        img.onerror = () => {
-            console.error('Error loading image for rotation');
-        };
-    }, [image, processedImage]);
-
-    // Scale the current image (zoom in/out)
-    const scaleImage = useCallback((scaleFactor: number) => {
-        console.log('scaleImage called with factor:', scaleFactor);
-        if (!image) {
-            console.warn('No image to scale');
-            return;
-        }
-
-        const img = new Image();
-        img.crossOrigin = 'anonymous'; // Prevent tainted canvas
-        img.src = image;
-
-        img.onload = () => {
-            console.log('Image loaded for scaling');
-            try {
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                if (!ctx) {
-                    console.error('Could not get canvas context');
-                    return;
-                }
-
-                // Calculate new dimensions
-                const newWidth = img.width * scaleFactor;
-                const newHeight = img.height * scaleFactor;
-
-                canvas.width = newWidth;
-                canvas.height = newHeight;
-
-                // Draw scaled image
-                ctx.drawImage(img, 0, 0, newWidth, newHeight);
-
-                canvas.toBlob((blob) => {
-                    if (blob) {
-                        const newImageUrl = URL.createObjectURL(blob);
-
-                        if (processedImage && image === processedImage) {
-                            setProcessedImage(newImageUrl);
-                            setImage(newImageUrl);
-                        } else {
-                            setOriginalImage(newImageUrl);
-                            setImage(newImageUrl);
-                        }
-                        console.log('Image scaled successfully');
-                    } else {
-                        console.error('Failed to create blob from scaled image');
-                    }
-                }, 'image/png');
-            } catch (err) {
-                console.error('Error scaling image:', err);
-            }
-        };
-
-        img.onerror = () => {
-            console.error('Error loading image for scaling');
-        };
-    }, [image, processedImage]);
-
     // Build the payload for submission
     const buildPayload = useCallback((): Partial<ClothingItem> => {
         const shouldUpdateImage = !initialData || image !== initialData.imageUrl;
@@ -408,7 +295,7 @@ export function useAddItemForm({
             name: formData.name || 'Nueva prenda',
             category: (formData.type as any) || 'top',
             color: formData.color || 'Por definir',
-            brand: formData.brand || undefined,
+            brand: formData.brand ? normalizeBrand(formData.brand) : undefined,
             season: formData.season ? [formData.season as any] : [],
             isAiProcessed: !!processedImage && image === processedImage,
             ...({
@@ -453,8 +340,6 @@ export function useAddItemForm({
         handleManualProcess,
         handleColorSelect,
         handleColorPickerChange,
-        rotateImage,
-        scaleImage,
 
         // Submit
         buildPayload,

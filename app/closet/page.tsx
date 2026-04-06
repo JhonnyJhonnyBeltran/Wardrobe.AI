@@ -37,6 +37,7 @@ export default function ClosetPage() {
   const { isPremium, user, setUser, isLoading } = useUser();
   const { t } = useTranslation();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [gridCols, setGridCols] = useState(2);
   const [showFilters, setShowFilters] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
 
@@ -146,10 +147,15 @@ export default function ClosetPage() {
   // Lock body scroll when filter panel is open
   useBodyScrollLock(showFilters);
 
-  // Clear selection when changing tabs
+  // Clear selection and filters when changing tabs
   useEffect(() => {
     setSelectionMode(false);
     setSelectedIds(new Set());
+    
+    // Reset filters
+    setSearchQuery('');
+    setSelectedCategories(new Set());
+    setShowFavoritesOnly(false);
   }, [activeTab]);
 
   const [outfits, setOutfits] = useState<any[]>([]);
@@ -459,8 +465,8 @@ export default function ClosetPage() {
 
   // Active filter badge count
   const activeFilterCount = useMemo(
-    () => (searchQuery ? 1 : 0) + selectedCategories.size + (showFavoritesOnly ? 1 : 0),
-    [searchQuery, selectedCategories, showFavoritesOnly]
+    () => (searchQuery ? 1 : 0) + selectedCategories.size + (showFavoritesOnly ? 1 : 0) + (gridCols !== 2 ? 1 : 0),
+    [searchQuery, selectedCategories, showFavoritesOnly, gridCols]
   );
 
   const colorMap: Record<string, string> = {
@@ -614,7 +620,7 @@ export default function ClosetPage() {
                 </div>
               ) : (
                 <div className={`px-4 ${viewMode === 'grid'
-                  ? 'grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3'
+                  ? `grid grid-cols-${gridCols} md:grid-cols-${gridCols + 1} lg:grid-cols-${gridCols + 2} gap-3`
                   : 'space-y-3' // List View
                   }`}>
                   {(filteredContent as ClothingItemType[]).map((item) => (
@@ -773,7 +779,7 @@ export default function ClosetPage() {
                 </div>
               ) : (
                 <div className={`px-4 ${viewMode === 'grid'
-                  ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'
+                  ? `grid grid-cols-${gridCols} md:grid-cols-${gridCols + 1} lg:grid-cols-${gridCols + 2} gap-4`
                   : 'space-y-4' // List for outfits
                   }`}>
                   {(filteredContent as Outfit[]).map((outfit) => (
@@ -1067,6 +1073,28 @@ export default function ClosetPage() {
                   <span className="ml-auto">✓</span>
                 )}
               </button>
+
+              {/* Grid Column Selector */}
+              <div className="mt-6">
+                <p className="text-xs font-semibold text-[var(--foreground-tertiary)] uppercase tracking-wider mb-3 pl-1">Diseño de cuadrícula</p>
+                <div className="flex gap-2 bg-[var(--background-secondary)] p-1 rounded-2xl border border-[var(--border-color)]">
+                  {[2, 3, 4].map((cols) => (
+                    <button
+                      key={cols}
+                      onClick={() => setGridCols(cols)}
+                      className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 ${gridCols === cols
+                        ? 'bg-[var(--foreground)] text-[var(--background)] shadow-sm'
+                        : 'text-[var(--foreground-secondary)] hover:bg-[var(--border-color)]'
+                        }`}
+                    >
+                      {cols} x {cols}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-[10px] text-[var(--foreground-tertiary)] mt-2 pl-1 italic">
+                  Cambia cuántas prendas se ven por fila
+                </p>
+              </div>
             </div>
           </BubbleToggle>
 

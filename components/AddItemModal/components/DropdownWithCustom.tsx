@@ -8,12 +8,14 @@
  * - Smooth scale+fade animation originating from the trigger button
  * - Auto-detects available space: opens upward when there isn't enough room below
  * - Scroll-indicator gradients so users know more options exist
+ * - Search functionality to quickly filter options
  */
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, Check } from 'lucide-react';
+import { ChevronDown, Check, Search, Plus } from 'lucide-react';
 import type { DropdownWithCustomProps } from '../types';
+import { normalizeBrand } from '@/lib/utils/string';
 
 // ─── Shared animation config ─────────────────────────────────────────────────
 
@@ -60,6 +62,7 @@ export function DropdownWithCustom({
     const [isOpen, setIsOpen] = useState(false);
     const [showCustomInput, setShowCustomInput] = useState(false);
     const [customValue, setCustomValue] = useState('');
+    const [searchTerm, setSearchTerm] = useState('');
     const [canScrollUp, setCanScrollUp] = useState(false);
     const [canScrollDown, setCanScrollDown] = useState(false);
     const [openUpward, setOpenUpward] = useState(false);
@@ -68,6 +71,16 @@ export function DropdownWithCustom({
     const buttonRef = useRef<HTMLButtonElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const listRef = useRef<HTMLDivElement>(null);
+
+    const filteredOptions = options.filter(opt => {
+        const normalizedOpt = normalizeBrand(opt).toLowerCase();
+        const normalizedSearch = normalizeBrand(searchTerm).toLowerCase();
+        return normalizedOpt.includes(normalizedSearch);
+    });
+
+    const exactMatch = options.some(opt => 
+        normalizeBrand(opt).toLowerCase() === normalizeBrand(searchTerm).toLowerCase()
+    );
 
     // ── Scroll indicators ──────────────────────────────────────────────────
 
@@ -82,6 +95,8 @@ export function DropdownWithCustom({
         if (isOpen) {
             // Defer so the DOM is painted before measuring
             requestAnimationFrame(updateScrollIndicators);
+        } else {
+            setSearchTerm(''); // Reset search when closed
         }
     }, [isOpen, updateScrollIndicators]);
 
@@ -90,7 +105,7 @@ export function DropdownWithCustom({
     const calculateOpenDirection = useCallback(() => {
         if (!buttonRef.current) return;
         const rect = buttonRef.current.getBoundingClientRect();
-        const DROPDOWN_HEIGHT = 220; // conservative estimate for max-h-[220px]
+        const DROPDOWN_HEIGHT = 280; // adjusted for search input
         const spaceBelow = window.innerHeight - rect.bottom;
         const spaceAbove = rect.top;
         setOpenUpward(spaceBelow < DROPDOWN_HEIGHT && spaceAbove > DROPDOWN_HEIGHT);
@@ -152,6 +167,14 @@ export function DropdownWithCustom({
     const handleCustomChange = (val: string) => {
         setCustomValue(val);
         onChange(val);
+    };
+
+    const handleAddNew = () => {
+        const normalized = normalizeBrand(searchTerm);
+        if (!normalized) return;
+        onChange(normalized);
+        setSearchTerm('');
+        setIsOpen(false);
     };
 
     const displayValue = showCustomInput ? customValue || placeholder : value || placeholder;
@@ -222,10 +245,25 @@ export function DropdownWithCustom({
                             originY: openUpward ? 1 : 0,
                             width: dropdownRef.current?.offsetWidth,
                         }}
-                        className={`absolute z-[200] w-full rounded-2xl bg-[var(--background)] border border-[var(--border-color)] shadow-xl overflow-hidden will-change-transform ${
+                        className={`absolute z-[200] w-full rounded-2xl bg-[var(--background)] border border-[var(--border-color)] shadow-xl overflow-hidden will-change-transform flex flex-col ${
                             openUpward ? 'bottom-full mb-1' : 'top-full mt-1'
                         }`}
                     >
+                        {/* Search Input Container */}
+                        <div className="p-2 border-b border-[var(--border-color)] bg-[var(--background)]">
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--foreground-tertiary)]" />
+                                <input
+                                    type="text"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    placeholder="Buscar..."
+                                    className="w-full pl-9 pr-4 py-2 rounded-xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)]/30"
+                                    onClick={(e) => e.stopPropagation()}
+                                />
+                            </div>
+                        </div>
+
                         {/* Scroll-up gradient */}
                         <AnimatePresence>
                             {canScrollUp && (
@@ -234,7 +272,7 @@ export function DropdownWithCustom({
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
                                     transition={{ duration: 0.18 }}
-                                    className="absolute top-0 left-0 right-0 h-7 bg-gradient-to-b from-[var(--background)] to-transparent pointer-events-none z-10 rounded-t-2xl"
+                                    className="absolute top-[53px] left-0 right-0 h-7 bg-gradient-to-b from-[var(--background)] to-transparent pointer-events-none z-10"
                                 />
                             )}
                         </AnimatePresence>
@@ -245,21 +283,41 @@ export function DropdownWithCustom({
                             onScroll={updateScrollIndicators}
                             className="max-h-[220px] overflow-auto hide-scrollbar py-1"
                         >
-                            {options.map((option) => (
+                            {filteredOptions.length > 0 ? (
+                                filteredOptions.map((option) => (
+                                    <button
+                                        key={option}
+                                        type="button"
+                                        onClick={() => handleSelectOption(option)}
+                                        className={`w-full px-4 py-2.5 text-left text-sm flex items-center justify-between gap-2 transition-colors ${
+                                            value === option
+                                                ? 'text-[var(--brand-pink)] font-semibold bg-[var(--brand-pink)]/5'
+                                                : 'text-[var(--foreground)] hover:bg-[var(--background-secondary)]'
+                                        }`}
+                                    >
+                                        <span className="truncate">{option}</span>
+                                        {value === option && <Check className="w-4 h-4 flex-shrink-0" />}
+                                    </button>
+                                ))
+                            ) : searchTerm.trim() !== '' && !exactMatch ? (
                                 <button
-                                    key={option}
                                     type="button"
-                                    onClick={() => handleSelectOption(option)}
-                                    className={`w-full px-4 py-2.5 text-left text-sm flex items-center justify-between gap-2 transition-colors ${
-                                        value === option
-                                            ? 'text-[var(--brand-pink)] font-semibold bg-[var(--brand-pink)]/5'
-                                            : 'text-[var(--foreground)] hover:bg-[var(--background-secondary)]'
-                                    }`}
+                                    onClick={handleAddNew}
+                                    className="w-full px-4 py-3 text-left text-sm flex items-center gap-3 text-[var(--brand-pink)] hover:bg-[var(--brand-pink)]/5 transition-colors font-medium border-b border-[var(--border-color)]/50"
                                 >
-                                    <span className="truncate">{option}</span>
-                                    {value === option && <Check className="w-4 h-4 flex-shrink-0" />}
+                                    <div className="w-8 h-8 rounded-full bg-[var(--brand-pink)]/10 flex items-center justify-center">
+                                        <Plus className="w-4 h-4" />
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-xs opacity-70">Añadir nueva marca</span>
+                                        <span className="font-bold">"{normalizeBrand(searchTerm)}"</span>
+                                    </div>
                                 </button>
-                            ))}
+                            ) : (
+                                <div className="px-4 py-3 text-sm text-[var(--foreground-tertiary)] text-center">
+                                    No se encontraron resultados
+                                </div>
+                            )}
 
                             {/* Custom option */}
                             <button
@@ -279,7 +337,7 @@ export function DropdownWithCustom({
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
                                     transition={{ duration: 0.18 }}
-                                    className="absolute bottom-0 left-0 right-0 h-7 bg-gradient-to-t from-[var(--background)] to-transparent pointer-events-none z-10 rounded-b-2xl"
+                                    className="absolute bottom-0 left-0 right-0 h-7 bg-gradient-to-t from-[var(--background)] to-transparent pointer-events-none z-10"
                                 />
                             )}
                         </AnimatePresence>

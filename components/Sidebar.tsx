@@ -63,7 +63,7 @@ export default function Sidebar() {
 
   return (
     <>
-      <aside className="hidden md:flex flex-col w-[72px] h-screen sticky top-0 bg-[var(--background)] border-r border-[var(--border-color)] z-50 items-center py-6">
+      <aside className="hidden md:flex flex-col w-[72px] h-screen sticky top-0 bg-white border-r border-[var(--border-color)] z-50 items-center py-6">
         {/* Nav Items */}
         <nav className="flex-1 flex flex-col gap-6 w-full items-center">
           {navItems.map((item, index) => {
@@ -81,7 +81,7 @@ export default function Sidebar() {
                     className={`flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-200 
                             ${isActive
                         ? 'text-[var(--brand-pink)]'
-                        : 'text-black dark:text-white'
+                        : 'text-black'
                       }`}
                   >
                     <div className="relative flex items-center justify-center">
@@ -103,14 +103,14 @@ export default function Sidebar() {
                     className={`flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-200 
                         ${isActive
                         ? 'text-[var(--brand-pink)]'
-                        : 'text-black dark:text-white'
+                        : 'text-black'
                       }`}
                   >
                     <div className="relative flex items-center justify-center">
                       {item.isLogoMark ? (
                         <motion.div
                           whileTap={{ scale: 0.9 }}
-                          className="w-[27px] h-[27px] transition-colors duration-200 bg-[var(--brand-pink)]"
+                          className={`w-[27px] h-[27px] transition-colors duration-200 ${isActive ? 'bg-[var(--brand-pink)]' : 'bg-black'}`}
                           style={{
                             maskImage: `url(/klozet-logo-dark.png)`,
                             WebkitMaskImage: `url(/klozet-logo-dark.png)`,
@@ -131,7 +131,7 @@ export default function Sidebar() {
                           })}
 
                           {badgeCount > 0 && item.labelKey !== 'search' && (
-                            <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1.5 flex items-center justify-center bg-[var(--brand-pink)] text-white text-[10px] font-bold rounded-full border-2 border-[var(--background)]">
+                            <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1.5 flex items-center justify-center bg-[var(--brand-pink)] text-white text-[10px] font-bold rounded-full border-2 border-white">
                               {badgeCount > 99 ? '+99' : badgeCount}
                             </span>
                           )}

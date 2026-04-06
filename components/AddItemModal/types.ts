@@ -9,7 +9,7 @@ import type { ClothingItem } from '@/types/clothing';
 export interface AddItemModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onAdd: (item: Partial<ClothingItem>) => void | Promise<void>;
+    onAdd: (item: Partial<ClothingItem>) => void | Promise<void | boolean>;
     initialData?: ClothingItem;
     isEditing?: boolean;
 }
@@ -63,9 +63,6 @@ export interface ImageUploaderProps {
     isProcessing: boolean;
     processingMessage: string;
     onImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
-    onRotate: (degrees: number) => void;
-    onScale?: (scale: number) => void;
-    currentScale?: number;
 }
 
 // Image selector (for scraped images) props
@@ -76,7 +73,6 @@ export interface ImageSelectorProps {
     processingMessage: string;
     processedImage: string | null;
     onSelectImage: (imageUrl: string, index: number) => void;
-    onRotate: (degrees: number) => void;
 }
 
 // Color picker props

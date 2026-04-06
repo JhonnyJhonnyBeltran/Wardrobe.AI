@@ -114,6 +114,11 @@ html {
   --radius-full: 9999px;
 }
 
+/* ===== UTILITIES ===== */
+.safe-bottom {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem);
+}
+
 /* ===== DARK MODE (Contexto §6A: Negro puro + Gris carbón) ===== */
 .dark {
   --background: var(--pure-black);
