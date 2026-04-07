@@ -73,6 +73,7 @@ export interface ImageSelectorProps {
     processingMessage: string;
     processedImage: string | null;
     onSelectImage: (imageUrl: string, index: number) => void;
+    onRotate?: (direction: 'cw' | 'ccw') => void;
 }
 
 // Color picker props
