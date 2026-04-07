@@ -153,10 +153,16 @@ export default function AuthPage() {
                     <div className="w-16 h-16 rounded-full bg-[var(--brand-pink)]/10 flex items-center justify-center mx-auto mb-4">
                         <Mail className="w-8 h-8 text-[var(--brand-pink)]" />
                     </div>
-                    <h2 className="text-2xl font-bold text-[var(--foreground)] mb-3">Confirma tu email</h2>
-                    <p className="text-[var(--foreground-secondary)] mb-6">
-                        Te hemos enviado un email a <strong>{email}</strong>. Haz clic en el enlace para activar tu cuenta.
+                    <h2 className="text-2xl font-bold text-[var(--foreground)] mb-3">Revisa tu bandeja</h2>
+                    <p className="text-[var(--foreground-secondary)] mb-4">
+                        Te hemos enviado un enlace de confirmación a <strong className="text-[var(--foreground)]">{email}</strong>.
                     </p>
+                    <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl px-4 py-3 mb-6 text-left">
+                        <p className="text-amber-400 text-xs font-semibold mb-1">¿No lo ves?</p>
+                        <p className="text-amber-400/80 text-xs leading-relaxed">
+                            Revisa la carpeta de <strong>SPAM o correo no deseado</strong>. A veces los filtros lo mandan ahí.
+                        </p>
+                    </div>
                     <button
                         onClick={() => { setEmailConfirmPending(false); setIsLogin(true); }}
                         className="text-sm font-semibold text-[var(--brand-pink)] hover:underline"
