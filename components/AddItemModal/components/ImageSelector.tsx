@@ -89,7 +89,7 @@ export function ImageSelector({
                     <div className="flex justify-center gap-2 mt-2">
                         <button
                             type="button"
-                            onClick={() => onRotate(-90)}
+                            onClick={() => onRotate?.(-90)}
                             disabled={isProcessing}
                             className="px-3 py-2 rounded-xl bg-[var(--background-secondary)] border border-[var(--border-color)] flex items-center gap-1 hover:bg-[var(--background-tertiary)] transition-colors disabled:opacity-50"
                         >
@@ -98,7 +98,7 @@ export function ImageSelector({
                         </button>
                         <button
                             type="button"
-                            onClick={() => onRotate(90)}
+                            onClick={() => onRotate?.(90)}
                             disabled={isProcessing}
                             className="px-3 py-2 rounded-xl bg-[var(--background-secondary)] border border-[var(--border-color)] flex items-center gap-1 hover:bg-[var(--background-tertiary)] transition-colors disabled:opacity-50"
                         >
