@@ -11,7 +11,7 @@ import type { User as SupabaseUser } from '@supabase/supabase-js';
 interface UseAuthReturn {
   user: SupabaseUser | null;
   loading: boolean;
-  signUp: (email: string, password: string, name?: string, username?: string) => Promise<{ success: boolean; error?: string }>;
+  signUp: (email: string, password: string, name?: string, username?: string) => Promise<{ success: boolean; error?: string; hasSession?: boolean }>;
   signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
@@ -107,12 +107,17 @@ export function useAuth(): UseAuthReturn {
 
   const signUp = async (email: string, password: string, name?: string, username?: string) => {
     try {
+      const redirectTo = typeof window !== 'undefined'
+        ? `${window.location.origin}/auth/callback`
+        : undefined;
+
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
+          emailRedirectTo: redirectTo,
           data: {
-            name: name || email.split('@')[0],
+            full_name: name || email.split('@')[0],
             username: username,
           },
         },
@@ -120,15 +125,17 @@ export function useAuth(): UseAuthReturn {
 
       if (error) throw error;
 
-      return { success: true };
+      // If session is returned, email confirmation is disabled — user is logged in immediately
+      const hasSession = !!data.session;
+      return { success: true, hasSession };
     } catch (error: any) {
-      return { success: false, error: error.message };
+      return { success: false, error: error.message, hasSession: false };
     }
   };
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
