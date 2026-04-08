@@ -12,6 +12,7 @@
  */
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { useDropdownScrollLock } from '@/lib/hooks';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, Check, Search, Plus } from 'lucide-react';
 import type { DropdownWithCustomProps } from '../types';
@@ -72,13 +73,16 @@ export function DropdownWithCustom({
     const inputRef = useRef<HTMLInputElement>(null);
     const listRef = useRef<HTMLDivElement>(null);
 
+    // Prevent the modal scroll container from scrolling while dropdown is open
+    useDropdownScrollLock(isOpen, dropdownRef);
+
     const filteredOptions = options.filter(opt => {
         const normalizedOpt = normalizeBrand(opt).toLowerCase();
         const normalizedSearch = normalizeBrand(searchTerm).toLowerCase();
         return normalizedOpt.includes(normalizedSearch);
     });
 
-    const exactMatch = options.some(opt => 
+    const exactMatch = options.some(opt =>
         normalizeBrand(opt).toLowerCase() === normalizeBrand(searchTerm).toLowerCase()
     );
 
@@ -142,7 +146,7 @@ export function DropdownWithCustom({
             setCustomValue(value);
             setShowCustomInput(true);
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // ── Handlers ───────────────────────────────────────────────────────────
@@ -245,9 +249,8 @@ export function DropdownWithCustom({
                             originY: openUpward ? 1 : 0,
                             width: dropdownRef.current?.offsetWidth,
                         }}
-                        className={`absolute z-[200] w-full rounded-2xl bg-[var(--background)] border border-[var(--border-color)] shadow-xl overflow-hidden will-change-transform flex flex-col ${
-                            openUpward ? 'bottom-full mb-1' : 'top-full mt-1'
-                        }`}
+                        className={`absolute z-[200] w-full rounded-2xl bg-[var(--background)] border border-[var(--border-color)] shadow-xl overflow-hidden will-change-transform flex flex-col ${openUpward ? 'bottom-full mb-1' : 'top-full mt-1'
+                            }`}
                     >
                         {/* Search Input Container */}
                         <div className="p-2 border-b border-[var(--border-color)] bg-[var(--background)]">
@@ -289,11 +292,10 @@ export function DropdownWithCustom({
                                         key={option}
                                         type="button"
                                         onClick={() => handleSelectOption(option)}
-                                        className={`w-full px-4 py-2.5 text-left text-sm flex items-center justify-between gap-2 transition-colors ${
-                                            value === option
+                                        className={`w-full px-4 py-2.5 text-left text-sm flex items-center justify-between gap-2 transition-colors ${value === option
                                                 ? 'text-[var(--brand-pink)] font-semibold bg-[var(--brand-pink)]/5'
                                                 : 'text-[var(--foreground)] hover:bg-[var(--background-secondary)]'
-                                        }`}
+                                            }`}
                                     >
                                         <span className="truncate">{option}</span>
                                         {value === option && <Check className="w-4 h-4 flex-shrink-0" />}

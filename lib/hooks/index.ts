@@ -18,3 +18,4 @@ export { useTypingIndicator } from './useTypingIndicator';
 // Message hooks
 export { useUnreadMessages } from './useUnreadMessages';
 export { useBodyScrollLock } from './useBodyScrollLock';
+export { useDropdownScrollLock } from './useDropdownScrollLock';

@@ -55,12 +55,12 @@ export default function AppLayout({ children }: AppLayoutProps) {
     pathname.startsWith('/profile/settings');
 
   return (
-    <div className="flex min-h-screen bg-[var(--background)]">
+    <div className="flex min-h-[100dvh] bg-[var(--background)] overflow-x-hidden">
       {/* Desktop Sidebar */}
       <Sidebar />
 
       {/* Main Content */}
-      <main className={`flex-1 ${hideTabBar ? 'pb-0' : 'pb-28 md:pb-0'}`}>
+      <main className={`flex-1 relative ${hideTabBar ? 'pb-0' : 'pb-28 md:pb-0'}`}>
         <AuthGuard>
           {children}
         </AuthGuard>

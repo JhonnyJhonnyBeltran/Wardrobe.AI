@@ -63,7 +63,7 @@ export default function Sidebar() {
 
   return (
     <>
-      <aside className="hidden md:flex flex-col w-[72px] h-screen sticky top-0 bg-white border-r border-[var(--border-color)] z-50 items-center py-6">
+      <aside className="hidden md:flex flex-col w-[72px] h-screen sticky top-0 bg-white border-r border-[var(--border-color)] z-[5001] items-center py-6 will-change-transform isolate">
         {/* Nav Items */}
         <nav className="flex-1 flex flex-col gap-6 w-full items-center">
           {navItems.map((item, index) => {
