@@ -22,12 +22,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
-        // Get theme from localStorage or system preference
+        // Get theme from localStorage
         const storedTheme = localStorage.getItem('klozet_theme') as Theme | null;
         if (storedTheme) {
             setTheme(storedTheme);
-        } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-            setTheme('dark');
         }
         setMounted(true);
     }, []);

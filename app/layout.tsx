@@ -13,6 +13,10 @@ export const metadata: Metadata = {
   title: "Klozet - Tu Asistente de Moda IA",
   description: "Genera outfits perfectos con inteligencia artificial. Tu estilista personal disponible 24/7.",
   manifest: "/manifest.json",
+  icons: {
+    icon: "/klozet-logo-dark.png",
+    apple: "/klozet-logo-dark.png",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
