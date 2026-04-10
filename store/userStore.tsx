@@ -29,6 +29,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<UserProfile | null>(null);
   const [preferences, setPreferences] = useState<UserPreferences>({});
+  const userIdRef = useRef<string | null>(null);
 
   // Fetch user profile from DB
   const fetchUserProfile = async (authUser: SupabaseUser) => {
@@ -103,40 +104,65 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const userIdRef = useRef<string | null>(null);
-
   useEffect(() => {
     let isMounted = true;
-
-    // 1. Check active session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (session?.user) {
-        userIdRef.current = session.user.id;
-        await fetchUserProfile(session.user);
-      } else {
-        if (isMounted) setUser(null);
+    
+    // Safety timeout: ensure loading state is cleared after a maximum of 5s
+    // to prevent getting stuck if auth fails to resolve
+    const safetyTimeout = setTimeout(() => {
+      if (isMounted && isLoading) {
+        console.warn('[UserStore] Auth resolution timed out.');
+        setIsLoading(false);
       }
-      if (isMounted) setIsLoading(false);
-    });
+    }, 5000);
 
-    // 2. Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (session?.user) {
-        // Track the current session.user.id via ref to avoid stale closures
-        if (session.user.id !== userIdRef.current || !user) {
+    const initAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
           userIdRef.current = session.user.id;
           await fetchUserProfile(session.user);
+        } else {
+          if (isMounted) setUser(null);
+        }
+      } catch (error) {
+        console.error('[UserStore] Session check error:', error);
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+          clearTimeout(safetyTimeout);
+        }
+      }
+    };
+
+    initAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (!isMounted) return;
+      
+      console.log(`[UserStore] Auth event: ${event}`);
+      clearTimeout(safetyTimeout);
+
+      if (session?.user) {
+        if (session.user.id !== userIdRef.current || event === 'SIGNED_IN') {
+          userIdRef.current = session.user.id;
+          setIsLoading(true);
+          await fetchUserProfile(session.user);
+          setIsLoading(false);
+        } else {
+          setIsLoading(false);
         }
       } else {
         userIdRef.current = null;
-        if (isMounted) setUser(null);
+        setUser(null);
+        setIsLoading(false);
       }
-      if (isMounted) setIsLoading(false);
     });
 
     return () => {
       isMounted = false;
       subscription.unsubscribe();
+      clearTimeout(safetyTimeout);
     };
   }, []);
 

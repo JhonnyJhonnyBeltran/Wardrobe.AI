@@ -65,26 +65,31 @@ export function useWardrobe(): UseWardrobeReturn {
     return storeToggleFavorite(user.id, id);
   }, [user?.id, storeToggleFavorite]);
 
-  // Initial fetch on mount
+  // Initial fetch on mount or user change
   useEffect(() => {
-    if (user?.id && items.length === 0 && !loading) {
-      fetchItems(user.id);
+    let isMounted = true;
+
+    if (user?.id) {
+       // Only fetch if we are not already loading and we don't have items OR we explicitly want to refresh
+       if (!loading && items.length === 0) {
+         fetchItems(user.id);
+       }
     }
     
     // Subscribe to auth changes to clear or refresh
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_OUT') {
-        useWardrobeStore.setState({ items: [], loading: false, error: null });
-      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        // Only fetch if we have a user
-        supabase.auth.getUser().then(({ data: { user: authUser } }) => {
-          if (authUser) fetchItems(authUser.id);
-        });
+        useWardrobeStore.setState({ items: [], loading: false, error: null, hasMore: true, page: 0 });
+      } else if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {
+        if (isMounted) fetchItems(session.user.id);
       }
     });
 
-    return () => subscription.unsubscribe();
-  }, [user?.id, fetchItems]); // Removed items.length and loading from deps to avoid infinite loops, handeled inside
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
+  }, [user?.id, fetchItems]); 
 
   return {
     items,

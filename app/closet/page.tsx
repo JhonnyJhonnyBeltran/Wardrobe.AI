@@ -40,6 +40,8 @@ export default function ClosetPage() {
   const [gridCols, setGridCols] = useState(2);
   const [showFilters, setShowFilters] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<ClothingItemType | null>(null);
+  const [selectedOutfit, setSelectedOutfit] = useState<Outfit | null>(null);
 
   // Auto-hide Header State
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
@@ -317,13 +319,7 @@ export default function ClosetPage() {
   // Removed faulty user.styleCompleted redirect that caused blank screens on client-side routing
 
 
-  // Product Modal State
-  const [selectedProduct, setSelectedProduct] = useState<(OutfitItem & { sourceUrl?: string }) | null>(null);
-  const [showProductModal, setShowProductModal] = useState(false);
   const [shareOutfit, setShareOutfit] = useState<any | null>(null); // State for sharing outfit
-
-  // Outfit Detail Modal State
-  const [selectedOutfit, setSelectedOutfit] = useState<Outfit | null>(null);
 
   const handleFavoriteToggle = async (id: string) => {
     const isFav = favorites.has(id);
@@ -432,8 +428,7 @@ export default function ClosetPage() {
   };
 
 
-  // Products/Items State
-  const [selectedItem, setSelectedItem] = useState<ClothingItemType | null>(null);
+
 
   // Filter content based on active tab
   const filteredContent = activeTab === 'items'
@@ -506,8 +501,33 @@ export default function ClosetPage() {
       <List className="w-5 h-5 text-[var(--foreground)]" />;
   };
 
+  const { setTabBarHidden } = useUiStore();
+
+  // Handle mobile-only navbar hiding (Standardized for all detail modals)
+  useEffect(() => {
+    const handleResize = () => {
+      const isMobile = window.innerWidth < 768;
+      const hasModalOpen = !!selectedItem || !!selectedOutfit || showAddModal;
+      
+      if (isMobile) {
+        setTabBarHidden(hasModalOpen);
+      } else {
+        // En escritorio nunca ocultamos el navbar (sidebar)
+        setTabBarHidden(false);
+      }
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      setTabBarHidden(false);
+    };
+  }, [selectedItem, selectedOutfit, showAddModal, setTabBarHidden]);
+
   return (
-    <motion.div
+    <>
+      <motion.div
       className="min-h-screen bg-[var(--background)] pb-24 md:pb-8 relative overflow-hidden touch-pan-y"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -850,114 +870,6 @@ export default function ClosetPage() {
 
       </main>
 
-      {/* Modals — always mounted, internal AnimatePresence handles exit */}
-      <AddItemModal
-        isOpen={showAddModal}
-        onClose={() => {
-          setShowAddModal(false);
-          setEditingItem(null);
-        }}
-        initialData={editingItem || undefined}
-        isEditing={!!editingItem}
-        onAdd={async (partial) => {
-          if (editingItem && editingItem.id) {
-            await updateItem(editingItem.id, partial as any);
-          } else {
-            await addItem(partial as any);
-          }
-          setEditingItem(null); // Reset after save
-        }}
-      />
-
-      <ProductModal
-        item={selectedItem ? {
-          ...selectedItem,
-          type: selectedItem.category,
-          source: 'Closet',
-          trending: false,
-          matchScore: 0,
-          imageUrl: selectedItem.imageUrl || '',
-        } as any : null}
-        isOpen={!!selectedItem}
-        onClose={() => setSelectedItem(null)}
-        onEdit={handleEditItem}
-        onDelete={async (id: string) => {
-          const usage = await checkItemUsage([id]);
-          const count = usage[id] || 0;
-
-          if (count > 0) {
-            useUiStore.getState().showModal({
-              title: 'Prenda en uso',
-              message: `Esta prenda forma parte de ${count} outfit(s). Si la borras, esos outfits quedarán incompletos. ¿Estás seguro de que quieres eliminarla?`,
-              type: 'warning',
-              confirmText: 'Sí, eliminar',
-              cancelText: 'Cancelar',
-              onConfirm: async () => {
-                await deleteItem(id);
-                setSelectedItem(null);
-              }
-            });
-          } else {
-            useUiStore.getState().showModal({
-              title: 'Eliminar prenda',
-              message: '¿Estás seguro de que quieres eliminar esta prenda? Esta acción no se puede deshacer.',
-              type: 'warning',
-              confirmText: 'Eliminar',
-              cancelText: 'Cancelar',
-              onConfirm: async () => {
-                await deleteItem(id);
-                setSelectedItem(null);
-              }
-            });
-          }
-        }}
-      />
-
-      <OutfitDetailModal
-        isOpen={!!selectedOutfit}
-        onClose={() => setSelectedOutfit(null)}
-        // @ts-ignore
-        outfit={selectedOutfit}
-        onDelete={async (id) => {
-          const usage = await checkOutfitUsage([id]);
-          const count = usage[id] || 0;
-
-          if (count > 0) {
-            useUiStore.getState().showModal({
-              title: 'Outfit publicado',
-              message: `Este outfit forma parte de ${count} publicación(es). Si lo borras, las publicaciones podrían verse afectadas. ¿Estás seguro de que quieres eliminarlo?`,
-              type: 'warning',
-              confirmText: 'Sí, eliminar',
-              cancelText: 'Cancelar',
-              onConfirm: async () => {
-                await supabase.from('outfit_items').delete().eq('outfit_id', id);
-                const { error } = await supabase.from('outfits').delete().eq('id', id);
-                if (error) {
-                  console.error('Error deleting outfit:', error);
-                  return;
-                }
-                setOutfits(prev => prev.filter(o => o.id !== id));
-                setSelectedOutfit(null);
-              }
-            });
-          } else {
-            useUiStore.getState().showModal({
-              title: 'Eliminar outfit',
-              message: '¿Estás seguro de que quieres eliminar este outfit? Esta acción no se puede deshacer.',
-              type: 'warning',
-              confirmText: 'Eliminar',
-              cancelText: 'Cancelar',
-              onConfirm: async () => {
-                await supabase.from('outfit_items').delete().eq('outfit_id', id);
-                await supabase.from('outfits').delete().eq('id', id);
-                setOutfits(prev => prev.filter(o => o.id !== id));
-                setSelectedOutfit(null);
-              }
-            });
-          }
-        }}
-      />
-
       {/* FAB stack: Filter + Add — always stacked, fully responsive */}
       {!showAddModal && !selectedItem && (
         <div className="fixed bottom-24 md:bottom-6 right-6 z-[5005] flex flex-col items-end gap-3">
@@ -1283,5 +1195,114 @@ export default function ClosetPage() {
         )}
       </AnimatePresence>
     </motion.div>
+
+      {/* Modals — moved outside draggable container to fix fixed positioning */}
+      <AddItemModal
+        isOpen={showAddModal}
+        onClose={() => {
+          setShowAddModal(false);
+          setEditingItem(null);
+        }}
+        initialData={editingItem || undefined}
+        isEditing={!!editingItem}
+        onAdd={async (partial) => {
+          if (editingItem && editingItem.id) {
+            await updateItem(editingItem.id, partial as any);
+          } else {
+            await addItem(partial as any);
+          }
+          setEditingItem(null); // Reset after save
+        }}
+      />
+
+      <ProductModal
+        item={selectedItem ? {
+          ...selectedItem,
+          type: selectedItem.category,
+          source: 'Closet',
+          trending: false,
+          matchScore: 0,
+          imageUrl: selectedItem.imageUrl || '',
+        } as any : null}
+        isOpen={!!selectedItem}
+        onClose={() => setSelectedItem(null)}
+        onEdit={handleEditItem}
+        onDelete={async (id: string) => {
+          const usage = await checkItemUsage([id]);
+          const count = usage[id] || 0;
+
+          if (count > 0) {
+            useUiStore.getState().showModal({
+              title: 'Prenda en uso',
+              message: `Esta prenda forma parte de ${count} outfit(s). Si la borras, esos outfits quedarán incompletos. ¿Estás seguro de que quieres eliminarla?`,
+              type: 'warning',
+              confirmText: 'Sí, eliminar',
+              cancelText: 'Cancelar',
+              onConfirm: async () => {
+                await deleteItem(id);
+                setSelectedItem(null);
+              }
+            });
+          } else {
+            useUiStore.getState().showModal({
+              title: 'Eliminar prenda',
+              message: '¿Estás seguro de que quieres eliminar esta prenda? Esta acción no se puede deshacer.',
+              type: 'warning',
+              confirmText: 'Eliminar',
+              cancelText: 'Cancelar',
+              onConfirm: async () => {
+                await deleteItem(id);
+                setSelectedItem(null);
+              }
+            });
+          }
+        }}
+      />
+
+      <OutfitDetailModal
+        isOpen={!!selectedOutfit}
+        onClose={() => setSelectedOutfit(null)}
+        // @ts-ignore
+        outfit={selectedOutfit}
+        onDelete={async (id) => {
+          const usage = await checkOutfitUsage([id]);
+          const count = usage[id] || 0;
+
+          if (count > 0) {
+            useUiStore.getState().showModal({
+              title: 'Outfit publicado',
+              message: `Este outfit forma parte de ${count} publicación(es). Si lo borras, las publicaciones podrían verse afectadas. ¿Estás seguro de que quieres eliminarlo?`,
+              type: 'warning',
+              confirmText: 'Sí, eliminar',
+              cancelText: 'Cancelar',
+              onConfirm: async () => {
+                await supabase.from('outfit_items').delete().eq('outfit_id', id);
+                const { error } = await supabase.from('outfits').delete().eq('id', id);
+                if (error) {
+                  console.error('Error deleting outfit:', error);
+                  return;
+                }
+                setOutfits(prev => prev.filter(o => o.id !== id));
+                setSelectedOutfit(null);
+              }
+            });
+          } else {
+            useUiStore.getState().showModal({
+              title: 'Eliminar outfit',
+              message: '¿Estás seguro de que quieres eliminar este outfit? Esta acción no se puede deshacer.',
+              type: 'warning',
+              confirmText: 'Eliminar',
+              cancelText: 'Cancelar',
+              onConfirm: async () => {
+                await supabase.from('outfit_items').delete().eq('outfit_id', id);
+                await supabase.from('outfits').delete().eq('id', id);
+                setOutfits(prev => prev.filter(o => o.id !== id));
+                setSelectedOutfit(null);
+              }
+            });
+          }
+        }}
+      />
+    </>
   );
 }

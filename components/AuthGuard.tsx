@@ -18,10 +18,13 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   // Redirect to onboarding if needed
   // useEffect removed since styleCompleted check is faulty
 
-  if (isLoading) {
+  // If it's a public path, we can allow rendering even if loading,
+  // to avoid getting stuck on a blank screen for visitors.
+  if (isLoading && !isPublicPath) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-sm text-[var(--foreground-tertiary)]">Cargando...</p>
+      <div className="min-h-[100dvh] flex flex-col items-center justify-center bg-[var(--background)] animate-in fade-in duration-500">
+        <div className="w-10 h-10 border-4 border-[var(--brand-pink)]/30 border-t-[var(--brand-pink)] rounded-full animate-spin mb-4" />
+        <p className="text-sm font-medium text-[var(--foreground-secondary)] tracking-wide">Cargando tu armario...</p>
       </div>
     );
   }

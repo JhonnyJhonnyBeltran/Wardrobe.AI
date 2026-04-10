@@ -47,18 +47,31 @@ export default function PostDetailPage() {
     const [showSwipeHint, setShowSwipeHint] = useState(true);
     const [showOptions, setShowOptions] = useState(false);
     const [deleting, setDeleting] = useState(false);
+    const [selectedItem, setSelectedItem] = useState<any | null>(null);
 
     const { showSaveToast, openFolderModal, setTabBarHidden } = useUiStore();
 
-    // Sync mobile comments visibility with global TabBar state
+    // Sync mobile comments and item drawer visibility with global TabBar state
     useEffect(() => {
-        setTabBarHidden(showMobileComments);
-        // Reset on unmount
-        return () => setTabBarHidden(false);
-    }, [showMobileComments, setTabBarHidden]);
+        const handleResize = () => {
+            const isMobile = window.innerWidth < 768;
+            const hasOverlayOpen = showMobileComments || !!selectedItem;
+            
+            if (isMobile) {
+                setTabBarHidden(hasOverlayOpen);
+            } else {
+                setTabBarHidden(false);
+            }
+        };
 
-    // For Outfit Item details modal
-    const [selectedItem, setSelectedItem] = useState<any | null>(null);
+        handleResize();
+        window.addEventListener('resize', handleResize);
+        return () => {
+            window.removeEventListener('resize', handleResize);
+            setTabBarHidden(false);
+        };
+    }, [showMobileComments, selectedItem, setTabBarHidden]);
+
     useBodyScrollLock(!!selectedItem);
 
     const commentInputRef = useRef<HTMLInputElement>(null);

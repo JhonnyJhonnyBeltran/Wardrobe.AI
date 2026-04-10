@@ -70,7 +70,7 @@ export default function NotificationList({ compact = false, onClose }: Notificat
             // Always start loading when effect runs
             if (isMounted) setLoading(true);
 
-            if (!user) {
+            if (!user?.id) {
                 if (isMounted) setLoading(false);
                 return;
             };

@@ -111,7 +111,7 @@ export default function MessagesPage() {
         const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
         const fetchConversations = async () => {
-            if (!user) {
+            if (!user?.id) {
                 if (isMounted) setLoading(false);
                 return;
             }
