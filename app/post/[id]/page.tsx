@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { ArrowLeft, Heart, MessageCircle, Bookmark, Share2, MoreHorizontal, X, Send, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Heart, MessageCircle, Bookmark, Share2, MoreHorizontal, MoreVertical, X, Send, ChevronLeft, ChevronRight, Edit2, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';
 import { useUser } from '@/store/userStore';
@@ -45,8 +45,17 @@ export default function PostDetailPage() {
     const [showMobileComments, setShowMobileComments] = useState(false);
     const [showSaveModal, setShowSaveModal] = useState(false);
     const [showSwipeHint, setShowSwipeHint] = useState(true);
+    const [showOptions, setShowOptions] = useState(false);
+    const [deleting, setDeleting] = useState(false);
 
-    const { showSaveToast, openFolderModal } = useUiStore();
+    const { showSaveToast, openFolderModal, setTabBarHidden } = useUiStore();
+
+    // Sync mobile comments visibility with global TabBar state
+    useEffect(() => {
+        setTabBarHidden(showMobileComments);
+        // Reset on unmount
+        return () => setTabBarHidden(false);
+    }, [showMobileComments, setTabBarHidden]);
 
     // For Outfit Item details modal
     const [selectedItem, setSelectedItem] = useState<any | null>(null);
@@ -149,20 +158,34 @@ export default function PostDetailPage() {
     // Build Slides Array
     const getSlides = useCallback(() => {
         const slides: { type: 'photo' | 'outfit'; url?: string; outfit?: any }[] = [];
-        // @ts-ignore
-        if (post?.image_url) slides.push({ type: 'photo', url: post.image_url });
-        // @ts-ignore
-        if (post?.outfits) {
-            slides.push({ type: 'outfit', outfit: post.outfits });
+        
+        // 1. Photo Slide
+        if (post?.image_url) {
+            slides.push({ type: 'photo', url: post.image_url });
         }
-        if (slides.length === 0) slides.push({ type: 'photo', url: '/placeholder.png' });
+        
+        // 2. Outfit Slide
+        if (post?.outfits) {
+            const outfitData = Array.isArray(post.outfits) ? post.outfits[0] : post.outfits;
+            if (outfitData) {
+                slides.push({ type: 'outfit', outfit: outfitData });
+            }
+        }
+        
+        // Fallback
+        if (slides.length === 0) {
+            slides.push({ type: 'photo', url: '/placeholder.png' });
+        }
+        
         return slides;
     }, [post]);
 
     const slides = getSlides();
     const currentSlide = slides[activeSlide] || slides[0];
-    // @ts-ignore
-    const author = post?.profiles || {};
+    
+    // Normalize author data
+    const authorRaw = post?.profiles;
+    const author = Array.isArray(authorRaw) ? authorRaw[0] : (authorRaw || {});
 
     // Handle Interactions
     const toggleLike = async () => {
@@ -370,6 +393,37 @@ export default function PostDetailPage() {
             setSubmittingComment(false);
         }
     };
+    
+    // Deletion and Editing handlers
+    const handleDeletePost = async () => {
+        if (!user || user.id !== post.user_id) return;
+        
+        const confirmed = window.confirm('¿Estás seguro de que quieres borrar esta publicación? Esta acción no se puede deshacer.');
+        if (!confirmed) return;
+        
+        setDeleting(true);
+        try {
+            const { error } = await supabase
+                .from('posts')
+                .delete()
+                .eq('id', postId);
+                
+            if (error) throw error;
+            
+            showSaveToast({ message: "Publicación eliminada", actionLabel: "" });
+            router.push('/profile');
+        } catch (error) {
+            console.error('Error deleting post:', error);
+            alert('Error al eliminar la publicación.');
+        } finally {
+            setDeleting(false);
+            setShowOptions(false);
+        }
+    };
+    
+    const handleEditPost = () => {
+        router.push(`/create-post?postId=${postId}`);
+    };
 
     const handleBack = () => router.back();
 
@@ -403,13 +457,57 @@ export default function PostDetailPage() {
                     <span className="font-semibold text-[15px] text-gray-900 dark:text-white truncate">{author.username}</span>
                 </Link>
 
-                {/* Right: Follow button (if not own post) */}
-                <div className="flex items-center">
+                {/* Right: Actions */}
+                <div className="flex items-center gap-1 relative">
+                    {/* Follow button (if not own post) */}
                     {/* @ts-ignore */}
-                    {user?.id !== post.user_id && (
+                    {user?.id !== post.user_id ? (
                         <button onClick={toggleFollow} className={`px-4 py-1.5 rounded-full font-bold text-xs transition-all ${isFollowing ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white' : 'bg-[var(--brand-pink)] text-white hover:bg-[var(--brand-pink-dark)]'}`}>
                             {isFollowing ? 'Siguiendo' : 'Seguir'}
                         </button>
+                    ) : (
+                        <div className="relative">
+                            <button 
+                                onClick={() => setShowOptions(!showOptions)}
+                                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+                            >
+                                <MoreVertical className="w-6 h-6 text-gray-900 dark:text-white" />
+                            </button>
+                            
+                            <AnimatePresence>
+                                {showOptions && (
+                                    <>
+                                        {/* Backdrop to close menu */}
+                                        <div 
+                                            className="fixed inset-0 z-40" 
+                                            onClick={() => setShowOptions(false)}
+                                        />
+                                        <motion.div
+                                            initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                                            exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                                            className="absolute right-0 mt-2 w-48 bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 py-2 z-50 overflow-hidden"
+                                        >
+                                            <button
+                                                onClick={handleEditPost}
+                                                className="w-full px-4 py-3 flex items-center gap-3 text-sm font-semibold text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                                            >
+                                                <Edit2 className="w-4 h-4" />
+                                                Editar publicación
+                                            </button>
+                                            <button
+                                                onClick={handleDeletePost}
+                                                disabled={deleting}
+                                                className="w-full px-4 py-3 flex items-center gap-3 text-sm font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                                {deleting ? 'Borrando...' : 'Borrar publicación'}
+                                            </button>
+                                        </motion.div>
+                                    </>
+                                )}
+                            </AnimatePresence>
+                        </div>
                     )}
                 </div>
             </header>
@@ -502,16 +600,18 @@ export default function PostDetailPage() {
                     <>
                         <button
                             onClick={(e) => { e.stopPropagation(); setActiveSlide(prev => prev === 0 ? slides.length - 1 : prev - 1); setShowSwipeHint(false); }}
-                            className="hidden md:flex absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 hover:bg-white dark:bg-black/60 dark:hover:bg-black items-center justify-center shadow-lg z-30 transition-all"
+                            className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/90 hover:bg-white dark:bg-black/70 dark:hover:bg-black items-center justify-center shadow-[0_4px_20px_rgba(0,0,0,0.15)] z-30 transition-all duration-300 hover:scale-110 active:scale-95 group/btn"
+                            aria-label="Anterior"
                         >
-                            <ChevronLeft className="w-6 h-6 text-gray-900 dark:text-white" />
+                            <ChevronLeft className="w-6 h-6 text-gray-900 dark:text-white group-hover/btn:-translate-x-0.5 transition-transform" />
                         </button>
 
                         <button
                             onClick={(e) => { e.stopPropagation(); setActiveSlide(prev => prev === slides.length - 1 ? 0 : prev + 1); setShowSwipeHint(false); }}
-                            className="hidden md:flex absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/80 hover:bg-white dark:bg-black/60 dark:hover:bg-black items-center justify-center shadow-lg z-30 transition-all"
+                            className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/90 hover:bg-white dark:bg-black/70 dark:hover:bg-black items-center justify-center shadow-[0_4px_20px_rgba(0,0,0,0.15)] z-30 transition-all duration-300 hover:scale-110 active:scale-95 group/btn"
+                            aria-label="Siguiente"
                         >
-                            <ChevronRight className="w-6 h-6 text-gray-900 dark:text-white" />
+                            <ChevronRight className="w-6 h-6 text-gray-900 dark:text-white group-hover/btn:translate-x-0.5 transition-transform" />
                         </button>
 
                         {/* Dots indicator - refined with morphing effect */}
@@ -654,9 +754,9 @@ export default function PostDetailPage() {
                 )}
             </div>
 
-            {/* Add Comment Input - Always visible at bottom of scroll inside right col */}
+            {/* Add Comment Input - Hidden on mobile, sticky bottom on desktop */}
             {currentSlide.type !== 'outfit' && (
-                <form onSubmit={handleAddComment} className="px-4 py-4 border-t border-gray-100 dark:border-gray-800 flex gap-3 items-center sticky bottom-[64px] md:bottom-0 bg-white dark:bg-black flex-shrink-0 w-full z-10">
+                <form onSubmit={handleAddComment} className="hidden md:flex px-4 py-4 border-t border-gray-100 dark:border-gray-800 gap-3 items-center md:sticky md:bottom-0 bg-white dark:bg-black flex-shrink-0 w-full z-10">
                     <Avatar src={user?.avatar || null} alt="Tú" size="sm" />
                     <div className="flex-1">
                         <input
@@ -726,7 +826,11 @@ export default function PostDetailPage() {
                             )}
                         </div>
 
-                        <form onSubmit={handleAddComment} className="py-4 flex gap-3 items-center border-t border-gray-100 dark:border-gray-800 px-6">
+                        {/* Comment Input in Overlay - Sticky at bottom */}
+                        <form 
+                            onSubmit={handleAddComment} 
+                            className="pb-safe pt-4 flex gap-3 items-center border-t border-gray-100 dark:border-gray-800 px-6 bg-white dark:bg-black"
+                        >
                             <Avatar src={user?.avatar || null} alt="Tú" size="md" />
                             <div className="flex-1">
                                 <input
@@ -735,12 +839,13 @@ export default function PostDetailPage() {
                                     className="w-full bg-gray-100 dark:bg-gray-800 rounded-full px-5 py-3.5 text-[15px] text-gray-900 dark:text-white placeholder-gray-400 outline-none"
                                     value={newComment}
                                     onChange={(e) => setNewComment(e.target.value)}
+                                    autoFocus
                                 />
                             </div>
                             <button
                                 type="submit"
                                 disabled={!newComment.trim() || submittingComment}
-                                className="p-3.5 bg-[var(--brand-pink)] text-white rounded-full hover:bg-[var(--brand-pink-dark)] disabled:opacity-50 transition-colors"
+                                className="p-3.5 bg-[var(--brand-pink)] text-white rounded-full hover:bg-[var(--brand-pink-dark)] disabled:opacity-50 transition-colors shadow-lg shadow-[var(--brand-pink)]/20"
                             >
                                 <Send className="w-5 h-5" />
                             </button>

@@ -29,14 +29,47 @@ export default function CreatePostPage() {
 
     const [caption, setCaption] = useState('');
     const [publishing, setPublishing] = useState(false);
+    
+    // Edit Mode State
+    const [editingPostId, setEditingPostId] = useState<string | null>(null);
+    const [originalPost, setOriginalPost] = useState<any>(null);
 
-    // Check for return from Create Page
+    // Check for postId (Edit Mode) or outfitId (Return from Create Page)
     useEffect(() => {
-        const outfitId = searchParams.get('outfitId');
-        if (outfitId) {
-            fetchSingleOutfit(outfitId);
+        const pId = searchParams.get('postId');
+        const oId = searchParams.get('outfitId');
+
+        if (pId) {
+            setEditingPostId(pId);
+            fetchExistingPost(pId);
+        } else if (oId) {
+            fetchSingleOutfit(oId);
         }
     }, [searchParams]);
+
+    const fetchExistingPost = async (id: string) => {
+        try {
+            const { data, error } = await supabase
+                .from('posts')
+                .select('*, outfit_id, image_url, caption')
+                .eq('id', id)
+                .single();
+            
+            if (error) throw error;
+            if (data) {
+                setOriginalPost(data);
+                setCaption(data.caption || '');
+                if (data.image_url) {
+                    setRealImage(data.image_url);
+                }
+                if (data.outfit_id) {
+                    fetchSingleOutfit(data.outfit_id);
+                }
+            }
+        } catch (err) {
+            console.error('Error fetching existing post:', err);
+        }
+    };
 
     // Fetch user outfits
     const fetchOutfits = async () => {
@@ -102,7 +135,7 @@ export default function CreatePostPage() {
             if (imageFile) {
                 const fileExt = 'png';
                 const fileName = `${user.id}/${Date.now()}.${fileExt}`;
-                const { error: uploadError, data } = await supabase.storage
+                const { error: uploadError } = await supabase.storage
                     .from('posts')
                     .upload(fileName, imageFile);
 
@@ -113,21 +146,38 @@ export default function CreatePostPage() {
                     .getPublicUrl(fileName);
 
                 finalImageUrl = publicUrl;
+            } else if (editingPostId && originalPost?.image_url) {
+                // Keep existing image if not changed
+                finalImageUrl = originalPost.image_url;
             }
 
-            // 2. Create Post in DB
-            const { error: insertError } = await supabase
-                .from('posts')
-                .insert({
-                    user_id: user.id,
-                    outfit_id: selectedOutfit?.id, // Can be null now
-                    image_url: finalImageUrl,
-                    caption: caption.trim() || (selectedOutfit ? selectedOutfit.name : '') // Default caption
-                } as any);
+            if (editingPostId) {
+                // 2. Update Post in DB
+                const { error: updateError } = await supabase
+                    .from('posts')
+                    .update({
+                        outfit_id: selectedOutfit?.id || null,
+                        image_url: finalImageUrl,
+                        caption: caption.trim()
+                    } as any)
+                    .eq('id', editingPostId);
 
-            if (insertError) throw insertError;
+                if (updateError) throw updateError;
+                router.push(`/post/${editingPostId}`);
+            } else {
+                // 2. Create Post in DB
+                const { error: insertError } = await (supabase
+                    .from('posts') as any)
+                    .insert({
+                        user_id: user.id,
+                        outfit_id: selectedOutfit?.id,
+                        image_url: finalImageUrl,
+                        caption: caption.trim() || (selectedOutfit ? selectedOutfit.name : '')
+                    });
 
-            router.push('/profile');
+                if (insertError) throw insertError;
+                router.push('/profile');
+            }
 
         } catch (err) {
             console.error('Error publishing:', err);
@@ -152,7 +202,7 @@ export default function CreatePostPage() {
                         <ArrowLeft className="w-5 h-5 text-[var(--foreground)]" />
                     </button>
                     <h1 className="text-lg font-bold text-[var(--foreground)]">
-                        {mode === 'select-outfit' ? 'Seleccionar Outfit' : 'Nueva Publicación'}
+                        {mode === 'select-outfit' ? 'Seleccionar Outfit' : (editingPostId ? 'Editar Publicación' : 'Nueva Publicación')}
                     </h1>
                 </div>
                 {mode === 'compose' && (
@@ -161,7 +211,7 @@ export default function CreatePostPage() {
                         disabled={publishing || !validatePost()}
                         className="md:hidden text-[var(--brand-pink)] font-bold text-sm disabled:opacity-50 px-2 py-1"
                     >
-                        {publishing ? 'Publicando...' : 'Compartir'}
+                        {publishing ? (editingPostId ? 'Guardando...' : 'Publicando...') : (editingPostId ? 'Guardar' : 'Compartir')}
                     </button>
                 )}
             </header>
@@ -234,7 +284,7 @@ export default function CreatePostPage() {
                                                     Cambiar
                                                 </button>
                                                 <button
-                                                    onClick={() => router.push(`/create?outfitId=${selectedOutfit.id}&returnTo=/create-post`)}
+                                                    onClick={() => router.push(`/create?outfitId=${selectedOutfit.id}&returnTo=/create-post${editingPostId ? `%3FpostId=${editingPostId}` : ''}`)}
                                                     className="text-[var(--brand-pink)] hover:text-[var(--brand-pink)]/80 flex items-center"
                                                 >
                                                     <Edit2 className="w-3.5 h-3.5 mr-1" />
@@ -286,7 +336,7 @@ export default function CreatePostPage() {
                                     disabled={publishing || !validatePost()}
                                     className="w-full h-16 rounded-3xl text-lg font-bold shadow-xl shadow-[var(--brand-pink)]/20"
                                 >
-                                    {publishing ? 'Publicando...' : 'Compartir con la comunidad'}
+                                    {publishing ? (editingPostId ? 'Guardando...' : 'Publicando...') : (editingPostId ? 'Guardar Cambios' : 'Compartir con la comunidad')}
                                 </Button>
                                 <p className="text-center text-xs text-[var(--foreground-tertiary)] mt-4">
                                     Al compartir, tu post será visible para tus seguidores y en el feed general.
@@ -301,7 +351,7 @@ export default function CreatePostPage() {
                     <div className="p-4 grid grid-cols-2 gap-4 pb-20">
                         {/* Create New Option */}
                         <button
-                            onClick={() => router.push('/create?returnTo=/create-post')}
+                            onClick={() => router.push(`/create?returnTo=/create-post${editingPostId ? `%3FpostId=${editingPostId}` : ''}`)}
                             className="aspect-[3/4] rounded-2xl border-2 border-dashed border-[var(--border-color)] flex flex-col items-center justify-center gap-2 hover:bg-[var(--background-secondary)] transition-colors text-[var(--foreground-secondary)] hover:text-[var(--foreground)]"
                         >
                             <div className="w-12 h-12 rounded-full bg-[var(--brand-pink)]/10 flex items-center justify-center">

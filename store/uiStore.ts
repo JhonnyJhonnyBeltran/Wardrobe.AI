@@ -64,6 +64,10 @@ interface UiStore {
     isCreateMenuOpen: boolean;
     setCreateMenuOpen: (isOpen: boolean) => void;
     toggleCreateMenu: () => void;
+
+    // TabBar State
+    isTabBarHidden: boolean;
+    setTabBarHidden: (isHidden: boolean) => void;
 }
 
 export const useUiStore = create<UiStore>((set) => ({
@@ -102,4 +106,8 @@ export const useUiStore = create<UiStore>((set) => ({
     isCreateMenuOpen: false,
     setCreateMenuOpen: (isOpen: boolean) => set({ isCreateMenuOpen: isOpen }),
     toggleCreateMenu: () => set((state: any) => ({ isCreateMenuOpen: !state.isCreateMenuOpen })),
+
+    // TabBar State
+    isTabBarHidden: false,
+    setTabBarHidden: (isHidden) => set({ isTabBarHidden: isHidden }),
 }));

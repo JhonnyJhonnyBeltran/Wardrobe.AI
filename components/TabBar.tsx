@@ -33,7 +33,7 @@ const UserFilledIcon = ({ className }: { className?: string }) => (
 
 export default function TabBar() {
   const pathname = usePathname();
-  const { requestsCount } = useUiStore();
+  const { requestsCount, isTabBarHidden: storeTabBarHidden } = useUiStore();
 
   // Message notifications from new store
   const messageUnreadCount = useMessageStore(selectTotalUnread);
@@ -42,6 +42,7 @@ export default function TabBar() {
 
   // Hide TabBar on deep flows (Contexto §3): Chat, Editor de Outfit, Configuración
   const hideTabBar =
+    storeTabBarHidden ||
     (pathname.startsWith('/messages/') && pathname !== '/messages') ||
     pathname === '/create' ||
     pathname.startsWith('/profile/settings');
