@@ -154,8 +154,8 @@ export default function CreatePostPage() {
 
             if (editingPostId) {
                 // 2. Update Post in DB
-                const { error: updateError } = await supabase
-                    .from('posts')
+                const { error: updateError } = await (supabase
+                    .from('posts') as any)
                     .update({
                         outfit_id: selectedOutfit?.id || null,
                         image_url: finalImageUrl,
