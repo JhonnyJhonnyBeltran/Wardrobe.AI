@@ -144,11 +144,17 @@ export function UserProvider({ children }: { children: ReactNode }) {
       clearTimeout(safetyTimeout);
 
       if (session?.user) {
-        if (session.user.id !== userIdRef.current || event === 'SIGNED_IN') {
+        // If it's a completely new user signing in, block UI to load profile fully
+        if (session.user.id !== userIdRef.current) {
           userIdRef.current = session.user.id;
           setIsLoading(true);
           await fetchUserProfile(session.user);
           setIsLoading(false);
+        } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          // If it's the SAME user just refreshing their token (e.g. after being away), 
+          // fetch silently to avoid infinite loading screens blocking the UI!
+          console.log('[UserStore] Silently refreshing profile on session tick');
+          fetchUserProfile(session.user);
         } else {
           setIsLoading(false);
         }

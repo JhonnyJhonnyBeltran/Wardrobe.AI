@@ -773,15 +773,7 @@ html {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
-/* Hide Navigation and Floating elements when a modal is open */
-html.modal-open aside,
-html.modal-open nav.fixed,
-html.modal-open .fixed:not([class*="z-[9999]"]):not([class*="z-[10000]"]):not([class*="z-[110]"]) {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  transition: opacity 0.3s var(--ease-smooth), visibility 0.3s var(--ease-smooth);
-}
+
 
 html::-webkit-scrollbar {
   display: none;

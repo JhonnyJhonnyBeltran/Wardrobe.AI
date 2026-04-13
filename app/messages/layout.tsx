@@ -96,8 +96,14 @@ export default function MessagesLayout({ children }: { children: React.ReactNode
                     }
                     setConversations(convs);
 
+                    // Prevent stale activeConversationId capture by checking window location
+                    const currentPath = window.location.pathname;
+                    const _activeConversationId = currentPath.startsWith('/messages/') && currentPath !== '/messages'
+                        ? currentPath.split('/messages/')[1]
+                        : null;
+
                     // Auto-select first conversation on desktop if none selected
-                    if (convs.length > 0 && !activeConversationId && typeof window !== 'undefined' && window.innerWidth >= 768) {
+                    if (convs.length > 0 && !_activeConversationId && typeof window !== 'undefined' && window.innerWidth >= 768) {
                         router.replace(`/messages/${convs[0].id}`);
                     }
                 } else {
@@ -111,7 +117,27 @@ export default function MessagesLayout({ children }: { children: React.ReactNode
         };
 
         fetchConversations();
-    }, [user]);
+
+        // Realtime subscription for desktop layout specifically
+        const channel = supabase.channel('layout-conversations-realtime')
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'messages',
+            }, (payload) => {
+                if (!user) return;
+                const newMsg = payload.new as any;
+                // Reload list if current user is involved in the message
+                if (newMsg && (newMsg.sender_id === user.id || newMsg.receiver_id === user.id)) {
+                    fetchConversations();
+                }
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [user, router]);
 
     const filteredConversations = conversations.filter(c =>
         c.other_user?.username.toLowerCase().includes(searchQuery.toLowerCase()) ||

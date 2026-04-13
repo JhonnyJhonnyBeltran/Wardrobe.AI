@@ -47,6 +47,15 @@ export default function MessagesPage() {
     const [showNewConversationModal, setShowNewConversationModal] = useState(false);
     const [followedUsers, setFollowedUsers] = useState<FollowProfile[]>([]);
     const [loadingFollowed, setLoadingFollowed] = useState(false);
+    const [userSearchQuery, setUserSearchQuery] = useState('');
+    
+    const { setTabBarHidden } = useUiStore();
+
+    // Hide tab bar when modal is open
+    useEffect(() => {
+        setTabBarHidden(showNewConversationModal);
+        return () => setTabBarHidden(false);
+    }, [showNewConversationModal, setTabBarHidden]);
 
     const handleConversationClick = async (convId: string, otherUserId: string) => {
         if (sharePostData && user) {
@@ -405,6 +414,20 @@ export default function MessagesPage() {
                                 </button>
                             </div>
 
+                            {/* Search (mimicking messages search bar) */}
+                            <div className="p-4 border-b border-[var(--border-color)]">
+                                <div className="relative">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--foreground-tertiary)]" />
+                                    <input
+                                        type="text"
+                                        placeholder="Buscar usuarios..."
+                                        value={userSearchQuery}
+                                        onChange={(e) => setUserSearchQuery(e.target.value)}
+                                        className="w-full pl-10 pr-4 py-2.5 bg-[var(--background-secondary)] rounded-xl text-sm outline-none transition-all font-medium text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)]"
+                                    />
+                                </div>
+                            </div>
+
                             {/* Users List */}
                             <div className="max-h-[60vh] overflow-y-auto">
                                 {loadingFollowed ? (
@@ -421,7 +444,10 @@ export default function MessagesPage() {
                                     </div>
                                 ) : followedUsers.length > 0 ? (
                                     <div className="py-2">
-                                        {followedUsers.map((followedUser) => (
+                                        {followedUsers.filter(u => 
+                                            u.username?.toLowerCase().includes(userSearchQuery.toLowerCase()) || 
+                                            u.full_name?.toLowerCase().includes(userSearchQuery.toLowerCase())
+                                        ).map((followedUser) => (
                                             <button
                                                 key={followedUser.id}
                                                 onClick={() => handleSelectUser(followedUser)}

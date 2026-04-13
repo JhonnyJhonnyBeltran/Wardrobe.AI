@@ -222,31 +222,13 @@ export default function ChatPage() {
         scrollToBottom();
 
         try {
-            // First, find or create conversation
-            let { data: existingConv } = await supabase
-                .from('conversations')
-                .select('id')
-                .or(`and(participant1_id.eq.${user.id},participant2_id.eq.${targetUserId}),and(participant1_id.eq.${targetUserId},participant2_id.eq.${user.id})`)
-                .single();
+            // Use the RPC to reliably get or create the conversation ID
+            const { data: conversationId, error: convError } = await supabase
+                .rpc('get_or_create_conversation', { target_user_id: targetUserId } as any);
 
-            let conversationId = (existingConv as any)?.id as string | undefined;
-
-            // If no conversation exists, create one
-            if (!conversationId) {
-                const { data: newConv, error: convError } = await supabase
-                    .from('conversations')
-                    .insert({
-                        participant1_id: user.id,
-                        participant2_id: targetUserId
-                    } as any)
-                    .select('id')
-                    .single();
-
-                if (convError) {
-                    console.error('Error creating conversation:', convError);
-                    throw convError;
-                }
-                conversationId = (newConv as any)?.id;
+            if (convError || !conversationId) {
+                console.error('Error getting/creating conversation:', convError);
+                throw convError || new Error('Could not get or create conversation');
             }
 
             // Now insert the message
@@ -474,7 +456,13 @@ export default function ChatPage() {
                                         {!isMe && (
                                             <div className="w-8 h-8 flex-shrink-0 group relative">
                                                 {showAvatar ? (
-                                                    <img src={targetUser?.avatar_url || ''} className="w-8 h-8 rounded-full object-cover shadow-sm bg-[var(--background-secondary)]" />
+                                                    targetUser?.avatar_url ? (
+                                                        <img src={targetUser.avatar_url} className="w-8 h-8 rounded-full object-cover shadow-sm bg-[var(--background-secondary)]" />
+                                                    ) : (
+                                                        <div className="w-8 h-8 rounded-full shadow-sm bg-[var(--background-secondary)] flex items-center justify-center font-bold text-[var(--foreground-secondary)] text-xs border border-[var(--border-color)]">
+                                                            {(targetUser?.full_name || targetUser?.username || '?')[0].toUpperCase()}
+                                                        </div>
+                                                    )
                                                 ) : (
                                                     <div className="w-8 h-8" />
                                                 )}
@@ -512,7 +500,7 @@ export default function ChatPage() {
             </div>
 
             {/* Input Area - Clean & Modern */}
-            <div className="bg-[var(--background)]/95 backdrop-blur-xl border-t border-[var(--border-color)] pb-[max(env(safe-area-inset-bottom),0.5rem)] px-2 md:px-0 flex justify-center shrink-0">
+            <div className="bg-[var(--background)]/95 backdrop-blur-xl border-t border-[var(--border-color)] pb-[env(safe-area-inset-bottom,0px)] px-2 md:px-0 flex justify-center shrink-0">
                 <div className="px-2 md:px-6 py-3 w-full max-w-3xl lg:max-w-2xl">
                     <div className="flex items-end gap-2">
                         <div className="flex-1 bg-[var(--background-secondary)] rounded-[24px] border border-[var(--border-color)] flex items-end pr-1.5 pl-4 transition-all focus-within:border-[var(--brand-pink)]/50 focus-within:ring-1 focus-within:ring-[var(--brand-pink)]/20 shadow-sm">

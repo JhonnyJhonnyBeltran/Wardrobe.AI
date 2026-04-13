@@ -23,8 +23,18 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   if (isLoading && !isPublicPath) {
     return (
       <div className="min-h-[100dvh] flex flex-col items-center justify-center bg-[var(--background)] animate-in fade-in duration-500">
-        <div className="w-10 h-10 border-4 border-[var(--brand-pink)]/30 border-t-[var(--brand-pink)] rounded-full animate-spin mb-4" />
-        <p className="text-sm font-medium text-[var(--foreground-secondary)] tracking-wide">Cargando tu armario...</p>
+        <div className="relative flex items-center justify-center mb-8">
+           {/* Outer rotating dashed ring */}
+           <div className="absolute inset-0 border-4 border-dashed border-[var(--brand-pink)]/30 rounded-full animate-[spin_3s_linear_infinite]" />
+           {/* Inner rotating solid ring */}
+           <div className="absolute inset-0 border-4 border-[var(--brand-pink)] rounded-full animate-[spin_1.5s_linear_infinite] border-t-transparent border-r-transparent" />
+           {/* Center Icon */}
+           <div className="w-20 h-20 bg-[var(--background-secondary)] rounded-full flex items-center justify-center overflow-hidden p-4 shadow-inner">
+             <img src="/klozet-logo-dark.png" alt="Cargando" className="w-full h-full object-contain dark:invert" />
+           </div>
+        </div>
+        <p className="text-base font-bold text-[var(--foreground)] tracking-wide">Cargando...</p>
+        <p className="text-xs text-[var(--foreground-secondary)] mt-2">Preparando tu armario virtual</p>
       </div>
     );
   }

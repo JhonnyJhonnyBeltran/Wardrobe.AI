@@ -109,8 +109,13 @@ export default function ClosetPage() {
   const toggleSelection = (id: string) => {
     setSelectedIds(prev => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+        // Salir del modo de selección si ya no hay nada seleccionado
+        if (next.size === 0) setSelectionMode(false);
+      } else {
+        next.add(id);
+      }
       return next;
     });
   };
@@ -488,15 +493,8 @@ export default function ClosetPage() {
   // Handle mobile-only navbar hiding (Standardized for all detail modals)
   useEffect(() => {
     const handleResize = () => {
-      const isMobile = window.innerWidth < 768;
       const hasModalOpen = !!selectedItem || !!selectedOutfit || showAddModal;
-      
-      if (isMobile) {
-        setTabBarHidden(hasModalOpen);
-      } else {
-        // En escritorio nunca ocultamos el navbar (sidebar)
-        setTabBarHidden(false);
-      }
+      setTabBarHidden(hasModalOpen);
     };
 
     handleResize();

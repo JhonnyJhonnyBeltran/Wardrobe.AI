@@ -61,9 +61,11 @@ export default function Sidebar() {
     return 0;
   };
 
+  const { isTabBarHidden: storeTabBarHidden } = useUiStore();
+
   return (
     <>
-      <aside className="hidden md:flex flex-col w-[72px] h-screen sticky top-0 bg-white border-r border-[var(--border-color)] z-[5001] items-center py-6 will-change-transform isolate">
+      <aside className={`hidden md:flex flex-col w-[72px] h-screen sticky top-0 bg-white border-r border-[var(--border-color)] z-[5001] items-center py-6 will-change-transform isolate transition-all duration-300 ${storeTabBarHidden ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
         {/* Nav Items */}
         <nav className="flex-1 flex flex-col gap-6 w-full items-center">
           {navItems.map((item, index) => {

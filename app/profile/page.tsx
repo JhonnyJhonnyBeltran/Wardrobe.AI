@@ -451,7 +451,10 @@ export default function ProfilePage() {
                 className="p-0.5"
               >
                 {isLoading ? (
-                  <div className="text-center py-10 text-[var(--foreground-tertiary)]">Cargando...</div>
+                  <div className="flex flex-col items-center justify-center py-16 text-[var(--foreground-tertiary)]">
+                     <Loader2 className="w-8 h-8 animate-spin mb-4 text-[var(--brand-pink)]" />
+                     <p className="font-medium animate-pulse tracking-wide">Cargando...</p>
+                  </div>
                 ) : posts.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-16 text-center">
                     <div className="w-16 h-16 bg-[var(--background-secondary)] rounded-full flex items-center justify-center mb-4">
@@ -540,7 +543,10 @@ export default function ProfilePage() {
                   </h3>
 
                   {isLoading ? (
-                    <div className="text-center py-10 text-[var(--foreground-tertiary)]">Cargando...</div>
+                    <div className="flex flex-col items-center justify-center py-16 text-[var(--foreground-tertiary)]">
+                       <Loader2 className="w-8 h-8 animate-spin mb-4 text-[var(--brand-pink)]" />
+                       <p className="font-medium animate-pulse tracking-wide">Cargando...</p>
+                    </div>
                   ) : savedPosts.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-16 text-center">
                       <div className="w-16 h-16 bg-[var(--background-secondary)] rounded-full flex items-center justify-center mb-4">
