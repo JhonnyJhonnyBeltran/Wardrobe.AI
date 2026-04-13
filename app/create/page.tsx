@@ -9,7 +9,7 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, Save, ArrowRight, Shirt, Wand2, Eye, X, Share2, Camera, Check } from 'lucide-react';
+import { ArrowLeft, Save, ArrowRight, Shirt, Wand2, Eye, X, Share2, Camera, Check, Briefcase, PartyPopper, Zap, Heart, Sparkles, Circle } from 'lucide-react';
 import { Button } from '@/components';
 import { useWardrobe } from '@/lib/hooks/useWardrobe';
 import { ClothingItem } from '@/types/clothing';
@@ -33,6 +33,7 @@ export default function CreateOutfitPage() {
 
     // Outfit name
     const [outfitName, setOutfitName] = useState('');
+    const [outfitOccasion, setOutfitOccasion] = useState('casual');
     const [loading, setLoading] = useState(false);
 
     // State for selected items
@@ -101,6 +102,7 @@ export default function CreateOutfitPage() {
 
                 if (outfit) {
                     setOutfitName(outfit.name);
+                    if (outfit.occasion) setOutfitOccasion(outfit.occasion);
 
                     // Reconstruct selections and canvas state
                     const newSelections: Record<string, ClothingItem[]> = {
@@ -323,6 +325,7 @@ export default function CreateOutfitPage() {
                 .insert({
                     user_id: user.id,
                     name: outfitName,
+                    occasion: outfitOccasion,
                     description: `Outfit con ${totalSelected} prendas`,
                     season: 'all-season',
                     is_public: false,
@@ -410,6 +413,7 @@ export default function CreateOutfitPage() {
                 // UPDATE existing outfit
                 const updatePayload: any = {
                     name: outfitName,
+                    occasion: outfitOccasion,
                     description: `Outfit con ${totalSelected} prendas`,
                     updated_at: new Date().toISOString()
                 };
@@ -441,6 +445,7 @@ export default function CreateOutfitPage() {
                     .insert({
                         user_id: user.id,
                         name: outfitName,
+                        occasion: outfitOccasion,
                         description: `Outfit con ${totalSelected} prendas`,
                         season: 'all-season', // Default for now
                         is_public: false,
@@ -640,8 +645,39 @@ export default function CreateOutfitPage() {
                                         placeholder="Ej: Look casual de verano"
                                         value={outfitName}
                                         onChange={(e) => setOutfitName(e.target.value)}
-                                        className="w-full px-4 py-3 bg-[var(--background-secondary)] rounded-xl text-[var(--foreground)] outline-none"
+                                        className="w-full px-4 py-3 bg-[var(--background-secondary)] rounded-xl text-[var(--foreground)] outline-none mb-4"
                                     />
+
+                                    <label className="block text-sm font-medium text-[var(--foreground-secondary)] mb-2">
+                                        Tipo de Outfit
+                                    </label>
+                                    <div className="flex flex-wrap gap-2">
+                                        {[
+                                            { id: 'casual', label: 'Casual', icon: Circle },
+                                            { id: 'everyday', label: 'Diario', icon: Sparkles },
+                                            { id: 'business', label: 'Negocios', icon: Briefcase },
+                                            { id: 'formal', label: 'Formal', icon: Briefcase },
+                                            { id: 'party', label: 'Fiesta', icon: PartyPopper },
+                                            { id: 'sport', label: 'Deporte', icon: Zap },
+                                            { id: 'date', label: 'Cita', icon: Heart },
+                                        ].map((occ) => {
+                                            const Icon = occ.icon;
+                                            return (
+                                                <button
+                                                    key={occ.id}
+                                                    onClick={() => setOutfitOccasion(occ.id)}
+                                                    className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all ${
+                                                        outfitOccasion === occ.id
+                                                            ? 'bg-[var(--brand-pink)] text-white'
+                                                            : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:bg-[var(--border-color)]'
+                                                    }`}
+                                                >
+                                                    <Icon className="w-4 h-4" />
+                                                    {occ.label}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
 
                                 {/* Canvas Preview - Border removed for cleaner look */}
@@ -772,8 +808,39 @@ export default function CreateOutfitPage() {
                                 placeholder="Ej: Look casual de verano"
                                 value={outfitName}
                                 onChange={(e) => setOutfitName(e.target.value)}
-                                className="w-full px-4 py-3 bg-[var(--background-secondary)] rounded-xl text-sm text-[var(--foreground)] outline-none focus:ring-2 focus:ring-[var(--brand-pink)] transition-all"
+                                className="w-full px-4 py-3 bg-[var(--background-secondary)] rounded-xl text-sm text-[var(--foreground)] outline-none focus:ring-2 focus:ring-[var(--brand-pink)] transition-all mb-4"
                             />
+
+                            <label className="block text-sm font-medium text-[var(--foreground-secondary)] mb-2">
+                                Tipo de Outfit
+                            </label>
+                            <div className="flex flex-wrap gap-2">
+                                {[
+                                    { id: 'casual', label: 'Casual', icon: Circle },
+                                    { id: 'everyday', label: 'Diario', icon: Sparkles },
+                                    { id: 'business', label: 'Negocios', icon: Briefcase },
+                                    { id: 'formal', label: 'Formal', icon: Briefcase },
+                                    { id: 'party', label: 'Fiesta', icon: PartyPopper },
+                                    { id: 'sport', label: 'Deporte', icon: Zap },
+                                    { id: 'date', label: 'Cita', icon: Heart },
+                                ].map((occ) => {
+                                    const Icon = occ.icon;
+                                    return (
+                                        <button
+                                            key={occ.id}
+                                            onClick={() => setOutfitOccasion(occ.id)}
+                                            className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-all ${
+                                                outfitOccasion === occ.id
+                                                    ? 'bg-[var(--brand-pink)] text-white'
+                                                    : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:bg-[var(--border-color)]'
+                                            }`}
+                                        >
+                                            <Icon className="w-3.5 h-3.5" />
+                                            {occ.label}
+                                        </button>
+                                    );
+                                })}
+                            </div>
                         </div>
 
                         {/* Canvas - Added border per request */}

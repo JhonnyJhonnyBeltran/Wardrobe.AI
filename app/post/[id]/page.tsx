@@ -842,7 +842,7 @@ export default function PostDetailPage() {
                         {/* Comment Input in Overlay - Sticky at bottom */}
                         <form 
                             onSubmit={handleAddComment} 
-                            className="pb-safe pt-4 flex gap-3 items-center border-t border-gray-100 dark:border-gray-800 px-6 bg-white dark:bg-black"
+                            className="pb-8 pt-4 flex gap-3 items-center border-t border-gray-100 dark:border-gray-800 px-6 bg-white dark:bg-black"
                         >
                             <Avatar src={user?.avatar || null} alt="Tú" size="md" />
                             <div className="flex-1">
@@ -868,13 +868,21 @@ export default function PostDetailPage() {
             )}
 
             {/* Garment Detail Modal */}
+            <AnimatePresence>
             {selectedItem && (
-                <div
-                    className="fixed inset-0 z-[100] flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm"
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
                     onClick={() => setSelectedItem(null)}
                 >
-                    <div
-                        className="bg-white dark:bg-[#1a1a1a] rounded-t-3xl md:rounded-3xl max-w-md w-full p-6 space-y-4 mb-0 md:mb-0 shadow-2xl relative"
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                        transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                        className="bg-white dark:bg-[#1a1a1a] rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl relative"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <button
@@ -924,9 +932,10 @@ export default function PostDetailPage() {
                             </div>
                         </div>
 
-                    </div>
-                </div>
+                    </motion.div>
+                </motion.div>
             )}
+            </AnimatePresence>
         </div>
     );
 }

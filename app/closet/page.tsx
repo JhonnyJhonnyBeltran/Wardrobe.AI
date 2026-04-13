@@ -358,6 +358,29 @@ export default function ClosetPage() {
     }
   };
 
+  const toggleOutfitFavorite = async (id: string, currentFav: boolean) => {
+    try {
+      const newFavStatus = !currentFav;
+      
+      // Optimistic update
+      setOutfits(prev => prev.map(o => o.id === id ? { ...o, favorite: newFavStatus } : o));
+      
+      // Update DB
+      const { error } = await supabase
+        .from('outfits')
+        .update({ favorite: newFavStatus })
+        .eq('id', id);
+
+      if (error) {
+        // Revert on error
+        setOutfits(prev => prev.map(o => o.id === id ? { ...o, favorite: currentFav } : o));
+        console.error('Error toggling outfit favorite:', error);
+      }
+    } catch (err) {
+      console.error('Unexpected error toggling outfit favorite:', err);
+    }
+  };
+
   const handleEditItem = (id: string) => {
     const itemToEdit = items.find(i => i.id === id);
     if (itemToEdit) {
@@ -428,7 +451,8 @@ export default function ClosetPage() {
     })
     : (outfits || []).filter(outfit => {
       const matchesSearch = outfit.name.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesSearch;
+      const matchesFavorites = !showFavoritesOnly || outfit.favorite;
+      return matchesSearch && matchesFavorites;
     });
 
   const categories = ['top', 'shirt', 'sweater', 'bottom', 'skirt', 'dress', 'outerwear', 'shoes', 'accessory'];
@@ -851,7 +875,7 @@ export default function ClosetPage() {
       </main>
 
       {/* FAB stack: Filter + Add — always stacked, fully responsive */}
-      {!showAddModal && !selectedItem && (
+      {!showAddModal && !selectedItem && !selectedOutfit && (
         <div className="fixed bottom-24 md:bottom-6 right-6 z-[5005] flex flex-col items-end gap-3">
           {/* Desktop Select Button */}
           <button
@@ -1244,14 +1268,15 @@ export default function ClosetPage() {
         onClose={() => setSelectedOutfit(null)}
         // @ts-ignore
         outfit={selectedOutfit}
+        onToggleFavorite={toggleOutfitFavorite}
         onDelete={async (id) => {
           const usage = await checkOutfitUsage([id]);
           const count = usage[id] || 0;
 
           if (count > 0) {
             useUiStore.getState().showModal({
-              title: 'Outfit publicado',
-              message: `Este outfit forma parte de ${count} publicación(es). Si lo borras, las publicaciones podrían verse afectadas. ¿Estás seguro de que quieres eliminarlo?`,
+              title: 'Outfit publicado en un post',
+              message: `Si eliminas este outfit, los ${count} post(s) asociado(s) se quedarán sin outfit. ¿Estás seguro de que quieres eliminarlo de todas formas?`,
               type: 'warning',
               confirmText: 'Sí, eliminar',
               cancelText: 'Cancelar',

@@ -3,7 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Heart, Share2, Briefcase, PartyPopper, Zap, Flower2, Snowflake, Circle, Layers, Sparkles, Trash2 } from 'lucide-react';
+import { X, Heart, Share2, Briefcase, PartyPopper, Zap, Flower2, Snowflake, Circle, Layers, Sparkles, Trash2, Edit2, CalendarDays, Rocket } from 'lucide-react';
 import Link from 'next/link';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { Outfit } from '@/types/outfit';
@@ -13,6 +13,7 @@ interface OutfitDetailModalProps {
     onClose: () => void;
     outfit: Outfit;
     onDelete?: (id: string) => void;
+    onToggleFavorite?: (id: string, currentStatus: boolean) => void;
 }
 
 const styleConfig: Record<string, { icon: React.ReactNode; label: string }> = {
@@ -25,7 +26,7 @@ const styleConfig: Record<string, { icon: React.ReactNode; label: string }> = {
     'everyday': { icon: <Sparkles className="w-4 h-4" />, label: 'Diario' },
 };
 
-export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete }: OutfitDetailModalProps) {
+export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleFavorite }: OutfitDetailModalProps) {
     useBodyScrollLock(isOpen);
 
     if (!isOpen || !outfit) return null;
@@ -103,36 +104,75 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete }: OutfitD
                                 </div>
                             )}
 
-                            {/* Actions Overlay */}
-                            <div className="absolute bottom-4 right-4 flex gap-2">
-                                <button className="p-3 bg-white/90 dark:bg-black/50 backdrop-blur-md rounded-full shadow-lg hover:scale-105 transition-transform">
-                                    <Heart className="w-5 h-5 text-[var(--foreground)]" />
-                                </button>
-                                <button className="p-3 bg-white/90 dark:bg-black/50 backdrop-blur-md rounded-full shadow-lg hover:scale-105 transition-transform">
-                                    <Share2 className="w-5 h-5 text-[var(--foreground)]" />
-                                </button>
-                                {onDelete && (
-                                    <button 
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            onDelete(outfit.id);
-                                        }}
-                                        className="p-3 bg-red-500/10 dark:bg-red-500/20 backdrop-blur-md rounded-full shadow-lg hover:scale-105 transition-transform group/delete"
-                                    >
-                                        <Trash2 className="w-5 h-5 text-red-500 group-hover/delete:scale-110 transition-transform" />
-                                    </button>
-                                )}
-                            </div>
                         </div>
 
                         {/* 2. Outfit Info */}
                         <div className="px-6 py-5 bg-[var(--background)]">
-                            <h2 className="text-2xl font-bold text-[var(--foreground)]">{outfit.name}</h2>
-                            <div className="flex items-center gap-2 mt-2 text-sm text-[var(--foreground-secondary)]">
-                                <span className="flex items-center gap-1.5 px-3 py-1 bg-[var(--background-secondary)] rounded-full font-medium">
-                                    {config.icon}
-                                    <span className="capitalize">{config.label}</span>
-                                </span>
+                            <h2 className="text-2xl font-bold text-[var(--foreground)] mb-4">{outfit.name}</h2>
+                            
+                            {/* Details Grid - Matching ProductModal style */}
+                            <div className="grid grid-cols-2 gap-3 mb-6">
+                                <div className="flex items-center gap-3 p-3 bg-[var(--background-secondary)] rounded-2xl">
+                                    <div className="w-8 h-8 rounded-full bg-[var(--brand-pink)]/10 flex items-center justify-center text-[var(--brand-pink)]">
+                                        {config.icon}
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] text-[var(--foreground-tertiary)] uppercase font-bold tracking-wider">Ocasión</p>
+                                        <p className="text-sm font-bold text-[var(--foreground)] capitalize">{config.label}</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-3 p-3 bg-[var(--background-secondary)] rounded-2xl">
+                                    <div className="w-8 h-8 rounded-full bg-[var(--brand-pink)]/10 flex items-center justify-center text-[var(--brand-pink)]">
+                                        <Layers className="w-4 h-4" />
+                                    </div>
+                                    <div>
+                                        <p className="text-[10px] text-[var(--foreground-tertiary)] uppercase font-bold tracking-wider">Prendas</p>
+                                        <p className="text-sm font-bold text-[var(--foreground)]">{items.length}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Action Buttons - Matching ProductModal style */}
+                            <div className="flex gap-3 items-center">
+                                <motion.button
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={() => onToggleFavorite?.(outfit.id, !!outfit.favorite)}
+                                    className={`flex-1 flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl font-bold transition-all duration-300 border h-[52px] ${outfit.favorite
+                                        ? 'bg-[var(--brand-pink)] text-white border-transparent shadow-md shadow-[var(--brand-pink)]/20'
+                                        : 'bg-pink-50 dark:bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] border-pink-200 dark:border-[var(--brand-pink)]/20 hover:bg-pink-100 dark:hover:bg-[var(--brand-pink)]/20'
+                                    }`}
+                                >
+                                    <Heart className={`w-5 h-5 transition-all ${outfit.favorite ? 'fill-white text-white' : 'text-[var(--brand-pink)]'}`} />
+                                    <span className="text-center">{outfit.favorite ? 'Liked' : 'Like'}</span>
+                                </motion.button>
+
+                                <Link
+                                    href={`/create?outfitId=${outfit.id}`}
+                                    className="flex-1"
+                                    onClick={onClose}
+                                >
+                                    <motion.button
+                                        whileHover={{ scale: 1.02 }}
+                                        whileTap={{ scale: 0.98 }}
+                                        className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl font-medium transition-all duration-300 bg-[var(--background-secondary)] text-[var(--foreground)] border border-[var(--border-color)] hover:bg-[var(--foreground)] hover:text-[var(--background)] h-[52px]"
+                                    >
+                                        <Edit2 className="w-5 h-5" />
+                                        <span className="text-center">Editar</span>
+                                    </motion.button>
+                                </Link>
+
+                                {onDelete && (
+                                    <motion.button
+                                        whileHover={{ scale: 1.02 }}
+                                        whileTap={{ scale: 0.98 }}
+                                        onClick={() => onDelete(outfit.id)}
+                                        className="flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl font-medium transition-all duration-300 border-2 border-transparent bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/20 h-[52px]"
+                                        title="Eliminar"
+                                    >
+                                        <Trash2 className="w-5 h-5" />
+                                    </motion.button>
+                                )}
                             </div>
                         </div>
 
