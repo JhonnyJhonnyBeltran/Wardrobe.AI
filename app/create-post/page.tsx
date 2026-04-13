@@ -57,13 +57,14 @@ export default function CreatePostPage() {
             
             if (error) throw error;
             if (data) {
-                setOriginalPost(data);
-                setCaption(data.caption || '');
-                if (data.image_url) {
-                    setRealImage(data.image_url);
+                const post = data as any;
+                setOriginalPost(post);
+                setCaption(post.caption || '');
+                if (post.image_url) {
+                    setRealImage(post.image_url);
                 }
-                if (data.outfit_id) {
-                    fetchSingleOutfit(data.outfit_id);
+                if (post.outfit_id) {
+                    fetchSingleOutfit(post.outfit_id);
                 }
             }
         } catch (err) {
