@@ -320,8 +320,7 @@ export default function CreateOutfitPage() {
             }
 
             // Insert new outfit
-            const { data: outfitData, error: outfitError } = await supabase
-                .from('outfits')
+            const { data: outfitData, error: outfitError } = await (supabase.from('outfits') as any)
                 .insert({
                     user_id: user.id,
                     name: outfitName,
@@ -422,9 +421,7 @@ export default function CreateOutfitPage() {
                     updatePayload.image_url = publicImageUrl;
                 }
 
-                const { error: updateError } = await supabase
-                    .from('outfits')
-                    // @ts-ignore
+                const { error: updateError } = await (supabase.from('outfits') as any)
                     .update(updatePayload)
                     .eq('id', outfitId);
 
@@ -440,8 +437,7 @@ export default function CreateOutfitPage() {
 
             } else {
                 // INSERT new outfit
-                const { data: outfitData, error: outfitError } = await supabase
-                    .from('outfits')
+                const { data: outfitData, error: outfitError } = await (supabase.from('outfits') as any)
                     .insert({
                         user_id: user.id,
                         name: outfitName,

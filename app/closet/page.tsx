@@ -366,8 +366,7 @@ export default function ClosetPage() {
       setOutfits(prev => prev.map(o => o.id === id ? { ...o, favorite: newFavStatus } : o));
       
       // Update DB
-      const { error } = await supabase
-        .from('outfits')
+      const { error } = await (supabase.from('outfits') as any)
         .update({ favorite: newFavStatus })
         .eq('id', id);
 
