@@ -27,7 +27,7 @@ import { useBodyScrollLock } from '@/lib/hooks';
 import { useSwipeNavigation } from '@/hooks/useSwipeNavigation';
 import { useTranslation } from '@/lib/i18n';
 import Link from 'next/link';
-import { OutfitItem } from '@/lib/fashion/outfitGenerator';
+
 import { supabase } from '@/lib/supabase/client';
 import Image from 'next/image';
 
@@ -406,25 +406,7 @@ export default function ClosetPage() {
   };
 
   const handleItemClick = (item: ClothingItemType) => {
-    // Convert ClothingItemData to OutfitItem for the modal
-    const productItem: OutfitItem & { sourceUrl?: string } = {
-      id: item.id,
-      type: (item.category as any) || 'top',
-      name: item.name,
-      brand: item.brand || '',
-      color: (item.color as any) || 'white',
-      imageUrl: item.imageUrl || '',
-      buyLink: (item as any).buyLink || undefined,
-      colorHex: (item as any).colorHex || undefined,
-      source: 'wardrobe',
-      trending: false,
-      matchScore: 100,
-      // sourceUrl: (item as any).sourceUrl || undefined, // Include source URL for scraped products
-    };
-
-    setSelectedProduct(productItem);
-    // Small delay handled by ClothingItem drawer animation
-    setShowProductModal(true);
+    setSelectedItem(item);
   };
 
 
