@@ -78,6 +78,31 @@ export default function NotificationList({ compact = false, onClose }: Notificat
             const realNotifications: Notification[] = [];
             const now = new Date();
 
+            // Helper to get relative time safely
+            const getTimeAgo = (dateString: string) => {
+                const time = new Date(dateString).getTime();
+                const now = Date.now();
+                const diffInSeconds = Math.floor((now - time) / 1000);
+                
+                // Restricción: Si la fecha es en el futuro (por un dispositivo con la hora mal ajustada)
+                if (diffInSeconds <= 0) return 'Justo ahora';
+                
+                const diffInMinutes = Math.floor(diffInSeconds / 60);
+                if (diffInMinutes < 60) return `hace ${diffInMinutes} ${diffInMinutes === 1 ? 'minuto' : 'minutos'}`;
+                
+                const diffInHours = Math.floor(diffInMinutes / 60);
+                if (diffInHours < 24) return `hace ${diffInHours} ${diffInHours === 1 ? 'hora' : 'horas'}`;
+                
+                const diffInDays = Math.floor(diffInHours / 24);
+                if (diffInDays < 30) return `hace ${diffInDays} ${diffInDays === 1 ? 'día' : 'días'}`;
+                
+                const diffInMonths = Math.floor(diffInDays / 30);
+                if (diffInMonths < 12) return `hace ${diffInMonths} ${diffInMonths === 1 ? 'mes' : 'meses'}`;
+                
+                const diffInYears = Math.floor(diffInDays / 365);
+                return `hace ${diffInYears} ${diffInYears === 1 ? 'año' : 'años'}`;
+            };
+
             // 1. System Notification - Every 9 days logic
             const lastMsgDate = localStorage.getItem('last_klozet_msg_date');
             const dismissedMsgId = localStorage.getItem('dismissed_system_msg_id');
@@ -122,7 +147,7 @@ export default function NotificationList({ compact = false, onClose }: Notificat
                                 name: f.follower?.full_name || f.follower?.username || 'Usuario',
                                 avatar: f.follower?.avatar_url || null
                             },
-                            time: new Date(f.created_at).toLocaleDateString(),
+                            time: getTimeAgo(f.created_at),
                             timestamp: new Date(f.created_at).getTime(),
                         });
                     });
@@ -160,7 +185,7 @@ export default function NotificationList({ compact = false, onClose }: Notificat
                                     name: l.user?.full_name || l.user?.username || 'Usuario',
                                     avatar: l.user?.avatar_url || null
                                 },
-                                time: new Date(l.created_at).toLocaleDateString(),
+                                time: getTimeAgo(l.created_at),
                                 timestamp: new Date(l.created_at).getTime(),
                                 image: l.post?.image_url,
                                 postId: l.post_id
@@ -193,7 +218,7 @@ export default function NotificationList({ compact = false, onClose }: Notificat
                                     avatar: c.user?.avatar_url || null
                                 },
                                 content: c.content, // reuse content for comment text
-                                time: new Date(c.created_at).toLocaleDateString(),
+                                time: getTimeAgo(c.created_at),
                                 timestamp: new Date(c.created_at).getTime(),
                                 image: c.post?.image_url,
                                 postId: c.post_id
