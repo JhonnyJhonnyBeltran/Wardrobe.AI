@@ -78,9 +78,9 @@ export default function PostCard({ post, onClick }: PostCardProps) {
     // If no image, show text card
     if (!post.imageUrl) {
         return (
-            <Link href={`/post/${post.id}`}>
+            <Link href={`/post/${post.id}`} className="block w-full h-full outline-none">
                 <div
-                    className="break-inside-avoid mb-6 group relative rounded-2xl overflow-hidden bg-[var(--card-bg)] shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer p-6 flex flex-col gap-4 border border-[var(--border-color)]"
+                    className="group relative rounded-2xl overflow-hidden bg-[var(--card-bg)] shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer p-6 flex flex-col gap-4 border border-[var(--border-color)] h-full w-full"
                 >
                     <div className="flex items-center gap-2">
                         <Avatar src={post.author.avatar || null} alt={post.author.name} size="sm" />
@@ -99,9 +99,9 @@ export default function PostCard({ post, onClick }: PostCardProps) {
     }
 
     return (
-        <Link href={`/post/${post.id}`}>
+        <Link href={`/post/${post.id}`} className="block w-full h-full outline-none">
             <div
-                className="break-inside-avoid mb-6 group relative rounded-2xl overflow-hidden bg-[var(--card-bg)] shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer h-full"
+                className="group relative rounded-2xl overflow-hidden bg-[var(--card-bg)] shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer h-full w-full"
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
             >
