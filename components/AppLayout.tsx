@@ -80,9 +80,14 @@ export default function AppLayout({ children }: AppLayoutProps) {
         {pendingUploadItem && (
           <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
+            animate={{ 
+              opacity: 1, 
+              scale: 1, 
+              y: 0,
+              bottom: isSelectionMode ? 'calc(var(--tabbar-height) + 112px)' : 'calc(var(--tabbar-height) + 24px)'
+            }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="fixed bottom-[110px] md:bottom-8 left-1/2 -translate-x-1/2 md:translate-x-0 md:left-auto md:right-24 z-[5010] shadow-xl flex items-center bg-[var(--background)] border-2 border-[var(--brand-pink)] rounded-full overflow-hidden"
+            className="fixed md:bottom-8 left-1/2 -translate-x-1/2 md:translate-x-0 md:left-auto md:right-24 z-[5005] shadow-xl flex items-center bg-[var(--background)] border-2 border-[var(--brand-pink)] rounded-full overflow-hidden pb-safe transition-[bottom] duration-300"
           >
             <Link
               href="/closet?action=new-item"
@@ -109,10 +114,14 @@ export default function AppLayout({ children }: AppLayoutProps) {
       <AnimatePresence>
         {saveToast && (
           <motion.div
-            initial={{ opacity: 0, y: 50, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.9 }}
-            className="fixed bottom-24 md:bottom-12 left-1/2 -translate-x-1/2 z-[9999] min-w-[320px] max-w-[90vw] flex items-center justify-between gap-4 px-5 py-3.5 bg-[#1a1a1a] backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl"
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ 
+              y: 0, 
+              opacity: 1,
+              bottom: isSelectionMode ? 'calc(var(--tabbar-height) + 84px)' : 'calc(var(--tabbar-height) + 16px)'
+            }}
+            exit={{ y: 100, opacity: 0 }}
+            className="fixed left-4 right-4 md:left-auto md:right-8 md:bottom-24 md:w-80 bg-[#1a1a1a] backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl flex items-center justify-between gap-4 px-5 py-3.5 z-[5010] transition-[bottom] duration-300 pb-safe"
           >
             <span className="text-white font-medium text-sm">{saveToast.message}</span>
             {saveToast.actionLabel && (

@@ -93,8 +93,16 @@ export default function ClosetPage() {
   const [editingItem, setEditingItem] = useState<ClothingItemType | null>(null);
   const { items, loading, loadingMore, hasMore, loadMore, addItem, updateItem, deleteItem, refresh } = useWardrobe();
 
-  // Selection Mode State
-  const [selectionMode, setSelectionMode] = useState(false);
+  // Selection Mode State (Synced with global store)
+  const { isSelectionMode, setSelectionMode: setGlobalSelectionMode } = useUiStore();
+  const [selectionMode, setSelectionModeLocal] = useState(false);
+  
+  // Custom setter to keep both in sync
+  const setSelectionMode = useCallback((active: boolean) => {
+    setSelectionModeLocal(active);
+    setGlobalSelectionMode(active);
+  }, [setGlobalSelectionMode]);
+
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const fetchIdRef = useRef(0); // Para cancelar fetches obsoletos
   const touchTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -875,7 +883,11 @@ export default function ClosetPage() {
 
       {/* FAB stack: Filter + Add — always stacked, fully responsive */}
       {!showAddModal && !selectedItem && !selectedOutfit && (
-        <div className="fixed bottom-24 md:bottom-6 right-6 z-[5005] flex flex-col items-end gap-3">
+        <div className={`fixed right-6 z-[5005] flex flex-col items-end gap-3 transition-all duration-300 ${
+          selectionMode 
+            ? 'bottom-[calc(var(--tabbar-height)+88px)]' 
+            : 'bottom-[calc(var(--tabbar-height)+16px)]'
+        } md:bottom-8`}>
           {/* Desktop Select Button */}
           <button
             onClick={() => {
@@ -1088,7 +1100,7 @@ export default function ClosetPage() {
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
-            className="fixed bottom-24 md:bottom-8 left-1/2 -translate-x-1/2 z-[5010] bg-[var(--card-bg)] border border-[var(--border-color)] rounded-full shadow-2xl flex items-center p-2 gap-4 whitespace-nowrap"
+            className="fixed bottom-[calc(var(--tabbar-height)+16px)] md:bottom-8 left-1/2 -translate-x-1/2 z-[5010] bg-[var(--card-bg)] border border-[var(--border-color)] rounded-full shadow-2xl flex items-center p-2 gap-4 whitespace-nowrap"
           >
             <div className="flex items-center gap-2 pl-4 mr-2">
               <span className="font-semibold text-[var(--foreground)]">{selectedIds.size} seleccionados</span>

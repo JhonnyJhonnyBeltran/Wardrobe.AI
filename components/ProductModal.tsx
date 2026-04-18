@@ -59,7 +59,7 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.3 }}
                         onClick={onClose}
-                        className="fixed inset-0 bg-black/60 shadow-2xl backdrop-blur-sm z-[5009]"
+                        className="fixed inset-0 bg-black/60 shadow-2xl backdrop-blur-sm z-[5015]"
                     />
 
                     {/* Modal Content Wrapper - Standardized Bottom Offset */}
@@ -73,12 +73,12 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
                             damping: 28,
                             stiffness: 300,
                         }}
-                        className="fixed inset-0 z-[5010] flex items-end md:items-center justify-center px-4 pb-4 md:pb-0 md:p-4 pointer-events-none"
+                        className="fixed inset-0 z-[5020] flex items-end md:items-center justify-center px-4 pb-[calc(var(--tabbar-height)+16px)] md:pb-0 md:p-4 pointer-events-none"
                     >
                         {/* Modal Content */}
                         <motion.div
                             onClick={(e) => e.stopPropagation()}
-                            className="relative w-full max-w-md max-h-[calc(100vh-130px)] md:max-h-[85vh] bg-[var(--background)] rounded-3xl md:rounded-[32px] overflow-hidden shadow-2xl flex flex-col border border-[var(--border-color)] pointer-events-auto"
+                            className="relative w-full max-w-md max-h-[calc(100dvh-var(--tabbar-height)-48px)] md:max-h-[85vh] bg-[var(--background)] rounded-3xl md:rounded-[32px] overflow-hidden shadow-2xl flex flex-col border border-[var(--border-color)] pointer-events-auto"
                         >
                             {/* Close Button */}
                             <motion.button

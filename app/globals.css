@@ -113,6 +113,9 @@ html {
   --radius-xl: 24px;
   --radius-2xl: 32px;
   --radius-full: 9999px;
+
+  /* ===== MOBILE SIZING ===== */
+  --tabbar-height: 72px;
 }
 
 /* ===== UTILITIES ===== */

@@ -69,6 +69,10 @@ interface UiStore {
     isTabBarHidden: boolean;
     setTabBarHidden: (isHidden: boolean) => void;
 
+    // Selection State
+    isSelectionMode: boolean;
+    setSelectionMode: (isActive: boolean) => void;
+
     // Stability & Lifecycle
     refetchTrigger: number;
     triggerRefetch: () => void;
@@ -116,6 +120,10 @@ export const useUiStore = create<UiStore>((set) => ({
     // TabBar State
     isTabBarHidden: false,
     setTabBarHidden: (isHidden) => set({ isTabBarHidden: isHidden }),
+
+    // Selection State
+    isSelectionMode: false,
+    setSelectionMode: (isActive) => set({ isSelectionMode: isActive }),
 
     // Stability & Lifecycle
     refetchTrigger: 0,

@@ -55,17 +55,17 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.3 }}
                         onClick={onClose}
-                        className="fixed inset-0 bg-black/60 shadow-2xl backdrop-blur-sm z-[5005]"
+                        className="fixed inset-0 bg-black/60 shadow-2xl backdrop-blur-sm z-[5015]"
                     />
 
                     {/* Modal Content Wrapper - Standardized Bottom Offset */}
-                    <div className="fixed inset-0 z-[5005] flex items-end md:items-center justify-center px-4 pb-4 md:pb-0 md:p-4 pointer-events-none">
+                    <div className="fixed inset-0 z-[5020] flex items-end md:items-center justify-center px-4 pb-[calc(var(--tabbar-height)+16px)] md:pb-0 md:p-4 pointer-events-none">
                         <motion.div
                             initial={{ opacity: 0, y: 100 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: 100 }}
                             transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-                            className="w-full max-h-[calc(100vh-130px)] md:max-h-[85vh] md:max-w-md bg-[var(--background)] rounded-3xl md:rounded-[32px] flex flex-col overflow-hidden shadow-2xl relative border border-[var(--border-color)] pointer-events-auto"
+                            className="w-full max-h-[calc(100dvh-var(--tabbar-height)-48px)] md:max-h-[85vh] md:max-w-md bg-[var(--background)] rounded-3xl md:rounded-[32px] flex flex-col overflow-hidden shadow-2xl relative border border-[var(--border-color)] pointer-events-auto"
                             onClick={(e) => e.stopPropagation()}
                         >
                     {/* Header Handles / Close */}

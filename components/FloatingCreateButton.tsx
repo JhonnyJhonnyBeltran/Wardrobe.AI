@@ -125,7 +125,7 @@ export default function FloatingCreateButton() {
                             onClick={(e) => e.stopPropagation()}
                         >
                             <div className="w-12 h-1.5 bg-[var(--border-color)] rounded-full mx-auto my-3" />
-                            <div className="px-4 pb-12">
+                            <div className="px-4 pb-[calc(var(--tabbar-height)+32px)]">
                                 <h3 className="text-xl font-bold text-center text-[var(--foreground)] mb-6">Crear Nuevo</h3>
                                 <div className="space-y-3">
                                     {actions.map((action) => {
