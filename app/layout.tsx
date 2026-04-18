@@ -8,6 +8,8 @@ import RealtimeProvider from "@/components/RealtimeProvider";
 import MessageProvider from "@/components/MessageProvider";
 import { NotificationToastContainer } from "@/components/NotificationToast";
 import WardrobePreloader from "@/components/WardrobePreloader";
+import GlobalErrorBoundary from "@/components/GlobalErrorBoundary";
+import AppLifecycleManager from "@/components/AppLifecycleManager";
 
 export const metadata: Metadata = {
   title: "Klozet - Tu Asistente de Moda IA",
@@ -41,21 +43,24 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning>
       <body className="antialiased">
-        <ThemeProvider>
-          <UserProvider>
-            <RealtimeProvider>
-              <MessageProvider>
-                <SocialListener />
-                <WardrobePreloader />
-                <ConditionalLayout>
-                  {children}
-                </ConditionalLayout>
-                <NotificationToastContainer position="top-right" />
-                <SystemModal />
-              </MessageProvider>
-            </RealtimeProvider>
-          </UserProvider>
-        </ThemeProvider>
+        <GlobalErrorBoundary>
+            <ThemeProvider>
+              <UserProvider>
+                <RealtimeProvider>
+                  <MessageProvider>
+                    <AppLifecycleManager />
+                    <SocialListener />
+                    <WardrobePreloader />
+                    <ConditionalLayout>
+                      {children}
+                    </ConditionalLayout>
+                    <NotificationToastContainer position="top-right" />
+                    <SystemModal />
+                  </MessageProvider>
+                </RealtimeProvider>
+              </UserProvider>
+            </ThemeProvider>
+        </GlobalErrorBoundary>
       </body>
     </html>
   );

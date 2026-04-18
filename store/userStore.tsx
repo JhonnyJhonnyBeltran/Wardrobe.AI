@@ -30,6 +30,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [preferences, setPreferences] = useState<UserPreferences>({});
   const userIdRef = useRef<string | null>(null);
+  const lastActiveRef = useRef<number>(Date.now());
 
   // Fetch user profile from DB
   const fetchUserProfile = async (authUser: SupabaseUser) => {
@@ -97,6 +98,17 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Helper to persist login status hint
+  const updateLoginHint = (isLoggedIn: boolean) => {
+    if (typeof window !== 'undefined') {
+      if (isLoggedIn) {
+        localStorage.setItem('klozet_was_logged_in', 'true');
+      } else {
+        localStorage.removeItem('klozet_was_logged_in');
+      }
+    }
+  };
+
   const refreshProfile = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (session?.user) {
@@ -112,6 +124,19 @@ export function UserProvider({ children }: { children: ReactNode }) {
     const safetyTimeout = setTimeout(() => {
       if (isMounted && isLoading) {
         console.warn('[UserStore] Auth resolution timed out.');
+        
+        // If we were supposed to be logged in but auth is stuck, 
+        // a hard refresh might clear some browser/supabase cache issues.
+        const wasLoggedIn = localStorage.getItem('klozet_was_logged_in') === 'true';
+        const hasReloaded = sessionStorage.getItem('klozet_recovery_reload') === 'true';
+        
+        if (wasLoggedIn && !hasReloaded) {
+          console.log('[UserStore] Stuck while authenticated. Triggering safe recovery reload...');
+          sessionStorage.setItem('klozet_recovery_reload', 'true');
+          window.location.reload();
+          return;
+        }
+
         setIsLoading(false);
       }
     }, 5000);
@@ -121,9 +146,13 @@ export function UserProvider({ children }: { children: ReactNode }) {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
           userIdRef.current = session.user.id;
+          updateLoginHint(true);
           await fetchUserProfile(session.user);
         } else {
-          if (isMounted) setUser(null);
+          if (isMounted) {
+            setUser(null);
+            updateLoginHint(false);
+          }
         }
       } catch (error) {
         console.error('[UserStore] Session check error:', error);
@@ -161,6 +190,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       } else {
         userIdRef.current = null;
         setUser(null);
+        updateLoginHint(false);
         setIsLoading(false);
       }
     });

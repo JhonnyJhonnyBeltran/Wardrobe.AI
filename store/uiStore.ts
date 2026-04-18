@@ -68,6 +68,12 @@ interface UiStore {
     // TabBar State
     isTabBarHidden: boolean;
     setTabBarHidden: (isHidden: boolean) => void;
+
+    // Stability & Lifecycle
+    refetchTrigger: number;
+    triggerRefetch: () => void;
+    lastFocusTimestamp: number;
+    setLastFocusTimestamp: (ts: number) => void;
 }
 
 export const useUiStore = create<UiStore>((set) => ({
@@ -110,4 +116,10 @@ export const useUiStore = create<UiStore>((set) => ({
     // TabBar State
     isTabBarHidden: false,
     setTabBarHidden: (isHidden) => set({ isTabBarHidden: isHidden }),
+
+    // Stability & Lifecycle
+    refetchTrigger: 0,
+    triggerRefetch: () => set((state: any) => ({ refetchTrigger: state.refetchTrigger + 1 })),
+    lastFocusTimestamp: Date.now(),
+    setLastFocusTimestamp: (ts) => set({ lastFocusTimestamp: ts }),
 }));
