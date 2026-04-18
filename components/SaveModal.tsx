@@ -96,7 +96,7 @@ export default function SaveModal() {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[5020] flex items-end md:items-center justify-center px-4 pb-[calc(var(--tabbar-height)+16px)] md:pb-0 md:p-4 pointer-events-none">
+      <div className="fixed inset-0 z-[5995] flex items-end md:items-center justify-center px-4 pb-[calc(var(--tabbar-height)+16px)] md:pb-0 md:p-4 pointer-events-none">
         {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}

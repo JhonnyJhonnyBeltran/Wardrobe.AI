@@ -87,7 +87,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
               bottom: isSelectionMode ? 'calc(var(--tabbar-height) + 112px)' : 'calc(var(--tabbar-height) + 24px)'
             }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="fixed md:bottom-8 left-1/2 -translate-x-1/2 md:translate-x-0 md:left-auto md:right-24 z-[5005] shadow-xl flex items-center bg-[var(--background)] border-2 border-[var(--brand-pink)] rounded-full overflow-hidden pb-safe transition-[bottom] duration-300"
+            className="fixed md:bottom-8 left-1/2 -translate-x-1/2 md:translate-x-0 md:left-auto md:right-24 z-[4990] shadow-xl flex items-center bg-[var(--background)] border-2 border-[var(--brand-pink)] rounded-full overflow-hidden pb-safe transition-[bottom] duration-300"
           >
             <Link
               href="/closet?action=new-item"
@@ -121,7 +121,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
               bottom: isSelectionMode ? 'calc(var(--tabbar-height) + 84px)' : 'calc(var(--tabbar-height) + 16px)'
             }}
             exit={{ y: 100, opacity: 0 }}
-            className="fixed left-4 right-4 md:left-auto md:right-8 md:bottom-24 md:w-80 bg-[#1a1a1a] backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl flex items-center justify-between gap-4 px-5 py-3.5 z-[5010] transition-[bottom] duration-300 pb-safe"
+            className="fixed left-4 right-4 md:left-auto md:right-8 md:bottom-24 md:w-80 bg-[#1a1a1a] backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl flex items-center justify-between gap-4 px-5 py-3.5 z-[4995] transition-[bottom] duration-300 pb-safe"
           >
             <span className="text-white font-medium text-sm">{saveToast.message}</span>
             {saveToast.actionLabel && (

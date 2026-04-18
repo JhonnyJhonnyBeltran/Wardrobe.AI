@@ -104,7 +104,7 @@ export default function FloatingCreateButton() {
             <AnimatePresence>
                 {isCreateMenuOpen && (
                     <motion.div
-                        className="fixed inset-0 z-[5010] flex flex-col justify-end items-center md:hidden pb-[110px]"
+                        className="fixed inset-0 z-[5990] flex flex-col justify-end items-center md:hidden pb-[110px]"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
