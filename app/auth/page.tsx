@@ -11,7 +11,7 @@ import { supabase } from '@/lib/supabase/client';
 
 export default function AuthPage() {
     const router = useRouter();
-    const { signIn, signUp } = useAuth();
+    const { signIn, signUp, resetPasswordForEmail } = useAuth();
     const { checkEmailAvailability, checkUsernameAvailability } = useSocial();
     const searchParams = useSearchParams();
     const mode = searchParams?.get('mode');
@@ -20,6 +20,11 @@ export default function AuthPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [emailConfirmPending, setEmailConfirmPending] = useState(false);
+    
+    // Reset password state
+    const [isResetPassword, setIsResetPassword] = useState(false);
+    const [resetSent, setResetSent] = useState(false);
+    const [resetEmail, setResetEmail] = useState('');
 
     // Login fields
     const [emailOrUser, setEmailOrUser] = useState('');
@@ -74,6 +79,23 @@ export default function AuthPage() {
             return data || null;
         } catch {
             return null;
+        }
+    };
+
+    const handleResetPassword = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            const res = await resetPasswordForEmail(resetEmail);
+            if (res.success) {
+                setResetSent(true);
+            } else {
+                alert(res.error || 'Error al enviar enlace de recuperación');
+            }
+        } catch (err: any) {
+            alert(err?.message || 'Error inesperado');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -188,14 +210,80 @@ export default function AuthPage() {
                     </div>
 
                     <AnimatePresence mode="wait">
-                        <motion.div
-                            key={isLogin ? 'login' : 'signup'}
-                            initial={{ opacity: 0, x: isLogin ? -20 : 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: isLogin ? 20 : -20 }}
-                            transition={{ duration: 0.3 }}
-                        >
-                            <h2 className="text-2xl font-bold text-[var(--foreground)] text-center mb-6 tracking-tight">
+                        {isResetPassword ? (
+                            <motion.div
+                                key="reset-password"
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                <h2 className="text-2xl font-bold text-[var(--foreground)] text-center mb-6 tracking-tight">
+                                    Recuperar contraseña
+                                </h2>
+                                
+                                {resetSent ? (
+                                    <div className="text-center">
+                                        <div className="w-16 h-16 rounded-full bg-[var(--brand-pink)]/10 flex items-center justify-center mx-auto mb-4">
+                                            <Mail className="w-8 h-8 text-[var(--brand-pink)]" />
+                                        </div>
+                                        <p className="text-[var(--foreground-secondary)] mb-6">
+                                            Hemos enviado un enlace de recuperación a <strong className="text-[var(--foreground)]">{resetEmail}</strong>
+                                        </p>
+                                        <Button
+                                            onClick={() => { setIsResetPassword(false); setResetSent(false); setIsLogin(true); }}
+                                            className="w-full text-sm font-semibold rounded-xl bg-[var(--background-secondary)] text-[var(--foreground)] hover:bg-[var(--border-color)] transition-colors"
+                                        >
+                                            Volver a iniciar sesión
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    <form onSubmit={handleResetPassword} className="space-y-4">
+                                        <p className="text-sm text-[var(--foreground-secondary)] text-center mb-4">
+                                            Introduce tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.
+                                        </p>
+                                        <div className="relative group">
+                                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--foreground-tertiary)] group-focus-within:text-[var(--brand-pink)] transition-colors" />
+                                            <input
+                                                type="email"
+                                                value={resetEmail}
+                                                onChange={(e) => setResetEmail(e.target.value)}
+                                                placeholder="Correo electrónico"
+                                                required
+                                                className="w-full pl-12 pr-4 h-12 rounded-xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)] transition-all"
+                                            />
+                                        </div>
+                                        
+                                        <Button
+                                            type="submit"
+                                            disabled={loading}
+                                            className="w-full h-12 text-lg font-semibold rounded-xl bg-[var(--brand-pink)] hover:bg-[var(--brand-pink-dark)] text-white shadow-lg shadow-[var(--brand-pink)]/20 disabled:opacity-60"
+                                            glow
+                                        >
+                                            {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Enviar enlace'}
+                                        </Button>
+
+                                        <div className="mt-8 text-center pt-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => setIsResetPassword(false)}
+                                                className="text-sm font-bold text-[var(--foreground)] hover:text-[var(--brand-pink)] transition-colors"
+                                            >
+                                                Volver atrás
+                                            </button>
+                                        </div>
+                                    </form>
+                                )}
+                            </motion.div>
+                        ) : (
+                            <motion.div
+                                key={isLogin ? 'login' : 'signup'}
+                                initial={{ opacity: 0, x: isLogin ? -20 : 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: isLogin ? 20 : -20 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                <h2 className="text-2xl font-bold text-[var(--foreground)] text-center mb-6 tracking-tight">
                                 {isLogin ? 'Bienvenido de nuevo' : 'Únete a KLOZET'}
                             </h2>
 
@@ -279,6 +367,18 @@ export default function AuthPage() {
                                     </button>
                                 </div>
 
+                                {isLogin && (
+                                    <div className="text-right">
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsResetPassword(true)}
+                                            className="text-xs font-semibold text-[var(--foreground-tertiary)] hover:text-[var(--brand-pink)] transition-colors"
+                                        >
+                                            ¿Olvidaste tu contraseña?
+                                        </button>
+                                    </div>
+                                )}
+
                                 <Button
                                     type="submit"
                                     disabled={loading}
@@ -302,6 +402,7 @@ export default function AuthPage() {
                                 </p>
                             </div>
                         </motion.div>
+                        )}
                     </AnimatePresence>
                 </div>
             </motion.div>

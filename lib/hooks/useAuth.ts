@@ -15,6 +15,8 @@ interface UseAuthReturn {
   signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
+  resetPasswordForEmail: (email: string) => Promise<{ success: boolean; error?: string }>;
+  updatePassword: (password: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 export function useAuth(): UseAuthReturn {
@@ -162,6 +164,31 @@ export function useAuth(): UseAuthReturn {
     });
   };
 
+  const resetPasswordForEmail = async (email: string) => {
+    try {
+      const redirectTo = typeof window !== 'undefined'
+        ? `${window.location.origin}/auth/callback?next=/auth/update-password`
+        : undefined;
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo,
+      });
+      if (error) throw error;
+      return { success: true };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  };
+
+  const updatePassword = async (password: string) => {
+    try {
+      const { error } = await supabase.auth.updateUser({ password });
+      if (error) throw error;
+      return { success: true };
+    } catch (error: any) {
+      return { success: false, error: error.message };
+    }
+  };
+
   return {
     user,
     loading,
@@ -169,5 +196,7 @@ export function useAuth(): UseAuthReturn {
     signIn,
     signOut,
     signInWithGoogle,
+    resetPasswordForEmail,
+    updatePassword,
   };
 }
