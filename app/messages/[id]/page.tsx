@@ -303,10 +303,10 @@ export default function ChatPage() {
 
     return (
         <div
-            className="flex flex-col h-[100dvh] md:h-full bg-[var(--background)]"
+            className="fixed inset-0 z-[40] md:z-auto md:relative flex flex-col md:h-full bg-[var(--background)]"
         >
             {/* Header */}
-            <div className="sticky top-0 z-30 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-color)] min-h-[64px] w-full px-4 md:px-6 py-2 flex items-center justify-between flex-shrink-0">
+            <div className="bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-color)] min-h-[64px] w-full px-4 md:px-6 py-2 flex items-center justify-between flex-shrink-0">
                 <div className="flex items-center gap-3">
                     <button onClick={() => router.push('/messages')} className="p-2 -ml-2 text-[var(--foreground)] hover:bg-[var(--background-secondary)] rounded-full transition-colors md:hidden">
                         <ArrowLeft className="w-6 h-6" />

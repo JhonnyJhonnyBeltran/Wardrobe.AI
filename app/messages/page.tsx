@@ -249,10 +249,11 @@ export default function MessagesPage() {
     );
 
     return (
-        <div className="min-h-[100dvh] bg-[var(--background)]">
+        <div className="fixed inset-0 z-[40] md:z-auto md:relative flex flex-col bg-[var(--background)] overflow-hidden">
             {/* Mobile: Header + Search + List. Desktop: layout shows list; this page is only for placeholder when no chat selected. */}
-            <div className="md:hidden">
-                <header className="sticky top-0 z-30 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-color)]">
+            {/* Mobile: Full Screen Layout */}
+            <div className="md:hidden flex-1 flex flex-col overflow-hidden">
+                <header className="bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-color)] shrink-0">
                     <div className="px-4 h-14 flex items-center justify-between">
                         <div className="flex items-center gap-4">
                             <button onClick={() => router.push('/feed')} className="p-2 -ml-2 hover:bg-[var(--background-secondary)] rounded-full transition-colors">
@@ -266,40 +267,41 @@ export default function MessagesPage() {
                     </div>
                 </header>
 
-                {/* Search - mobile only */}
-                <div className="p-4">
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--foreground-tertiary)]" />
-                        <input
-                            type="text"
-                            placeholder="Buscar mensajes..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2.5 bg-[var(--background-secondary)] rounded-xl text-sm outline-none transition-all font-medium text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)]"
-                        />
-                    </div>
-                </div>
-
-                {/* Share Mode Banner - mobile */}
-                {sharePostData && (
-                    <div className="bg-[var(--brand-pink)]/10 p-3 mx-4 mb-2 rounded-xl border border-[var(--brand-pink)]/20 flex items-center gap-3">
-                        <div className="w-10 h-10 bg-white rounded-lg overflow-hidden flex-shrink-0">
-                            {(() => {
-                                try {
-                                    const data = JSON.parse(sharePostData);
-                                    return <img src={data.image} className="w-full h-full object-cover" alt="" />;
-                                } catch (e) { return null; }
-                            })()}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="text-xs font-bold text-[var(--foreground)] truncate">Enviar publicación a...</p>
-                            <p className="text-xs text-[var(--foreground-secondary)]">Selecciona un chat para compartir</p>
+                {/* Scrollable List Content */}
+                <div className="flex-1 overflow-y-auto pb-[env(safe-area-inset-bottom,20px)]">
+                    {/* Search - mobile only */}
+                    <div className="p-4">
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--foreground-tertiary)]" />
+                            <input
+                                type="text"
+                                placeholder="Buscar mensajes..."
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                className="w-full pl-10 pr-4 py-2.5 bg-[var(--background-secondary)] rounded-xl text-sm outline-none transition-all font-medium text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)]"
+                            />
                         </div>
                     </div>
-                )}
 
-                {/* List - mobile only */}
-                <div className="px-2">
+                    {/* Share Mode Banner - mobile */}
+                    {sharePostData && (
+                        <div className="bg-[var(--brand-pink)]/10 p-3 mx-4 mb-2 rounded-xl border border-[var(--brand-pink)]/20 flex items-center gap-3">
+                            <div className="w-10 h-10 bg-white rounded-lg overflow-hidden flex-shrink-0">
+                                {(() => {
+                                    try {
+                                        const data = JSON.parse(sharePostData);
+                                        return <img src={data.image} className="w-full h-full object-cover" alt="" />;
+                                    } catch (e) { return null; }
+                                })()}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-xs font-bold text-[var(--foreground)] truncate">Enviar publicación a...</p>
+                                <p className="text-xs text-[var(--foreground-secondary)]">Selecciona un chat para compartir</p>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="px-2">
                     {loading ? (
                         <div className="space-y-4 p-4">
                             {[1, 2, 3].map((i) => (

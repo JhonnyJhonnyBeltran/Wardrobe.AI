@@ -43,7 +43,7 @@ export default function TabBar() {
   // Hide TabBar on deep flows (Contexto §3): Chat, Editor de Outfit, Configuración
   const hideTabBar =
     storeTabBarHidden ||
-    (pathname.startsWith('/messages/') && pathname !== '/messages') ||
+    pathname.startsWith('/messages') ||
     pathname === '/create' ||
     pathname.startsWith('/profile/settings');
   if (hideTabBar) return null;

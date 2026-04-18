@@ -53,7 +53,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
   
   const hideTabBar =
     storeTabBarHidden ||
-    (pathname.startsWith('/messages/') && pathname !== '/messages') ||
+    pathname.startsWith('/messages') ||
     pathname === '/create' ||
     pathname.startsWith('/profile/settings');
 
