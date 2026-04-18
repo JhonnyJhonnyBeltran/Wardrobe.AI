@@ -55,11 +55,11 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.3 }}
                         onClick={onClose}
-                        className="fixed inset-0 bg-black/60 shadow-2xl backdrop-blur-sm z-[100]"
+                        className="fixed inset-0 bg-black/60 shadow-2xl backdrop-blur-sm z-[5005]"
                     />
 
                     {/* Modal Content Wrapper - Standardized Bottom Offset */}
-                    <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center px-4 pb-[85px] md:pb-0 md:p-4 pointer-events-none">
+                    <div className="fixed inset-0 z-[5005] flex items-end md:items-center justify-center px-4 pb-4 md:pb-0 md:p-4 pointer-events-none">
                         <motion.div
                             initial={{ opacity: 0, y: 100 }}
                             animate={{ opacity: 1, y: 0 }}
