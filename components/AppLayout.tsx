@@ -21,7 +21,7 @@ interface AppLayoutProps {
 }
 
 export default function AppLayout({ children }: AppLayoutProps) {
-  const { pendingUploadItem, clearPendingUploadItem, showModal, saveToast, hideSaveToast } = useUiStore();
+  const { pendingUploadItem, clearPendingUploadItem, showModal, saveToast, hideSaveToast, isSelectionMode } = useUiStore();
 
   useEffect(() => {
     if (saveToast) {
