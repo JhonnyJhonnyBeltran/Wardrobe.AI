@@ -370,6 +370,7 @@ export default function MessagesPage() {
                     )}
                 </div>
             </div>
+        </div>
 
             {/* Desktop: placeholder when no conversation selected (layout shows list on left) - Contexto §4C */}
             <div className="hidden md:flex flex-1 flex-col items-center justify-center p-8 text-center min-h-0">

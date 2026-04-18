@@ -72,6 +72,7 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
                             type: 'spring',
                             damping: 28,
                             stiffness: 300,
+                        }}
                         className="fixed inset-0 z-[5010] flex items-end md:items-center justify-center px-4 pb-4 md:pb-0 md:p-4 pointer-events-none"
                     >
                         {/* Modal Content */}
