@@ -35,6 +35,8 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
+import BackgroundInitializer from "@/components/BackgroundInitializer";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -51,6 +53,7 @@ export default function RootLayout({
                     <AppLifecycleManager />
                     <SocialListener />
                     <WardrobePreloader />
+                    <BackgroundInitializer />
                     <ConditionalLayout>
                       {children}
                     </ConditionalLayout>

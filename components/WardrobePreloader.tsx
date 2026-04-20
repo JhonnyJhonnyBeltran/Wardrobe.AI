@@ -106,37 +106,28 @@ const WardrobePreloader = () => {
     }, 400);
   }, []);
 
-  // Minimum display time (3s) to appreciate the animation
+  // Minimum display time (2.5s) to appreciate the animation
   useEffect(() => {
     if (!visible) return;
+
+    // Fail-safe: ensure preloader is removed after 8 seconds no matter what
+    const failSafeTimer = setTimeout(() => {
+      if (visible) {
+        console.warn('[Preloader] Fail-safe triggered, removing preloader.');
+        setVisible(false);
+      }
+    }, 8000);
+
     const timer = setTimeout(() => {
       minTimeElapsed.current = true;
+      modelReady.current = true; // No longer wait for AI model
       tryComplete();
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, [visible, tryComplete]);
+    }, 2500);
 
-  // Preload model
-  useEffect(() => {
-    if (!visible || preloadStarted.current) return;
-    if (isModelLoaded('quality')) {
-      modelReady.current = true;
-      tryComplete();
-      return;
-    }
-    preloadStarted.current = true;
-
-    const doPreload = async () => {
-      try {
-        await preloadModel('quality');
-      } catch {
-        // Continue even on failure
-      } finally {
-        modelReady.current = true;
-        tryComplete();
-      }
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(failSafeTimer);
     };
-    setTimeout(doPreload, 300);
   }, [visible, tryComplete]);
 
   if (visible === null || visible === false) return null;
