@@ -1,39 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import dynamic from "next/dynamic";
 import "./globals.css";
-import { UserProvider, ThemeProvider } from "@/store";
-import ConditionalLayout from "@/components/ConditionalLayout";
-import GlobalErrorBoundary from "@/components/GlobalErrorBoundary";
-import RealtimeProvider from "@/components/RealtimeProvider";
-import MessageProvider from "@/components/MessageProvider";
-import SmartModelPreloader from "@/components/SmartModelPreloader";
-
-// Dynamic imports for non-critical components - loaded only when needed
-const SystemModal = dynamic(() => import("@/components/SystemModal"), {
-  loading: () => null, // Don't show anything while loading
-  ssr: false, // Disable SSR for client-only component
-});
-
-const SocialListener = dynamic(() => import("@/components/SocialListener"), {
-  loading: () => null,
-  ssr: false,
-});
-
-const AppLifecycleManager = dynamic(() => import("@/components/AppLifecycleManager"), {
-  loading: () => null,
-  ssr: false,
-});
-
-const NotificationToastContainer = dynamic(
-  () => import("@/components/NotificationToast").then(mod => ({ default: mod.NotificationToastContainer })),
-  {
-    loading: () => null,
-    ssr: false,
-  }
-);
-
-// Deprecated: WardrobePreloader is no longer used - models are preloaded on-demand
-// Deprecated: BackgroundInitializer is simplified - reserved for future tasks
+import RootLayoutClient from "./RootLayoutClient";
 
 export const metadata: Metadata = {
   title: "Klozet - Tu Asistente de Moda IA",
@@ -67,31 +34,7 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning>
       <body className="antialiased">
-        <GlobalErrorBoundary>
-          <ThemeProvider>
-            <UserProvider>
-              <RealtimeProvider>
-                <MessageProvider>
-                  {/* Critical components */}
-                  <SmartModelPreloader />
-                  <AppLifecycleManager />
-                  
-                  {/* Non-critical components - loaded dynamically */}
-                  <SocialListener />
-                  
-                  {/* Main layout */}
-                  <ConditionalLayout>
-                    {children}
-                  </ConditionalLayout>
-                  
-                  {/* UI overlays - loaded on-demand */}
-                  <NotificationToastContainer position="top-right" />
-                  <SystemModal />
-                </MessageProvider>
-              </RealtimeProvider>
-            </UserProvider>
-          </ThemeProvider>
-        </GlobalErrorBoundary>
+        <RootLayoutClient>{children}</RootLayoutClient>
       </body>
     </html>
   );
