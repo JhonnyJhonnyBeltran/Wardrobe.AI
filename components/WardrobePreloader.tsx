@@ -9,7 +9,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
-import { preloadModel, isModelLoaded } from '@/lib/imageProcessing';
 import { useUser } from '@/store';
 
 const APP_PRELOAD_KEY = 'klozet_app_preloaded';
@@ -36,7 +35,6 @@ const WardrobePreloader = () => {
   const [fadeOut, setFadeOut] = useState(false);
   const [progress, setProgress] = useState(0);
   const preloadStarted = useRef(false);
-  const modelReady = useRef(false);
   const minTimeElapsed = useRef(false);
   const progressInterval = useRef<NodeJS.Timeout | null>(null);
 
@@ -107,20 +105,20 @@ const WardrobePreloader = () => {
   }, []);
 
   // Minimum display time (2.5s) to appreciate the animation
+  // OPTIMIZED: Removed AI model preloading - models are now loaded on-demand by SmartModelPreloader
   useEffect(() => {
     if (!visible) return;
 
-    // Fail-safe: ensure preloader is removed after 8 seconds no matter what
+    // Fail-safe: ensure preloader is removed after 5 seconds no matter what
     const failSafeTimer = setTimeout(() => {
       if (visible) {
         console.warn('[Preloader] Fail-safe triggered, removing preloader.');
         setVisible(false);
       }
-    }, 8000);
+    }, 5000);
 
     const timer = setTimeout(() => {
       minTimeElapsed.current = true;
-      modelReady.current = true; // No longer wait for AI model
       tryComplete();
     }, 2500);
 
