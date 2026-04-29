@@ -36,6 +36,7 @@ const WardrobePreloader = () => {
   const [progress, setProgress] = useState(0);
   const preloadStarted = useRef(false);
   const minTimeElapsed = useRef(false);
+  const modelReady = useRef(true);
   const progressInterval = useRef<NodeJS.Timeout | null>(null);
 
   // Only show for logged-in users on first visit
