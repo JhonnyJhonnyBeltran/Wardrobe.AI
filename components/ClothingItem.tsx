@@ -3,9 +3,11 @@
 /**
  * ClothingItem Component - Floating Design (No harsh borders)
  * Apple/Revolut Style - Clean, minimal with subtle depth
+ * OPTIMIZED: Uses Next.js Image for better performance
  */
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { Heart, ShoppingBag, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useTranslation } from '@/lib/i18n';
