@@ -1,14 +1,16 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useAuth } from '@/lib/hooks/useAuth';
-import { LogoExtended } from '@/components';
+import { useUser } from '@/store';
+import SessionSplash from '@/components/SessionSplash';
 
 export default function RootPage() {
   const router = useRouter();
-  const { user, loading } = useAuth();
+  // Usamos useUser en lugar de useAuth para compartir el estado de carga global y evitar condiciones de carrera
+  const { user, isLoading } = useUser();
   const searchParams = useSearchParams();
+  const [showSplash, setShowSplash] = useState(true);
 
   useEffect(() => {
     // If there's a Supabase auth code in the URL (email confirmation callback),
@@ -19,18 +21,26 @@ export default function RootPage() {
       return;
     }
 
-    if (loading) return;
+    if (isLoading) return;
 
+    // Cuando termina de cargar, preparamos la salida del splash
+    setShowSplash(false);
+  }, [isLoading, searchParams, router]);
+
+  const handleSplashComplete = () => {
     if (user) {
       router.push('/closet');
     } else {
       router.push('/auth?mode=signup');
     }
-  }, [user, loading, router, searchParams]);
+  };
 
   return (
-    <div className="min-h-screen bg-[var(--background)] flex items-center justify-center">
-      <LogoExtended size="md" className="animate-pulse opacity-50" />
+    <div className="min-h-screen bg-[var(--background)]">
+      <SessionSplash 
+        isLoading={showSplash} 
+        onComplete={handleSplashComplete} 
+      />
     </div>
   );
 }

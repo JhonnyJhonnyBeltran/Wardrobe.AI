@@ -26,6 +26,7 @@ export { default as BubbleToggle } from './BubbleToggle';
 export { default as WardrobeSelectionModal } from './WardrobeSelectionModal';
 export { default as ModelPreloader } from './ModelPreloader';
 export { default as Avatar } from './Avatar';
+export { default as SessionSplash } from './SessionSplash';
 
 // Realtime components
 export { default as RealtimeProvider } from './RealtimeProvider';

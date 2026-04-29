@@ -49,7 +49,7 @@ export default function PostDetailPage() {
     const [deleting, setDeleting] = useState(false);
     const [selectedItem, setSelectedItem] = useState<any | null>(null);
 
-    const { showSaveToast, openFolderModal, setTabBarHidden } = useUiStore();
+    const { showSaveToast, openFolderModal, setTabBarHidden, showModal } = useUiStore();
 
     // Sync mobile comments and item drawer visibility with global TabBar state
     useEffect(() => {
@@ -408,30 +408,40 @@ export default function PostDetailPage() {
     };
     
     // Deletion and Editing handlers
-    const handleDeletePost = async () => {
+    const handleDeletePost = () => {
         if (!user || user.id !== post.user_id) return;
         
-        const confirmed = window.confirm('¿Estás seguro de que quieres borrar esta publicación? Esta acción no se puede deshacer.');
-        if (!confirmed) return;
-        
-        setDeleting(true);
-        try {
-            const { error } = await supabase
-                .from('posts')
-                .delete()
-                .eq('id', postId);
-                
-            if (error) throw error;
-            
-            showSaveToast({ message: "Publicación eliminada", actionLabel: "" });
-            router.push('/profile');
-        } catch (error) {
-            console.error('Error deleting post:', error);
-            alert('Error al eliminar la publicación.');
-        } finally {
-            setDeleting(false);
-            setShowOptions(false);
-        }
+        showModal({
+            title: 'Borrar publicación',
+            message: '¿Estás seguro de que quieres borrar esta publicación? Esta acción no se puede deshacer.',
+            type: 'confirm',
+            confirmText: 'Borrar',
+            cancelText: 'Cancelar',
+            onConfirm: async () => {
+                setDeleting(true);
+                setShowOptions(false);
+                try {
+                    const { error } = await supabase
+                        .from('posts')
+                        .delete()
+                        .eq('id', postId);
+                        
+                    if (error) throw error;
+                    
+                    showSaveToast({ message: "Publicación eliminada", actionLabel: "" });
+                    router.push('/profile');
+                } catch (error) {
+                    console.error('Error deleting post:', error);
+                    showModal({
+                        title: 'Error',
+                        message: 'Error al eliminar la publicación. Por favor, inténtalo de nuevo.',
+                        type: 'error'
+                    });
+                } finally {
+                    setDeleting(false);
+                }
+            }
+        });
     };
     
     const handleEditPost = () => {
