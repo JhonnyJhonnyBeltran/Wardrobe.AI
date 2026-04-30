@@ -46,16 +46,16 @@ export default function SessionSplash({ isLoading, onComplete, text, subtext }: 
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ 
-              scale: animatingOut ? 1.5 : [1, 1.03, 1], 
+              scale: animatingOut ? 5 : [1, 1.05, 1], 
               opacity: animatingOut ? 0 : 1,
             }}
             transition={{ 
-              scale: animatingOut ? { duration: 0.5, ease: 'easeIn' } : { duration: 3, repeat: Infinity, ease: "easeInOut" },
-              opacity: animatingOut ? { duration: 0.4, ease: 'easeIn' } : { duration: 0.5 }
+              scale: animatingOut ? { duration: 0.6, ease: [0.22, 1, 0.36, 1] } : { duration: 3, repeat: Infinity, ease: "easeInOut" },
+              opacity: animatingOut ? { duration: 0.4, ease: 'easeOut', delay: 0.1 } : { duration: 0.5 }
             }}
-            className="flex flex-col items-center"
+            className="flex flex-col items-center origin-center"
           >
-            <LogoExtended size="lg" />
+            <LogoExtended size="xl" />
           </motion.div>
           
           {(text || subtext) && !animatingOut && (

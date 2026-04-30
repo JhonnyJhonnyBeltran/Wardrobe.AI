@@ -118,28 +118,29 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let isMounted = true;
+    let authResolved = false;
     
-    // Safety timeout: ensure loading state is cleared after a maximum of 5s
+    // Safety timeout: ensure loading state is cleared after a maximum of 8s
     // to prevent getting stuck if auth fails to resolve
     const safetyTimeout = setTimeout(() => {
-      if (isMounted && isLoading) {
-        console.warn('[UserStore] Auth resolution timed out.');
-        
-        // If we were supposed to be logged in but auth is stuck, 
-        // a hard refresh might clear some browser/supabase cache issues.
-        const wasLoggedIn = localStorage.getItem('klozet_was_logged_in') === 'true';
-        const hasReloaded = sessionStorage.getItem('klozet_recovery_reload') === 'true';
-        
-        if (wasLoggedIn && !hasReloaded) {
-          console.log('[UserStore] Stuck while authenticated. Triggering safe recovery reload...');
-          sessionStorage.setItem('klozet_recovery_reload', 'true');
-          window.location.reload();
-          return;
-        }
-
-        setIsLoading(false);
+      if (!isMounted || authResolved) return;
+      
+      console.warn('[UserStore] Auth resolution timed out.');
+      
+      // If we were supposed to be logged in but auth is stuck, 
+      // a hard refresh might clear some browser/supabase cache issues.
+      const wasLoggedIn = localStorage.getItem('klozet_was_logged_in') === 'true';
+      const hasReloaded = sessionStorage.getItem('klozet_recovery_reload') === 'true';
+      
+      if (wasLoggedIn && !hasReloaded) {
+        console.log('[UserStore] Stuck while authenticated. Triggering safe recovery reload...');
+        sessionStorage.setItem('klozet_recovery_reload', 'true');
+        window.location.reload();
+        return;
       }
-    }, 5000);
+
+      setIsLoading(false);
+    }, 8000);
 
     const initAuth = async () => {
       try {
@@ -158,6 +159,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         console.error('[UserStore] Session check error:', error);
       } finally {
         if (isMounted) {
+          authResolved = true;
           setIsLoading(false);
           clearTimeout(safetyTimeout);
         }
@@ -170,7 +172,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
       if (!isMounted) return;
       
       console.log(`[UserStore] Auth event: ${event}`);
-      clearTimeout(safetyTimeout);
 
       if (session?.user) {
         // If it's a completely new user signing in, block UI to load profile fully
@@ -178,20 +179,26 @@ export function UserProvider({ children }: { children: ReactNode }) {
           userIdRef.current = session.user.id;
           setIsLoading(true);
           await fetchUserProfile(session.user);
+          authResolved = true;
           setIsLoading(false);
+          clearTimeout(safetyTimeout);
         } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
           // If it's the SAME user just refreshing their token (e.g. after being away), 
           // fetch silently to avoid infinite loading screens blocking the UI!
           console.log('[UserStore] Silently refreshing profile on session tick');
           fetchUserProfile(session.user);
         } else {
+          authResolved = true;
           setIsLoading(false);
+          clearTimeout(safetyTimeout);
         }
       } else {
         userIdRef.current = null;
         setUser(null);
         updateLoginHint(false);
+        authResolved = true;
         setIsLoading(false);
+        clearTimeout(safetyTimeout);
       }
     });
 
