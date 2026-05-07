@@ -26,6 +26,11 @@ export default function AuthPage() {
     const [resetSent, setResetSent] = useState(false);
     const [resetEmail, setResetEmail] = useState('');
 
+    // Resend confirmation email state
+    const [resendLoading, setResendLoading] = useState(false);
+    const [resendCooldown, setResendCooldown] = useState(0);
+    const [resendSuccess, setResendSuccess] = useState(false);
+
     // Login fields
     const [emailOrUser, setEmailOrUser] = useState('');
 
@@ -79,6 +84,27 @@ export default function AuthPage() {
             return data || null;
         } catch {
             return null;
+        }
+    };
+
+    const handleResendConfirmation = async () => {
+        if (resendCooldown > 0 || resendLoading) return;
+        setResendLoading(true);
+        setResendSuccess(false);
+        try {
+            const { error } = await supabase.auth.resend({ type: 'signup', email });
+            if (!error) {
+                setResendSuccess(true);
+                setResendCooldown(60);
+                const interval = setInterval(() => {
+                    setResendCooldown(prev => {
+                        if (prev <= 1) { clearInterval(interval); return 0; }
+                        return prev - 1;
+                    });
+                }, 1000);
+            }
+        } finally {
+            setResendLoading(false);
         }
     };
 
@@ -175,9 +201,10 @@ export default function AuthPage() {
                     <div className="w-16 h-16 rounded-full bg-[var(--brand-pink)]/10 flex items-center justify-center mx-auto mb-4">
                         <Mail className="w-8 h-8 text-[var(--brand-pink)]" />
                     </div>
-                    <h2 className="text-2xl font-bold text-[var(--foreground)] mb-3">Revisa tu bandeja</h2>
+                    <h2 className="text-2xl font-bold text-[var(--foreground)] mb-3">Revisa tu correo</h2>
                     <p className="text-[var(--foreground-secondary)] mb-4">
                         Te hemos enviado un enlace de confirmación a <strong className="text-[var(--foreground)]">{email}</strong>.
+                        Haz clic en él para activar tu cuenta.
                     </p>
                     <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl px-4 py-3 mb-6 text-left">
                         <p className="text-amber-400 text-xs font-semibold mb-1">¿No lo ves?</p>
@@ -185,6 +212,32 @@ export default function AuthPage() {
                             Revisa la carpeta de <strong>SPAM o correo no deseado</strong>. A veces los filtros lo mandan ahí.
                         </p>
                     </div>
+
+                    {/* Resend button */}
+                    <div className="mb-6">
+                        {resendSuccess && (
+                            <motion.p
+                                initial={{ opacity: 0, y: -6 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="text-green-500 text-xs font-semibold mb-3"
+                            >
+                                Correo reenviado correctamente.
+                            </motion.p>
+                        )}
+                        <button
+                            onClick={handleResendConfirmation}
+                            disabled={resendLoading || resendCooldown > 0}
+                            className="w-full h-11 rounded-xl border border-[var(--border-color)] bg-[var(--background-secondary)] text-sm font-semibold text-[var(--foreground)] hover:border-[var(--brand-pink)] hover:text-[var(--brand-pink)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        >
+                            {resendLoading
+                                ? <Loader2 className="w-4 h-4 animate-spin" />
+                                : resendCooldown > 0
+                                    ? `Reenviar en ${resendCooldown}s`
+                                    : 'Reenviar correo de confirmación'
+                            }
+                        </button>
+                    </div>
+
                     <button
                         onClick={() => { setEmailConfirmPending(false); setIsLogin(true); }}
                         className="text-sm font-semibold text-[var(--brand-pink)] hover:underline"
