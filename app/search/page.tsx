@@ -481,7 +481,7 @@ export default function SearchPage() {
               <div className="mt-2">
                 <div className="masonry-grid">
                   {results.map(post => (
-                    <div key={post.id} className="contents break-inside-avoid">
+                    <div key={post.id} className="break-inside-avoid mb-6">
                       <PostCard post={post} />
                     </div>
                   ))}
@@ -522,7 +522,7 @@ export default function SearchPage() {
                     </h2>
                     <div className="masonry-grid">
                       {results.map(post => (
-                        <div key={post.id} className="contents break-inside-avoid">
+                        <div key={post.id} className="break-inside-avoid mb-6">
                           <PostCard post={post} />
                         </div>
                       ))}
