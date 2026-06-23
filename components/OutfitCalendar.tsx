@@ -323,10 +323,10 @@ export default function OutfitCalendar() {
                   
                   {/* Outfit Indicator */}
                   {hasOutfits && (
-                    <div className={`absolute bottom-1 sm:bottom-2 left-1/2 -translate-x-1/2 flex items-center justify-center -space-x-1 sm:-space-x-1.5 ${isToday ? 'bottom-2 sm:bottom-3' : ''}`}>
+                    <div className="absolute bottom-2 sm:bottom-3 left-1/2 -translate-x-1/2 flex items-center justify-center -space-x-1 sm:-space-x-1.5">
                       {dayOutfits.slice(0, 3).map((_, idx) => (
-                        <div key={idx} className={`rounded-full shadow-sm border border-transparent ${isToday ? 'bg-white text-[var(--brand-pink)] p-1 sm:p-1.5 scale-110 z-10' : 'bg-[var(--brand-pink)] text-white p-0.5 sm:p-1'}`}>
-                           <Shirt className={isToday ? "w-4 h-4 sm:w-5 sm:h-5 fill-current" : "w-2.5 h-2.5 sm:w-3 sm:h-3"} />
+                        <div key={idx} className={`rounded-full shadow-sm border border-transparent p-1 sm:p-1.5 scale-110 z-10 ${isToday ? 'bg-white text-[var(--brand-pink)]' : 'bg-[var(--brand-pink)] text-white'}`}>
+                           <Shirt className={`w-4 h-4 sm:w-5 sm:h-5 ${isToday ? 'fill-current' : ''}`} />
                         </div>
                       ))}
                     </div>
