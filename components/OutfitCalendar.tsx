@@ -275,7 +275,7 @@ export default function OutfitCalendar() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4"
+            className="fixed inset-0 z-[6000] bg-black/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4"
             onClick={() => setSelectedDate(null)}
           >
             <motion.div
@@ -284,7 +284,7 @@ export default function OutfitCalendar() {
               exit={{ y: '100%' }}
               transition={{ type: "spring", bounce: 0, duration: 0.4 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-[var(--background)] w-full max-w-lg rounded-t-3xl sm:rounded-3xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden"
+              className="bg-[var(--background)] w-full max-w-lg md:max-w-4xl rounded-t-3xl sm:rounded-3xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden"
             >
               {/* Handle for mobile */}
               <div className="w-full flex justify-center py-3 sm:hidden">
@@ -327,25 +327,25 @@ export default function OutfitCalendar() {
                           <Trash2 className="w-4 h-4" />
                         </button>
                         
-                        <div className="flex gap-4 mb-4">
+                        <div className="flex flex-col md:flex-row gap-4 md:gap-6 mb-4">
                             {outfit.image_url ? (
-                                <img src={outfit.image_url} alt={outfit.name} className="w-24 h-24 object-cover rounded-xl border border-[var(--border-color)]" />
+                                <img src={outfit.image_url} alt={outfit.name} className="w-24 h-24 md:w-56 md:h-56 object-cover rounded-xl border border-[var(--border-color)] shrink-0" />
                             ) : (
-                                <div className="w-24 h-24 bg-[var(--background-secondary)] rounded-xl border border-[var(--border-color)] flex items-center justify-center">
+                                <div className="w-24 h-24 md:w-56 md:h-56 bg-[var(--background-secondary)] rounded-xl border border-[var(--border-color)] flex items-center justify-center shrink-0">
                                     <span className="text-xs text-[var(--foreground-tertiary)]">Sin foto</span>
                                 </div>
                             )}
-                            <div>
-                                <h4 className="font-bold text-[var(--foreground)] text-lg mb-1">{outfit.name || 'Outfit sin nombre'}</h4>
-                                <p className="text-sm text-[var(--foreground-secondary)]">{outfit.items?.length || 0} prendas</p>
+                            <div className="flex-1">
+                                <h4 className="font-bold text-[var(--foreground)] text-lg md:text-2xl mb-1 md:mb-2">{outfit.name || 'Outfit sin nombre'}</h4>
+                                <p className="text-sm md:text-base text-[var(--foreground-secondary)]">{outfit.items?.length || 0} prendas</p>
                             </div>
                         </div>
 
                         {/* Display small items */}
                         {outfit.items && outfit.items.length > 0 && (
-                            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                            <div className="flex gap-2 md:gap-4 overflow-x-auto pb-2 scrollbar-hide mt-2 md:mt-4">
                                 {outfit.items.map((item: any) => (
-                                    <div key={item.id} className="w-12 h-12 rounded-lg bg-[var(--background-secondary)] overflow-hidden flex-shrink-0 border border-[var(--border-color)]">
+                                    <div key={item.id} className="w-12 h-12 md:w-20 md:h-20 rounded-lg md:rounded-xl bg-[var(--background-secondary)] overflow-hidden flex-shrink-0 border border-[var(--border-color)]">
                                         {item.image_url ? (
                                             <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
                                         ) : null}
