@@ -116,7 +116,7 @@ export default function PreferencesPage() {
             // 2. Update local store
             setUser({
                 ...user,
-                age_range: ageRange,
+                ageRange: ageRange as any,
                 gender: gender as any,
                 preferredStyles: selectedStyles,
                 styleCompleted: true
