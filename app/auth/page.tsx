@@ -8,13 +8,34 @@ import { Button, LogoExtended } from '@/components';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useSocial } from '@/lib/hooks/useSocial';
 import { supabase } from '@/lib/supabase/client';
+import { useUser } from '@/store/userStore';
 
 export default function AuthPage() {
     const router = useRouter();
     const { signIn, signUp, resetPasswordForEmail } = useAuth();
     const { checkEmailAvailability, checkUsernameAvailability } = useSocial();
+    const { user, isLoadingUser } = useUser();
     const searchParams = useSearchParams();
     const mode = searchParams?.get('mode');
+    const urlError = searchParams?.get('error');
+
+    // Auto-redirect if already logged in
+    useEffect(() => {
+        if (!isLoadingUser && user) {
+            if (user.styleCompleted) {
+                router.push('/closet');
+            } else {
+                router.push('/onboarding/preferences');
+            }
+        }
+    }, [user, isLoadingUser, router]);
+
+    // Show auth errors from callback
+    useEffect(() => {
+        if (urlError) {
+            alert(`Error de autenticación: ${urlError}`);
+        }
+    }, [urlError]);
 
     const [isLogin, setIsLogin] = useState(mode !== 'signup');
     const [showPassword, setShowPassword] = useState(false);
