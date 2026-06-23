@@ -33,10 +33,17 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   // to avoid getting stuck on a blank screen for visitors.
   if ((isLoading || isRecovering) && !isPublicPath) {
     return (
-      <SessionSplash 
-        isLoading={true} 
-        text={isRecovering ? 'Restaurando sesión...' : 'Preparando tu armario virtual'} 
-      />
+      <div className="w-full h-full flex flex-col p-4 sm:p-6 md:p-8 pt-safe-top animate-pulse">
+        {/* Top Header Placeholder */}
+        <div className="h-10 w-48 bg-[var(--background-secondary)] rounded-xl mb-6 md:mb-8"></div>
+        
+        {/* Grid/Feed Placeholder */}
+        <div className="flex-1 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+          {[...Array(12)].map((_, i) => (
+            <div key={i} className="aspect-[3/4] bg-[var(--background-secondary)] rounded-2xl w-full"></div>
+          ))}
+        </div>
+      </div>
     );
   }
 
