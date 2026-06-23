@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
 
     let isCompleted = profile?.style_completed;
 
-    // Check legacy users table if not found in profiles
+    // Check legacy users table if not found in profiles by ID
     if (!profile) {
       const { data: legacyProfile } = await supabase
         .from('users')
@@ -77,6 +77,18 @@ export async function GET(request: NextRequest) {
         
       if (legacyProfile) {
         isCompleted = legacyProfile.style_completed;
+      } else if (user.email) {
+        // Fallback by email for unlinked identities
+        const { data: emailLegacyProfile } = await supabase
+          .from('users')
+          .select('style_completed')
+          .eq('email', user.email)
+          .limit(1)
+          .maybeSingle();
+        
+        if (emailLegacyProfile) {
+          isCompleted = emailLegacyProfile.style_completed;
+        }
       }
     }
 

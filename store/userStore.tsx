@@ -53,6 +53,17 @@ export function UserProvider({ children }: { children: ReactNode }) {
           .eq('id', authUser.id)
           .maybeSingle();
         legacyProfile = lp as any;
+        
+        // 2.5 Fallback by email for unlinked identities
+        if (!legacyProfile && authUser.email) {
+          const { data: emailLp } = await supabase
+            .from('users')
+            .select('*')
+            .eq('email', authUser.email)
+            .limit(1)
+            .maybeSingle();
+          legacyProfile = emailLp as any;
+        }
       }
 
       // 3. Construct user object
