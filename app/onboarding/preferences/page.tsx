@@ -101,15 +101,15 @@ export default function PreferencesPage() {
         try {
             const { error } = await (supabase as any)
                 .from('profiles')
-                .update({
+                .upsert({
+                    id: user.id, // required for upsert
                     age_range: ageRange,
                     gender: gender,
                     preferred_styles: selectedStyles,
                     visual_style_preferences: selectedStyles,
                     style_completed: true,
                     updated_at: new Date().toISOString(),
-                })
-                .eq('id', user.id);
+                });
 
             if (error) throw error;
 
