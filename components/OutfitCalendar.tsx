@@ -310,8 +310,8 @@ export default function OutfitCalendar() {
                   {hasOutfits && (
                     <div className="absolute bottom-1 sm:bottom-2 left-1/2 -translate-x-1/2 flex items-center justify-center -space-x-1 sm:-space-x-1.5">
                       {dayOutfits.slice(0, 3).map((_, idx) => (
-                        <div key={idx} className={`rounded-full p-0.5 sm:p-1 shadow-sm border border-[var(--card-bg)] ${isToday ? 'bg-[var(--background)] text-[var(--foreground)]' : 'bg-[var(--brand-pink)] text-white'}`}>
-                           <Shirt className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                        <div key={idx} className={`rounded-full p-0.5 sm:p-1 shadow-sm border border-[var(--card-bg)] ${isToday ? 'bg-[var(--background)] text-[var(--brand-pink)] scale-110' : 'bg-[var(--brand-pink)] text-white'}`}>
+                           <Shirt className={isToday ? "w-3 h-3 sm:w-3.5 sm:h-3.5" : "w-2.5 h-2.5 sm:w-3 sm:h-3"} />
                         </div>
                       ))}
                     </div>
