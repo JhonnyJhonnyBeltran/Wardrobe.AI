@@ -65,7 +65,7 @@ export default function PreferencesPage() {
 
         if (user.styleCompleted) {
             setIsEditing(true);
-            setAgeRange(prev => prev || user.age_range || '');
+            setAgeRange(prev => prev || user.ageRange || '');
             setGender(prev => prev || user.gender || '');
             if (Array.isArray(user.preferredStyles)) {
                 setSelectedStyles(prev => prev.length ? prev : user.preferredStyles!);
