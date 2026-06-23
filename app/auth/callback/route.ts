@@ -65,9 +65,24 @@ export async function GET(request: NextRequest) {
       .from('profiles')
       .select('style_completed, username')
       .eq('id', user.id)
-      .single();
+      .maybeSingle();
 
-    if (!profile?.style_completed) {
+    let isCompleted = profile?.style_completed;
+
+    // Check legacy users table if not found in profiles
+    if (!profile) {
+      const { data: legacyProfile } = await supabase
+        .from('users')
+        .select('style_completed')
+        .eq('id', user.id)
+        .maybeSingle();
+        
+      if (legacyProfile) {
+        isCompleted = legacyProfile.style_completed;
+      }
+    }
+
+    if (!isCompleted) {
       return NextResponse.redirect(new URL('/onboarding/preferences', requestUrl.origin));
     }
   }
