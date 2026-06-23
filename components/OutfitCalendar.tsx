@@ -47,7 +47,7 @@ export default function OutfitCalendar() {
       const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
       const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
       
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('calendar_outfits')
         .select(`
           id,
@@ -134,7 +134,7 @@ export default function OutfitCalendar() {
     const dateStr = formatDateToSQL(selectedDate);
     
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('calendar_outfits')
         .insert({
           user_id: user.id,
@@ -173,7 +173,7 @@ export default function OutfitCalendar() {
       cancelText: 'Cancelar',
       onConfirm: async () => {
         try {
-          const { error } = await supabase.from('calendar_outfits').delete().eq('id', calendarId);
+          const { error } = await (supabase as any).from('calendar_outfits').delete().eq('id', calendarId);
           if (error) throw error;
           fetchCalendarData();
         } catch (err) {
