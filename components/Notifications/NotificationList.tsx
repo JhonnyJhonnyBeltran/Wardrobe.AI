@@ -44,11 +44,6 @@ export default function NotificationList({ compact = false, onClose }: Notificat
     const [followMap, setFollowMap] = useState<Record<string, string>>({}); // Track follow status
     const router = useRouter();
 
-    useEffect(() => {
-        // Clear badge when component is mounted (viewed)
-        markActivityAsViewed();
-    }, [markActivityAsViewed]);
-
     // Fetch Follow Status Map on mount
     useEffect(() => {
         if (user?.id) {
@@ -235,7 +230,14 @@ export default function NotificationList({ compact = false, onClose }: Notificat
 
             // Sort by time (newest first)
             if (isMounted) {
-                setNotifications(realNotifications.sort((a, b) => b.timestamp - a.timestamp));
+                const sortedNotifications = realNotifications.sort((a, b) => b.timestamp - a.timestamp);
+                setNotifications(sortedNotifications);
+                
+                // Clear badge using the newest notification timestamp
+                const newestTimestamp = sortedNotifications.length > 0 
+                    ? new Date(sortedNotifications[0].timestamp).toISOString() 
+                    : undefined;
+                markActivityAsViewed(newestTimestamp);
             }
         };
 

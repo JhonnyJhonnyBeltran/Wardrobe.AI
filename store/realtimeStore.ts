@@ -27,7 +27,7 @@ interface RealtimeStore {
 
   // New Activity Methods
   checkActivity: (userId: string) => Promise<void>;
-  markActivityAsViewed: () => void;
+  markActivityAsViewed: (timestampISO?: string) => void;
 
   // Online users
   onlineUsers: string[];
@@ -90,9 +90,10 @@ export const useRealtimeStore = create<RealtimeStore>((set, get) => ({
     set({ unreadCount: totalUnread });
   },
 
-  markActivityAsViewed: () => {
-    // Add 5 minutes to account for client-server clock skew
-    const now = new Date(Date.now() + 5 * 60000).toISOString();
+  markActivityAsViewed: (timestampISO?: string) => {
+    // If a specific server timestamp is provided (from the newest notification), use it.
+    // Otherwise, fallback to current time + 5 minutes.
+    const now = timestampISO || new Date(Date.now() + 5 * 60000).toISOString();
     if (typeof window !== 'undefined') {
       localStorage.setItem('last_viewed_activity', now);
     }
