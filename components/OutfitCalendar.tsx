@@ -149,12 +149,8 @@ export default function OutfitCalendar() {
         
       if (error) {
         if (error.code === '23505') {
-            useUiStore.getState().showModal({
-                title: 'Outfit ya asignado',
-                message: 'Ya has asignado este outfit para este día.',
-                type: 'warning',
-                confirmText: 'Entendido'
-            });
+            // Already assigned, just close silently
+            setShowPicker(false);
             return;
         }
         throw error;
@@ -317,7 +313,7 @@ export default function OutfitCalendar() {
                   onClick={() => setSelectedDate(dayDate)}
                   className={`relative aspect-square rounded-xl sm:rounded-2xl flex flex-col items-center justify-center transition-all ${
                     isToday 
-                      ? 'bg-[var(--foreground)] text-[var(--background)] shadow-md' 
+                      ? 'bg-[var(--brand-pink)] text-white shadow-lg' 
                       : 'hover:bg-[var(--background-secondary)] text-[var(--foreground)]'
                   } ${hasOutfits && !isToday ? 'border-2 border-[var(--brand-pink)]/30' : 'border border-transparent'}`}
                 >
@@ -327,10 +323,10 @@ export default function OutfitCalendar() {
                   
                   {/* Outfit Indicator */}
                   {hasOutfits && (
-                    <div className="absolute bottom-1 sm:bottom-2 left-1/2 -translate-x-1/2 flex items-center justify-center -space-x-1 sm:-space-x-1.5">
+                    <div className={`absolute bottom-1 sm:bottom-2 left-1/2 -translate-x-1/2 flex items-center justify-center -space-x-1 sm:-space-x-1.5 ${isToday ? 'bottom-2 sm:bottom-3' : ''}`}>
                       {dayOutfits.slice(0, 3).map((_, idx) => (
-                        <div key={idx} className={`rounded-full p-0.5 sm:p-1 shadow-sm border border-[var(--card-bg)] ${isToday ? 'bg-[var(--background)] text-[var(--brand-pink)] scale-110' : 'bg-[var(--brand-pink)] text-white'}`}>
-                           <Shirt className={isToday ? "w-3 h-3 sm:w-3.5 sm:h-3.5" : "w-2.5 h-2.5 sm:w-3 sm:h-3"} />
+                        <div key={idx} className={`rounded-full shadow-sm border border-transparent ${isToday ? 'bg-white text-[var(--brand-pink)] p-1 sm:p-1.5 scale-110 z-10' : 'bg-[var(--brand-pink)] text-white p-0.5 sm:p-1'}`}>
+                           <Shirt className={isToday ? "w-4 h-4 sm:w-5 sm:h-5 fill-current" : "w-2.5 h-2.5 sm:w-3 sm:h-3"} />
                         </div>
                       ))}
                     </div>
