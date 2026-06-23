@@ -58,7 +58,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
     pathname.startsWith('/profile/settings');
 
   return (
-    <div className="flex min-h-[100dvh] bg-[var(--background)] overflow-x-hidden">
+    <div className="flex min-h-[100dvh] bg-[var(--background)]">
       {/* Desktop Sidebar */}
       <Sidebar />
 
