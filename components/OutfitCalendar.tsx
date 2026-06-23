@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, CalendarDays, X, Plus, Trash2, Shirt } from 
 import { supabase } from '@/lib/supabase/client';
 import { useUser } from '@/store';
 import { OutfitDetailModal } from '@/components/OutfitDetailModal';
+import ProductModal from '@/components/ProductModal';
 import OutfitCard from '@/components/OutfitCard';
 import type { Outfit } from '@/types/outfit';
 import { Button } from '@/components';
@@ -29,6 +30,10 @@ export default function OutfitCalendar() {
   // Modals state
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [showPicker, setShowPicker] = useState(false);
+  
+  // Details Modals state
+  const [selectedOutfitDetail, setSelectedOutfitDetail] = useState<Outfit | null>(null);
+  const [selectedItemDetail, setSelectedItemDetail] = useState<any | null>(null);
   
   // Data for picker
   const [userOutfits, setUserOutfits] = useState<Outfit[]>([]);
@@ -223,22 +228,36 @@ export default function OutfitCalendar() {
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
-                  {outfit.image_url ? (
-                    <img src={outfit.image_url} alt={outfit.name} className="w-24 h-24 md:w-32 md:h-32 object-cover rounded-2xl border border-[var(--border-color)] shrink-0" />
-                  ) : (
-                    <div className="w-24 h-24 md:w-32 md:h-32 bg-[var(--background-secondary)] rounded-2xl border border-[var(--border-color)] flex items-center justify-center shrink-0">
-                      <span className="text-xs text-[var(--foreground-tertiary)]">Sin foto</span>
-                    </div>
-                  )}
+                  <div 
+                    onClick={() => setSelectedOutfitDetail(outfit)}
+                    className="cursor-pointer hover:opacity-90 transition-opacity shrink-0"
+                  >
+                      {outfit.image_url ? (
+                        <img src={outfit.image_url} alt={outfit.name} className="w-24 h-24 md:w-32 md:h-32 object-cover rounded-2xl border border-[var(--border-color)]" />
+                      ) : (
+                        <div className="w-24 h-24 md:w-32 md:h-32 bg-[var(--background-secondary)] rounded-2xl border border-[var(--border-color)] flex items-center justify-center">
+                          <span className="text-xs text-[var(--foreground-tertiary)]">Sin foto</span>
+                        </div>
+                      )}
+                  </div>
                   <div className="flex flex-col justify-center flex-1">
-                    <h4 className="font-bold text-[var(--foreground)] text-lg md:text-xl mb-1">{outfit.name || 'Outfit sin nombre'}</h4>
+                    <h4 
+                        className="font-bold text-[var(--foreground)] text-lg md:text-xl mb-1 cursor-pointer hover:text-[var(--brand-pink)] transition-colors"
+                        onClick={() => setSelectedOutfitDetail(outfit)}
+                    >
+                        {outfit.name || 'Outfit sin nombre'}
+                    </h4>
                     <p className="text-sm text-[var(--foreground-secondary)] mb-3">{outfit.items?.length || 0} prendas</p>
                     
                     {/* Display small items */}
                     {outfit.items && outfit.items.length > 0 && (
                         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                             {outfit.items.map((item: any) => (
-                                <div key={item.id} className="w-10 h-10 rounded-lg bg-[var(--background-secondary)] overflow-hidden flex-shrink-0 border border-[var(--border-color)]">
+                                <div 
+                                    key={item.id} 
+                                    onClick={() => setSelectedItemDetail(item)}
+                                    className="w-10 h-10 rounded-lg bg-[var(--background-secondary)] overflow-hidden flex-shrink-0 border border-[var(--border-color)] cursor-pointer hover:ring-2 hover:ring-[var(--brand-pink)] transition-all"
+                                >
                                     {item.image_url ? (
                                         <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
                                     ) : null}
@@ -383,15 +402,25 @@ export default function OutfitCalendar() {
                         </button>
                         
                         <div className="flex flex-col md:flex-row gap-4 md:gap-6 mb-4">
-                            {outfit.image_url ? (
-                                <img src={outfit.image_url} alt={outfit.name} className="w-24 h-24 md:w-56 md:h-56 object-cover rounded-xl border border-[var(--border-color)] shrink-0" />
-                            ) : (
-                                <div className="w-24 h-24 md:w-56 md:h-56 bg-[var(--background-secondary)] rounded-xl border border-[var(--border-color)] flex items-center justify-center shrink-0">
-                                    <span className="text-xs text-[var(--foreground-tertiary)]">Sin foto</span>
-                                </div>
-                            )}
+                            <div 
+                                onClick={() => setSelectedOutfitDetail(outfit)}
+                                className="cursor-pointer hover:opacity-90 transition-opacity shrink-0"
+                            >
+                                {outfit.image_url ? (
+                                    <img src={outfit.image_url} alt={outfit.name} className="w-24 h-24 md:w-56 md:h-56 object-cover rounded-xl border border-[var(--border-color)]" />
+                                ) : (
+                                    <div className="w-24 h-24 md:w-56 md:h-56 bg-[var(--background-secondary)] rounded-xl border border-[var(--border-color)] flex items-center justify-center">
+                                        <span className="text-xs text-[var(--foreground-tertiary)]">Sin foto</span>
+                                    </div>
+                                )}
+                            </div>
                             <div className="flex-1">
-                                <h4 className="font-bold text-[var(--foreground)] text-lg md:text-2xl mb-1 md:mb-2">{outfit.name || 'Outfit sin nombre'}</h4>
+                                <h4 
+                                    className="font-bold text-[var(--foreground)] text-lg md:text-2xl mb-1 md:mb-2 cursor-pointer hover:text-[var(--brand-pink)] transition-colors"
+                                    onClick={() => setSelectedOutfitDetail(outfit)}
+                                >
+                                    {outfit.name || 'Outfit sin nombre'}
+                                </h4>
                                 <p className="text-sm md:text-base text-[var(--foreground-secondary)]">{outfit.items?.length || 0} prendas</p>
                             </div>
                         </div>
@@ -400,7 +429,11 @@ export default function OutfitCalendar() {
                         {outfit.items && outfit.items.length > 0 && (
                             <div className="flex gap-2 md:gap-4 overflow-x-auto pb-2 scrollbar-hide mt-2 md:mt-4">
                                 {outfit.items.map((item: any) => (
-                                    <div key={item.id} className="w-12 h-12 md:w-20 md:h-20 rounded-lg md:rounded-xl bg-[var(--background-secondary)] overflow-hidden flex-shrink-0 border border-[var(--border-color)]">
+                                    <div 
+                                        key={item.id} 
+                                        onClick={() => setSelectedItemDetail(item)}
+                                        className="w-12 h-12 md:w-20 md:h-20 rounded-lg md:rounded-xl bg-[var(--background-secondary)] overflow-hidden flex-shrink-0 border border-[var(--border-color)] cursor-pointer hover:ring-2 hover:ring-[var(--brand-pink)] transition-all"
+                                    >
                                         {item.image_url ? (
                                             <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
                                         ) : null}
@@ -484,6 +517,27 @@ export default function OutfitCalendar() {
           </motion.div>
         )}
       </AnimatePresence>
+    {/* Modals for details */}
+    {selectedOutfitDetail && (
+        <OutfitDetailModal
+            isOpen={!!selectedOutfitDetail}
+            onClose={() => setSelectedOutfitDetail(null)}
+            outfit={selectedOutfitDetail}
+            onToggleFavorite={() => {}} // Could be wired up later if needed
+            onDelete={() => {}} // Same
+        />
+    )}
+
+    {selectedItemDetail && (
+        <ProductModal
+            isOpen={!!selectedItemDetail}
+            onClose={() => setSelectedItemDetail(null)}
+            item={selectedItemDetail}
+            onFavoriteToggle={() => {}}
+            onEdit={() => {}}
+            onDelete={() => {}}
+        />
+    )}
     </div>
   );
 }
