@@ -195,9 +195,64 @@ export default function OutfitCalendar() {
   const selectedDateStr = selectedDate ? formatDateToSQL(selectedDate) : '';
   const selectedDayOutfits = selectedDate ? getDayOutfits(selectedDate) : [];
 
+  const todayOutfits = getDayOutfits(new Date());
+
   return (
     <div className="w-full flex flex-col pt-2 pb-12">
       <div className="px-4">
+        {/* Today's Outfit Highlight */}
+        {todayOutfits.length > 0 && (
+          <div className="mb-8">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-bold text-[var(--foreground)] text-xl flex items-center gap-2">
+                <Shirt className="w-6 h-6 text-[var(--brand-pink)]" />
+                Outfit de Hoy
+              </h3>
+              <Button onClick={() => setSelectedDate(new Date())} variant="outline" size="sm" className="rounded-full border-[var(--brand-pink)] text-[var(--brand-pink)] hover:bg-[var(--brand-pink)] hover:text-white">
+                <Plus className="w-4 h-4 mr-1" />
+                Añadir
+              </Button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {todayOutfits.map((outfit) => (
+                <div key={`today-${outfit.calendar_id}`} className="bg-[var(--card-bg)] rounded-3xl border border-[var(--brand-pink)]/30 p-4 shadow-sm relative overflow-hidden flex flex-col sm:flex-row gap-4 hover:shadow-md transition-shadow">
+                  <button 
+                    onClick={() => handleRemoveAssignment(outfit.calendar_id)}
+                    className="absolute top-4 right-4 z-10 p-2 bg-red-100 text-red-500 rounded-full hover:bg-red-500 hover:text-white transition-colors"
+                    title="Quitar de hoy"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                  {outfit.image_url ? (
+                    <img src={outfit.image_url} alt={outfit.name} className="w-24 h-24 md:w-32 md:h-32 object-cover rounded-2xl border border-[var(--border-color)] shrink-0" />
+                  ) : (
+                    <div className="w-24 h-24 md:w-32 md:h-32 bg-[var(--background-secondary)] rounded-2xl border border-[var(--border-color)] flex items-center justify-center shrink-0">
+                      <span className="text-xs text-[var(--foreground-tertiary)]">Sin foto</span>
+                    </div>
+                  )}
+                  <div className="flex flex-col justify-center flex-1">
+                    <h4 className="font-bold text-[var(--foreground)] text-lg md:text-xl mb-1">{outfit.name || 'Outfit sin nombre'}</h4>
+                    <p className="text-sm text-[var(--foreground-secondary)] mb-3">{outfit.items?.length || 0} prendas</p>
+                    
+                    {/* Display small items */}
+                    {outfit.items && outfit.items.length > 0 && (
+                        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                            {outfit.items.map((item: any) => (
+                                <div key={item.id} className="w-10 h-10 rounded-lg bg-[var(--background-secondary)] overflow-hidden flex-shrink-0 border border-[var(--border-color)]">
+                                    {item.image_url ? (
+                                        <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
+                                    ) : null}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <div className="flex items-center justify-between mb-6 bg-[var(--card-bg)] p-4 rounded-3xl shadow-sm border border-[var(--border-color)]">
           <button onClick={handlePrevMonth} className="p-2 rounded-full hover:bg-[var(--background-secondary)] text-[var(--foreground)] transition-colors">
