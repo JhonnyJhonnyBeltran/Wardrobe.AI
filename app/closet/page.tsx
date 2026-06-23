@@ -10,7 +10,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRef } from 'react';
 import {
-  Heart, Grid3x3, List, Search, Filter, Plus, Wand2, X, Shirt, Layers, Share2, Trash2, Check
+  Heart, Grid3x3, List, Search, Filter, Plus, Wand2, X, Shirt, Layers, Share2, Trash2, Check, CalendarDays
 } from 'lucide-react';
 import { Card, Button, ClothingItem, LogoMark } from '@/components';
 import AddItemModal from '@/components/AddItemModal';
@@ -18,6 +18,7 @@ import ProductModal from '@/components/ProductModal';
 import BubbleToggle from '@/components/BubbleToggle';
 import OutfitCard from '@/components/OutfitCard';
 import { OutfitDetailModal } from '@/components/OutfitDetailModal';
+import OutfitCalendar from '@/components/OutfitCalendar';
 import type { Outfit } from '@/types/outfit';
 import type { ClothingItem as ClothingItemType } from '@/types/clothing';
 import { useUser } from '@/store';
@@ -142,7 +143,7 @@ export default function ClosetPage() {
   };
 
   // Outfits State
-  const [activeTab, setActiveTab] = useState<'items' | 'outfits'>('items');
+  const [activeTab, setActiveTab] = useState<'items' | 'outfits' | 'calendar'>('items');
 
   useSwipeNavigation({
     onSwipeRight: () => {
@@ -593,6 +594,16 @@ export default function ClosetPage() {
               <Layers className={`w-5 h-5 ${activeTab === 'outfits' ? 'text-[var(--brand-pink)]' : ''}`} />
               <span className="font-medium">Outfits</span>
             </button>
+            <button
+              onClick={() => setActiveTab('calendar')}
+              className={`flex-1 flex items-center justify-center py-3 border-b-2 transition-colors gap-2 ${activeTab === 'calendar'
+                ? 'border-[var(--brand-pink)] text-[var(--foreground)]'
+                : 'border-transparent text-[var(--foreground-tertiary)]'
+                }`}
+            >
+              <CalendarDays className={`w-5 h-5 ${activeTab === 'calendar' ? 'text-[var(--brand-pink)]' : ''}`} />
+              <span className="font-medium hidden sm:inline">Calendario</span>
+            </button>
           </div>
 
         </div>
@@ -772,7 +783,7 @@ export default function ClosetPage() {
                 </div>
               )}
             </motion.div>
-          ) : (
+          ) : activeTab === 'outfits' ? (
             <motion.div
               key="outfits"
               initial={{ opacity: 0, x: 20 }}
@@ -875,6 +886,16 @@ export default function ClosetPage() {
                   ))}
                 </div>
               )}
+            </motion.div>
+          ) : (
+            <motion.div
+              key="calendar"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.2 }}
+            >
+              <OutfitCalendar />
             </motion.div>
           )}
         </AnimatePresence>
@@ -1040,7 +1061,7 @@ export default function ClosetPage() {
           >
             <Plus className="w-7 h-7" />
             <span className="hidden md:block font-bold whitespace-nowrap text-[15px] ml-1 pr-1">
-              {activeTab === 'items' ? 'Nueva Prenda' : 'Nuevo Outfit'}
+              {activeTab === 'items' ? 'Nueva Prenda' : activeTab === 'outfits' ? 'Nuevo Outfit' : 'Crear'}
             </span>
           </motion.button>
         </div>

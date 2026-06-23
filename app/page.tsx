@@ -31,7 +31,7 @@ export default function RootPage() {
     if (user) {
       router.push('/closet');
     } else {
-      router.push('/auth?mode=signup');
+      router.push('/auth');
     }
   };
 

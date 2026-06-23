@@ -16,6 +16,14 @@ import { supabase } from '@/lib/supabase/client';
 import Image from 'next/image';
 
 // --- DATA ---
+const AGE_OPTIONS = [
+    { value: 'under_18', label: 'Menos de 18' },
+    { value: '18_24', label: '18 - 24 años' },
+    { value: '25_34', label: '25 - 34 años' },
+    { value: '35_44', label: '35 - 44 años' },
+    { value: '45_plus', label: '45+ años' },
+];
+
 const GENDER_OPTIONS = [
     { value: 'woman', label: 'Mujer', icon: User, image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=600&q=80' },
     { value: 'man', label: 'Hombre', icon: UserCircle, image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&q=80' },
@@ -37,6 +45,7 @@ export default function PreferencesPage() {
 
     // Core state
     const [step, setStep] = useState(0);
+    const [ageRange, setAgeRange] = useState('');
     const [gender, setGender] = useState('');
     const [selectedStyles, setSelectedStyles] = useState<string[]>([]);
 
@@ -56,6 +65,7 @@ export default function PreferencesPage() {
 
         if (user.styleCompleted) {
             setIsEditing(true);
+            setAgeRange(prev => prev || user.age_range || '');
             setGender(prev => prev || user.gender || '');
             if (Array.isArray(user.preferredStyles)) {
                 setSelectedStyles(prev => prev.length ? prev : user.preferredStyles!);
@@ -74,9 +84,10 @@ export default function PreferencesPage() {
     }, [user, router, isLoadingUser]);
 
     const handleNext = () => {
-        if (step === 0 && !gender) return;
+        if (step === 0 && !ageRange) return;
+        if (step === 1 && !gender) return;
 
-        if (step < 1) {
+        if (step < 2) {
             setStep(prev => prev + 1);
         } else {
             handleComplete();
@@ -88,10 +99,10 @@ export default function PreferencesPage() {
         setIsSaving(true);
 
         try {
-            // 1. Update DB (upsert profile config)
             const { error } = await (supabase as any)
                 .from('profiles')
                 .update({
+                    age_range: ageRange,
                     gender: gender,
                     preferred_styles: selectedStyles,
                     visual_style_preferences: selectedStyles,
@@ -105,6 +116,7 @@ export default function PreferencesPage() {
             // 2. Update local store
             setUser({
                 ...user,
+                age_range: ageRange,
                 gender: gender as any,
                 preferredStyles: selectedStyles,
                 styleCompleted: true
@@ -143,6 +155,7 @@ export default function PreferencesPage() {
                 <div className="flex gap-2">
                     <div className={`h-1.5 w-12 rounded-full transition-colors ${step >= 0 ? 'bg-[var(--brand-pink)]' : 'bg-[var(--border-color)]'}`} />
                     <div className={`h-1.5 w-12 rounded-full transition-colors ${step >= 1 ? 'bg-[var(--brand-pink)]' : 'bg-[var(--border-color)]'}`} />
+                    <div className={`h-1.5 w-12 rounded-full transition-colors ${step >= 2 ? 'bg-[var(--brand-pink)]' : 'bg-[var(--border-color)]'}`} />
                 </div>
                 {isEditing && (
                     <button onClick={() => router.push('/closet')} className="p-2 rounded-full hover:bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:text-[var(--brand-pink)] transition-colors">
@@ -161,8 +174,50 @@ export default function PreferencesPage() {
 
             <main className="flex-1 px-6 max-w-2xl mx-auto w-full pt-8 relative">
                 <AnimatePresence mode="wait">
-                    {/* STEP 1: GENDER */}
+                    {/* STEP 0: AGE RANGE */}
                     {step === 0 && (
+                        <motion.div
+                            key="step0"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            transition={{ duration: 0.3 }}
+                            className="flex flex-col gap-8"
+                        >
+                            <div className="text-center md:text-left space-y-3">
+                                <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-[var(--foreground)]">¿Qué edad tienes?</h1>
+                                <p className="text-[17px] text-[var(--foreground-secondary)]">Nos ayuda a adaptar las recomendaciones a tu estilo de vida.</p>
+                            </div>
+
+                            <div className="grid gap-4 mt-4">
+                                {AGE_OPTIONS.map((option) => (
+                                    <button
+                                        key={option.value}
+                                        onClick={() => {
+                                            setAgeRange(option.value);
+                                            setTimeout(() => setStep(1), 300);
+                                        }}
+                                        className={`relative w-full h-16 md:h-20 rounded-2xl flex items-center justify-between px-6 transition-all border-2 ${ageRange === option.value
+                                            ? 'border-[var(--brand-pink)] bg-[var(--brand-pink)]/5 scale-[0.98]'
+                                            : 'border-[var(--border-color)] hover:border-[var(--brand-pink)]/50 bg-[var(--background-secondary)] active:scale-95'
+                                            }`}
+                                    >
+                                        <span className={`text-xl font-semibold tracking-wide ${ageRange === option.value ? 'text-[var(--brand-pink)]' : 'text-[var(--foreground)]'}`}>
+                                            {option.label}
+                                        </span>
+                                        {ageRange === option.value && (
+                                            <div className="w-8 h-8 rounded-full bg-[var(--brand-pink)] flex items-center justify-center text-white shadow-lg">
+                                                <Check className="w-5 h-5" />
+                                            </div>
+                                        )}
+                                    </button>
+                                ))}
+                            </div>
+                        </motion.div>
+                    )}
+
+                    {/* STEP 1: GENDER */}
+                    {step === 1 && (
                         <motion.div
                             key="step1"
                             initial={{ opacity: 0, x: 20 }}
@@ -183,7 +238,7 @@ export default function PreferencesPage() {
                                         onClick={() => {
                                             setGender(option.value);
                                             // Auto-advance for ultra-fast UX
-                                            setTimeout(() => setStep(1), 300);
+                                            setTimeout(() => setStep(2), 300);
                                         }}
                                         className={`relative w-full h-32 md:h-40 rounded-2xl overflow-hidden text-left transition-all ${gender === option.value
                                             ? 'ring-4 ring-[var(--brand-pink)] ring-offset-2 ring-offset-[var(--background)] scale-[0.98]'
@@ -210,7 +265,7 @@ export default function PreferencesPage() {
                     )}
 
                     {/* STEP 2: STYLES */}
-                    {step === 1 && (
+                    {step === 2 && (
                         <motion.div
                             key="step2"
                             initial={{ opacity: 0, x: 20 }}
@@ -275,13 +330,13 @@ export default function PreferencesPage() {
 
                     <Button
                         size="lg"
-                        glow={step === 1 || (step === 0 && !!gender)}
+                        glow={step === 2 || (step === 1 && !!gender) || (step === 0 && !!ageRange)}
                         className="flex-1 h-14 rounded-2xl text-[16px] max-w-sm ml-auto"
                         onClick={handleNext}
-                        disabled={(step === 0 && !gender) || isSaving}
+                        disabled={(step === 0 && !ageRange) || (step === 1 && !gender) || isSaving}
                     >
-                        {step === 1 ? '¡Listo, entremos! ✨' : 'Siguiente paso'}
-                        {step === 0 && <ChevronRight className="w-5 h-5 ml-2" />}
+                        {step === 2 ? '¡Listo, entremos! ✨' : 'Siguiente paso'}
+                        {step < 2 && <ChevronRight className="w-5 h-5 ml-2" />}
                     </Button>
                 </div>
             </div>

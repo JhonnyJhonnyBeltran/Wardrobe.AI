@@ -225,7 +225,7 @@ export default function SearchPage() {
 
       if (!searchTerm.trim()) {
         // Default: Show most liked posts if no query
-        const { data: recentData } = await supabase
+        let postsQuery = supabase
           .from('posts')
           .select(`
                         id,
@@ -246,7 +246,14 @@ export default function SearchPage() {
                             )
                         ),
                         likes (count)
-                    `)
+                    `);
+
+        // If user has preferred styles, try to filter by them
+        if (user?.preferredStyles && user.preferredStyles.length > 0) {
+            postsQuery = postsQuery.overlaps('style_ids', user.preferredStyles);
+        }
+
+        const { data: recentData } = await postsQuery
           .order('created_at', { ascending: false })
           .range(from, to);
 

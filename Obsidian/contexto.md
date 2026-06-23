@@ -15,3 +15,18 @@ Wardrobe.AI es una plataforma de moda impulsada por IA que permite a los usuario
 - Mantener una estética premium y moderna.
 - Evitar placeholders en el código final.
 - Documentar cambios significativos aquí o en archivos dedicados dentro de `./Obsidian`.
+
+## Onboarding
+- El flujo de inicio rápido para nuevos usuarios está en `/onboarding/preferences` y consta de 3 pasos para optimizar la retención:
+  1. **Edad:** Rango de edad del usuario (`age_range`).
+  2. **Identidad:** Mujer, Hombre u Otro.
+  3. **Estilos:** Selección visual de `style_options`.
+- Al finalizar, se guarda en `profiles` actualizando `style_completed = true`.
+
+## Motor de Recomendaciones (Search)
+- La pantalla de Búsqueda (`/search`) muestra por defecto los "posts populares".
+- Si el usuario ha seleccionado `preferredStyles` en su onboarding, la consulta utiliza `.overlaps('style_ids', user.preferredStyles)` para filtrar las publicaciones más afines a su estilo antes de ordenarlas por fecha y likes.
+- Se ha añadido la columna `style_ids TEXT[]` a las tablas de `clothing_items`, `outfits` y `posts` para poder enlazar estilos a las prendas.
+
+## Funciones Premium (Roadmap)
+- Existe una estrategia documentada para implementar un Asistente IA Personal como funcionalidad estrella. Ver [premium_ai_feature.md](./premium_ai_feature.md).
