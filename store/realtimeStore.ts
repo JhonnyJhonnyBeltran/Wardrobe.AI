@@ -91,7 +91,8 @@ export const useRealtimeStore = create<RealtimeStore>((set, get) => ({
   },
 
   markActivityAsViewed: () => {
-    const now = new Date().toISOString();
+    // Add 5 minutes to account for client-server clock skew
+    const now = new Date(Date.now() + 5 * 60000).toISOString();
     if (typeof window !== 'undefined') {
       localStorage.setItem('last_viewed_activity', now);
     }

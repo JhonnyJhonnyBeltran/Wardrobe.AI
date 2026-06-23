@@ -14,6 +14,7 @@ interface OutfitDetailModalProps {
     outfit: Outfit;
     onDelete?: (id: string) => void;
     onToggleFavorite?: (id: string, currentStatus: boolean) => void;
+    onItemClick?: (item: any) => void;
 }
 
 const styleConfig: Record<string, { icon: React.ReactNode; label: string }> = {
@@ -26,7 +27,7 @@ const styleConfig: Record<string, { icon: React.ReactNode; label: string }> = {
     'everyday': { icon: <Sparkles className="w-4 h-4" />, label: 'Diario' },
 };
 
-export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleFavorite }: OutfitDetailModalProps) {
+export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleFavorite, onItemClick }: OutfitDetailModalProps) {
     useBodyScrollLock(isOpen);
 
     if (!isOpen || !outfit) return null;
@@ -187,7 +188,23 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
 
                                     if (!clothing || (!img && !clothing.name)) return null;
 
-                                    return (
+                                    return onItemClick ? (
+                                        <div
+                                            key={clothing.id}
+                                            className="block group cursor-pointer"
+                                            onClick={() => onItemClick(clothing)}
+                                        >
+                                            <div className="aspect-square bg-[var(--background-secondary)] rounded-2xl overflow-hidden relative mb-2">
+                                                {img ? (
+                                                    <Image src={img} alt={getItemName(item) || 'Ropa'} fill className="object-cover group-hover:scale-105 transition-transform duration-300" />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center text-4xl" style={{ backgroundColor: clothing.color || '#ccc' }}>👕</div>
+                                                )}
+                                            </div>
+                                            <p className="text-[13px] font-bold text-[var(--foreground)] truncate px-1">{getItemName(item)}</p>
+                                            <p className="text-[11px] text-[var(--foreground-secondary)] px-1">{getItemBrand(item) || 'Sin marca'}</p>
+                                        </div>
+                                    ) : (
                                         <Link
                                             href={`/closet?item=${clothing.id}`}
                                             key={clothing.id}

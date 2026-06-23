@@ -525,6 +525,7 @@ export default function OutfitCalendar() {
             outfit={selectedOutfitDetail}
             onToggleFavorite={() => {}} // Could be wired up later if needed
             onDelete={() => {}} // Same
+            onItemClick={(item) => setSelectedItemDetail(item)}
         />
     )}
 
