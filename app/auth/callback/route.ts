@@ -58,5 +58,19 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL(`/auth?error=${encodeURIComponent(errorMessage)}`, requestUrl.origin));
   }
 
+  // Check if profile is complete
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('style_completed, username')
+      .eq('id', user.id)
+      .single();
+
+    if (!profile?.style_completed) {
+      return NextResponse.redirect(new URL('/onboarding/preferences', requestUrl.origin));
+    }
+  }
+
   return NextResponse.redirect(new URL(next, requestUrl.origin));
 }

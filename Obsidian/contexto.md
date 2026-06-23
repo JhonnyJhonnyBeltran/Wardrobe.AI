@@ -30,3 +30,10 @@ Wardrobe.AI es una plataforma de moda impulsada por IA que permite a los usuario
 
 ## Funciones Premium (Roadmap)
 - Existe una estrategia documentada para implementar un Asistente IA Personal como funcionalidad estrella. Ver [premium_ai_feature.md](./premium_ai_feature.md).
+
+## Pendientes para Lanzamiento a Producción
+- **Landing Page Pública (`app/page.tsx`)**: Crear una página de inicio real en lugar de redirigir directamente al login. Es un requisito obligatorio para Google.
+- **Páginas Legales**: Redactar y publicar Términos de Servicio y Política de Privacidad.
+- **Verificación de Google Cloud**: 
+  - Registrar el dominio `klozet.es` en Google Search Console.
+  - Solicitar y pasar el proceso de Verificación de Aplicación OAuth para eliminar la pantalla de "App no verificada" (Requiere la Landing Page y páginas legales).
