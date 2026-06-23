@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, CalendarDays, X, Plus, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CalendarDays, X, Plus, Trash2, Shirt } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
 import { useUser } from '@/store';
 import { OutfitDetailModal } from '@/components/OutfitDetailModal';
@@ -251,11 +251,13 @@ export default function OutfitCalendar() {
                     {i + 1}
                   </span>
                   
-                  {/* Pink Dot Indicator */}
+                  {/* Outfit Indicator */}
                   {hasOutfits && (
-                    <div className="absolute bottom-1 sm:bottom-2 left-1/2 -translate-x-1/2 flex gap-0.5">
+                    <div className="absolute bottom-1 sm:bottom-2 left-1/2 -translate-x-1/2 flex items-center justify-center -space-x-1 sm:-space-x-1.5">
                       {dayOutfits.slice(0, 3).map((_, idx) => (
-                        <div key={idx} className={`w-1.5 h-1.5 rounded-full ${isToday ? 'bg-[var(--background)]' : 'bg-[var(--brand-pink)]'}`} />
+                        <div key={idx} className={`rounded-full p-0.5 sm:p-1 shadow-sm border border-[var(--card-bg)] ${isToday ? 'bg-[var(--background)] text-[var(--foreground)]' : 'bg-[var(--brand-pink)] text-white'}`}>
+                           <Shirt className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                        </div>
                       ))}
                     </div>
                   )}
