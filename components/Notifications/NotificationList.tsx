@@ -233,9 +233,9 @@ export default function NotificationList({ compact = false, onClose }: Notificat
                 const sortedNotifications = realNotifications.sort((a, b) => b.timestamp - a.timestamp);
                 setNotifications(sortedNotifications);
                 
-                // Clear badge using the newest notification timestamp
+                // Clear badge using the newest notification timestamp + 1 second to avoid microsecond truncation issues in DB
                 const newestTimestamp = sortedNotifications.length > 0 
-                    ? new Date(sortedNotifications[0].timestamp).toISOString() 
+                    ? new Date(sortedNotifications[0].timestamp + 1000).toISOString() 
                     : undefined;
                 markActivityAsViewed(newestTimestamp);
             }

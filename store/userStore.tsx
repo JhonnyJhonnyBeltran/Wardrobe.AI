@@ -153,13 +153,17 @@ export function UserProvider({ children }: { children: ReactNode }) {
       setIsLoading(false);
     }, 8000);
 
+    const isFetchingRef = { current: false }; // Track if initAuth is still running
+
     const initAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
           userIdRef.current = session.user.id;
           updateLoginHint(true);
+          isFetchingRef.current = true;
           await fetchUserProfile(session.user);
+          isFetchingRef.current = false;
         } else {
           if (isMounted) {
             setUser(null);
@@ -168,6 +172,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         }
       } catch (error) {
         console.error('[UserStore] Session check error:', error);
+        isFetchingRef.current = false;
       } finally {
         if (isMounted) {
           authResolved = true;
@@ -199,9 +204,11 @@ export function UserProvider({ children }: { children: ReactNode }) {
           console.log('[UserStore] Silently refreshing profile on session tick');
           fetchUserProfile(session.user);
         } else {
-          authResolved = true;
-          setIsLoading(false);
-          clearTimeout(safetyTimeout);
+          if (!isFetchingRef.current) {
+            authResolved = true;
+            setIsLoading(false);
+            clearTimeout(safetyTimeout);
+          }
         }
       } else {
         userIdRef.current = null;
