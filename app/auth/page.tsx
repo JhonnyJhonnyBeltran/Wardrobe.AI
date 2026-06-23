@@ -14,21 +14,21 @@ export default function AuthPage() {
     const router = useRouter();
     const { signIn, signUp, resetPasswordForEmail } = useAuth();
     const { checkEmailAvailability, checkUsernameAvailability } = useSocial();
-    const { user, isLoadingUser } = useUser();
+    const { user, isLoading } = useUser();
     const searchParams = useSearchParams();
     const mode = searchParams?.get('mode');
     const urlError = searchParams?.get('error');
 
     // Auto-redirect if already logged in
     useEffect(() => {
-        if (!isLoadingUser && user) {
+        if (!isLoading && user) {
             if (user.styleCompleted) {
                 router.push('/closet');
             } else {
                 router.push('/onboarding/preferences');
             }
         }
-    }, [user, isLoadingUser, router]);
+    }, [user, isLoading, router]);
 
     // Show auth errors from callback
     useEffect(() => {
