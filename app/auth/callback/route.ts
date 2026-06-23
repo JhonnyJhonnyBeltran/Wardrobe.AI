@@ -13,25 +13,23 @@ export async function GET(request: NextRequest) {
   let hasError = false;
   let errorMessage = '';
 
+  let response = NextResponse.redirect(new URL(next, requestUrl.origin));
   const cookieStore = await cookies();
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
+        getAll() {
+          return cookieStore.getAll();
         },
-        set(name: string, value: string, options: any) {
+        setAll(cookiesToSet) {
           try {
-            cookieStore.set({ name, value, ...options });
-          } catch (error) {
-            // ignore
-          }
-        },
-        remove(name: string, options: any) {
-          try {
-            cookieStore.set({ name, value: '', ...options });
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+              response.cookies.set({ name, value, ...options });
+            });
           } catch (error) {
             // ignore
           }
@@ -83,9 +81,14 @@ export async function GET(request: NextRequest) {
     }
 
     if (!isCompleted) {
-      return NextResponse.redirect(new URL('/onboarding/preferences', requestUrl.origin));
+      const newResponse = NextResponse.redirect(new URL('/onboarding/preferences', requestUrl.origin));
+      // Copy cookies from the base response to ensure they aren't lost
+      response.cookies.getAll().forEach((cookie) => {
+        newResponse.cookies.set(cookie.name, cookie.value, cookie);
+      });
+      return newResponse;
     }
   }
 
-  return NextResponse.redirect(new URL(next, requestUrl.origin));
+  return response;
 }
