@@ -553,7 +553,7 @@ export default function ClosetPage() {
                 }`}
             >
               <Shirt className={`w-5 h-5 ${activeTab === 'items' ? 'text-[var(--brand-pink)]' : ''}`} />
-              <span className="font-medium">Prendas</span>
+              <span className="font-medium hidden sm:inline">Prendas</span>
             </button>
             <button
               onClick={() => setActiveTab('outfits')}
@@ -563,7 +563,7 @@ export default function ClosetPage() {
                 }`}
             >
               <Layers className={`w-5 h-5 ${activeTab === 'outfits' ? 'text-[var(--brand-pink)]' : ''}`} />
-              <span className="font-medium">Outfits</span>
+              <span className="font-medium hidden sm:inline">Outfits</span>
             </button>
             <button
               onClick={() => setActiveTab('calendar')}
