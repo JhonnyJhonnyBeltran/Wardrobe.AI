@@ -223,7 +223,7 @@ export default function SearchPage() {
       let data: any[] | null = null;
 
       if (!searchTerm.trim()) {
-        // Default: Show most liked posts if no query
+        // Default: Explore / Discovery Feed
         let postsQuery = supabase
           .from('posts')
           .select(`
@@ -232,9 +232,12 @@ export default function SearchPage() {
                         image_url,
                         created_at,
                         user_id,
+                        style_ids,
                         profiles (
                             username,
-                            avatar_url
+                            avatar_url,
+                            morphology,
+                            colorimetry
                         ),
                         outfits (
                             name,
@@ -247,7 +250,7 @@ export default function SearchPage() {
                         likes (count)
                     `);
 
-        // If user has preferred styles, try to filter by them
+        // If user has preferred styles, try to filter by them to narrow candidates
         if (user?.preferredStyles && user.preferredStyles.length > 0) {
             postsQuery = postsQuery.overlaps('style_ids', user.preferredStyles);
         }
@@ -258,9 +261,32 @@ export default function SearchPage() {
 
         if (recentData) {
           data = recentData.sort((a: any, b: any) => {
-            const aLikes = a.likes?.[0]?.count || 0;
-            const bLikes = b.likes?.[0]?.count || 0;
-            return bLikes - aLikes;
+            let scoreA = 0;
+            let scoreB = 0;
+
+            // 1. Likes weight
+            scoreA += (a.likes?.[0]?.count || 0) * 0.5;
+            scoreB += (b.likes?.[0]?.count || 0) * 0.5;
+
+            // 2. Morphology match
+            if (user?.morphology && a.profiles?.morphology === user.morphology) scoreA += 5;
+            if (user?.morphology && b.profiles?.morphology === user.morphology) scoreB += 5;
+
+            // 3. Colorimetry match
+            if (user?.colorimetry && a.profiles?.colorimetry === user.colorimetry) scoreA += 5;
+            if (user?.colorimetry && b.profiles?.colorimetry === user.colorimetry) scoreB += 5;
+
+            // 4. Style match (exact overlap count could give more points)
+            if (user?.preferredStyles && a.style_ids) {
+                const overlapA = a.style_ids.filter((s: string) => user.preferredStyles!.includes(s)).length;
+                scoreA += overlapA * 2;
+            }
+            if (user?.preferredStyles && b.style_ids) {
+                const overlapB = b.style_ids.filter((s: string) => user.preferredStyles!.includes(s)).length;
+                scoreB += overlapB * 2;
+            }
+
+            return scoreB - scoreA;
           });
         }
       } else {

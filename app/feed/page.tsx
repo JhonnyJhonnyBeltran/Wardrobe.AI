@@ -62,35 +62,65 @@ export default function FeedPage() {
       // Include current user's posts and friends' posts
       const targetIds = [user.id, ...followingIds];
 
-      const { data: postsData, error: postsError } = await supabase
+      // 1. Fetch posts from following
+      const { data: followingPostsData, error: postsError } = await supabase
         .from('posts')
         .select(`
-          id,
-          caption,
-          image_url,
-          created_at,
-          user_id,
-          outfits (
-              name,
-              outfit_items (
-                  clothing_items (
-                      image_url
-                  )
-              )
-          ),
-            likes_count,
-            comments_count
+          id, caption, image_url, created_at, user_id,
+          outfits ( name, outfit_items ( clothing_items ( image_url ) ) ),
+          likes_count, comments_count, style_ids
         `)
         .in('user_id', targetIds)
-        .order('likes_count', { ascending: false })
         .order('created_at', { ascending: false })
         .range(from, to);
 
       if (postsError) throw postsError;
 
-      if (postsData) {
-        // Manually fetch profiles for these posts
-        const userIds = [...new Set((postsData as any[]).map(p => p.user_id))];
+      // 2. Fetch suggested posts (For You) based on preferredStyles
+      let suggestedPostsData: any[] = [];
+      // Only fetch suggestions if we are on the first few pages to avoid overwhelming
+      if (user.preferredStyles && user.preferredStyles.length > 0 && currentPage < 3) {
+        // Find 3 suggested posts per page
+        const { data: suggestions } = await supabase
+          .from('posts')
+          .select(`
+            id, caption, image_url, created_at, user_id,
+            outfits ( name, outfit_items ( clothing_items ( image_url ) ) ),
+            likes_count, comments_count, style_ids
+          `)
+          .not('user_id', 'in', `(${targetIds.join(',')})`)
+          .overlaps('style_ids', user.preferredStyles)
+          .order('likes_count', { ascending: false }) // Popular items
+          .range(currentPage * 3, (currentPage * 3) + 2);
+          
+        if (suggestions) {
+          // Tag them as suggested
+          suggestedPostsData = suggestions.map((p: any) => ({ ...p, isSuggested: true }));
+        }
+      }
+
+      // Mix them: Insert 1 suggested post every 3 regular posts
+      let mixedPosts: any[] = [];
+      const mainPosts = followingPostsData || [];
+      
+      let sIdx = 0;
+      for (let i = 0; i < mainPosts.length; i++) {
+        mixedPosts.push(mainPosts[i]);
+        // Insert a suggestion every 3 posts
+        if ((i + 1) % 3 === 0 && sIdx < suggestedPostsData.length) {
+          mixedPosts.push(suggestedPostsData[sIdx]);
+          sIdx++;
+        }
+      }
+      // Add remaining suggestions at the end if the main feed is short
+      while (sIdx < suggestedPostsData.length) {
+        mixedPosts.push(suggestedPostsData[sIdx]);
+        sIdx++;
+      }
+
+      if (mixedPosts.length > 0) {
+        // Manually fetch profiles for ALL mixed posts
+        const userIds = [...new Set(mixedPosts.map(p => p.user_id))];
 
         let profilesMap: Record<string, any> = {};
 
@@ -109,17 +139,17 @@ export default function FeedPage() {
 
         // Check which posts the current user has liked
         let likedPostIds = new Set<string>();
-        if (postsData && (postsData as any[]).length > 0) {
-          const { data: userLikes, error: likesError } = await supabase
-            .from('likes' as any)
-            .select('post_id')
-            .eq('user_id', user.id)
-            .in('post_id', (postsData as any[]).map(p => p.id));
-          
-          if (!likesError && userLikes) {
-            (userLikes as any[]).forEach(l => likedPostIds.add(l.post_id));
-          }
+        const { data: userLikes, error: likesError } = await supabase
+          .from('likes' as any)
+          .select('post_id')
+          .eq('user_id', user.id)
+          .in('post_id', mixedPosts.map(p => p.id));
+        
+        if (!likesError && userLikes) {
+          (userLikes as any[]).forEach(l => likedPostIds.add(l.post_id));
         }
+
+        const postsData = mixedPosts;
 
         const formattedPosts = postsData.map((post: any) => {
           // Determine display image:
@@ -150,7 +180,8 @@ export default function FeedPage() {
             },
             likes: post.likes_count || 0,
             comments: post.comments_count || 0,
-            isLiked: likedPostIds.has(post.id)
+            isLiked: likedPostIds.has(post.id),
+            isSuggested: post.isSuggested
           };
         });
         if (isLoadMore) {

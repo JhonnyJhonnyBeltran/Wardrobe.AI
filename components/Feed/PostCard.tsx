@@ -21,6 +21,7 @@ export interface Post {
     isLiked?: boolean;
     isSaved?: boolean;
     description?: string; // Add description for text-only posts
+    isSuggested?: boolean; // Indicate if post is a recommendation
 }
 
 interface PostCardProps {
@@ -117,6 +118,13 @@ export default function PostCard({ post, onClick }: PostCardProps) {
 
                     {/* Gradient Overlay - Always visible for text readability or removed if user wants clean */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-60" />
+
+                    {/* Suggested Badge */}
+                    {post.isSuggested && (
+                        <div className="absolute top-3 left-3 bg-white/20 backdrop-blur-md px-2 py-1 rounded-full border border-white/30 flex items-center gap-1 shadow-sm">
+                            <span className="text-[10px] font-semibold text-white tracking-wide uppercase">Para ti</span>
+                        </div>
+                    )}
 
                     {/* Add Save Quick Action to PostCard */}
                     <button
