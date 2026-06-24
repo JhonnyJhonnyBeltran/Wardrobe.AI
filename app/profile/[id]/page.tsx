@@ -13,7 +13,7 @@ import * as followService from '@/lib/services/followService';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useSwipeNavigation } from '@/hooks/useSwipeNavigation';
+
 import {
   ArrowLeft,
   Grid3x3,
@@ -63,9 +63,7 @@ export default function PublicProfilePage() {
   // Check if viewing own profile
   const isOwnProfile = currentUser?.id === profileId;
 
-  useSwipeNavigation({
-    onSwipeRight: () => router.back(),
-  });
+
 
   useEffect(() => {
     if (isOwnProfile) {

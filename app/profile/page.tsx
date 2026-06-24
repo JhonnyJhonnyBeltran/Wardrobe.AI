@@ -25,7 +25,7 @@ import {
   Lock,
   Loader2
 } from 'lucide-react';
-import { useSwipeNavigation } from '@/hooks/useSwipeNavigation';
+
 import FolderPreview from '@/components/FolderPreview';
 import { useUiStore } from '@/store/uiStore';
 
@@ -66,14 +66,7 @@ export default function ProfilePage() {
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   const [savedPostsWithoutFolder, setSavedPostsWithoutFolder] = useState<any[]>([]);
 
-  useSwipeNavigation({
-    onSwipeRight: () => router.push('/notifications'),
-    onSwipeLeft: () => {
-      if (activeTab === 'posts') {
-        setActiveTab('saved');
-      }
-    }
-  });
+
 
   // Real data state
   const [profileStats, setProfileStats] = useState({

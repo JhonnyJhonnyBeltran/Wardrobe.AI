@@ -7,7 +7,7 @@ import { supabase } from '@/lib/supabase/client';
 import { ArrowLeft, Send, MoreVertical, Image as ImageIcon, Smile } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { useSwipeNavigation } from '@/hooks/useSwipeNavigation';
+
 import { useMessageStore } from '@/store/messageStore';
 import { realtimeManager } from '@/lib/realtime/RealtimeManager';
 
@@ -47,10 +47,7 @@ export default function ChatPage() {
     
     const markConversationAsRead = useMessageStore(state => state.markConversationAsRead);
 
-    // Swipe back to messages list
-    useSwipeNavigation({
-        onSwipeRight: () => router.push('/messages')
-    });
+
 
     // Removed incorrect markConversationAsRead call from here, moving it to fetchMessages
 

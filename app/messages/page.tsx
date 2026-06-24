@@ -8,7 +8,7 @@ import { useUiStore } from '@/store/uiStore';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ConversationItem } from '@/components/ConversationItem';
 import { supabase } from '@/lib/supabase/client';
-import { useSwipeNavigation } from '@/hooks/useSwipeNavigation';
+
 import { getFollowing } from '@/lib/services/followService';
 import type { FollowProfile } from '@/types/follow';
 
@@ -35,9 +35,6 @@ export default function MessagesPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const sharePostData = searchParams.get('share_post');
-
-    // Enable swipe navigation (mobile only)
-    useSwipeNavigation();
 
     const [conversations, setConversations] = useState<Conversation[]>([]);
     const [loading, setLoading] = useState(true);

@@ -25,7 +25,6 @@ import { useUser } from '@/store';
 import { useUiStore } from '@/store/uiStore';
 import { useWardrobe } from '@/lib/hooks/useWardrobe';
 import { useBodyScrollLock } from '@/lib/hooks';
-import { useSwipeNavigation } from '@/hooks/useSwipeNavigation';
 import { useTranslation } from '@/lib/i18n';
 import Link from 'next/link';
 
@@ -145,20 +144,6 @@ export default function ClosetPage() {
   // Outfits State
   const [activeTab, setActiveTab] = useState<'items' | 'outfits' | 'calendar'>('items');
 
-  useSwipeNavigation({
-    onSwipeRight: () => {
-      // Swipe Right -> Goes "Back" geographically -> Search
-      router.push('/search');
-    },
-    onSwipeLeft: () => {
-      // Swipe Left -> Goes "Forward" geographically -> Outfits or Notifications
-      if (activeTab === 'items') {
-        setActiveTab('outfits');
-      } else {
-        router.push('/notifications');
-      }
-    }
-  });
 
   // Lock body scroll when filter panel is open
   useBodyScrollLock(showFilters);
@@ -499,17 +484,7 @@ export default function ClosetPage() {
     // ... add more if needed
   };
 
-  // Swipe Navigation Logic
-  const handleDragEnd = (event: any, info: any) => {
-    const threshold = 50;
-    if (info.offset.x < -threshold) {
-      // Swipe Left -> Next (Notifications)
-      router.push('/notifications');
-    } else if (info.offset.x > threshold) {
-      // Swipe Right -> Prev (Search)
-      router.push('/search');
-    }
-  };
+
 
   const toggleViewMode = () => {
     setViewMode(prev => prev === 'grid' ? 'list' : 'grid');
@@ -539,16 +514,12 @@ export default function ClosetPage() {
 
   return (
     <>
-      <motion.div
+    <motion.div
       className="min-h-screen bg-[var(--background)] pb-24 md:pb-8 relative overflow-hidden touch-pan-y"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.3 }}
-      drag="x"
-      dragConstraints={{ left: 0, right: 0 }}
-      dragElastic={0.05}
-      onDragEnd={handleDragEnd}
     >
 
       {/* Header Sticky & Auto-hide */}

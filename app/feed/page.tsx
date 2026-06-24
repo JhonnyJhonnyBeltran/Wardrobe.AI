@@ -11,7 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRef, useCallback } from 'react';
 import { useUiStore } from '@/store/uiStore';
 import { supabase } from '@/lib/supabase/client';
-import { useSwipeNavigation } from '@/hooks/useSwipeNavigation';
+
 import { useMessageStore, selectTotalUnread, selectBadgeVisible } from '@/store/messageStore';
 import { useUser } from '@/store/userStore';
 import { getFollowing } from '@/lib/services/followService';
@@ -30,8 +30,7 @@ export default function FeedPage() {
   const POSTS_PER_PAGE = 12;
   const observerElement = useRef<HTMLDivElement | null>(null);
 
-  // Enable swipe navigation
-  useSwipeNavigation();
+
 
   // Message notifications
   const messageUnreadCount = useMessageStore(selectTotalUnread);

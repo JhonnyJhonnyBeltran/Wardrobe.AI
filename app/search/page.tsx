@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Search as SearchIcon, X, Users, Image as ImageIcon, UserPlus, Check } from 'lucide-react';
 import PostCard, { type Post } from '@/components/Feed/PostCard';
 import { supabase } from '@/lib/supabase/client';
-import { useSwipeNavigation } from '@/hooks/useSwipeNavigation';
+
 import { useUser } from '@/store/userStore';
 import { useUiStore } from '@/store/uiStore';
 import Link from 'next/link';
@@ -45,8 +45,7 @@ export default function SearchPage() {
   const postsObserverElement = useRef<HTMLDivElement | null>(null);
   const usersObserverElement = useRef<HTMLDivElement | null>(null);
 
-  // Enable swipe navigation
-  useSwipeNavigation();
+
 
   // Debounce query
   useEffect(() => {
