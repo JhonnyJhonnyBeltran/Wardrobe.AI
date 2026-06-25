@@ -12,6 +12,7 @@ import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import Avatar from '@/components/Avatar';
 import { useUiStore } from '@/store/uiStore';
 import { motion, AnimatePresence } from 'framer-motion';
+import InteractiveOutfitViewer from '@/components/InteractiveOutfitViewer';
 
 interface Comment {
     id: string;
@@ -94,6 +95,11 @@ export default function PostDetailPage() {
                         outfits (
                             id, name, image_url,
                             outfit_items (
+                                position_x,
+                                position_y,
+                                scale,
+                                rotation,
+                                z_index,
                                 clothing_items (id, name, brand, image_url, color, category, size, reference)
                             )
                         )
@@ -572,32 +578,11 @@ export default function PostDetailPage() {
                                 draggable={false}
                             />
                         ) : (
-                            <div className="w-full h-full relative bg-white dark:bg-[#111]">
-                                {(currentSlide.outfit?.imageUrl || currentSlide.outfit?.image_url) ? (
-                                    <Image
-                                        src={currentSlide.outfit.imageUrl || currentSlide.outfit.image_url}
-                                        alt="Outfit Presentation"
-                                        fill
-                                        className="object-cover"
-                                        priority
-                                        draggable={false}
-                                    />
-                                ) : (
-                                    <div className="w-full h-full grid grid-cols-2 gap-[1px] bg-gray-200 dark:bg-gray-700">
-                                        {(currentSlide.outfit?.outfit_items || []).slice(0, 4).map((item: any, i: number) => {
-                                            const clothing = item.clothing_items;
-                                            return (
-                                                <div key={i} className="relative bg-white dark:bg-[#222] overflow-hidden aspect-square">
-                                                    {clothing?.image_url ? (
-                                                        <Image src={clothing.image_url} alt={clothing.name} fill className="object-cover" draggable={false} />
-                                                    ) : (
-                                                        <div className="w-full h-full flex items-center justify-center text-4xl" style={{ backgroundColor: clothing?.color || '#ccc' }}>👕</div>
-                                                    )}
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                )}
+                            <div className="w-full h-full relative bg-[#f8f9fa] dark:bg-[#111]">
+                                <InteractiveOutfitViewer 
+                                    outfit={currentSlide.outfit} 
+                                    onItemClick={(item) => setSelectedItem(item)} 
+                                />
                             </div>
                         )}
                     </motion.div>

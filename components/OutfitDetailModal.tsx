@@ -7,6 +7,7 @@ import { X, Heart, Share2, Briefcase, PartyPopper, Zap, Flower2, Snowflake, Circ
 import Link from 'next/link';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { Outfit } from '@/types/outfit';
+import InteractiveOutfitViewer from './InteractiveOutfitViewer';
 
 interface OutfitDetailModalProps {
     isOpen: boolean;
@@ -83,28 +84,11 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
 
                     <div className="overflow-y-auto custom-scrollbar flex-1 pb-10">
                         {/* 1. Outfit Visual Header */}
-                        <div className="relative w-full aspect-square md:aspect-[4/3] bg-gray-100 dark:bg-[#111]">
-                            {outfitPreviewImage ? (
-                                <Image
-                                    src={outfitPreviewImage}
-                                    alt={outfit.name}
-                                    fill
-                                    className="object-contain mix-blend-multiply dark:mix-blend-normal p-4"
-                                />
-                            ) : (
-                                <div className="absolute inset-0 grid grid-cols-2 gap-1 p-4">
-                                    {items.slice(0, 4).map((item: any, i: number) => (
-                                        <div key={i} className="relative rounded-2xl overflow-hidden bg-white dark:bg-[#222] shadow-sm">
-                                            {getItemImage(item) ? (
-                                                <Image src={getItemImage(item)} alt="Item" fill className="object-cover" />
-                                            ) : (
-                                                <div className="w-full h-full flex items-center justify-center text-4xl" style={{ backgroundColor: item.color || '#ccc' }}>👕</div>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-
+                        <div className="relative w-full aspect-square md:aspect-[4/3] bg-[#f8f9fa] dark:bg-[#111]">
+                            <InteractiveOutfitViewer
+                                outfit={outfit}
+                                onItemClick={onItemClick}
+                            />
                         </div>
 
                         {/* 2. Outfit Info */}

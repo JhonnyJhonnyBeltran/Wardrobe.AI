@@ -230,6 +230,11 @@ export default function ClosetPage() {
         .select(`
           *,
           outfit_items (
+            position_x,
+            position_y,
+            scale,
+            rotation,
+            z_index,
             clothing_item:clothing_items (*)
           )
         `)
@@ -244,7 +249,17 @@ export default function ClosetPage() {
         ...o,
         createdAt: new Date(o.created_at),
         occasion: o.occasion,
-        items: o.outfit_items.map((oi: any) => oi.clothing_item).filter(Boolean),
+        items: o.outfit_items.map((oi: any) => {
+            if (!oi.clothing_item) return null;
+            return {
+                ...oi.clothing_item,
+                position_x: oi.position_x,
+                position_y: oi.position_y,
+                scale: oi.scale,
+                rotation: oi.rotation,
+                z_index: oi.z_index
+            };
+        }).filter(Boolean),
         style: o.occasion, // map occasion to style for UI
         date: new Date(o.created_at).toLocaleDateString(),
       }));
