@@ -182,7 +182,7 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
                                                 {img ? (
                                                     <Image src={img} alt={getItemName(item) || 'Ropa'} fill className="object-cover group-hover:scale-105 transition-transform duration-300" />
                                                 ) : (
-                                                    <div className="w-full h-full flex items-center justify-center text-4xl" style={{ backgroundColor: clothing.color || '#ccc' }}>👕</div>
+                                                    <div className="w-full h-full flex items-center justify-center text-4xl" style={{ backgroundColor: clothing.color_hex || clothing.color || '#ccc' }}>👕</div>
                                                 )}
                                             </div>
                                             <p className="text-[13px] font-bold text-[var(--foreground)] truncate px-1">{getItemName(item)}</p>
@@ -199,7 +199,7 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
                                                 {img ? (
                                                     <Image src={img} alt={getItemName(item) || 'Ropa'} fill className="object-cover group-hover:scale-105 transition-transform duration-300" />
                                                 ) : (
-                                                    <div className="w-full h-full flex items-center justify-center text-4xl" style={{ backgroundColor: clothing.color || '#ccc' }}>👕</div>
+                                                    <div className="w-full h-full flex items-center justify-center text-4xl" style={{ backgroundColor: clothing.color_hex || clothing.color || '#ccc' }}>👕</div>
                                                 )}
                                             </div>
                                             <p className="text-[13px] font-bold text-[var(--foreground)] truncate px-1">{getItemName(item)}</p>

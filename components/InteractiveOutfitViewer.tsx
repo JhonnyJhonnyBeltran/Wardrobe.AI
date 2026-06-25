@@ -76,7 +76,7 @@ export default function InteractiveOutfitViewer({ outfit, onItemClick, className
                 const y = item.position_y ?? 50;
                 const scale = item.scale ?? 1;
                 const rotation = item.rotation ?? 0;
-                const zIndex = item.z_index ?? i;
+                const zIndex = item.layer_order ?? item.z_index ?? i;
 
                 const isHovered = hoveredItemId === clothing.id;
 

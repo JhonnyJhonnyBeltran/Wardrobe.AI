@@ -106,14 +106,14 @@ export default function OutfitCard({ outfit, isLocked = false, onClick, onEdit, 
                                                 const target = e.target as HTMLImageElement;
                                                 target.style.display = 'none';
                                                 if (target.parentElement) {
-                                                    target.parentElement.style.backgroundColor = item.color || '#ccc';
+                                                    target.parentElement.style.backgroundColor = item.color_hex || item.color || '#ccc';
                                                 }
                                             }}
                                         />
                                     ) : (
                                         <div
                                             className="w-full h-full"
-                                            style={{ backgroundColor: item.color || '#ccc' }}
+                                            style={{ backgroundColor: item.color_hex || item.color || '#ccc' }}
                                         />
                                     )}
                                 </motion.div>

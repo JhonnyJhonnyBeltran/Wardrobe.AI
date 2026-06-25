@@ -99,8 +99,8 @@ export default function PostDetailPage() {
                                 position_y,
                                 scale,
                                 rotation,
-                                z_index,
-                                clothing_items (id, name, brand, image_url, color, category, size, reference)
+                                layer_order,
+                                clothing_items (id, name, brand, image_url, color, color_hex, category, size, reference)
                             )
                         )
                     `)
@@ -712,7 +712,7 @@ export default function PostDetailPage() {
                                             <div className="flex items-center gap-1.5 mt-1">
                                                 <div
                                                     className="w-3 h-3 rounded-full border border-gray-200 dark:border-gray-600"
-                                                    style={{ backgroundColor: clothing.color }}
+                                                    style={{ backgroundColor: clothing.color_hex || clothing.color }}
                                                 />
                                                 <span className="text-[10px] text-gray-400 capitalize">{clothing.color}</span>
                                             </div>
@@ -891,7 +891,7 @@ export default function PostDetailPage() {
                             {selectedItem.image_url ? (
                                 <Image src={selectedItem.image_url} alt={selectedItem.name} fill className="object-cover" />
                             ) : (
-                                <div className="w-full h-full flex items-center justify-center text-6xl" style={{ backgroundColor: selectedItem.color || '#ccc' }}>👕</div>
+                                <div className="w-full h-full flex items-center justify-center text-6xl" style={{ backgroundColor: selectedItem.color_hex || selectedItem.color || '#ccc' }}>👕</div>
                             )}
                         </div>
 
@@ -907,7 +907,7 @@ export default function PostDetailPage() {
                                     <div className="flex items-center gap-2 p-2 px-3 bg-gray-100 dark:bg-gray-800 rounded-xl w-fit">
                                         <div
                                             className="w-3.5 h-3.5 rounded-full border border-gray-300 dark:border-gray-600"
-                                            style={{ backgroundColor: selectedItem.color }}
+                                            style={{ backgroundColor: selectedItem.color_hex || selectedItem.color }}
                                         />
                                         <span className="text-[13px] font-medium text-gray-600 dark:text-gray-300 capitalize">{selectedItem.color}</span>
                                     </div>

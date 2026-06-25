@@ -234,7 +234,7 @@ export default function ClosetPage() {
             position_y,
             scale,
             rotation,
-            z_index,
+            layer_order,
             clothing_item:clothing_items (*)
           )
         `)
@@ -257,7 +257,7 @@ export default function ClosetPage() {
                 position_y: oi.position_y,
                 scale: oi.scale,
                 rotation: oi.rotation,
-                z_index: oi.z_index
+                layer_order: oi.layer_order
             };
         }).filter(Boolean),
         style: o.occasion, // map occasion to style for UI
