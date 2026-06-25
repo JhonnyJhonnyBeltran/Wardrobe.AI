@@ -67,7 +67,7 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: 100 }}
                             transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-                            className="w-full max-h-[calc(100dvh-var(--tabbar-height)-48px)] md:max-h-[85vh] md:max-w-md bg-[var(--background)] rounded-3xl md:rounded-[32px] flex flex-col overflow-hidden shadow-2xl relative border border-[var(--border-color)] pointer-events-auto"
+                            className="w-full max-h-[90vh] md:max-h-[85vh] md:max-w-4xl bg-[var(--background)] rounded-3xl md:rounded-[32px] flex flex-col md:flex-row overflow-hidden shadow-2xl relative border border-[var(--border-color)] pointer-events-auto"
                             onClick={(e) => e.stopPropagation()}
                         >
                     {/* Header Handles / Close */}
@@ -82,15 +82,16 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
                         <X className="w-5 h-5 text-white" />
                     </button>
 
-                    <div className="overflow-y-auto custom-scrollbar flex-1 pb-10">
-                        {/* 1. Outfit Visual Header */}
-                        <div className="relative w-full aspect-square md:aspect-[4/3] bg-[#f8f9fa] dark:bg-[#111]">
-                            <InteractiveOutfitViewer
-                                outfit={outfit}
-                                onItemClick={onItemClick}
-                            />
-                        </div>
+                    {/* Left Column (Desktop) / Top (Mobile): Visual Header */}
+                    <div className="relative w-full md:w-1/2 shrink-0 aspect-square md:aspect-auto md:h-full bg-[#f8f9fa] dark:bg-[#111]">
+                        <InteractiveOutfitViewer
+                            outfit={outfit}
+                            onItemClick={onItemClick}
+                        />
+                    </div>
 
+                    {/* Right Column (Desktop) / Bottom (Mobile): Details & Items */}
+                    <div className="w-full md:w-1/2 overflow-y-auto custom-scrollbar flex flex-col pb-10">
                         {/* 2. Outfit Info */}
                         <div className="px-6 py-5 bg-[var(--background)]">
                             <h2 className="text-2xl font-bold text-[var(--foreground)] mb-4">{outfit.name}</h2>

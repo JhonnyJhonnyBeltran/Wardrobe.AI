@@ -16,7 +16,7 @@ export default function InteractiveOutfitViewer({ outfit, onItemClick, className
     // Fallback if no outfit or items
     if (!outfit) return null;
 
-    const items = outfit.outfit_items || outfit.items || [];
+    const items = outfit.items || outfit.outfit_items || [];
     
     // Check if we have valid layout data for at least one item
     // Some legacy outfits might not have position_x, position_y
@@ -46,7 +46,7 @@ export default function InteractiveOutfitViewer({ outfit, onItemClick, className
         return (
             <div className={`grid grid-cols-2 gap-1 bg-gray-200 dark:bg-gray-700 w-full h-full ${className}`}>
                 {items.slice(0, 4).map((item: any, i: number) => {
-                    const clothing = item.clothing_items || item;
+                    const clothing = item.clothing_items || item.clothing_item || item;
                     const img = clothing.imageUrl || clothing.image_url;
                     return (
                         <div key={i} className="relative bg-white dark:bg-[#222] overflow-hidden aspect-square">
@@ -66,7 +66,7 @@ export default function InteractiveOutfitViewer({ outfit, onItemClick, className
     return (
         <div className={`relative w-full h-full bg-[#f8f9fa] dark:bg-[#111] overflow-hidden ${className}`}>
             {items.map((item: any, i: number) => {
-                const clothing = item.clothing_items || item;
+                const clothing = item.clothing_items || item.clothing_item || item;
                 const img = clothing.imageUrl || clothing.image_url;
                 
                 if (!img) return null;
