@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { motion, useDragControls } from 'framer-motion';
+import { motion, useDragControls, useMotionValue } from 'framer-motion';
 import { ClothingItem } from '@/types/clothing';
 import { X, RotateCw, Maximize2, Trash2, Move } from 'lucide-react';
 import Image from 'next/image';
@@ -29,6 +29,10 @@ export const DraggableItem = ({
     const [isResizing, setIsResizing] = useState(false);
     const [isRotating, setIsRotating] = useState(false);
     const itemRef = useRef<HTMLDivElement>(null);
+    
+    // Bind internal drag state to motion values so we can reset it!
+    const dragX = useMotionValue(0);
+    const dragY = useMotionValue(0);
 
     // Removed drag constraints to allow freedom outside canvas limits
     const constraintsRef = { current: null }; 
@@ -36,14 +40,23 @@ export const DraggableItem = ({
     // Handle Drag End to update X/Y
     const handleDragEnd = (_: any, info: any) => {
         if (!containerRef.current || !itemRef.current) return;
-
         const containerRect = containerRef.current.getBoundingClientRect();
-        // Convert pixel position to percentage relative to container
-        // We use the point relative to the container center or top-left correctly
-        const xPercent = (info.point.x - containerRect.left) / containerRect.width * 100;
-        const yPercent = (info.point.y - containerRect.top) / containerRect.height * 100;
+        const itemRect = itemRef.current.getBoundingClientRect();
 
+        // Calculate absolute center of the item
+        const itemCenterX = itemRect.left + itemRect.width / 2;
+        const itemCenterY = itemRect.top + itemRect.height / 2;
+
+        // Convert to percentage relative to container
+        const xPercent = ((itemCenterX - containerRect.left) / containerRect.width) * 100;
+        const yPercent = ((itemCenterY - containerRect.top) / containerRect.height) * 100;
+
+        // Update state with new percentage positions
         onChange({ x: xPercent, y: yPercent });
+        
+        // Reset the drag translation so it doesn't double-apply the offset
+        dragX.set(0);
+        dragY.set(0);
     };
 
     return (
@@ -53,28 +66,28 @@ export const DraggableItem = ({
             dragMomentum={false}
             dragControls={controls}
             onDragStart={onSelect} // Select on start dragging
+            onDragEnd={handleDragEnd} // Use proper drag end handler
             onTap={onSelect}
-            // Animate only if not dragging to avoid jitter
+            // Animate other properties and left/top
             animate={{
-                x: state.x,
-                y: state.y,
+                left: `${state.x}%`,
+                top: `${state.y}%`,
                 rotate: state.rotation,
                 scale: state.scale,
                 zIndex: state.zIndex,
             }}
             transition={{
-                x: { type: 'spring', damping: 25, stiffness: 300, mass: 0.5 },
-                y: { type: 'spring', damping: 25, stiffness: 300, mass: 0.5 },
+                left: { type: 'spring', damping: 25, stiffness: 300, mass: 0.5 },
+                top: { type: 'spring', damping: 25, stiffness: 300, mass: 0.5 },
                 rotate: { type: 'spring', damping: 20, stiffness: 200 },
                 scale: { type: 'spring', damping: 20, stiffness: 200 }
             }}
-            // Use style for initial position if needed, but Motion handles transform
             style={{
                 position: 'absolute',
-                left: 0,
-                top: 0,
-                x: state.x, // Initial
-                y: state.y, // Initial
+                x: dragX,
+                y: dragY,
+                marginLeft: '-75px', // Center horizontally since width is 150px
+                marginTop: '-75px', // Center vertically roughly
                 width: '150px', // Base width
                 height: 'auto',
                 touchAction: 'none',

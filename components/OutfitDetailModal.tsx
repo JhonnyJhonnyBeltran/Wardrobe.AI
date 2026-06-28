@@ -73,13 +73,13 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: 100 }}
                             transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-                            className="w-full h-[100dvh] md:h-auto md:max-h-[85vh] md:max-w-4xl bg-[var(--background)] md:rounded-[32px] flex flex-col md:flex-row overflow-hidden shadow-2xl relative md:border border-[var(--border-color)] pointer-events-auto"
+                            className="w-full h-[100dvh] md:h-[90vh] md:max-w-[1200px] bg-[var(--background)] md:rounded-[32px] flex flex-col md:flex-row overflow-hidden shadow-2xl relative md:border border-[var(--border-color)] pointer-events-auto"
                             onClick={(e) => e.stopPropagation()}
                         >
                             {/* Close button - Top Left on Mobile, Top Right on Desktop */}
                             <button
                                 onClick={onClose}
-                                className="absolute top-12 md:top-4 left-4 md:left-auto md:right-4 z-50 p-3 md:p-2.5 bg-black/20 hover:bg-black/40 backdrop-blur-md rounded-full transition-colors text-white"
+                                className="absolute top-12 md:top-6 left-4 md:left-auto md:right-6 z-50 p-3 md:p-3 bg-black/20 hover:bg-black/40 backdrop-blur-md rounded-full transition-colors text-white"
                             >
                                 <X className="w-6 h-6 md:w-5 md:h-5" />
                             </button>
@@ -268,19 +268,19 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
                                             animate={{ opacity: 1, scale: 1, y: 0 }}
                                             exit={{ opacity: 0, scale: 0.95, y: 10 }}
                                             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                                            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[5040] bg-white dark:bg-[#1a1a1a] rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl hidden md:block"
+                                            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[5040] bg-white dark:bg-[#1a1a1a] rounded-3xl max-w-sm w-full p-5 space-y-4 shadow-2xl hidden md:block"
                                             onClick={(e) => e.stopPropagation()}
                                         >
                                             <button
                                                 onClick={handleCloseItemDetail}
-                                                className="absolute top-4 right-4 p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors z-10"
+                                                className="absolute top-3 right-3 p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors z-10"
                                             >
                                                 <X className="w-5 h-5 text-gray-900 dark:text-white" />
                                             </button>
 
-                                            <div className="relative w-full aspect-square rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-800">
+                                            <div className="relative w-full h-56 rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-800">
                                                 {selectedItemForDetail.imageUrl || selectedItemForDetail.image_url ? (
-                                                    <Image src={selectedItemForDetail.imageUrl || selectedItemForDetail.image_url} alt={selectedItemForDetail.name || 'Prenda'} fill className="object-cover" />
+                                                    <Image src={selectedItemForDetail.imageUrl || selectedItemForDetail.image_url} alt={selectedItemForDetail.name || 'Prenda'} fill className="object-contain p-4" />
                                                 ) : (
                                                     <div className="w-full h-full flex items-center justify-center text-6xl" style={{ backgroundColor: selectedItemForDetail.color_hex || selectedItemForDetail.color || '#ccc' }}>👕</div>
                                                 )}

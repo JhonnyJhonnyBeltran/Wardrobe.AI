@@ -8,6 +8,7 @@ import html2canvas from 'html2canvas';
 interface FreeDragCanvasProps {
     items: ClothingItem[]; // Flat list of items to show
     onRemoveItem?: (itemId: string) => void;
+    initialState?: Record<string, any>;
 }
 
 export interface FreeDragCanvasRef {
@@ -23,7 +24,7 @@ interface ItemState {
     zIndex: number;
 }
 
-export const FreeDragCanvas = forwardRef<FreeDragCanvasRef, FreeDragCanvasProps>(function FreeDragCanvas({ items, onRemoveItem }, ref) {
+export const FreeDragCanvas = forwardRef<FreeDragCanvasRef, FreeDragCanvasProps>(function FreeDragCanvas({ items, onRemoveItem, initialState }, ref) {
     const containerRef = useRef<HTMLDivElement>(null);
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [itemStates, setItemStates] = useState<Record<string, ItemState>>({});
@@ -39,18 +40,18 @@ export const FreeDragCanvas = forwardRef<FreeDragCanvasRef, FreeDragCanvasProps>
             items.forEach((item, index) => {
                 if (!next[item.id]) {
                     hasChanges = true;
-                    // Improved initial layout: Staggered grid
+                    const saved = initialState?.[item.id];
+                    
                     const col = index % 3;
                     const row = Math.floor(index / 3);
 
                     next[item.id] = {
-                        x: 50 + col * 100, // Pixel Offset approx
-                        y: 50 + row * 150,
-                        scale: 1,
-                        rotation: 0,
-                        zIndex: index + 1
+                        x: saved?.x ?? (30 + col * 20), // PERCENTAGES
+                        y: saved?.y ?? (30 + row * 20), // PERCENTAGES
+                        scale: saved?.scale ?? 1,
+                        rotation: saved?.rotation ?? 0,
+                        zIndex: saved?.zIndex ?? (index + 1)
                     };
-                    if (index + 1 > maxZIndex) setMaxZIndex(index + 1);
                 }
             });
 
@@ -58,9 +59,8 @@ export const FreeDragCanvas = forwardRef<FreeDragCanvasRef, FreeDragCanvasProps>
         });
     }, [items]);
 
-    // Export function
     useImperativeHandle(ref, () => ({
-        getItemsState: () => itemStates,
+        getItemsState: () => itemStates, // It's already in percentages now!
         exportToImage: async () => {
             if (!containerRef.current) return null;
             // Deselect before capture

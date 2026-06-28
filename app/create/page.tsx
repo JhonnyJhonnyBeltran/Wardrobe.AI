@@ -683,6 +683,7 @@ export default function CreateOutfitPage() {
                                         ref={canvasRef}
                                         items={flatItems}
                                         onRemoveItem={handleRemoveItem}
+                                        initialState={canvasState}
                                     />
                                 </div>
                                 <button
@@ -846,6 +847,7 @@ export default function CreateOutfitPage() {
                                 ref={canvasRef}
                                 items={flatItems}
                                 onRemoveItem={handleRemoveItem}
+                                initialState={canvasState}
                             />
                         </div>
 
