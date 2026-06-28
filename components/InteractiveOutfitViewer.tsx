@@ -8,10 +8,19 @@ interface InteractiveOutfitViewerProps {
     outfit: any;
     onItemClick?: (item: any) => void;
     className?: string;
+    isMobileSticker?: boolean;
 }
 
-export default function InteractiveOutfitViewer({ outfit, onItemClick, className = '' }: InteractiveOutfitViewerProps) {
+export default function InteractiveOutfitViewer({ outfit, onItemClick, className = '', isMobileSticker = false }: InteractiveOutfitViewerProps) {
     const [hoveredItemId, setHoveredItemId] = useState<string | null>(null);
+    const [isMobile, setIsMobile] = useState(false);
+
+    React.useEffect(() => {
+        const checkMobile = () => setIsMobile(window.innerWidth < 768);
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
 
     // Fallback if no outfit or items
     if (!outfit) return null;
@@ -111,10 +120,11 @@ export default function InteractiveOutfitViewer({ outfit, onItemClick, className
                         <div 
                             className="relative w-full aspect-[3/4]"
                             style={{
-                                filter: isHovered 
-                                    ? 'drop-shadow(0 0 6px rgba(255,255,255,0.8)) drop-shadow(0 8px 12px rgba(0,0,0,0.3))' 
-                                    : 'drop-shadow(0 4px 6px rgba(0,0,0,0.15))',
-                                transition: 'filter 0.2s ease-in-out'
+                                filter: (isMobileSticker && isMobile)
+                                    ? (isHovered 
+                                        ? 'drop-shadow(0 0 6px rgba(255,255,255,0.8)) drop-shadow(0 8px 12px rgba(0,0,0,0.3))' 
+                                        : 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))')
+                                    : 'none'
                             }}
                         >
                             <Image

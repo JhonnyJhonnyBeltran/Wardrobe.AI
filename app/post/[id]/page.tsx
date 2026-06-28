@@ -581,7 +581,9 @@ export default function PostDetailPage() {
                             <div className="w-full h-full relative bg-[#f8f9fa] dark:bg-[#111]">
                                 <InteractiveOutfitViewer 
                                     outfit={currentSlide.outfit} 
-                                    onItemClick={(item) => setSelectedItem(item)} 
+                                    onItemClick={(item) => setSelectedItem(item)}
+                                    className="w-full h-full"
+                                    isMobileSticker={true}
                                 />
                             </div>
                         )}

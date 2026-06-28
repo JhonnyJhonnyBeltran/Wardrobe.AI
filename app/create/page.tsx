@@ -150,14 +150,14 @@ export default function CreateOutfitPage() {
                             newSelections[slot].push(clothingItem);
                         }
 
-                        // Set canvas state
-                        const stateKey = `${slot}-${item.id}`;
+                        // Set canvas state using item.id as key
+                        const stateKey = item.id;
                         newCanvasState[stateKey] = {
-                            x: oi.position_x || 50,
-                            y: oi.position_y || 50,
-                            scale: oi.scale || 1,
-                            rotation: oi.rotation || 0,
-                            zIndex: oi.layer_order || 1
+                            x: oi.position_x ?? 50,
+                            y: oi.position_y ?? 50,
+                            scale: oi.scale ?? 1,
+                            rotation: oi.rotation ?? 0,
+                            zIndex: oi.layer_order ?? 1
                         };
                     });
 
@@ -339,7 +339,7 @@ export default function CreateOutfitPage() {
 
             // Create Outfit Items
             const outfitItemsArr: any[] = [];
-            const currentCanvasState = canvasRef.current?.getItemsState() || {};
+            const currentCanvasState = canvasState; // Use the continuously updated state!
             
             Object.entries(selections).forEach(([slotId, items]) => {
                 items.forEach(item => {
@@ -348,11 +348,11 @@ export default function CreateOutfitPage() {
                     outfitItemsArr.push({
                         outfit_id: newOutfitId,
                         clothing_item_id: item.id,
-                        position_x: state.x || 50,
-                        position_y: state.y || 50,
-                        scale: state.scale || 1,
-                        rotation: state.rotation || 0,
-                        layer_order: state.zIndex || 1
+                        position_x: state.x ?? 50, // Fix fallback to use ?? so 0 doesn't become 50
+                        position_y: state.y ?? 50,
+                        scale: state.scale ?? 1,
+                        rotation: state.rotation ?? 0,
+                        layer_order: state.zIndex ?? 1
                     });
                 });
             });
@@ -459,7 +459,7 @@ export default function CreateOutfitPage() {
 
             // Create Outfit Items (Common for both insert and update)
             const outfitItemsArr: any[] = [];
-            const currentCanvasState = canvasRef.current?.getItemsState() || {};
+            const currentCanvasState = canvasState; // Use the continuously updated state!
 
             Object.entries(selections).forEach(([slotId, items]) => {
                 items.forEach(item => {
@@ -468,11 +468,11 @@ export default function CreateOutfitPage() {
                     outfitItemsArr.push({
                         outfit_id: savedOutfitId,
                         clothing_item_id: item.id,
-                        position_x: state.x || 50,
-                        position_y: state.y || 50,
-                        scale: state.scale || 1,
-                        rotation: state.rotation || 0,
-                        layer_order: state.zIndex || 1
+                        position_x: state.x ?? 50,
+                        position_y: state.y ?? 50,
+                        scale: state.scale ?? 1,
+                        rotation: state.rotation ?? 0,
+                        layer_order: state.zIndex ?? 1
                     });
                 });
             });
@@ -684,6 +684,7 @@ export default function CreateOutfitPage() {
                                         items={flatItems}
                                         onRemoveItem={handleRemoveItem}
                                         initialState={canvasState}
+                                        onStateChange={setCanvasState}
                                     />
                                 </div>
                                 <button
@@ -848,6 +849,7 @@ export default function CreateOutfitPage() {
                                 items={flatItems}
                                 onRemoveItem={handleRemoveItem}
                                 initialState={canvasState}
+                                onStateChange={setCanvasState}
                             />
                         </div>
 

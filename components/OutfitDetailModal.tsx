@@ -67,13 +67,13 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
                     />
 
                     {/* Modal Content Wrapper - Immersive on Mobile, Split on Desktop */}
-                    <div className="fixed inset-0 z-[5020] flex items-end md:items-center justify-center md:p-4 pointer-events-none">
+                    <div className="fixed inset-0 z-[5020] flex items-end md:items-center justify-center md:p-6 pointer-events-none">
                         <motion.div
                             initial={{ opacity: 0, y: 100 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: 100 }}
                             transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-                            className="w-full h-[100dvh] md:h-[90vh] md:max-w-[1200px] bg-[var(--background)] md:rounded-[32px] flex flex-col md:flex-row overflow-hidden shadow-2xl relative md:border border-[var(--border-color)] pointer-events-auto"
+                            className="w-full h-[100dvh] md:h-[90vh] md:max-w-[1400px] bg-[var(--background)] md:rounded-[32px] flex flex-col md:flex-row overflow-hidden shadow-2xl relative md:border border-[var(--border-color)] pointer-events-auto"
                             onClick={(e) => e.stopPropagation()}
                         >
                             {/* Close button - Top Left on Mobile, Top Right on Desktop */}
@@ -85,16 +85,17 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
                             </button>
 
                             {/* Left Column (Desktop) / Background (Mobile) */}
-                            <div className="absolute inset-0 md:relative md:inset-auto md:w-1/2 md:flex-1 bg-[#f8f9fa] dark:bg-[#111] z-0 flex flex-col items-stretch">
+                            <div className="absolute inset-0 md:relative md:inset-auto md:w-[60%] md:flex-none bg-[#f8f9fa] dark:bg-[#111] z-0 flex flex-col items-stretch border-r border-[var(--border-color)]">
                                 <InteractiveOutfitViewer
                                     outfit={outfit}
                                     onItemClick={handleItemClick}
-                                    className="flex-1 min-h-0"
+                                    className="flex-1 w-full h-full"
+                                    isMobileSticker={true}
                                 />
                             </div>
 
                             {/* Right Column (Desktop) / Foreground Overlay (Mobile) */}
-                            <div className="relative z-10 w-full h-full md:h-auto md:w-1/2 flex flex-col pointer-events-none md:pointer-events-auto mt-auto md:mt-0 justify-end md:justify-start pb-[calc(var(--tabbar-height)+20px)] md:pb-0 overflow-hidden">
+                            <div className="relative z-10 w-full h-full md:h-auto md:flex-1 flex flex-col pointer-events-none md:pointer-events-auto mt-auto md:mt-0 justify-end md:justify-start pb-[calc(var(--tabbar-height)+20px)] md:pb-0 overflow-hidden md:bg-[var(--background)]">
                                 
                                 {/* Inner scrolling container */}
                                 <div className="w-full pointer-events-auto md:overflow-y-auto custom-scrollbar md:pb-10 flex flex-col bg-gradient-to-t from-[var(--background)] via-[var(--background)] to-transparent md:bg-none pt-24 md:pt-0">
@@ -294,16 +295,25 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
                                                 )}
 
                                                 <div className="flex flex-wrap items-center gap-2 mt-3 mb-6">
-                                                    {selectedItemForDetail.color && (
+                                                    {(selectedItemForDetail.color || selectedItemForDetail.color_hex || selectedItemForDetail.colorHex) && (
                                                         <div className="flex items-center gap-2 p-2 px-3 bg-gray-100 dark:bg-gray-800 rounded-xl w-fit">
-                                                            <div className="w-3.5 h-3.5 rounded-full border border-gray-300 dark:border-gray-600" style={{ backgroundColor: selectedItemForDetail.color_hex || selectedItemForDetail.color }} />
-                                                            <span className="text-[13px] font-medium text-gray-600 dark:text-gray-300 capitalize">{selectedItemForDetail.color}</span>
+                                                            <div className="w-3.5 h-3.5 rounded-full border border-gray-300 dark:border-gray-600" style={{ backgroundColor: selectedItemForDetail.color_hex || selectedItemForDetail.colorHex || selectedItemForDetail.color || '#ccc' }} />
+                                                            <span className="text-[13px] font-medium text-gray-600 dark:text-gray-300 capitalize">{selectedItemForDetail.color || selectedItemForDetail.colorHex || selectedItemForDetail.color_hex || 'Color'}</span>
                                                         </div>
                                                     )}
                                                     {selectedItemForDetail.size && (
                                                         <div className="flex items-center gap-2 p-2 px-3 bg-gray-100 dark:bg-gray-800 rounded-xl w-fit">
                                                             <span className="text-[13px] font-medium text-gray-500 dark:text-gray-400">Talla:</span>
                                                             <span className="text-[13px] font-semibold text-gray-900 dark:text-white">{selectedItemForDetail.size}</span>
+                                                        </div>
+                                                    )}
+                                                    {(selectedItemForDetail.brand || selectedItemForDetail.fabric) && (
+                                                        <div className="flex items-center gap-2 p-2 px-3 bg-gray-100 dark:bg-gray-800 rounded-xl w-fit">
+                                                            <span className="text-[13px] font-semibold text-gray-900 dark:text-white">
+                                                                {selectedItemForDetail.brand}
+                                                                {selectedItemForDetail.brand && selectedItemForDetail.fabric && ' • '}
+                                                                {selectedItemForDetail.fabric}
+                                                            </span>
                                                         </div>
                                                     )}
                                                 </div>

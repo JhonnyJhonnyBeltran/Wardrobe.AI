@@ -9,6 +9,7 @@ interface FreeDragCanvasProps {
     items: ClothingItem[]; // Flat list of items to show
     onRemoveItem?: (itemId: string) => void;
     initialState?: Record<string, any>;
+    onStateChange?: (state: Record<string, ItemState>) => void;
 }
 
 export interface FreeDragCanvasRef {
@@ -24,11 +25,50 @@ interface ItemState {
     zIndex: number;
 }
 
-export const FreeDragCanvas = forwardRef<FreeDragCanvasRef, FreeDragCanvasProps>(function FreeDragCanvas({ items, onRemoveItem, initialState }, ref) {
+export const FreeDragCanvas = forwardRef<FreeDragCanvasRef, FreeDragCanvasProps>(function FreeDragCanvas({ items, onRemoveItem, initialState, onStateChange }, ref) {
     const containerRef = useRef<HTMLDivElement>(null);
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [itemStates, setItemStates] = useState<Record<string, ItemState>>({});
     const [maxZIndex, setMaxZIndex] = useState(10);
+
+    // Notify parent of state changes
+    // Debounce or only notify when it actually changes to prevent loop
+    const previousItemStates = useRef<Record<string, ItemState>>({});
+    useEffect(() => {
+        if (onStateChange && Object.keys(itemStates).length > 0) {
+            // Check if actually changed
+            if (JSON.stringify(previousItemStates.current) !== JSON.stringify(itemStates)) {
+                previousItemStates.current = itemStates;
+                onStateChange(itemStates);
+            }
+        }
+    }, [itemStates, onStateChange]);
+
+    // Sync with initialState to keep both canvas instances in sync
+    useEffect(() => {
+        if (!initialState) return;
+        setItemStates(prev => {
+            const next = { ...prev };
+            let hasChanges = false;
+            
+            Object.keys(initialState).forEach(key => {
+                const incoming = initialState[key];
+                const current = next[key];
+                
+                if (incoming && (!current || 
+                    current.x !== incoming.x || 
+                    current.y !== incoming.y || 
+                    current.scale !== incoming.scale || 
+                    current.rotation !== incoming.rotation ||
+                    current.zIndex !== incoming.zIndex)) {
+                    next[key] = { ...current, ...incoming };
+                    hasChanges = true;
+                }
+            });
+            
+            return hasChanges ? next : prev;
+        });
+    }, [initialState]);
 
     // Initialize/Update items
     useEffect(() => {
@@ -52,6 +92,14 @@ export const FreeDragCanvas = forwardRef<FreeDragCanvasRef, FreeDragCanvasProps>
                         rotation: saved?.rotation ?? 0,
                         zIndex: saved?.zIndex ?? (index + 1)
                     };
+                }
+            });
+
+            // Cleanup removed items
+            Object.keys(next).forEach(id => {
+                if (!items.find(i => i.id === id)) {
+                    hasChanges = true;
+                    delete next[id];
                 }
             });
 

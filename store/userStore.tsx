@@ -5,6 +5,7 @@
  */
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { UserProfile, SubscriptionTier, UserPreferences } from '@/types';
 import { supabase } from '@/lib/supabase/client';
 import { User as SupabaseUser } from '@supabase/supabase-js';
@@ -26,6 +27,7 @@ interface UserContextType extends UserState {
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export function UserProvider({ children }: { children: ReactNode }) {
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState<UserProfile | null>(null);
   const [preferences, setPreferences] = useState<UserPreferences>({});
@@ -198,11 +200,15 @@ export function UserProvider({ children }: { children: ReactNode }) {
           authResolved = true;
           setIsLoading(false);
           clearTimeout(safetyTimeout);
+          router.refresh(); // Tell Server Components to update cookies!
         } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
           // If it's the SAME user just refreshing their token (e.g. after being away), 
           // fetch silently to avoid infinite loading screens blocking the UI!
           console.log('[UserStore] Silently refreshing profile on session tick');
           fetchUserProfile(session.user);
+          if (event === 'TOKEN_REFRESHED') {
+            router.refresh(); // Sync updated session cookie
+          }
         } else {
           if (!isFetchingRef.current) {
             authResolved = true;
@@ -211,10 +217,14 @@ export function UserProvider({ children }: { children: ReactNode }) {
           }
         }
       } else {
-        userIdRef.current = null;
-        setUser(null);
+        // No user
+        if (userIdRef.current !== null) {
+          console.log('[UserStore] User logged out');
+          userIdRef.current = null;
+          setUser(null);
+          router.refresh(); // Sync Server Components when logged out
+        }
         updateLoginHint(false);
-        authResolved = true;
         setIsLoading(false);
         clearTimeout(safetyTimeout);
       }
