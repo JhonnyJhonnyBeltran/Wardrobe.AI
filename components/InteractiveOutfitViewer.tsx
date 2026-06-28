@@ -27,7 +27,41 @@ export default function InteractiveOutfitViewer({ outfit, onItemClick, className
     // If we don't have layout data, use the static image fallback
     const staticImage = outfit.imageUrl || outfit.image_url;
     
-    if (!hasLayoutData && staticImage) {
+    // Always use interactive viewer, if no positions, we will arrange them programmatically
+    // to avoid them all stacking in the middle
+    
+    // Generate programmatic positions for items that lack them
+    const itemsWithPositions = items.map((item: any, i: number) => {
+        const clothing = item.clothing_items || item.clothing_item || item;
+        const img = clothing.imageUrl || clothing.image_url;
+        
+        let x = item.position_x;
+        let y = item.position_y;
+        
+        // If they don't have layout data, spread them nicely
+        if (x === undefined || x === null) {
+            // Simple grid layout spread
+            const cols = items.length > 2 ? 2 : 1;
+            const row = Math.floor(i / cols);
+            const col = i % cols;
+            
+            x = (col + 1) * (100 / (cols + 1));
+            y = (row + 1) * (100 / (Math.ceil(items.length / cols) + 1));
+        }
+
+        return {
+            ...item,
+            clothing,
+            img,
+            computedX: x,
+            computedY: y,
+            computedScale: item.scale ?? 1,
+            computedRotation: item.rotation ?? 0,
+            computedZIndex: item.layer_order ?? item.z_index ?? i
+        };
+    }).filter((item: any) => item.img);
+
+    if (itemsWithPositions.length === 0 && staticImage) {
         return (
             <div className={`relative w-full h-full bg-[#f8f9fa] dark:bg-[#111] overflow-hidden ${className}`}>
                 <Image
@@ -41,77 +75,42 @@ export default function InteractiveOutfitViewer({ outfit, onItemClick, className
         );
     }
 
-    if (!hasLayoutData && !staticImage) {
-        // Fallback grid
-        return (
-            <div className={`grid grid-cols-2 gap-1 bg-gray-200 dark:bg-gray-700 w-full h-full ${className}`}>
-                {items.slice(0, 4).map((item: any, i: number) => {
-                    const clothing = item.clothing_items || item.clothing_item || item;
-                    const img = clothing.imageUrl || clothing.image_url;
-                    return (
-                        <div key={i} className="relative bg-white dark:bg-[#222] overflow-hidden aspect-square">
-                            {img ? (
-                                <Image src={img} alt="Item" fill className="object-cover" />
-                            ) : (
-                                <div className="w-full h-full flex items-center justify-center text-4xl">👕</div>
-                            )}
-                        </div>
-                    );
-                })}
-            </div>
-        );
-    }
-
     // Interactive canvas rendering
     return (
-        <div className={`relative w-full h-full bg-[#f8f9fa] dark:bg-[#111] overflow-hidden ${className}`}>
-            {items.map((item: any, i: number) => {
-                const clothing = item.clothing_items || item.clothing_item || item;
-                const img = clothing.imageUrl || clothing.image_url;
+        <div className={`relative w-full h-full min-h-[400px] bg-[#f8f9fa] dark:bg-[#111] overflow-hidden flex items-center justify-center ${className}`}>
+            {itemsWithPositions.map((item: any, i: number) => {
+                const isHovered = hoveredItemId === item.clothing.id;
                 
-                if (!img) return null;
-
-                // Fallback coordinates if missing for some reason
-                const x = item.position_x ?? 50;
-                const y = item.position_y ?? 50;
-                const scale = item.scale ?? 1;
-                const rotation = item.rotation ?? 0;
-                const zIndex = item.layer_order ?? item.z_index ?? i;
-
-                const isHovered = hoveredItemId === clothing.id;
+                // On mobile, or desktop, we want the items to scale relative to the container.
+                // 35% of container width is a good base size for an item
+                const baseWidthStr = `${35 * item.computedScale}%`;
 
                 return (
                     <motion.div
-                        key={clothing.id || i}
+                        key={item.clothing.id || i}
                         className="absolute cursor-pointer"
                         style={{
-                            left: `${x}%`,
-                            top: `${y}%`,
+                            left: `${item.computedX}%`,
+                            top: `${item.computedY}%`,
                             x: '-50%',
                             y: '-50%',
-                            zIndex: isHovered ? 999 : zIndex,
+                            zIndex: isHovered ? 999 : item.computedZIndex,
+                            width: baseWidthStr,
                         }}
-                        initial={{ scale: scale, rotate: rotation }}
+                        initial={{ rotate: item.computedRotation }}
                         animate={{ 
-                            scale: isHovered ? scale * 1.05 : scale,
-                            rotate: rotation
+                            scale: isHovered ? 1.05 : 1,
+                            rotate: item.computedRotation
                         }}
                         transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                        onHoverStart={() => setHoveredItemId(clothing.id)}
+                        onHoverStart={() => setHoveredItemId(item.clothing.id)}
                         onHoverEnd={() => setHoveredItemId(null)}
-                        onClick={() => onItemClick?.(clothing)}
+                        onClick={() => onItemClick?.(item.clothing)}
                     >
-                        {/* 
-                          Sticker Effect:
-                          We apply a drop-shadow. When hovered, the drop-shadow increases 
-                          and we can add a white outline effect using drop-shadow multiple times 
-                          or a filter.
-                        */}
+                        {/* Sticker Effect */}
                         <div 
-                            className="relative"
+                            className="relative w-full aspect-[3/4]"
                             style={{
-                                width: '150px', // Base size, scaled by transform
-                                height: '200px',
                                 filter: isHovered 
                                     ? 'drop-shadow(0 0 6px rgba(255,255,255,0.8)) drop-shadow(0 8px 12px rgba(0,0,0,0.3))' 
                                     : 'drop-shadow(0 4px 6px rgba(0,0,0,0.15))',
@@ -119,11 +118,11 @@ export default function InteractiveOutfitViewer({ outfit, onItemClick, className
                             }}
                         >
                             <Image
-                                src={img}
-                                alt={clothing.name || 'Prenda'}
+                                src={item.img}
+                                alt={item.clothing.name || 'Prenda'}
                                 fill
                                 className="object-contain"
-                                sizes="150px"
+                                sizes="(max-width: 768px) 50vw, 33vw"
                             />
                         </div>
                     </motion.div>

@@ -1,9 +1,7 @@
-'use client';
-
-import React from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Heart, Share2, Briefcase, PartyPopper, Zap, Flower2, Snowflake, Circle, Layers, Sparkles, Trash2, Edit2, CalendarDays, Rocket } from 'lucide-react';
+import { X, Heart, Share2, Briefcase, PartyPopper, Zap, Flower2, Snowflake, Circle, Layers, Sparkles, Trash2, Edit2, CalendarDays, Rocket, Info } from 'lucide-react';
 import Link from 'next/link';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { Outfit } from '@/types/outfit';
@@ -30,6 +28,7 @@ const styleConfig: Record<string, { icon: React.ReactNode; label: string }> = {
 
 export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleFavorite, onItemClick }: OutfitDetailModalProps) {
     useBodyScrollLock(isOpen);
+    const [selectedItemForDetail, setSelectedItemForDetail] = useState<any | null>(null);
 
     if (!isOpen || !outfit) return null;
 
@@ -37,13 +36,20 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
     const config = styleConfig[styleKey] || { icon: <Layers className="w-4 h-4" />, label: styleKey };
 
     // @ts-ignore
-    const outfitPreviewImage = outfit.imageUrl || outfit.image_url;
-    // @ts-ignore
     const items = outfit.items || outfit.outfit_items || [];
 
     const getItemImage = (item: any) => item.imageUrl || item.image_url || item.clothing_items?.image_url;
     const getItemName = (item: any) => item.name || item.clothing_items?.name;
     const getItemBrand = (item: any) => item.brand || item.clothing_items?.brand;
+
+    const handleItemClick = (clothing: any) => {
+        // Open the bottom sheet instead of navigating
+        setSelectedItemForDetail(clothing);
+    };
+
+    const handleCloseItemDetail = () => {
+        setSelectedItemForDetail(null);
+    };
 
     return (
         <AnimatePresence>
@@ -60,157 +66,211 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
                         className="fixed inset-0 bg-black/60 shadow-2xl backdrop-blur-sm z-[5015]"
                     />
 
-                    {/* Modal Content Wrapper - Standardized Bottom Offset */}
-                    <div className="fixed inset-0 z-[5020] flex items-end md:items-center justify-center px-4 pb-[calc(var(--tabbar-height)+16px)] md:pb-0 md:p-4 pointer-events-none">
+                    {/* Modal Content Wrapper - Immersive on Mobile, Split on Desktop */}
+                    <div className="fixed inset-0 z-[5020] flex items-end md:items-center justify-center md:p-4 pointer-events-none">
                         <motion.div
                             initial={{ opacity: 0, y: 100 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: 100 }}
                             transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-                            className="w-full max-h-[90vh] md:max-h-[85vh] md:max-w-4xl bg-[var(--background)] rounded-3xl md:rounded-[32px] flex flex-col md:flex-row overflow-hidden shadow-2xl relative border border-[var(--border-color)] pointer-events-auto"
+                            className="w-full h-[100dvh] md:h-auto md:max-h-[85vh] md:max-w-4xl bg-[var(--background)] md:rounded-[32px] flex flex-col md:flex-row overflow-hidden shadow-2xl relative md:border border-[var(--border-color)] pointer-events-auto"
                             onClick={(e) => e.stopPropagation()}
                         >
-                    {/* Header Handles / Close */}
-                    <div className="absolute top-0 inset-x-0 z-20 flex justify-center py-3 md:hidden">
-                        <div className="w-12 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-full" />
-                    </div>
+                            {/* Close button - Top Left on Mobile, Top Right on Desktop */}
+                            <button
+                                onClick={onClose}
+                                className="absolute top-12 md:top-4 left-4 md:left-auto md:right-4 z-50 p-3 md:p-2.5 bg-black/20 hover:bg-black/40 backdrop-blur-md rounded-full transition-colors text-white"
+                            >
+                                <X className="w-6 h-6 md:w-5 md:h-5" />
+                            </button>
 
-                    <button
-                        onClick={onClose}
-                        className="absolute top-4 right-4 z-20 p-2.5 bg-black/20 hover:bg-black/40 backdrop-blur-md rounded-full transition-colors hidden md:block"
-                    >
-                        <X className="w-5 h-5 text-white" />
-                    </button>
-
-                    {/* Left Column (Desktop) / Top (Mobile): Visual Header */}
-                    <div className="relative w-full md:w-1/2 shrink-0 aspect-square md:aspect-auto md:h-full bg-[#f8f9fa] dark:bg-[#111]">
-                        <InteractiveOutfitViewer
-                            outfit={outfit}
-                            onItemClick={onItemClick}
-                        />
-                    </div>
-
-                    {/* Right Column (Desktop) / Bottom (Mobile): Details & Items */}
-                    <div className="w-full md:w-1/2 overflow-y-auto custom-scrollbar flex flex-col pb-10">
-                        {/* 2. Outfit Info */}
-                        <div className="px-6 py-5 bg-[var(--background)]">
-                            <h2 className="text-2xl font-bold text-[var(--foreground)] mb-4">{outfit.name}</h2>
-                            
-                            {/* Details Grid - Matching ProductModal style */}
-                            <div className="grid grid-cols-2 gap-3 mb-6">
-                                <div className="flex items-center gap-3 p-3 bg-[var(--background-secondary)] rounded-2xl">
-                                    <div className="w-8 h-8 rounded-full bg-[var(--brand-pink)]/10 flex items-center justify-center text-[var(--brand-pink)]">
-                                        {config.icon}
-                                    </div>
-                                    <div>
-                                        <p className="text-[10px] text-[var(--foreground-tertiary)] uppercase font-bold tracking-wider">Ocasión</p>
-                                        <p className="text-sm font-bold text-[var(--foreground)] capitalize">{config.label}</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-3 p-3 bg-[var(--background-secondary)] rounded-2xl">
-                                    <div className="w-8 h-8 rounded-full bg-[var(--brand-pink)]/10 flex items-center justify-center text-[var(--brand-pink)]">
-                                        <Layers className="w-4 h-4" />
-                                    </div>
-                                    <div>
-                                        <p className="text-[10px] text-[var(--foreground-tertiary)] uppercase font-bold tracking-wider">Prendas</p>
-                                        <p className="text-sm font-bold text-[var(--foreground)]">{items.length}</p>
-                                    </div>
-                                </div>
+                            {/* Left Column (Desktop) / Background (Mobile) */}
+                            <div className="absolute inset-0 md:relative md:inset-auto md:w-1/2 md:flex-1 bg-[#f8f9fa] dark:bg-[#111] z-0 flex flex-col items-stretch">
+                                <InteractiveOutfitViewer
+                                    outfit={outfit}
+                                    onItemClick={handleItemClick}
+                                    className="flex-1 min-h-0"
+                                />
                             </div>
 
-                            {/* Action Buttons - Matching ProductModal style */}
-                            <div className="flex gap-3 items-center">
-                                <motion.button
-                                    whileHover={{ scale: 1.02 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    onClick={() => onToggleFavorite?.(outfit.id, !!outfit.favorite)}
-                                    className={`flex-1 flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl font-bold transition-all duration-300 border h-[52px] ${outfit.favorite
-                                        ? 'bg-[var(--brand-pink)] text-white border-transparent shadow-md shadow-[var(--brand-pink)]/20'
-                                        : 'bg-pink-50 dark:bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] border-pink-200 dark:border-[var(--brand-pink)]/20 hover:bg-pink-100 dark:hover:bg-[var(--brand-pink)]/20'
-                                    }`}
-                                >
-                                    <Heart className={`w-5 h-5 transition-all ${outfit.favorite ? 'fill-white text-white' : 'text-[var(--brand-pink)]'}`} />
-                                    <span className="text-center">{outfit.favorite ? 'Liked' : 'Like'}</span>
-                                </motion.button>
-
-                                <Link
-                                    href={`/create?outfitId=${outfit.id}`}
-                                    className="flex-1"
-                                    onClick={onClose}
-                                >
-                                    <motion.button
-                                        whileHover={{ scale: 1.02 }}
-                                        whileTap={{ scale: 0.98 }}
-                                        className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl font-medium transition-all duration-300 bg-[var(--background-secondary)] text-[var(--foreground)] border border-[var(--border-color)] hover:bg-[var(--foreground)] hover:text-[var(--background)] h-[52px]"
-                                    >
-                                        <Edit2 className="w-5 h-5" />
-                                        <span className="text-center">Editar</span>
-                                    </motion.button>
-                                </Link>
-
-                                {onDelete && (
-                                    <motion.button
-                                        whileHover={{ scale: 1.02 }}
-                                        whileTap={{ scale: 0.98 }}
-                                        onClick={() => onDelete(outfit.id)}
-                                        className="flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl font-medium transition-all duration-300 border-2 border-transparent bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/20 h-[52px]"
-                                        title="Eliminar"
-                                    >
-                                        <Trash2 className="w-5 h-5" />
-                                    </motion.button>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* 3. Items Breakdown */}
-                        <div className="px-6 mt-4">
-                            <h3 className="font-bold text-lg text-[var(--foreground)] mb-4">Prendas de este look</h3>
-                            <div className="grid grid-cols-2 gap-3">
-                                {items.map((item: any) => {
-                                    // Handle DB relation 'clothing_items' or inline 'items'
-                                    const clothing = item.clothing_items || item;
-                                    const img = getItemImage(item);
-
-                                    if (!clothing || (!img && !clothing.name)) return null;
-
-                                    return onItemClick ? (
-                                        <div
-                                            key={clothing.id}
-                                            className="block group cursor-pointer"
-                                            onClick={() => onItemClick(clothing)}
-                                        >
-                                            <div className="aspect-square bg-[var(--background-secondary)] rounded-2xl overflow-hidden relative mb-2">
-                                                {img ? (
-                                                    <Image src={img} alt={getItemName(item) || 'Ropa'} fill className="object-cover group-hover:scale-105 transition-transform duration-300" />
-                                                ) : (
-                                                    <div className="w-full h-full flex items-center justify-center text-4xl" style={{ backgroundColor: clothing.color_hex || clothing.color || '#ccc' }}>👕</div>
-                                                )}
+                            {/* Right Column (Desktop) / Foreground Overlay (Mobile) */}
+                            <div className="relative z-10 w-full h-full md:h-auto md:w-1/2 flex flex-col pointer-events-none md:pointer-events-auto mt-auto md:mt-0 justify-end md:justify-start pb-[calc(var(--tabbar-height)+20px)] md:pb-0 overflow-hidden">
+                                
+                                {/* Inner scrolling container */}
+                                <div className="w-full pointer-events-auto md:overflow-y-auto custom-scrollbar md:pb-10 flex flex-col bg-gradient-to-t from-[var(--background)] via-[var(--background)] to-transparent md:bg-none pt-24 md:pt-0">
+                                    
+                                    {/* Outfit Info */}
+                                    <div className="px-6 py-5 md:bg-[var(--background)]">
+                                        <h2 className="text-2xl md:text-2xl font-bold text-[var(--foreground)] mb-4 drop-shadow-md md:drop-shadow-none">{outfit.name || 'Outfit sin título'}</h2>
+                                        
+                                        {/* Details Grid */}
+                                        <div className="grid grid-cols-2 gap-3 mb-6">
+                                            <div className="flex items-center gap-3 p-3 bg-[var(--background-secondary)]/90 backdrop-blur-md md:bg-[var(--background-secondary)] rounded-2xl">
+                                                <div className="w-8 h-8 rounded-full bg-[var(--brand-pink)]/10 flex items-center justify-center text-[var(--brand-pink)]">
+                                                    {config.icon}
+                                                </div>
+                                                <div>
+                                                    <p className="text-[10px] text-[var(--foreground-tertiary)] uppercase font-bold tracking-wider">Ocasión</p>
+                                                    <p className="text-sm font-bold text-[var(--foreground)] capitalize">{config.label}</p>
+                                                </div>
                                             </div>
-                                            <p className="text-[13px] font-bold text-[var(--foreground)] truncate px-1">{getItemName(item)}</p>
-                                            <p className="text-[11px] text-[var(--foreground-secondary)] px-1">{getItemBrand(item) || 'Sin marca'}</p>
+                                            <div className="flex items-center gap-3 p-3 bg-[var(--background-secondary)]/90 backdrop-blur-md md:bg-[var(--background-secondary)] rounded-2xl">
+                                                <div className="w-8 h-8 rounded-full bg-[var(--brand-pink)]/10 flex items-center justify-center text-[var(--brand-pink)]">
+                                                    <Layers className="w-4 h-4" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-[10px] text-[var(--foreground-tertiary)] uppercase font-bold tracking-wider">Prendas</p>
+                                                    <p className="text-sm font-bold text-[var(--foreground)]">{items.length}</p>
+                                                </div>
+                                            </div>
                                         </div>
-                                    ) : (
-                                        <Link
-                                            href={`/closet?item=${clothing.id}`}
-                                            key={clothing.id}
-                                            className="block group"
-                                            onClick={onClose}
-                                        >
-                                            <div className="aspect-square bg-[var(--background-secondary)] rounded-2xl overflow-hidden relative mb-2">
-                                                {img ? (
-                                                    <Image src={img} alt={getItemName(item) || 'Ropa'} fill className="object-cover group-hover:scale-105 transition-transform duration-300" />
-                                                ) : (
-                                                    <div className="w-full h-full flex items-center justify-center text-4xl" style={{ backgroundColor: clothing.color_hex || clothing.color || '#ccc' }}>👕</div>
-                                                )}
-                                            </div>
-                                            <p className="text-[13px] font-bold text-[var(--foreground)] truncate px-1">{getItemName(item)}</p>
-                                            <p className="text-[11px] text-[var(--foreground-secondary)] px-1">{getItemBrand(item) || 'Sin marca'}</p>
-                                        </Link>
-                                    );
-                                })}
+
+                                        {/* Action Buttons */}
+                                        <div className="flex gap-3 items-center">
+                                            <motion.button
+                                                whileHover={{ scale: 1.02 }}
+                                                whileTap={{ scale: 0.98 }}
+                                                onClick={() => onToggleFavorite?.(outfit.id, !!outfit.favorite)}
+                                                className={`flex-1 flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl font-bold transition-all duration-300 border h-[52px] ${outfit.favorite
+                                                    ? 'bg-[var(--brand-pink)] text-white border-transparent shadow-md shadow-[var(--brand-pink)]/20'
+                                                    : 'bg-[var(--background-secondary)]/90 backdrop-blur-md text-[var(--brand-pink)] border-transparent hover:bg-pink-100'
+                                                }`}
+                                            >
+                                                <Heart className={`w-5 h-5 transition-all ${outfit.favorite ? 'fill-white text-white' : 'text-[var(--brand-pink)]'}`} />
+                                                <span className="text-center">{outfit.favorite ? 'Liked' : 'Like'}</span>
+                                            </motion.button>
+
+                                            <Link
+                                                href={`/create?outfitId=${outfit.id}`}
+                                                className="flex-1"
+                                                onClick={onClose}
+                                            >
+                                                <motion.button
+                                                    whileHover={{ scale: 1.02 }}
+                                                    whileTap={{ scale: 0.98 }}
+                                                    className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl font-medium transition-all duration-300 bg-[var(--background-secondary)]/90 backdrop-blur-md text-[var(--foreground)] border border-transparent hover:bg-[var(--foreground)] hover:text-[var(--background)] h-[52px]"
+                                                >
+                                                    <Edit2 className="w-5 h-5" />
+                                                    <span className="text-center">Editar</span>
+                                                </motion.button>
+                                            </Link>
+
+                                            {onDelete && (
+                                                <motion.button
+                                                    whileHover={{ scale: 1.02 }}
+                                                    whileTap={{ scale: 0.98 }}
+                                                    onClick={() => onDelete(outfit.id)}
+                                                    className="flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl font-medium transition-all duration-300 bg-red-500/10 backdrop-blur-md text-red-600 hover:bg-red-500/20 h-[52px]"
+                                                    title="Eliminar"
+                                                >
+                                                    <Trash2 className="w-5 h-5" />
+                                                </motion.button>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* 3. Items Breakdown (Desktop Only) */}
+                                    <div className="px-6 mt-4 hidden md:block">
+                                        <h3 className="font-bold text-lg text-[var(--foreground)] mb-4">Prendas de este look</h3>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            {items.map((item: any) => {
+                                                const clothing = item.clothing_items || item.clothing_item || item;
+                                                const img = getItemImage(item);
+                                                if (!clothing || (!img && !clothing.name)) return null;
+
+                                                return (
+                                                    <div
+                                                        key={clothing.id}
+                                                        className="block group cursor-pointer"
+                                                        onClick={() => handleItemClick(clothing)}
+                                                    >
+                                                        <div className="aspect-square bg-[var(--background-secondary)] rounded-2xl overflow-hidden relative mb-2">
+                                                            {img ? (
+                                                                <Image src={img} alt={getItemName(item) || 'Ropa'} fill className="object-cover group-hover:scale-105 transition-transform duration-300" />
+                                                            ) : (
+                                                                <div className="w-full h-full flex items-center justify-center text-4xl" style={{ backgroundColor: clothing.color_hex || clothing.color || '#ccc' }}>👕</div>
+                                                            )}
+                                                        </div>
+                                                        <p className="text-[13px] font-bold text-[var(--foreground)] truncate px-1">{getItemName(item)}</p>
+                                                        <p className="text-[11px] text-[var(--foreground-secondary)] px-1">{getItemBrand(item) || 'Sin marca'}</p>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
+                            
+                            {/* Item Detail Bottom Sheet (Mobile & Desktop) */}
+                            <AnimatePresence>
+                                {selectedItemForDetail && (
+                                    <>
+                                        {/* Inner Backdrop for Bottom Sheet */}
+                                        <motion.div
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            exit={{ opacity: 0 }}
+                                            onClick={handleCloseItemDetail}
+                                            className="absolute inset-0 bg-black/40 z-[5030]"
+                                        />
+                                        <motion.div
+                                            initial={{ y: "100%" }}
+                                            animate={{ y: 0 }}
+                                            exit={{ y: "100%" }}
+                                            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                                            className="absolute bottom-0 left-0 right-0 z-[5040] bg-[var(--background)] rounded-t-3xl p-6 pt-12 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] flex flex-col items-center"
+                                        >
+                                            {/* Close Button */}
+                                            <button 
+                                                onClick={handleCloseItemDetail}
+                                                className="absolute top-4 right-4 p-2 bg-[var(--background-secondary)] rounded-full text-[var(--foreground-secondary)]"
+                                            >
+                                                <X className="w-5 h-5" />
+                                            </button>
+
+                                            {/* Floating Sticker Image */}
+                                            <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-40 h-40">
+                                                <div 
+                                                    className="w-full h-full relative"
+                                                    style={{ filter: 'drop-shadow(0 0 0 4px white) drop-shadow(0 8px 16px rgba(0,0,0,0.2))' }}
+                                                >
+                                                    <Image 
+                                                        src={selectedItemForDetail.imageUrl || selectedItemForDetail.image_url} 
+                                                        alt={selectedItemForDetail.name || 'Prenda'}
+                                                        fill
+                                                        className="object-contain"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            {/* Item Info */}
+                                            <div className="w-full text-center mt-8">
+                                                <h3 className="text-xl font-bold text-[var(--foreground)]">{selectedItemForDetail.name || 'Prenda sin nombre'}</h3>
+                                                <p className="text-[var(--foreground-secondary)] mt-1">{selectedItemForDetail.brand || 'Sin marca'}</p>
+                                                
+                                                <div className="mt-6 flex gap-3 w-full">
+                                                    {onItemClick ? (
+                                                        <button 
+                                                            onClick={() => onItemClick(selectedItemForDetail)}
+                                                            className="flex-1 bg-[var(--foreground)] text-[var(--background)] font-bold py-3.5 rounded-xl hover:opacity-90 transition-opacity"
+                                                        >
+                                                            Ver detalles
+                                                        </button>
+                                                    ) : (
+                                                        <Link 
+                                                            href={`/closet?item=${selectedItemForDetail.id}`}
+                                                            onClick={onClose}
+                                                            className="flex-1 bg-[var(--foreground)] text-[var(--background)] font-bold py-3.5 rounded-xl hover:opacity-90 transition-opacity text-center"
+                                                        >
+                                                            Ver en armario
+                                                        </Link>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </motion.div>
+                                    </>
+                                )}
+                            </AnimatePresence>
                         </motion.div>
                     </div>
                 </>
