@@ -865,19 +865,56 @@ export default function PostDetailPage() {
             {/* Garment Detail Modal */}
             <AnimatePresence>
             {selectedItem && (
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
-                    onClick={() => setSelectedItem(null)}
-                >
+                <>
+                    {/* Backdrop */}
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm"
+                        onClick={() => setSelectedItem(null)}
+                    />
+
+                    {/* MOBILE: Bottom Sheet with Sticker Effect */}
+                    <motion.div
+                        initial={{ y: "100%" }}
+                        animate={{ y: 0 }}
+                        exit={{ y: "100%" }}
+                        transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                        className="fixed bottom-0 left-0 right-0 z-[110] bg-[var(--background)] rounded-t-3xl p-6 pt-12 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] flex flex-col items-center md:hidden"
+                    >
+                        <button 
+                            onClick={() => setSelectedItem(null)}
+                            className="absolute top-4 right-4 p-2 bg-[var(--background-secondary)] rounded-full text-[var(--foreground-secondary)]"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+
+                        <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-40 h-40">
+                            <div className="w-full h-full relative" style={{ filter: 'drop-shadow(0 0 0 4px white) drop-shadow(0 8px 16px rgba(0,0,0,0.2))' }}>
+                                <Image src={selectedItem.image_url || selectedItem.imageUrl} alt={selectedItem.name || 'Prenda'} fill className="object-contain" />
+                            </div>
+                        </div>
+
+                        <div className="w-full text-center mt-8">
+                            <h3 className="text-xl font-bold text-[var(--foreground)]">{selectedItem.name || 'Prenda sin nombre'}</h3>
+                            <p className="text-[var(--foreground-secondary)] mt-1">{selectedItem.brand || 'Sin marca'}</p>
+                            
+                            <div className="mt-6 flex gap-3 w-full">
+                                <Link href={`/closet?item=${selectedItem.id}`} className="flex-1 bg-[var(--foreground)] text-[var(--background)] font-bold py-3.5 rounded-xl hover:opacity-90 transition-opacity text-center">
+                                    Ver en armario
+                                </Link>
+                            </div>
+                        </div>
+                    </motion.div>
+
+                    {/* DESKTOP: Standard Centered Modal */}
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95, y: 10 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 10 }}
                         transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                        className="bg-white dark:bg-[#1a1a1a] rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl relative"
+                        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[110] bg-white dark:bg-[#1a1a1a] rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl hidden md:block"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <button
@@ -888,8 +925,8 @@ export default function PostDetailPage() {
                         </button>
 
                         <div className="relative w-full aspect-square rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-800">
-                            {selectedItem.image_url ? (
-                                <Image src={selectedItem.image_url} alt={selectedItem.name} fill className="object-cover" />
+                            {selectedItem.image_url || selectedItem.imageUrl ? (
+                                <Image src={selectedItem.image_url || selectedItem.imageUrl} alt={selectedItem.name} fill className="object-cover" />
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center text-6xl" style={{ backgroundColor: selectedItem.color_hex || selectedItem.color || '#ccc' }}>👕</div>
                             )}
@@ -902,13 +939,10 @@ export default function PostDetailPage() {
                                 <p className="text-sm text-gray-400 uppercase tracking-wider mt-2">{selectedItem.category}</p>
                             )}
 
-                            <div className="flex flex-wrap items-center gap-2 mt-3">
+                            <div className="flex flex-wrap items-center gap-2 mt-3 mb-6">
                                 {selectedItem.color && (
                                     <div className="flex items-center gap-2 p-2 px-3 bg-gray-100 dark:bg-gray-800 rounded-xl w-fit">
-                                        <div
-                                            className="w-3.5 h-3.5 rounded-full border border-gray-300 dark:border-gray-600"
-                                            style={{ backgroundColor: selectedItem.color_hex || selectedItem.color }}
-                                        />
+                                        <div className="w-3.5 h-3.5 rounded-full border border-gray-300 dark:border-gray-600" style={{ backgroundColor: selectedItem.color_hex || selectedItem.color }} />
                                         <span className="text-[13px] font-medium text-gray-600 dark:text-gray-300 capitalize">{selectedItem.color}</span>
                                     </div>
                                 )}
@@ -918,17 +952,14 @@ export default function PostDetailPage() {
                                         <span className="text-[13px] font-semibold text-gray-900 dark:text-white">{selectedItem.size}</span>
                                     </div>
                                 )}
-                                {selectedItem.reference && (
-                                    <div className="flex items-center gap-2 p-2 px-3 bg-gray-100 dark:bg-gray-800 rounded-xl w-fit">
-                                        <span className="text-[13px] font-medium text-gray-500 dark:text-gray-400">Ref:</span>
-                                        <span className="text-[13px] font-semibold text-gray-900 dark:text-white">{selectedItem.reference}</span>
-                                    </div>
-                                )}
                             </div>
-                        </div>
 
+                            <Link href={`/closet?item=${selectedItem.id}`} className="block w-full bg-[var(--foreground)] text-[var(--background)] font-bold py-3.5 rounded-xl hover:opacity-90 transition-opacity text-center">
+                                Ver en armario
+                            </Link>
+                        </div>
                     </motion.div>
-                </motion.div>
+                </>
             )}
             </AnimatePresence>
         </div>

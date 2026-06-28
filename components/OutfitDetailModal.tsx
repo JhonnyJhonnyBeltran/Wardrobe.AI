@@ -201,11 +201,11 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
                                 </div>
                             </div>
                             
-                            {/* Item Detail Bottom Sheet (Mobile & Desktop) */}
+                            {/* Item Detail (Mobile: Bottom Sheet, Desktop: Standard Modal) */}
                             <AnimatePresence>
                                 {selectedItemForDetail && (
                                     <>
-                                        {/* Inner Backdrop for Bottom Sheet */}
+                                        {/* Inner Backdrop */}
                                         <motion.div
                                             initial={{ opacity: 0 }}
                                             animate={{ opacity: 1 }}
@@ -213,12 +213,14 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
                                             onClick={handleCloseItemDetail}
                                             className="absolute inset-0 bg-black/40 z-[5030]"
                                         />
+
+                                        {/* MOBILE: Bottom Sheet with Sticker Effect */}
                                         <motion.div
                                             initial={{ y: "100%" }}
                                             animate={{ y: 0 }}
                                             exit={{ y: "100%" }}
                                             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                                            className="absolute bottom-0 left-0 right-0 z-[5040] bg-[var(--background)] rounded-t-3xl p-6 pt-12 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] flex flex-col items-center"
+                                            className="absolute bottom-0 left-0 right-0 z-[5040] bg-[var(--background)] rounded-t-3xl p-6 pt-12 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] flex flex-col items-center md:hidden"
                                         >
                                             {/* Close Button */}
                                             <button 
@@ -249,23 +251,70 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
                                                 <p className="text-[var(--foreground-secondary)] mt-1">{selectedItemForDetail.brand || 'Sin marca'}</p>
                                                 
                                                 <div className="mt-6 flex gap-3 w-full">
-                                                    {onItemClick ? (
-                                                        <button 
-                                                            onClick={() => onItemClick(selectedItemForDetail)}
-                                                            className="flex-1 bg-[var(--foreground)] text-[var(--background)] font-bold py-3.5 rounded-xl hover:opacity-90 transition-opacity"
-                                                        >
-                                                            Ver detalles
-                                                        </button>
-                                                    ) : (
-                                                        <Link 
-                                                            href={`/closet?item=${selectedItemForDetail.id}`}
-                                                            onClick={onClose}
-                                                            className="flex-1 bg-[var(--foreground)] text-[var(--background)] font-bold py-3.5 rounded-xl hover:opacity-90 transition-opacity text-center"
-                                                        >
-                                                            Ver en armario
-                                                        </Link>
+                                                    <Link 
+                                                        href={`/closet?item=${selectedItemForDetail.id}`} 
+                                                        onClick={onClose}
+                                                        className="flex-1 bg-[var(--foreground)] text-[var(--background)] font-bold py-3.5 rounded-xl hover:opacity-90 transition-opacity text-center"
+                                                    >
+                                                        Ver en armario
+                                                    </Link>
+                                                </div>
+                                            </div>
+                                        </motion.div>
+
+                                        {/* DESKTOP: Standard Centered Modal */}
+                                        <motion.div
+                                            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                                            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                                            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                                            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[5040] bg-white dark:bg-[#1a1a1a] rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl hidden md:block"
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
+                                            <button
+                                                onClick={handleCloseItemDetail}
+                                                className="absolute top-4 right-4 p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors z-10"
+                                            >
+                                                <X className="w-5 h-5 text-gray-900 dark:text-white" />
+                                            </button>
+
+                                            <div className="relative w-full aspect-square rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-800">
+                                                {selectedItemForDetail.imageUrl || selectedItemForDetail.image_url ? (
+                                                    <Image src={selectedItemForDetail.imageUrl || selectedItemForDetail.image_url} alt={selectedItemForDetail.name || 'Prenda'} fill className="object-cover" />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center text-6xl" style={{ backgroundColor: selectedItemForDetail.color_hex || selectedItemForDetail.color || '#ccc' }}>👕</div>
+                                                )}
+                                            </div>
+
+                                            <div>
+                                                <h3 className="text-xl font-bold text-gray-900 dark:text-white">{selectedItemForDetail.name || 'Prenda'}</h3>
+                                                <p className="text-gray-500 dark:text-gray-400 font-medium mt-1">{selectedItemForDetail.brand || 'Sin marca'}</p>
+                                                {selectedItemForDetail.category && (
+                                                    <p className="text-sm text-gray-400 uppercase tracking-wider mt-2">{selectedItemForDetail.category}</p>
+                                                )}
+
+                                                <div className="flex flex-wrap items-center gap-2 mt-3 mb-6">
+                                                    {selectedItemForDetail.color && (
+                                                        <div className="flex items-center gap-2 p-2 px-3 bg-gray-100 dark:bg-gray-800 rounded-xl w-fit">
+                                                            <div className="w-3.5 h-3.5 rounded-full border border-gray-300 dark:border-gray-600" style={{ backgroundColor: selectedItemForDetail.color_hex || selectedItemForDetail.color }} />
+                                                            <span className="text-[13px] font-medium text-gray-600 dark:text-gray-300 capitalize">{selectedItemForDetail.color}</span>
+                                                        </div>
+                                                    )}
+                                                    {selectedItemForDetail.size && (
+                                                        <div className="flex items-center gap-2 p-2 px-3 bg-gray-100 dark:bg-gray-800 rounded-xl w-fit">
+                                                            <span className="text-[13px] font-medium text-gray-500 dark:text-gray-400">Talla:</span>
+                                                            <span className="text-[13px] font-semibold text-gray-900 dark:text-white">{selectedItemForDetail.size}</span>
+                                                        </div>
                                                     )}
                                                 </div>
+
+                                                <Link 
+                                                    href={`/closet?item=${selectedItemForDetail.id}`} 
+                                                    onClick={onClose}
+                                                    className="block w-full bg-[var(--foreground)] text-[var(--background)] font-bold py-3.5 rounded-xl hover:opacity-90 transition-opacity text-center"
+                                                >
+                                                    Ver en armario
+                                                </Link>
                                             </div>
                                         </motion.div>
                                     </>

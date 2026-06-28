@@ -339,19 +339,20 @@ export default function CreateOutfitPage() {
 
             // Create Outfit Items
             const outfitItemsArr: any[] = [];
+            const currentCanvasState = canvasRef.current?.getItemsState() || {};
+            
             Object.entries(selections).forEach(([slotId, items]) => {
                 items.forEach(item => {
-                    const stateKey = `${slotId}-${item.id}`;
-                    const state = canvasState[stateKey] || { x: 50, y: 50, scale: 1, rotation: 0, zIndex: 1 };
+                    const state = currentCanvasState[item.id] || { x: 50, y: 50, scale: 1, rotation: 0, zIndex: 1 };
 
                     outfitItemsArr.push({
                         outfit_id: newOutfitId,
                         clothing_item_id: item.id,
-                        position_x: state.x,
-                        position_y: state.y,
-                        scale: state.scale,
-                        rotation: state.rotation,
-                        layer_order: state.zIndex
+                        position_x: state.x || 50,
+                        position_y: state.y || 50,
+                        scale: state.scale || 1,
+                        rotation: state.rotation || 0,
+                        layer_order: state.zIndex || 1
                     });
                 });
             });
@@ -458,20 +459,20 @@ export default function CreateOutfitPage() {
 
             // Create Outfit Items (Common for both insert and update)
             const outfitItemsArr: any[] = [];
+            const currentCanvasState = canvasRef.current?.getItemsState() || {};
 
             Object.entries(selections).forEach(([slotId, items]) => {
                 items.forEach(item => {
-                    const stateKey = `${slotId}-${item.id}`;
-                    const state = canvasState[stateKey] || { x: 50, y: 50, scale: 1, rotation: 0, zIndex: 1 };
+                    const state = currentCanvasState[item.id] || { x: 50, y: 50, scale: 1, rotation: 0, zIndex: 1 };
 
                     outfitItemsArr.push({
                         outfit_id: savedOutfitId,
                         clothing_item_id: item.id,
-                        position_x: state.x,
-                        position_y: state.y,
-                        scale: state.scale,
-                        rotation: state.rotation,
-                        layer_order: state.zIndex
+                        position_x: state.x || 50,
+                        position_y: state.y || 50,
+                        scale: state.scale || 1,
+                        rotation: state.rotation || 0,
+                        layer_order: state.zIndex || 1
                     });
                 });
             });

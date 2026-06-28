@@ -12,6 +12,7 @@ interface FreeDragCanvasProps {
 
 export interface FreeDragCanvasRef {
     exportToImage: () => Promise<string | null>;
+    getItemsState: () => Record<string, any>;
 }
 
 interface ItemState {
@@ -59,6 +60,7 @@ export const FreeDragCanvas = forwardRef<FreeDragCanvasRef, FreeDragCanvasProps>
 
     // Export function
     useImperativeHandle(ref, () => ({
+        getItemsState: () => itemStates,
         exportToImage: async () => {
             if (!containerRef.current) return null;
             // Deselect before capture
