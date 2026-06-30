@@ -242,13 +242,32 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
                                         </div>
                                     </div>
 
-                                    <div className="w-full text-center">
+                                    <div className="w-full text-center mt-2">
                                         <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{selectedItemForDetail.name || 'Nueva prenda'}</h3>
-                                        <p className="text-gray-500 dark:text-gray-400 mt-1">{selectedItemForDetail.brand || 'Sin marca'}</p>
+                                        <p className="text-gray-500 dark:text-gray-400 mt-1 text-lg">{selectedItemForDetail.brand || 'Sin marca'}</p>
+                                        
+                                        {selectedItemForDetail.category && (
+                                            <p className="text-sm text-gray-400 uppercase tracking-wider mt-3 font-medium">{selectedItemForDetail.category}</p>
+                                        )}
+
+                                        <div className="flex flex-wrap items-center justify-center gap-2 mt-4 mb-2">
+                                            {(selectedItemForDetail.color || selectedItemForDetail.color_hex || selectedItemForDetail.colorHex) && (
+                                                <div className="flex items-center gap-2 p-2 px-4 bg-gray-100 dark:bg-gray-800 rounded-full w-fit">
+                                                    <div className="w-4 h-4 rounded-full border border-gray-300 dark:border-gray-600 shadow-sm" style={{ backgroundColor: selectedItemForDetail.color_hex || selectedItemForDetail.colorHex || selectedItemForDetail.color || '#ccc' }} />
+                                                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300 capitalize">{selectedItemForDetail.color || selectedItemForDetail.colorHex || selectedItemForDetail.color_hex || 'Color'}</span>
+                                                </div>
+                                            )}
+                                            {selectedItemForDetail.size && (
+                                                <div className="flex items-center gap-2 p-2 px-4 bg-gray-100 dark:bg-gray-800 rounded-full w-fit">
+                                                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Talla</span>
+                                                    <span className="text-sm font-bold text-gray-900 dark:text-white">{selectedItemForDetail.size}</span>
+                                                </div>
+                                            )}
+                                        </div>
                                         
                                         {(selectedItemForDetail.source_url || selectedItemForDetail.sourceUrl) && (
                                             <div className="mt-8 w-full">
-                                                <a href={selectedItemForDetail.source_url || selectedItemForDetail.sourceUrl} target="_blank" rel="noopener noreferrer" className="block w-full bg-black dark:bg-white text-white dark:text-black font-bold py-4 rounded-3xl hover:opacity-90 transition-opacity text-center shadow-lg">
+                                                <a href={selectedItemForDetail.source_url || selectedItemForDetail.sourceUrl} target="_blank" rel="noopener noreferrer" className="block w-full bg-black dark:bg-white text-white dark:text-black font-bold py-4 rounded-3xl hover:opacity-90 transition-opacity text-center shadow-lg text-lg">
                                                     Enlace a la web
                                                 </a>
                                             </div>
