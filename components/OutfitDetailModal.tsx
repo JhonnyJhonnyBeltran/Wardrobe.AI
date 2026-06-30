@@ -220,13 +220,49 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
                                     className="fixed inset-0 bg-black/40 z-[6030]"
                                 />
 
-                                {/* Standard Centered Modal (Mobile & Desktop) */}
+                                {/* MOBILE: Bottom Sheet with Sticker Effect */}
+                                <motion.div
+                                    initial={{ y: "100%" }}
+                                    animate={{ y: 0 }}
+                                    exit={{ y: "100%" }}
+                                    transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                                    className="fixed bottom-0 left-0 right-0 z-[6040] bg-white dark:bg-[#1a1a1a] rounded-t-[32px] p-6 pt-16 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] flex flex-col items-center md:hidden pointer-events-auto"
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    <button 
+                                        onClick={handleCloseItemDetail}
+                                        className="absolute top-4 right-4 p-2 bg-gray-100 dark:bg-gray-800 rounded-full text-gray-500 dark:text-gray-400"
+                                    >
+                                        <X className="w-5 h-5" />
+                                    </button>
+
+                                    <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-52 h-52 pointer-events-none">
+                                        <div className="w-full h-full relative" style={{ filter: 'drop-shadow(0 8px 16px rgba(0,0,0,0.15))' }}>
+                                            <Image src={selectedItemForDetail.imageUrl || selectedItemForDetail.image_url} alt={selectedItemForDetail.name || 'Prenda'} fill className="object-contain" />
+                                        </div>
+                                    </div>
+
+                                    <div className="w-full text-center">
+                                        <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{selectedItemForDetail.name || 'Nueva prenda'}</h3>
+                                        <p className="text-gray-500 dark:text-gray-400 mt-1">{selectedItemForDetail.brand || 'Sin marca'}</p>
+                                        
+                                        {(selectedItemForDetail.source_url || selectedItemForDetail.sourceUrl) && (
+                                            <div className="mt-8 w-full">
+                                                <a href={selectedItemForDetail.source_url || selectedItemForDetail.sourceUrl} target="_blank" rel="noopener noreferrer" className="block w-full bg-black dark:bg-white text-white dark:text-black font-bold py-4 rounded-3xl hover:opacity-90 transition-opacity text-center shadow-lg">
+                                                    Enlace a la web
+                                                </a>
+                                            </div>
+                                        )}
+                                    </div>
+                                </motion.div>
+
+                                {/* DESKTOP: Standard Centered Modal */}
                                 <motion.div
                                     initial={{ opacity: 0, scale: 0.95, y: 10 }}
                                     animate={{ opacity: 1, scale: 1, y: 0 }}
                                     exit={{ opacity: 0, scale: 0.95, y: 10 }}
                                     transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                                    className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[6040] bg-white dark:bg-[#1a1a1a] rounded-3xl max-w-sm w-[90%] p-5 space-y-4 shadow-2xl pointer-events-auto"
+                                    className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[6040] bg-white dark:bg-[#1a1a1a] rounded-3xl max-w-sm w-[90%] p-5 space-y-4 shadow-2xl pointer-events-auto hidden md:block"
                                     onClick={(e) => e.stopPropagation()}
                                 >
                                     <button

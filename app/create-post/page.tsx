@@ -80,7 +80,7 @@ export default function CreatePostPage() {
         try {
             const { data, error } = await supabase
                 .from('outfits')
-                .select('*, outfit_items(clothing_items(id, image_url), position_x, position_y, scale, rotation, layer_order, z_index)')
+                .select('*, outfit_items(clothing_item:clothing_items(id, image_url), position_x, position_y, scale, rotation, layer_order, z_index)')
                 .eq('user_id', user.id)
                 .order('created_at', { ascending: false });
 
@@ -93,7 +93,7 @@ export default function CreatePostPage() {
     };
 
     const fetchSingleOutfit = async (id: string) => {
-        const { data } = await supabase.from('outfits').select('*, outfit_items(clothing_items(id, image_url), position_x, position_y, scale, rotation, layer_order, z_index)').eq('id', id).single();
+        const { data } = await supabase.from('outfits').select('*, outfit_items(clothing_item:clothing_items(id, image_url), position_x, position_y, scale, rotation, layer_order, z_index)').eq('id', id).single();
         if (data) setSelectedOutfit(data);
     };
 
