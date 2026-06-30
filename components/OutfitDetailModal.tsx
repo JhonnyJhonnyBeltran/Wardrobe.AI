@@ -258,14 +258,43 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
                                                 <h3 className="text-xl font-bold text-[var(--foreground)]">{selectedItemForDetail.name || 'Prenda sin nombre'}</h3>
                                                 <p className="text-[var(--foreground-secondary)] mt-1">{selectedItemForDetail.brand || 'Sin marca'}</p>
                                                 
+                                                {selectedItemForDetail.category && (
+                                                    <p className="text-sm text-[var(--foreground-tertiary)] uppercase tracking-wider mt-2">{selectedItemForDetail.category}</p>
+                                                )}
+
+                                                <div className="flex flex-wrap items-center justify-center gap-2 mt-3 mb-4">
+                                                    {(selectedItemForDetail.color || selectedItemForDetail.color_hex || selectedItemForDetail.colorHex) && (
+                                                        <div className="flex items-center gap-2 p-2 px-3 bg-[var(--background-secondary)] rounded-xl w-fit">
+                                                            <div className="w-3.5 h-3.5 rounded-full border border-[var(--border-color)]" style={{ backgroundColor: selectedItemForDetail.color_hex || selectedItemForDetail.colorHex || selectedItemForDetail.color || '#ccc' }} />
+                                                            <span className="text-[13px] font-medium text-[var(--foreground-secondary)] capitalize">{selectedItemForDetail.color || selectedItemForDetail.colorHex || selectedItemForDetail.color_hex || 'Color'}</span>
+                                                        </div>
+                                                    )}
+                                                    {selectedItemForDetail.size && (
+                                                        <div className="flex items-center gap-2 p-2 px-3 bg-[var(--background-secondary)] rounded-xl w-fit">
+                                                            <span className="text-[13px] font-medium text-[var(--foreground-secondary)]">Talla {selectedItemForDetail.size}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+
                                                 <div className="mt-6 flex gap-3 w-full">
-                                                    <Link 
-                                                        href={`/closet?item=${selectedItemForDetail.id}`} 
-                                                        onClick={onClose}
-                                                        className="flex-1 bg-[var(--foreground)] text-[var(--background)] font-bold py-3.5 rounded-xl hover:opacity-90 transition-opacity text-center"
-                                                    >
-                                                        Ver en armario
-                                                    </Link>
+                                                    {(selectedItemForDetail.source_url || selectedItemForDetail.sourceUrl) ? (
+                                                        <a 
+                                                            href={selectedItemForDetail.source_url || selectedItemForDetail.sourceUrl} 
+                                                            target="_blank" 
+                                                            rel="noopener noreferrer" 
+                                                            className="flex-1 bg-[var(--brand-pink)] text-white font-bold py-3.5 rounded-xl hover:opacity-90 transition-opacity text-center shadow-lg shadow-[var(--brand-pink)]/30"
+                                                        >
+                                                            Comprar Prenda
+                                                        </a>
+                                                    ) : (
+                                                        <Link 
+                                                            href={`/closet?item=${selectedItemForDetail.id}`} 
+                                                            onClick={onClose}
+                                                            className="flex-1 bg-[var(--foreground)] text-[var(--background)] font-bold py-3.5 rounded-xl hover:opacity-90 transition-opacity text-center"
+                                                        >
+                                                            Ver en armario
+                                                        </Link>
+                                                    )}
                                                 </div>
                                             </div>
                                         </motion.div>
@@ -325,13 +354,24 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
                                                     )}
                                                 </div>
 
-                                                <Link 
-                                                    href={`/closet?item=${selectedItemForDetail.id}`} 
-                                                    onClick={onClose}
-                                                    className="block w-full bg-[var(--foreground)] text-[var(--background)] font-bold py-3.5 rounded-xl hover:opacity-90 transition-opacity text-center"
-                                                >
-                                                    Ver en armario
-                                                </Link>
+                                                {(selectedItemForDetail.source_url || selectedItemForDetail.sourceUrl) ? (
+                                                    <a 
+                                                        href={selectedItemForDetail.source_url || selectedItemForDetail.sourceUrl} 
+                                                        target="_blank" 
+                                                        rel="noopener noreferrer" 
+                                                        className="block w-full bg-[var(--brand-pink)] text-white font-bold py-3.5 rounded-xl hover:opacity-90 transition-opacity text-center shadow-lg shadow-[var(--brand-pink)]/30"
+                                                    >
+                                                        Comprar Prenda
+                                                    </a>
+                                                ) : (
+                                                    <Link 
+                                                        href={`/closet?item=${selectedItemForDetail.id}`} 
+                                                        onClick={onClose}
+                                                        className="block w-full bg-[var(--foreground)] text-[var(--background)] font-bold py-3.5 rounded-xl hover:opacity-90 transition-opacity text-center"
+                                                    >
+                                                        Ver en armario
+                                                    </Link>
+                                                )}
                                             </div>
                                         </motion.div>
                                     </>
