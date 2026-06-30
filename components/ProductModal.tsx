@@ -245,7 +245,11 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
                                         <motion.button
                                             whileHover={{ scale: 1.02 }}
                                             whileTap={{ scale: 0.98 }}
-                                            onClick={() => onFavoriteToggle?.(displayItem.id)}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                e.preventDefault();
+                                                onFavoriteToggle?.(displayItem.id);
+                                            }}
                                             className={`flex-1 flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl font-bold transition-all duration-300 border min-w-[100px] h-[52px] ${isFavorite
                                                 ? 'bg-[var(--brand-pink)] text-white border-transparent shadow-md shadow-[var(--brand-pink)]/20'
                                                 : 'bg-pink-50 dark:bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] border-pink-200 dark:border-[var(--brand-pink)]/20 hover:bg-pink-100 dark:hover:bg-[var(--brand-pink)]/20'
@@ -259,7 +263,9 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
                                             <motion.button
                                                 whileHover={{ scale: 1.02 }}
                                                 whileTap={{ scale: 0.98 }}
-                                                onClick={() => {
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    e.preventDefault();
                                                     if (onClose) onClose();
                                                     setTimeout(() => onEdit(displayItem.id), 100);
                                                 }}

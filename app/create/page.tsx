@@ -593,7 +593,7 @@ export default function CreateOutfitPage() {
                                                                 loading="lazy"
                                                             />
                                                             {isSelected && (
-                                                                <div className="absolute inset-0 bg-[var(--brand-pink)]/20 flex items-center justify-center backdrop-blur-[1px]">
+                                                                <div className="absolute inset-0 bg-[var(--brand-pink)]/10 flex items-center justify-center">
                                                                     <div className="bg-[var(--brand-pink)] text-white rounded-full p-2 shadow-lg scale-110">
                                                                         <Check className="w-5 h-5" />
                                                                     </div>
@@ -607,8 +607,30 @@ export default function CreateOutfitPage() {
                                     </div>
                                 </div>
 
+                                {/* Selected Items Summary */}
+                                {totalSelected > 0 && (
+                                    <div className="fixed bottom-[88px] left-0 right-0 px-4 py-3 bg-[var(--background)]/90 backdrop-blur-md border-t border-[var(--border-color)] z-30 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
+                                        <div className="flex gap-2 overflow-x-auto scrollbar-hide items-center">
+                                            {flatItems.map((item, idx) => (
+                                                <div key={`${item.id}-${idx}`} className="relative w-12 h-12 rounded-xl bg-[#f8f9fa] dark:bg-[#111] border border-[var(--border-color)] flex-shrink-0 overflow-hidden group">
+                                                    <img src={item.imageUrl} alt={item.name} className="w-full h-full object-contain p-1" />
+                                                    <button 
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleRemoveItem(item.id);
+                                                        }}
+                                                        className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                                    >
+                                                        <X className="w-4 h-4 text-white" />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+
                                 {/* Next Button */}
-                                <div className="fixed bottom-0 left-0 right-0 p-4 border-t border-[var(--border-color)] bg-[var(--background)]/80 backdrop-blur-md z-40">
+                                <div className="fixed bottom-0 left-0 right-0 p-4 bg-[var(--background)] z-40">
                                     <Button
                                         onClick={() => setMobileStep('preview')}
                                         disabled={isEmpty}
@@ -778,7 +800,7 @@ export default function CreateOutfitPage() {
                                                         loading="lazy"
                                                     />
                                                     {isSelected && (
-                                                        <div className="absolute inset-0 bg-[var(--brand-pink)]/20 flex items-center justify-center backdrop-blur-[1px]">
+                                                        <div className="absolute inset-0 bg-[var(--brand-pink)]/10 flex items-center justify-center">
                                                             <div className="bg-[var(--brand-pink)] text-white rounded-full p-2 shadow-lg scale-110">
                                                                 <Check className="w-5 h-5" />
                                                             </div>
