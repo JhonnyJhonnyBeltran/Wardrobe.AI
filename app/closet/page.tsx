@@ -747,9 +747,9 @@ export default function ClosetPage() {
                                   e.stopPropagation();
                                   handleFavoriteToggle(item.id);
                                 }}
-                                className="absolute top-2 right-2 p-2 rounded-full bg-black/20 backdrop-blur-sm text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                                className="absolute top-3 right-3 p-1 z-20 focus:outline-none"
                               >
-                                <Heart className={`w-4 h-4 ${item.favorite ? 'fill-current text-red-500' : 'text-white'}`} />
+                                <Heart className={`w-5 h-5 transition-colors duration-300 ${item.favorite ? 'fill-[var(--brand-pink)] text-[var(--brand-pink)]' : 'fill-[#d1d5db] text-[#d1d5db]'}`} />
                               </motion.button>
 
                               {/* Delete Button - Always visible on desktop */}
@@ -878,6 +878,7 @@ export default function ClosetPage() {
                             }
                           });
                         }}
+                        onToggleFavorite={(outfit, currentFav) => toggleOutfitFavorite(outfit.id, currentFav)}
                       />
                     </div>
                   ))}

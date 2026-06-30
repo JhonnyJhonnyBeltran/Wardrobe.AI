@@ -71,7 +71,7 @@ export function FilterBar({
             </div>
 
             {/* Filters Row */}
-            <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide pb-1">
+            <div className="flex flex-wrap items-center gap-2 pb-1">
                 {/* Favorites Toggle */}
                 <button
                     onClick={onFavoritesToggle}

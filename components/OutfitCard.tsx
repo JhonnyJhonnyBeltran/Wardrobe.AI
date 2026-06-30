@@ -17,6 +17,7 @@ interface OutfitCardProps {
     onEdit?: (outfit: Outfit) => void;
     onShare?: (outfit: Outfit) => void;
     onDelete?: (outfitId: string) => void;
+    onToggleFavorite?: (outfit: Outfit, currentFav: boolean) => void;
     index?: number;
 }
 
@@ -43,7 +44,7 @@ const styleConfig: Record<string, { icon: React.ReactNode; gradient: string }> =
 
 import { Edit2, Trash2, Share2, Send } from 'lucide-react';
 
-export default function OutfitCard({ outfit, isLocked = false, onClick, onEdit, onDelete, onShare, index = 0 }: OutfitCardProps) {
+export default function OutfitCard({ outfit, isLocked = false, onClick, onEdit, onDelete, onShare, onToggleFavorite, index = 0 }: OutfitCardProps) {
     const styleKey = outfit.occasion || outfit.style || 'everyday';
     const config = styleConfig[styleKey] || { icon: <Layers className="w-3 h-3" />, gradient: 'from-pink-400 to-rose-500' };
 
@@ -129,10 +130,23 @@ export default function OutfitCard({ outfit, isLocked = false, onClick, onEdit, 
 
             </div>
 
+            {/* Favorite Button Overlay - Always visible */}
+            {onToggleFavorite && !isLocked && (
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onToggleFavorite(outfit, outfit.favorite ?? false);
+                    }}
+                    className="absolute top-3 right-3 p-1 z-20 focus:outline-none"
+                >
+                    <Heart className={`w-5 h-5 transition-colors duration-300 ${outfit.favorite ? 'fill-[var(--brand-pink)] text-[var(--brand-pink)]' : 'fill-[#d1d5db] text-[#d1d5db] hover:fill-gray-400 hover:text-gray-400'}`} />
+                </button>
+            )}
+
             {/* Actions Overlay (Visible on Hover/Focus) */}
             {
                 !isLocked && (
-                    <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
+                    <div className="absolute top-2 left-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
                         {onEdit && (
                             <button
                                 onClick={(e) => {
