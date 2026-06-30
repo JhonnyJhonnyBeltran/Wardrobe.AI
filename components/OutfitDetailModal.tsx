@@ -226,7 +226,7 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
                                     animate={{ y: 0 }}
                                     exit={{ y: "100%" }}
                                     transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                                    className="fixed bottom-0 left-0 right-0 z-[6040] bg-white dark:bg-[#1a1a1a] rounded-t-[32px] p-6 pt-16 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] flex flex-col items-center md:hidden pointer-events-auto"
+                                    className="fixed bottom-0 left-0 right-0 z-[6040] bg-white dark:bg-[#1a1a1a] rounded-t-[32px] p-6 pt-20 pb-10 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] flex flex-col items-center justify-between min-h-[45vh] md:hidden pointer-events-auto"
                                     onClick={(e) => e.stopPropagation()}
                                 >
                                     <button 
@@ -242,27 +242,29 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
                                         </div>
                                     </div>
 
-                                    <div className="w-full text-center mt-2">
-                                        <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{selectedItemForDetail.name || 'Nueva prenda'}</h3>
-                                        <p className="text-gray-500 dark:text-gray-400 mt-1 text-lg">{selectedItemForDetail.brand || 'Sin marca'}</p>
-                                        
-                                        {selectedItemForDetail.category && (
-                                            <p className="text-sm text-gray-400 uppercase tracking-wider mt-3 font-medium">{selectedItemForDetail.category}</p>
-                                        )}
+                                    <div className="w-full text-center flex-1 flex flex-col justify-between mt-4">
+                                        <div>
+                                            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{selectedItemForDetail.name || 'Nueva prenda'}</h3>
+                                            <p className="text-gray-500 dark:text-gray-400 mt-1 text-lg">{selectedItemForDetail.brand || 'Sin marca'}</p>
+                                            
+                                            {selectedItemForDetail.category && (
+                                                <p className="text-sm text-gray-400 uppercase tracking-wider mt-4 font-medium">{selectedItemForDetail.category}</p>
+                                            )}
 
-                                        <div className="flex flex-wrap items-center justify-center gap-2 mt-4 mb-2">
-                                            {(selectedItemForDetail.color || selectedItemForDetail.color_hex || selectedItemForDetail.colorHex) && (
-                                                <div className="flex items-center gap-2 p-2 px-4 bg-gray-100 dark:bg-gray-800 rounded-full w-fit">
-                                                    <div className="w-4 h-4 rounded-full border border-gray-300 dark:border-gray-600 shadow-sm" style={{ backgroundColor: selectedItemForDetail.color_hex || selectedItemForDetail.colorHex || selectedItemForDetail.color || '#ccc' }} />
-                                                    <span className="text-sm font-medium text-gray-700 dark:text-gray-300 capitalize">{selectedItemForDetail.color || selectedItemForDetail.colorHex || selectedItemForDetail.color_hex || 'Color'}</span>
-                                                </div>
-                                            )}
-                                            {selectedItemForDetail.size && (
-                                                <div className="flex items-center gap-2 p-2 px-4 bg-gray-100 dark:bg-gray-800 rounded-full w-fit">
-                                                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Talla</span>
-                                                    <span className="text-sm font-bold text-gray-900 dark:text-white">{selectedItemForDetail.size}</span>
-                                                </div>
-                                            )}
+                                            <div className="flex flex-wrap items-center justify-center gap-3 mt-5 mb-2">
+                                                {(selectedItemForDetail.color || selectedItemForDetail.color_hex || selectedItemForDetail.colorHex) && (
+                                                    <div className="flex items-center gap-2 p-2 px-4 bg-gray-100 dark:bg-gray-800 rounded-full w-fit">
+                                                        <div className="w-4 h-4 rounded-full border border-gray-300 dark:border-gray-600 shadow-sm" style={{ backgroundColor: selectedItemForDetail.color_hex || selectedItemForDetail.colorHex || selectedItemForDetail.color || '#ccc' }} />
+                                                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300 capitalize">{selectedItemForDetail.color || selectedItemForDetail.colorHex || selectedItemForDetail.color_hex || 'Color'}</span>
+                                                    </div>
+                                                )}
+                                                {selectedItemForDetail.size && (
+                                                    <div className="flex items-center gap-2 p-2 px-4 bg-gray-100 dark:bg-gray-800 rounded-full w-fit">
+                                                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Talla</span>
+                                                        <span className="text-sm font-bold text-gray-900 dark:text-white">{selectedItemForDetail.size}</span>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                         
                                         {(selectedItemForDetail.source_url || selectedItemForDetail.sourceUrl) && (
