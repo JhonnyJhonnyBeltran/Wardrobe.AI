@@ -85,6 +85,7 @@ export const useWardrobeStore = create<WardrobeState>((set, get) => ({
         size: item.size || undefined,
         reference: item.reference || undefined,
         fabric: item.fabric || undefined,
+        sourceUrl: item.source_url || undefined,
       }));
 
       set(state => ({
@@ -150,6 +151,7 @@ export const useWardrobeStore = create<WardrobeState>((set, get) => ({
         size: (item as any).size || null,
         reference: (item as any).reference || null,
         fabric: (item as any).fabric || null,
+        source_url: (item as any).sourceUrl || null,
       };
 
       const { data, error: insertError } = await supabase
@@ -178,6 +180,7 @@ export const useWardrobeStore = create<WardrobeState>((set, get) => ({
         size: dbItem.size || undefined,
         reference: dbItem.reference || undefined,
         fabric: dbItem.fabric || undefined,
+        sourceUrl: dbItem.source_url || undefined,
       };
 
       set(state => ({ items: [newItem, ...state.items] }));

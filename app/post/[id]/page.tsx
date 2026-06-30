@@ -474,7 +474,7 @@ export default function PostDetailPage() {
     return (
         <div className="min-h-screen w-full bg-white dark:bg-black flex flex-col">
             {/* HEADER - White background like /profile */}
-            <header className="sticky top-0 z-50 w-full max-w-[1000px] mx-auto bg-white dark:bg-black border-b border-gray-100 dark:border-gray-800 h-16 flex items-center justify-between px-4">
+            <header className="sticky top-0 z-50 w-full max-w-[1400px] mx-auto bg-white dark:bg-black border-b border-gray-100 dark:border-gray-800 h-16 flex items-center justify-between px-4">
                 {/* Left: Back Button */}
                 <button onClick={handleBack} className="p-2 -ml-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
                     <ArrowLeft className="w-6 h-6 text-gray-900 dark:text-white" />
@@ -542,7 +542,7 @@ export default function PostDetailPage() {
             </header>
 
             {/* Desktop Container */}
-            <div className="flex flex-col md:flex-row w-full max-w-[1000px] mx-auto flex-1 md:h-[calc(100vh-64px)]">
+            <div className="flex flex-col md:flex-row w-full max-w-[1400px] mx-auto flex-1 md:h-[calc(100vh-64px)]">
 
             {/* IMAGE CAROUSEL - Swipeable with Framer Motion */}
             <div className="relative w-full aspect-[4/5] md:aspect-auto md:w-[60%] md:h-[calc(100vh-64px)] bg-white md:bg-gray-50 dark:bg-black dark:md:bg-[#0a0a0a] border-r-0 md:border-r border-gray-100 dark:border-gray-800 flex-shrink-0 overflow-hidden">
@@ -902,11 +902,32 @@ export default function PostDetailPage() {
                             <h3 className="text-xl font-bold text-[var(--foreground)]">{selectedItem.name || 'Prenda sin nombre'}</h3>
                             <p className="text-[var(--foreground-secondary)] mt-1">{selectedItem.brand || 'Sin marca'}</p>
                             
-                            <div className="mt-6 flex gap-3 w-full">
-                                <Link href={`/closet?item=${selectedItem.id}`} className="flex-1 bg-[var(--foreground)] text-[var(--background)] font-bold py-3.5 rounded-xl hover:opacity-90 transition-opacity text-center">
-                                    Ver en armario
-                                </Link>
+                            {selectedItem.category && (
+                                <p className="text-sm text-[var(--foreground-tertiary)] uppercase tracking-wider mt-2">{selectedItem.category}</p>
+                            )}
+
+                            <div className="flex flex-wrap items-center justify-center gap-2 mt-3 mb-4">
+                                {selectedItem.color && (
+                                    <div className="flex items-center gap-2 p-2 px-3 bg-[var(--background-secondary)] rounded-xl w-fit">
+                                        <div className="w-3.5 h-3.5 rounded-full border border-[var(--border-color)]" style={{ backgroundColor: selectedItem.color_hex || selectedItem.color }} />
+                                        <span className="text-[13px] font-medium text-[var(--foreground-secondary)] capitalize">{selectedItem.color}</span>
+                                    </div>
+                                )}
+                                {selectedItem.size && (
+                                    <div className="flex items-center gap-2 p-2 px-3 bg-[var(--background-secondary)] rounded-xl w-fit">
+                                        <span className="text-[13px] font-medium text-[var(--foreground-secondary)]">Talla {selectedItem.size}</span>
+                                    </div>
+                                )}
                             </div>
+                            
+                            {(selectedItem.source_url || selectedItem.sourceUrl) && (
+                                <div className="mt-4 flex gap-3 w-full">
+                                    <a href={selectedItem.source_url || selectedItem.sourceUrl} target="_blank" rel="noopener noreferrer" className="flex-1 bg-[var(--brand-pink)] text-white font-bold py-3.5 rounded-xl hover:opacity-90 transition-opacity text-center flex items-center justify-center gap-2 shadow-lg shadow-[var(--brand-pink)]/20">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                                        Comprar Prenda
+                                    </a>
+                                </div>
+                            )}
                         </div>
                     </motion.div>
 
@@ -956,9 +977,14 @@ export default function PostDetailPage() {
                                 )}
                             </div>
 
-                            <Link href={`/closet?item=${selectedItem.id}`} className="block w-full bg-[var(--foreground)] text-[var(--background)] font-bold py-3.5 rounded-xl hover:opacity-90 transition-opacity text-center">
-                                Ver en armario
-                            </Link>
+                            {(selectedItem.source_url || selectedItem.sourceUrl) && (
+                                <div className="mt-4 flex gap-3 w-full">
+                                    <a href={selectedItem.source_url || selectedItem.sourceUrl} target="_blank" rel="noopener noreferrer" className="flex-1 bg-[var(--brand-pink)] text-white font-bold py-3.5 rounded-xl hover:opacity-90 transition-opacity text-center flex items-center justify-center gap-2 shadow-lg shadow-[var(--brand-pink)]/20">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                                        Comprar Prenda
+                                    </a>
+                                </div>
+                            )}
                         </div>
                     </motion.div>
                 </>

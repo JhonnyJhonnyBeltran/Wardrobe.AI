@@ -85,6 +85,29 @@ export default function AddItemModal({
         try {
             const payload = buildPayload();
             
+            // Validate source URL if present
+            if (payload.sourceUrl) {
+                let url = payload.sourceUrl.trim();
+                const blockedDomains = ['pornhub', 'xvideos', 'xnxx', 'xhamster', 'redtube', 'onlyfans', 'chaturbate'];
+                const urlLower = url.toLowerCase();
+                
+                if (blockedDomains.some(d => urlLower.includes(d))) {
+                    useUiStore.getState().showModal({
+                        title: 'Enlace no permitido',
+                        message: 'Solo se permiten enlaces a tiendas de ropa y sitios legítimos.',
+                        type: 'error',
+                        confirmText: 'Entendido'
+                    });
+                    setIsSubmitting(false);
+                    return;
+                }
+                
+                if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                    url = 'https://' + url;
+                    payload.sourceUrl = url;
+                }
+            }
+            
             // Check if brand is new and needs to be added to global database
             if (payload.brand) {
                 const normalizedBrand = normalizeBrand(payload.brand);
@@ -393,6 +416,25 @@ export default function AddItemModal({
                                                     className="w-full px-4 py-2.5 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)]"
                                                 />
                                             </div>
+                                        </div>
+
+                                        {/* Source URL */}
+                                        <div>
+                                            <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
+                                                Enlace a la prenda
+                                            </label>
+                                            <input
+                                                type="url"
+                                                value={formData.sourceUrl}
+                                                onChange={(e) =>
+                                                    setFormData((prev) => ({
+                                                        ...prev,
+                                                        sourceUrl: e.target.value,
+                                                    }))
+                                                }
+                                                placeholder="ej: https://zara.com/... (Opcional)"
+                                                className="w-full px-4 py-2.5 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)]"
+                                            />
                                         </div>
 
                                         {/* Color */}

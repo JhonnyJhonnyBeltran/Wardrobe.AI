@@ -9,9 +9,11 @@ interface InteractiveOutfitViewerProps {
     onItemClick?: (item: any) => void;
     className?: string;
     isMobileSticker?: boolean;
+    selectedItemId?: string;
+    disableInteraction?: boolean;
 }
 
-export default function InteractiveOutfitViewer({ outfit, onItemClick, className = '', isMobileSticker = false }: InteractiveOutfitViewerProps) {
+export default function InteractiveOutfitViewer({ outfit, onItemClick, className = '', isMobileSticker = false, selectedItemId, disableInteraction = false }: InteractiveOutfitViewerProps) {
     const [hoveredItemId, setHoveredItemId] = useState<string | null>(null);
     const [isMobile, setIsMobile] = useState(false);
 
@@ -89,7 +91,6 @@ export default function InteractiveOutfitViewer({ outfit, onItemClick, className
         <div className={`relative w-full h-full min-h-[400px] bg-[#f8f9fa] dark:bg-[#111] overflow-hidden flex items-center justify-center ${className}`}>
             {itemsWithPositions.map((item: any, i: number) => {
                 const isHovered = hoveredItemId === item.clothing.id;
-                
                 // On mobile, or desktop, we want the items to scale relative to the container.
                 // 35% of container width is a good base size for an item
                 const baseWidthStr = `${35 * item.computedScale}%`;
@@ -97,30 +98,34 @@ export default function InteractiveOutfitViewer({ outfit, onItemClick, className
                 return (
                     <motion.div
                         key={item.clothing.id || i}
-                        className="absolute cursor-pointer"
+                        className={`absolute ${disableInteraction ? 'pointer-events-none' : 'cursor-pointer'}`}
                         style={{
                             left: `${item.computedX}%`,
                             top: `${item.computedY}%`,
                             x: '-50%',
                             y: '-50%',
-                            zIndex: isHovered ? 999 : item.computedZIndex,
+                            zIndex: isHovered && !disableInteraction ? 999 : item.computedZIndex,
                             width: baseWidthStr,
                         }}
                         initial={{ rotate: item.computedRotation }}
-                        animate={{ 
+                        animate={!disableInteraction ? { 
                             scale: isHovered ? 1.05 : 1,
                             rotate: item.computedRotation
-                        }}
+                        } : { rotate: item.computedRotation }}
                         transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                        onHoverStart={() => setHoveredItemId(item.clothing.id)}
+                        onHoverStart={() => !disableInteraction && setHoveredItemId(item.clothing.id)}
                         onHoverEnd={() => setHoveredItemId(null)}
-                        onClick={() => onItemClick?.(item.clothing)}
+                        onClick={(e) => {
+                            if (disableInteraction) return;
+                            e.stopPropagation();
+                            onItemClick?.(item.clothing);
+                        }}
                     >
                         {/* Sticker Effect */}
                         <div 
                             className="relative w-full aspect-[3/4]"
                             style={{
-                                filter: (isMobileSticker && isMobile)
+                                filter: (isMobileSticker && isMobile && selectedItemId !== item.clothing.id)
                                     ? (isHovered 
                                         ? 'drop-shadow(0 0 6px rgba(255,255,255,0.8)) drop-shadow(0 8px 12px rgba(0,0,0,0.3))' 
                                         : 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))')

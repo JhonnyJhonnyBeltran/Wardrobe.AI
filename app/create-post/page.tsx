@@ -9,6 +9,7 @@ import { supabase } from '@/lib/supabase/client';
 import Image from 'next/image';
 import { useUser } from '@/store/userStore';
 import { Button } from '@/components';
+import InteractiveOutfitViewer from '@/components/InteractiveOutfitViewer';
 
 export default function CreatePostPage() {
     const router = useRouter();
@@ -79,7 +80,7 @@ export default function CreatePostPage() {
         try {
             const { data, error } = await supabase
                 .from('outfits')
-                .select('*, outfit_items(clothing_items(image_url))')
+                .select('*, outfit_items(clothing_items(id, image_url), position_x, position_y, scale, rotation, layer_order, z_index)')
                 .eq('user_id', user.id)
                 .order('created_at', { ascending: false });
 
@@ -92,7 +93,7 @@ export default function CreatePostPage() {
     };
 
     const fetchSingleOutfit = async (id: string) => {
-        const { data } = await supabase.from('outfits').select('*, outfit_items(clothing_items(image_url))').eq('id', id).single();
+        const { data } = await supabase.from('outfits').select('*, outfit_items(clothing_items(id, image_url), position_x, position_y, scale, rotation, layer_order, z_index)').eq('id', id).single();
         if (data) setSelectedOutfit(data);
     };
 
@@ -371,22 +372,19 @@ export default function CreatePostPage() {
                                 <button
                                     key={outfit.id}
                                     onClick={() => handleOutfitSelect(outfit)}
-                                    className="relative aspect-[3/4] rounded-2xl overflow-hidden border border-[var(--border-color)] group hover:border-[var(--brand-pink)] transition-all"
+                                    className="relative aspect-[3/4] rounded-2xl overflow-hidden border border-[var(--border-color)] group hover:border-[var(--brand-pink)] transition-all bg-[var(--card-bg)] flex flex-col"
                                 >
-                                    {outfit.outfit_items?.[0]?.clothing_items?.image_url ? (
-                                        <Image
-                                            src={outfit.outfit_items[0].clothing_items.image_url}
-                                            alt={outfit.name}
-                                            fill
-                                            className="object-cover"
-                                        />
-                                    ) : (
-                                        <div className="w-full h-full bg-[var(--background-secondary)] flex items-center justify-center">
-                                            <Shirt className="w-8 h-8 opacity-20" />
-                                        </div>
-                                    )}
-                                    <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/80 to-transparent pt-8">
-                                        <p className="text-white text-xs font-bold truncate">{outfit.name}</p>
+                                    <div className="flex-1 w-full relative bg-[var(--background-secondary)]">
+                                        {outfit.outfit_items?.length > 0 ? (
+                                            <InteractiveOutfitViewer outfit={outfit} disableInteraction={true} className="w-full h-full min-h-0" />
+                                        ) : (
+                                            <div className="w-full h-full bg-[var(--background-secondary)] flex items-center justify-center">
+                                                <Shirt className="w-8 h-8 opacity-20" />
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="p-3 bg-[var(--card-bg)] border-t border-[var(--border-color)] shrink-0 text-left">
+                                        <p className="text-[var(--foreground)] text-xs font-bold truncate">{outfit.name}</p>
                                     </div>
                                 </button>
                             ))

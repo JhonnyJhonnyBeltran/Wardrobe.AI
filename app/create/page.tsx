@@ -580,26 +580,28 @@ export default function CreateOutfitPage() {
                                                     <div
                                                         key={item.id}
                                                         onClick={() => handleSelect(slot, item)}
-                                                        className={`cursor-pointer group relative aspect-[3/4] rounded-2xl overflow-hidden bg-[var(--card-bg)] transition-all ${isSelected
+                                                        className={`cursor-pointer group relative aspect-[3/4] rounded-2xl overflow-hidden bg-[var(--card-bg)] transition-all flex flex-col ${isSelected
                                                             ? 'ring-2 ring-inset ring-[var(--brand-pink)]'
                                                             : 'ring-1 ring-inset ring-[var(--border-color)]'
                                                             }`}
                                                     >
-                                                        <img
-                                                            src={item.imageUrl}
-                                                            alt={item.name}
-                                                            className="w-full h-full object-cover"
-                                                            loading="lazy"
-                                                        />
-                                                        {isSelected && (
-                                                            <div className="absolute inset-0 bg-[var(--brand-pink)]/20 flex items-center justify-center">
-                                                                <div className="bg-[var(--brand-pink)] text-white rounded-full p-1">
-                                                                    <Check className="w-4 h-4" />
+                                                        <div className="flex-1 w-full relative bg-[var(--background-secondary)]">
+                                                            <img
+                                                                src={item.imageUrl}
+                                                                alt={item.name}
+                                                                className="w-full h-full object-cover"
+                                                                loading="lazy"
+                                                            />
+                                                            {isSelected && (
+                                                                <div className="absolute inset-0 bg-[var(--brand-pink)]/20 flex items-center justify-center">
+                                                                    <div className="bg-[var(--brand-pink)] text-white rounded-full p-1">
+                                                                        <Check className="w-4 h-4" />
+                                                                    </div>
                                                                 </div>
-                                                            </div>
-                                                        )}
-                                                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
-                                                            <p className="text-white text-xs truncate">{item.name}</p>
+                                                            )}
+                                                        </div>
+                                                        <div className="p-2 bg-[var(--card-bg)] border-t border-[var(--border-color)] shrink-0 text-left">
+                                                            <p className="text-[var(--foreground)] text-xs font-bold truncate">{item.name}</p>
                                                         </div>
                                                     </div>
                                                 );
@@ -766,26 +768,28 @@ export default function CreateOutfitPage() {
                                             <div
                                                 key={item.id}
                                                 onClick={() => handleSelect(slot, item)}
-                                                className={`cursor-pointer group relative aspect-[3/4] rounded-2xl overflow-hidden bg-[var(--card-bg)] transition-all duration-300 ${isSelected
+                                                className={`cursor-pointer group relative aspect-[3/4] rounded-2xl overflow-hidden bg-[var(--card-bg)] transition-all duration-300 flex flex-col ${isSelected
                                                     ? 'ring-2 ring-inset ring-[var(--brand-pink)]'
                                                     : 'ring-1 ring-inset ring-[var(--border-color)]'
                                                     }`}
                                             >
-                                                <img
-                                                    src={item.imageUrl}
-                                                    alt={item.name}
-                                                    className="w-full h-full object-cover"
-                                                    loading="lazy"
-                                                />
-                                                {isSelected && (
-                                                    <div className="absolute inset-0 bg-[var(--brand-pink)]/20 flex items-center justify-center backdrop-blur-[1px]">
-                                                        <div className="bg-[var(--brand-pink)] text-white rounded-full p-2 shadow-lg scale-110">
-                                                            <Check className="w-5 h-5" />
+                                                <div className="flex-1 w-full relative bg-[var(--background-secondary)]">
+                                                    <img
+                                                        src={item.imageUrl}
+                                                        alt={item.name}
+                                                        className="w-full h-full object-cover"
+                                                        loading="lazy"
+                                                    />
+                                                    {isSelected && (
+                                                        <div className="absolute inset-0 bg-[var(--brand-pink)]/20 flex items-center justify-center backdrop-blur-[1px]">
+                                                            <div className="bg-[var(--brand-pink)] text-white rounded-full p-2 shadow-lg scale-110">
+                                                                <Check className="w-5 h-5" />
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                )}
-                                                <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/80 via-black/40 to-transparent">
-                                                    <p className="text-white text-xs font-medium truncate">{item.name}</p>
+                                                    )}
+                                                </div>
+                                                <div className="p-3 bg-[var(--card-bg)] border-t border-[var(--border-color)] shrink-0 text-left">
+                                                    <p className="text-[var(--foreground)] text-xs font-bold truncate">{item.name}</p>
                                                 </div>
                                             </div>
                                         );

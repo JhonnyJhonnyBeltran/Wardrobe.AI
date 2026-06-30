@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Heart, Share2, Briefcase, PartyPopper, Zap, Flower2, Snowflake, Circle, Layers, Sparkles, Trash2, Edit2, CalendarDays, Rocket, Info } from 'lucide-react';
 import Link from 'next/link';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { Outfit } from '@/types/outfit';
+import { createPortal } from 'react-dom';
 import InteractiveOutfitViewer from './InteractiveOutfitViewer';
 
 interface OutfitDetailModalProps {
@@ -29,8 +30,13 @@ const styleConfig: Record<string, { icon: React.ReactNode; label: string }> = {
 export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleFavorite, onItemClick }: OutfitDetailModalProps) {
     useBodyScrollLock(isOpen);
     const [selectedItemForDetail, setSelectedItemForDetail] = useState<any | null>(null);
+    const [mounted, setMounted] = useState(false);
 
-    if (!isOpen || !outfit) return null;
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    if (!isOpen || !outfit || !mounted) return null;
 
     const styleKey = outfit.occasion || outfit.style || 'everyday';
     const config = styleConfig[styleKey] || { icon: <Layers className="w-4 h-4" />, label: styleKey };
@@ -51,7 +57,7 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
         setSelectedItemForDetail(null);
     };
 
-    return (
+    return createPortal(
         <AnimatePresence>
             {isOpen && (
                 <>
@@ -63,11 +69,11 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.3 }}
                         onClick={onClose}
-                        className="fixed inset-0 bg-black/60 shadow-2xl backdrop-blur-sm z-[5015]"
+                        className="fixed inset-0 bg-black/60 shadow-2xl backdrop-blur-sm z-[6015]"
                     />
 
                     {/* Modal Content Wrapper - Immersive on Mobile, Split on Desktop */}
-                    <div className="fixed inset-0 z-[5020] flex items-end md:items-center justify-center md:p-6 pointer-events-none">
+                    <div className="fixed inset-0 z-[6020] flex items-end md:items-center justify-center md:p-6 pointer-events-none">
                         <motion.div
                             initial={{ opacity: 0, y: 100 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -86,12 +92,15 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
 
                             {/* Left Column (Desktop) / Background (Mobile) */}
                             <div className="absolute inset-0 md:relative md:inset-auto md:w-[60%] md:flex-none bg-[#f8f9fa] dark:bg-[#111] z-0 flex flex-col items-stretch border-r border-[var(--border-color)]">
-                                <InteractiveOutfitViewer
-                                    outfit={outfit}
-                                    onItemClick={handleItemClick}
-                                    className="flex-1 w-full h-full"
-                                    isMobileSticker={true}
-                                />
+                                <div className="absolute top-0 left-0 right-0 bottom-[35vh] md:relative md:bottom-auto md:inset-0 md:h-full md:flex-1">
+                                    <InteractiveOutfitViewer
+                                        outfit={outfit}
+                                        onItemClick={setSelectedItemForDetail}
+                                        className="w-full h-full"
+                                        isMobileSticker={true}
+                                        selectedItemId={selectedItemForDetail?.id}
+                                    />
+                                </div>
                             </div>
 
                             {/* Right Column (Desktop) / Foreground Overlay (Mobile) */}
@@ -212,7 +221,7 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
                                             animate={{ opacity: 1 }}
                                             exit={{ opacity: 0 }}
                                             onClick={handleCloseItemDetail}
-                                            className="absolute inset-0 bg-black/40 z-[5030]"
+                                            className="absolute inset-0 bg-black/40 z-[6030]"
                                         />
 
                                         {/* MOBILE: Bottom Sheet with Sticker Effect */}
@@ -221,7 +230,7 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
                                             animate={{ y: 0 }}
                                             exit={{ y: "100%" }}
                                             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                                            className="absolute bottom-0 left-0 right-0 z-[5040] bg-[var(--background)] rounded-t-3xl p-6 pt-12 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] flex flex-col items-center md:hidden"
+                                            className="absolute bottom-0 left-0 right-0 z-[6040] bg-[var(--background)] rounded-t-3xl p-6 pt-12 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] flex flex-col items-center md:hidden"
                                         >
                                             {/* Close Button */}
                                             <button 
@@ -269,7 +278,7 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
                                             animate={{ opacity: 1, scale: 1, y: 0 }}
                                             exit={{ opacity: 0, scale: 0.95, y: 10 }}
                                             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                                            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[5040] bg-white dark:bg-[#1a1a1a] rounded-3xl max-w-sm w-full p-5 space-y-4 shadow-2xl hidden md:block"
+                                            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[6040] bg-white dark:bg-[#1a1a1a] rounded-3xl max-w-sm w-full p-5 space-y-4 shadow-2xl hidden md:block"
                                             onClick={(e) => e.stopPropagation()}
                                         >
                                             <button
@@ -334,6 +343,7 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
                     </div>
                 </>
             )}
-        </AnimatePresence>
+        </AnimatePresence>,
+        document.body
     );
 }
