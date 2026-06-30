@@ -350,6 +350,10 @@ export default function ClosetPage() {
       return newFavorites;
     });
 
+    if (selectedItem?.id === id) {
+      setSelectedItem(prev => prev ? { ...prev, favorite: newFavStatus } : null);
+    }
+
     try {
       await updateItem(id, { favorite: newFavStatus });
     } catch (error) {
@@ -373,6 +377,9 @@ export default function ClosetPage() {
       
       // Optimistic update
       setOutfits(prev => prev.map(o => o.id === id ? { ...o, favorite: newFavStatus } : o));
+      if (selectedOutfit?.id === id) {
+        setSelectedOutfit(prev => prev ? { ...prev, favorite: newFavStatus } : null);
+      }
       
       // Update DB
       const { error } = await (supabase.from('outfits') as any)
