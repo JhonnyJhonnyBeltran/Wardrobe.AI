@@ -135,22 +135,6 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
 
                                         {/* Action Buttons */}
                                         <div className="flex gap-3 items-center">
-                                            <motion.button
-                                                whileHover={{ scale: 1.02 }}
-                                                whileTap={{ scale: 0.98 }}
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    e.preventDefault();
-                                                    onToggleFavorite?.(outfit.id, !!outfit.favorite);
-                                                }}
-                                                className={`flex-1 flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl font-bold transition-all duration-300 border h-[52px] ${outfit.favorite
-                                                    ? 'bg-[var(--brand-pink)] text-white border-transparent shadow-md shadow-[var(--brand-pink)]/20'
-                                                    : 'bg-[var(--background-secondary)]/90 backdrop-blur-md text-[var(--brand-pink)] border-transparent hover:bg-pink-100'
-                                                }`}
-                                            >
-                                                <Heart className={`w-5 h-5 transition-all ${outfit.favorite ? 'fill-white text-white' : 'text-[var(--brand-pink)]'}`} />
-                                                <span className="text-center">{outfit.favorite ? 'Liked' : 'Like'}</span>
-                                            </motion.button>
 
                                             <Link
                                                 href={`/create?outfitId=${outfit.id}`}
