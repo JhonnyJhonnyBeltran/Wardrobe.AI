@@ -91,7 +91,7 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
                             </button>
 
                             {/* Left Column (Desktop) / Top Half (Mobile) */}
-                            <div className="relative w-full h-[55dvh] md:h-auto md:w-[60%] md:flex-none bg-[#f8f9fa] dark:bg-[#111] z-0 flex flex-col items-stretch md:border-r border-b md:border-b-0 border-[var(--border-color)]">
+                            <div className="relative w-full h-[70dvh] md:h-auto md:w-[60%] md:flex-none bg-[#f8f9fa] dark:bg-[#111] z-0 flex flex-col items-stretch md:border-r border-b md:border-b-0 border-[var(--border-color)]">
                                 <div className="absolute inset-0 w-full h-full">
                                     <InteractiveOutfitViewer
                                         outfit={outfit}

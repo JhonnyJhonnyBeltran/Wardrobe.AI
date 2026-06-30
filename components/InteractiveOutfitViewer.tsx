@@ -109,9 +109,10 @@ export default function InteractiveOutfitViewer({ outfit, onItemClick, className
                         }}
                         initial={{ rotate: item.computedRotation }}
                         animate={!disableInteraction ? { 
-                            scale: isHovered ? 1.05 : 1,
+                            scale: isHovered || selectedItemId === item.clothing.id ? 1.05 : 1,
                             rotate: item.computedRotation
                         } : { rotate: item.computedRotation }}
+                        whileTap={!disableInteraction ? { scale: 0.95 } : undefined}
                         transition={{ type: 'spring', stiffness: 300, damping: 20 }}
                         onHoverStart={() => !disableInteraction && setHoveredItemId(item.clothing.id)}
                         onHoverEnd={() => setHoveredItemId(null)}
@@ -125,10 +126,10 @@ export default function InteractiveOutfitViewer({ outfit, onItemClick, className
                         <div 
                             className="relative w-full aspect-[3/4]"
                             style={{
-                                filter: (isMobileSticker && isMobile && selectedItemId !== item.clothing.id)
-                                    ? (isHovered 
-                                        ? 'drop-shadow(0 0 6px rgba(255,255,255,0.8)) drop-shadow(0 8px 12px rgba(0,0,0,0.3))' 
-                                        : 'drop-shadow(0 4px 6px rgba(0,0,0,0.1))')
+                                filter: isMobileSticker 
+                                    ? (isHovered || selectedItemId === item.clothing.id
+                                        ? 'drop-shadow(0 0 8px rgba(255,255,255,0.9)) drop-shadow(0 8px 16px rgba(0,0,0,0.4))' 
+                                        : 'drop-shadow(0 4px 6px rgba(0,0,0,0.15))')
                                     : 'none'
                             }}
                         >
