@@ -77,7 +77,7 @@ export default function OutfitCard({ outfit, isLocked = false, onClick, onEdit, 
             <div onClick={!isLocked ? onClick : undefined} className="cursor-pointer">
                 {/* Outfit Preview */}
                 <div
-                    className={`relative w-full aspect-[4/5] bg-white dark:bg-[#111] overflow-hidden ${isLocked ? 'blur-sm' : ''
+                    className={`relative w-full aspect-[4/5] bg-[#f8f9fa] dark:bg-[#111] overflow-hidden ${isLocked ? 'blur-sm' : ''
                         }`}
                 >
                     {outfitPreviewImage ? (

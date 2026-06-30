@@ -70,7 +70,7 @@ export const ClothingItem: React.FC<ClothingItemProps> = ({
       style={{ WebkitTapHighlightColor: 'transparent' }}
     >
       {/* Card Container */}
-      <div className="relative aspect-square overflow-hidden rounded-3xl bg-white border border-[var(--border-color)]">
+      <div className="relative aspect-square overflow-hidden rounded-3xl bg-[#f8f9fa] dark:bg-[#111] border border-[var(--border-color)]">
 
         {/* Image or Placeholder */}
         <div className="w-full h-full flex items-center justify-center relative z-10">

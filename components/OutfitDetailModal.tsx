@@ -222,82 +222,13 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
                                             className="absolute inset-0 bg-black/40 z-[6030]"
                                         />
 
-                                        {/* MOBILE: Bottom Sheet with Sticker Effect */}
-                                        <motion.div
-                                            initial={{ y: "100%" }}
-                                            animate={{ y: 0 }}
-                                            exit={{ y: "100%" }}
-                                            transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                                            className="absolute bottom-0 left-0 right-0 z-[6040] bg-[var(--background)] rounded-t-3xl p-6 pt-12 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] flex flex-col items-center md:hidden"
-                                        >
-                                            {/* Close Button */}
-                                            <button 
-                                                onClick={handleCloseItemDetail}
-                                                className="absolute top-4 right-4 p-2 bg-[var(--background-secondary)] rounded-full text-[var(--foreground-secondary)]"
-                                            >
-                                                <X className="w-5 h-5" />
-                                            </button>
-
-                                            {/* Floating Sticker Image */}
-                                            <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-40 h-40">
-                                                <div 
-                                                    className="w-full h-full relative"
-                                                    style={{ filter: 'drop-shadow(0 0 0 4px white) drop-shadow(0 8px 16px rgba(0,0,0,0.2))' }}
-                                                >
-                                                    <Image 
-                                                        src={selectedItemForDetail.imageUrl || selectedItemForDetail.image_url} 
-                                                        alt={selectedItemForDetail.name || 'Prenda'}
-                                                        fill
-                                                        className="object-contain"
-                                                    />
-                                                </div>
-                                            </div>
-
-                                            {/* Item Info */}
-                                            <div className="w-full text-center mt-8">
-                                                <h3 className="text-xl font-bold text-[var(--foreground)]">{selectedItemForDetail.name || 'Prenda sin nombre'}</h3>
-                                                <p className="text-[var(--foreground-secondary)] mt-1">{selectedItemForDetail.brand || 'Sin marca'}</p>
-                                                
-                                                {selectedItemForDetail.category && (
-                                                    <p className="text-sm text-[var(--foreground-tertiary)] uppercase tracking-wider mt-2">{selectedItemForDetail.category}</p>
-                                                )}
-
-                                                <div className="flex flex-wrap items-center justify-center gap-2 mt-3 mb-4">
-                                                    {(selectedItemForDetail.color || selectedItemForDetail.color_hex || selectedItemForDetail.colorHex) && (
-                                                        <div className="flex items-center gap-2 p-2 px-3 bg-[var(--background-secondary)] rounded-xl w-fit">
-                                                            <div className="w-3.5 h-3.5 rounded-full border border-[var(--border-color)]" style={{ backgroundColor: selectedItemForDetail.color_hex || selectedItemForDetail.colorHex || selectedItemForDetail.color || '#ccc' }} />
-                                                            <span className="text-[13px] font-medium text-[var(--foreground-secondary)] capitalize">{selectedItemForDetail.color || selectedItemForDetail.colorHex || selectedItemForDetail.color_hex || 'Color'}</span>
-                                                        </div>
-                                                    )}
-                                                    {selectedItemForDetail.size && (
-                                                        <div className="flex items-center gap-2 p-2 px-3 bg-[var(--background-secondary)] rounded-xl w-fit">
-                                                            <span className="text-[13px] font-medium text-[var(--foreground-secondary)]">Talla {selectedItemForDetail.size}</span>
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                {(selectedItemForDetail.source_url || selectedItemForDetail.sourceUrl) && (
-                                                    <div className="mt-6 flex gap-3 w-full">
-                                                        <a 
-                                                            href={selectedItemForDetail.source_url || selectedItemForDetail.sourceUrl} 
-                                                            target="_blank" 
-                                                            rel="noopener noreferrer" 
-                                                            className="flex-1 bg-[var(--brand-pink)] text-white font-bold py-3.5 rounded-xl hover:opacity-90 transition-opacity text-center shadow-lg shadow-[var(--brand-pink)]/30"
-                                                        >
-                                                            Enlace a la web
-                                                        </a>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </motion.div>
-
-                                        {/* DESKTOP: Standard Centered Modal */}
+                                        {/* Standard Centered Modal (Mobile & Desktop) */}
                                         <motion.div
                                             initial={{ opacity: 0, scale: 0.95, y: 10 }}
                                             animate={{ opacity: 1, scale: 1, y: 0 }}
                                             exit={{ opacity: 0, scale: 0.95, y: 10 }}
                                             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                                            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[6040] bg-white dark:bg-[#1a1a1a] rounded-3xl max-w-sm w-full p-5 space-y-4 shadow-2xl hidden md:block"
+                                            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[6040] bg-white dark:bg-[#1a1a1a] rounded-3xl max-w-sm w-[90%] p-5 space-y-4 shadow-2xl"
                                             onClick={(e) => e.stopPropagation()}
                                         >
                                             <button
