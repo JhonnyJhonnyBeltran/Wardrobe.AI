@@ -710,7 +710,7 @@ export default function ClosetPage() {
                           <Card
                             key={item.id}
                             variant="default"
-                            className={`group relative overflow-hidden bg-[var(--card-bg)] border-none shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer ${selectionMode && selectedIds.has(item.id) ? 'ring-4 ring-[var(--brand-pink)] ring-inset' : ''}`}
+                            className={`group relative overflow-hidden bg-[#f8f9fa] dark:bg-[#111] border border-[var(--border-color)] shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer ${selectionMode && selectedIds.has(item.id) ? 'ring-4 ring-[var(--brand-pink)] ring-inset' : ''}`}
                             onClick={() => {
                               if (selectionMode) {
                                 toggleSelection(item.id);
@@ -726,7 +726,7 @@ export default function ClosetPage() {
                               </div>
                             )}
 
-                            <div className="relative aspect-[3/4] overflow-hidden bg-[var(--background-secondary)]">
+                            <div className="relative aspect-[3/4] overflow-hidden bg-transparent">
                               {item.imageUrl ? (
                                 <img
                                   src={item.imageUrl}
@@ -765,14 +765,7 @@ export default function ClosetPage() {
                               </motion.button>
                             </div>
 
-                            <div className="p-3">
-                              <h3 className="font-medium text-[var(--foreground)] truncate text-sm">
-                                {item.name}
-                              </h3>
-                              <p className="text-xs text-[var(--foreground-secondary)] mt-0.5 capitalize truncate">
-                                {item.category} • {item.brand || 'Sin marca'}
-                              </p>
-                            </div>
+
                           </Card>
                         </motion.div>
                       )}
