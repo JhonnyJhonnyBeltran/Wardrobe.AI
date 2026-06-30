@@ -90,9 +90,9 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
                                 <X className="w-6 h-6 md:w-5 md:h-5" />
                             </button>
 
-                            {/* Left Column (Desktop) / Background (Mobile) */}
-                            <div className="absolute inset-0 md:relative md:inset-auto md:w-[60%] md:flex-none bg-[#f8f9fa] dark:bg-[#111] z-0 flex flex-col items-stretch border-r border-[var(--border-color)]">
-                                <div className="absolute top-0 left-0 right-0 bottom-[35vh] md:relative md:bottom-auto md:inset-0 md:h-full md:flex-1">
+                            {/* Left Column (Desktop) / Top Half (Mobile) */}
+                            <div className="relative w-full h-[55dvh] md:h-auto md:w-[60%] md:flex-none bg-[#f8f9fa] dark:bg-[#111] z-0 flex flex-col items-stretch md:border-r border-b md:border-b-0 border-[var(--border-color)]">
+                                <div className="absolute inset-0 w-full h-full">
                                     <InteractiveOutfitViewer
                                         outfit={outfit}
                                         onItemClick={setSelectedItemForDetail}
@@ -103,15 +103,13 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
                                 </div>
                             </div>
 
-                            {/* Right Column (Desktop) / Foreground Overlay (Mobile) */}
-                            <div className="relative z-10 w-full h-full md:h-auto md:flex-1 flex flex-col pointer-events-none md:pointer-events-auto mt-auto md:mt-0 justify-end md:justify-start pb-[calc(var(--tabbar-height)+20px)] md:pb-0 overflow-hidden md:bg-[var(--background)]">
-                                
-                                {/* Inner scrolling container */}
-                                <div className="w-full pointer-events-auto md:overflow-y-auto custom-scrollbar md:pb-10 flex flex-col bg-gradient-to-t from-[var(--background)] via-[var(--background)] to-transparent md:bg-none pt-24 md:pt-0">
-                                    
+                            {/* Right Column (Desktop) / Bottom Half (Mobile) */}
+                            <div className="relative z-10 w-full flex-1 md:h-auto flex flex-col pointer-events-auto bg-[var(--background)] overflow-y-auto custom-scrollbar pb-[calc(var(--tabbar-height)+20px)] md:pb-0">
+                                {/* Inner container */}
+                                <div className="w-full flex flex-col md:pb-10">
                                     {/* Outfit Info */}
-                                    <div className="px-6 py-5 md:bg-[var(--background)]">
-                                        <h2 className="text-2xl md:text-2xl font-bold text-[var(--foreground)] mb-4 drop-shadow-md md:drop-shadow-none">{outfit.name || 'Outfit sin título'}</h2>
+                                    <div className="px-6 py-5">
+                                        <h2 className="text-2xl font-bold text-[var(--foreground)] mb-4">{outfit.name || 'Outfit sin título'}</h2>
                                         
                                         {/* Details Grid */}
                                         <div className="grid grid-cols-2 gap-3 mb-6">

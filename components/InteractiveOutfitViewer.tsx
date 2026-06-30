@@ -88,7 +88,7 @@ export default function InteractiveOutfitViewer({ outfit, onItemClick, className
 
     // Interactive canvas rendering
     return (
-        <div className={`relative w-full h-full min-h-[400px] bg-[#f8f9fa] dark:bg-[#111] overflow-hidden flex items-center justify-center ${className}`}>
+        <div className={`relative w-full h-full bg-[#f8f9fa] dark:bg-[#111] overflow-hidden flex items-center justify-center ${className}`}>
             {itemsWithPositions.map((item: any, i: number) => {
                 const isHovered = hoveredItemId === item.clothing.id;
                 // On mobile, or desktop, we want the items to scale relative to the container.
