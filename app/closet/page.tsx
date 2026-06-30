@@ -451,14 +451,32 @@ export default function ClosetPage() {
   // Filter content based on active tab
   const filteredContent = activeTab === 'items'
     ? (items || []).filter(item => {
-      const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (item.brand || '').toLowerCase().includes(searchQuery.toLowerCase());
+      const q = searchQuery.toLowerCase();
+      const seasonStr = Array.isArray(item.season) ? item.season.join(' ') : (item.season || '');
+      const matchesSearch = item.name.toLowerCase().includes(q) ||
+        (item.brand || '').toLowerCase().includes(q) ||
+        seasonStr.toLowerCase().includes(q);
       const matchesType = selectedCategories.size === 0 || selectedCategories.has(item.category);
       const matchesFavorites = !showFavoritesOnly || favorites.has(item.id);
       return matchesSearch && matchesType && matchesFavorites;
     })
     : (outfits || []).filter(outfit => {
-      const matchesSearch = outfit.name.toLowerCase().includes(searchQuery.toLowerCase());
+      const q = searchQuery.toLowerCase();
+      const seasonStr = Array.isArray(outfit.season) ? outfit.season.join(' ') : (outfit.season || '');
+      
+      const outfitMatches = outfit.name.toLowerCase().includes(q) || 
+                            (outfit.occasion || outfit.style || '').toLowerCase().includes(q) ||
+                            seasonStr.toLowerCase().includes(q);
+      
+      const itemsMatch = outfit.items?.some((item: any) => {
+        const itemSeasonStr = Array.isArray(item.season) ? item.season.join(' ') : (item.season || '');
+        return (item.name || '').toLowerCase().includes(q) ||
+               (item.brand || '').toLowerCase().includes(q) ||
+               (item.category || '').toLowerCase().includes(q) ||
+               itemSeasonStr.toLowerCase().includes(q);
+      });
+
+      const matchesSearch = outfitMatches || itemsMatch;
       const matchesFavorites = !showFavoritesOnly || outfit.favorite;
       return matchesSearch && matchesFavorites;
     });
@@ -515,7 +533,7 @@ export default function ClosetPage() {
   // Handle mobile-only navbar hiding (Standardized for all detail modals)
   useEffect(() => {
     const handleResize = () => {
-      const hasModalOpen = !!selectedItem || !!selectedOutfit || showAddModal;
+      const hasModalOpen = !!selectedItem || !!selectedOutfit || showAddModal || showFilters;
       setTabBarHidden(hasModalOpen);
     };
 
@@ -525,7 +543,7 @@ export default function ClosetPage() {
       window.removeEventListener('resize', handleResize);
       setTabBarHidden(false);
     };
-  }, [selectedItem, selectedOutfit, showAddModal, setTabBarHidden]);
+  }, [selectedItem, selectedOutfit, showAddModal, showFilters, setTabBarHidden]);
 
   return (
     <>

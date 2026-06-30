@@ -70,7 +70,7 @@ export default function OutfitCard({ outfit, isLocked = false, onClick, onEdit, 
                 scale: 1.03,
                 transition: { duration: 0.2 }
             } : {}}
-            className={`relative overflow-hidden rounded-[20px] bg-white dark:bg-gray-900 shadow-sm ${isLocked ? 'cursor-not-allowed' : 'cursor-pointer'
+            className={`relative overflow-hidden rounded-[20px] bg-white dark:bg-gray-900 shadow-sm border border-[var(--border-color)] ${isLocked ? 'cursor-not-allowed' : 'cursor-pointer'
                 }`}
         >
             {/* Clickable Area */}
@@ -126,22 +126,7 @@ export default function OutfitCard({ outfit, isLocked = false, onClick, onEdit, 
                     )}
                 </div>
 
-                {/* Info Section */}
-                <div className="p-4 bg-white dark:bg-gray-900">
-                    <div className="flex justify-between items-start mb-1">
-                        <div>
-                            <h3 className="font-bold text-gray-900 dark:text-white text-lg leading-tight line-clamp-1">
-                                {outfit.name}
-                            </h3>
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-1">
-                                {config.icon}
-                                <span className="capitalize">{styleKey}</span>
-                                <span className="mx-1">•</span>
-                                {dateDisplay}
-                            </p>
-                        </div>
-                    </div>
-                </div>
+
             </div>
 
             {/* Actions Overlay (Visible on Hover/Focus) */}

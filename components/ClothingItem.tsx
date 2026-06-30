@@ -183,40 +183,6 @@ export const ClothingItem: React.FC<ClothingItemProps> = ({
           </motion.button>
         )}
       </div>
-
-      {/* Info section */}
-      <div className="mt-3 px-2">
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-sm text-[var(--foreground)] truncate leading-tight group-hover:text-[var(--brand-pink)] transition-colors">
-              {name}
-            </h3>
-            {brand && (
-              <p className="text-xs text-[var(--foreground-tertiary)] truncate mt-0.5 font-medium">
-                {brand}
-              </p>
-            )}
-          </div>
-          {/* Color Dot */}
-          {colorHex && (
-            <div
-              className="w-3 h-3 rounded-full border border-[var(--border-color)] shadow-sm flex-shrink-0 mt-1 ring-2 ring-transparent group-hover:ring-[var(--brand-pink)]/20 transition-all"
-              style={{ backgroundColor: colorHex }}
-              title={color}
-            />
-          )}
-        </div>
-
-        {/* Type Badge */}
-        {type && (
-          <div className="mt-2 flex flex-wrap gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
-            <span className="inline-block px-2 py-0.5 text-[10px] font-bold rounded-md
-                                bg-[var(--background-secondary)] text-[var(--foreground-secondary)] uppercase tracking-wider">
-              {type}
-            </span>
-          </div>
-        )}
-      </div>
     </motion.div>
   );
 };
