@@ -59,12 +59,46 @@ export default function AppLifecycleManager() {
             }
         };
 
+        const onResourceError = (e: ErrorEvent) => {
+            // Resource errors don't bubble, so we catch them in the capture phase
+            const target = e.target as HTMLElement;
+            if (target && (target.tagName === 'SCRIPT' || target.tagName === 'LINK')) {
+                const src = (target as HTMLScriptElement).src || (target as HTMLLinkElement).href;
+                if (src && src.includes('/_next/static/chunks/')) {
+                    console.warn('[Lifecycle] Next.js chunk load error detected (404). Reloading page...', src);
+                    const lastReload = sessionStorage.getItem('klozet_chunk_reload');
+                    const now = Date.now();
+                    if (!lastReload || now - parseInt(lastReload, 10) > 10000) {
+                        sessionStorage.setItem('klozet_chunk_reload', now.toString());
+                        window.location.reload();
+                    }
+                }
+            }
+        };
+
+        const onUnhandledRejection = (e: PromiseRejectionEvent) => {
+            const reason = (e.reason?.message || String(e.reason)).toLowerCase();
+            if (reason.includes('chunkloaderror') || reason.includes('loading chunk') || reason.includes('failed to fetch dynamically imported module')) {
+                console.warn('[Lifecycle] Dynamic import chunk error detected. Reloading page...');
+                const lastReload = sessionStorage.getItem('klozet_chunk_reload');
+                const now = Date.now();
+                if (!lastReload || now - parseInt(lastReload, 10) > 10000) {
+                    sessionStorage.setItem('klozet_chunk_reload', now.toString());
+                    window.location.reload();
+                }
+            }
+        };
+
         window.addEventListener('focus', onFocus);
         window.addEventListener('visibilitychange', onVisibilityChange);
+        window.addEventListener('error', onResourceError, true);
+        window.addEventListener('unhandledrejection', onUnhandledRejection);
 
         return () => {
             window.removeEventListener('focus', onFocus);
             window.removeEventListener('visibilitychange', onVisibilityChange);
+            window.removeEventListener('error', onResourceError, true);
+            window.removeEventListener('unhandledrejection', onUnhandledRejection);
         };
     }, [triggerRefetch, lastFocusTimestamp, setLastFocusTimestamp, refreshProfile, user]);
 
