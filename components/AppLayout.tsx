@@ -80,14 +80,12 @@ export default function AppLayout({ children }: AppLayoutProps) {
         {pendingUploadItem && (
           <motion.div
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ 
-              opacity: 1, 
-              scale: 1, 
-              y: 0,
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            style={{
               bottom: isSelectionMode ? 'calc(var(--tabbar-height) + 112px)' : 'calc(var(--tabbar-height) + 24px)'
             }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="fixed md:bottom-8 left-0 right-0 mx-auto w-max md:w-auto md:mx-0 md:left-auto md:right-24 z-[4990] shadow-xl flex items-center bg-[var(--background)] border-2 border-[var(--brand-pink)] rounded-full overflow-hidden pb-safe transition-[bottom] duration-300"
+            className="fixed left-0 right-0 mx-auto md:left-auto md:right-24 md:mx-0 w-max bg-[var(--background)] border-2 border-[var(--brand-pink)] rounded-full shadow-xl flex items-center overflow-hidden z-[4990] transition-[bottom] duration-300 pb-safe"
           >
             <Link
               href="/closet?action=new-item"
@@ -114,14 +112,13 @@ export default function AppLayout({ children }: AppLayoutProps) {
       <AnimatePresence>
         {saveToast && (
           <motion.div
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ 
-              y: 0, 
-              opacity: 1,
+            initial={{ y: 50, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 50, opacity: 0 }}
+            style={{
               bottom: isSelectionMode ? 'calc(var(--tabbar-height) + 84px)' : 'calc(var(--tabbar-height) + 16px)'
             }}
-            exit={{ y: 100, opacity: 0 }}
-            className="fixed left-4 right-4 md:left-[72px] md:right-0 md:mx-auto md:w-[400px] bg-[#1a1a1a] backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl flex items-center justify-between gap-4 px-5 py-3.5 z-[4995] transition-[bottom] duration-300 pb-safe"
+            className="fixed left-0 right-0 mx-auto md:left-[72px] w-max bg-[#1c1c1c] rounded-full shadow-lg flex items-center justify-center gap-3 px-6 py-3 z-[4995] transition-[bottom] duration-300 pb-safe"
           >
             <span className="text-white font-medium text-sm">{saveToast.message}</span>
             {saveToast.actionLabel && (
@@ -130,7 +127,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
                   saveToast.onAction?.();
                   hideSaveToast();
                 }}
-                className="text-[var(--brand-pink)] font-bold text-sm tracking-wide hover:text-pink-400 transition-colors bg-[var(--brand-pink)]/10 px-4 py-1.5 rounded-full"
+                className="text-[var(--brand-pink)] font-bold text-sm tracking-wide hover:text-pink-400 transition-colors"
               >
                 {saveToast.actionLabel}
               </button>
