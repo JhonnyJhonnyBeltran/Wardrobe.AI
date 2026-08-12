@@ -237,7 +237,7 @@ export default function ProfilePage() {
       try {
         if (selectedFolder) {
           // Get saves in a specific folder
-          const response = await fetch(`/api/saves?folder_id=${selectedFolder.id}`);
+          const response = await fetch(`/api/saves?folder_id=${selectedFolder.id}&t=${Date.now()}`);
           const data = await response.json();
           if (data.saves) {
             setSavedPosts(data.saves.map((save: any) => ({
@@ -247,7 +247,7 @@ export default function ProfilePage() {
           }
         } else {
           // Get all saves without folder
-          const response = await fetch('/api/saves');
+          const response = await fetch(`/api/saves?t=${Date.now()}`);
           const data = await response.json();
           if (data.saves) {
             setSavedPosts(data.saves.map((save: any) => ({

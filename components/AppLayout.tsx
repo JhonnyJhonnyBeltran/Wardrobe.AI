@@ -121,7 +121,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
               bottom: isSelectionMode ? 'calc(var(--tabbar-height) + 84px)' : 'calc(var(--tabbar-height) + 16px)'
             }}
             exit={{ y: 100, opacity: 0 }}
-            className="fixed left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:right-auto md:bottom-24 md:w-[400px] bg-[#1a1a1a] backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl flex items-center justify-between gap-4 px-5 py-3.5 z-[4995] transition-[bottom] duration-300 pb-safe"
+            className="fixed left-4 right-4 md:left-[calc(50%+36px)] md:-translate-x-1/2 md:right-auto md:bottom-24 md:w-[400px] bg-[#1a1a1a] backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl flex items-center justify-between gap-4 px-5 py-3.5 z-[4995] transition-[bottom] duration-300 pb-safe"
           >
             <span className="text-white font-medium text-sm">{saveToast.message}</span>
             {saveToast.actionLabel && (
