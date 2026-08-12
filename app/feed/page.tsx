@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { SquarePlus, Plus, PlusSquare, Send, Shirt, Layers, Image as ImageIcon } from 'lucide-react';
+import { SquarePlus, Plus, PlusSquare, Send, Shirt, Layers, Image as ImageIcon, Sparkles } from 'lucide-react';
 import PostCard, { type Post } from '@/components/Feed/PostCard';
 import PremiumAdCard from '@/components/Feed/PremiumAdCard';
-import { LogoMark } from '@/components';
+import { LogoMark, EmptyState } from '@/components';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -149,6 +149,18 @@ export default function FeedPage() {
           (userLikes as any[]).forEach(l => likedPostIds.add(l.post_id));
         }
 
+        // Check which posts the current user has saved
+        let savedPostIds = new Set<string>();
+        const { data: userSaves, error: savesError } = await supabase
+          .from('saves')
+          .select('post_id')
+          .eq('user_id', user.id)
+          .in('post_id', mixedPosts.map(p => p.id));
+        
+        if (!savesError && userSaves) {
+          (userSaves as any[]).forEach(s => savedPostIds.add(s.post_id));
+        }
+
         const postsData = mixedPosts;
 
         const formattedPosts = postsData.map((post: any) => {
@@ -181,6 +193,7 @@ export default function FeedPage() {
             likes: post.likes_count || 0,
             comments: post.comments_count || 0,
             isLiked: likedPostIds.has(post.id),
+            isSaved: savedPostIds.has(post.id),
             isSuggested: post.isSuggested
           };
         });
@@ -272,18 +285,14 @@ export default function FeedPage() {
               ))}
             </div>
           ) : posts.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-24 text-center">
-              <div className="w-20 h-20 bg-[var(--background-secondary)] rounded-full flex items-center justify-center mb-6">
-                <PlusSquare className="w-10 h-10 text-[var(--foreground-tertiary)]" />
-              </div>
-              <p className="text-[var(--foreground-secondary)] text-lg font-medium">No hay publicaciones aún.</p>
-              <p className="text-[var(--foreground-tertiary)] text-sm mt-2 max-w-xs mx-auto">Sé el primero en compartir tu estilo con la comunidad.</p>
-              <Link href="/create-post" className="mt-8">
-                <button className="text-white font-bold px-8 py-3 rounded-full bg-[var(--brand-pink)] hover:bg-[var(--brand-pink-dark)] transition-all duration-300 transform hover:scale-105 shadow-lg shadow-[var(--brand-pink)]/20">
-                  Crear post
-                </button>
-              </Link>
-            </div>
+            <EmptyState
+              icon={PlusSquare}
+              title="No hay publicaciones aún."
+              description="Sé el primero en compartir tu estilo con la comunidad."
+              actionLabel="Crear post"
+              actionHref="/create-post"
+              fullHeight={false}
+            />
           ) : (
             <div className="masonry-grid">
               {posts.map((post, index) => (

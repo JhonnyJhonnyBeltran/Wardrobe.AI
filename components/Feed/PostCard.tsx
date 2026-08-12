@@ -1,12 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Heart, Bookmark } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Avatar from '@/components/Avatar';
 import { useUiStore } from '@/store/uiStore';
+import { motion, AnimatePresence } from 'framer-motion';
+import { haptics } from '@/lib/haptic';
 
 export interface Post {
     id: string;
@@ -36,11 +38,52 @@ interface PostCardProps {
 export default function PostCard({ post, onClick }: PostCardProps) {
     const [isHovered, setIsHovered] = useState(false);
     const [isSavedState, setIsSavedState] = useState(post.isSaved || false);
-    const { showSaveToast, openFolderModal } = useUiStore();
+    const [isLongPressing, setIsLongPressing] = useState(false);
+    const { showSaveToast, openFolderModal, triggerRefetch } = useUiStore();
+    const router = useRouter();
 
-    const toggleQuickSave = async (e: React.MouseEvent) => {
+    const longPressTimer = useRef<NodeJS.Timeout | null>(null);
+
+    useEffect(() => {
+        setIsSavedState(post.isSaved || false);
+    }, [post.isSaved]);
+
+    const handleTouchStart = () => {
+        if (longPressTimer.current) clearTimeout(longPressTimer.current);
+        longPressTimer.current = setTimeout(() => {
+            haptics.heavy();
+            setIsLongPressing(true);
+        }, 500); // 500ms to trigger long press
+    };
+
+    const handleTouchEnd = () => {
+        if (longPressTimer.current) clearTimeout(longPressTimer.current);
+    };
+
+    const handleTouchMove = () => {
+        if (longPressTimer.current) clearTimeout(longPressTimer.current);
+    };
+
+    const handleNavigation = (e: React.MouseEvent) => {
+        if (isLongPressing) {
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+        }
+        if (onClick) {
+            onClick();
+        } else {
+            router.push(`/post/${post.id}`);
+        }
+    };
+
+    const toggleQuickSave = async (e: React.MouseEvent | React.TouchEvent) => {
         e.preventDefault();
         e.stopPropagation();
+
+        if (isLongPressing) {
+            setIsLongPressing(false); // Close overlay after saving in mobile
+        }
 
         const previousState = isSavedState;
         setIsSavedState(!previousState);
@@ -60,6 +103,7 @@ export default function PostCard({ post, onClick }: PostCardProps) {
                     body: JSON.stringify({ post_id: post.id })
                 });
                 if (!res.ok) throw new Error('Save failed');
+                triggerRefetch();
             } catch (err) {
                 console.error(err);
                 setIsSavedState(previousState);
@@ -69,6 +113,7 @@ export default function PostCard({ post, onClick }: PostCardProps) {
             try {
                 const res = await fetch(`/api/saves?post_id=${post.id}`, { method: 'DELETE' });
                 if (!res.ok) throw new Error('Unsave failed');
+                triggerRefetch();
             } catch (err) {
                 console.error(err);
                 setIsSavedState(previousState);
@@ -79,7 +124,7 @@ export default function PostCard({ post, onClick }: PostCardProps) {
     // If no image, show text card
     if (!post.imageUrl) {
         return (
-            <Link href={`/post/${post.id}`} className="block w-full h-full outline-none">
+            <div onClick={handleNavigation} className="block w-full h-full outline-none">
                 <div
                     className="group relative rounded-2xl overflow-hidden bg-[var(--card-bg)] shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer p-6 flex flex-col gap-4 border border-[var(--border-color)] h-full w-full"
                 >
@@ -95,61 +140,110 @@ export default function PostCard({ post, onClick }: PostCardProps) {
                         <span className={cn(post.isLiked ? "text-[var(--brand-pink)] font-medium" : "text-[var(--foreground-tertiary)]")}>{post.likes}</span>
                     </div>
                 </div>
-            </Link>
+            </div>
         );
     }
 
     return (
-        <Link href={`/post/${post.id}`} className="block w-full h-full outline-none">
-            <div
-                className="group relative rounded-2xl overflow-hidden bg-[var(--card-bg)] shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer h-full w-full"
-                onMouseEnter={() => setIsHovered(true)}
-                onMouseLeave={() => setIsHovered(false)}
-            >
-                <div className="relative w-full h-full flex flex-col">
-                    <Image
-                        src={post.imageUrl}
-                        alt={post.title}
-                        width={500}
-                        height={600}
-                        className="w-full h-full object-cover"
-                        sizes="(max-width: 768px) 50vw, (max-width: 1024px) 25vw, 16vw"
+        <>
+            <AnimatePresence>
+                {isLongPressing && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-black/80 z-[60] backdrop-blur-sm"
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setIsLongPressing(false);
+                        }}
                     />
+                )}
+            </AnimatePresence>
 
-                    {/* Gradient Overlay - Always visible for text readability or removed if user wants clean */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-60" />
+            <motion.div
+                onClick={handleNavigation}
+                onTouchStart={handleTouchStart}
+                onTouchEnd={handleTouchEnd}
+                onTouchMove={handleTouchMove}
+                className={cn(
+                    "block w-full h-full outline-none select-none",
+                    isLongPressing ? "relative z-[70]" : "relative"
+                )}
+                animate={isLongPressing ? { scale: 1.05 } : { scale: 1 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            >
+                <div
+                    className="group relative rounded-2xl overflow-hidden bg-[var(--card-bg)] shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer h-full w-full"
+                    onMouseEnter={() => setIsHovered(true)}
+                    onMouseLeave={() => setIsHovered(false)}
+                >
+                    <div className="relative w-full h-full flex flex-col pointer-events-none">
+                        <Image
+                            src={post.imageUrl}
+                            alt={post.title}
+                            width={500}
+                            height={600}
+                            className="w-full h-full object-cover"
+                            sizes="(max-width: 768px) 50vw, (max-width: 1024px) 25vw, 16vw"
+                        />
 
-                    {/* Suggested Badge */}
-                    {post.isSuggested && (
-                        <div className="absolute top-3 left-3 bg-white/20 backdrop-blur-md px-2 py-1 rounded-full border border-white/30 flex items-center gap-1 shadow-sm">
-                            <span className="text-[10px] font-semibold text-white tracking-wide uppercase">Para ti</span>
-                        </div>
-                    )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-60" />
 
-                    {/* Add Save Quick Action to PostCard */}
-                    <button
-                        onClick={toggleQuickSave}
-                        className={`absolute top-3 right-3 p-2.5 rounded-full backdrop-blur-md transition-all duration-300 md:opacity-0 md:group-hover:opacity-100 ${isSavedState ? 'bg-[var(--brand-pink)] shadow-[var(--brand-pink)]/40 opacity-100' : 'bg-black/40 hover:bg-black/60 opacity-0'
-                            }`}
-                    >
-                        <Bookmark className={`w-5 h-5 ${isSavedState ? 'fill-white text-white' : 'text-white'}`} strokeWidth={isSavedState ? 2 : 2.5} />
-                    </button>
-
-                    {/* Minimal Info on Hover */}
-                    <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <div className="flex items-center gap-2 text-white/90">
-                            <Avatar src={post.author.avatar || null} alt={post.author.name} size="xs" className="border border-white/20" />
-                            <span className="text-xs font-medium truncate max-w-[100px]">{post.author.name}</span>
-                        </div>
-                        {(post.likes > 0 || post.isLiked) && (
-                            <div className="flex items-center gap-1 text-white/90 bg-black/20 backdrop-blur-sm px-2 py-1 rounded-full border border-white/5">
-                                <Heart className={cn("w-3 h-3 transition-colors", post.isLiked ? "fill-[var(--brand-pink)] text-[var(--brand-pink)]" : "fill-white/50 text-white/50")} />
-                                <span className={cn("text-xs font-medium", post.isLiked && "text-[var(--brand-pink)]")}>{post.likes}</span>
+                        {post.isSuggested && (
+                            <div className="absolute top-3 left-3 bg-white/20 backdrop-blur-md px-2 py-1 rounded-full border border-white/30 flex items-center gap-1 shadow-sm">
+                                <span className="text-[10px] font-semibold text-white tracking-wide uppercase">Para ti</span>
                             </div>
                         )}
+
+                        <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <div className="flex items-center gap-2 text-white/90">
+                                <Avatar src={post.author.avatar || null} alt={post.author.name} size="xs" className="border border-white/20" />
+                                <span className="text-xs font-medium truncate max-w-[100px]">{post.author.name}</span>
+                            </div>
+                            {(post.likes > 0 || post.isLiked) && (
+                                <div className="flex items-center gap-1 text-white/90 bg-black/20 backdrop-blur-sm px-2 py-1 rounded-full border border-white/5">
+                                    <Heart className={cn("w-3 h-3 transition-colors", post.isLiked ? "fill-[var(--brand-pink)] text-[var(--brand-pink)]" : "fill-white/50 text-white/50")} />
+                                    <span className={cn("text-xs font-medium", post.isLiked && "text-[var(--brand-pink)]")}>{post.likes}</span>
+                                </div>
+                            )}
+                        </div>
                     </div>
+                    
+                    {/* Desktop Hover Save Button */}
+                    <button
+                        onClick={toggleQuickSave}
+                        className={cn(
+                            "absolute top-3 right-3 p-2.5 rounded-full backdrop-blur-md transition-all duration-300 hidden md:block",
+                            isHovered || isSavedState ? "opacity-100" : "opacity-0",
+                            isSavedState ? "bg-[var(--brand-pink)] shadow-[var(--brand-pink)]/40" : "bg-black/40 hover:bg-black/60"
+                        )}
+                    >
+                        <Bookmark className={cn("w-5 h-5", isSavedState ? "fill-white text-white" : "text-white")} strokeWidth={isSavedState ? 2 : 2.5} />
+                    </button>
                 </div>
-            </div>
-        </Link>
+
+                {/* Mobile Long Press Action Menu */}
+                <AnimatePresence>
+                    {isLongPressing && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 10 }}
+                            className="absolute -bottom-16 left-0 right-0 flex justify-center"
+                        >
+                            <button
+                                onClick={toggleQuickSave}
+                                className="flex items-center gap-2 bg-[var(--card-bg)] border border-[var(--border-color)] px-6 py-3 rounded-full font-semibold shadow-xl z-[70] text-[var(--foreground)]"
+                            >
+                                <Bookmark className={cn("w-5 h-5", isSavedState ? "fill-[var(--brand-pink)] text-[var(--brand-pink)]" : "text-[var(--foreground)]")} />
+                                {isSavedState ? "Guardado" : "Guardar"}
+                            </button>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </motion.div>
+        </>
     );
 }

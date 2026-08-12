@@ -8,6 +8,7 @@
 
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Save, ArrowRight, Shirt, Wand2, Eye, X, Share2, Camera, Check, Briefcase, PartyPopper, Zap, Heart, Sparkles, Circle } from 'lucide-react';
 import { Button } from '@/components';
@@ -171,7 +172,7 @@ export default function CreateOutfitPage() {
                 }
             } catch (err) {
                 console.error('Error fetching outfit:', err);
-                alert('No se pudo cargar el outfit.');
+                toast.error('No se pudo cargar el outfit.');
                 router.push('/closet');
             } finally {
                 setLoading(false);
@@ -281,8 +282,7 @@ export default function CreateOutfitPage() {
     // Add to stories
     const handleAddToStories = async () => {
         if (!previewImage) return;
-        // TODO: Implement add to stories functionality  
-        alert('¡Añadiendo a historias! (Funcionalidad en desarrollo)');
+        toast.info('¡Añadiendo a historias! (Funcionalidad en desarrollo)');
     };
 
     // Helper to save outfit without redirecting (for publish flow)
@@ -292,7 +292,7 @@ export default function CreateOutfitPage() {
         try {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) {
-                alert('Debes iniciar sesión para guardar outfits');
+                toast.error('Debes iniciar sesión para guardar outfits');
                 return null;
             }
 
@@ -375,7 +375,7 @@ export default function CreateOutfitPage() {
         try {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) {
-                alert('Debes iniciar sesión para guardar outfits');
+                toast.error('Debes iniciar sesión para guardar outfits');
                 return;
             }
 
@@ -495,7 +495,7 @@ export default function CreateOutfitPage() {
 
         } catch (error) {
             console.error('Error saving outfit:', error);
-            alert('Error al guardar el outfit. Inténtalo de nuevo.');
+            toast.error('Error al guardar el outfit. Inténtalo de nuevo.');
         } finally {
             setLoading(false);
         }

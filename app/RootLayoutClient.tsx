@@ -13,6 +13,8 @@ import ConditionalLayout from "@/components/ConditionalLayout";
 import GlobalErrorBoundary from "@/components/GlobalErrorBoundary";
 import SmartModelPreloader from "@/components/SmartModelPreloader";
 
+import { Toaster } from 'sonner';
+
 // Dynamic imports for non-critical components - loaded only when needed
 const SystemModal = dynamic(() => import("@/components/SystemModal"), {
   loading: () => null,
@@ -58,6 +60,7 @@ export default function RootLayoutClient({ children }: RootLayoutClientProps) {
               
               {/* UI overlays - loaded on-demand */}
               <NotificationToastContainer position="top-right" />
+              <Toaster position="top-center" richColors theme="system" expand={true} />
               <SystemModal />
             </MessageProvider>
           </RealtimeProvider>

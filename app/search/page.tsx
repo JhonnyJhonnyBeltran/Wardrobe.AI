@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Search as SearchIcon, X, Users, Image as ImageIcon, UserPlus, Check } from 'lucide-react';
 import PostCard, { type Post } from '@/components/Feed/PostCard';
+import { EmptyState } from '@/components';
 import { supabase } from '@/lib/supabase/client';
 
 import { useUser } from '@/store/userStore';
@@ -459,9 +460,12 @@ export default function SearchPage() {
           <>
             {/* NO RESULTS STATE */}
             {!loading && userResults.length === 0 && results.length === 0 && query && (
-              <div className="text-center py-12">
-                <p className="text-gray-500 dark:text-gray-400">No se encontraron resultados para "{query}"</p>
-              </div>
+              <EmptyState
+                icon={SearchIcon}
+                title="Sin resultados"
+                description={`No se encontraron resultados para "${query}"`}
+                fullHeight={false}
+              />
             )}
 
             {/* USER RESULTS */}

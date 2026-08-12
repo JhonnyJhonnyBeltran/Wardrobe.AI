@@ -26,6 +26,7 @@ import {
   Loader2
 } from 'lucide-react';
 
+import { Avatar, Button as UiButton, OutfitCard, EmptyState, Skeleton, SkeletonProfile } from '@/components';
 import FolderPreview from '@/components/FolderPreview';
 import { useUiStore } from '@/store/uiStore';
 
@@ -55,7 +56,7 @@ export default function ProfilePage() {
   const { user } = useUser();
   const { t } = useTranslation();
   const router = useRouter();
-  const { openFolderModal, setCreateMenuOpen } = useUiStore();
+  const { openFolderModal, setCreateMenuOpen, refetchTrigger } = useUiStore();
   const [activeTab, setActiveTab] = useState<TabType>('posts');
 
   // Folder state
@@ -226,7 +227,7 @@ export default function ProfilePage() {
       isMounted = false;
       clearTimeout(timeoutId);
     };
-  }, [user]);
+  }, [user, refetchTrigger]);
 
   // Fetch saved posts when folder is selected
   useEffect(() => {
@@ -256,19 +257,25 @@ export default function ProfilePage() {
           }
         }
       } catch (error) {
-        console.error('Error fetching saved posts:', error);
+        console.error('Error fetching saved data:', error);
       }
     };
 
     fetchSavedData();
-  }, [selectedFolder, activeTab, user]);
+  }, [selectedFolder, user, activeTab, refetchTrigger]);
 
   // Open save modal
   const handleSaveClick = (postId: string) => {
     openFolderModal(postId);
   };
 
-  if (!user) return null;
+  if (!user) return (
+    <div className="flex h-screen bg-[var(--background)]">
+      <main className="flex-1 w-full max-w-[600px] mx-auto bg-[var(--background)] min-h-screen relative border-x border-[var(--border-color)] pb-20 md:pb-0">
+        <SkeletonProfile />
+      </main>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-[var(--background)] pb-24">
@@ -444,20 +451,18 @@ export default function ProfilePage() {
                 className="p-0.5"
               >
                 {isLoading ? (
-                  <div className="flex flex-col items-center justify-center py-16 text-[var(--foreground-tertiary)]">
-                     <Loader2 className="w-8 h-8 animate-spin mb-4 text-[var(--brand-pink)]" />
-                     <p className="font-medium animate-pulse tracking-wide">Cargando...</p>
+                  <div className="grid grid-cols-3 gap-0.5">
+                    {[...Array(9)].map((_, i) => (
+                      <Skeleton key={i} className="aspect-square rounded-none" />
+                    ))}
                   </div>
                 ) : posts.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-16 text-center">
-                    <div className="w-16 h-16 bg-[var(--background-secondary)] rounded-full flex items-center justify-center mb-4">
-                      <Grid3x3 className="w-8 h-8 text-[var(--foreground-tertiary)]" />
-                    </div>
-                    <h3 className="text-lg font-semibold mb-2">Aún no hay publicaciones</h3>
-                    <p className="text-[var(--foreground-secondary)] text-sm max-w-xs mx-auto">
-                      Comparte tus mejores outfits con la comunidad.
-                    </p>
-                  </div>
+                  <EmptyState
+                    icon={Grid3x3}
+                    title="Aún no hay publicaciones"
+                    description="Comparte tus mejores outfits con la comunidad."
+                    fullHeight={false}
+                  />
                 ) : (
                   <div className="grid grid-cols-3 gap-0.5">
                     {posts.map((post) => (
@@ -536,22 +541,18 @@ export default function ProfilePage() {
                   </h3>
 
                   {isLoading ? (
-                    <div className="flex flex-col items-center justify-center py-16 text-[var(--foreground-tertiary)]">
-                       <Loader2 className="w-8 h-8 animate-spin mb-4 text-[var(--brand-pink)]" />
-                       <p className="font-medium animate-pulse tracking-wide">Cargando...</p>
+                    <div className="grid grid-cols-3 gap-0.5">
+                      {[...Array(9)].map((_, i) => (
+                        <Skeleton key={i} className="aspect-square rounded-none" />
+                      ))}
                     </div>
                   ) : savedPosts.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-16 text-center">
-                      <div className="w-16 h-16 bg-[var(--background-secondary)] rounded-full flex items-center justify-center mb-4">
-                        <Bookmark className="w-8 h-8 text-[var(--foreground-tertiary)]" />
-                      </div>
-                      <h3 className="text-lg font-semibold mb-2">No hay guardados</h3>
-                      <p className="text-[var(--foreground-secondary)] text-sm max-w-xs mx-auto">
-                        {selectedFolder
-                          ? `No hay publicaciones en "${selectedFolder.name}"`
-                          : 'Guarda las publicaciones que te inspiren.'}
-                      </p>
-                    </div>
+                    <EmptyState
+                      icon={Bookmark}
+                      title="No hay guardados"
+                      description={selectedFolder ? `No hay publicaciones en "${selectedFolder.name}"` : 'Guarda las publicaciones que te inspiren.'}
+                      fullHeight={false}
+                    />
                   ) : (
                     <div className="grid grid-cols-3 gap-0.5">
                       {savedPosts.map((post) => (

@@ -12,12 +12,11 @@ import { useRef } from 'react';
 import {
   Heart, Grid3x3, List, Search, Filter, Plus, Wand2, X, Shirt, Layers, Share2, Trash2, Check, CalendarDays
 } from 'lucide-react';
-import { Card, Button, ClothingItem, LogoMark } from '@/components';
+import { toast } from 'sonner';
+import { Button, Card, FloatingCreateButton, OutfitCard, ClothingItem, NotificationToastContainer, WardrobeSelectionModal, OutfitDetailModal, EmptyState, SkeletonCard } from '@/components';
 import AddItemModal from '@/components/AddItemModal';
 import ProductModal from '@/components/ProductModal';
 import BubbleToggle from '@/components/BubbleToggle';
-import OutfitCard from '@/components/OutfitCard';
-import { OutfitDetailModal } from '@/components/OutfitDetailModal';
 import OutfitCalendar from '@/components/OutfitCalendar';
 import type { Outfit } from '@/types/outfit';
 import type { ClothingItem as ClothingItemType } from '@/types/clothing';
@@ -653,24 +652,22 @@ export default function ClosetPage() {
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.2 }}
             >
-              {!loading && (!items || items.length === 0 || (filteredContent as ClothingItemType[]).length === 0) ? (
-                <div className="flex flex-col items-center justify-center py-16 px-6 text-center mt-8 md:mt-12 mx-4 bg-[var(--card-bg)]/50 rounded-3xl border border-dashed border-[var(--border-color)]">
-                  <div className="w-20 h-20 bg-[var(--background-secondary)] rounded-full flex items-center justify-center mb-6 shadow-sm">
-                    {(!items || items.length === 0) ? (
-                      <Shirt className="w-10 h-10 text-[var(--foreground-tertiary)]" />
-                    ) : (
-                      <Search className="w-10 h-10 text-[var(--foreground-tertiary)]" />
-                    )}
-                  </div>
-                  <h3 className="text-xl font-bold mb-3 text-[var(--foreground)]">
-                    {(!items || items.length === 0) ? 'Añade tu primera prenda' : 'No se encontraron prendas'}
-                  </h3>
-                  <p className="text-[var(--foreground-secondary)] max-w-sm mx-auto mb-8 text-base">
-                    {(!items || items.length === 0)
-                      ? 'Tu armario está esperando. Añade prendas con foto y crea looks increíbles.'
-                      : 'No hay resultados para tu búsqueda. Prueba otros filtros o términos.'}
-                  </p>
+              {loading ? (
+                <div className={`px-4 ${viewMode === 'grid'
+                  ? `grid grid-cols-${gridCols} md:grid-cols-${gridCols + 1} lg:grid-cols-${gridCols + 2} gap-3`
+                  : 'space-y-3'
+                  }`}>
+                  {[...Array(8)].map((_, i) => (
+                    <SkeletonCard key={i} />
+                  ))}
                 </div>
+              ) : (!items || items.length === 0 || (filteredContent as ClothingItemType[]).length === 0) ? (
+                <EmptyState
+                  icon={(!items || items.length === 0) ? Shirt : Search}
+                  title={(!items || items.length === 0) ? 'Añade tu primera prenda' : 'No se encontraron prendas'}
+                  description={(!items || items.length === 0) ? 'Tu armario está esperando. Añade prendas con foto y crea looks increíbles.' : 'No hay resultados para tu búsqueda. Prueba otros filtros o términos.'}
+                  fullHeight={false}
+                />
               ) : (
                 <div className={`px-4 ${viewMode === 'grid'
                   ? `grid grid-cols-${gridCols} md:grid-cols-${gridCols + 1} lg:grid-cols-${gridCols + 2} gap-3`
@@ -795,34 +792,31 @@ export default function ClosetPage() {
               exit={{ opacity: 0, x: 20 }}
               transition={{ duration: 0.2 }}
             >
-              {!outfitsLoading && (!outfits || outfits.length === 0 || (filteredContent as Outfit[]).length === 0) ? (
-                <div className="flex flex-col items-center justify-center py-16 px-6 text-center mt-8 md:mt-12 mx-4 bg-[var(--card-bg)]/50 rounded-3xl border border-dashed border-[var(--border-color)]">
-                  <div className="w-20 h-20 bg-[var(--background-secondary)] rounded-full flex items-center justify-center mb-6 shadow-sm">
-                    <Layers className="w-10 h-10 text-[var(--foreground-tertiary)]" />
-                  </div>
-                  <h3 className="text-xl font-bold mb-3 text-[var(--foreground)]">
-                    {(!outfits || outfits.length === 0) ? 'Crea tu primer outfit' : 'No hay resultados'}
-                  </h3>
-                  <p className="text-[var(--foreground-secondary)] max-w-sm mx-auto mb-8 text-base">
-                    {(!outfits || outfits.length === 0)
-                      ? 'Combina prendas de tu armario y guarda tus looks favoritos.'
-                      : 'Prueba con otra búsqueda.'}
-                  </p>
-                  <Button
-                    onClick={() => {
-                      if (!items || items.length === 0) {
-                        alert('Añade prendas a tu armario antes de crear outfits');
-                      } else {
-                        router.push('/create');
-                      }
-                    }}
-                    className={`h-12 px-8 text-lg rounded-xl shadow-lg shadow-[var(--brand-pink)]/20 transition-all
-                       ${(!items || items.length === 0) ? 'opacity-60 cursor-pointer' : 'hover:shadow-[var(--brand-pink)]/40'}`}
-                  >
-                    <Plus className="w-5 h-5 mr-2" />
-                    {(!outfits || outfits.length === 0) ? 'Crear primer outfit' : 'Crear outfit'}
-                  </Button>
+              {outfitsLoading ? (
+                <div className={`px-4 ${viewMode === 'grid'
+                  ? `grid grid-cols-${gridCols} md:grid-cols-${gridCols + 1} lg:grid-cols-${gridCols + 2} gap-4`
+                  : 'space-y-4'
+                  }`}>
+                  {[...Array(6)].map((_, i) => (
+                    <SkeletonCard key={i} />
+                  ))}
                 </div>
+              ) : (!outfits || outfits.length === 0 || (filteredContent as Outfit[]).length === 0) ? (
+                <EmptyState
+                  icon={Layers}
+                  title={(!outfits || outfits.length === 0) ? 'Crea tu primer outfit' : 'No hay resultados'}
+                  description={(!outfits || outfits.length === 0) ? 'Combina prendas de tu armario y guarda tus looks favoritos.' : 'Prueba con otra búsqueda.'}
+                  actionLabel={(!outfits || outfits.length === 0) ? 'Crear primer outfit' : 'Crear outfit'}
+                  actionIcon={Plus}
+                  actionOnClick={() => {
+                    if (!items || items.length === 0) {
+                      toast.error('Añade prendas a tu armario antes de crear outfits');
+                    } else {
+                      router.push('/create');
+                    }
+                  }}
+                  fullHeight={false}
+                />
               ) : (
                 <div className={`px-4 ${viewMode === 'grid'
                   ? `grid grid-cols-${gridCols} md:grid-cols-${gridCols + 1} lg:grid-cols-${gridCols + 2} gap-4`
@@ -873,14 +867,10 @@ export default function ClosetPage() {
                                 const { error } = await supabase.from('outfits').delete().eq('id', id);
                                 if (error) throw error;
                                 setOutfits(prev => prev.filter(o => o.id !== id));
-                                showModal({
-                                  title: 'Outfit eliminado',
-                                  message: 'El outfit se ha eliminado de tu armario.',
-                                  type: 'success',
-                                  confirmText: 'Entendido'
-                                });
+                                toast.success('El outfit se ha eliminado de tu armario.');
                               } catch (err) {
                                 console.error('Error deleting outfit:', err);
+                                toast.error('Error al eliminar el outfit');
                               }
                             }
                           });
