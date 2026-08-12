@@ -85,7 +85,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
             style={{
               bottom: isSelectionMode ? 'calc(var(--tabbar-height) + 112px)' : 'calc(var(--tabbar-height) + 24px)'
             }}
-            className="fixed left-0 right-0 mx-auto md:left-auto md:right-24 md:mx-0 w-max bg-[var(--background)] border-2 border-[var(--brand-pink)] rounded-full shadow-xl flex items-center overflow-hidden z-[4990] transition-[bottom] duration-300 pb-safe"
+            className="fixed left-0 right-0 mx-auto md:left-auto md:right-24 md:mx-0 w-max bg-[var(--background)] border-2 border-[var(--brand-pink)] rounded-full shadow-xl flex items-center overflow-hidden z-[4990] transition-[bottom] duration-300"
           >
             <Link
               href="/closet?action=new-item"
@@ -118,9 +118,9 @@ export default function AppLayout({ children }: AppLayoutProps) {
             style={{
               bottom: isSelectionMode ? 'calc(var(--tabbar-height) + 84px)' : 'calc(var(--tabbar-height) + 16px)'
             }}
-            className="fixed left-0 right-0 mx-auto md:left-[72px] w-max bg-[#1c1c1c] rounded-full shadow-lg flex items-center justify-center gap-3 px-6 py-3 z-[4995] transition-[bottom] duration-300 pb-safe"
+            className="fixed left-0 right-0 mx-auto md:left-[72px] w-max bg-[var(--background)] border border-[var(--border-color)] rounded-full shadow-lg flex items-center justify-center gap-3 px-6 py-3 z-[4995] transition-[bottom] duration-300"
           >
-            <span className="text-white font-medium text-sm">{saveToast.message}</span>
+            <span className="text-[var(--foreground)] font-medium text-sm">{saveToast.message}</span>
             {saveToast.actionLabel && (
               <button
                 onClick={() => {
