@@ -152,7 +152,7 @@ export default function PostCard({ post, onClick }: PostCardProps) {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-black/80 z-[60] backdrop-blur-sm"
+                        className="fixed inset-0 bg-black/60 z-[6010]"
                         onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
@@ -167,12 +167,9 @@ export default function PostCard({ post, onClick }: PostCardProps) {
                 onTouchStart={handleTouchStart}
                 onTouchEnd={handleTouchEnd}
                 onTouchMove={handleTouchMove}
-                className={cn(
-                    "block w-full h-full outline-none select-none",
-                    isLongPressing ? "relative z-[70]" : "relative"
-                )}
-                animate={isLongPressing ? { scale: 1.05 } : { scale: 1 }}
-                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                animate={isLongPressing ? { scale: 1.05, y: -20, zIndex: 6020 } : { scale: 1, y: 0, zIndex: 1 }}
+                transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                className={cn("w-full h-full relative z-10", isLongPressing ? "z-[6020]" : "")}
             >
                 <div
                     className="group relative rounded-2xl overflow-hidden bg-[var(--card-bg)] shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer h-full w-full"
@@ -228,17 +225,17 @@ export default function PostCard({ post, onClick }: PostCardProps) {
                 <AnimatePresence>
                     {isLongPressing && (
                         <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 10 }}
-                            className="absolute -bottom-16 left-0 right-0 flex justify-center"
+                            initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 10 }}
+                            className="absolute -bottom-16 left-1/2 -translate-x-1/2 w-max bg-[#1c1c1c] text-white px-5 py-3 rounded-full flex items-center justify-center gap-2 shadow-2xl z-[6030]"
                         >
                             <button
                                 onClick={toggleQuickSave}
-                                className="flex items-center gap-2 bg-[var(--card-bg)] border border-[var(--border-color)] px-6 py-3 rounded-full font-semibold shadow-xl z-[70] text-[var(--foreground)]"
+                                className="flex items-center gap-2"
                             >
-                                <Bookmark className={cn("w-5 h-5", isSavedState ? "fill-[var(--brand-pink)] text-[var(--brand-pink)]" : "text-[var(--foreground)]")} />
-                                {isSavedState ? "Guardado" : "Guardar"}
+                                <Bookmark className={cn("w-5 h-5", isSavedState ? "fill-[var(--brand-pink)] text-[var(--brand-pink)]" : "text-white")} />
+                                <span className="font-medium text-sm">{isSavedState ? "Guardado" : "Guardar"}</span>
                             </button>
                         </motion.div>
                     )}
