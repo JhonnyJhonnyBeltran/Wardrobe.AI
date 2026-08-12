@@ -251,10 +251,8 @@ export default function SearchPage() {
                         likes (count)
                     `);
 
-        // If user has preferred styles, try to filter by them to narrow candidates
-        if (user?.preferredStyles && user.preferredStyles.length > 0) {
-            postsQuery = postsQuery.overlaps('style_ids', user.preferredStyles);
-        }
+        // We removed the strict .overlaps filter so the feed isn't empty if styles don't perfectly match.
+        // The client-side sorting algorithm will still prioritize matches!
 
         const { data: recentData } = await postsQuery
           .order('created_at', { ascending: false })
@@ -427,31 +425,31 @@ export default function SearchPage() {
 
   return (
     <div className="min-h-[100dvh] w-full max-w-[100vw] overflow-x-hidden bg-[var(--background)] pb-24">
-      {/* Header */}
-      <div className="sticky top-0 z-30 w-full min-w-0 bg-[var(--background)]/90 backdrop-blur-md border-b border-[var(--border-color)]">
-        <div className="w-full max-w-4xl mx-auto px-4 py-3 sm:py-4">
-          <div className="relative w-full min-w-0">
-            <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--foreground-secondary)]" />
+      {/* Floating Header */}
+      <div className="fixed top-4 md:top-6 left-0 right-0 z-[4980] px-4 pointer-events-none flex justify-center">
+        <div className="w-full max-w-2xl pointer-events-auto">
+          <div className="relative w-full rounded-full bg-[var(--background)]/90 backdrop-blur-xl border border-[var(--border-color)] shadow-lg overflow-hidden transition-all duration-300 focus-within:shadow-xl focus-within:border-[var(--brand-pink)]">
+            <SearchIcon className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--foreground-secondary)]" />
             <input
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Buscar en Klozet..."
-              className="search-input-no-outline w-full min-w-0 bg-[var(--background-secondary)] rounded-xl py-3 pl-12 pr-10 text-base text-[var(--foreground)] placeholder-[var(--foreground-tertiary)] transition-colors"
+              placeholder="Buscar estilos, prendas, usuarios..."
+              className="search-input-no-outline w-full bg-transparent py-4 pl-14 pr-12 text-base font-medium text-[var(--foreground)] placeholder-[var(--foreground-tertiary)]"
             />
             {query && (
               <button
                 onClick={() => setQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 bg-[var(--background)] rounded-full hover:scale-110 transition-transform"
+                className="absolute right-4 top-1/2 -translate-y-1/2 p-1.5 bg-[var(--background-secondary)] rounded-full hover:scale-110 transition-transform"
               >
-                <X className="w-3 h-3 text-[var(--foreground-secondary)]" />
+                <X className="w-4 h-4 text-[var(--foreground-secondary)]" />
               </button>
             )}
           </div>
         </div>
       </div>
 
-      <div className="w-full max-w-4xl mx-auto px-4 py-4 sm:py-6 flex flex-col gap-6 sm:gap-8 min-w-0">
+      <div className="w-full max-w-5xl mx-auto px-4 pt-24 sm:pt-28 pb-4 flex flex-col gap-6 sm:gap-8 min-w-0">
         {loading ? (
           <div className="flex justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-500"></div>
@@ -518,7 +516,7 @@ export default function SearchPage() {
                 <div className="masonry-grid">
                   {results.map(post => (
                     <div key={post.id} className="break-inside-avoid mb-6">
-                      <PostCard post={post} />
+                      <PostCard post={post} hideSaveButton={true} />
                     </div>
                   ))}
                 </div>
@@ -559,7 +557,7 @@ export default function SearchPage() {
                     <div className="masonry-grid">
                       {results.map(post => (
                         <div key={post.id} className="break-inside-avoid mb-6">
-                          <PostCard post={post} />
+                          <PostCard post={post} hideSaveButton={true} />
                         </div>
                       ))}
                     </div>

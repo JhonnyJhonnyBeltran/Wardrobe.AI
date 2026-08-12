@@ -29,13 +29,14 @@ export interface Post {
 interface PostCardProps {
     post: Post;
     onClick?: () => void;
+    hideSaveButton?: boolean;
 }
 
 /**
  * PostCard - Minimalista estilo Pinterest via User Request.
  * Sin botones visibles. Clic navega al detalle.
  */
-export default function PostCard({ post, onClick }: PostCardProps) {
+export default function PostCard({ post, onClick, hideSaveButton = false }: PostCardProps) {
     const [isHovered, setIsHovered] = useState(false);
     const [isSavedState, setIsSavedState] = useState(post.isSaved || false);
     const [isLongPressing, setIsLongPressing] = useState(false);
@@ -48,7 +49,8 @@ export default function PostCard({ post, onClick }: PostCardProps) {
         setIsSavedState(post.isSaved || false);
     }, [post.isSaved]);
 
-    const handleTouchStart = () => {
+    const handleTouchStart = (e: React.TouchEvent) => {
+        if (hideSaveButton) return;
         if (longPressTimer.current) clearTimeout(longPressTimer.current);
         longPressTimer.current = setTimeout(() => {
             haptics.heavy();
@@ -208,38 +210,47 @@ export default function PostCard({ post, onClick }: PostCardProps) {
                         </div>
                     </div>
                     
-                    {/* Desktop Hover Save Button */}
-                    <button
-                        onClick={toggleQuickSave}
-                        className={cn(
-                            "absolute top-3 right-3 p-2.5 rounded-full backdrop-blur-md transition-all duration-300 hidden md:block",
-                            isHovered || isSavedState ? "opacity-100" : "opacity-0",
-                            isSavedState ? "bg-[var(--brand-pink)] shadow-[var(--brand-pink)]/40" : "bg-black/40 hover:bg-black/60"
-                        )}
-                    >
-                        <Bookmark className={cn("w-5 h-5", isSavedState ? "fill-white text-white" : "text-white")} strokeWidth={isSavedState ? 2 : 2.5} />
-                    </button>
+                    {!hideSaveButton && (
+                        <AnimatePresence>
+                            {isHovered && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: -10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -10 }}
+                                    className="absolute top-3 right-3 hidden md:block z-[40]"
+                                >
+                                    <button
+                                        onClick={toggleQuickSave}
+                                        className="bg-[var(--card-bg)]/90 backdrop-blur-sm border border-[var(--border-color)] p-2.5 rounded-full hover:scale-105 hover:shadow-lg transition-all"
+                                    >
+                                        <Bookmark className={cn("w-5 h-5", isSavedState ? "fill-[var(--brand-pink)] text-[var(--brand-pink)]" : "text-[var(--foreground)]")} />
+                                    </button>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    )}
                 </div>
 
-                {/* Mobile Long Press Action Menu */}
-                <AnimatePresence>
-                    {isLongPressing && (
-                        <motion.div
-                            initial={{ opacity: 0, y: 20, scale: 0.9 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.9, y: 10 }}
-                            className="absolute -bottom-16 left-1/2 -translate-x-1/2 w-max bg-[#1c1c1c] text-white px-5 py-3 rounded-full flex items-center justify-center gap-2 shadow-2xl z-[6030]"
-                        >
-                            <button
-                                onClick={toggleQuickSave}
-                                className="flex items-center gap-2"
+                {!hideSaveButton && (
+                    <AnimatePresence>
+                        {isLongPressing && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.9, y: 10 }}
+                                className="absolute -bottom-16 left-1/2 -translate-x-1/2 w-max bg-[#1c1c1c] text-white px-5 py-3 rounded-full flex items-center justify-center gap-2 shadow-2xl z-[6030]"
                             >
-                                <Bookmark className={cn("w-5 h-5", isSavedState ? "fill-[var(--brand-pink)] text-[var(--brand-pink)]" : "text-white")} />
-                                <span className="font-medium text-sm">{isSavedState ? "Guardado" : "Guardar"}</span>
-                            </button>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                                <button
+                                    onClick={toggleQuickSave}
+                                    className="flex items-center gap-2"
+                                >
+                                    <Bookmark className={cn("w-5 h-5", isSavedState ? "fill-[var(--brand-pink)] text-[var(--brand-pink)]" : "text-white")} />
+                                    <span className="font-medium text-sm">{isSavedState ? "Guardado" : "Guardar"}</span>
+                                </button>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                )}
             </motion.div>
         </>
     );
