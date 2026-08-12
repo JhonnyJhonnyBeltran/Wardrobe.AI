@@ -533,27 +533,9 @@ export default function SearchPage() {
             {/* Empty State / Initial Placeholders */}
             {!query && (
               <div className="space-y-6">
-                {/* Temas Populares Chips */}
-                <div className="w-full overflow-x-auto pb-2 scrollbar-hide">
-                  <div className="flex items-center gap-2 w-max pl-1 pr-4">
-                    {['#OOTD', 'Vintage', 'Streetwear', 'Y2K', 'Minimalista', 'Gorpcore', 'Verano'].map((topic) => (
-                      <button
-                        key={topic}
-                        onClick={() => setQuery(topic)}
-                        className="px-4 py-2 bg-[var(--background-secondary)] border border-[var(--border-color)] rounded-full text-sm font-medium text-[var(--foreground)] whitespace-nowrap hover:border-[var(--brand-pink)] transition-colors"
-                      >
-                        {topic}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
                 {/* Título de sección si hay posts */}
                 {results.length > 0 && (
                   <div className="mt-2">
-                    <h2 className="text-sm font-bold text-[var(--foreground-secondary)] uppercase tracking-wider mb-4">
-                      Populares en Klozet
-                    </h2>
                     <div className="masonry-grid">
                       {results.map(post => (
                         <div key={post.id} className="break-inside-avoid mb-6">
