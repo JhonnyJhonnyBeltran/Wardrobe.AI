@@ -382,31 +382,22 @@ export default function ChatPage() {
                     <div className="absolute right-0 top-full mt-2 w-48 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl shadow-xl overflow-hidden hidden group-hover:block z-50">
                         <button
                             onClick={async () => {
-                                alert("Usuario reportado. Gracias por ayudarnos a mantener la comunidad segura.");
-                            }}
-                            className="w-full text-left px-4 py-3 text-sm text-[var(--foreground)] hover:bg-[var(--background-secondary)] transition-colors flex items-center gap-2"
-                        >
-                            <span className="w-2 h-2 rounded-full bg-yellow-500" />
-                            Reportar usuario
-                        </button>
-                        <button
-                            onClick={async () => {
                                 if (confirm("¿Estás seguro de que quieres eliminar esta conversación? Esta acción no se puede deshacer.")) {
                                     setLoading(true);
                                     try {
-                                        // Get or create conversation first
-                                        const { data: conversationId } = await supabase
-                                            .rpc('get_or_create_conversation', { target_user_id: targetUserId } as any);
+                                        // Local Storage logic for hiding conversation
+                                        const deletedChatsStr = localStorage.getItem('deleted_chats');
+                                        const deletedChats = deletedChatsStr ? JSON.parse(deletedChatsStr) : {};
+                                        deletedChats[targetUserId] = Date.now();
+                                        localStorage.setItem('deleted_chats', JSON.stringify(deletedChats));
 
-                                        if (conversationId) {
-                                            // Delete the conversation (messages will be deleted by CASCADE)
-                                            await supabase
-                                                .from('conversations')
-                                                .delete()
-                                                .eq('id', conversationId);
-                                        } else {
-                                            // Fallback: delete messages directly
-                                            await supabase.from('messages').delete().or(`and(sender_id.eq.${user?.id},receiver_id.eq.${targetUserId}),and(sender_id.eq.${targetUserId},receiver_id.eq.${user?.id})`);
+                                        // Call the rpc function to delete conversation logically for this user
+                                        const { error } = await (supabase.rpc as any)('delete_conversation_for_user', {
+                                            target_user_id: targetUserId
+                                        });
+                                        
+                                        if (error) {
+                                            console.warn('RPC delete_conversation_for_user not available or failed:', error);
                                         }
 
                                         router.push('/messages');
@@ -416,10 +407,9 @@ export default function ChatPage() {
                                     }
                                 }
                             }}
-                            className="w-full text-left px-4 py-3 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors flex items-center gap-2"
+                            className="w-full text-center px-4 py-3 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors font-medium"
                         >
-                            <span className="w-2 h-2 rounded-full bg-red-500" />
-                            Eliminar chat
+                            Eliminar conversación
                         </button>
                     </div>
                 </div>
