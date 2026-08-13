@@ -723,11 +723,14 @@ export default function ClosetPage() {
                               }
                             }}
                           >
-                            {/* Selection Checkmark */}
+                            {/* Selection Checkmark & Overlay */}
                             {selectionMode && selectedIds.has(item.id) && (
-                              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 bg-[var(--brand-pink)] rounded-full p-3 text-white shadow-xl shadow-[var(--brand-pink)]/30 backdrop-blur-sm">
-                                <Check className="w-8 h-8" strokeWidth={3} />
-                              </div>
+                              <>
+                                <div className="absolute inset-0 z-10 bg-[var(--brand-pink)]/20 pointer-events-none transition-opacity" />
+                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 bg-[var(--brand-pink)] rounded-full p-3 text-white shadow-xl shadow-[var(--brand-pink)]/30 backdrop-blur-sm">
+                                  <Check className="w-8 h-8" strokeWidth={3} />
+                                </div>
+                              </>
                             )}
 
                             <div className="relative aspect-[3/4] overflow-hidden bg-transparent">
@@ -837,11 +840,14 @@ export default function ClosetPage() {
                           onClick={() => toggleSelection(outfit.id)}
                         />
                       )}
-                      {/* Selection Checkmark */}
+                      {/* Selection Checkmark & Overlay */}
                       {selectionMode && selectedIds.has(outfit.id) && (
-                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 bg-[var(--brand-pink)] rounded-full p-3 text-white shadow-xl shadow-[var(--brand-pink)]/30 backdrop-blur-sm">
-                          <Check className="w-8 h-8" strokeWidth={3} />
-                        </div>
+                        <>
+                          <div className="absolute inset-0 z-10 bg-[var(--brand-pink)]/20 pointer-events-none rounded-[32px] transition-opacity" />
+                          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 bg-[var(--brand-pink)] rounded-full p-3 text-white shadow-xl shadow-[var(--brand-pink)]/30 backdrop-blur-sm">
+                            <Check className="w-8 h-8" strokeWidth={3} />
+                          </div>
+                        </>
                       )}
                       <OutfitCard
                         outfit={outfit}
