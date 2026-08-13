@@ -28,6 +28,32 @@ interface UserProfile {
     avatar_url: string | null;
 }
 
+const formatDateSeparator = (dateString: string) => {
+    const date = new Date(dateString);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    const diffTime = today.getTime() - date.getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (date.toDateString() === today.toDateString()) {
+        return 'Hoy';
+    } else if (date.toDateString() === yesterday.toDateString()) {
+        return 'Ayer';
+    } else if (diffDays < 7) {
+        const day = date.toLocaleDateString('es-ES', { weekday: 'long' });
+        return day.charAt(0).toUpperCase() + day.slice(1);
+    } else {
+        const day = date.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+        return day.charAt(0).toUpperCase() + day.slice(1);
+    }
+};
+
+const formatMessageTime = (dateString: string) => {
+    return new Date(dateString).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+};
+
 export default function ChatPage() {
     const { user } = useUser();
     const params = useParams();
@@ -395,8 +421,8 @@ export default function ChatPage() {
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto px-4 md:px-6 py-4 flex flex-col items-center">
-                <div className="w-full max-w-3xl lg:max-w-2xl flex flex-col space-y-3 flex-1 justify-end">
+            <div className="flex-1 overflow-y-auto px-4 md:px-6 py-4 flex flex-col">
+                <div className="w-full flex flex-col space-y-3 flex-1 justify-end">
                     {loading ? (
                         <div className="flex justify-center py-20">
                             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--brand-pink)]"></div>
@@ -418,6 +444,16 @@ export default function ChatPage() {
                             // Grouping logic for balloons
                             const isFirstInGroup = !prevMsg || prevMsg.sender_id !== msg.sender_id;
                             const isLastInGroup = !nextMsg || nextMsg.sender_id !== msg.sender_id;
+                            
+                            // Date separator logic
+                            let showDateSeparator = false;
+                            if (!prevMsg) {
+                                showDateSeparator = true;
+                            } else {
+                                const prevDate = new Date(prevMsg.created_at).toDateString();
+                                const currDate = new Date(msg.created_at).toDateString();
+                                if (prevDate !== currDate) showDateSeparator = true;
+                            }
 
                             // We only show avatar on the last message of the person's block (iMessage style)
                             const showAvatar = !isMe && isLastInGroup;
@@ -429,7 +465,7 @@ export default function ChatPage() {
                                 borderRadiusClass = `rounded-r-[22px] ${isFirstInGroup ? 'rounded-tl-[22px]' : 'rounded-tl-[8px]'} ${isLastInGroup ? 'rounded-bl-[22px]' : 'rounded-bl-[8px]'}`;
                             }
                             
-                            const marginTop = isFirstInGroup && idx !== 0 ? 'mt-4' : 'mt-[3px]';
+                            const marginTop = isFirstInGroup && idx !== 0 && !showDateSeparator ? 'mt-4' : 'mt-[3px]';
 
                             // Check if message is a shared post
                             let isSharedPost = false;
@@ -442,12 +478,19 @@ export default function ChatPage() {
                             } catch (e) { }
 
                             return (
-                                <motion.div
-                                    key={msg.id}
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className={`flex w-full ${marginTop} ${isMe ? 'justify-end' : 'justify-start'}`}
-                                >
+                                <div key={msg.id} className="flex flex-col">
+                                    {showDateSeparator && (
+                                        <div className="flex justify-center my-6">
+                                            <span className="bg-[var(--background-secondary)] text-[var(--foreground-secondary)] text-xs px-3 py-1 rounded-full font-medium shadow-sm">
+                                                {formatDateSeparator(msg.created_at)}
+                                            </span>
+                                        </div>
+                                    )}
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className={`flex w-full ${marginTop} ${isMe ? 'justify-end' : 'justify-start'}`}
+                                    >
                                     <div className={`flex w-fit max-w-[85%] sm:max-w-[75%] md:max-w-[400px] xl:max-w-[480px] min-w-0 items-end gap-2 ${isMe ? 'flex-row-reverse' : 'flex-row'}`}>
                                         {/* Avatar placeholder for alignment */}
                                         {!isMe && (
@@ -473,7 +516,12 @@ export default function ChatPage() {
                                                 </div>
                                                 <div className="p-3">
                                                     <p className="text-xs font-bold text-[var(--foreground)] truncate">{sharedPostData.title || 'Outfit compartido'}</p>
-                                                    <Link href={`/feed?post=${sharedPostData.id}`} className="text-[10px] text-[var(--foreground-secondary)] hover:underline">Ver publicación</Link>
+                                                    <div className="flex justify-between items-center mt-1">
+                                                        <Link href={`/feed?post=${sharedPostData.id}`} className="text-[10px] text-[var(--brand-pink)] font-medium hover:underline">Ver publicación</Link>
+                                                        <span className={`text-[10px] ${isMe ? 'text-[var(--brand-pink)]/70' : 'text-[var(--foreground-tertiary)]'}`}>
+                                                            {formatMessageTime(msg.created_at)}
+                                                        </span>
+                                                    </div>
                                                 </div>
                                             </div>
                                         ) : (
@@ -484,11 +532,14 @@ export default function ChatPage() {
                                                     ? 'bg-[var(--brand-pink)] text-white font-medium'
                                                     : 'bg-[var(--background-secondary)] text-[var(--foreground)]'}
                                             `}>
-                                                {msg.content}
+                                                <span className={`text-[10px] ml-2 ${isMe ? 'text-white/70' : 'text-[var(--foreground-tertiary)]'} float-right mt-1.5`}>
+                                                    {formatMessageTime(msg.created_at)}
+                                                </span>
                                             </div>
                                         )}
                                     </div>
-                                </motion.div>
+                                    </motion.div>
+                                </div>
                             );
                         })
                     )}
@@ -497,8 +548,8 @@ export default function ChatPage() {
             </div>
 
             {/* Input Area - Clean & Modern */}
-            <div className="bg-[var(--background)]/95 backdrop-blur-xl border-t border-[var(--border-color)] pb-[env(safe-area-inset-bottom,0px)] px-2 md:px-0 flex justify-center shrink-0">
-                <div className="px-2 md:px-6 py-3 w-full max-w-3xl lg:max-w-2xl">
+            <div className="bg-[var(--background)]/95 backdrop-blur-xl border-t border-[var(--border-color)] pb-[env(safe-area-inset-bottom,0px)] px-4 md:px-6 flex shrink-0">
+                <div className="py-3 w-full">
                     <div className="flex items-end gap-2">
                         <div className="flex-1 bg-[var(--background-secondary)] rounded-[24px] border border-[var(--border-color)] flex items-end pr-1.5 pl-4 transition-all focus-within:border-[var(--brand-pink)]/50 focus-within:ring-1 focus-within:ring-[var(--brand-pink)]/20 shadow-sm">
                             <textarea
