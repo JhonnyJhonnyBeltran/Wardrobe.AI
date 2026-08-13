@@ -168,11 +168,12 @@ export default function ChatPage() {
     const fetchMessages = async () => {
         if (!user || !targetUserId) return;
 
-        // OR query for bidirectional messages
+        // Use .in() array for robust bidirectional query without complex PostgREST OR syntax
         const { data } = await supabase
             .from('messages')
             .select('*')
-            .or(`and(sender_id.eq.${user.id},receiver_id.eq.${targetUserId}),and(sender_id.eq.${targetUserId},receiver_id.eq.${user.id})`)
+            .in('sender_id', [user.id, targetUserId])
+            .in('receiver_id', [user.id, targetUserId])
             .order('created_at', { ascending: true });
 
         if (data) {
@@ -180,7 +181,8 @@ export default function ChatPage() {
             const { data: convData } = await supabase
                 .from('conversations')
                 .select('participant1_id, participant2_id, user1_deleted_at, user2_deleted_at')
-                .or(`and(participant1_id.eq.${user.id},participant2_id.eq.${targetUserId}),and(participant1_id.eq.${targetUserId},participant2_id.eq.${user.id})`)
+                .in('participant1_id', [user.id, targetUserId])
+                .in('participant2_id', [user.id, targetUserId])
                 .single();
             
             let servDeletedAt = 0;
@@ -194,10 +196,17 @@ export default function ChatPage() {
 
             const deletedChatsStr = localStorage.getItem('deleted_chats');
             const deletedChats = deletedChatsStr ? JSON.parse(deletedChatsStr) : {};
-            const localDeletedAt = deletedChats[targetUserId] ? new Date(deletedChats[targetUserId]).getTime() : 0;
-            const deletedAt = Math.max(localDeletedAt, servDeletedAt);
+            const localDeletedAt = deletedChats[targetUserId] ? Number(deletedChats[targetUserId]) : 0;
             
-            const filteredMessages = data.filter((msg: any) => new Date(msg.created_at).getTime() > deletedAt);
+            // Validate NaN
+            let deletedAt = Math.max(isNaN(localDeletedAt) ? 0 : localDeletedAt, isNaN(servDeletedAt) ? 0 : servDeletedAt);
+            if (isNaN(deletedAt)) deletedAt = 0;
+            
+            const filteredMessages = data.filter((msg: any) => {
+                const msgTime = new Date(msg.created_at).getTime();
+                if (isNaN(msgTime)) return true;
+                return msgTime > deletedAt;
+            });
             setMessages(filteredMessages as any[]);
             setLoading(false);
 
@@ -428,10 +437,15 @@ export default function ChatPage() {
                                         onConfirm: async () => {
                                             setLoading(true);
                                             try {
-                                                // Local Storage logic for hiding conversation
+                                                // Local Storage logic for hiding conversation: store the current latest server timestamp to prevent clock skew
                                                 const deletedChatsStr = localStorage.getItem('deleted_chats');
                                                 const deletedChats = deletedChatsStr ? JSON.parse(deletedChatsStr) : {};
-                                                deletedChats[targetUserId] = Date.now();
+                                                
+                                                // Encontramos el tiempo del último mensaje en la UI para usar tiempo de servidor y evitar desfase de relojes locales
+                                                const latestMsg = messages.length > 0 ? messages[messages.length - 1] : null;
+                                                const timestampToSave = latestMsg ? new Date(latestMsg.created_at).getTime() + 1000 : Date.now();
+                                                
+                                                deletedChats[targetUserId] = timestampToSave;
                                                 localStorage.setItem('deleted_chats', JSON.stringify(deletedChats));
 
                                                 // Call the rpc function to delete conversation logically for this user

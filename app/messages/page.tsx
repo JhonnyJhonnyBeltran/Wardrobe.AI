@@ -173,17 +173,18 @@ export default function MessagesPage() {
                     // Filter out self-chats to avoid confusing the user
                     if (otherId === user.id) return;
 
-                    // Check if this chat was locally deleted or server deleted
                     const deletedChatsStr = localStorage.getItem('deleted_chats');
                     const deletedChats = deletedChatsStr ? JSON.parse(deletedChatsStr) : {};
-                    const localDeletedAt = deletedChats[otherId] ? new Date(deletedChats[otherId]).getTime() : 0;
+                    const localDeletedAt = deletedChats[otherId] ? Number(deletedChats[otherId]) : 0;
                     const servDeletedAt = serverDeletedAt.get(otherId) || 0;
-                    const deletedAt = Math.max(localDeletedAt, servDeletedAt);
+                    
+                    let deletedAt = Math.max(isNaN(localDeletedAt) ? 0 : localDeletedAt, isNaN(servDeletedAt) ? 0 : servDeletedAt);
+                    if (isNaN(deletedAt)) deletedAt = 0;
                     
                     const msgTime = new Date(msg.created_at).getTime();
 
                     // If message is older than when we deleted the chat, ignore it
-                    if (msgTime <= deletedAt) return;
+                    if (!isNaN(msgTime) && msgTime <= deletedAt) return;
 
                     // We only want the LATEST message for each partner
                     if (!convMap.has(otherId)) {
@@ -368,7 +369,8 @@ export default function MessagesPage() {
                                                     // Local Storage logic for hiding conversation
                                                     const deletedChatsStr = localStorage.getItem('deleted_chats');
                                                     const deletedChats = deletedChatsStr ? JSON.parse(deletedChatsStr) : {};
-                                                    deletedChats[partnerId] = Date.now();
+                                                    const timestampToSave = conv.last_message_at ? new Date(conv.last_message_at).getTime() + 1000 : Date.now();
+                                                    deletedChats[partnerId] = timestampToSave;
                                                     localStorage.setItem('deleted_chats', JSON.stringify(deletedChats));
 
                                                     // Call the rpc function to delete conversation logically for this user
