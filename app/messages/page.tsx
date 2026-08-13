@@ -347,7 +347,7 @@ export default function MessagesPage() {
                                                 localStorage.setItem('deleted_chats', JSON.stringify(deletedChats));
 
                                                 // Call the rpc function to delete conversation logically for this user
-                                                const { error } = await supabase.rpc('delete_conversation_for_user' as any, {
+                                                const { error } = await (supabase.rpc as any)('delete_conversation_for_user', {
                                                     target_user_id: partnerId
                                                 });
                                                 
