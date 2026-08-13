@@ -547,11 +547,11 @@ export default function ChatPage() {
                 </div>
             </div>
 
-            {/* Input Area - Clean & Modern */}
-            <div className="bg-[var(--background)]/95 backdrop-blur-xl border-t border-[var(--border-color)] pb-[env(safe-area-inset-bottom,0px)] px-4 md:px-6 flex shrink-0">
-                <div className="py-3 w-full">
+            {/* Input Area - Floating */}
+            <div className="pb-[calc(env(safe-area-inset-bottom,0px)+16px)] pt-2 px-4 md:px-6 shrink-0 bg-transparent">
+                <div className="w-full">
                     <div className="flex items-end gap-2">
-                        <div className="flex-1 bg-[var(--background-secondary)] rounded-[24px] border border-[var(--border-color)] flex items-end pr-1.5 pl-4 transition-all focus-within:border-[var(--brand-pink)]/50 focus-within:ring-1 focus-within:ring-[var(--brand-pink)]/20 shadow-sm">
+                        <div className="flex-1 bg-[var(--background)]/90 backdrop-blur-xl rounded-[24px] border border-[var(--border-color)] shadow-lg flex items-end pr-1.5 pl-4 transition-all focus-within:border-[var(--brand-pink)]/50 focus-within:ring-1 focus-within:ring-[var(--brand-pink)]/20">
                             <textarea
                                 id="chat-input"
                                 value={newMessage}
