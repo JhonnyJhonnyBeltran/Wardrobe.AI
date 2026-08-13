@@ -725,8 +725,8 @@ export default function ClosetPage() {
                           >
                             {/* Selection Checkmark */}
                             {selectionMode && selectedIds.has(item.id) && (
-                              <div className="absolute top-2 right-2 z-10 bg-[var(--brand-pink)] rounded-full p-1 text-white shadow-md">
-                                <Check className="w-4 h-4" />
+                              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 bg-[var(--brand-pink)] rounded-full p-3 text-white shadow-xl shadow-[var(--brand-pink)]/30 backdrop-blur-sm">
+                                <Check className="w-8 h-8" strokeWidth={3} />
                               </div>
                             )}
 
@@ -839,8 +839,8 @@ export default function ClosetPage() {
                       )}
                       {/* Selection Checkmark */}
                       {selectionMode && selectedIds.has(outfit.id) && (
-                        <div className="absolute top-2 right-2 z-20 bg-[var(--brand-pink)] rounded-full p-1 text-white shadow-md">
-                          <Check className="w-4 h-4" />
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 bg-[var(--brand-pink)] rounded-full p-3 text-white shadow-xl shadow-[var(--brand-pink)]/30 backdrop-blur-sm">
+                          <Check className="w-8 h-8" strokeWidth={3} />
                         </div>
                       )}
                       <OutfitCard
@@ -898,7 +898,7 @@ export default function ClosetPage() {
       </main>
 
       {/* FAB stack: Filter + Add — always stacked, fully responsive */}
-      {!showAddModal && !selectedItem && !selectedOutfit && (
+      {!showAddModal && !selectedItem && !selectedOutfit && activeTab !== 'calendar' && (
         <div className={`fixed right-6 z-[4990] flex flex-col items-end gap-3 transition-all duration-300 ${
           selectionMode 
             ? 'bottom-[calc(var(--tabbar-height)+env(safe-area-inset-bottom,0px)+108px)]' 
