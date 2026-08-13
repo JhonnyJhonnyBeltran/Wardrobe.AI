@@ -160,7 +160,12 @@ export default function ChatPage() {
             .order('created_at', { ascending: true });
 
         if (data) {
-            setMessages(data as any[]);
+            const deletedChatsStr = localStorage.getItem('deleted_chats');
+            const deletedChats = deletedChatsStr ? JSON.parse(deletedChatsStr) : {};
+            const deletedAt = deletedChats[targetUserId] ? new Date(deletedChats[targetUserId]).getTime() : 0;
+            
+            const filteredMessages = data.filter((msg: any) => new Date(msg.created_at).getTime() > deletedAt);
+            setMessages(filteredMessages as any[]);
             setLoading(false);
 
             // Update read state in Supabase

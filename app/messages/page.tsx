@@ -156,6 +156,15 @@ export default function MessagesPage() {
                     // Filter out self-chats to avoid confusing the user
                     if (otherId === user.id) return;
 
+                    // Check if this chat was locally deleted
+                    const deletedChatsStr = localStorage.getItem('deleted_chats');
+                    const deletedChats = deletedChatsStr ? JSON.parse(deletedChatsStr) : {};
+                    const deletedAt = deletedChats[otherId] ? new Date(deletedChats[otherId]).getTime() : 0;
+                    const msgTime = new Date(msg.created_at).getTime();
+
+                    // If message is older than when we deleted the chat, ignore it
+                    if (msgTime <= deletedAt) return;
+
                     // We only want the LATEST message for each partner
                     if (!convMap.has(otherId)) {
                         convMap.set(otherId, msg);
@@ -331,20 +340,19 @@ export default function MessagesPage() {
                                             const partnerId = conv.other_user?.id || (conv.participant_2 === user?.id ? conv.participant_1 : conv.participant_2);
 
                                             try {
-                                                // Get or create conversation first
-                                                const { data: conversationId } = await supabase
-                                                    .rpc('get_or_create_conversation', { target_user_id: partnerId } as any) as { data: any };
+                                                // Local Storage logic for hiding conversation
+                                                const deletedChatsStr = localStorage.getItem('deleted_chats');
+                                                const deletedChats = deletedChatsStr ? JSON.parse(deletedChatsStr) : {};
+                                                deletedChats[partnerId] = Date.now();
+                                                localStorage.setItem('deleted_chats', JSON.stringify(deletedChats));
 
-
-                                                if (conversationId) {
-                                                    // Delete the conversation (messages will be deleted by CASCADE)
-                                                    await supabase
-                                                        .from('conversations')
-                                                        .delete()
-                                                        .eq('id', conversationId);
-                                                } else {
-                                                    // Fallback: delete messages directly
-                                                    await supabase.from('messages').delete().or(`and(sender_id.eq.${user?.id},receiver_id.eq.${partnerId}),and(sender_id.eq.${partnerId},receiver_id.eq.${user?.id})`);
+                                                // Call the rpc function to delete conversation logically for this user
+                                                const { error } = await supabase.rpc('delete_conversation_for_user' as any, {
+                                                    target_user_id: partnerId
+                                                });
+                                                
+                                                if (error) {
+                                                    console.warn('RPC delete_conversation_for_user not available or failed:', error);
                                                 }
 
                                                 // Remove from local state

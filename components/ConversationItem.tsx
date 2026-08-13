@@ -187,24 +187,15 @@ export const ConversationItem = memo(function ConversationItem({
         </button>
 
         {/* Dropdown - Visible on hover of the button wrapper */}
-        <div className="absolute right-0 top-8 w-40 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl shadow-lg z-20 hidden group-hover/actions:block">
-          <div
-            onClick={(e) => {
-              e.stopPropagation();
-              onReport?.();
-            }}
-            className="px-4 py-2 text-sm text-[var(--foreground)] hover:bg-[var(--background-secondary)] cursor-pointer flex items-center gap-2"
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-yellow-500" /> Reportar
-          </div>
+        <div className="absolute right-0 top-8 w-48 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl shadow-lg z-20 hidden group-hover/actions:block overflow-hidden">
           <div
             onClick={(e) => {
               e.stopPropagation();
               onDelete?.();
             }}
-            className="px-4 py-2 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 cursor-pointer flex items-center gap-2"
+            className="px-4 py-3 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 cursor-pointer font-medium text-center"
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-red-500" /> Eliminar
+            Eliminar conversación
           </div>
         </div>
       </div>
