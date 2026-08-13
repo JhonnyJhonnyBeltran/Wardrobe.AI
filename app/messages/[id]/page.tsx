@@ -176,9 +176,26 @@ export default function ChatPage() {
             .order('created_at', { ascending: true });
 
         if (data) {
+            // Get conversation to check server-side deletion
+            const { data: convData } = await supabase
+                .from('conversations')
+                .select('participant1_id, participant2_id, user1_deleted_at, user2_deleted_at')
+                .or(`and(participant1_id.eq.${user.id},participant2_id.eq.${targetUserId}),and(participant1_id.eq.${targetUserId},participant2_id.eq.${user.id})`)
+                .single();
+            
+            let servDeletedAt = 0;
+            if (convData) {
+                const conv = convData as any;
+                const deletedAtStr = conv.participant1_id === user.id ? conv.user1_deleted_at : conv.user2_deleted_at;
+                if (deletedAtStr) {
+                    servDeletedAt = new Date(deletedAtStr).getTime();
+                }
+            }
+
             const deletedChatsStr = localStorage.getItem('deleted_chats');
             const deletedChats = deletedChatsStr ? JSON.parse(deletedChatsStr) : {};
-            const deletedAt = deletedChats[targetUserId] ? new Date(deletedChats[targetUserId]).getTime() : 0;
+            const localDeletedAt = deletedChats[targetUserId] ? new Date(deletedChats[targetUserId]).getTime() : 0;
+            const deletedAt = Math.max(localDeletedAt, servDeletedAt);
             
             const filteredMessages = data.filter((msg: any) => new Date(msg.created_at).getTime() > deletedAt);
             setMessages(filteredMessages as any[]);

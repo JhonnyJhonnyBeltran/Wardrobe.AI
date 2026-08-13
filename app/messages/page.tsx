@@ -146,6 +146,23 @@ export default function MessagesPage() {
                     return;
                 }
 
+                // Fetch conversations to get server-side deleted_at timestamps
+                const { data: activeConversations } = await supabase
+                    .from('conversations')
+                    .select('participant1_id, participant2_id, user1_deleted_at, user2_deleted_at')
+                    .or(`participant1_id.eq.${user.id},participant2_id.eq.${user.id}`);
+                
+                const serverDeletedAt = new Map<string, number>();
+                if (activeConversations) {
+                    activeConversations.forEach((conv: any) => {
+                        const otherId = conv.participant1_id === user.id ? conv.participant2_id : conv.participant1_id;
+                        const deletedAt = conv.participant1_id === user.id ? conv.user1_deleted_at : conv.user2_deleted_at;
+                        if (deletedAt) {
+                            serverDeletedAt.set(otherId, new Date(deletedAt).getTime());
+                        }
+                    });
+                }
+
                 // 2. Group by the OTHER user ID
                 const convMap = new Map<string, any>();
                 const unreadCounts = new Map<string, number>();
@@ -156,10 +173,13 @@ export default function MessagesPage() {
                     // Filter out self-chats to avoid confusing the user
                     if (otherId === user.id) return;
 
-                    // Check if this chat was locally deleted
+                    // Check if this chat was locally deleted or server deleted
                     const deletedChatsStr = localStorage.getItem('deleted_chats');
                     const deletedChats = deletedChatsStr ? JSON.parse(deletedChatsStr) : {};
-                    const deletedAt = deletedChats[otherId] ? new Date(deletedChats[otherId]).getTime() : 0;
+                    const localDeletedAt = deletedChats[otherId] ? new Date(deletedChats[otherId]).getTime() : 0;
+                    const servDeletedAt = serverDeletedAt.get(otherId) || 0;
+                    const deletedAt = Math.max(localDeletedAt, servDeletedAt);
+                    
                     const msgTime = new Date(msg.created_at).getTime();
 
                     // If message is older than when we deleted the chat, ignore it
