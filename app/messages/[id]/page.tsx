@@ -70,6 +70,19 @@ export default function ChatPage() {
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const typingTimeoutRef = useRef<any>(null);
     const channelRef = useRef<any>(null);
+    const menuRef = useRef<HTMLDivElement>(null);
+    const [showMenu, setShowMenu] = useState(false);
+
+    // Close menu on outside click
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+                setShowMenu(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
     
     const markConversationAsRead = useMessageStore(state => state.markConversationAsRead);
 
@@ -374,14 +387,19 @@ export default function ChatPage() {
                     )}
                 </div>
 
-                <div className="relative group">
-                    <button className="p-2 text-[var(--foreground)] hover:bg-[var(--background-secondary)] rounded-full transition-colors">
+                <div className="relative group" ref={menuRef}>
+                    <button 
+                        onClick={() => setShowMenu(!showMenu)}
+                        className="p-2 text-[var(--foreground)] rounded-full transition-colors"
+                    >
                         <MoreVertical className="w-5 h-5" />
                     </button>
                     {/* Dropdown Menu */}
-                    <div className="absolute right-0 top-full mt-2 w-48 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl shadow-xl overflow-hidden hidden group-hover:block z-50">
-                        <button
-                            onClick={async () => {
+                    {showMenu && (
+                        <div className="absolute right-0 top-full mt-2 w-48 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl shadow-xl overflow-hidden z-50">
+                            <button
+                                onClick={async () => {
+                                    setShowMenu(false);
                                 if (confirm("¿Estás seguro de que quieres eliminar esta conversación? Esta acción no se puede deshacer.")) {
                                     setLoading(true);
                                     try {
@@ -412,6 +430,7 @@ export default function ChatPage() {
                             Eliminar conversación
                         </button>
                     </div>
+                    )}
                 </div>
             </div>
 

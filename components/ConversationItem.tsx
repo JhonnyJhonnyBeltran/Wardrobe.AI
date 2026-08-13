@@ -6,7 +6,7 @@
 
 'use client';
 
-import { memo } from 'react';
+import { memo, useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { AvatarWithStatus } from '@/components/OnlineIndicator';
 
@@ -72,6 +72,19 @@ export const ConversationItem = memo(function ConversationItem({
   onDelete,
   onReport,
 }: ConversationItemProps) {
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Close menu on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
   // Check if this conversation has unread messages
   const hasUnread = unreadCount > 0;
 
@@ -175,29 +188,32 @@ export const ConversationItem = memo(function ConversationItem({
       </div>
 
       {/* Actions (Stop Propagation) */}
-      <div className="relative group/actions">
+      <div className="relative group/actions" ref={menuRef}>
         <button
           onClick={(e) => {
             e.stopPropagation();
-            // Toggle dropdown or just show it via hover (using CSS group-hover for simplicity in MVP)
+            setShowMenu(!showMenu);
           }}
-          className="p-2 text-[var(--foreground-tertiary)] hover:text-[var(--foreground)] hover:bg-[var(--background-tertiary)] rounded-full transition-colors opacity-0 group-hover:opacity-100"
+          className="p-2 text-[var(--foreground-tertiary)] rounded-full transition-colors opacity-0 group-hover:opacity-100"
         >
           <MoreVertical className="w-5 h-5" />
         </button>
 
-        {/* Dropdown - Visible on hover of the button wrapper */}
-        <div className="absolute right-0 top-8 w-48 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl shadow-lg z-20 hidden group-hover/actions:block overflow-hidden">
-          <div
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete?.();
-            }}
-            className="px-4 py-3 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 cursor-pointer font-medium text-center"
-          >
-            Eliminar conversación
+        {/* Dropdown - Visible on click */}
+        {showMenu && (
+          <div className="absolute right-0 top-8 w-48 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-xl shadow-lg z-20 overflow-hidden">
+            <div
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowMenu(false);
+                onDelete?.();
+              }}
+              className="px-4 py-3 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 cursor-pointer font-medium text-center"
+            >
+              Eliminar conversación
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </motion.div>
   );
