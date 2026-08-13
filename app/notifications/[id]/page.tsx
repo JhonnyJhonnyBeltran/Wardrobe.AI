@@ -161,7 +161,8 @@ export default function ChatPage() {
       // 3. Get or check for existing conversation
       const { data: existingConv, error: convError } = await (supabase.from('conversations') as any)
         .select('*')
-        .or(`and(participant_1.eq.${user.id},participant_2.eq.${targetUserId}),and(participant_1.eq.${targetUserId},participant_2.eq.${user.id})`)
+        .in('participant_1', [user.id, targetUserId])
+        .in('participant_2', [user.id, targetUserId])
         .single();
 
       if (existingConv && !convError) {

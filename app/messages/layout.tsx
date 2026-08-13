@@ -55,10 +55,39 @@ export default function MessagesLayout({ children }: { children: React.ReactNode
 
                 const msgs = messages as any[] | null;
 
+                const { data: activeConversations } = await supabase
+                    .from('conversations')
+                    .select('participant1_id, participant2_id, user1_deleted_at, user2_deleted_at')
+                    .or(`participant1_id.eq.${user.id},participant2_id.eq.${user.id}`);
+                
+                const serverDeletedAt = new Map<string, number>();
+                if (activeConversations) {
+                    activeConversations.forEach((conv: any) => {
+                        const otherId = conv.participant1_id === user.id ? conv.participant2_id : conv.participant1_id;
+                        const deletedAt = conv.participant1_id === user.id ? conv.user1_deleted_at : conv.user2_deleted_at;
+                        if (deletedAt) {
+                            serverDeletedAt.set(otherId, new Date(deletedAt).getTime());
+                        }
+                    });
+                }
+
                 if (msgs && msgs.length > 0) {
                     const convMap = new Map();
                     for (const msg of msgs) {
                         const otherId = msg.sender_id === user.id ? msg.receiver_id : msg.sender_id;
+                        if (otherId === user.id) continue;
+
+                        const deletedChatsStr = localStorage.getItem('deleted_chats');
+                        const deletedChats = deletedChatsStr ? JSON.parse(deletedChatsStr) : {};
+                        const localDeletedAt = deletedChats[otherId] ? Number(deletedChats[otherId]) : 0;
+                        const servDeletedAt = serverDeletedAt.get(otherId) || 0;
+                        
+                        let deletedAt = Math.max(isNaN(localDeletedAt) ? 0 : localDeletedAt, isNaN(servDeletedAt) ? 0 : servDeletedAt);
+                        if (isNaN(deletedAt)) deletedAt = 0;
+                        
+                        const msgTime = new Date(msg.created_at).getTime();
+                        if (!isNaN(msgTime) && msgTime <= deletedAt) continue;
+
                         if (!convMap.has(otherId)) {
                             convMap.set(otherId, msg);
                         }
