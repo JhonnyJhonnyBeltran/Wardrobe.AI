@@ -15,6 +15,7 @@ Wardrobe.AI es una plataforma de moda impulsada por IA que permite a los usuario
 - Mantener una estética premium y moderna.
 - Evitar placeholders en el código final.
 - **Siempre comprobar que el código funciona y compila correctamente (ej. `npm run build`) antes de hacer commit y subirlo al repositorio remoto.**
+- **No utilizar funciones nativas del navegador como `alert()` o `confirm()`. Utilizar siempre modales HTML/React o divs en la interfaz.**
 - Documentar cambios significativos aquí o en archivos dedicados dentro de `./Obsidian`.
 
 ## Onboarding

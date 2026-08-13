@@ -46,7 +46,7 @@ export default function MessagesPage() {
     const [loadingFollowed, setLoadingFollowed] = useState(false);
     const [userSearchQuery, setUserSearchQuery] = useState('');
     
-    const { setTabBarHidden } = useUiStore();
+    const { setTabBarHidden, showModal } = useUiStore();
 
     // Hide tab bar when modal is open
     useEffect(() => {
@@ -333,36 +333,42 @@ export default function MessagesPage() {
                                     unreadCount={conv.unreadCount}
                                     currentUserId={user?.id || 'me'}
                                     onClick={() => handleConversationClick(conv.id, conv.id)}
-                                    onReport={() => alert("Usuario reportado.")}
+                                    onReport={() => showModal({ title: 'Usuario reportado', message: 'Gracias por ayudarnos a mantener la comunidad segura.', type: 'success' })}
                                     onDelete={async () => {
-                                        if (confirm("¿Eliminar conversación?")) {
-                                            setLoading(true);
-                                            const partnerId = conv.other_user?.id || (conv.participant_2 === user?.id ? conv.participant_1 : conv.participant_2);
+                                        showModal({
+                                            title: 'Eliminar conversación',
+                                            message: '¿Estás seguro de que quieres eliminar esta conversación? Esta acción no se puede deshacer.',
+                                            type: 'confirm',
+                                            confirmText: 'Eliminar chat',
+                                            onConfirm: async () => {
+                                                setLoading(true);
+                                                const partnerId = conv.other_user?.id || (conv.participant_2 === user?.id ? conv.participant_1 : conv.participant_2);
 
-                                            try {
-                                                // Local Storage logic for hiding conversation
-                                                const deletedChatsStr = localStorage.getItem('deleted_chats');
-                                                const deletedChats = deletedChatsStr ? JSON.parse(deletedChatsStr) : {};
-                                                deletedChats[partnerId] = Date.now();
-                                                localStorage.setItem('deleted_chats', JSON.stringify(deletedChats));
+                                                try {
+                                                    // Local Storage logic for hiding conversation
+                                                    const deletedChatsStr = localStorage.getItem('deleted_chats');
+                                                    const deletedChats = deletedChatsStr ? JSON.parse(deletedChatsStr) : {};
+                                                    deletedChats[partnerId] = Date.now();
+                                                    localStorage.setItem('deleted_chats', JSON.stringify(deletedChats));
 
-                                                // Call the rpc function to delete conversation logically for this user
-                                                const { error } = await (supabase.rpc as any)('delete_conversation_for_user', {
-                                                    target_user_id: partnerId
-                                                });
-                                                
-                                                if (error) {
-                                                    console.warn('RPC delete_conversation_for_user not available or failed:', error);
+                                                    // Call the rpc function to delete conversation logically for this user
+                                                    const { error } = await (supabase.rpc as any)('delete_conversation_for_user', {
+                                                        target_user_id: partnerId
+                                                    });
+                                                    
+                                                    if (error) {
+                                                        console.warn('RPC delete_conversation_for_user not available or failed:', error);
+                                                    }
+
+                                                    // Remove from local state
+                                                    setConversations(prev => prev.filter(c => c.id !== conv.id));
+                                                } catch (e) {
+                                                    console.error(e);
+                                                } finally {
+                                                    setLoading(false);
                                                 }
-
-                                                // Remove from local state
-                                                setConversations(prev => prev.filter(c => c.id !== conv.id));
-                                            } catch (e) {
-                                                console.error('Error deleting conversation:', e);
-                                            } finally {
-                                                setLoading(false);
                                             }
-                                        }
+                                        });
                                     }}
                                 />
                             ))}

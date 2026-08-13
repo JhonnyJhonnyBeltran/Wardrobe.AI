@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 
 import { useMessageStore } from '@/store/messageStore';
+import { useUiStore } from '@/store/uiStore';
 import { realtimeManager } from '@/lib/realtime/RealtimeManager';
 
 // Types
@@ -72,6 +73,8 @@ export default function ChatPage() {
     const channelRef = useRef<any>(null);
     const menuRef = useRef<HTMLDivElement>(null);
     const [showMenu, setShowMenu] = useState(false);
+    
+    const showModal = useUiStore(state => state.showModal);
 
     // Close menu on outside click
     useEffect(() => {
@@ -400,36 +403,42 @@ export default function ChatPage() {
                             <button
                                 onClick={async () => {
                                     setShowMenu(false);
-                                if (confirm("¿Estás seguro de que quieres eliminar esta conversación? Esta acción no se puede deshacer.")) {
-                                    setLoading(true);
-                                    try {
-                                        // Local Storage logic for hiding conversation
-                                        const deletedChatsStr = localStorage.getItem('deleted_chats');
-                                        const deletedChats = deletedChatsStr ? JSON.parse(deletedChatsStr) : {};
-                                        deletedChats[targetUserId] = Date.now();
-                                        localStorage.setItem('deleted_chats', JSON.stringify(deletedChats));
+                                    showModal({
+                                        title: 'Eliminar conversación',
+                                        message: '¿Estás seguro de que quieres eliminar esta conversación? Esta acción no se puede deshacer.',
+                                        type: 'confirm',
+                                        confirmText: 'Eliminar chat',
+                                        onConfirm: async () => {
+                                            setLoading(true);
+                                            try {
+                                                // Local Storage logic for hiding conversation
+                                                const deletedChatsStr = localStorage.getItem('deleted_chats');
+                                                const deletedChats = deletedChatsStr ? JSON.parse(deletedChatsStr) : {};
+                                                deletedChats[targetUserId] = Date.now();
+                                                localStorage.setItem('deleted_chats', JSON.stringify(deletedChats));
 
-                                        // Call the rpc function to delete conversation logically for this user
-                                        const { error } = await (supabase.rpc as any)('delete_conversation_for_user', {
-                                            target_user_id: targetUserId
-                                        });
-                                        
-                                        if (error) {
-                                            console.warn('RPC delete_conversation_for_user not available or failed:', error);
+                                                // Call the rpc function to delete conversation logically for this user
+                                                const { error } = await (supabase.rpc as any)('delete_conversation_for_user', {
+                                                    target_user_id: targetUserId
+                                                });
+                                                
+                                                if (error) {
+                                                    console.warn('RPC delete_conversation_for_user not available or failed:', error);
+                                                }
+
+                                                router.push('/messages');
+                                            } catch (e) {
+                                                console.error(e);
+                                                setLoading(false);
+                                            }
                                         }
-
-                                        router.push('/messages');
-                                    } catch (e) {
-                                        console.error(e);
-                                        setLoading(false);
-                                    }
-                                }
-                            }}
-                            className="w-full text-center px-4 py-3 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors font-medium"
-                        >
-                            Eliminar conversación
-                        </button>
-                    </div>
+                                    });
+                                }}
+                                className="w-full text-center px-4 py-3 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors font-medium"
+                            >
+                                Eliminar conversación
+                            </button>
+                        </div>
                     )}
                 </div>
             </div>
