@@ -481,7 +481,7 @@ export default function ChatPage() {
                                 <div key={msg.id} className="flex flex-col">
                                     {showDateSeparator && (
                                         <div className="flex justify-center my-6">
-                                            <span className="bg-[var(--background-secondary)] text-[var(--foreground-secondary)] text-xs px-3 py-1 rounded-full font-medium shadow-sm">
+                                            <span className="text-[var(--foreground-secondary)] text-xs font-medium">
                                                 {formatDateSeparator(msg.created_at)}
                                             </span>
                                         </div>
@@ -532,6 +532,7 @@ export default function ChatPage() {
                                                     ? 'bg-[var(--brand-pink)] text-white font-medium'
                                                     : 'bg-[var(--background-secondary)] text-[var(--foreground)]'}
                                             `}>
+                                                {msg.content}
                                                 <span className={`text-[10px] ml-2 ${isMe ? 'text-white/70' : 'text-[var(--foreground-tertiary)]'} float-right mt-1.5`}>
                                                     {formatMessageTime(msg.created_at)}
                                                 </span>
