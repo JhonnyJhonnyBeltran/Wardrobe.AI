@@ -496,13 +496,15 @@ export default function ChatPage() {
                                         {!isMe && (
                                             <div className="w-8 h-8 flex-shrink-0 group relative">
                                                 {showAvatar ? (
-                                                    targetUser?.avatar_url ? (
-                                                        <img src={targetUser.avatar_url} className="w-8 h-8 rounded-full object-cover shadow-sm bg-[var(--background-secondary)]" />
-                                                    ) : (
-                                                        <div className="w-8 h-8 rounded-full shadow-sm bg-[var(--background-secondary)] flex items-center justify-center font-bold text-[var(--foreground-secondary)] text-xs border border-[var(--border-color)]">
-                                                            {(targetUser?.full_name || targetUser?.username || '?')[0].toUpperCase()}
-                                                        </div>
-                                                    )
+                                                    <Link href={`/profile/${targetUser?.id}`}>
+                                                        {targetUser?.avatar_url ? (
+                                                            <img src={targetUser.avatar_url} className="w-8 h-8 rounded-full object-cover shadow-sm bg-[var(--background-secondary)] cursor-pointer hover:opacity-80 transition-opacity" />
+                                                        ) : (
+                                                            <div className="w-8 h-8 rounded-full shadow-sm bg-[var(--background-secondary)] flex items-center justify-center font-bold text-[var(--foreground-secondary)] text-xs border border-[var(--border-color)] cursor-pointer hover:opacity-80 transition-opacity">
+                                                                {(targetUser?.full_name || targetUser?.username || '?')[0].toUpperCase()}
+                                                            </div>
+                                                        )}
+                                                    </Link>
                                                 ) : (
                                                     <div className="w-8 h-8" />
                                                 )}
