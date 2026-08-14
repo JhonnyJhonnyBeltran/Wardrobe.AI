@@ -479,12 +479,20 @@ export default function OutfitCalendar() {
       <AnimatePresence>
         {showPicker && (
           <motion.div
-            initial={{ opacity: 0, x: '100%' }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: '100%' }}
-            transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-            className="fixed inset-0 z-[60] bg-[var(--background)] flex flex-col"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[6000] bg-black/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4"
+            onClick={() => setShowPicker(false)}
           >
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-[var(--background)] w-full max-w-lg md:max-w-4xl rounded-t-3xl sm:rounded-3xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden"
+            >
             <div className="px-6 py-4 border-b border-[var(--border-color)] flex items-center gap-4 bg-[var(--background)]/90 backdrop-blur-md sticky top-0 z-10 pt-safe-top">
               <button
                 onClick={() => setShowPicker(false)}
@@ -548,7 +556,8 @@ export default function OutfitCalendar() {
                   ))}
                 </div>
               )}
-            </div>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
