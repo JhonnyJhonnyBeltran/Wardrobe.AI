@@ -708,7 +708,7 @@ export default function ClosetPage() {
                             <div className="flex items-center gap-4 bg-[var(--card-bg)] p-3 rounded-2xl shadow-sm border border-[var(--border)]">
                               <div className="w-16 h-16 rounded-xl bg-[var(--background-secondary)] relative overflow-hidden flex-shrink-0">
                                 {item.imageUrl ? (
-                                  <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
+                                  <img src={item.imageUrl} alt={item.name} className="w-full h-full object-contain scale-[0.85]" />
                                 ) : (
                                   <div className="w-full h-full flex items-center justify-center text-[var(--foreground-tertiary)]">
                                     <span className="text-xs">No img</span>
@@ -765,7 +765,7 @@ export default function ClosetPage() {
                                 <img
                                   src={item.imageUrl}
                                   alt={item.name}
-                                  className="w-full h-full object-cover"
+                                  className="w-full h-full object-contain scale-[0.85]"
                                   loading="lazy"
                                 />
                               ) : (
