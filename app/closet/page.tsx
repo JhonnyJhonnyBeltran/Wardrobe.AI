@@ -30,21 +30,12 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';
 import Image from 'next/image';
 
-const getGridClasses = (cols: number, isOutfit: boolean = false) => {
-  const gap = isOutfit ? 'gap-4' : 'gap-3';
-  if (cols === 2) return `grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 ${gap}`;
-  if (cols === 3) return `grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 ${gap}`;
-  if (cols === 4) return `grid grid-cols-4 md:grid-cols-5 lg:grid-cols-6 ${gap}`;
-  return `grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 ${gap}`;
-};
-
 export default function ClosetPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isPremium, user, setUser, isLoading } = useUser();
   const { t } = useTranslation();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [gridCols, setGridCols] = useState(2);
   const [showFilters, setShowFilters] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState<ClothingItemType | null>(null);
@@ -128,7 +119,6 @@ export default function ClosetPage() {
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
-          if (parsed.gridCols) setGridCols(parsed.gridCols);
           if (parsed.searchQuery) setSearchQuery(parsed.searchQuery);
           if (parsed.showFavoritesOnly !== undefined) setShowFavoritesOnly(parsed.showFavoritesOnly);
           if (parsed.selectedCategories) setSelectedCategories(new Set(parsed.selectedCategories));
@@ -139,18 +129,16 @@ export default function ClosetPage() {
     }
   }, [user?.id]);
 
-  // Save filters to localStorage whenever they change
   useEffect(() => {
     if (typeof window !== 'undefined' && user?.id && mountedRef.current) {
       const filters = {
-        gridCols,
         searchQuery,
         showFavoritesOnly,
         selectedCategories: Array.from(selectedCategories)
       };
       localStorage.setItem(`closet_filters_${user.id}`, JSON.stringify(filters));
     }
-  }, [gridCols, searchQuery, showFavoritesOnly, selectedCategories, user?.id]);
+  }, [searchQuery, showFavoritesOnly, selectedCategories, user?.id]);
 
   const toggleSelection = (id: string) => {
     setSelectedIds(prev => {
@@ -542,8 +530,8 @@ export default function ClosetPage() {
 
   // Active filter badge count
   const activeFilterCount = useMemo(
-    () => (searchQuery ? 1 : 0) + selectedCategories.size + (showFavoritesOnly ? 1 : 0) + (gridCols !== 2 ? 1 : 0),
-    [searchQuery, selectedCategories, showFavoritesOnly, gridCols]
+    () => (searchQuery ? 1 : 0) + selectedCategories.size + (showFavoritesOnly ? 1 : 0),
+    [searchQuery, selectedCategories, showFavoritesOnly]
   );
 
   const colorMap: Record<string, string> = {
@@ -693,7 +681,7 @@ export default function ClosetPage() {
             >
               {loading ? (
                 <div className={`px-4 ${viewMode === 'grid'
-                  ? getGridClasses(gridCols)
+                  ? 'grid grid-cols-3 md:grid-cols-5 gap-3'
                   : 'space-y-3'
                   }`}>
                   {[...Array(8)].map((_, i) => (
@@ -709,7 +697,7 @@ export default function ClosetPage() {
                 />
               ) : (
                 <div className={`px-4 ${viewMode === 'grid'
-                  ? getGridClasses(gridCols)
+                  ? 'grid grid-cols-3 md:grid-cols-5 gap-3'
                   : 'space-y-3' // List View
                   }`}>
                   {(filteredContent as ClothingItemType[]).map((item) => (
@@ -836,7 +824,7 @@ export default function ClosetPage() {
             >
               {outfitsLoading ? (
                 <div className={`px-4 ${viewMode === 'grid'
-                  ? getGridClasses(gridCols, true)
+                  ? 'grid grid-cols-3 md:grid-cols-5 gap-4'
                   : 'space-y-4'
                   }`}>
                   {[...Array(6)].map((_, i) => (
@@ -861,7 +849,7 @@ export default function ClosetPage() {
                 />
               ) : (
                 <div className={`px-4 ${viewMode === 'grid'
-                  ? getGridClasses(gridCols, true)
+                  ? 'grid grid-cols-3 md:grid-cols-5 gap-4'
                   : 'space-y-4' // List for outfits
                   }`}>
                   {(filteredContent as Outfit[]).map((outfit) => (
@@ -986,7 +974,6 @@ export default function ClosetPage() {
                         setSearchQuery('');
                         setSelectedCategories(new Set());
                         setShowFavoritesOnly(false);
-                        setGridCols(2);
                       }}
                       className="text-xs font-semibold text-[var(--brand-pink)] hover:underline"
                     >
@@ -1076,28 +1063,6 @@ export default function ClosetPage() {
                   <span className="ml-auto">✓</span>
                 )}
               </button>
-
-              {/* Grid Column Selector */}
-              <div className="mt-6">
-                <p className="text-xs font-semibold text-[var(--foreground-tertiary)] uppercase tracking-wider mb-3 pl-1">Diseño de cuadrícula</p>
-                <div className="flex gap-2 bg-[var(--background-secondary)] p-1 rounded-2xl border border-[var(--border-color)]">
-                  {[2, 3, 4].map((cols) => (
-                    <button
-                      key={cols}
-                      onClick={() => setGridCols(cols)}
-                      className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 ${gridCols === cols
-                        ? 'bg-[var(--foreground)] text-[var(--background)] shadow-sm'
-                        : 'text-[var(--foreground-secondary)] hover:bg-[var(--border-color)]'
-                        }`}
-                    >
-                      {cols} x {cols}
-                    </button>
-                  ))}
-                </div>
-                <p className="text-[10px] text-[var(--foreground-tertiary)] mt-2 pl-1 italic">
-                  Cambia cuántas prendas se ven por fila
-                </p>
-              </div>
             </div>
           </BubbleToggle>
 
