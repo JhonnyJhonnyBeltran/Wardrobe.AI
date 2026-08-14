@@ -268,10 +268,10 @@ export default function OutfitCalendar() {
                   </button>
                   <div 
                     onClick={() => setSelectedOutfitDetail(outfit)}
-                    className="cursor-pointer hover:opacity-90 transition-opacity shrink-0 flex items-center justify-center bg-[var(--background-secondary)] rounded-2xl border border-[var(--border-color)] overflow-hidden w-24 h-24 md:w-32 md:h-32"
+                    className="cursor-pointer hover:opacity-90 transition-opacity shrink-0 flex items-center justify-center bg-[#f8f9fa] dark:bg-[#111] rounded-2xl border border-[var(--border-color)] overflow-hidden h-24 md:h-32 aspect-[4/5]"
                   >
                       {outfit.image_url ? (
-                        <img src={outfit.image_url} alt={outfit.name} className="w-full h-full object-cover scale-[0.8]" />
+                        <img src={outfit.image_url} alt={outfit.name} className="w-full h-full object-cover" />
                       ) : (
                         <span className="text-xs text-[var(--foreground-tertiary)]">Sin foto</span>
                       )}
@@ -440,14 +440,12 @@ export default function OutfitCalendar() {
                         <div className="flex flex-col md:flex-row gap-4 md:gap-6 mb-4">
                             <div 
                                 onClick={() => setSelectedOutfitDetail(outfit)}
-                                className="cursor-pointer hover:opacity-90 transition-opacity shrink-0"
+                                className="cursor-pointer hover:opacity-90 transition-opacity shrink-0 flex items-center justify-center bg-[#f8f9fa] dark:bg-[#111] rounded-xl border border-[var(--border-color)] overflow-hidden h-24 md:h-56 aspect-[4/5]"
                             >
                                 {outfit.image_url ? (
-                                    <img src={outfit.image_url} alt={outfit.name} className="w-24 h-24 md:w-56 md:h-56 object-cover rounded-xl border border-[var(--border-color)]" />
+                                    <img src={outfit.image_url} alt={outfit.name} className="w-full h-full object-cover" />
                                 ) : (
-                                    <div className="w-24 h-24 md:w-56 md:h-56 bg-[var(--background-secondary)] rounded-xl border border-[var(--border-color)] flex items-center justify-center">
-                                        <span className="text-xs text-[var(--foreground-tertiary)]">Sin foto</span>
-                                    </div>
+                                    <span className="text-xs text-[var(--foreground-tertiary)]">Sin foto</span>
                                 )}
                             </div>
                             <div className="flex-1">
