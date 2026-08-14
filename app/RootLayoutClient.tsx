@@ -60,7 +60,19 @@ export default function RootLayoutClient({ children }: RootLayoutClientProps) {
               
               {/* UI overlays - loaded on-demand */}
               <NotificationToastContainer position="top-right" />
-              <Toaster position="top-center" richColors theme="system" expand={true} />
+              <Toaster 
+                position="top-center" 
+                theme="system" 
+                expand={true} 
+                toastOptions={{
+                  style: {
+                    background: 'var(--brand-pink)',
+                    color: 'white',
+                    border: 'none',
+                  },
+                  className: 'font-sans font-medium shadow-xl rounded-2xl',
+                }}
+              />
               <SystemModal />
             </MessageProvider>
           </RealtimeProvider>
