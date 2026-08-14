@@ -242,7 +242,7 @@ export default function OutfitCalendar() {
 
   return (
     <div className="w-full flex flex-col pt-2 pb-12">
-      <div className="px-4 max-w-4xl mx-auto w-full">
+      <div className="px-4 max-w-6xl mx-auto w-full">
         {/* Today's Outfit Highlight */}
         {todayOutfits.length > 0 && (
           <div className="mb-8">
@@ -268,14 +268,12 @@ export default function OutfitCalendar() {
                   </button>
                   <div 
                     onClick={() => setSelectedOutfitDetail(outfit)}
-                    className="cursor-pointer hover:opacity-90 transition-opacity shrink-0"
+                    className="cursor-pointer hover:opacity-90 transition-opacity shrink-0 flex items-center justify-center bg-[var(--background-secondary)] rounded-2xl border border-[var(--border-color)] overflow-hidden w-24 h-24 md:w-32 md:h-32"
                   >
                       {outfit.image_url ? (
-                        <img src={outfit.image_url} alt={outfit.name} className="w-24 h-24 md:w-32 md:h-32 object-cover rounded-2xl border border-[var(--border-color)]" />
+                        <img src={outfit.image_url} alt={outfit.name} className="w-full h-full object-cover scale-[0.8]" />
                       ) : (
-                        <div className="w-24 h-24 md:w-32 md:h-32 bg-[var(--background-secondary)] rounded-2xl border border-[var(--border-color)] flex items-center justify-center">
-                          <span className="text-xs text-[var(--foreground-tertiary)]">Sin foto</span>
-                        </div>
+                        <span className="text-xs text-[var(--foreground-tertiary)]">Sin foto</span>
                       )}
                   </div>
                   <div className="flex flex-col justify-center flex-1">
@@ -294,10 +292,10 @@ export default function OutfitCalendar() {
                                 <div 
                                     key={item.id} 
                                     onClick={() => setSelectedItemDetail(item)}
-                                    className="w-10 h-10 rounded-lg bg-[var(--background-secondary)] overflow-hidden flex-shrink-0 border border-[var(--border-color)] cursor-pointer hover:ring-2 hover:ring-[var(--brand-pink)] transition-all"
+                                    className="w-10 h-10 rounded-lg bg-[var(--background-secondary)] overflow-hidden flex-shrink-0 border border-[var(--border-color)] cursor-pointer hover:ring-2 hover:ring-[var(--brand-pink)] transition-all flex items-center justify-center"
                                 >
                                     {item.image_url ? (
-                                        <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
+                                        <img src={item.image_url} alt={item.name} className="w-full h-full object-cover scale-[0.8]" />
                                     ) : null}
                                 </div>
                             ))}
@@ -339,7 +337,7 @@ export default function OutfitCalendar() {
           <div className="grid grid-cols-7 gap-1 sm:gap-2">
             {/* Empty Offset Days */}
             {Array.from({ length: startOffset }).map((_, i) => (
-              <div key={`empty-${i}`} className="aspect-square rounded-xl opacity-0" />
+              <div key={`empty-${i}`} className="aspect-square sm:aspect-[3/2] md:aspect-[2/1] lg:aspect-[2.5/1] rounded-xl opacity-0" />
             ))}
             
             {/* Actual Days */}
@@ -353,7 +351,7 @@ export default function OutfitCalendar() {
                 <button
                   key={`day-${i}`}
                   onClick={() => setSelectedDate(dayDate)}
-                  className={`relative aspect-square rounded-xl sm:rounded-2xl flex flex-col items-center justify-center transition-all ${
+                  className={`relative aspect-square sm:aspect-[3/2] md:aspect-[2/1] lg:aspect-[2.5/1] rounded-xl sm:rounded-2xl flex flex-col items-center justify-center transition-all ${
                     isToday 
                       ? 'bg-[var(--brand-pink)] text-white shadow-lg' 
                       : 'hover:bg-[var(--background-secondary)] text-[var(--foreground)]'

@@ -187,9 +187,9 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
                                                         className="block group cursor-pointer"
                                                         onClick={() => handleItemClick(clothing)}
                                                     >
-                                                        <div className="aspect-square bg-[var(--background-secondary)] rounded-2xl overflow-hidden relative mb-2">
+                                                        <div className="aspect-square bg-[var(--background-secondary)] rounded-2xl overflow-hidden relative mb-2 flex items-center justify-center">
                                                             {img ? (
-                                                                <Image src={img} alt={getItemName(item) || 'Ropa'} fill className="object-cover group-hover:scale-105 transition-transform duration-300" />
+                                                                <Image src={img} alt={getItemName(item) || 'Ropa'} fill className="object-cover scale-[0.8] group-hover:scale-[0.85] transition-transform duration-300" />
                                                             ) : (
                                                                 <div className="w-full h-full flex items-center justify-center text-4xl" style={{ backgroundColor: clothing.color_hex || clothing.color || '#ccc' }}>👕</div>
                                                             )}
