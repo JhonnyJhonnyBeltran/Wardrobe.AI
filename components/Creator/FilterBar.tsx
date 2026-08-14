@@ -23,6 +23,14 @@ const COLORS = [
     { name: 'Blanco', value: 'white', hex: '#FFFFFF' },
     { name: 'Rosa', value: 'pink', hex: '#EC4899' },
     { name: 'Morado', value: 'purple', hex: '#A855F7' },
+    { name: 'Naranja', value: 'orange', hex: '#F97316' },
+    { name: 'Gris', value: 'gray', hex: '#6B7280' },
+    { name: 'Marrón', value: 'brown', hex: '#8B4513' },
+    { name: 'Beige', value: 'beige', hex: '#F5F5DC' },
+    { name: 'Granate', value: 'maroon', hex: '#800000' },
+    { name: 'Celeste', value: 'lightblue', hex: '#87CEEB' },
+    { name: 'Cian', value: 'cyan', hex: '#06B6D4' },
+    { name: 'Caqui', value: 'khaki', hex: '#C3B091' },
 ];
 
 const TYPES = [
@@ -31,6 +39,11 @@ const TYPES = [
     'Pantalón',
     'Vestido',
     'Chaqueta',
+    'Jersey',
+    'Sudadera',
+    'Abrigo',
+    'Falda',
+    'Shorts',
     'Zapatos',
     'Accesorios',
 ];
@@ -87,7 +100,10 @@ export function FilterBar({
                 {/* Color Filter */}
                 <div className="relative">
                     <button
-                        onClick={() => setShowColorPicker(!showColorPicker)}
+                        onClick={() => {
+                            setShowColorPicker(!showColorPicker);
+                            if (!showColorPicker) setShowTypePicker(false);
+                        }}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${selectedColor
                             ? 'bg-[var(--brand-pink)] text-white'
                             : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:bg-[var(--background-tertiary)]'
@@ -130,7 +146,10 @@ export function FilterBar({
                 {/* Type Filter */}
                 <div className="relative">
                     <button
-                        onClick={() => setShowTypePicker(!showTypePicker)}
+                        onClick={() => {
+                            setShowTypePicker(!showTypePicker);
+                            if (!showTypePicker) setShowColorPicker(false);
+                        }}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${selectedType
                             ? 'bg-[var(--brand-pink)] text-white'
                             : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:bg-[var(--background-tertiary)]'
