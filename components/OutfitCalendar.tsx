@@ -426,34 +426,35 @@ export default function OutfitCalendar() {
                 ) : (
                   <div className="space-y-6">
                     {selectedDayOutfits.map((outfit) => (
-                      <div key={outfit.calendar_id} className="bg-[var(--card-bg)] rounded-3xl border border-[var(--border-color)] p-4 shadow-sm relative overflow-hidden">
-                        <button 
-                          onClick={() => handleRemoveAssignment(outfit.calendar_id)}
-                          className="absolute top-4 right-4 z-10 p-2 bg-red-100 text-red-500 rounded-full hover:bg-red-500 hover:text-white transition-colors"
+                      <div key={outfit.calendar_id} className="bg-[var(--card-bg)] rounded-3xl border border-[var(--border-color)] p-4 shadow-sm relative overflow-hidden flex flex-col gap-4">
+                        <div 
+                            onClick={() => setSelectedOutfitDetail(outfit)}
+                            className="cursor-pointer hover:opacity-90 transition-opacity shrink-0 flex items-center justify-center bg-[#f8f9fa] dark:bg-[#111] rounded-2xl border border-[var(--border-color)] overflow-hidden w-full aspect-[4/5] relative"
                         >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                        
-                        <div className="flex flex-col md:flex-row gap-4 md:gap-6 mb-4">
-                            <div 
-                                onClick={() => setSelectedOutfitDetail(outfit)}
-                                className="cursor-pointer hover:opacity-90 transition-opacity shrink-0 flex items-center justify-center bg-[#f8f9fa] dark:bg-[#111] rounded-xl border border-[var(--border-color)] overflow-hidden h-24 md:h-56 aspect-[4/5]"
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRemoveAssignment(outfit.calendar_id);
+                              }}
+                              className="absolute top-3 right-3 z-10 p-2 bg-red-100/90 backdrop-blur-sm text-red-500 rounded-full hover:bg-red-500 hover:text-white transition-colors shadow-sm"
+                              title="Quitar de hoy"
                             >
-                                {outfit.image_url ? (
-                                    <img src={outfit.image_url} alt={outfit.name} className="w-full h-full object-cover" />
-                                ) : (
-                                    <span className="text-xs text-[var(--foreground-tertiary)]">Sin foto</span>
-                                )}
-                            </div>
-                            <div className="flex-1">
-                                <h4 
-                                    className="font-bold text-[var(--foreground)] text-lg md:text-2xl mb-1 md:mb-2 cursor-pointer hover:text-[var(--brand-pink)] transition-colors"
-                                    onClick={() => setSelectedOutfitDetail(outfit)}
-                                >
-                                    {outfit.name || 'Outfit sin nombre'}
-                                </h4>
-                                <p className="text-sm md:text-base text-[var(--foreground-secondary)]">{outfit.items?.length || 0} prendas</p>
-                            </div>
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                            {outfit.image_url ? (
+                                <img src={outfit.image_url} alt={outfit.name} className="w-full h-full object-cover" />
+                            ) : (
+                                <span className="text-xs text-[var(--foreground-tertiary)]">Sin foto</span>
+                            )}
+                        </div>
+                        <div className="flex flex-col justify-center flex-1 text-center mt-2">
+                            <h4 
+                                className="font-bold text-[var(--foreground)] text-lg md:text-xl mb-1 cursor-pointer hover:text-[var(--brand-pink)] transition-colors"
+                                onClick={() => setSelectedOutfitDetail(outfit)}
+                            >
+                                {outfit.name || 'Outfit sin nombre'}
+                            </h4>
+                            <p className="text-sm text-[var(--foreground-secondary)]">{outfit.items?.length || 0} prendas</p>
                         </div>
                       </div>
                     ))}
