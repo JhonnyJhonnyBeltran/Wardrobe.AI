@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, CalendarDays, X, Plus, Trash2, Shirt } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CalendarDays, X, Plus, Trash2, Shirt, Search } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
 import { useUser } from '@/store';
 import { OutfitDetailModal } from '@/components/OutfitDetailModal';
@@ -21,7 +21,8 @@ const formatDateToSQL = (date: Date) => {
 
 export default function OutfitCalendar() {
   const { user } = useUser();
-  const { showModal } = useUiStore();
+  const { showModal, setTabBarHidden } = useUiStore();
+  const [outfitSearchQuery, setOutfitSearchQuery] = useState('');
   
   const [currentDate, setCurrentDate] = useState(new Date());
   const [calendarData, setCalendarData] = useState<Record<string, any[]>>({});
@@ -134,6 +135,22 @@ export default function OutfitCalendar() {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
   };
 
+  const filteredPickerOutfits = useMemo(() => {
+    if (!outfitSearchQuery.trim()) return userOutfits;
+    const q = outfitSearchQuery.toLowerCase();
+    return userOutfits.filter(o => o.name?.toLowerCase().includes(q));
+  }, [userOutfits, outfitSearchQuery]);
+
+  useEffect(() => {
+    if (window.innerWidth < 768) {
+      const hasModalOpen = !!selectedOutfitDetail || !!selectedItemDetail || showPicker || !!selectedDate;
+      setTabBarHidden(hasModalOpen);
+    }
+    return () => {
+      setTabBarHidden(false);
+    };
+  }, [selectedOutfitDetail, selectedItemDetail, showPicker, selectedDate, setTabBarHidden]);
+
   const handleAssignOutfit = async (outfitId: string) => {
     if (!user || !selectedDate) return;
     const dateStr = formatDateToSQL(selectedDate);
@@ -200,7 +217,7 @@ export default function OutfitCalendar() {
 
   return (
     <div className="w-full flex flex-col pt-2 pb-12">
-      <div className="px-4">
+      <div className="px-4 max-w-4xl mx-auto w-full">
         {/* Today's Outfit Highlight */}
         {todayOutfits.length > 0 && (
           <div className="mb-8">
@@ -484,6 +501,17 @@ export default function OutfitCalendar() {
             </div>
 
             <div className="flex-1 overflow-y-auto p-4">
+              <div className="mb-6 relative">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--foreground-tertiary)]" />
+                <input
+                  type="text"
+                  placeholder="Buscar outfit..."
+                  value={outfitSearchQuery}
+                  onChange={(e) => setOutfitSearchQuery(e.target.value)}
+                  className="w-full pl-12 pr-4 py-3 bg-[var(--background-secondary)] rounded-2xl text-[var(--foreground)] outline-none border border-transparent focus:border-[var(--brand-pink)]/30 transition-all placeholder-[var(--foreground-tertiary)] font-medium"
+                />
+              </div>
+
               {outfitsLoading ? (
                 <div className="flex justify-center py-12">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--brand-pink)]"></div>
@@ -493,9 +521,13 @@ export default function OutfitCalendar() {
                     <p className="text-[var(--foreground-secondary)] text-lg mb-4">Aún no tienes outfits guardados.</p>
                     <p className="text-[var(--foreground-tertiary)] mb-6">Crea uno en la pestaña de Outfits primero.</p>
                 </div>
+              ) : filteredPickerOutfits.length === 0 ? (
+                <div className="text-center py-12 px-4">
+                    <p className="text-[var(--foreground-secondary)] text-lg mb-4">No se encontraron outfits.</p>
+                </div>
               ) : (
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {userOutfits.map(outfit => (
+                  {filteredPickerOutfits.map(outfit => (
                     <div key={outfit.id} onClick={() => handleAssignOutfit(outfit.id)} className="cursor-pointer">
                         <OutfitCard
                           outfit={outfit}
