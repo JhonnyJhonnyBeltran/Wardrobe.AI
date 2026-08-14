@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, CalendarDays, X, Plus, Trash2, Shirt, Search, Heart } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CalendarDays, X, Plus, Trash2, Shirt, Search, Heart, Edit2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
 import { useUser } from '@/store';
 import { OutfitDetailModal } from '@/components/OutfitDetailModal';
@@ -258,9 +258,9 @@ export default function OutfitCalendar() {
                   <Shirt className="w-6 h-6 text-[var(--brand-pink)]" />
                   Outfit de Hoy
                 </h3>
-                <Button onClick={() => setSelectedDate(new Date())} variant="outline" size="sm" className="rounded-full border-[var(--brand-pink)] text-[var(--brand-pink)] hover:bg-[var(--brand-pink)] hover:text-white">
-                  <Plus className="w-4 h-4 mr-1" />
-                  Añadir
+                <Button onClick={() => setSelectedDate(new Date())} variant="outline" size="sm" className="rounded-full border-[var(--brand-pink)] text-[var(--brand-pink)] hover:bg-[var(--brand-pink)] hover:text-white transition-colors">
+                  <Edit2 className="w-4 h-4 mr-1" />
+                  Modificar
                 </Button>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
@@ -469,8 +469,17 @@ export default function OutfitCalendar() {
                   }} 
                   className="w-full py-4 text-lg rounded-2xl flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(236,72,153,0.3)]"
                 >
-                  <Plus className="w-5 h-5" />
-                  Asignar un Outfit
+                  {selectedDayOutfits.length > 0 ? (
+                    <>
+                      <Plus className="w-5 h-5" />
+                      Añadir otro Outfit
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-5 h-5" />
+                      Asignar un Outfit
+                    </>
+                  )}
                 </Button>
               </div>
             </motion.div>
