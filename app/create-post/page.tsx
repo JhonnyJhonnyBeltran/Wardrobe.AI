@@ -1,15 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Shirt, Layers, Camera, Check, Plus, Image as ImageIcon, X, ChevronRight, Edit2 } from 'lucide-react';
+import { ArrowLeft, Shirt, Layers, Camera, Check, Plus, Image as ImageIcon, X, ChevronRight, Edit2, Search } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';
 import Image from 'next/image';
 import { useUser } from '@/store/userStore';
 import { Button } from '@/components';
 import InteractiveOutfitViewer from '@/components/InteractiveOutfitViewer';
+import OutfitCard from '@/components/OutfitCard';
 
 export default function CreatePostPage() {
     const router = useRouter();
@@ -23,6 +24,13 @@ export default function CreatePostPage() {
     const [selectedOutfit, setSelectedOutfit] = useState<any>(null);
     const [userOutfits, setUserOutfits] = useState<any[]>([]);
     const [loadingOutfits, setLoadingOutfits] = useState(false);
+    const [outfitSearchQuery, setOutfitSearchQuery] = useState('');
+
+    const filteredOutfits = useMemo(() => {
+        if (!outfitSearchQuery.trim()) return userOutfits;
+        const q = outfitSearchQuery.toLowerCase();
+        return userOutfits.filter(o => o.name?.toLowerCase().includes(q));
+    }, [userOutfits, outfitSearchQuery]);
 
     // Image State
     const [realImage, setRealImage] = useState<string | null>(null); // Preview URL
@@ -207,13 +215,21 @@ export default function CreatePostPage() {
                         {mode === 'select-outfit' ? 'Seleccionar Outfit' : (editingPostId ? 'Editar Publicación' : 'Nueva Publicación')}
                     </h1>
                 </div>
-                {mode === 'compose' && (
+                {mode === 'compose' ? (
                     <button
                         onClick={handlePublish}
                         disabled={publishing || !validatePost()}
                         className="md:hidden text-[var(--brand-pink)] font-bold text-sm disabled:opacity-50 px-2 py-1"
                     >
                         {publishing ? (editingPostId ? 'Guardando...' : 'Publicando...') : (editingPostId ? 'Guardar' : 'Compartir')}
+                    </button>
+                ) : (
+                    <button
+                        onClick={() => router.push(`/create?returnTo=/create-post${editingPostId ? `%3FpostId=${editingPostId}` : ''}`)}
+                        className="text-[var(--brand-pink)] font-bold text-sm px-2 py-1 flex items-center gap-1 hover:opacity-80"
+                    >
+                        <Plus className="w-4 h-4" />
+                        Crear Nuevo
                     </button>
                 )}
             </header>
@@ -350,44 +366,41 @@ export default function CreatePostPage() {
 
                 {/* SELECT OUTFIT MODE */}
                 {mode === 'select-outfit' && (
-                    <div className="p-4 grid grid-cols-2 gap-4 pb-20">
-                        {/* Create New Option */}
-                        <button
-                            onClick={() => router.push(`/create?returnTo=/create-post${editingPostId ? `%3FpostId=${editingPostId}` : ''}`)}
-                            className="aspect-[3/4] rounded-2xl border-2 border-dashed border-[var(--border-color)] flex flex-col items-center justify-center gap-2 hover:bg-[var(--background-secondary)] transition-colors text-[var(--foreground-secondary)] hover:text-[var(--foreground)]"
-                        >
-                            <div className="w-12 h-12 rounded-full bg-[var(--brand-pink)]/10 flex items-center justify-center">
-                                <Plus className="w-6 h-6 text-[var(--brand-pink)]" />
-                            </div>
-                            <span className="font-medium">Crear Nuevo</span>
-                        </button>
+                    <div className="flex-1 flex flex-col p-4 max-w-4xl mx-auto w-full pb-20">
+                        <div className="mb-6 relative">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--foreground-tertiary)]" />
+                            <input
+                                type="text"
+                                placeholder="Buscar outfit..."
+                                value={outfitSearchQuery}
+                                onChange={(e) => setOutfitSearchQuery(e.target.value)}
+                                className="w-full pl-12 pr-4 py-3 bg-[var(--background-secondary)] rounded-2xl text-[var(--foreground)] outline-none border border-transparent focus:border-[var(--brand-pink)]/30 transition-all placeholder-[var(--foreground-tertiary)] font-medium"
+                            />
+                        </div>
 
-                        {/* Existing Outfits */}
                         {loadingOutfits ? (
-                            [...Array(4)].map((_, i) => (
-                                <div key={i} className="aspect-[3/4] bg-[var(--card-bg)] rounded-2xl animate-pulse" />
-                            ))
+                            <div className="flex justify-center py-12">
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--brand-pink)]"></div>
+                            </div>
+                        ) : filteredOutfits.length === 0 ? (
+                            <div className="text-center py-12 px-4">
+                                <p className="text-[var(--foreground-secondary)] text-lg mb-4">No se encontraron outfits.</p>
+                            </div>
                         ) : (
-                            userOutfits.map(outfit => (
-                                <button
-                                    key={outfit.id}
-                                    onClick={() => handleOutfitSelect(outfit)}
-                                    className="relative aspect-[3/4] rounded-2xl overflow-hidden border border-[var(--border-color)] group hover:border-[var(--brand-pink)] transition-all bg-[var(--card-bg)] flex flex-col"
-                                >
-                                    <div className="flex-1 w-full relative bg-[var(--background-secondary)]">
-                                        {outfit.outfit_items?.length > 0 ? (
-                                            <InteractiveOutfitViewer outfit={outfit} disableInteraction={true} className="w-full h-full min-h-0" />
-                                        ) : (
-                                            <div className="w-full h-full bg-[var(--background-secondary)] flex items-center justify-center">
-                                                <Shirt className="w-8 h-8 opacity-20" />
-                                            </div>
-                                        )}
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                {filteredOutfits.map(outfit => (
+                                    <div key={outfit.id} onClick={() => handleOutfitSelect(outfit)} className="cursor-pointer">
+                                        <OutfitCard
+                                            outfit={outfit}
+                                            index={0}
+                                            onClick={() => handleOutfitSelect(outfit)}
+                                            onEdit={() => {}}
+                                            onShare={() => {}}
+                                            onDelete={() => {}}
+                                        />
                                     </div>
-                                    <div className="p-3 bg-[var(--card-bg)] border-t border-[var(--border-color)] shrink-0 text-left">
-                                        <p className="text-[var(--foreground)] text-xs font-bold truncate">{outfit.name}</p>
-                                    </div>
-                                </button>
-                            ))
+                                ))}
+                            </div>
                         )}
                     </div>
                 )}
