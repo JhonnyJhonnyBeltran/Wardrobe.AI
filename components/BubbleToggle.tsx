@@ -125,7 +125,7 @@ const BubbleToggle = memo(function BubbleToggle({
                 variants={badgeVariants}
                 initial="hidden"
                 animate="visible"
-                className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 bg-white text-[var(--brand-pink)] text-xs font-bold rounded-full flex items-center justify-center shadow-sm"
+                className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 bg-[var(--foreground)] text-[var(--background)] text-xs font-bold rounded-full flex items-center justify-center shadow-md border-2 border-[var(--brand-pink)]"
               >
                 {activeCount}
               </motion.span>

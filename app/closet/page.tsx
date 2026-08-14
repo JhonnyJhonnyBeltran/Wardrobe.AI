@@ -30,6 +30,14 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';
 import Image from 'next/image';
 
+const getGridClasses = (cols: number, isOutfit: boolean = false) => {
+  const gap = isOutfit ? 'gap-4' : 'gap-3';
+  if (cols === 2) return `grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 ${gap}`;
+  if (cols === 3) return `grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 ${gap}`;
+  if (cols === 4) return `grid grid-cols-4 md:grid-cols-5 lg:grid-cols-6 ${gap}`;
+  return `grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 ${gap}`;
+};
+
 export default function ClosetPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -112,6 +120,37 @@ export default function ClosetPage() {
     mountedRef.current = true;
     return () => { mountedRef.current = false; }
   }, []);
+
+  // Load filters from localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined' && user?.id) {
+      const saved = localStorage.getItem(`closet_filters_${user.id}`);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (parsed.gridCols) setGridCols(parsed.gridCols);
+          if (parsed.searchQuery) setSearchQuery(parsed.searchQuery);
+          if (parsed.showFavoritesOnly !== undefined) setShowFavoritesOnly(parsed.showFavoritesOnly);
+          if (parsed.selectedCategories) setSelectedCategories(new Set(parsed.selectedCategories));
+        } catch (e) {
+          console.error('Error parsing saved filters', e);
+        }
+      }
+    }
+  }, [user?.id]);
+
+  // Save filters to localStorage whenever they change
+  useEffect(() => {
+    if (typeof window !== 'undefined' && user?.id && mountedRef.current) {
+      const filters = {
+        gridCols,
+        searchQuery,
+        showFavoritesOnly,
+        selectedCategories: Array.from(selectedCategories)
+      };
+      localStorage.setItem(`closet_filters_${user.id}`, JSON.stringify(filters));
+    }
+  }, [gridCols, searchQuery, showFavoritesOnly, selectedCategories, user?.id]);
 
   const toggleSelection = (id: string) => {
     setSelectedIds(prev => {
@@ -654,7 +693,7 @@ export default function ClosetPage() {
             >
               {loading ? (
                 <div className={`px-4 ${viewMode === 'grid'
-                  ? `grid grid-cols-${gridCols} md:grid-cols-${gridCols + 1} lg:grid-cols-${gridCols + 2} gap-3`
+                  ? getGridClasses(gridCols)
                   : 'space-y-3'
                   }`}>
                   {[...Array(8)].map((_, i) => (
@@ -670,7 +709,7 @@ export default function ClosetPage() {
                 />
               ) : (
                 <div className={`px-4 ${viewMode === 'grid'
-                  ? `grid grid-cols-${gridCols} md:grid-cols-${gridCols + 1} lg:grid-cols-${gridCols + 2} gap-3`
+                  ? getGridClasses(gridCols)
                   : 'space-y-3' // List View
                   }`}>
                   {(filteredContent as ClothingItemType[]).map((item) => (
@@ -797,7 +836,7 @@ export default function ClosetPage() {
             >
               {outfitsLoading ? (
                 <div className={`px-4 ${viewMode === 'grid'
-                  ? `grid grid-cols-${gridCols} md:grid-cols-${gridCols + 1} lg:grid-cols-${gridCols + 2} gap-4`
+                  ? getGridClasses(gridCols, true)
                   : 'space-y-4'
                   }`}>
                   {[...Array(6)].map((_, i) => (
@@ -822,7 +861,7 @@ export default function ClosetPage() {
                 />
               ) : (
                 <div className={`px-4 ${viewMode === 'grid'
-                  ? `grid grid-cols-${gridCols} md:grid-cols-${gridCols + 1} lg:grid-cols-${gridCols + 2} gap-4`
+                  ? getGridClasses(gridCols, true)
                   : 'space-y-4' // List for outfits
                   }`}>
                   {(filteredContent as Outfit[]).map((outfit) => (
@@ -939,7 +978,22 @@ export default function ClosetPage() {
             <div className="w-[calc(100vw-3rem)] max-w-sm bg-[var(--card-bg)] rounded-3xl border border-[var(--border-color)] shadow-2xl p-4 max-h-[70vh] overflow-auto">
               {/* Header */}
               <div className="flex items-center justify-between mb-4">
-                <span className="text-base font-bold text-[var(--foreground)]">Filtros</span>
+                <div className="flex items-center gap-3">
+                  <span className="text-base font-bold text-[var(--foreground)]">Filtros</span>
+                  {activeFilterCount > 0 && (
+                    <button
+                      onClick={() => {
+                        setSearchQuery('');
+                        setSelectedCategories(new Set());
+                        setShowFavoritesOnly(false);
+                        setGridCols(2);
+                      }}
+                      className="text-xs font-semibold text-[var(--brand-pink)] hover:underline"
+                    >
+                      Borrar filtros
+                    </button>
+                  )}
+                </div>
                 <motion.button
                   whileHover={{ scale: 1.1, rotate: 90 }}
                   whileTap={{ scale: 0.9 }}
