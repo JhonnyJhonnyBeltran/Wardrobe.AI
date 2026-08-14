@@ -359,12 +359,15 @@ export default function OutfitCalendar() {
                   
                   {/* Outfit Indicator */}
                   {hasOutfits && (
-                    <div className="flex items-center justify-center -space-x-1 sm:-space-x-1.5">
-                      {dayOutfits.slice(0, 3).map((_, idx) => (
-                        <div key={idx} className={`rounded-full shadow-sm border border-transparent p-1 scale-110 z-10 ${isToday ? 'bg-white text-[var(--brand-pink)]' : 'bg-[var(--brand-pink)] text-white'}`}>
-                           <Shirt className={`w-3 h-3 sm:w-4 sm:h-4 ${isToday ? 'fill-current' : ''}`} />
+                    <div className="relative flex items-center justify-center">
+                      <div className={`rounded-full shadow-sm p-1 sm:p-1.5 z-10 ${isToday ? 'bg-white text-[var(--brand-pink)]' : 'bg-[var(--brand-pink)] text-white'}`}>
+                         <Shirt className={`w-3 h-3 sm:w-4 sm:h-4 ${isToday ? 'fill-current' : ''}`} />
+                      </div>
+                      {dayOutfits.length > 1 && (
+                        <div className={`absolute -top-1.5 -right-1.5 sm:-top-2 sm:-right-2 w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center text-[9px] sm:text-[11px] font-bold z-20 shadow-sm border border-white dark:border-[#111] ${isToday ? 'bg-black text-white dark:bg-white dark:text-black' : 'bg-[var(--foreground)] text-[var(--background)]'}`}>
+                          {dayOutfits.length}
                         </div>
-                      ))}
+                      )}
                     </div>
                   )}
                 </button>
