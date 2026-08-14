@@ -1,6 +1,10 @@
 import type { Metadata, Viewport } from "next";
+import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
 import RootLayoutClient from "./RootLayoutClient";
+
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
 
 export const metadata: Metadata = {
   title: "Klozet - Tu Asistente de Moda IA",
@@ -33,7 +37,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" suppressHydrationWarning>
-      <body className="antialiased">
+      <body className={`${inter.variable} ${outfit.variable} antialiased`}>
         <RootLayoutClient>{children}</RootLayoutClient>
       </body>
     </html>

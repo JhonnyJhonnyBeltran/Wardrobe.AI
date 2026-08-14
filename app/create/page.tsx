@@ -22,12 +22,31 @@ import { MobileItemSelector } from '@/components/Creator/MobileItemSelector';
 import { supabase } from '@/lib/supabase/client';
 import { uploadImage, BUCKETS } from '@/lib/supabase/storage';
 import Image from 'next/image';
+import { useUiStore } from '@/store/uiStore';
+
+const OUTFIT_OCCASIONS = [
+    { id: 'casual', label: 'Casual', icon: Circle },
+    { id: 'everyday', label: 'Diario', icon: Sparkles },
+    { id: 'business', label: 'Negocios', icon: Briefcase },
+    { id: 'formal', label: 'Formal', icon: Briefcase },
+    { id: 'party', label: 'Fiesta', icon: PartyPopper },
+    { id: 'sport', label: 'Deporte', icon: Zap },
+    { id: 'date', label: 'Cita', icon: Heart },
+    { id: 'streetwear', label: 'Streetwear', icon: Sparkles },
+    { id: 'vacation', label: 'Vacaciones', icon: Sparkles },
+    { id: 'evening', label: 'Noche', icon: Sparkles },
+    { id: 'wedding', label: 'Boda', icon: Sparkles },
+    { id: 'beach', label: 'Playa', icon: Sparkles },
+    { id: 'winter', label: 'Invierno', icon: Sparkles },
+    { id: 'summer', label: 'Verano', icon: Sparkles },
+];
 
 export default function CreateOutfitPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const outfitId = searchParams.get('outfitId');
     const { items: wardrobeItems } = useWardrobe();
+    const { setTabBarHidden } = useUiStore();
 
     // Mobile flow state: 'selection' | 'preview' - Skipped 'initial' as per request
     const [mobileStep, setMobileStep] = useState<'selection' | 'preview'>('selection');
@@ -630,17 +649,32 @@ export default function CreateOutfitPage() {
                                 )}
 
                                 {/* Next Button */}
-                                <div className="fixed bottom-0 left-0 right-0 p-4 bg-[var(--background)] z-40">
-                                    <Button
-                                        onClick={() => setMobileStep('preview')}
-                                        disabled={isEmpty}
-                                        glow={!isEmpty}
-                                        className="w-full rounded-full py-4 text-base font-semibold"
-                                    >
-                                        Siguiente ({totalSelected})
-                                        <ArrowRight className="w-5 h-5 ml-2" />
-                                    </Button>
-                                </div>
+                                <AnimatePresence>
+                                    {!isEmpty && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 50 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: 50 }}
+                                            className="fixed bottom-0 left-0 right-0 p-4 bg-[var(--background)] z-40"
+                                        >
+                                            <Button
+                                                onClick={() => setMobileStep('preview')}
+                                                glow={true}
+                                                className="w-full rounded-full py-4 text-base font-semibold overflow-hidden"
+                                            >
+                                                <motion.span
+                                                    key={totalSelected}
+                                                    initial={{ y: -20, opacity: 0 }}
+                                                    animate={{ y: 0, opacity: 1 }}
+                                                    className="inline-block"
+                                                >
+                                                    Siguiente ({totalSelected})
+                                                </motion.span>
+                                                <ArrowRight className="w-5 h-5 ml-2" />
+                                            </Button>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
                             </motion.div>
                         )}
 
@@ -670,15 +704,7 @@ export default function CreateOutfitPage() {
                                         Tipo de Outfit
                                     </label>
                                     <div className="flex flex-wrap gap-2">
-                                        {[
-                                            { id: 'casual', label: 'Casual', icon: Circle },
-                                            { id: 'everyday', label: 'Diario', icon: Sparkles },
-                                            { id: 'business', label: 'Negocios', icon: Briefcase },
-                                            { id: 'formal', label: 'Formal', icon: Briefcase },
-                                            { id: 'party', label: 'Fiesta', icon: PartyPopper },
-                                            { id: 'sport', label: 'Deporte', icon: Zap },
-                                            { id: 'date', label: 'Cita', icon: Heart },
-                                        ].map((occ) => {
+                                        {OUTFIT_OCCASIONS.map((occ) => {
                                             const Icon = occ.icon;
                                             return (
                                                 <button
@@ -719,26 +745,26 @@ export default function CreateOutfitPage() {
                                 </button>
 
                                 {/* Preview & Save Buttons */}
-                                <div className="fixed bottom-0 left-0 right-0 p-4 border-t border-[var(--border-color)] bg-[var(--background)]/80 backdrop-blur-md z-40 flex gap-3">
-                                    <Button
-                                        onClick={handlePreview}
-                                        disabled={isEmpty || previewLoading}
-                                        className="flex-1 rounded-full py-4 text-sm font-semibold bg-[var(--background)] border-2 border-[var(--brand-pink)] text-[var(--brand-pink)]"
-                                    >
-                                        <Eye className="w-5 h-5 mr-2" />
-                                        Preview
-                                    </Button>
-
-                                    <Button
-                                        onClick={handleSave}
-                                        disabled={isEmpty || !outfitName.trim()}
-                                        glow={!isEmpty && outfitName.trim().length > 0}
-                                        className="flex-1 rounded-full py-4 text-sm font-semibold"
-                                    >
-                                        <Save className="w-5 h-5 mr-2" />
-                                        Guardar
-                                    </Button>
-                                </div>
+                                <AnimatePresence>
+                                    {!isEmpty && outfitName.trim().length > 0 && outfitOccasion && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 50 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: 50 }}
+                                            className="fixed bottom-0 left-0 right-0 p-4 border-t border-[var(--border-color)] bg-[var(--background)]/80 backdrop-blur-md z-40 flex gap-3"
+                                        >
+                                            <Button
+                                                onClick={handleSave}
+                                                glow={true}
+                                                loading={loading}
+                                                className="w-full rounded-full py-4 text-sm font-semibold"
+                                            >
+                                                <Save className="w-5 h-5 mr-2" />
+                                                Guardar
+                                            </Button>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
                             </motion.div>
                         )}
                     </AnimatePresence>
@@ -834,15 +860,7 @@ export default function CreateOutfitPage() {
                                 Tipo de Outfit
                             </label>
                             <div className="flex flex-wrap gap-2">
-                                {[
-                                    { id: 'casual', label: 'Casual', icon: Circle },
-                                    { id: 'everyday', label: 'Diario', icon: Sparkles },
-                                    { id: 'business', label: 'Negocios', icon: Briefcase },
-                                    { id: 'formal', label: 'Formal', icon: Briefcase },
-                                    { id: 'party', label: 'Fiesta', icon: PartyPopper },
-                                    { id: 'sport', label: 'Deporte', icon: Zap },
-                                    { id: 'date', label: 'Cita', icon: Heart },
-                                ].map((occ) => {
+                                {OUTFIT_OCCASIONS.map((occ) => {
                                     const Icon = occ.icon;
                                     return (
                                         <button
@@ -862,7 +880,7 @@ export default function CreateOutfitPage() {
                             </div>
                         </div>
 
-                        {/* Canvas - Added border per request */}
+                        {/* Canvas */}
                         <div className="overflow-hidden shadow-lg bg-white border border-gray-200 rounded-2xl">
                             <FreeDragCanvas
                                 ref={canvasRef}
@@ -880,25 +898,25 @@ export default function CreateOutfitPage() {
                                 {totalSelected > 0 && <span className="text-[var(--brand-pink)]">¡Listo para guardar!</span>}
                             </div>
 
-                            <Button
-                                onClick={handlePreview}
-                                disabled={isEmpty || previewLoading}
-                                variant="outline"
-                                className="w-full rounded-2xl py-6 text-sm font-bold border-2 hover:bg-[var(--background-secondary)]"
-                            >
-                                <Eye className="w-4 h-4 mr-2" />
-                                {previewLoading ? 'Generando...' : 'Ver Preview Completa'}
-                            </Button>
-
-                            <Button
-                                onClick={handleSave}
-                                disabled={isEmpty || !outfitName.trim()}
-                                glow={!isEmpty && outfitName.trim().length > 0}
-                                className="w-full rounded-2xl py-6 text-sm font-bold shadow-lg shadow-pink-500/20"
-                            >
-                                <Save className="w-4 h-4 mr-2" />
-                                Guardar Outfit
-                            </Button>
+                            <AnimatePresence>
+                                {!isEmpty && outfitName.trim().length > 0 && outfitOccasion && (
+                                    <motion.div 
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        className="flex gap-3 pt-4 border-t border-[var(--border-color)]"
+                                    >
+                                        <Button
+                                            onClick={handleSave}
+                                            loading={loading}
+                                            className="flex-1 py-3 bg-[var(--brand-pink)] hover:bg-[#ff3377] text-white rounded-xl shadow-lg shadow-[var(--brand-pink)]/20 transition-all font-medium"
+                                        >
+                                            <Save className="w-4 h-4 mr-2" />
+                                            {outfitId ? 'Guardar Cambios' : 'Guardar Outfit'}
+                                        </Button>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
                         </div>
                     </div>
                 </div>
