@@ -242,71 +242,81 @@ export default function OutfitCalendar() {
 
   return (
     <div className="w-full flex flex-col pt-2 pb-12">
-      <div className="px-4 max-w-6xl mx-auto w-full">
+      <div className="px-4 max-w-6xl mx-auto w-full flex flex-col lg:flex-row gap-6 lg:gap-8 items-start">
         {/* Today's Outfit Highlight */}
-        {todayOutfits.length > 0 && (
-          <div className="mb-8">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="font-bold text-[var(--foreground)] text-xl flex items-center gap-2">
-                <Shirt className="w-6 h-6 text-[var(--brand-pink)]" />
-                Outfit de Hoy
-              </h3>
-              <Button onClick={() => setSelectedDate(new Date())} variant="outline" size="sm" className="rounded-full border-[var(--brand-pink)] text-[var(--brand-pink)] hover:bg-[var(--brand-pink)] hover:text-white">
-                <Plus className="w-4 h-4 mr-1" />
-                Añadir
-              </Button>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {todayOutfits.map((outfit) => (
-                <div key={`today-${outfit.calendar_id}`} className="bg-[var(--card-bg)] rounded-3xl border border-[var(--brand-pink)]/30 p-4 shadow-sm relative overflow-hidden flex flex-col sm:flex-row gap-4 hover:shadow-md transition-shadow">
-                  <button 
-                    onClick={() => handleRemoveAssignment(outfit.calendar_id)}
-                    className="absolute top-4 right-4 z-10 p-2 bg-red-100 text-red-500 rounded-full hover:bg-red-500 hover:text-white transition-colors"
-                    title="Quitar de hoy"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                  <div 
-                    onClick={() => setSelectedOutfitDetail(outfit)}
-                    className="cursor-pointer hover:opacity-90 transition-opacity shrink-0 flex items-center justify-center bg-[#f8f9fa] dark:bg-[#111] rounded-2xl border border-[var(--border-color)] overflow-hidden h-24 md:h-32 aspect-[4/5]"
-                  >
-                      {outfit.image_url ? (
-                        <img src={outfit.image_url} alt={outfit.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <span className="text-xs text-[var(--foreground-tertiary)]">Sin foto</span>
-                      )}
-                  </div>
-                  <div className="flex flex-col justify-center flex-1">
-                    <h4 
-                        className="font-bold text-[var(--foreground)] text-lg md:text-xl mb-1 cursor-pointer hover:text-[var(--brand-pink)] transition-colors"
-                        onClick={() => setSelectedOutfitDetail(outfit)}
+        <AnimatePresence mode="popLayout">
+          {todayOutfits.length > 0 && (
+            <motion.div 
+              layout
+              initial={{ opacity: 0, scale: 0.9, width: '100%' }}
+              animate={{ opacity: 1, scale: 1, width: '100%' }}
+              exit={{ opacity: 0, scale: 0.9, width: 0 }}
+              className="lg:w-1/3 lg:max-w-sm shrink-0 w-full mb-8 lg:mb-0"
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-bold text-[var(--foreground)] text-xl flex items-center gap-2">
+                  <Shirt className="w-6 h-6 text-[var(--brand-pink)]" />
+                  Outfit de Hoy
+                </h3>
+                <Button onClick={() => setSelectedDate(new Date())} variant="outline" size="sm" className="rounded-full border-[var(--brand-pink)] text-[var(--brand-pink)] hover:bg-[var(--brand-pink)] hover:text-white">
+                  <Plus className="w-4 h-4 mr-1" />
+                  Añadir
+                </Button>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
+                {todayOutfits.map((outfit) => (
+                  <div key={`today-${outfit.calendar_id}`} className="bg-[var(--card-bg)] rounded-3xl border border-[var(--border-color)] p-4 shadow-sm relative overflow-hidden flex flex-col gap-4 hover:shadow-md transition-shadow">
+                    <button 
+                      onClick={() => handleRemoveAssignment(outfit.calendar_id)}
+                      className="absolute top-4 right-4 z-10 p-2 bg-red-100 text-red-500 rounded-full hover:bg-red-500 hover:text-white transition-colors"
+                      title="Quitar de hoy"
                     >
-                        {outfit.name || 'Outfit sin nombre'}
-                    </h4>
-                    <p className="text-sm text-[var(--foreground-secondary)] mb-1">{outfit.items?.length || 0} prendas</p>
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                    <div 
+                      onClick={() => setSelectedOutfitDetail(outfit)}
+                      className="cursor-pointer hover:opacity-90 transition-opacity shrink-0 flex items-center justify-center bg-[#f8f9fa] dark:bg-[#111] rounded-2xl border border-[var(--border-color)] overflow-hidden w-full aspect-[4/5]"
+                    >
+                        {outfit.image_url ? (
+                          <img src={outfit.image_url} alt={outfit.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-xs text-[var(--foreground-tertiary)]">Sin foto</span>
+                        )}
+                    </div>
+                    <div className="flex flex-col justify-center flex-1 text-center mt-2">
+                      <h4 
+                          className="font-bold text-[var(--foreground)] text-lg md:text-xl mb-1 cursor-pointer hover:text-[var(--brand-pink)] transition-colors"
+                          onClick={() => setSelectedOutfitDetail(outfit)}
+                      >
+                          {outfit.name || 'Outfit sin nombre'}
+                      </h4>
+                      <p className="text-sm text-[var(--foreground-secondary)] mb-1">{outfit.items?.length || 0} prendas</p>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Calendar Section */}
+        <motion.div layout className="flex-1 w-full flex flex-col">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6 bg-[var(--card-bg)] p-4 rounded-3xl shadow-sm border border-[var(--border-color)]">
+            <button onClick={handlePrevMonth} className="p-2 rounded-full hover:bg-[var(--background-secondary)] text-[var(--foreground)] transition-colors">
+              <ChevronLeft className="w-6 h-6" />
+            </button>
+            <h2 className="text-xl font-bold text-[var(--foreground)] capitalize flex items-center gap-2">
+              <CalendarDays className="w-5 h-5 text-[var(--brand-pink)]" />
+              {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+            </h2>
+            <button onClick={handleNextMonth} className="p-2 rounded-full hover:bg-[var(--background-secondary)] text-[var(--foreground)] transition-colors">
+              <ChevronRight className="w-6 h-6" />
+            </button>
           </div>
-        )}
 
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6 bg-[var(--card-bg)] p-4 rounded-3xl shadow-sm border border-[var(--border-color)]">
-          <button onClick={handlePrevMonth} className="p-2 rounded-full hover:bg-[var(--background-secondary)] text-[var(--foreground)] transition-colors">
-            <ChevronLeft className="w-6 h-6" />
-          </button>
-          <h2 className="text-xl font-bold text-[var(--foreground)] capitalize flex items-center gap-2">
-            <CalendarDays className="w-5 h-5 text-[var(--brand-pink)]" />
-            {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
-          </h2>
-          <button onClick={handleNextMonth} className="p-2 rounded-full hover:bg-[var(--background-secondary)] text-[var(--foreground)] transition-colors">
-            <ChevronRight className="w-6 h-6" />
-          </button>
-        </div>
-
-        {/* Calendar Grid */}
-        <div className="bg-[var(--card-bg)] rounded-3xl p-4 sm:p-6 shadow-sm border border-[var(--border-color)]">
+          {/* Calendar Grid */}
+          <div className="bg-[var(--card-bg)] rounded-3xl p-4 sm:p-6 shadow-sm border border-[var(--border-color)]">
           {/* Days Header */}
           <div className="grid grid-cols-7 mb-4">
             {dayNames.map((day, i) => (
@@ -359,6 +369,7 @@ export default function OutfitCalendar() {
             })}
           </div>
         </div>
+        </motion.div>
       </div>
 
       {/* Day Details Modal */}
