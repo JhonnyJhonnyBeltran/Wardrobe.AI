@@ -266,17 +266,20 @@ export default function OutfitCalendar() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
                 {todayOutfits.map((outfit) => (
                   <div key={`today-${outfit.calendar_id}`} className="bg-[var(--card-bg)] rounded-3xl border border-[var(--border-color)] p-4 shadow-sm relative overflow-hidden flex flex-col gap-4 hover:shadow-md transition-shadow">
-                    <button 
-                      onClick={() => handleRemoveAssignment(outfit.calendar_id)}
-                      className="absolute top-4 right-4 z-10 p-2 bg-red-100 text-red-500 rounded-full hover:bg-red-500 hover:text-white transition-colors"
-                      title="Quitar de hoy"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
                     <div 
                       onClick={() => setSelectedOutfitDetail(outfit)}
-                      className="cursor-pointer hover:opacity-90 transition-opacity shrink-0 flex items-center justify-center bg-[#f8f9fa] dark:bg-[#111] rounded-2xl border border-[var(--border-color)] overflow-hidden w-full aspect-[4/5]"
+                      className="cursor-pointer hover:opacity-90 transition-opacity shrink-0 flex items-center justify-center bg-[#f8f9fa] dark:bg-[#111] rounded-2xl border border-[var(--border-color)] overflow-hidden w-full aspect-[4/5] relative"
                     >
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveAssignment(outfit.calendar_id);
+                          }}
+                          className="absolute top-3 right-3 z-10 p-2 bg-red-100/90 backdrop-blur-sm text-red-500 rounded-full hover:bg-red-500 hover:text-white transition-colors shadow-sm"
+                          title="Quitar de hoy"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                         {outfit.image_url ? (
                           <img src={outfit.image_url} alt={outfit.name} className="w-full h-full object-cover" />
                         ) : (
@@ -330,7 +333,7 @@ export default function OutfitCalendar() {
           <div className="grid grid-cols-7 gap-1 sm:gap-2">
             {/* Empty Offset Days */}
             {Array.from({ length: startOffset }).map((_, i) => (
-              <div key={`empty-${i}`} className="aspect-square sm:aspect-[3/2] md:aspect-[2/1] lg:aspect-[2.5/1] rounded-xl opacity-0" />
+              <div key={`empty-${i}`} className="aspect-square sm:aspect-[4/3] rounded-xl opacity-0" />
             ))}
             
             {/* Actual Days */}
@@ -344,22 +347,22 @@ export default function OutfitCalendar() {
                 <button
                   key={`day-${i}`}
                   onClick={() => setSelectedDate(dayDate)}
-                  className={`relative aspect-square sm:aspect-[3/2] md:aspect-[2/1] lg:aspect-[2.5/1] rounded-xl sm:rounded-2xl flex flex-col items-center justify-center transition-all ${
+                  className={`relative aspect-square sm:aspect-[4/3] rounded-xl sm:rounded-2xl flex flex-col items-center justify-center gap-1 sm:gap-1.5 p-1 sm:p-2 transition-all ${
                     isToday 
                       ? 'bg-[var(--brand-pink)] text-white shadow-lg' 
                       : 'hover:bg-[var(--background-secondary)] text-[var(--foreground)]'
                   } ${hasOutfits && !isToday ? 'border-2 border-[var(--brand-pink)]/30' : 'border border-transparent'}`}
                 >
-                  <span className={`text-sm sm:text-base font-medium ${isToday ? 'font-bold' : ''}`}>
+                  <span className={`text-sm sm:text-base font-medium leading-none ${isToday ? 'font-bold' : ''}`}>
                     {i + 1}
                   </span>
                   
                   {/* Outfit Indicator */}
                   {hasOutfits && (
-                    <div className="absolute bottom-2 sm:bottom-3 left-1/2 -translate-x-1/2 flex items-center justify-center -space-x-1 sm:-space-x-1.5">
+                    <div className="flex items-center justify-center -space-x-1 sm:-space-x-1.5">
                       {dayOutfits.slice(0, 3).map((_, idx) => (
-                        <div key={idx} className={`rounded-full shadow-sm border border-transparent p-1 sm:p-1.5 scale-110 z-10 ${isToday ? 'bg-white text-[var(--brand-pink)]' : 'bg-[var(--brand-pink)] text-white'}`}>
-                           <Shirt className={`w-4 h-4 sm:w-5 sm:h-5 ${isToday ? 'fill-current' : ''}`} />
+                        <div key={idx} className={`rounded-full shadow-sm border border-transparent p-1 scale-110 z-10 ${isToday ? 'bg-white text-[var(--brand-pink)]' : 'bg-[var(--brand-pink)] text-white'}`}>
+                           <Shirt className={`w-3 h-3 sm:w-4 sm:h-4 ${isToday ? 'fill-current' : ''}`} />
                         </div>
                       ))}
                     </div>
