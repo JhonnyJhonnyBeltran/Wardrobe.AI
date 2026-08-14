@@ -283,24 +283,7 @@ export default function OutfitCalendar() {
                     >
                         {outfit.name || 'Outfit sin nombre'}
                     </h4>
-                    <p className="text-sm text-[var(--foreground-secondary)] mb-3">{outfit.items?.length || 0} prendas</p>
-                    
-                    {/* Display small items */}
-                    {outfit.items && outfit.items.length > 0 && (
-                        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                            {outfit.items.map((item: any) => (
-                                <div 
-                                    key={item.id} 
-                                    onClick={() => setSelectedItemDetail(item)}
-                                    className="w-10 h-10 rounded-lg bg-[var(--background-secondary)] overflow-hidden flex-shrink-0 border border-[var(--border-color)] cursor-pointer hover:ring-2 hover:ring-[var(--brand-pink)] transition-all flex items-center justify-center"
-                                >
-                                    {item.image_url ? (
-                                        <img src={item.image_url} alt={item.name} className="w-full h-full object-cover scale-[0.8]" />
-                                    ) : null}
-                                </div>
-                            ))}
-                        </div>
-                    )}
+                    <p className="text-sm text-[var(--foreground-secondary)] mb-1">{outfit.items?.length || 0} prendas</p>
                   </div>
                 </div>
               ))}
@@ -458,23 +441,6 @@ export default function OutfitCalendar() {
                                 <p className="text-sm md:text-base text-[var(--foreground-secondary)]">{outfit.items?.length || 0} prendas</p>
                             </div>
                         </div>
-
-                        {/* Display small items */}
-                        {outfit.items && outfit.items.length > 0 && (
-                            <div className="flex gap-2 md:gap-4 overflow-x-auto pb-2 scrollbar-hide mt-2 md:mt-4">
-                                {outfit.items.map((item: any) => (
-                                    <div 
-                                        key={item.id} 
-                                        onClick={() => setSelectedItemDetail(item)}
-                                        className="w-12 h-12 md:w-20 md:h-20 rounded-lg md:rounded-xl bg-[var(--background-secondary)] overflow-hidden flex-shrink-0 border border-[var(--border-color)] cursor-pointer hover:ring-2 hover:ring-[var(--brand-pink)] transition-all"
-                                    >
-                                        {item.image_url ? (
-                                            <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
-                                        ) : null}
-                                    </div>
-                                ))}
-                            </div>
-                        )}
                       </div>
                     ))}
                   </div>
