@@ -19,14 +19,14 @@ export default function SystemModal() {
     const getIcon = () => {
         switch (type) {
             case 'success':
-                return <CheckCircle2 className="w-12 h-12 text-green-500" />;
+                return <CheckCircle2 className="w-12 h-12 text-[var(--brand-pink)]" />;
             case 'error':
-                return <AlertCircle className="w-12 h-12 text-red-500" />;
+                return <AlertCircle className="w-12 h-12 text-[var(--brand-pink)]" />;
             case 'warning':
             case 'confirm':
-                return <AlertTriangle className="w-12 h-12 text-amber-500" />;
+                return <AlertTriangle className="w-12 h-12 text-[var(--brand-pink)]" />;
             default:
-                return <Info className="w-12 h-12 text-blue-500" />;
+                return <Info className="w-12 h-12 text-[var(--brand-pink)]" />;
         }
     };
 
