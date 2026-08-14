@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, CalendarDays, X, Plus, Trash2, Shirt, Search } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CalendarDays, X, Plus, Trash2, Shirt, Search, Heart } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
 import { useUser } from '@/store';
 import { OutfitDetailModal } from '@/components/OutfitDetailModal';
@@ -23,6 +23,7 @@ export default function OutfitCalendar() {
   const { user } = useUser();
   const { showModal, setTabBarHidden } = useUiStore();
   const [outfitSearchQuery, setOutfitSearchQuery] = useState('');
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   
   const [currentDate, setCurrentDate] = useState(new Date());
   const [calendarData, setCalendarData] = useState<Record<string, any[]>>({});
@@ -136,10 +137,34 @@ export default function OutfitCalendar() {
   };
 
   const filteredPickerOutfits = useMemo(() => {
-    if (!outfitSearchQuery.trim()) return userOutfits;
-    const q = outfitSearchQuery.toLowerCase();
-    return userOutfits.filter(o => o.name?.toLowerCase().includes(q));
-  }, [userOutfits, outfitSearchQuery]);
+    let filtered = userOutfits;
+    if (showFavoritesOnly) {
+        filtered = filtered.filter(o => o.favorite);
+    }
+    if (outfitSearchQuery.trim()) {
+        const q = outfitSearchQuery.toLowerCase();
+        filtered = filtered.filter(o => o.name?.toLowerCase().includes(q));
+    }
+    return filtered;
+  }, [userOutfits, outfitSearchQuery, showFavoritesOnly]);
+
+  const toggleOutfitFavorite = async (outfit: Outfit, currentFav: boolean) => {
+    const newFav = !currentFav;
+    setUserOutfits(prev => prev.map(o => o.id === outfit.id ? { ...o, favorite: newFav } : o));
+    
+    try {
+        const { error } = await (supabase as any)
+            .from('outfits')
+            .update({ favorite: newFav })
+            .eq('id', outfit.id);
+            
+        if (error) throw error;
+    } catch (err) {
+        console.error('Error toggling favorite:', err);
+        // Revert on error
+        setUserOutfits(prev => prev.map(o => o.id === outfit.id ? { ...o, favorite: currentFav } : o));
+    }
+  };
 
   useEffect(() => {
     if (window.innerWidth < 768) {
@@ -501,15 +526,23 @@ export default function OutfitCalendar() {
             </div>
 
             <div className="flex-1 overflow-y-auto p-4">
-              <div className="mb-6 relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--foreground-tertiary)]" />
-                <input
-                  type="text"
-                  placeholder="Buscar outfit..."
-                  value={outfitSearchQuery}
-                  onChange={(e) => setOutfitSearchQuery(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 bg-[var(--background-secondary)] rounded-2xl text-[var(--foreground)] outline-none border border-transparent focus:border-[var(--brand-pink)]/30 transition-all placeholder-[var(--foreground-tertiary)] font-medium"
-                />
+              <div className="mb-6 flex items-center gap-3 relative">
+                <div className="relative flex-1">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--foreground-tertiary)]" />
+                  <input
+                    type="text"
+                    placeholder="Buscar outfit..."
+                    value={outfitSearchQuery}
+                    onChange={(e) => setOutfitSearchQuery(e.target.value)}
+                    className="w-full pl-12 pr-4 py-3 bg-[var(--background-secondary)] rounded-2xl text-[var(--foreground)] outline-none border border-transparent focus:border-[var(--brand-pink)]/30 transition-all placeholder-[var(--foreground-tertiary)] font-medium"
+                  />
+                </div>
+                <button 
+                    onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+                    className={`p-3 rounded-2xl flex-shrink-0 transition-colors border ${showFavoritesOnly ? 'bg-[var(--brand-pink)]/10 border-[var(--brand-pink)]/30' : 'bg-[var(--background-secondary)] border-transparent'}`}
+                >
+                    <Heart className={`w-5 h-5 transition-colors ${showFavoritesOnly ? 'fill-[var(--brand-pink)] text-[var(--brand-pink)]' : 'text-[var(--foreground-secondary)]'}`} />
+                </button>
               </div>
 
               {outfitsLoading ? (
@@ -536,6 +569,7 @@ export default function OutfitCalendar() {
                           onEdit={() => {}}
                           onShare={() => {}}
                           onDelete={() => {}}
+                          onToggleFavorite={toggleOutfitFavorite}
                         />
                     </div>
                   ))}

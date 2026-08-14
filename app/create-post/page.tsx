@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Shirt, Layers, Camera, Check, Plus, Image as ImageIcon, X, ChevronRight, Edit2, Search } from 'lucide-react';
+import { ArrowLeft, Shirt, Layers, Camera, Check, Plus, Image as ImageIcon, X, ChevronRight, Edit2, Search, Heart } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';
 import Image from 'next/image';
@@ -25,12 +25,37 @@ export default function CreatePostPage() {
     const [userOutfits, setUserOutfits] = useState<any[]>([]);
     const [loadingOutfits, setLoadingOutfits] = useState(false);
     const [outfitSearchQuery, setOutfitSearchQuery] = useState('');
+    const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
 
     const filteredOutfits = useMemo(() => {
-        if (!outfitSearchQuery.trim()) return userOutfits;
-        const q = outfitSearchQuery.toLowerCase();
-        return userOutfits.filter(o => o.name?.toLowerCase().includes(q));
-    }, [userOutfits, outfitSearchQuery]);
+        let filtered = userOutfits;
+        if (showFavoritesOnly) {
+            filtered = filtered.filter(o => o.favorite);
+        }
+        if (outfitSearchQuery.trim()) {
+            const q = outfitSearchQuery.toLowerCase();
+            filtered = filtered.filter(o => o.name?.toLowerCase().includes(q));
+        }
+        return filtered;
+    }, [userOutfits, outfitSearchQuery, showFavoritesOnly]);
+
+    const toggleOutfitFavorite = async (outfit: any, currentFav: boolean) => {
+        const newFav = !currentFav;
+        setUserOutfits(prev => prev.map(o => o.id === outfit.id ? { ...o, favorite: newFav } : o));
+        
+        try {
+            const { error } = await (supabase as any)
+                .from('outfits')
+                .update({ favorite: newFav })
+                .eq('id', outfit.id);
+                
+            if (error) throw error;
+        } catch (err) {
+            console.error('Error toggling favorite:', err);
+            // Revert on error
+            setUserOutfits(prev => prev.map(o => o.id === outfit.id ? { ...o, favorite: currentFav } : o));
+        }
+    };
 
     // Image State
     const [realImage, setRealImage] = useState<string | null>(null); // Preview URL
@@ -367,15 +392,23 @@ export default function CreatePostPage() {
                 {/* SELECT OUTFIT MODE */}
                 {mode === 'select-outfit' && (
                     <div className="flex-1 flex flex-col p-4 max-w-4xl mx-auto w-full pb-20">
-                        <div className="mb-6 relative">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--foreground-tertiary)]" />
-                            <input
-                                type="text"
-                                placeholder="Buscar outfit..."
-                                value={outfitSearchQuery}
-                                onChange={(e) => setOutfitSearchQuery(e.target.value)}
-                                className="w-full pl-12 pr-4 py-3 bg-[var(--background-secondary)] rounded-2xl text-[var(--foreground)] outline-none border border-transparent focus:border-[var(--brand-pink)]/30 transition-all placeholder-[var(--foreground-tertiary)] font-medium"
-                            />
+                        <div className="mb-6 flex items-center gap-3 relative">
+                            <div className="relative flex-1">
+                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--foreground-tertiary)]" />
+                                <input
+                                    type="text"
+                                    placeholder="Buscar outfit..."
+                                    value={outfitSearchQuery}
+                                    onChange={(e) => setOutfitSearchQuery(e.target.value)}
+                                    className="w-full pl-12 pr-4 py-3 bg-[var(--background-secondary)] rounded-2xl text-[var(--foreground)] outline-none border border-transparent focus:border-[var(--brand-pink)]/30 transition-all placeholder-[var(--foreground-tertiary)] font-medium"
+                                />
+                            </div>
+                            <button 
+                                onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+                                className={`p-3 rounded-2xl flex-shrink-0 transition-colors border ${showFavoritesOnly ? 'bg-[var(--brand-pink)]/10 border-[var(--brand-pink)]/30' : 'bg-[var(--background-secondary)] border-transparent'}`}
+                            >
+                                <Heart className={`w-5 h-5 transition-colors ${showFavoritesOnly ? 'fill-[var(--brand-pink)] text-[var(--brand-pink)]' : 'text-[var(--foreground-secondary)]'}`} />
+                            </button>
                         </div>
 
                         {loadingOutfits ? (
@@ -397,6 +430,7 @@ export default function CreatePostPage() {
                                             onEdit={() => {}}
                                             onShare={() => {}}
                                             onDelete={() => {}}
+                                            onToggleFavorite={toggleOutfitFavorite}
                                         />
                                     </div>
                                 ))}
