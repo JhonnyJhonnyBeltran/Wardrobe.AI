@@ -647,6 +647,11 @@ export default function CreateOutfitPage() {
                                                             : 'ring-1 ring-inset ring-[var(--border-color)]'
                                                             }`}
                                                     >
+                                                        {item.favorite && (
+                                                            <div className="absolute top-2 right-2 z-10 text-[var(--brand-pink)] bg-white/80 dark:bg-black/80 rounded-full p-1 backdrop-blur-sm shadow-sm">
+                                                                <Heart className="w-3.5 h-3.5 fill-current" />
+                                                            </div>
+                                                        )}
                                                         <div className="flex-1 w-full relative bg-transparent flex items-center justify-center">
                                                             <img
                                                                 src={item.imageUrl}
@@ -861,6 +866,11 @@ export default function CreateOutfitPage() {
                                                     : 'ring-1 ring-inset ring-[var(--border-color)]'
                                                     }`}
                                             >
+                                                {item.favorite && (
+                                                    <div className="absolute top-2 right-2 z-10 text-[var(--brand-pink)] bg-white/80 dark:bg-black/80 rounded-full p-1.5 backdrop-blur-sm shadow-sm">
+                                                        <Heart className="w-4 h-4 fill-current" />
+                                                    </div>
+                                                )}
                                                 <div className="flex-1 w-full relative bg-transparent flex items-center justify-center">
                                                     <img
                                                         src={item.imageUrl}
