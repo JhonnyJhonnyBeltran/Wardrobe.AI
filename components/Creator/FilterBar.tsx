@@ -119,7 +119,7 @@ export function FilterBar({
                     </button>
 
                     {showColorPicker && (
-                        <div className="absolute top-full mt-2 left-0 bg-[var(--card-bg)] rounded-xl border border-[var(--border-color)] shadow-lg p-3 z-10 min-w-[200px]">
+                        <div className="absolute top-full mt-2 left-0 bg-[var(--card-bg)] rounded-xl border border-[var(--border-color)] shadow-lg p-3 z-50 min-w-[200px] max-h-[300px] overflow-y-auto custom-scrollbar">
                             <div className="grid grid-cols-4 gap-2">
                                 {COLORS.map((color) => {
                                     const isSelected = selectedColors.includes(color.value);
@@ -175,7 +175,7 @@ export function FilterBar({
                     </button>
 
                     {showTypePicker && (
-                        <div className="absolute top-full mt-2 left-0 bg-[var(--card-bg)] rounded-xl border border-[var(--border-color)] shadow-lg p-2 z-10 min-w-[140px]">
+                        <div className="absolute top-full mt-2 left-0 bg-[var(--card-bg)] rounded-xl border border-[var(--border-color)] shadow-lg p-2 z-50 min-w-[140px] max-h-[300px] overflow-y-auto custom-scrollbar">
                             {TYPES.map((type) => {
                                 const isSelected = selectedTypes.includes(type);
                                 const isTodos = type === 'Todos';
