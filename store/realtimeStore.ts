@@ -75,19 +75,59 @@ export const useRealtimeStore = create<RealtimeStore>((set, get) => ({
     const lastViewed = typeof window !== 'undefined' ? localStorage.getItem('last_viewed_activity') : null;
     const lastViewedDate = lastViewed ? new Date(lastViewed) : new Date(0); // Epoch if never viewed
 
-    // 2. Count new follows
+    // 2. Count new activity (Follows, Likes, Comments)
     const { supabase } = await import('@/lib/supabase/client');
 
-    // Check follows created after lastViewedDate
-    const { count, error } = await supabase
-      .from('follows')
-      .select('*', { count: 'exact', head: true })
-      .eq('following_id', userId)
-      .gt('created_at', lastViewedDate.toISOString());
+    try {
+      // First, get all my posts to check for likes and comments
+      const { data: myPosts } = await supabase
+        .from('posts')
+        .select('id')
+        .eq('user_id', userId);
 
-    let totalUnread = count || 0;
+      const myPostIds = myPosts ? myPosts.map(p => p.id) : [];
 
-    set({ unreadCount: totalUnread });
+      const promises: Promise<any>[] = [
+        // Check follows
+        supabase
+          .from('follows')
+          .select('*', { count: 'exact', head: true })
+          .eq('following_id', userId)
+          .gt('created_at', lastViewedDate.toISOString())
+      ];
+
+      if (myPostIds.length > 0) {
+        // Check likes
+        promises.push(
+          supabase
+            .from('likes')
+            .select('*', { count: 'exact', head: true })
+            .in('post_id', myPostIds)
+            .neq('user_id', userId)
+            .gt('created_at', lastViewedDate.toISOString())
+        );
+
+        // Check comments
+        promises.push(
+          supabase
+            .from('comments' as any)
+            .select('*', { count: 'exact', head: true })
+            .in('post_id', myPostIds)
+            .neq('user_id', userId)
+            .gt('created_at', lastViewedDate.toISOString())
+        );
+      }
+
+      const results = await Promise.all(promises);
+      let totalUnread = 0;
+      results.forEach(res => {
+        if (res.count) totalUnread += res.count;
+      });
+
+      set({ unreadCount: totalUnread });
+    } catch (err) {
+      console.error('Error checking activity:', err);
+    }
   },
 
   markActivityAsViewed: (timestampISO?: string) => {

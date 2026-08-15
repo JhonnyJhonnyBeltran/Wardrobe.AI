@@ -7,7 +7,8 @@ import { useUser } from '@/store/userStore';
 import { useRealtimeStore } from '@/store/realtimeStore';
 import Image from 'next/image';
 import { supabase } from '@/lib/supabase/client';
-import { getRecentFollowActivity, followUser, unfollowUser, getMyFollowStatusMap, getFollowStatus } from '@/lib/services/followService';
+import { getRecentFollowActivity, getMyFollowStatusMap } from '@/lib/services/followService';
+import { getSmartSuggestions } from '@/lib/services/suggestionService';
 import { LogoMark, Avatar } from '@/components';
 import Link from 'next/link';
 import { useWardrobe } from '@/lib/hooks/useWardrobe';
@@ -36,9 +37,18 @@ interface NotificationListProps {
 }
 
 export default function NotificationList({ compact = false, onClose }: NotificationListProps) {
-    const { user } = useUser();
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [loading, setLoading] = useState(true);
+
+    const NotificationSkeleton = () => (
+        <div className="flex items-start gap-4 p-4 rounded-3xl bg-[var(--background)]/50 border border-[var(--border-color)]/30 animate-pulse">
+            <div className="w-12 h-12 rounded-full bg-[var(--background-secondary)] shrink-0" />
+            <div className="flex-1 space-y-2">
+                <div className="h-4 bg-[var(--background-secondary)] rounded w-3/4" />
+                <div className="h-3 bg-[var(--background-secondary)] rounded w-1/2" />
+            </div>
+        </div>
+    );
     const markActivityAsViewed = useRealtimeStore(state => state.markActivityAsViewed);
     const { items: wardrobeItems } = useWardrobe(); // For Create Outfit check
     const [followMap, setFollowMap] = useState<Record<string, string>>({}); // Track follow status
@@ -98,34 +108,9 @@ export default function NotificationList({ compact = false, onClose }: Notificat
                 return `hace ${diffInYears} ${diffInYears === 1 ? 'año' : 'años'}`;
             };
 
-            // 1. System Notification - Every 9 days logic
-            const lastMsgDate = localStorage.getItem('last_klozet_msg_date');
-            const dismissedMsgId = localStorage.getItem('dismissed_system_msg_id');
-            const nineDaysMs = 9 * 24 * 60 * 60 * 1000;
-            const currentSystemMsgId = `sys-${Math.floor(now.getTime() / nineDaysMs)}`;
-
-            let shouldShowSystemMsg = false;
-            if (dismissedMsgId !== currentSystemMsgId) {
-                if (!lastMsgDate) {
-                    shouldShowSystemMsg = true;
-                } else {
-                    const last = new Date(lastMsgDate);
-                    if (now.getTime() - last.getTime() > nineDaysMs) {
-                        shouldShowSystemMsg = true;
-                    }
-                }
-            }
-
-            if (shouldShowSystemMsg) {
-                realNotifications.push({
-                    id: currentSystemMsgId,
-                    type: 'system',
-                    content: '¡Hola! Han pasado unos días. ¿Qué tal si subes tu outfit de hoy o le pides consejo a Kloe?',
-                    time: 'Justo ahora',
-                    timestamp: now.getTime(),
-                    actor: { id: 'system', username: 'klozet', name: 'Klozet', avatar: '' }
-                });
-            }
+            // 1. Obtener sugerencias inteligentes
+            const smartSuggestions = await getSmartSuggestions(user.id);
+            realNotifications.push(...smartSuggestions);
 
             // 2. Fetch Follows (Real Data)
             try {
@@ -301,17 +286,18 @@ export default function NotificationList({ compact = false, onClose }: Notificat
 
     const hasSystem = notifications.some(n => n.type === 'system');
     const activityNotifications = notifications.filter(n => n.type !== 'system');
-    const isEmpty = notifications.length === 0;
 
     if (loading) {
         return (
-            <div className="flex-1 flex items-center justify-center p-8">
-                <div className="w-8 h-8 rounded-full border-2 border-[var(--brand-pink)] border-t-transparent animate-spin" />
+            <div className={`space-y-4 flex-1 w-full ${compact ? 'p-2' : 'p-4'}`}>
+                {Array.from({ length: 4 }).map((_, i) => (
+                    <NotificationSkeleton key={i} />
+                ))}
             </div>
         );
     }
 
-    if (isEmpty) {
+    if (notifications.length === 0) {
         return (
             <div className="flex-1 flex flex-col items-center justify-center text-center p-8 gap-4 min-h-[50vh]">
                 <div className="w-16 h-16 rounded-full bg-[var(--background-secondary)] flex items-center justify-center text-[var(--foreground-tertiary)]">
