@@ -93,7 +93,7 @@ export const useRealtimeStore = create<RealtimeStore>((set, get) => ({
           .from('follows')
           .select('*', { count: 'exact', head: true })
           .eq('following_id', userId)
-          .gt('created_at', lastViewedDate.toISOString())
+          .gt('created_at', lastViewedDate.toISOString()) as unknown as Promise<any>
       ];
 
       if (myPostIds.length > 0) {
@@ -104,7 +104,7 @@ export const useRealtimeStore = create<RealtimeStore>((set, get) => ({
             .select('*', { count: 'exact', head: true })
             .in('post_id', myPostIds)
             .neq('user_id', userId)
-            .gt('created_at', lastViewedDate.toISOString())
+            .gt('created_at', lastViewedDate.toISOString()) as unknown as Promise<any>
         );
 
         // Check comments
@@ -114,7 +114,7 @@ export const useRealtimeStore = create<RealtimeStore>((set, get) => ({
             .select('*', { count: 'exact', head: true })
             .in('post_id', myPostIds)
             .neq('user_id', userId)
-            .gt('created_at', lastViewedDate.toISOString())
+            .gt('created_at', lastViewedDate.toISOString()) as unknown as Promise<any>
         );
       }
 
