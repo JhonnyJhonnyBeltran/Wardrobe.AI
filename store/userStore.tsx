@@ -37,79 +37,100 @@ export function UserProvider({ children }: { children: ReactNode }) {
   // Fetch user profile from DB
   const fetchUserProfile = useCallback(async (authUser: SupabaseUser) => {
     try {
-      // 1. Try to fetch from 'profiles' (Social/New table)
-      const { data: profileResult, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', authUser.id)
-        .maybeSingle();
-
-      let profile = profileResult as any;
-
-      // 2. Try to fetch from 'users' (Legacy table) if needed
-      let legacyProfile = null;
-      if (!profile) {
-        const { data: lp } = await supabase
-          .from('users')
+      // Wrapper promise to enforce a maximum execution time (e.g. 10s)
+      const fetchPromise = (async () => {
+        // 1. Try to fetch from 'profiles' (Social/New table)
+        const { data: profileResult, error: profileError } = await supabase
+          .from('profiles')
           .select('*')
           .eq('id', authUser.id)
           .maybeSingle();
-        legacyProfile = lp as any;
-        
-        // 2.5 Fallback by email for unlinked identities
-        if (!legacyProfile && authUser.email) {
-          const { data: emailLp } = await supabase
+
+        let profile = profileResult as any;
+
+        // 2. Try to fetch from 'users' (Legacy table) if needed
+        let legacyProfile = null;
+        if (!profile) {
+          const { data: lp } = await supabase
             .from('users')
             .select('*')
-            .eq('email', authUser.email)
-            .limit(1)
+            .eq('id', authUser.id)
             .maybeSingle();
-          legacyProfile = emailLp as any;
+          legacyProfile = lp as any;
+          
+          // 2.5 Fallback by email for unlinked identities
+          if (!legacyProfile && authUser.email) {
+            const { data: emailLp } = await supabase
+              .from('users')
+              .select('*')
+              .eq('email', authUser.email)
+              .limit(1)
+              .maybeSingle();
+            legacyProfile = emailLp as any;
+          }
         }
-      }
 
-      // 3. Construct user object
-      // Priority: Profile (New) -> Users (Old) -> Auth Metadata -> Email
-      const name = profile?.full_name || legacyProfile?.name || authUser.user_metadata?.name || authUser.email!.split('@')[0];
-      const avatar = profile?.avatar_url || legacyProfile?.avatar || authUser.user_metadata?.avatar_url;
-      const username = profile?.username;
+        // 3. Construct user object
+        // Priority: Profile (New) -> Users (Old) -> Auth Metadata -> Email
+        const name = profile?.full_name || legacyProfile?.name || authUser.user_metadata?.name || authUser.email!.split('@')[0];
+        const avatar = profile?.avatar_url || legacyProfile?.avatar || authUser.user_metadata?.avatar_url;
+        const username = profile?.username;
 
-      // Get subscription tier from profile or legacy
-      const subscriptionTier = (profile?.subscription_tier || legacyProfile?.subscription_tier || 'free') as SubscriptionTier;
+        // Get subscription tier from profile or legacy
+        const subscriptionTier = (profile?.subscription_tier || legacyProfile?.subscription_tier || 'free') as SubscriptionTier;
 
-      // Style preferences
-      // Check both tables, prefer 'profiles'
-      const styleSource = profile || legacyProfile || {};
+        // Style preferences
+        // Check both tables, prefer 'profiles'
+        const styleSource = profile || legacyProfile || {};
 
-      setUser({
-        id: authUser.id,
-        email: authUser.email!,
-        name: name,
-        username: username,
-        bio: profile?.bio,
-        avatar: avatar,
-        subscriptionTier: subscriptionTier,
-        createdAt: new Date(authUser.created_at || Date.now()),
+        setUser({
+          id: authUser.id,
+          email: authUser.email!,
+          name: name,
+          username: username,
+          bio: profile?.bio,
+          avatar: avatar,
+          subscriptionTier: subscriptionTier,
+          createdAt: new Date(authUser.created_at || Date.now()),
 
-        // Morph/Color
-        morphology: styleSource.morphology,
-        colorimetry: styleSource.colorimetry,
+          // Morph/Color
+          morphology: styleSource.morphology,
+          colorimetry: styleSource.colorimetry,
 
-        // Style Profile
-        ageRange: styleSource.age_range,
-        gender: styleSource.gender,
-        height: styleSource.height,
-        heightRange: styleSource.height_range,
-        preferredStyles: styleSource.preferred_styles,
-        usesAccessories: styleSource.uses_accessories,
-        visualStylePreferences: styleSource.visual_style_preferences,
-        styleCompleted: styleSource.style_completed || false,
-      });
+          // Style Profile
+          ageRange: styleSource.age_range,
+          gender: styleSource.gender,
+          height: styleSource.height,
+          heightRange: styleSource.height_range,
+          preferredStyles: styleSource.preferred_styles,
+          usesAccessories: styleSource.uses_accessories,
+          visualStylePreferences: styleSource.visual_style_preferences,
+          styleCompleted: styleSource.style_completed || false,
+        });
+      })();
 
+      const timeoutPromise = new Promise<void>((_, reject) => 
+        setTimeout(() => reject(new Error('fetchUserProfile timeout reached')), 12000)
+      );
+
+      await Promise.race([fetchPromise, timeoutPromise]);
     } catch (error) {
       console.error('Error fetching user profile:', error);
+      // Fallback: If DB fetch fails, at least populate with authUser so app doesn't hang in unauthorized state
+      if (!user) {
+        setUser({
+          id: authUser.id,
+          email: authUser.email || '',
+          name: authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'User',
+          username: undefined,
+          avatar: authUser.user_metadata?.avatar_url,
+          subscriptionTier: 'free',
+          createdAt: new Date(authUser.created_at || Date.now()),
+          styleCompleted: false,
+        });
+      }
     }
-  }, []);
+  }, [user]);
 
   // Helper to persist login status hint
   const updateLoginHint = (isLoggedIn: boolean) => {
@@ -123,10 +144,31 @@ export function UserProvider({ children }: { children: ReactNode }) {
   };
 
   const refreshProfile = useCallback(async () => {
-    // ALWAYS use getUser() to validate session on the server
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      await fetchUserProfile(user);
+    try {
+      // ALWAYS use getUser() to validate session on the server, but with a timeout
+      const getUserPromise = supabase.auth.getUser();
+      const timeoutPromise = new Promise<{data: {user: null}}>((resolve) => 
+        setTimeout(() => {
+          console.warn('[UserStore] refreshProfile supabase.auth.getUser() timed out');
+          resolve({ data: { user: null } });
+        }, 8000)
+      );
+
+      const { data: { user } } = await Promise.race([getUserPromise, timeoutPromise]);
+      
+      if (user) {
+        // Also race the fetchUserProfile
+        const fetchPromise = fetchUserProfile(user);
+        const fetchTimeout = new Promise<void>((resolve) => 
+          setTimeout(() => {
+            console.warn('[UserStore] refreshProfile fetchUserProfile timed out');
+            resolve();
+          }, 8000)
+        );
+        await Promise.race([fetchPromise, fetchTimeout]);
+      }
+    } catch (err) {
+      console.error('[UserStore] Error in refreshProfile:', err);
     }
   }, [fetchUserProfile]);
 
