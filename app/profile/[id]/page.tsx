@@ -52,7 +52,7 @@ export default function PublicProfilePage() {
   const [isBlocking, setIsBlocking] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [outfits, setOutfits] = useState<any[]>([]);
-  const isMutual = isFollowedByMe && followStatus === 'accepted';
+  // isMutual removed as outfits are now public
 
   // Stats
   const [profileStats, setProfileStats] = useState({
@@ -129,22 +129,14 @@ export default function PublicProfilePage() {
         const blocked = await followService.isBlocked(currentUser.id, profileId);
         setIsBlocked(blocked);
 
-        // 6. Fetch Outfits if mutual
-        if (status === 'accepted') {
-          // Check if it's mutual by getting if they follow us
-          const mutualStatus = await followService.getFollowStatus(profileId, currentUser.id);
-          setIsFollowedByMe(mutualStatus === 'accepted');
-
-          if (mutualStatus === 'accepted') {
-            const { data: outfitsData } = await supabase
-              .from('outfits')
-              .select('*')
-              .eq('user_id', profileId)
-              .order('created_at', { ascending: false });
-            
-            setOutfits(outfitsData || []);
-          }
-        }
+        // 6. Fetch Outfits unconditionally (public profiles)
+        const { data: outfitsData } = await supabase
+          .from('outfits')
+          .select('*')
+          .eq('user_id', profileId)
+          .order('created_at', { ascending: false });
+        
+        setOutfits(outfitsData || []);
       }
 
     } catch (error) {
@@ -440,17 +432,15 @@ export default function PublicProfilePage() {
             >
               <Grid3x3 className={`w-6 h-6 ${activeTab === 'posts' ? 'text-[var(--brand-pink)]' : ''}`} />
             </button>
-            {isMutual && (
-              <button
-                onClick={() => setActiveTab('outfits')}
-                className={`flex-1 flex items-center justify-center py-3 border-b-2 transition-colors ${activeTab === 'outfits'
-                  ? 'border-[var(--brand-pink)] text-[var(--foreground)]'
-                  : 'border-transparent text-[var(--foreground-tertiary)]'
-                  }`}
-              >
-                <span className={`text-xl ${activeTab === 'outfits' ? '' : 'grayscale opacity-60'}`}>👗</span>
-              </button>
-            )}
+            <button
+              onClick={() => setActiveTab('outfits')}
+              className={`flex-1 flex items-center justify-center py-3 border-b-2 transition-colors ${activeTab === 'outfits'
+                ? 'border-[var(--brand-pink)] text-[var(--foreground)]'
+                : 'border-transparent text-[var(--foreground-tertiary)]'
+                }`}
+            >
+              <span className={`text-xl ${activeTab === 'outfits' ? '' : 'grayscale opacity-60'}`}>👗</span>
+            </button>
           </div>
         </div>
 
@@ -507,24 +497,27 @@ export default function PublicProfilePage() {
                     <p className="text-[var(--foreground-secondary)]">Este usuario aún no ha creado ningún outfit.</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-3 gap-0.5">
                     {outfits.map((outfit) => (
                       <Link
                         key={outfit.id}
-                        href={`/outfit/${outfit.id}`}
-                        className="bg-[var(--background-secondary)] rounded-2xl p-4 flex flex-col gap-2 transition-transform duration-300 hover:-translate-y-1 hover:shadow-xl group"
+                        href={`/outfits/${outfit.id}`}
+                        className="aspect-square bg-[var(--background-secondary)] relative block z-0 transition-all duration-300 hover:scale-[1.05] hover:z-10 hover:shadow-xl hover:rounded-md group"
                       >
-                        <div className="aspect-[3/4] rounded-xl overflow-hidden bg-[var(--background)] flex items-center justify-center border border-[var(--border-color)]">
-                           {/* Simple Outfit preview with the first 4 items or a placeholder icon */}
-                           {outfit.items && Array.isArray(outfit.items) && outfit.items.length > 0 ? (
-                             <div className="w-full h-full relative">
-                                <img src={outfit.items[0]?.image_url || '/placeholder.png'} alt="Outfit item" className="w-full h-full object-cover" />
-                             </div>
-                           ) : (
-                             <span className="text-4xl group-hover:scale-110 transition-transform duration-300">👗</span>
-                           )}
+                        {outfit.items && Array.isArray(outfit.items) && outfit.items.length > 0 ? (
+                          <img
+                            src={outfit.items[0]?.image_url || '/placeholder.png'}
+                            alt="Outfit item"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-[var(--background)]">
+                            <span className="text-4xl group-hover:scale-110 transition-transform duration-300">👗</span>
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <span className="text-white text-xs font-bold truncate px-2 max-w-full">{outfit.name || 'Outfit guardado'}</span>
                         </div>
-                        <h4 className="font-semibold text-sm truncate px-1 mt-1">{outfit.name || 'Outfit guardado'}</h4>
                       </Link>
                     ))}
                   </div>
