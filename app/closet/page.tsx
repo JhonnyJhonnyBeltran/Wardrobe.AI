@@ -595,17 +595,24 @@ export default function ClosetPage() {
           {/* Top Actions: Create & AI */}
           <div className="bg-[var(--card-bg)] p-2 rounded-2xl flex items-center gap-2">
             <Link href="/create" className="flex-1">
-              <button className="w-full py-3 px-4 rounded-xl bg-[var(--foreground)] text-[var(--background)] font-bold flex items-center justify-center gap-2 shadow-md hover:opacity-90 transition-opacity">
+              <motion.button 
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full py-3 px-4 rounded-xl bg-[var(--foreground)] text-[var(--background)] font-bold flex items-center justify-center gap-2 shadow-md hover:opacity-90 transition-opacity"
+              >
                 <Plus className="w-5 h-5" />
                 Crear Outfit
-              </button>
+              </motion.button>
             </Link>
             <Link href="/premium" className="flex-1">
-              <button className="w-full py-3 px-4 rounded-xl bg-[var(--background-secondary)] text-[var(--foreground-secondary)] font-semibold flex items-center justify-center gap-2 border border-[var(--border-color)] relative overflow-hidden group">
-                <Wand2 className="w-5 h-5" />
+              <motion.button 
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full py-3 px-4 rounded-xl bg-[var(--background-secondary)] text-[var(--foreground-secondary)] font-semibold flex items-center justify-center gap-2 border border-[var(--border-color)] relative overflow-hidden group hover:border-[var(--brand-pink)]/50 transition-all"
+              >
+                <Wand2 className="w-5 h-5 group-hover:text-[var(--brand-pink)] transition-colors" />
                 Crear con IA
-                <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-              </button>
+              </motion.button>
             </Link>
           </div>
 
