@@ -4,7 +4,7 @@
  * User Store - State management for user subscription and profile
  */
 
-import React, { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useRef, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { UserProfile, SubscriptionTier, UserPreferences } from '@/types';
 import { supabase } from '@/lib/supabase/client';
@@ -35,7 +35,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const lastActiveRef = useRef<number>(Date.now());
 
   // Fetch user profile from DB
-  const fetchUserProfile = async (authUser: SupabaseUser) => {
+  const fetchUserProfile = useCallback(async (authUser: SupabaseUser) => {
     try {
       // 1. Try to fetch from 'profiles' (Social/New table)
       const { data: profileResult, error: profileError } = await supabase
@@ -109,7 +109,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('Error fetching user profile:', error);
     }
-  };
+  }, []);
 
   // Helper to persist login status hint
   const updateLoginHint = (isLoggedIn: boolean) => {
@@ -122,13 +122,13 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const refreshProfile = async () => {
+  const refreshProfile = useCallback(async () => {
     // ALWAYS use getUser() to validate session on the server
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
       await fetchUserProfile(user);
     }
-  };
+  }, [fetchUserProfile]);
 
   useEffect(() => {
     let isMounted = true;
@@ -148,50 +148,47 @@ export function UserProvider({ children }: { children: ReactNode }) {
       
       console.log(`[UserStore] Auth event: ${event}`);
 
-      // INITIAL_SESSION occurs when the client is mounted and Supabase determines state
-      // (whether by finding a valid session in local storage or after a background refresh).
-      // This is the robust way to check initial state in Supabase v2.
-      if (session?.user) {
-        // If it's a new user signing in or initial load
-        if (session.user.id !== userIdRef.current || event === 'INITIAL_SESSION') {
-          userIdRef.current = session.user.id;
-          updateLoginHint(true);
-          
-          // Only show global loading state for initial load or new sign in
-          if (event !== 'TOKEN_REFRESHED') {
-            setIsLoading(true);
+      try {
+        if (session?.user) {
+          // If it's a new user signing in or initial load
+          if (session.user.id !== userIdRef.current || event === 'INITIAL_SESSION') {
+            userIdRef.current = session.user.id;
+            updateLoginHint(true);
+            
+            // Only show global loading state for initial load or new sign in
+            if (event !== 'TOKEN_REFRESHED') {
+              setIsLoading(true);
+            }
+            
+            isFetchingRef.current = true;
+            await fetchUserProfile(session.user);
+            isFetchingRef.current = false;
+            
+            if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+               router.refresh(); // Sync Server Components cookies!
+            }
+          } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+            // Silent refresh if the same user just renewed their token
+            console.log('[UserStore] Silently refreshing profile on session tick');
+            isFetchingRef.current = true;
+            await fetchUserProfile(session.user);
+            isFetchingRef.current = false;
+            
+            if (event === 'TOKEN_REFRESHED') {
+              router.refresh(); // Sync updated session cookie
+            }
           }
-          
-          isFetchingRef.current = true;
-          await fetchUserProfile(session.user);
-          isFetchingRef.current = false;
-          
-          setIsLoading(false);
-          clearTimeout(safetyTimeout);
-          
-          if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
-             router.refresh(); // Sync Server Components cookies!
+        } else {
+          // No user session (SIGNED_OUT, or INITIAL_SESSION without a valid token)
+          if (userIdRef.current !== null || user !== null) {
+            console.log('[UserStore] User logged out or session expired');
+            userIdRef.current = null;
+            setUser(null);
+            router.refresh(); // Sync Server Components when logged out
           }
-        } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-          // Silent refresh if the same user just renewed their token
-          console.log('[UserStore] Silently refreshing profile on session tick');
-          isFetchingRef.current = true;
-          await fetchUserProfile(session.user);
-          isFetchingRef.current = false;
-          
-          if (event === 'TOKEN_REFRESHED') {
-            router.refresh(); // Sync updated session cookie
-          }
+          updateLoginHint(false);
         }
-      } else {
-        // No user session (SIGNED_OUT, or INITIAL_SESSION without a valid token)
-        if (userIdRef.current !== null || user !== null) {
-          console.log('[UserStore] User logged out or session expired');
-          userIdRef.current = null;
-          setUser(null);
-          router.refresh(); // Sync Server Components when logged out
-        }
-        updateLoginHint(false);
+      } finally {
         setIsLoading(false);
         clearTimeout(safetyTimeout);
       }
@@ -220,11 +217,11 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }
   }, [preferences]);
 
-  const isPremium = () => {
+  const isPremium = useCallback(() => {
     return user?.subscriptionTier === SubscriptionTier.PREMIUM;
-  };
+  }, [user]);
 
-  const upgradeToPremiun = () => {
+  const upgradeToPremiun = useCallback(() => {
     // This is just a client-side mock for now, realistically this would trigger a payment flow
     if (user) {
       setUser({
@@ -232,21 +229,21 @@ export function UserProvider({ children }: { children: ReactNode }) {
         subscriptionTier: SubscriptionTier.PREMIUM,
       });
     }
-  };
+  }, [user]);
+
+  const contextValue = useMemo(() => ({
+    user,
+    preferences,
+    isLoading,
+    setUser,
+    setPreferences,
+    isPremium,
+    upgradeToPremiun,
+    refreshProfile,
+  }), [user, preferences, isLoading, isPremium, upgradeToPremiun, refreshProfile]);
 
   return (
-    <UserContext.Provider
-      value={{
-        user,
-        preferences,
-        isLoading,
-        setUser,
-        setPreferences,
-        isPremium,
-        upgradeToPremiun,
-        refreshProfile,
-      }}
-    >
+    <UserContext.Provider value={contextValue}>
       {children}
     </UserContext.Provider>
   );
