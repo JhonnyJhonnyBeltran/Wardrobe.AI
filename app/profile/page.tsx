@@ -453,7 +453,7 @@ export default function ProfilePage() {
                 {isLoading ? (
                   <div className="grid grid-cols-3 gap-0.5">
                     {[...Array(9)].map((_, i) => (
-                      <Skeleton key={i} className="aspect-square rounded-none" />
+                      <Skeleton key={i} className="aspect-square rounded-none animate-pulse" />
                     ))}
                   </div>
                 ) : posts.length === 0 ? (
@@ -464,14 +464,14 @@ export default function ProfilePage() {
                     fullHeight={false}
                   />
                 ) : (
-                  <div className="grid grid-cols-3 gap-0.5">
+                  <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-0.5 md:gap-1 p-0.5 md:p-1">
                     {posts.map((post) => (
                       <Link
                         key={post.id}
                         href={`/post/${post.id}`}
-                        className="aspect-square bg-[var(--background-secondary)] relative group cursor-pointer overflow-hidden"
+                        className="aspect-square bg-[var(--background-secondary)] relative group cursor-pointer overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:z-10 hover:shadow-lg hover:rounded-md"
                       >
-                        <img src={post.image_url} alt="Post" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
+                        <img src={post.image_url} alt="Post" className="w-full h-full object-cover" />
                       </Link>
                     ))}
                   </div>
@@ -489,45 +489,61 @@ export default function ProfilePage() {
                 <div className="p-4 border-b border-[var(--border-color)]">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="font-semibold text-sm text-[var(--foreground)]">Carpetas</h3>
-                  </div>
-
-
-
-                  {/* Folders Grid with 4-post preview */}
-                  <div className="grid grid-cols-3 gap-2">
-                    {/* Create Folder Placeholder - Always First */}
+                    {/* Botón Añadir en rosa */}
                     <button
                       onClick={() => setShowCreateFolder(true)}
-                      className="aspect-square rounded-lg border-2 border-dashed border-[var(--border-color)] flex flex-col items-center justify-center gap-1 hover:border-[var(--brand-pink)] hover:bg-[var(--brand-pink)]/5 transition-colors"
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-full border border-[var(--brand-pink)] text-[var(--brand-pink)] hover:bg-[var(--brand-pink)]/10 transition-colors text-xs font-semibold"
                     >
-                      <Plus className="w-8 h-8 text-[var(--brand-pink)]" />
-                      <span className="text-xs text-[var(--brand-pink)] font-medium">Crear</span>
+                      <Plus className="w-4 h-4" />
+                      Añadir
                     </button>
+                  </div>
 
+                  {/* Folders Grid - más pequeñas en ordenador */}
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 md:gap-3">
                     {/* Existing Folders */}
                     {folders.map((folder) => (
-                      <div key={folder.id} className="relative">
+                      <div key={folder.id} className="relative group">
                         <button
                           onClick={() => setSelectedFolder(selectedFolder?.id === folder.id ? null : folder)}
-                          className={`w-full aspect-square rounded-lg overflow-hidden relative group ${selectedFolder?.id === folder.id ? 'ring-2 ring-[var(--brand-pink)]' : ''
-                            }`}
+                          className={`w-full aspect-square rounded-xl overflow-hidden relative flex flex-col transition-all duration-200 ${
+                            selectedFolder?.id === folder.id 
+                              ? 'ring-2 ring-[var(--brand-pink)] shadow-md bg-[var(--background-secondary)]' 
+                              : 'bg-[var(--background-secondary)]/50 hover:bg-[var(--background-secondary)] hover:shadow-sm'
+                          }`}
                         >
-                          {folder.preview_images && folder.preview_images.length > 0 ? (
-                            <FolderPreview images={folder.preview_images} />
-                          ) : (
-                            <div className="w-full h-full bg-[var(--background-secondary)] flex items-center justify-center">
-                              <Folder className="w-8 h-8 text-[var(--foreground-tertiary)]" />
-                            </div>
-                          )}
-                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <span className="text-white font-medium text-sm">{folder.name}</span>
+                          <div className="flex-1 w-full flex items-center justify-center p-2 relative">
+                            {folder.preview_images && folder.preview_images.length > 0 ? (
+                              <FolderPreview images={folder.preview_images} />
+                            ) : (
+                              <Folder className="w-8 h-8 text-[var(--brand-pink)] opacity-80" />
+                            )}
+                          </div>
+                          
+                          {/* Folder Name visible */}
+                          <div className="w-full py-1.5 px-2 bg-gradient-to-t from-black/60 to-transparent absolute bottom-0 left-0">
+                            <span className="text-white font-medium text-xs truncate w-full block text-left drop-shadow-md">
+                              {folder.name}
+                            </span>
                           </div>
                         </button>
+                        
+                        {/* Botón X para eliminar con Modal (solo visible en hover o siempre en móvil) */}
                         <button
-                          onClick={(e) => { e.stopPropagation(); deleteFolder(folder.id); }}
-                          className="absolute top-1 right-1 p-1 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            useUiStore.getState().showModal({
+                              title: '¿Eliminar carpeta?',
+                              message: `¿Estás seguro de que quieres eliminar la carpeta "${folder.name}"? Los posts guardados no se borrarán de tus guardados generales.`,
+                              type: 'danger',
+                              confirmText: 'Eliminar',
+                              cancelText: 'Cancelar',
+                              onConfirm: () => deleteFolder(folder.id)
+                            });
+                          }}
+                          className="absolute -top-1.5 -right-1.5 p-1 bg-red-500 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity z-10"
                         >
-                          <Trash2 className="w-3 h-3 text-white" />
+                          <X className="w-3.5 h-3.5 text-white" />
                         </button>
                       </div>
                     ))}
@@ -541,9 +557,9 @@ export default function ProfilePage() {
                   </h3>
 
                   {isLoading ? (
-                    <div className="grid grid-cols-3 gap-0.5">
+                    <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-0.5 md:gap-1 p-0.5 md:p-1">
                       {[...Array(9)].map((_, i) => (
-                        <Skeleton key={i} className="aspect-square rounded-none" />
+                        <Skeleton key={i} className="aspect-square rounded-none animate-pulse" />
                       ))}
                     </div>
                   ) : savedPosts.length === 0 ? (
@@ -554,16 +570,16 @@ export default function ProfilePage() {
                       fullHeight={false}
                     />
                   ) : (
-                    <div className="grid grid-cols-3 gap-0.5">
+                    <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-0.5 md:gap-1 p-0.5 md:p-1">
                       {savedPosts.map((post) => (
                         <Link
                           key={post.id}
                           href={`/post/${post.id}`}
-                          className="aspect-square bg-[var(--background-secondary)] relative group cursor-pointer overflow-hidden"
+                          className="aspect-square bg-[var(--background-secondary)] relative group cursor-pointer overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:z-10 hover:shadow-lg hover:rounded-md"
                         >
-                          <img src={post.image_url} alt="Saved Post" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
-                          <div className="absolute top-1 right-1 bg-black/50 p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Bookmark className="w-3 h-3 text-white fill-current" />
+                          <img src={post.image_url} alt="Saved Post" className="w-full h-full object-cover" />
+                          <div className="absolute top-1 right-1 bg-black/50 p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Bookmark className="w-3.5 h-3.5 text-white fill-current" />
                           </div>
                         </Link>
                       ))}

@@ -22,11 +22,19 @@ const sizeClasses = {
   xl: 'w-24 h-24',
 };
 
+const textSizes = {
+  xs: 'text-[10px]',
+  sm: 'text-xs',
+  md: 'text-lg',
+  lg: 'text-xl',
+  xl: 'text-4xl',
+};
+
 export default function Avatar({ src, alt = 'Usuario', size = 'md', className = '' }: AvatarProps) {
   const sizeClass = sizeClasses[size];
   
   // Check if src is valid (not null, undefined, or empty string)
-  const hasValidSrc = src && src.trim() !== '' && !src.startsWith('https://i.pravatar.cc') && !src.startsWith('https://robohash.org');
+  const hasValidSrc = src && src.trim() !== '' && !src.startsWith('https://i.pravatar.cc') && !src.startsWith('https://robohash.org') && !src.includes('default user.png') && !src.includes('user_icon_149851');
 
   // Use the default user image as placeholder for new users
   const defaultAvatar = '/default user.png';
@@ -45,22 +53,15 @@ export default function Avatar({ src, alt = 'Usuario', size = 'md', className = 
     );
   }
 
-  // Fallback to user_icon_149851.svg (elegant minimal avatar)
-  // If image fails to load, fall back to User icon
+  // Fallback to letter avatar
+  const initial = (alt && alt !== 'Usuario') ? alt.charAt(0).toUpperCase() : '?';
+  const textSizeClass = textSizes[size];
+
   return (
-    <div className={`relative rounded-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 flex items-center justify-center ${sizeClass} ${className}`}>
-      <Image
-        src={defaultAvatar}
-        alt={alt}
-        fill
-        className="object-cover p-2"
-        sizes={size === 'xl' ? '96px' : size === 'lg' ? '48px' : size === 'xs' ? '20px' : '40px'}
-        onError={(e) => {
-          // Hide the image and show the icon instead
-          (e.target as HTMLImageElement).style.display = 'none';
-        }}
-      />
-      <User className={`absolute text-gray-400 dark:text-gray-300 ${size === 'xl' ? 'w-12 h-12' : size === 'lg' ? 'w-6 h-6' : size === 'xs' ? 'w-3 h-3' : 'w-1/2 h-1/2'}`} strokeWidth={1.5} />
+    <div className={`relative rounded-full overflow-hidden bg-gradient-to-br from-[var(--brand-pink)] to-[#d63384] flex items-center justify-center ${sizeClass} ${className}`}>
+      <span className={`font-bold text-white leading-none ${textSizeClass}`}>
+        {initial}
+      </span>
     </div>
   );
 }

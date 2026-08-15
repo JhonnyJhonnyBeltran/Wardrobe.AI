@@ -26,7 +26,7 @@ import {
   Lock
 } from 'lucide-react';
 
-type TabType = 'posts';
+type TabType = 'posts' | 'outfits';
 
 interface Profile {
   id: string;
@@ -51,6 +51,8 @@ export default function PublicProfilePage() {
   const [isBlocked, setIsBlocked] = useState(false);
   const [isBlocking, setIsBlocking] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
+  const [outfits, setOutfits] = useState<any[]>([]);
+  const isMutual = isFollowedByMe && followStatus === 'accepted';
 
   // Stats
   const [profileStats, setProfileStats] = useState({
@@ -126,6 +128,23 @@ export default function PublicProfilePage() {
         // 5. Check if user is blocked
         const blocked = await followService.isBlocked(currentUser.id, profileId);
         setIsBlocked(blocked);
+
+        // 6. Fetch Outfits if mutual
+        if (status === 'accepted') {
+          // Check if it's mutual by getting if they follow us
+          const mutualStatus = await followService.getFollowStatus(profileId, currentUser.id);
+          setIsFollowedByMe(mutualStatus === 'accepted');
+
+          if (mutualStatus === 'accepted') {
+            const { data: outfitsData } = await supabase
+              .from('outfits')
+              .select('*')
+              .eq('user_id', profileId)
+              .order('created_at', { ascending: false });
+            
+            setOutfits(outfitsData || []);
+          }
+        }
       }
 
     } catch (error) {
@@ -220,6 +239,43 @@ export default function PublicProfilePage() {
     return (
       <div className="min-h-screen bg-[var(--background)] flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-[var(--brand-pink)]" />
+      </div>
+    );
+  }
+
+  if (isBlocked) {
+    return (
+      <div className="min-h-screen bg-[var(--background)] pb-24">
+        {/* Header */}
+        <header className="sticky top-0 z-30 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-color)]/50">
+          <div className="flex items-center justify-between px-4 h-14 w-full md:max-w-[70%] mx-auto">
+            <div className="flex items-center gap-3">
+              <button onClick={() => router.back()} className="p-1 -ml-1 hover:bg-[var(--background-secondary)] rounded-full transition-colors">
+                <ArrowLeft className="w-6 h-6 text-[var(--foreground)]" />
+              </button>
+              <span className="font-bold text-[var(--foreground)] truncate max-w-[200px] sm:max-w-[280px]">
+                Usuario bloqueado
+              </span>
+            </div>
+          </div>
+        </header>
+
+        <main className="w-full md:max-w-[70%] mx-auto flex flex-col items-center justify-center pt-32 px-4 text-center">
+          <div className="w-24 h-24 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mb-6">
+            <Lock className="w-12 h-12 text-red-500" />
+          </div>
+          <h2 className="text-2xl font-bold mb-2">Has bloqueado a este usuario</h2>
+          <p className="text-[var(--foreground-secondary)] mb-8 max-w-sm mx-auto">
+            No puedes ver las publicaciones ni los outfits de los usuarios que has bloqueado. Ellos tampoco pueden ver tu perfil ni interactuar contigo.
+          </p>
+          <button
+            onClick={handleBlock}
+            disabled={isBlocking}
+            className="flex items-center justify-center gap-2 px-8 py-3 rounded-xl bg-[var(--brand-pink)] text-white font-semibold hover:opacity-90 transition-opacity"
+          >
+            {isBlocking ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Desbloquear'}
+          </button>
+        </main>
       </div>
     );
   }
@@ -384,45 +440,97 @@ export default function PublicProfilePage() {
             >
               <Grid3x3 className={`w-6 h-6 ${activeTab === 'posts' ? 'text-[var(--brand-pink)]' : ''}`} />
             </button>
+            {isMutual && (
+              <button
+                onClick={() => setActiveTab('outfits')}
+                className={`flex-1 flex items-center justify-center py-3 border-b-2 transition-colors ${activeTab === 'outfits'
+                  ? 'border-[var(--brand-pink)] text-[var(--foreground)]'
+                  : 'border-transparent text-[var(--foreground-tertiary)]'
+                  }`}
+              >
+                <span className={`text-xl ${activeTab === 'outfits' ? '' : 'grayscale opacity-60'}`}>👗</span>
+              </button>
+            )}
           </div>
         </div>
 
         {/* Content Grid - Exact Style */}
         <div className="min-h-[40vh]">
           <AnimatePresence mode="wait">
-            <motion.div
-              key="posts"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="p-0.5"
-            >
-              {posts.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 text-center">
-                  <div className="w-16 h-16 bg-[var(--background-secondary)] rounded-full flex items-center justify-center mb-4">
-                    <Grid3x3 className="w-8 h-8 text-[var(--foreground-tertiary)]" />
+            {activeTab === 'posts' ? (
+              <motion.div
+                key="posts"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="p-0.5"
+              >
+                {posts.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-16 text-center">
+                    <div className="w-16 h-16 bg-[var(--background-secondary)] rounded-full flex items-center justify-center mb-4">
+                      <Grid3x3 className="w-8 h-8 text-[var(--foreground-tertiary)]" />
+                    </div>
+                    <h3 className="text-lg font-semibold mb-2">Aún no hay publicaciones</h3>
                   </div>
-                  <h3 className="text-lg font-semibold mb-2">Aún no hay publicaciones</h3>
-                </div>
-              ) : (
-                <div className="grid grid-cols-3 gap-0.5">
-                  {posts.map((post) => (
-                    <Link
-                      key={post.id}
-                      href={`/post/${post.id}`}
-                      className="aspect-square bg-[var(--background-secondary)] relative group cursor-pointer overflow-hidden"
-                    >
-                      {post.image_url ? (
-                        <img src={post.image_url} alt="Post" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-4xl group-hover:scale-110 transition-transform duration-300">👗</div>
-                      )}
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </motion.div>
+                ) : (
+                  <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-0.5 md:gap-1 p-0.5 md:p-1">
+                    {posts.map((post) => (
+                      <Link
+                        key={post.id}
+                        href={`/post/${post.id}`}
+                        className="aspect-square bg-[var(--background-secondary)] relative group cursor-pointer overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:z-10 hover:shadow-lg hover:rounded-md"
+                      >
+                        {post.image_url ? (
+                          <img src={post.image_url} alt="Post" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-4xl">👗</div>
+                        )}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </motion.div>
+            ) : (
+              <motion.div
+                key="outfits"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="p-4"
+              >
+                {outfits.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-16 text-center">
+                    <div className="text-5xl mb-4 grayscale opacity-60">👗</div>
+                    <h3 className="text-lg font-semibold mb-2">No hay outfits</h3>
+                    <p className="text-[var(--foreground-secondary)]">Este usuario aún no ha creado ningún outfit.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {outfits.map((outfit) => (
+                      <Link
+                        key={outfit.id}
+                        href={`/outfit/${outfit.id}`}
+                        className="bg-[var(--background-secondary)] rounded-2xl p-4 flex flex-col gap-2 transition-transform duration-300 hover:-translate-y-1 hover:shadow-xl group"
+                      >
+                        <div className="aspect-[3/4] rounded-xl overflow-hidden bg-[var(--background)] flex items-center justify-center border border-[var(--border-color)]">
+                           {/* Simple Outfit preview with the first 4 items or a placeholder icon */}
+                           {outfit.items && Array.isArray(outfit.items) && outfit.items.length > 0 ? (
+                             <div className="w-full h-full relative">
+                                <img src={outfit.items[0]?.image_url || '/placeholder.png'} alt="Outfit item" className="w-full h-full object-cover" />
+                             </div>
+                           ) : (
+                             <span className="text-4xl group-hover:scale-110 transition-transform duration-300">👗</span>
+                           )}
+                        </div>
+                        <h4 className="font-semibold text-sm truncate px-1 mt-1">{outfit.name || 'Outfit guardado'}</h4>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </motion.div>
+            )}
           </AnimatePresence>
         </div>
       </main>

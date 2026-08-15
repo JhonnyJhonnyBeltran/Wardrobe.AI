@@ -27,7 +27,7 @@ import type {
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 const TABLE = 'follows' as const;
-const BLOCKED_TABLE = 'blocked_users' as const;
+const BLOCKED_TABLE = 'blocks' as const;
 
 const PROFILE_JOIN_COLUMNS = 'id, username, full_name, avatar_url' as const;
 

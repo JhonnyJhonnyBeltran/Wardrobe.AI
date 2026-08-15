@@ -11,7 +11,7 @@ import { X, MessageCircle, UserPlus, Heart, Bell } from 'lucide-react';
 import { useRealtimeStore } from '@/store/realtimeStore';
 import type { Notification, NotificationType } from '@/lib/realtime';
 import Link from 'next/link';
-import Image from 'next/image';
+import Avatar from '@/components/Avatar';
 
 // ============================================
 // ICON MAPPING
@@ -99,17 +99,15 @@ const Toast = memo(function Toast({
       {/* Icon */}
       <div className={`
         flex-shrink-0 w-10 h-10 rounded-full 
-        flex items-center justify-center text-white
-        ${notificationColors[notification.type]}
+        flex items-center justify-center text-white relative
+        ${!notification.sender?.avatar_url || notification.sender?.avatar_url?.includes('default user.png') ? notificationColors[notification.type] : ''}
       `}>
-        {notification.sender?.avatar_url ? (
-          <Image
-            src={notification.sender.avatar_url}
-            alt=""
-            width={40}
-            height={40}
-            className="w-full h-full rounded-full object-cover"
-            unoptimized
+        {notification.sender?.avatar_url && !notification.sender?.avatar_url?.includes('default user.png') ? (
+          <Avatar 
+            src={notification.sender.avatar_url} 
+            alt={notification.sender.username || notification.sender.full_name || 'Usuario'} 
+            size="md" 
+            className="w-full h-full"
           />
         ) : (
           notificationIcons[notification.type]
