@@ -1,40 +1,22 @@
 "use client";
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { Card, Button, SessionSplash } from '@/components';
+import { Card, Button } from '@/components';
 import { useUser } from '@/store/userStore';
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
-  const { user, isLoading, refreshProfile } = useUser();
+  const { user, isLoading } = useUser();
   const pathname = usePathname();
   const router = useRouter();
-  const [isRecovering, setIsRecovering] = React.useState(false);
-  const recoveryAttempted = React.useRef(false);
 
   // Allow public pages (onboarding and auth)
   const publicPaths = ['/', '/auth'];
   const isPublicPath = publicPaths.includes(pathname || '') || pathname?.startsWith('/auth/');
-  const isOnboarding = pathname?.startsWith('/onboarding');
-
-  // If we suspect the user was logged in but the session is currently null, 
-  // try one proactive refresh before showing the "Access Required" card.
-  useEffect(() => {
-    const wasLoggedIn = localStorage.getItem('klozet_was_logged_in') === 'true';
-    if (!isLoading && !user && wasLoggedIn && !recoveryAttempted.current && !isPublicPath) {
-      console.log('[AuthGuard] User was previously logged in but session is null. Attempting silent recovery...');
-      recoveryAttempted.current = true;
-      setIsRecovering(true);
-      // refreshProfile now uses supabase.auth.getUser() which properly forces a server check
-      refreshProfile().finally(() => {
-        setIsRecovering(false);
-      });
-    }
-  }, [isLoading, user, refreshProfile, isPublicPath]);
 
   // If it's a public path, we can allow rendering even if loading,
   // to avoid getting stuck on a blank screen for visitors.
-  if ((isLoading || isRecovering) && !isPublicPath) {
+  if (isLoading && !isPublicPath) {
     return (
       <div className="w-full h-full flex flex-col p-4 sm:p-6 md:p-8 pt-safe-top animate-pulse">
         {/* Top Header Placeholder */}
@@ -51,7 +33,6 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   }
 
   // If public path, allow access
-  // Note: The useEffect above will still trigger redirect if they are logged in and incomplete style
   if (isPublicPath) return <>{children}</>;
 
   if (!user) {
@@ -67,8 +48,6 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
       </div>
     );
   }
-
-  // Prevent rendering protected content if we are about to redirect
 
   return <>{children}</>;
 }
