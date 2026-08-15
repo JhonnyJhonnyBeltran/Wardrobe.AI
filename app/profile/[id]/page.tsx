@@ -474,12 +474,12 @@ export default function PublicProfilePage() {
                     <h3 className="text-lg font-semibold mb-2">Aún no hay publicaciones</h3>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-0.5 md:gap-1 p-0.5 md:p-1">
+                  <div className="grid grid-cols-3 gap-0.5">
                     {posts.map((post) => (
                       <Link
                         key={post.id}
                         href={`/post/${post.id}`}
-                        className="aspect-square bg-[var(--background-secondary)] relative group cursor-pointer overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:z-10 hover:shadow-lg hover:rounded-md"
+                        className="aspect-square bg-[var(--background-secondary)] relative block z-0 transition-all duration-300 hover:scale-[1.05] hover:z-10 hover:shadow-xl hover:rounded-md"
                       >
                         {post.image_url ? (
                           <img src={post.image_url} alt="Post" className="w-full h-full object-cover" />

@@ -464,12 +464,12 @@ export default function ProfilePage() {
                     fullHeight={false}
                   />
                 ) : (
-                  <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-0.5 md:gap-1 p-0.5 md:p-1">
+                  <div className="grid grid-cols-3 gap-0.5">
                     {posts.map((post) => (
                       <Link
                         key={post.id}
                         href={`/post/${post.id}`}
-                        className="aspect-square bg-[var(--background-secondary)] relative group cursor-pointer overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:z-10 hover:shadow-lg hover:rounded-md"
+                        className="aspect-square bg-[var(--background-secondary)] relative block z-0 hover:z-10 transition-all duration-300 hover:scale-[1.05] hover:shadow-xl hover:rounded-md"
                       >
                         <img src={post.image_url} alt="Post" className="w-full h-full object-cover" />
                       </Link>
@@ -557,7 +557,7 @@ export default function ProfilePage() {
                   </h3>
 
                   {isLoading ? (
-                    <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-0.5 md:gap-1 p-0.5 md:p-1">
+                    <div className="grid grid-cols-3 gap-0.5">
                       {[...Array(9)].map((_, i) => (
                         <Skeleton key={i} className="aspect-square rounded-none animate-pulse" />
                       ))}
@@ -570,12 +570,12 @@ export default function ProfilePage() {
                       fullHeight={false}
                     />
                   ) : (
-                    <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-0.5 md:gap-1 p-0.5 md:p-1">
+                    <div className="grid grid-cols-3 gap-0.5">
                       {savedPosts.map((post) => (
                         <Link
                           key={post.id}
                           href={`/post/${post.id}`}
-                          className="aspect-square bg-[var(--background-secondary)] relative group cursor-pointer overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:z-10 hover:shadow-lg hover:rounded-md"
+                          className="aspect-square bg-[var(--background-secondary)] relative block z-0 hover:z-10 transition-all duration-300 hover:scale-[1.05] hover:shadow-xl hover:rounded-md group"
                         >
                           <img src={post.image_url} alt="Saved Post" className="w-full h-full object-cover" />
                           <div className="absolute top-1 right-1 bg-black/50 p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
