@@ -44,6 +44,7 @@ export const DraggableItem = ({
         const itemRect = itemRef.current.getBoundingClientRect();
 
         // Calculate absolute center of the item
+        // Since motion.div is 0x0, itemRect.left/top is the center. We add width/2 just in case.
         const itemCenterX = itemRect.left + itemRect.width / 2;
         const itemCenterY = itemRect.top + itemRect.height / 2;
 
@@ -51,12 +52,16 @@ export const DraggableItem = ({
         const xPercent = ((itemCenterX - containerRect.left) / containerRect.width) * 100;
         const yPercent = ((itemCenterY - containerRect.top) / containerRect.height) * 100;
 
-        // Update state with new percentage positions
-        onChange({ x: xPercent, y: yPercent });
+        // Instantly update DOM to prevent flicker while React state catches up
+        itemRef.current.style.left = `${xPercent}%`;
+        itemRef.current.style.top = `${yPercent}%`;
         
         // Reset the drag translation so it doesn't double-apply the offset
         dragX.set(0);
         dragY.set(0);
+        
+        // Update state
+        onChange({ x: xPercent, y: yPercent });
     };
 
     return (
@@ -83,18 +88,27 @@ export const DraggableItem = ({
                 top: `${state.y}%`,
                 x: dragX,
                 y: dragY,
-                marginLeft: '-75px', // Center horizontally since width is 150px
-                marginTop: '-75px', // Center vertically roughly
-                width: '150px', // Base width
-                height: 'auto',
+                width: 0,
+                height: 0,
                 touchAction: 'none',
                 cursor: isSelected ? 'move' : 'pointer',
             }}
             className={`group relative select-none ${isSelected ? 'z-[1000]' : ''}`}
         >
-            <div className={`relative w-full h-full p-0`}>
-                {/* Image */}
-                <div className={`relative w-full h-full overflow-visible pointer-events-none`}>
+            <div 
+                style={{ 
+                    position: 'absolute', 
+                    width: '150px', 
+                    transform: 'translate(-50%, -50%)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                }}
+            >
+                <div className={`relative w-full h-full p-0`}>
+                    {/* Image */}
+                    <div className={`relative w-full h-full overflow-visible pointer-events-none`}>
                     {item.imageUrl && (
                         <img
                             src={item.imageUrl}
@@ -155,6 +169,7 @@ export const DraggableItem = ({
                         </div>
                     </div>
                 )}
+            </div>
             </div>
         </motion.div>
     );

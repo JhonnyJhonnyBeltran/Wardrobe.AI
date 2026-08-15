@@ -44,32 +44,6 @@ export const FreeDragCanvas = forwardRef<FreeDragCanvasRef, FreeDragCanvasProps>
         }
     }, [itemStates, onStateChange]);
 
-    // Sync with initialState to keep both canvas instances in sync
-    useEffect(() => {
-        if (!initialState) return;
-        setItemStates(prev => {
-            const next = { ...prev };
-            let hasChanges = false;
-            
-            Object.keys(initialState).forEach(key => {
-                const incoming = initialState[key];
-                const current = next[key];
-                
-                if (incoming && (!current || 
-                    current.x !== incoming.x || 
-                    current.y !== incoming.y || 
-                    current.scale !== incoming.scale || 
-                    current.rotation !== incoming.rotation ||
-                    current.zIndex !== incoming.zIndex)) {
-                    next[key] = { ...current, ...incoming };
-                    hasChanges = true;
-                }
-            });
-            
-            return hasChanges ? next : prev;
-        });
-    }, [initialState]);
-
     // Initialize/Update items
     useEffect(() => {
         setItemStates(prev => {
