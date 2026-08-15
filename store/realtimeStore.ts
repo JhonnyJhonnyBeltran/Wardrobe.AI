@@ -85,7 +85,7 @@ export const useRealtimeStore = create<RealtimeStore>((set, get) => ({
         .select('id')
         .eq('user_id', userId);
 
-      const myPostIds = myPosts ? myPosts.map(p => p.id) : [];
+      const myPostIds = myPosts ? myPosts.map((p: any) => p.id) : [];
 
       const promises: Promise<any>[] = [
         // Check follows
