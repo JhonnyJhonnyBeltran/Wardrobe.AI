@@ -153,7 +153,7 @@ export default function MessagesLayout({ children }: { children: React.ReactNode
                 event: '*',
                 schema: 'public',
                 table: 'messages',
-            }, (payload) => {
+            }, (payload: any) => {
                 if (!user) return;
                 const newMsg = payload.new as any;
                 // Reload list if current user is involved in the message

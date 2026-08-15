@@ -254,7 +254,7 @@ export default function MessagesPage() {
                 event: '*',
                 schema: 'public',
                 table: 'messages',
-            }, (payload) => {
+            }, (payload: any) => {
                 if (!user) return;
                 const newMsg = payload.new as any;
                 // Si el mensaje es para nosotros o nuestro, recargamos la lista

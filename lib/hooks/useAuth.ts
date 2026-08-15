@@ -26,7 +26,8 @@ export function useAuth(): UseAuthReturn {
 
   useEffect(() => {
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
+    supabase.auth.getSession().then((response: any) => {
+      const { data: { session }, error } = response;
       if (error) {
         console.warn('Session init error:', error.message);
         if (error.message.includes('Refresh Token')) {
@@ -42,7 +43,7 @@ export function useAuth(): UseAuthReturn {
     });
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
       setUser(session?.user ?? null);
       if (session?.user) {
         updateUserStore(session.user);

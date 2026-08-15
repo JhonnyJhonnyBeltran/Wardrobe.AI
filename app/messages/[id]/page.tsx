@@ -118,7 +118,7 @@ export default function ChatPage() {
             config: { broadcast: { self: false } }
         });
 
-        channel.on('broadcast', { event: 'typing' }, (payload) => {
+        channel.on('broadcast', { event: 'typing' }, (payload: any) => {
             if (payload.payload.userId === targetUserId) {
                 setIsTyping(payload.payload.isTyping);
                 clearTimeout(typingTimeoutRef.current);
@@ -131,7 +131,7 @@ export default function ChatPage() {
         channel.subscribe();
         channelRef.current = channel;
 
-        channel.on('broadcast', { event: 'new_message' }, async (payload) => {
+        channel.on('broadcast', { event: 'new_message' }, async (payload: any) => {
             const newMsg = payload.payload.message as Message;
             
             setMessages((prev: Message[]) => {

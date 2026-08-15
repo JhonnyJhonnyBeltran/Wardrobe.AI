@@ -38,12 +38,12 @@ export default function SocialListener() {
           table: 'follows',
           filter: `following_id=eq.${userId}`
         },
-        (payload) => {
+        (payload: any) => {
           console.log('[SocialListener] Realtime event:', payload.eventType);
           fetchCount();
         }
       )
-      .subscribe((status) => {
+      .subscribe((status: any) => {
         console.log('[SocialListener] Subscription status:', status);
       });
 

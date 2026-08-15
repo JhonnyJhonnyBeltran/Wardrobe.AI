@@ -135,7 +135,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     
     const isFetchingRef = { current: false };
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: any, session: any) => {
       if (!isMounted) return;
       
       let eventSafetyTimeout: NodeJS.Timeout | null = null;

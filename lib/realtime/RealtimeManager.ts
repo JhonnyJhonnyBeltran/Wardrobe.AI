@@ -133,11 +133,11 @@ class RealtimeManager {
         (payload) => this.handleNotificationInsert(payload)
       )
       // Listen for broadcast notifications
-      .on('broadcast', { event: EVENTS.NOTIFICATION }, (payload) => {
+      .on('broadcast', { event: EVENTS.NOTIFICATION }, (payload: any) => {
         this.emitNotification(payload.payload as Notification);
       });
 
-    await channel.subscribe((status) => {
+    await channel.subscribe((status: any) => {
       console.log('[RealtimeManager] Global channel status:', status);
     });
 
@@ -204,7 +204,7 @@ class RealtimeManager {
 
     const channel = supabase
       .channel(channelName)
-      .on('broadcast', { event: EVENTS.TYPING }, (payload) => {
+      .on('broadcast', { event: EVENTS.TYPING }, (payload: any) => {
         const event = payload.payload as TypingEvent;
         if (event.user_id !== this.userId) {
           this.handleTypingEvent(conversationId, event);

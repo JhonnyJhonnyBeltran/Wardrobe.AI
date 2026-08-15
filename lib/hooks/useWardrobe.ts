@@ -77,7 +77,8 @@ export function useWardrobe(): UseWardrobeReturn {
     }
     
     // Subscribe to auth changes to clear or refresh
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: any, session: any) => {
+      // If user logs out, clear their items
       if (event === 'SIGNED_OUT') {
         useWardrobeStore.setState({ items: [], loading: false, error: null, hasMore: true, page: 0 });
       } else if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && session?.user) {

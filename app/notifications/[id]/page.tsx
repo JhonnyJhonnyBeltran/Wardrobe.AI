@@ -239,7 +239,7 @@ export default function ChatPage() {
         schema: 'public',
         table: 'messages',
         filter: `receiver_id=eq.${user.id}`
-      }, (payload) => {
+      }, (payload: any) => {
         const newMsg = payload.new as Message;
         if (newMsg.sender_id === targetUserId) {
           setMessages(prev => [...prev, newMsg]);

@@ -117,7 +117,8 @@ export function useUnreadMessages(options: UseUnreadMessagesOptions = {}) {
           schema: 'public',
           table: 'messages',
         },
-        async (payload) => {
+        async (payload: any) => {
+          console.log('[useUnreadMessages] Realtime message event:', payload);
           const newOrUpdatedMessage = (payload.new || payload.old) as any;
           
           if (!newOrUpdatedMessage) return;
@@ -155,7 +156,6 @@ export function useUnreadMessages(options: UseUnreadMessagesOptions = {}) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const messagesTable = supabase.from('messages' as any);
       await messagesTable
-        // @ts-expect-error - Supabase type definitions don't include messages table
         .update({ is_read: true })
         .eq('conversation_id', conversationId)
         .eq('receiver_id', user.id)
