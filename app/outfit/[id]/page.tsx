@@ -3,12 +3,13 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { ArrowLeft, Edit2, Trash2, Share2, Heart, MessageCircle, Send } from 'lucide-react';
+import { ArrowLeft, Edit2, Trash2, Share2, Heart, MessageCircle, Send, Circle, Briefcase, PartyPopper, Zap, Sparkles, Layers } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';
 import { useUser } from '@/store/userStore';
 import { haptics } from '@/lib/haptic';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
+import InteractiveOutfitViewer from '@/components/InteractiveOutfitViewer';
 
 interface OutfitItem {
   id: string;
@@ -205,83 +206,81 @@ export default function OutfitDetailPage() {
         </div>
       </header>
 
-      <main className="p-4 max-w-2xl mx-auto space-y-6">
-        {/* Outfit Preview Grid */}
-        <section className="grid grid-cols-2 gap-2">
-          {outfitItems.map((item, index) => (
-            <button
-              key={item.id || index}
-              onClick={() => handleItemClick(item)}
-              className="relative aspect-square rounded-2xl overflow-hidden bg-[var(--background-secondary)] border border-[var(--border-color)] hover:border-[var(--brand-pink)] transition-colors"
-            >
-              {item.image_url ? (
-                <Image
-                  src={item.image_url}
-                  alt={item.name}
-                  fill
-                  className="object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <span className="text-4xl">👕</span>
+      <main className="w-full flex flex-col md:flex-row pb-24 md:pb-0 h-[calc(100vh-56px)] overflow-hidden">
+        
+        {/* Left Column (Desktop) / Top Half (Mobile) - The Image */}
+        <div className="relative w-full h-[50vh] md:h-full md:w-[60%] shrink-0 bg-[#f8f9fa] dark:bg-[#111] z-0 flex flex-col items-stretch border-b md:border-b-0 md:border-r border-[var(--border-color)]">
+          <InteractiveOutfitViewer
+            outfit={outfit as any}
+            onItemClick={handleItemClick}
+            className="w-full h-full"
+            isMobileSticker={true}
+            selectedItemId={selectedItem?.id}
+          />
+        </div>
+
+        {/* Right Column (Desktop) / Bottom Half (Mobile) - The Details */}
+        <div className="relative w-full flex-1 overflow-y-auto custom-scrollbar bg-[var(--background)]">
+          <div className="w-full flex flex-col p-4 md:p-6 space-y-6">
+            
+            {/* Outfit Info */}
+            <section className="space-y-4">
+              <div>
+                <h2 className="text-2xl font-bold text-[var(--foreground)]">{outfit.name || 'Outfit sin título'}</h2>
+                {outfit.description && (
+                  <p className="text-[var(--foreground-secondary)] mt-2">{outfit.description}</p>
+                )}
+              </div>
+
+              {/* Tags Grid (Ocasión y Prendas) */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex items-center gap-3 p-3 bg-[var(--background-secondary)] rounded-2xl">
+                    <div className="w-8 h-8 rounded-full bg-[var(--brand-pink)]/10 flex items-center justify-center text-[var(--brand-pink)]">
+                        <Layers className="w-4 h-4" />
+                    </div>
+                    <div>
+                        <p className="text-[10px] text-[var(--foreground-tertiary)] uppercase font-bold tracking-wider">Ocasión</p>
+                        <p className="text-sm font-bold text-[var(--foreground)] capitalize">{outfit.occasion || (outfit as any).style || 'Casual'}</p>
+                    </div>
                 </div>
-              )}
-            </button>
-          ))}
-        </section>
-
-        {/* Outfit Info */}
-        <section className="space-y-4">
-          <div>
-            <h2 className="text-2xl font-bold text-[var(--foreground)]">{outfit.name}</h2>
-            {outfit.description && (
-              <p className="text-[var(--foreground-secondary)] mt-2">{outfit.description}</p>
-            )}
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            {outfit.occasion && (
-              <span className="px-3 py-1 rounded-full bg-[var(--background-secondary)] text-sm text-[var(--foreground)]">
-                {outfit.occasion}
-              </span>
-            )}
-            {outfit.season && (
-              <span className="px-3 py-1 rounded-full bg-[var(--brand-pink)]/10 text-sm text-[var(--brand-pink)]">
-                {outfit.season}
-              </span>
-            )}
-          </div>
-        </section>
-
-        {/* Items List */}
-        <section className="space-y-3">
-          <h3 className="text-lg font-semibold text-[var(--foreground)]">Prendas ({outfitItems.length})</h3>
-          <div className="space-y-2">
-            {outfitItems.map((item, index) => (
-              <button
-                key={item.id || index}
-                onClick={() => handleItemClick(item)}
-                className="w-full flex items-center gap-4 p-3 rounded-xl bg-[var(--background-secondary)] hover:bg-[var(--background-tertiary)] transition-colors text-left"
-              >
-                <div className="w-16 h-16 rounded-lg overflow-hidden bg-[var(--card-bg)] relative shrink-0">
-                  {item.image_url ? (
-                    <Image src={item.image_url} alt={item.name} fill className="object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-2xl">👕</div>
-                  )}
+                <div className="flex items-center gap-3 p-3 bg-[var(--background-secondary)] rounded-2xl">
+                    <div className="w-8 h-8 rounded-full bg-[var(--brand-pink)]/10 flex items-center justify-center text-[var(--brand-pink)]">
+                        <Layers className="w-4 h-4" />
+                    </div>
+                    <div>
+                        <p className="text-[10px] text-[var(--foreground-tertiary)] uppercase font-bold tracking-wider">Prendas</p>
+                        <p className="text-sm font-bold text-[var(--foreground)]">{outfitItems.length}</p>
+                    </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-[var(--foreground)] truncate">{item.name}</p>
-                  <p className="text-sm text-[var(--foreground-secondary)]">{item.brand || 'Sin marca'}</p>
-                  <p className="text-xs text-[var(--foreground-tertiary)]">{item.category}</p>
-                </div>
-              </button>
-            ))}
-          </div>
-        </section>
+              </div>
+            </section>
 
-        {/* Appeared In Posts */}
-        {relatedPosts.length > 0 && (
+            {/* Items Grid (Like the modal) */}
+            <section className="space-y-4">
+              <h3 className="text-lg font-semibold text-[var(--foreground)]">Prendas de este look</h3>
+              <div className="grid grid-cols-2 gap-3">
+                {outfitItems.map((item, index) => (
+                  <div
+                    key={item.id || index}
+                    className="block group cursor-pointer"
+                    onClick={() => handleItemClick(item)}
+                  >
+                    <div className="aspect-square bg-[var(--background-secondary)] rounded-2xl overflow-hidden relative mb-2 flex items-center justify-center border border-transparent hover:border-[var(--border-color)] transition-all">
+                      {item.image_url ? (
+                        <Image src={item.image_url} alt={item.name} fill className="object-cover scale-[0.8] group-hover:scale-[0.85] transition-transform duration-300" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-4xl" style={{ backgroundColor: item.color || '#ccc' }}>👕</div>
+                      )}
+                    </div>
+                    <p className="text-[13px] font-bold text-[var(--foreground)] truncate px-1">{item.name}</p>
+                    <p className="text-[11px] text-[var(--foreground-secondary)] px-1">{item.brand || 'Sin marca'}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* Appeared In Posts */}
+            {relatedPosts.length > 0 && (
           <section className="space-y-3 pt-4 border-t border-[var(--border-color)]">
             <h3 className="text-lg font-semibold text-[var(--foreground)]">Aparece en ({relatedPosts.length})</h3>
             <div className="grid grid-cols-3 gap-2">
@@ -303,6 +302,8 @@ export default function OutfitDetailPage() {
             </div>
           </section>
         )}
+          </div>
+        </div>
       </main>
 
       {/* Item Detail Modal */}

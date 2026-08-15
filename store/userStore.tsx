@@ -17,7 +17,7 @@ interface UserState {
 }
 
 interface UserContextType extends UserState {
-  setUser: (user: UserProfile | null) => void;
+  setUser: React.Dispatch<React.SetStateAction<UserProfile | null>>;
   setPreferences: (preferences: UserPreferences) => void;
   isPremium: () => boolean;
   upgradeToPremiun: () => void;
@@ -29,7 +29,42 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 export function UserProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState<UserProfile | null>(null);
+  const [userState, setUserState] = useState<UserProfile | null>(null);
+
+  // Use a custom setUser that also syncs to localStorage
+  const setUser = useCallback((action: React.SetStateAction<UserProfile | null>) => {
+    setUserState(prevState => {
+      const newUser = typeof action === 'function' ? action(prevState) : action;
+      if (typeof window !== 'undefined') {
+        if (newUser) {
+          localStorage.setItem('klozet_user_cache', JSON.stringify(newUser));
+        } else {
+          localStorage.removeItem('klozet_user_cache');
+        }
+      }
+      return newUser;
+    });
+  }, []);
+
+  const user = userState;
+
+  // Hydrate from cache immediately on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('klozet_user_cache');
+        if (cached) {
+          const parsedUser = JSON.parse(cached);
+          if (parsedUser.createdAt) parsedUser.createdAt = new Date(parsedUser.createdAt);
+          setUserState(parsedUser);
+          userIdRef.current = parsedUser.id;
+          setIsLoading(false); // We have a cached user, no need to show loading skeleton
+        }
+      } catch (e) {
+        console.error('Error parsing user cache', e);
+      }
+    }
+  }, []);
   const [preferences, setPreferences] = useState<UserPreferences>({});
   const userIdRef = useRef<string | null>(null);
   const lastActiveRef = useRef<number>(Date.now());
@@ -110,27 +145,31 @@ export function UserProvider({ children }: { children: ReactNode }) {
       })();
 
       const timeoutPromise = new Promise<void>((_, reject) => 
-        setTimeout(() => reject(new Error('fetchUserProfile timeout reached')), 12000)
+        setTimeout(() => reject(new Error('fetchUserProfile timeout reached')), 3000)
       );
 
       await Promise.race([fetchPromise, timeoutPromise]);
     } catch (error) {
       console.error('Error fetching user profile:', error);
       // Fallback: If DB fetch fails, at least populate with authUser so app doesn't hang in unauthorized state
-      if (!user) {
-        setUser({
-          id: authUser.id,
-          email: authUser.email || '',
-          name: authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'User',
-          username: undefined,
-          avatar: authUser.user_metadata?.avatar_url,
-          subscriptionTier: SubscriptionTier.FREE,
-          createdAt: new Date(authUser.created_at || Date.now()),
-          styleCompleted: false,
-        });
-      }
+      // (Using userState here to avoid stale closures, but we're in a callback so we just check if it's currently null)
+      setUser((prevUser) => {
+        if (!prevUser) {
+          return {
+            id: authUser.id,
+            email: authUser.email || '',
+            name: authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'User',
+            username: undefined,
+            avatar: authUser.user_metadata?.avatar_url,
+            subscriptionTier: SubscriptionTier.FREE,
+            createdAt: new Date(authUser.created_at || Date.now()),
+            styleCompleted: false,
+          };
+        }
+        return prevUser;
+      });
     }
-  }, [user]);
+  }, []);
 
   // Helper to persist login status hint
   const updateLoginHint = (isLoggedIn: boolean) => {
@@ -151,7 +190,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         setTimeout(() => {
           console.warn('[UserStore] refreshProfile supabase.auth.getUser() timed out');
           resolve({ data: { user: null } });
-        }, 4000)
+        }, 3000)
       );
 
       const { data: { user } } = await Promise.race([getUserPromise, timeoutPromise]);
@@ -163,7 +202,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
           setTimeout(() => {
             console.warn('[UserStore] refreshProfile fetchUserProfile timed out');
             resolve();
-          }, 4000)
+          }, 3000)
         );
         await Promise.race([fetchPromise, fetchTimeout]);
       }
@@ -200,7 +239,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
                   console.warn(`[UserStore] Fetch timeout reached for event ${event}.`);
                   setIsLoading(false);
                 }
-              }, 10000);
+              }, 3000);
             }
             
             isFetchingRef.current = true;

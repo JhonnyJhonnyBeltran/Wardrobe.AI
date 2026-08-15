@@ -483,7 +483,7 @@ export default function PostDetailPage() {
     return (
         <div className="min-h-screen w-full bg-white dark:bg-black flex flex-col">
             {/* HEADER - White background like /profile */}
-            <header className="sticky top-0 z-50 w-full max-w-[1400px] mx-auto bg-white dark:bg-black border-b border-gray-100 dark:border-gray-800 h-16 flex items-center justify-between px-4">
+            <header className={`sticky top-0 z-50 w-full max-w-[1400px] mx-auto bg-white dark:bg-black border-b border-gray-100 dark:border-gray-800 h-16 flex items-center justify-between px-4 transition-all duration-300 ${selectedItem ? 'backdrop-blur-md bg-white/80 dark:bg-black/80 blur-md opacity-50' : ''}`}>
                 {/* Left: Back Button */}
                 <button onClick={handleBack} className="p-2 -ml-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
                     <ArrowLeft className="w-6 h-6 text-gray-900 dark:text-white" />
