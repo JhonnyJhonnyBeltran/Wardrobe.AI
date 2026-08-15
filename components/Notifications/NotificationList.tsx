@@ -7,7 +7,7 @@ import { useUser } from '@/store/userStore';
 import { useRealtimeStore } from '@/store/realtimeStore';
 import Image from 'next/image';
 import { supabase } from '@/lib/supabase/client';
-import { getRecentFollowActivity, getMyFollowStatusMap } from '@/lib/services/followService';
+import { getRecentFollowActivity, followUser, unfollowUser, getMyFollowStatusMap, getFollowStatus } from '@/lib/services/followService';
 import { getSmartSuggestions } from '@/lib/services/suggestionService';
 import { LogoMark, Avatar } from '@/components';
 import Link from 'next/link';
@@ -37,6 +37,7 @@ interface NotificationListProps {
 }
 
 export default function NotificationList({ compact = false, onClose }: NotificationListProps) {
+    const { user } = useUser();
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [loading, setLoading] = useState(true);
 

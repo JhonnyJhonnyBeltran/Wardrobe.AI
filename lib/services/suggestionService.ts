@@ -126,7 +126,8 @@ export async function getSmartSuggestions(userId: string): Promise<Notification[
         }
 
         // Completar Perfil
-        if (userData && (!userData.avatar_url || !userData.full_name) && canShowSuggestion(SUGGESTIONS.COMPLETE_PROFILE)) {
+        const user = userData as any;
+        if (user && (!user.avatar_url || !user.full_name) && canShowSuggestion(SUGGESTIONS.COMPLETE_PROFILE)) {
              suggestions.push({
                 id: SUGGESTIONS.COMPLETE_PROFILE + '_' + now.getTime(),
                 type: 'system',
