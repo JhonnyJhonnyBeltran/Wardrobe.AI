@@ -243,7 +243,7 @@ export default function FeedPage() {
   return (
     <div className="min-h-screen bg-[var(--background)] pb-24">
       {/* Header Mejorado */}
-      <header className="sticky top-0 z-30 bg-[var(--background)]/95 backdrop-blur-lg border-b border-[var(--border-color)]/50 md:hidden shadow-sm">
+      <header className="sticky top-0 z-30 bg-[var(--background)]/95 backdrop-blur-lg border-b border-[var(--border-color)]/50 md:hidden">
         <div className="px-5 h-16 flex items-center justify-between">
           {/* Left: + Button instead of Logo */}
           <button

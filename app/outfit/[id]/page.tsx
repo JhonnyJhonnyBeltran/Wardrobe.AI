@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { ArrowLeft, Edit2, Trash2, Share2, Heart, MessageCircle, Send } from 'lucide-react';
+import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';
 import { useUser } from '@/store/userStore';
 import { haptics } from '@/lib/haptic';
@@ -39,6 +40,7 @@ export default function OutfitDetailPage() {
   const router = useRouter();
   const { user } = useUser();
   const [outfit, setOutfit] = useState<Outfit | null>(null);
+  const [relatedPosts, setRelatedPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState<OutfitItem | null>(null);
 
@@ -71,6 +73,18 @@ export default function OutfitDetailPage() {
 
         if (error) throw error;
         setOutfit(data);
+
+        // Fetch related posts
+        const { data: postsData } = await supabase
+          .from('posts')
+          .select('id, image_url, caption')
+          .eq('outfit_id', outfitId)
+          .order('created_at', { ascending: false });
+        
+        if (postsData) {
+          setRelatedPosts(postsData);
+        }
+
       } catch (err) {
         console.error('Error fetching outfit:', err);
       } finally {
@@ -265,6 +279,30 @@ export default function OutfitDetailPage() {
             ))}
           </div>
         </section>
+
+        {/* Appeared In Posts */}
+        {relatedPosts.length > 0 && (
+          <section className="space-y-3 pt-4 border-t border-[var(--border-color)]">
+            <h3 className="text-lg font-semibold text-[var(--foreground)]">Aparece en ({relatedPosts.length})</h3>
+            <div className="grid grid-cols-3 gap-2">
+              {relatedPosts.map((post) => (
+                <Link
+                  key={post.id}
+                  href={`/post/${post.id}`}
+                  className="aspect-square bg-[var(--background-secondary)] relative block rounded-xl overflow-hidden hover:opacity-90 transition-opacity"
+                >
+                  {post.image_url ? (
+                    <Image src={post.image_url} alt="Post" fill className="object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center p-2 text-center text-xs text-[var(--foreground-secondary)] overflow-hidden line-clamp-3">
+                      {post.caption || 'Ver post'}
+                    </div>
+                  )}
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
       </main>
 
       {/* Item Detail Modal */}
