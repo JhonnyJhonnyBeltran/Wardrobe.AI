@@ -117,10 +117,22 @@ const Toast = memo(function Toast({
       {/* Content */}
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-gray-900 dark:text-white">
-          {notification.title}
+          {notification.title || (
+            notification.type === 'like' ? 'Nuevo me gusta' :
+            notification.type === 'comment' ? 'Nuevo comentario' :
+            notification.type === 'follow_accepted' ? 'Solicitud aceptada' :
+            notification.type === 'follow_request' ? 'Nueva solicitud de seguimiento' :
+            'Nueva notificación'
+          )}
         </p>
         <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
-          {notification.message}
+          {notification.message || (
+            notification.type === 'like' ? 'A alguien le ha gustado tu publicación' :
+            notification.type === 'comment' ? 'Alguien ha comentado en tu publicación' :
+            notification.type === 'follow_accepted' ? 'Han aceptado tu solicitud de seguimiento' :
+            notification.type === 'follow_request' ? 'Alguien quiere seguirte' :
+            'Tienes nueva actividad'
+          )}
         </p>
       </div>
 

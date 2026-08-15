@@ -136,7 +136,7 @@ export default function PublicProfilePage() {
           .select(`
             *,
             outfit_items (
-              clothing_item:clothing_items (
+              clothing_items (
                 image_url
               )
             )
@@ -516,7 +516,7 @@ export default function PublicProfilePage() {
                       >
                         {outfit.outfit_items && Array.isArray(outfit.outfit_items) && outfit.outfit_items.length > 0 ? (
                           <img
-                            src={outfit.outfit_items[0]?.clothing_item?.image_url || '/placeholder.png'}
+                            src={outfit.outfit_items[0]?.clothing_items?.image_url || '/placeholder.png'}
                             alt="Outfit item"
                             className="w-full h-full object-cover"
                           />

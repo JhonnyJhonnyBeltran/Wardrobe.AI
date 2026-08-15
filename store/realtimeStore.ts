@@ -141,11 +141,23 @@ export const useRealtimeStore = create<RealtimeStore>((set, get) => ({
   },
 
   // Stub methods for compatibility if something else uses them (though we removed usages)
-  addNotification: () => { },
-  markAsRead: () => { },
-  markAllAsRead: () => { },
-  removeNotification: () => { },
-  clearNotifications: () => { },
+  addNotification: (notification) => set(state => {
+    // Evitar duplicados
+    if (state.notifications.some(n => n.id === notification.id)) return state;
+    return {
+      notifications: [notification, ...state.notifications].slice(0, 10),
+    };
+  }),
+  markAsRead: (id) => set(state => ({
+    notifications: state.notifications.map(n => n.id === id ? { ...n, read: true } : n)
+  })),
+  markAllAsRead: () => set(state => ({
+    notifications: state.notifications.map(n => ({ ...n, read: true }))
+  })),
+  removeNotification: (id) => set(state => ({
+    notifications: state.notifications.filter(n => n.id !== id)
+  })),
+  clearNotifications: () => set({ notifications: [] }),
 
   // Online users
   onlineUsers: initialState.onlineUsers,

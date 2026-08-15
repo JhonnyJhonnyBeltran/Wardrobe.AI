@@ -55,7 +55,7 @@ export function useRealtime(options: UseRealtimeOptions = {}) {
 
         // Subscribe to notifications
         const unsubNotifications = realtimeManager.onNotification((notification) => {
-          // Store update removed as we moved to virtual "checkActivity"
+          useRealtimeStore.getState().addNotification(notification);
           onNotificationRef.current?.(notification);
           // Optionally trigger a re-check if it's a relevant type
           if ((notification as any).type === 'follow') {

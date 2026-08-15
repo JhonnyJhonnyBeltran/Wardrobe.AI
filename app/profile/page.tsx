@@ -349,11 +349,13 @@ export default function ProfilePage() {
           {/* Left: Create Button */}
           <button
             onClick={() => setCreateMenuOpen(true)}
-            className="p-2 -ml-2 hover:bg-[var(--background-secondary)] rounded-full transition-colors flex-shrink-0"
+            className="md:hidden p-2 -ml-2 hover:bg-[var(--background-secondary)] rounded-full transition-colors flex-shrink-0"
             aria-label="Crear publicación"
           >
             <Plus className="w-6 h-6 text-[var(--brand-pink)]" />
           </button>
+          {/* Spacer for desktop to keep the title centered */}
+          <div className="hidden md:block w-10 flex-shrink-0 -ml-2"></div>
 
           {/* Center: Username */}
           <div className="flex-1 flex justify-center items-center px-2">

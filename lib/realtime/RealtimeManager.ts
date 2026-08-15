@@ -357,7 +357,7 @@ class RealtimeManager {
       title: data.title as string || 'Notificación',
       message: data.message as string || '',
       data: data.data as Record<string, unknown>,
-      sender_id: data.sender_id as string,
+      sender_id: (data.sender_id || data.actor_id) as string,
       read: false,
       created_at: data.created_at as string || new Date().toISOString(),
     };
