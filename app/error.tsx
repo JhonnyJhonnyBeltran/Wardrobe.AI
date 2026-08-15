@@ -9,38 +9,39 @@ export default function ErrorBoundary({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  const [isChunkError, setIsChunkError] = useState(false);
+  const [isReloading, setIsReloading] = useState(false);
 
   useEffect(() => {
-    // Check if the error is related to failing to load a chunk (common after deployments or long periods of inactivity)
-    const errorString = (error.message || error.toString()).toLowerCase();
-    
-    // Patterns that indicate a Next.js chunk failed to load
-    const isChunkLoadError = 
-      errorString.includes('chunkloaderror') || 
-      errorString.includes('failed to fetch dynamically imported module') ||
-      errorString.includes('loading chunk') ||
-      errorString.includes('fetch failed') ||
-      errorString.includes('network error');
-      
-    if (isChunkLoadError) {
-      console.warn('Chunk load error detected, reloading page automatically...', error);
-      setIsChunkError(true);
-      // Force a full page reload to get the new chunks from the server
-      window.location.reload();
-      return;
-    }
-    
-    // Log other errors
     console.error('Unhandled application error:', error);
+    
+    // Prevent infinite reload loops
+    const now = Date.now();
+    const lastReload = parseInt(sessionStorage.getItem('error_reload_time') || '0');
+    const reloadCount = parseInt(sessionStorage.getItem('error_reload_count') || '0');
+
+    let newCount = 1;
+    // If the last reload was less than 10 seconds ago, it's a loop
+    if (now - lastReload < 10000) {
+      newCount = reloadCount + 1;
+    }
+
+    sessionStorage.setItem('error_reload_time', now.toString());
+    sessionStorage.setItem('error_reload_count', newCount.toString());
+
+    // Only auto-reload up to 2 times in a row
+    if (newCount <= 2) {
+      console.warn('Auto-reloading page to recover from error...', error);
+      setIsReloading(true);
+      window.location.reload();
+    }
   }, [error]);
 
-  if (isChunkError) {
+  if (isReloading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] p-4 text-center">
         <div className="w-8 h-8 border-4 border-[var(--brand-pink)] border-t-transparent rounded-full animate-spin mb-4"></div>
-        <h2 className="text-xl font-bold mb-2">Actualizando aplicación...</h2>
-        <p className="text-gray-500">Por favor, espera un momento.</p>
+        <h2 className="text-xl font-bold mb-2">Recargando aplicación...</h2>
+        <p className="text-gray-500">Hemos detectado un problema y estamos intentando solucionarlo.</p>
       </div>
     );
   }
@@ -56,17 +57,21 @@ export default function ErrorBoundary({
       </div>
       <h2 className="text-2xl font-bold mb-3 text-gray-900 dark:text-white">Algo ha salido mal</h2>
       <p className="text-gray-500 dark:text-gray-400 mb-8 max-w-md">
-        Ha ocurrido un error inesperado. Si el problema persiste, intenta recargar la página.
+        Ha ocurrido un error persistente. Si el problema continúa, contacta a soporte.
       </p>
       <div className="flex gap-4">
         <button
           onClick={() => window.location.reload()}
           className="px-6 py-2.5 bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white font-semibold rounded-xl hover:opacity-80 transition-opacity"
         >
-          Recargar página
+          Forzar recarga
         </button>
         <button
-          onClick={() => reset()}
+          onClick={() => {
+            sessionStorage.removeItem('error_reload_time');
+            sessionStorage.removeItem('error_reload_count');
+            reset();
+          }}
           className="px-6 py-2.5 bg-[var(--brand-pink)] text-white font-semibold rounded-xl hover:opacity-90 transition-opacity shadow-lg shadow-[var(--brand-pink)]/20"
         >
           Intentar de nuevo
