@@ -250,7 +250,7 @@ export default function PublicProfilePage() {
         <header className="sticky top-0 z-30 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-color)]/50">
           <div className="flex items-center justify-between px-4 h-14 w-full md:max-w-[70%] mx-auto">
             <div className="flex items-center gap-3">
-              <button onClick={() => router.back()} className="p-1 -ml-1 hover:bg-[var(--background-secondary)] rounded-full transition-colors">
+              <button onClick={() => window.history.length > 2 ? router.back() : router.push('/feed')} className="p-1 -ml-1 hover:bg-[var(--background-secondary)] rounded-full transition-colors">
                 <ArrowLeft className="w-6 h-6 text-[var(--foreground)]" />
               </button>
               <span className="font-bold text-[var(--foreground)] truncate max-w-[200px] sm:max-w-[280px]">
@@ -288,7 +288,7 @@ export default function PublicProfilePage() {
       <header className="sticky top-0 z-30 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-color)]/50">
         <div className="flex items-center justify-between px-4 h-14 w-full md:max-w-[70%] mx-auto">
           <div className="flex items-center gap-3">
-            <button onClick={() => router.back()} className="p-1 -ml-1 hover:bg-[var(--background-secondary)] rounded-full transition-colors">
+            <button onClick={() => window.history.length > 2 ? router.back() : router.push('/feed')} className="p-1 -ml-1 hover:bg-[var(--background-secondary)] rounded-full transition-colors">
               <ArrowLeft className="w-6 h-6 text-[var(--foreground)]" />
             </button>
             <span className="font-bold text-[var(--foreground)] truncate max-w-[200px] sm:max-w-[280px]">

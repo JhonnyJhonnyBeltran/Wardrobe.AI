@@ -15,7 +15,11 @@ export default function NotificationsPopover({ isOpen, onClose }: NotificationsP
     // Close when clicking outside
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
-            if (popoverRef.current && !popoverRef.current.contains(event.target as Node)) {
+            const target = event.target as Element;
+            if (target.closest('#notifications-nav-btn')) {
+                return; // Let the button handle the toggle
+            }
+            if (popoverRef.current && !popoverRef.current.contains(target)) {
                 onClose();
             }
         };

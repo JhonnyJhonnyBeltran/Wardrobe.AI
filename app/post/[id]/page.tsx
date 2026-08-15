@@ -454,7 +454,13 @@ export default function PostDetailPage() {
         router.push(`/create-post?postId=${postId}`);
     };
 
-    const handleBack = () => router.back();
+    const handleBack = () => {
+        if (window.history.length > 2) {
+            router.back();
+        } else {
+            router.push('/feed');
+        }
+    };
 
     // Loading state
     if (loading) return (
@@ -545,7 +551,7 @@ export default function PostDetailPage() {
             <div className="flex flex-col md:flex-row w-full max-w-[1400px] mx-auto flex-1 md:h-[calc(100vh-64px)]">
 
             {/* IMAGE CAROUSEL - Swipeable with Framer Motion */}
-            <div className="relative w-full aspect-[4/5] md:aspect-auto md:w-[60%] md:h-[calc(100vh-64px)] bg-white md:bg-gray-50 dark:bg-black dark:md:bg-[#0a0a0a] border-r-0 md:border-r border-gray-100 dark:border-gray-800 flex-shrink-0 overflow-hidden">
+            <div className="relative w-full h-auto min-h-[300px] md:w-[60%] md:h-[calc(100vh-64px)] bg-white md:bg-gray-50 dark:bg-black dark:md:bg-[#0a0a0a] border-r-0 md:border-r border-gray-100 dark:border-gray-800 flex-shrink-0 overflow-hidden flex items-center justify-center">
                 <AnimatePresence initial={false} mode="wait">
                     <motion.div
                         key={activeSlide}
@@ -569,12 +575,13 @@ export default function PostDetailPage() {
                         className="w-full h-full relative cursor-grab active:cursor-grabbing"
                     >
                         {currentSlide.type === 'photo' ? (
-                            <div className="w-full h-full relative bg-black">
+                            <div className="w-full h-full flex items-center justify-center relative">
                                 <Image
                                     src={currentSlide.url || '/placeholder.png'}
                                     alt="Post"
-                                    fill
-                                    className="object-contain"
+                                    width={1200}
+                                    height={1200}
+                                    className="w-full h-auto md:h-full max-h-[85vh] md:max-h-[calc(100vh-64px)] object-contain"
                                     priority
                                     draggable={false}
                                 />

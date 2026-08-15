@@ -148,7 +148,7 @@ export default function OutfitDetailPage() {
       {/* Header */}
       <header className="sticky top-0 z-30 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-color)] px-4 h-14 flex items-center justify-between">
         <button
-          onClick={() => router.back()}
+          onClick={() => window.history.length > 2 ? router.back() : router.push('/feed')}
           className="p-2 -ml-2 hover:bg-[var(--background-secondary)] rounded-full transition-colors"
         >
           <ArrowLeft className="w-5 h-5 text-[var(--foreground)]" />

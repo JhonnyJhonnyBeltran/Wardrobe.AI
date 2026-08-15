@@ -15,7 +15,7 @@ interface NavItem {
   labelKey: 'home' | 'closet' | 'create' | 'social' | 'profile' | 'search' | 'messages' | 'notifications';
   icon: React.ReactNode;
   isLogoMark?: boolean;
-  action?: () => void; // Add action support
+  action?: (e?: any) => void; // Add action support
 }
 
 export default function Sidebar() {
@@ -48,7 +48,10 @@ export default function Sidebar() {
       href: '#', // Prevent navigation
       labelKey: 'notifications',
       icon: <Heart />,
-      action: () => setShowNotifications(!showNotifications)
+      action: (e) => {
+        e?.preventDefault();
+        setShowNotifications(prev => !prev);
+      }
     },
     { href: '/profile', labelKey: 'profile', icon: <UserRound /> },
   ];
@@ -79,6 +82,7 @@ export default function Sidebar() {
               <div key={item.labelKey} className="relative group">
                 {item.action ? (
                   <button
+                    id={item.labelKey === 'notifications' ? 'notifications-nav-btn' : undefined}
                     onClick={item.action}
                     className={`flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-200 
                             ${isActive
