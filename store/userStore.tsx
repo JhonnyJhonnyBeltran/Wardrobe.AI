@@ -133,20 +133,12 @@ export function UserProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let isMounted = true;
     
-    let isResolved = false;
-    
-    // Safety timeout: ensure loading state is cleared after a maximum of 10s
-    // but don't force a reload, just let it fail gracefully
-    const safetyTimeout = setTimeout(() => {
-      if (!isMounted || isResolved) return;
-      console.warn('[UserStore] Auth resolution safety timeout reached.');
-      setIsLoading(false);
-    }, 10000);
-
     const isFetchingRef = { current: false };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!isMounted) return;
+      
+      let eventSafetyTimeout: NodeJS.Timeout | null = null;
       
       console.log(`[UserStore] Auth event: ${event}`);
 
@@ -160,6 +152,13 @@ export function UserProvider({ children }: { children: ReactNode }) {
             // Only show global loading state for initial load or new sign in
             if (event !== 'TOKEN_REFRESHED') {
               setIsLoading(true);
+              // Start a timeout specifically for this fetch attempt
+              eventSafetyTimeout = setTimeout(() => {
+                if (isMounted) {
+                  console.warn(`[UserStore] Fetch timeout reached for event ${event}.`);
+                  setIsLoading(false);
+                }
+              }, 10000);
             }
             
             isFetchingRef.current = true;
@@ -184,16 +183,16 @@ export function UserProvider({ children }: { children: ReactNode }) {
           updateLoginHint(false);
         }
       } finally {
-        isResolved = true;
         setIsLoading(false);
-        clearTimeout(safetyTimeout);
+        if (eventSafetyTimeout) {
+          clearTimeout(eventSafetyTimeout);
+        }
       }
     });
 
     return () => {
       isMounted = false;
       subscription.unsubscribe();
-      clearTimeout(safetyTimeout);
     };
   }, []);
 
