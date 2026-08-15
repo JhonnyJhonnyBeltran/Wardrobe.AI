@@ -40,6 +40,7 @@ export default function OutfitCalendar() {
   // Data for picker
   const [userOutfits, setUserOutfits] = useState<Outfit[]>([]);
   const [outfitsLoading, setOutfitsLoading] = useState(false);
+  const [outfitToSwap, setOutfitToSwap] = useState<string | null>(null);
 
   // Derive calendar grid
   const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
@@ -181,21 +182,33 @@ export default function OutfitCalendar() {
     const dateStr = formatDateToSQL(selectedDate);
     
     try {
-      const { error } = await (supabase as any)
-        .from('calendar_outfits')
-        .insert({
-          user_id: user.id,
-          outfit_id: outfitId,
-          date: dateStr
-        });
+      if (outfitToSwap) {
+        // Swap flow
+        const { error } = await (supabase as any)
+          .from('calendar_outfits')
+          .update({ outfit_id: outfitId })
+          .eq('id', outfitToSwap);
         
-      if (error) {
-        if (error.code === '23505') {
-            // Already assigned, just close silently
-            setShowPicker(false);
-            return;
+        if (error) throw error;
+        setOutfitToSwap(null);
+      } else {
+        // Insert flow
+        const { error } = await (supabase as any)
+          .from('calendar_outfits')
+          .insert({
+            user_id: user.id,
+            outfit_id: outfitId,
+            date: dateStr
+          });
+          
+        if (error) {
+          if (error.code === '23505') {
+              // Already assigned exactly this outfit
+              setShowPicker(false);
+              return;
+          }
+          throw error;
         }
-        throw error;
       }
       
       // Refresh
@@ -203,7 +216,12 @@ export default function OutfitCalendar() {
       setShowPicker(false);
     } catch (err) {
       console.error('Error assigning outfit:', err);
-      alert('Error al asignar el outfit');
+      // Use toast or SystemModal instead of native alert
+      showModal({
+        title: 'Error',
+        message: 'No se pudo asignar el outfit.',
+        type: 'error',
+      });
     }
   };
 
@@ -270,6 +288,18 @@ export default function OutfitCalendar() {
                       onClick={() => setSelectedOutfitDetail(outfit)}
                       className="cursor-pointer hover:opacity-90 transition-opacity shrink-0 flex items-center justify-center bg-[#f8f9fa] dark:bg-[#111] rounded-2xl border border-[var(--border-color)] overflow-hidden w-full aspect-[4/5] relative"
                     >
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOutfitToSwap(outfit.calendar_id);
+                            loadUserOutfits();
+                            setShowPicker(true);
+                          }}
+                          className="absolute top-3 right-14 z-10 p-2 bg-white/90 dark:bg-black/90 backdrop-blur-sm text-[var(--foreground)] rounded-full hover:bg-[var(--background-secondary)] transition-colors shadow-sm"
+                          title="Cambiar outfit"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
                         <button 
                           onClick={(e) => {
                             e.stopPropagation();
@@ -437,6 +467,18 @@ export default function OutfitCalendar() {
                             <button 
                               onClick={(e) => {
                                 e.stopPropagation();
+                                setOutfitToSwap(outfit.calendar_id);
+                                loadUserOutfits();
+                                setShowPicker(true);
+                              }}
+                              className="absolute top-3 right-14 z-10 p-2 bg-white/90 dark:bg-black/90 backdrop-blur-sm text-[var(--foreground)] rounded-full hover:bg-[var(--background-secondary)] transition-colors shadow-sm"
+                              title="Cambiar outfit"
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </button>
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 handleRemoveAssignment(outfit.calendar_id);
                               }}
                               className="absolute top-3 right-3 z-10 p-2 bg-red-100/90 backdrop-blur-sm text-red-500 rounded-full hover:bg-red-500 hover:text-white transition-colors shadow-sm"
@@ -499,7 +541,7 @@ export default function OutfitCalendar() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[6000] bg-black/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4"
-            onClick={() => setShowPicker(false)}
+            onClick={() => { setShowPicker(false); setOutfitToSwap(null); }}
           >
             <motion.div
               initial={{ y: '100%' }}
@@ -511,13 +553,13 @@ export default function OutfitCalendar() {
             >
             <div className="px-6 py-4 border-b border-[var(--border-color)] flex items-center gap-4 bg-[var(--background)]/90 backdrop-blur-md sticky top-0 z-10 pt-safe-top">
               <button
-                onClick={() => setShowPicker(false)}
+                onClick={() => { setShowPicker(false); setOutfitToSwap(null); }}
                 className="w-10 h-10 flex items-center justify-center rounded-full bg-[var(--background-secondary)] text-[var(--foreground)] transition-colors"
               >
                 <ChevronLeft className="w-6 h-6" />
               </button>
               <div>
-                  <h3 className="text-xl font-bold text-[var(--foreground)]">Selecciona un Outfit</h3>
+                  <h3 className="text-xl font-bold text-[var(--foreground)]">{outfitToSwap ? 'Cambiar Outfit' : 'Selecciona un Outfit'}</h3>
                   <p className="text-sm text-[var(--foreground-secondary)]">Para el {selectedDate?.toLocaleDateString()}</p>
               </div>
             </div>
