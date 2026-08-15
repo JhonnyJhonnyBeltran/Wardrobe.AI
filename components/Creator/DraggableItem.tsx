@@ -73,21 +73,15 @@ export const DraggableItem = ({
             onDragStart={onSelect} // Select on start dragging
             onDragEnd={handleDragEnd} // Use proper drag end handler
             onTap={onSelect}
-            animate={{
-                rotate: state.rotation,
-                scale: state.scale,
-                zIndex: state.zIndex,
-            }}
-            transition={{
-                rotate: { type: 'spring', damping: 20, stiffness: 200 },
-                scale: { type: 'spring', damping: 20, stiffness: 200 }
-            }}
             style={{
                 position: 'absolute',
                 left: `${state.x}%`,
                 top: `${state.y}%`,
                 x: dragX,
                 y: dragY,
+                rotate: state.rotation,
+                scale: state.scale,
+                zIndex: state.zIndex,
                 width: 0,
                 height: 0,
                 touchAction: 'none',
