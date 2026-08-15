@@ -219,8 +219,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: any, session: any) => {
       if (!isMounted) return;
       
-      let eventSafetyTimeout: NodeJS.Timeout | null = null;
-      
       console.log(`[UserStore] Auth event: ${event}`);
 
       try {
@@ -230,16 +228,25 @@ export function UserProvider({ children }: { children: ReactNode }) {
             userIdRef.current = session.user.id;
             updateLoginHint(true);
             
-            // Only show global loading state for initial load or new sign in
+            // Optimistic hydration: If cache missed but we have a valid session, 
+            // populate user immediately so AuthGuard doesn't block the UI.
+            setUser((prev) => {
+              if (prev && prev.id === session.user.id) return prev;
+              return {
+                id: session.user.id,
+                email: session.user.email || '',
+                name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User',
+                username: undefined,
+                avatar: session.user.user_metadata?.avatar_url,
+                subscriptionTier: SubscriptionTier.FREE,
+                createdAt: new Date(session.user.created_at || Date.now()),
+                styleCompleted: false,
+              };
+            });
+            
+            // Only show global loading state for initial load or new sign in if we don't have a user
             if (event !== 'TOKEN_REFRESHED') {
-              setIsLoading(true);
-              // Start a timeout specifically for this fetch attempt
-              eventSafetyTimeout = setTimeout(() => {
-                if (isMounted) {
-                  console.warn(`[UserStore] Fetch timeout reached for event ${event}.`);
-                  setIsLoading(false);
-                }
-              }, 3000);
+              setIsLoading(false); // We can immediately stop loading since we hydrated optimistically
             }
             
             isFetchingRef.current = true;
@@ -265,9 +272,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
         }
       } finally {
         setIsLoading(false);
-        if (eventSafetyTimeout) {
-          clearTimeout(eventSafetyTimeout);
-        }
       }
     });
 
