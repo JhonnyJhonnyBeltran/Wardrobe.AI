@@ -64,7 +64,7 @@ export default function PublicProfilePage() {
   const [posts, setPosts] = useState<any[]>([]);
 
   // Check if viewing own profile
-  const isOwnProfile = currentUser?.id === profileId;
+  const isOwnProfile = currentUser?.id === profileId || currentUser?.username === decodeURIComponent(profileId);
 
 
 
@@ -82,28 +82,33 @@ export default function PublicProfilePage() {
     try {
       setIsLoading(true);
 
-      // 1. Fetch profile
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', profileId)
-        .single();
+      let profileQuery = supabase.from('profiles').select('*');
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      
+      if (uuidRegex.test(profileId)) {
+        profileQuery = profileQuery.eq('id', profileId);
+      } else {
+        profileQuery = profileQuery.eq('username', decodeURIComponent(profileId));
+      }
+      
+      const { data: profileData, error: profileError } = await profileQuery.single();
 
       if (profileError || !profileData) {
         router.push('/404');
         return;
       }
 
+      const targetId = profileData.id;
       setProfile(profileData);
 
       // 2. Fetch stats
       const { count: postCount } = await supabase
         .from('posts')
         .select('*', { count: 'exact', head: true })
-        .eq('user_id', profileId);
+        .eq('user_id', targetId);
 
-      const followersCount = await followService.getFollowersCount(profileId);
-      const followingCount = await followService.getFollowingCount(profileId);
+      const followersCount = await followService.getFollowersCount(targetId);
+      const followingCount = await followService.getFollowingCount(targetId);
 
       setProfileStats({
         posts: postCount || 0,
@@ -115,19 +120,19 @@ export default function PublicProfilePage() {
       const { data: postsData } = await supabase
         .from('posts')
         .select('*')
-        .eq('user_id', profileId)
+        .eq('user_id', targetId)
         .order('created_at', { ascending: false });
 
       setPosts(postsData || []);
 
       // 4. Check follow status
       if (currentUser) {
-        const status = await followService.getFollowStatus(currentUser.id, profileId);
+        const status = await followService.getFollowStatus(currentUser.id, targetId);
         setFollowStatus(status);
         setIsFollowedByMe(status === 'accepted');
         
         // 5. Check if user is blocked
-        const blocked = await followService.isBlocked(currentUser.id, profileId);
+        const blocked = await followService.isBlocked(currentUser.id, targetId);
         setIsBlocked(blocked);
 
         // 6. Fetch Outfits unconditionally (public profiles)
@@ -141,7 +146,7 @@ export default function PublicProfilePage() {
               )
             )
           `)
-          .eq('user_id', profileId)
+          .eq('user_id', targetId)
           .order('created_at', { ascending: false });
         
         setOutfits(outfitsData || []);
@@ -161,7 +166,8 @@ export default function PublicProfilePage() {
     setFollowStatus('accepted');
     setIsFollowedByMe(true);
 
-    const result = await followService.followUser(currentUser.id, profileId);
+    const targetId = profile?.id || profileId;
+    const result = await followService.followUser(currentUser.id, targetId);
 
     if (!result.success) {
       setFollowStatus('none');
@@ -184,7 +190,8 @@ export default function PublicProfilePage() {
     setFollowStatus('none');
     setIsFollowedByMe(false);
 
-    const result = await followService.unfollowUser(currentUser.id, profileId);
+    const targetId = profile?.id || profileId;
+    const result = await followService.unfollowUser(currentUser.id, targetId);
 
     if (!result.success) {
       setFollowStatus(previousStatus);

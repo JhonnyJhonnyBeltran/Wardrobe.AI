@@ -13,6 +13,7 @@ import Avatar from '@/components/Avatar';
 import { useUiStore } from '@/store/uiStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import InteractiveOutfitViewer from '@/components/InteractiveOutfitViewer';
+import { haptics } from '@/lib/haptic';
 
 interface Comment {
     id: string;
@@ -48,6 +49,8 @@ export default function PostDetailPage() {
     const [showSwipeHint, setShowSwipeHint] = useState(true);
     const [showOptions, setShowOptions] = useState(false);
     const [deleting, setDeleting] = useState(false);
+    const [replyingTo, setReplyingTo] = useState<{ id: string, username: string } | null>(null);
+    const [showHeartAnim, setShowHeartAnim] = useState(false);
     const [selectedItem, setSelectedItem] = useState<any | null>(null);
 
     const { showSaveToast, openFolderModal, setTabBarHidden, showModal } = useUiStore();
@@ -573,7 +576,27 @@ export default function PostDetailPage() {
                             }
                         }}
                         className="w-full h-full relative cursor-grab active:cursor-grabbing"
+                        onDoubleClick={() => {
+                            if (!isLiked) toggleLike();
+                            setShowHeartAnim(true);
+                            setTimeout(() => setShowHeartAnim(false), 1000);
+                            haptics.selection();
+                        }}
                     >
+                        <AnimatePresence>
+                            {showHeartAnim && (
+                                <motion.div
+                                    initial={{ scale: 0, opacity: 0 }}
+                                    animate={{ scale: 1.5, opacity: 1 }}
+                                    exit={{ scale: 0, opacity: 0 }}
+                                    transition={{ type: "spring", damping: 15 }}
+                                    className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none"
+                                >
+                                    <Heart className="w-32 h-32 text-white fill-white drop-shadow-[0_0_20px_rgba(0,0,0,0.5)]" />
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+
                         {currentSlide.type === 'photo' ? (
                             <div className="w-full h-full flex items-center justify-center relative">
                                 <Image
