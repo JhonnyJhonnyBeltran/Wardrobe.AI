@@ -1,7 +1,7 @@
 'use client';
 
 import { Search, Heart, X } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 interface FilterBarProps {
     searchQuery: string;
@@ -69,9 +69,22 @@ export function FilterBar({
 }) {
     const [showColorPicker, setShowColorPicker] = useState(false);
     const [showTypePicker, setShowTypePicker] = useState(false);
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    // Close dropdowns when clicking outside
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+                setShowColorPicker(false);
+                setShowTypePicker(false);
+            }
+        }
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     return (
-        <div className="space-y-3 p-4 bg-[var(--card-bg)] rounded-2xl border border-[var(--border-color)]">
+        <div ref={containerRef} className="space-y-3 p-4 bg-[var(--card-bg)] rounded-2xl border border-[var(--border-color)]">
             {/* Search Bar */}
             <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--foreground-tertiary)]" />
@@ -119,7 +132,7 @@ export function FilterBar({
                     </button>
 
                     {showColorPicker && (
-                        <div className="absolute top-full mt-2 left-0 bg-[var(--card-bg)] rounded-xl border border-[var(--border-color)] shadow-lg p-3 z-50 min-w-[200px] max-h-[300px] overflow-y-auto custom-scrollbar">
+                        <div className="absolute top-full mt-2 left-0 bg-[var(--card-bg)] rounded-xl border border-[var(--border-color)] shadow-lg p-3 z-50 min-w-[200px] max-h-[250px] overflow-y-auto custom-scrollbar">
                             <div className="grid grid-cols-4 gap-2">
                                 {COLORS.map((color) => {
                                     const isSelected = selectedColors.includes(color.value);
@@ -175,7 +188,7 @@ export function FilterBar({
                     </button>
 
                     {showTypePicker && (
-                        <div className="absolute top-full mt-2 left-0 bg-[var(--card-bg)] rounded-xl border border-[var(--border-color)] shadow-lg p-2 z-50 min-w-[140px] max-h-[300px] overflow-y-auto custom-scrollbar">
+                        <div className="absolute top-full mt-2 left-0 bg-[var(--card-bg)] rounded-xl border border-[var(--border-color)] shadow-lg p-2 z-50 min-w-[140px] max-h-[250px] overflow-y-auto custom-scrollbar">
                             {TYPES.map((type) => {
                                 const isSelected = selectedTypes.includes(type);
                                 const isTodos = type === 'Todos';
