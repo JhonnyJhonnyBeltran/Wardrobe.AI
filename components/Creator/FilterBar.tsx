@@ -51,13 +51,22 @@ const TYPES = [
 export function FilterBar({
     searchQuery,
     onSearchChange,
-    selectedColor,
-    onColorChange,
-    selectedType,
-    onTypeChange,
+    selectedColors,
+    onColorsChange,
+    selectedTypes,
+    onTypesChange,
     showFavoritesOnly,
     onFavoritesToggle
-}: FilterBarProps) {
+}: {
+    searchQuery: string;
+    onSearchChange: (query: string) => void;
+    selectedColors: string[];
+    onColorsChange: (colors: string[]) => void;
+    selectedTypes: string[];
+    onTypesChange: (types: string[]) => void;
+    showFavoritesOnly: boolean;
+    onFavoritesToggle: () => void;
+}) {
     const [showColorPicker, setShowColorPicker] = useState(false);
     const [showTypePicker, setShowTypePicker] = useState(false);
 
@@ -104,44 +113,54 @@ export function FilterBar({
                             setShowColorPicker(!showColorPicker);
                             if (!showColorPicker) setShowTypePicker(false);
                         }}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${selectedColor
-                            ? 'bg-[var(--brand-pink)] text-white'
-                            : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:bg-[var(--background-tertiary)]'
-                            }`}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:bg-[var(--background-tertiary)]`}
                     >
-                        {selectedColor ? (
-                            <>
-                                <div
-                                    className="w-3 h-3 rounded-full border border-white/30"
-                                    style={{ backgroundColor: COLORS.find(c => c.value === selectedColor)?.hex }}
-                                />
-                                {COLORS.find(c => c.value === selectedColor)?.name}
-                            </>
-                        ) : (
-                            'Color'
-                        )}
+                        Color +
                     </button>
 
                     {showColorPicker && (
                         <div className="absolute top-full mt-2 left-0 bg-[var(--card-bg)] rounded-xl border border-[var(--border-color)] shadow-lg p-3 z-10 min-w-[200px]">
                             <div className="grid grid-cols-4 gap-2">
-                                {COLORS.map((color) => (
-                                    <button
-                                        key={color.value}
-                                        onClick={() => {
-                                            onColorChange(selectedColor === color.value ? null : color.value);
-                                            setShowColorPicker(false);
-                                        }}
-                                        className={`w-10 h-10 rounded-full border-2 transition-transform hover:scale-110 ${selectedColor === color.value ? 'border-[#FF69B4] scale-110' : 'border-[var(--border-color)]'
-                                            }`}
-                                        style={{ backgroundColor: color.hex }}
-                                        title={color.name}
-                                    />
-                                ))}
+                                {COLORS.map((color) => {
+                                    const isSelected = selectedColors.includes(color.value);
+                                    return (
+                                        <button
+                                            key={color.value}
+                                            onClick={() => {
+                                                if (isSelected) {
+                                                    onColorsChange(selectedColors.filter(c => c !== color.value));
+                                                } else {
+                                                    onColorsChange([...selectedColors, color.value]);
+                                                }
+                                            }}
+                                            className={`w-10 h-10 rounded-full border-2 transition-transform hover:scale-110 ${isSelected ? 'border-[#FF69B4] scale-110' : 'border-[var(--border-color)]'
+                                                }`}
+                                            style={{ backgroundColor: color.hex }}
+                                            title={color.name}
+                                        />
+                                    );
+                                })}
                             </div>
                         </div>
                     )}
                 </div>
+
+                {/* Active Color Pills */}
+                {selectedColors.map(colorValue => {
+                    const c = COLORS.find(c => c.value === colorValue);
+                    if (!c) return null;
+                    return (
+                        <button
+                            key={c.value}
+                            onClick={() => onColorsChange(selectedColors.filter(v => v !== c.value))}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap bg-[var(--brand-pink)] text-white hover:bg-[#ff3377] transition-colors"
+                        >
+                            <div className="w-3 h-3 rounded-full border border-white/30" style={{ backgroundColor: c.hex }} />
+                            {c.name}
+                            <X className="w-3 h-3 ml-0.5" />
+                        </button>
+                    );
+                })}
 
                 {/* Type Filter */}
                 <div className="relative">
@@ -150,47 +169,68 @@ export function FilterBar({
                             setShowTypePicker(!showTypePicker);
                             if (!showTypePicker) setShowColorPicker(false);
                         }}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${selectedType
-                            ? 'bg-[var(--brand-pink)] text-white'
-                            : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:bg-[var(--background-tertiary)]'
-                            }`}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:bg-[var(--background-tertiary)]`}
                     >
-                        {selectedType || 'Tipo'}
+                        Tipo +
                     </button>
 
                     {showTypePicker && (
                         <div className="absolute top-full mt-2 left-0 bg-[var(--card-bg)] rounded-xl border border-[var(--border-color)] shadow-lg p-2 z-10 min-w-[140px]">
-                            {TYPES.map((type) => (
-                                <button
-                                    key={type}
-                                    onClick={() => {
-                                        onTypeChange(type === 'Todos' ? null : type);
-                                        setShowTypePicker(false);
-                                    }}
-                                    className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition-colors ${(type === 'Todos' && !selectedType) || selectedType === type
-                                        ? 'bg-[var(--brand-pink)] text-white'
-                                        : 'text-[var(--foreground)] hover:bg-[var(--background-secondary)]'
-                                        }`}
-                                >
-                                    {type}
-                                </button>
-                            ))}
+                            {TYPES.map((type) => {
+                                const isSelected = selectedTypes.includes(type);
+                                const isTodos = type === 'Todos';
+                                return (
+                                    <button
+                                        key={type}
+                                        onClick={() => {
+                                            if (isTodos) {
+                                                onTypesChange([]);
+                                                setShowTypePicker(false);
+                                                return;
+                                            }
+                                            if (isSelected) {
+                                                onTypesChange(selectedTypes.filter(t => t !== type));
+                                            } else {
+                                                onTypesChange([...selectedTypes, type]);
+                                            }
+                                        }}
+                                        className={`w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition-colors ${(isTodos && selectedTypes.length === 0) || isSelected
+                                            ? 'bg-[var(--brand-pink)] text-white'
+                                            : 'text-[var(--foreground)] hover:bg-[var(--background-secondary)]'
+                                            }`}
+                                    >
+                                        {type}
+                                    </button>
+                                );
+                            })}
                         </div>
                     )}
                 </div>
 
+                {/* Active Type Pills */}
+                {selectedTypes.map(typeValue => (
+                    <button
+                        key={typeValue}
+                        onClick={() => onTypesChange(selectedTypes.filter(v => v !== typeValue))}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap bg-[var(--brand-pink)] text-white hover:bg-[#ff3377] transition-colors"
+                    >
+                        {typeValue}
+                        <X className="w-3 h-3 ml-0.5" />
+                    </button>
+                ))}
+
                 {/* Clear Filters */}
-                {(searchQuery || selectedColor || selectedType || showFavoritesOnly) && (
+                {(searchQuery || selectedColors.length > 0 || selectedTypes.length > 0 || showFavoritesOnly) && (
                     <button
                         onClick={() => {
                             onSearchChange('');
-                            onColorChange(null);
-                            onTypeChange(null);
+                            onColorsChange([]);
+                            onTypesChange([]);
                             if (showFavoritesOnly) onFavoritesToggle();
                         }}
                         className="px-3 py-1.5 rounded-full text-xs font-medium bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors whitespace-nowrap"
                     >
-                        Limpiar filtros
+                        Limpiar
                     </button>
                 )}
             </div>

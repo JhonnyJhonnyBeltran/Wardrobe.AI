@@ -204,8 +204,8 @@ export default function CreateOutfitPage() {
 
     // Filter states
     const [searchQuery, setSearchQuery] = useState('');
-    const [selectedColor, setSelectedColor] = useState<string | null>(null);
-    const [selectedType, setSelectedType] = useState<string | null>(null);
+    const [selectedColors, setSelectedColors] = useState<string[]>([]);
+    const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
     const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
 
     // Helpers
@@ -241,18 +241,35 @@ export default function CreateOutfitPage() {
             if (searchQuery && !item.name.toLowerCase().includes(searchQuery.toLowerCase())) {
                 return false;
             }
-            if (selectedColor && item.color?.toLowerCase() !== selectedColor.toLowerCase()) {
+            if (selectedColors.length > 0 && (!item.color || !selectedColors.includes(item.color.toLowerCase()))) {
                 return false;
             }
-            if (selectedType && item.category?.toLowerCase() !== selectedType.toLowerCase()) {
-                return false;
+            if (selectedTypes.length > 0) {
+                const typeMatches = selectedTypes.some(type => {
+                    const t = type.toLowerCase();
+                    const c = item.category?.toLowerCase() || '';
+                    const n = item.name?.toLowerCase() || '';
+                    if (t === 'camiseta') return c === 'top' || c === 'shirt' || n.includes('camiseta');
+                    if (t === 'pantalón') return c === 'bottom' || n.includes('pantalón') || n.includes('pantalon');
+                    if (t === 'vestido') return c === 'dress' || n.includes('vestido');
+                    if (t === 'chaqueta') return c === 'outerwear' || n.includes('chaqueta');
+                    if (t === 'jersey') return c === 'sweater' || n.includes('jersey');
+                    if (t === 'sudadera') return n.includes('sudadera') || n.includes('hoodie');
+                    if (t === 'abrigo') return c === 'outerwear' || n.includes('abrigo');
+                    if (t === 'falda') return c === 'skirt' || n.includes('falda');
+                    if (t === 'shorts') return n.includes('short');
+                    if (t === 'zapatos') return c === 'shoes' || n.includes('zapat') || n.includes('sneaker');
+                    if (t === 'accesorios') return c === 'accessory' || n.includes('accesorio') || n.includes('gorra') || n.includes('sombrero') || n.includes('gafas') || n.includes('bolso');
+                    return false;
+                });
+                if (!typeMatches) return false;
             }
             if (showFavoritesOnly && !item.favorite) {
                 return false;
             }
             return true;
         });
-    }, [wardrobeItems, searchQuery, selectedColor, selectedType, showFavoritesOnly]);
+    }, [wardrobeItems, searchQuery, selectedColors, selectedTypes, showFavoritesOnly]);
 
     // Get items for each slot with filters applied
     const getItemsForSlot = useCallback((category: string, filter?: (item: ClothingItem) => boolean) => {
@@ -562,10 +579,10 @@ export default function CreateOutfitPage() {
                                     <FilterBar
                                         searchQuery={searchQuery}
                                         onSearchChange={setSearchQuery}
-                                        selectedColor={selectedColor}
-                                        onColorChange={setSelectedColor}
-                                        selectedType={selectedType}
-                                        onTypeChange={setSelectedType}
+                                        selectedColors={selectedColors}
+                                        onColorsChange={setSelectedColors}
+                                        selectedTypes={selectedTypes}
+                                        onTypesChange={setSelectedTypes}
                                         showFavoritesOnly={showFavoritesOnly}
                                         onFavoritesToggle={() => setShowFavoritesOnly(!showFavoritesOnly)}
                                     />
@@ -777,10 +794,10 @@ export default function CreateOutfitPage() {
                         <FilterBar
                             searchQuery={searchQuery}
                             onSearchChange={setSearchQuery}
-                            selectedColor={selectedColor}
-                            onColorChange={setSelectedColor}
-                            selectedType={selectedType}
-                            onTypeChange={setSelectedType}
+                            selectedColors={selectedColors}
+                            onColorsChange={setSelectedColors}
+                            selectedTypes={selectedTypes}
+                            onTypesChange={setSelectedTypes}
                             showFavoritesOnly={showFavoritesOnly}
                             onFavoritesToggle={() => setShowFavoritesOnly(!showFavoritesOnly)}
                         />
