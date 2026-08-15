@@ -23,7 +23,8 @@ import {
   MoreHorizontal,
   Send,
   Loader2,
-  Lock
+  Lock,
+  Shirt
 } from 'lucide-react';
 
 type TabType = 'posts' | 'outfits';
@@ -439,7 +440,7 @@ export default function PublicProfilePage() {
                 : 'border-transparent text-[var(--foreground-tertiary)]'
                 }`}
             >
-              <span className={`text-xl ${activeTab === 'outfits' ? '' : 'grayscale opacity-60'}`}>👗</span>
+              <Shirt className={`w-6 h-6 ${activeTab === 'outfits' ? 'text-[var(--brand-pink)]' : ''}`} />
             </button>
           </div>
         </div>
@@ -492,7 +493,9 @@ export default function PublicProfilePage() {
               >
                 {outfits.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-16 text-center">
-                    <div className="text-5xl mb-4 grayscale opacity-60">👗</div>
+                    <div className="w-16 h-16 bg-[var(--background-secondary)] rounded-full flex items-center justify-center mb-4">
+                      <Shirt className="w-8 h-8 text-[var(--foreground-tertiary)]" />
+                    </div>
                     <h3 className="text-lg font-semibold mb-2">No hay outfits</h3>
                     <p className="text-[var(--foreground-secondary)]">Este usuario aún no ha creado ningún outfit.</p>
                   </div>
@@ -512,7 +515,7 @@ export default function PublicProfilePage() {
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center bg-[var(--background)]">
-                            <span className="text-4xl group-hover:scale-110 transition-transform duration-300">👗</span>
+                            <Shirt className="w-10 h-10 text-[var(--foreground-tertiary)] group-hover:scale-110 transition-transform duration-300" />
                           </div>
                         )}
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
