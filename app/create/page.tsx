@@ -241,8 +241,34 @@ export default function CreateOutfitPage() {
             if (searchQuery && !item.name.toLowerCase().includes(searchQuery.toLowerCase())) {
                 return false;
             }
-            if (selectedColors.length > 0 && (!item.color || !selectedColors.includes(item.color.toLowerCase()))) {
-                return false;
+            if (selectedColors.length > 0) {
+                const colorTranslations: Record<string, string[]> = {
+                    'red': ['red', 'rojo', 'roja'],
+                    'blue': ['blue', 'azul'],
+                    'green': ['green', 'verde'],
+                    'yellow': ['yellow', 'amarillo', 'amarilla'],
+                    'black': ['black', 'negro', 'negra'],
+                    'white': ['white', 'blanco', 'blanca'],
+                    'pink': ['pink', 'rosa', 'rosado'],
+                    'purple': ['purple', 'morado', 'morada', 'lila', 'violeta'],
+                    'orange': ['orange', 'naranja', 'anaranjado'],
+                    'gray': ['gray', 'grey', 'gris'],
+                    'brown': ['brown', 'marrón', 'marron', 'cafe', 'café'],
+                    'beige': ['beige', 'crema'],
+                    'maroon': ['maroon', 'granate', 'bordeaux', 'vino'],
+                    'lightblue': ['lightblue', 'celeste', 'azul claro'],
+                    'cyan': ['cyan', 'cian', 'turquesa'],
+                    'khaki': ['khaki', 'caqui', 'kaki']
+                };
+
+                const colorMatches = selectedColors.some(selectedColor => {
+                    const c = item.color?.toLowerCase() || '';
+                    const n = item.name?.toLowerCase() || '';
+                    
+                    const synonyms = colorTranslations[selectedColor] || [selectedColor];
+                    return synonyms.some(syn => c.includes(syn) || c === syn || n.includes(syn));
+                });
+                if (!colorMatches) return false;
             }
             if (selectedTypes.length > 0) {
                 const typeMatches = selectedTypes.some(type => {
