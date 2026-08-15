@@ -13,7 +13,6 @@ import * as followService from '@/lib/services/followService';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import OutfitCard from '@/components/OutfitCard';
 
 import {
   ArrowLeft,
@@ -519,16 +518,28 @@ export default function PublicProfilePage() {
                     <p className="text-[var(--foreground-secondary)]">Este usuario aún no ha creado ningún outfit público.</p>
                   </div>
                 ) : (
-                  <div className="space-y-4 max-w-lg mx-auto pb-24">
-                    {outfits.map((outfit, index) => (
-                      <OutfitCard
+                  <div className="grid grid-cols-3 gap-0.5">
+                    {outfits.map((outfit) => (
+                      <Link
                         key={outfit.id}
-                        outfit={outfit}
-                        index={index}
-                        onClick={() => {
-                          router.push(`/outfit/${outfit.id}`);
-                        }}
-                      />
+                        href={`/outfit/${outfit.id}`}
+                        className="aspect-square bg-[var(--background-secondary)] relative block z-0 transition-all duration-300 hover:scale-[1.05] hover:z-10 hover:shadow-xl hover:rounded-md group"
+                      >
+                        {outfit.outfit_items && Array.isArray(outfit.outfit_items) && outfit.outfit_items.length > 0 ? (
+                          <img
+                            src={outfit.outfit_items[0]?.clothing_items?.image_url || '/placeholder.png'}
+                            alt="Outfit item"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-[var(--background)]">
+                            <Shirt className="w-10 h-10 text-[var(--foreground-tertiary)] group-hover:scale-110 transition-transform duration-300" />
+                          </div>
+                        )}
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <span className="text-white text-xs font-bold truncate px-2 max-w-full">{outfit.name || 'Outfit guardado'}</span>
+                        </div>
+                      </Link>
                     ))}
                   </div>
                 )}
