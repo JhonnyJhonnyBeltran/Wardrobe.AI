@@ -86,15 +86,17 @@ export function useRealtime(options: UseRealtimeOptions = {}) {
     };
   }, [user?.id, user?.name, user?.avatar, autoConnect, setConnected, setOnlineUsers, checkActivity]);
 
+  const userId = user?.id;
+
   // Cleanup on user logout
   useEffect(() => {
-    if (!user && isInitializedRef.current) {
+    if (!userId && isInitializedRef.current) {
       console.log('[useRealtime] User logged out, cleaning up...');
       realtimeManager.cleanup();
       reset();
       isInitializedRef.current = false;
     }
-  }, [user, reset]);
+  }, [userId, reset]);
 
   // Manual connect function
   const connect = useCallback(async () => {

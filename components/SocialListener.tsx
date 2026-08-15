@@ -10,12 +10,14 @@ export default function SocialListener() {
   const { user } = useUser();
   const { setRequestsCount } = useUiStore();
 
+  const userId = user?.id;
+
   useEffect(() => {
-    if (!user) return;
+    if (!userId) return;
 
     // 1. Initial fetch of count
     const fetchCount = async () => {
-      const count = await getPendingRequestsCount(user.id);
+      const count = await getPendingRequestsCount(userId);
       console.log('[SocialListener] Pending requests count:', count);
       setRequestsCount(count);
     };
@@ -34,7 +36,7 @@ export default function SocialListener() {
           event: '*', // Listen to all events
           schema: 'public',
           table: 'follows',
-          filter: `following_id=eq.${user.id}`
+          filter: `following_id=eq.${userId}`
         },
         (payload) => {
           console.log('[SocialListener] Realtime event:', payload.eventType);
@@ -49,7 +51,7 @@ export default function SocialListener() {
       clearInterval(pollInterval);
       supabase.removeChannel(channel);
     };
-  }, [user, setRequestsCount]);
+  }, [userId, setRequestsCount]);
 
   return null; // Renderless component
 }

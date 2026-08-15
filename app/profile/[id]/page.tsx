@@ -133,7 +133,14 @@ export default function PublicProfilePage() {
         // 6. Fetch Outfits unconditionally (public profiles)
         const { data: outfitsData } = await supabase
           .from('outfits')
-          .select('*')
+          .select(`
+            *,
+            outfit_items (
+              clothing_item:clothing_items (
+                image_url
+              )
+            )
+          `)
           .eq('user_id', profileId)
           .order('created_at', { ascending: false });
         
@@ -507,9 +514,9 @@ export default function PublicProfilePage() {
                         href={`/outfits/${outfit.id}`}
                         className="aspect-square bg-[var(--background-secondary)] relative block z-0 transition-all duration-300 hover:scale-[1.05] hover:z-10 hover:shadow-xl hover:rounded-md group"
                       >
-                        {outfit.items && Array.isArray(outfit.items) && outfit.items.length > 0 ? (
+                        {outfit.outfit_items && Array.isArray(outfit.outfit_items) && outfit.outfit_items.length > 0 ? (
                           <img
-                            src={outfit.items[0]?.image_url || '/placeholder.png'}
+                            src={outfit.outfit_items[0]?.clothing_item?.image_url || '/placeholder.png'}
                             alt="Outfit item"
                             className="w-full h-full object-cover"
                           />

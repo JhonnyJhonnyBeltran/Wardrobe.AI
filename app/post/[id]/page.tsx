@@ -312,8 +312,8 @@ export default function PostDetailPage() {
         try {
             if (navigator.share) {
                 await navigator.share({
-                    title: 'Wardrobe.AI',
-                    text: 'Mira esta publicación en Wardrobe.AI',
+                    title: 'Klozet',
+                    text: 'Mira esta publicación en Klozet',
                     url: window.location.href,
                 });
             } else {
@@ -569,14 +569,16 @@ export default function PostDetailPage() {
                         className="w-full h-full relative cursor-grab active:cursor-grabbing"
                     >
                         {currentSlide.type === 'photo' ? (
-                            <Image
-                                src={currentSlide.url || '/placeholder.png'}
-                                alt="Post"
-                                fill
-                                className="object-cover"
-                                priority
-                                draggable={false}
-                            />
+                            <div className="w-full h-full relative bg-black">
+                                <Image
+                                    src={currentSlide.url || '/placeholder.png'}
+                                    alt="Post"
+                                    fill
+                                    className="object-contain"
+                                    priority
+                                    draggable={false}
+                                />
+                            </div>
                         ) : (
                             <div className="w-full h-full relative bg-[#f8f9fa] dark:bg-[#111]">
                                 <InteractiveOutfitViewer 
@@ -655,10 +657,16 @@ export default function PostDetailPage() {
                         </button>
                         <button 
                             onClick={() => {
+                                if (activeSlide !== 0) {
+                                    setActiveSlide(0);
+                                    setShowSwipeHint(false);
+                                }
                                 if (window.innerWidth < 768) {
                                     setShowMobileComments(true);
                                 } else {
-                                    commentInputRef.current?.focus();
+                                    setTimeout(() => {
+                                        commentInputRef.current?.focus();
+                                    }, 100);
                                 }
                             }} 
                             className="flex items-center gap-1.5 hover:opacity-70 transition-opacity"

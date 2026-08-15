@@ -133,10 +133,12 @@ export function UserProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let isMounted = true;
     
+    let isResolved = false;
+    
     // Safety timeout: ensure loading state is cleared after a maximum of 10s
     // but don't force a reload, just let it fail gracefully
     const safetyTimeout = setTimeout(() => {
-      if (!isMounted) return;
+      if (!isMounted || isResolved) return;
       console.warn('[UserStore] Auth resolution safety timeout reached.');
       setIsLoading(false);
     }, 10000);
@@ -164,19 +166,12 @@ export function UserProvider({ children }: { children: ReactNode }) {
             await fetchUserProfile(session.user);
             isFetchingRef.current = false;
             
-            if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
-               router.refresh(); // Sync Server Components cookies!
-            }
           } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
             // Silent refresh if the same user just renewed their token
             console.log('[UserStore] Silently refreshing profile on session tick');
             isFetchingRef.current = true;
             await fetchUserProfile(session.user);
             isFetchingRef.current = false;
-            
-            if (event === 'TOKEN_REFRESHED') {
-              router.refresh(); // Sync updated session cookie
-            }
           }
         } else {
           // No user session (SIGNED_OUT, or INITIAL_SESSION without a valid token)
@@ -189,6 +184,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
           updateLoginHint(false);
         }
       } finally {
+        isResolved = true;
         setIsLoading(false);
         clearTimeout(safetyTimeout);
       }
