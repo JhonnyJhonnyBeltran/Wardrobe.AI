@@ -124,7 +124,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
           name: authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'User',
           username: undefined,
           avatar: authUser.user_metadata?.avatar_url,
-          subscriptionTier: 'free',
+          subscriptionTier: SubscriptionTier.FREE,
           createdAt: new Date(authUser.created_at || Date.now()),
           styleCompleted: false,
         });
