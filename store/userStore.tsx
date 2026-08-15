@@ -151,7 +151,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         setTimeout(() => {
           console.warn('[UserStore] refreshProfile supabase.auth.getUser() timed out');
           resolve({ data: { user: null } });
-        }, 8000)
+        }, 4000)
       );
 
       const { data: { user } } = await Promise.race([getUserPromise, timeoutPromise]);
@@ -163,7 +163,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
           setTimeout(() => {
             console.warn('[UserStore] refreshProfile fetchUserProfile timed out');
             resolve();
-          }, 8000)
+          }, 4000)
         );
         await Promise.race([fetchPromise, fetchTimeout]);
       }
@@ -232,8 +232,19 @@ export function UserProvider({ children }: { children: ReactNode }) {
       }
     });
 
+    // Global fallback: If onAuthStateChange never resolves INITIAL_SESSION for some reason, don't hang forever
+    const globalMountTimeout = setTimeout(() => {
+      if (isMounted) {
+        setIsLoading(prev => {
+          if (prev) console.warn('[UserStore] Global mount timeout reached. Forcing isLoading to false.');
+          return false;
+        });
+      }
+    }, 5000);
+
     return () => {
       isMounted = false;
+      clearTimeout(globalMountTimeout);
       subscription.unsubscribe();
     };
   }, []);
