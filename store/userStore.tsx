@@ -123,103 +123,70 @@ export function UserProvider({ children }: { children: ReactNode }) {
   };
 
   const refreshProfile = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user) {
-      await fetchUserProfile(session.user);
+    // ALWAYS use getUser() to validate session on the server
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      await fetchUserProfile(user);
     }
   };
 
   useEffect(() => {
     let isMounted = true;
-    let authResolved = false;
     
-    // Safety timeout: ensure loading state is cleared after a maximum of 8s
-    // to prevent getting stuck if auth fails to resolve
+    // Safety timeout: ensure loading state is cleared after a maximum of 10s
+    // but don't force a reload, just let it fail gracefully
     const safetyTimeout = setTimeout(() => {
-      if (!isMounted || authResolved) return;
-      
-      console.warn('[UserStore] Auth resolution timed out.');
-      
-      // If we were supposed to be logged in but auth is stuck, 
-      // a hard refresh might clear some browser/supabase cache issues.
-      const wasLoggedIn = localStorage.getItem('klozet_was_logged_in') === 'true';
-      const hasReloaded = sessionStorage.getItem('klozet_recovery_reload') === 'true';
-      
-      if (wasLoggedIn && !hasReloaded) {
-        console.log('[UserStore] Stuck while authenticated. Triggering safe recovery reload...');
-        sessionStorage.setItem('klozet_recovery_reload', 'true');
-        window.location.reload();
-        return;
-      }
-
+      if (!isMounted) return;
+      console.warn('[UserStore] Auth resolution safety timeout reached.');
       setIsLoading(false);
-    }, 8000);
+    }, 10000);
 
-    const isFetchingRef = { current: false }; // Track if initAuth is still running
-
-    const initAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          userIdRef.current = session.user.id;
-          updateLoginHint(true);
-          isFetchingRef.current = true;
-          await fetchUserProfile(session.user);
-          isFetchingRef.current = false;
-        } else {
-          if (isMounted) {
-            setUser(null);
-            updateLoginHint(false);
-          }
-        }
-      } catch (error) {
-        console.error('[UserStore] Session check error:', error);
-        isFetchingRef.current = false;
-      } finally {
-        if (isMounted) {
-          authResolved = true;
-          setIsLoading(false);
-          clearTimeout(safetyTimeout);
-        }
-      }
-    };
-
-    initAuth();
+    const isFetchingRef = { current: false };
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!isMounted) return;
       
       console.log(`[UserStore] Auth event: ${event}`);
 
+      // INITIAL_SESSION occurs when the client is mounted and Supabase determines state
+      // (whether by finding a valid session in local storage or after a background refresh).
+      // This is the robust way to check initial state in Supabase v2.
       if (session?.user) {
-        // If it's a completely new user signing in, block UI to load profile fully
-        if (session.user.id !== userIdRef.current) {
+        // If it's a new user signing in or initial load
+        if (session.user.id !== userIdRef.current || event === 'INITIAL_SESSION') {
           userIdRef.current = session.user.id;
-          setIsLoading(true);
+          updateLoginHint(true);
+          
+          // Only show global loading state for initial load or new sign in
+          if (event !== 'TOKEN_REFRESHED') {
+            setIsLoading(true);
+          }
+          
+          isFetchingRef.current = true;
           await fetchUserProfile(session.user);
-          authResolved = true;
+          isFetchingRef.current = false;
+          
           setIsLoading(false);
           clearTimeout(safetyTimeout);
-          router.refresh(); // Tell Server Components to update cookies!
+          
+          if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+             router.refresh(); // Sync Server Components cookies!
+          }
         } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-          // If it's the SAME user just refreshing their token (e.g. after being away), 
-          // fetch silently to avoid infinite loading screens blocking the UI!
+          // Silent refresh if the same user just renewed their token
           console.log('[UserStore] Silently refreshing profile on session tick');
-          fetchUserProfile(session.user);
+          isFetchingRef.current = true;
+          await fetchUserProfile(session.user);
+          isFetchingRef.current = false;
+          
           if (event === 'TOKEN_REFRESHED') {
             router.refresh(); // Sync updated session cookie
           }
-        } else {
-          if (!isFetchingRef.current) {
-            authResolved = true;
-            setIsLoading(false);
-            clearTimeout(safetyTimeout);
-          }
         }
       } else {
-        // No user
-        if (userIdRef.current !== null) {
-          console.log('[UserStore] User logged out');
+        // No user session (SIGNED_OUT, or INITIAL_SESSION without a valid token)
+        if (userIdRef.current !== null || user !== null) {
+          console.log('[UserStore] User logged out or session expired');
           userIdRef.current = null;
           setUser(null);
           router.refresh(); // Sync Server Components when logged out

@@ -25,7 +25,10 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
       console.log('[AuthGuard] User was previously logged in but session is null. Attempting silent recovery...');
       recoveryAttempted.current = true;
       setIsRecovering(true);
-      refreshProfile().finally(() => setIsRecovering(false));
+      // refreshProfile now uses supabase.auth.getUser() which properly forces a server check
+      refreshProfile().finally(() => {
+        setIsRecovering(false);
+      });
     }
   }, [isLoading, user, refreshProfile, isPublicPath]);
 

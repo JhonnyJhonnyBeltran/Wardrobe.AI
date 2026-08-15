@@ -35,7 +35,7 @@ export async function middleware(request: NextRequest) {
   try {
     await Promise.race([
       supabase.auth.getUser(),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('Auth timeout')), 3000))
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Auth timeout')), 5000))
     ]);
   } catch (e) {
     console.warn('[Middleware] Auth check timed out or failed, proceeding anyway.');
