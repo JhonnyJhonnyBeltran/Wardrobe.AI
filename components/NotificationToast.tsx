@@ -105,7 +105,7 @@ const Toast = memo(function Toast({
         {notification.sender?.avatar_url && !notification.sender?.avatar_url?.includes('default user.png') ? (
           <Avatar 
             src={notification.sender.avatar_url} 
-            alt={notification.sender.username || notification.sender.full_name || 'Usuario'} 
+            alt={notification.sender.username || 'Usuario'} 
             size="md" 
             className="w-full h-full"
           />

@@ -535,7 +535,7 @@ export default function ProfilePage() {
                             useUiStore.getState().showModal({
                               title: '¿Eliminar carpeta?',
                               message: `¿Estás seguro de que quieres eliminar la carpeta "${folder.name}"? Los posts guardados no se borrarán de tus guardados generales.`,
-                              type: 'danger',
+                              type: 'warning',
                               confirmText: 'Eliminar',
                               cancelText: 'Cancelar',
                               onConfirm: () => deleteFolder(folder.id)
