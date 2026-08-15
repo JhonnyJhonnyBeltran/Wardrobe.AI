@@ -97,7 +97,7 @@ class RealtimeManager {
           table: TABLES.MESSAGES,
           filter: `receiver_id=eq.${this.userId}`,
         },
-        (payload) => this.handleNewMessage(payload)
+        (payload: any) => this.handleNewMessage(payload)
       )
       // Listen for follow requests
       .on(
@@ -108,7 +108,7 @@ class RealtimeManager {
           table: TABLES.FOLLOWS,
           filter: `following_id=eq.${this.userId}`,
         },
-        (payload) => this.handleFollowEvent(payload, 'new')
+        (payload: any) => this.handleFollowEvent(payload, 'new')
       )
       // Listen for follow status updates
       .on(
@@ -119,7 +119,7 @@ class RealtimeManager {
           table: TABLES.FOLLOWS,
           filter: `follower_id=eq.${this.userId}`,
         },
-        (payload) => this.handleFollowEvent(payload, 'update')
+        (payload: any) => this.handleFollowEvent(payload, 'update')
       )
       // Listen for notifications table (if exists)
       .on(
@@ -130,7 +130,7 @@ class RealtimeManager {
           table: TABLES.NOTIFICATIONS,
           filter: `user_id=eq.${this.userId}`,
         },
-        (payload) => this.handleNotificationInsert(payload)
+        (payload: any) => this.handleNotificationInsert(payload)
       )
       // Listen for broadcast notifications
       .on('broadcast', { event: EVENTS.NOTIFICATION }, (payload: any) => {
@@ -161,21 +161,23 @@ class RealtimeManager {
 
     channel
       .on('presence', { event: 'sync' }, () => {
-        const state = channel.presenceState<UserPresence>();
+        const state = channel.presenceState() as any;
         this.handlePresenceSync(state);
       })
-      .on('presence', { event: 'join' }, ({ key }) => {
+      .on('presence', { event: 'join' }, (payload: any) => {
+        const key = payload.key;
         console.log('[RealtimeManager] User joined:', key);
         this.onlineUsers.add(key);
         this.emitOnlineUsers();
       })
-      .on('presence', { event: 'leave' }, ({ key }) => {
+      .on('presence', { event: 'leave' }, (payload: any) => {
+        const key = payload.key;
         console.log('[RealtimeManager] User left:', key);
         this.onlineUsers.delete(key);
         this.emitOnlineUsers();
       });
 
-    await channel.subscribe(async (status) => {
+    await channel.subscribe(async (status: any) => {
       console.log('[RealtimeManager] Presence channel status:', status);
       if (status === 'SUBSCRIBED') {
         await channel.track({
