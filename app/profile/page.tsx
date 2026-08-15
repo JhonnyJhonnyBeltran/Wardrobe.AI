@@ -15,6 +15,7 @@ import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import {
   Menu,
+  Settings,
   Grid3x3,
   Bookmark,
   FolderPlus,
@@ -367,10 +368,10 @@ export default function ProfilePage() {
           {/* Right: Settings/Options Button */}
           <Link
             href="/profile/settings"
-            className="p-2 -mr-2 hover:bg-[var(--background-secondary)] rounded-full transition-colors flex-shrink-0"
+            className="p-2 -mr-2 rounded-full transition-colors flex-shrink-0 text-[var(--foreground)] hover:bg-[var(--background-secondary)] md:hover:bg-transparent md:hover:text-[var(--brand-pink)]"
             aria-label="Configuración"
           >
-            <Menu className="w-6 h-6 text-[var(--foreground)]" />
+            <Settings className="w-6 h-6" />
           </Link>
         </div>
       </header>
@@ -487,50 +488,37 @@ export default function ProfilePage() {
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
               >
-                {/* Folders Section with Previews */}
+                {/* Folders Section */}
                 <div className="p-4 border-b border-[var(--border-color)]">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="font-semibold text-sm text-[var(--foreground)]">Carpetas</h3>
-                    {/* Botón Añadir en rosa */}
+                    {/* Botón texto */}
                     <button
                       onClick={() => setShowCreateFolder(true)}
-                      className="flex items-center gap-1 px-3 py-1.5 rounded-full border border-[var(--brand-pink)] text-[var(--brand-pink)] hover:bg-[var(--brand-pink)]/10 transition-colors text-xs font-semibold"
+                      className="text-[var(--brand-pink)] hover:text-[var(--brand-pink)]/80 transition-colors text-sm font-semibold"
                     >
-                      <Plus className="w-4 h-4" />
-                      Añadir
+                      {folders.length === 0 ? 'Crear carpeta' : 'Añadir carpeta'}
                     </button>
                   </div>
 
-                  {/* Folders Grid - más pequeñas en ordenador */}
-                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2 md:gap-3">
+                  {/* Folders Pills */}
+                  <div className="flex flex-wrap gap-2">
                     {/* Existing Folders */}
                     {folders.map((folder) => (
                       <div key={folder.id} className="relative group">
                         <button
                           onClick={() => setSelectedFolder(selectedFolder?.id === folder.id ? null : folder)}
-                          className={`w-full aspect-square rounded-xl overflow-hidden relative flex flex-col transition-all duration-200 ${
+                          className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200 text-sm font-medium ${
                             selectedFolder?.id === folder.id 
-                              ? 'ring-2 ring-[var(--brand-pink)] shadow-md bg-[var(--background-secondary)]' 
-                              : 'bg-[var(--background-secondary)]/50 hover:bg-[var(--background-secondary)] hover:shadow-sm'
+                              ? 'bg-[var(--brand-pink)] text-white shadow-md' 
+                              : 'bg-[var(--background-secondary)] text-[var(--foreground)] hover:bg-[var(--background-secondary)]/80'
                           }`}
                         >
-                          <div className="flex-1 w-full flex items-center justify-center p-2 relative">
-                            {folder.preview_images && folder.preview_images.length > 0 ? (
-                              <FolderPreview images={folder.preview_images} />
-                            ) : (
-                              <Folder className="w-8 h-8 text-[var(--brand-pink)] opacity-80" />
-                            )}
-                          </div>
-                          
-                          {/* Folder Name visible */}
-                          <div className="w-full py-1.5 px-2 bg-gradient-to-t from-black/60 to-transparent absolute bottom-0 left-0">
-                            <span className="text-white font-medium text-xs truncate w-full block text-left drop-shadow-md">
-                              {folder.name}
-                            </span>
-                          </div>
+                          <Folder className="w-4 h-4" />
+                          <span className="truncate max-w-[150px]">{folder.name}</span>
                         </button>
                         
-                        {/* Botón X para eliminar con Modal (solo visible en hover o siempre en móvil) */}
+                        {/* Botón X para eliminar con Modal */}
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -543,9 +531,9 @@ export default function ProfilePage() {
                               onConfirm: () => deleteFolder(folder.id)
                             });
                           }}
-                          className="absolute -top-1.5 -right-1.5 p-1 bg-red-500 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                          className="absolute -top-1 -right-1 p-1 bg-red-500 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity z-10"
                         >
-                          <X className="w-3.5 h-3.5 text-white" />
+                          <X className="w-3 h-3 text-white" />
                         </button>
                       </div>
                     ))}
