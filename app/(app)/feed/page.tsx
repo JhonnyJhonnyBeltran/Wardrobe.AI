@@ -315,7 +315,7 @@ export default function FeedPage() {
               ))}
 
               {/* Skeleton Cards for infinite loading illusion or actual loading */}
-              {(loadingMore || !hasMore) && (
+              {(loadingMore || (!hasMore && posts.length >= 12)) && (
                 [...Array(3)].map((_, i) => (
                   <div key={`skeleton-${i}`} className="break-inside-avoid mb-6">
                     <div className="rounded-2xl overflow-hidden bg-[var(--background-secondary)] animate-pulse" style={{ height: [180, 220, 240][i % 3] }} />
