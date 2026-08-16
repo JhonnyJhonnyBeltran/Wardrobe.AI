@@ -162,15 +162,26 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
                                             {onToggleVisibility && (
                                                 <motion.button
                                                     whileHover={{ scale: 1.1 }}
-                                                    whileTap={{ scale: 0.9 }}
+                                                    whileTap={{ scale: 0.8 }}
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         onToggleVisibility(outfit);
                                                     }}
-                                                    className="p-3.5 rounded-xl bg-[var(--background-secondary)]/90 backdrop-blur-md text-[var(--foreground)] hover:bg-[var(--foreground)] hover:text-[var(--background)] transition-all duration-300 h-[52px] w-[52px] flex items-center justify-center"
+                                                    className="p-3.5 rounded-xl bg-[var(--background-secondary)]/90 backdrop-blur-md text-[var(--foreground)] hover:bg-[var(--foreground)] hover:text-[var(--background)] transition-all duration-300 h-[52px] w-[52px] flex items-center justify-center relative"
                                                     title={outfit.is_public ? "Hacer privado" : "Hacer público"}
                                                 >
-                                                    {outfit.is_public ? <Eye className="w-5 h-5" /> : <Lock className="w-5 h-5" />}
+                                                    <AnimatePresence mode="wait">
+                                                        <motion.div
+                                                            key={outfit.is_public ? 'public' : 'private'}
+                                                            initial={{ scale: 0.5, opacity: 0, rotate: -90 }}
+                                                            animate={{ scale: 1, opacity: 1, rotate: 0 }}
+                                                            exit={{ scale: 0.5, opacity: 0, rotate: 90 }}
+                                                            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                                                            className="absolute"
+                                                        >
+                                                            {outfit.is_public ? <Eye className="w-5 h-5" /> : <Lock className="w-5 h-5" />}
+                                                        </motion.div>
+                                                    </AnimatePresence>
                                                 </motion.button>
                                             )}
 

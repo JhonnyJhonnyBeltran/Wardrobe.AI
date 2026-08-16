@@ -443,8 +443,6 @@ export default function ClosetPage() {
         // Revert on error
         setOutfits(prev => prev.map(o => o.id === outfitToToggle.id ? { ...o, is_public: outfitToToggle.is_public } : o));
         console.error('Error toggling outfit visibility:', error);
-      } else {
-        toast.success(newVisibility ? 'El outfit ahora es público' : 'El outfit ahora es privado');
       }
     } catch (err) {
       console.error('Unexpected error toggling outfit visibility:', err);
