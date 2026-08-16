@@ -103,7 +103,7 @@ export default function PostDetailPage() {
                                 scale,
                                 rotation,
                                 layer_order,
-                                clothing_item:clothing_items (id, name, brand, image_url, color, color_hex, category, size, reference)
+                                clothing_items (id, name, brand, image_url, color, color_hex, category, size, reference)
                             )
                         )
                     `)
@@ -145,19 +145,6 @@ export default function PostDetailPage() {
                     .select('id, content, created_at, user_id, profiles(id, username, avatar_url)')
                     .eq('post_id', postId)
                     .order('created_at', { ascending: true });
-
-                // Fix mapped outfit items
-                if (postData.outfits) {
-                    const outfitsList = Array.isArray(postData.outfits) ? postData.outfits : [postData.outfits];
-                    outfitsList.forEach((outfit: any) => {
-                        if (outfit && outfit.outfit_items) {
-                            outfit.outfit_items = outfit.outfit_items.map((oi: any) => ({
-                                ...oi,
-                                clothing_items: oi.clothing_item || oi.clothing_items
-                            }));
-                        }
-                    });
-                }
 
                 setPost(postData);
                 setIsLiked(likeRes.data && (likeRes.data as any[]).length > 0);
@@ -496,14 +483,14 @@ export default function PostDetailPage() {
     return (
         <div className="min-h-screen w-full bg-white dark:bg-black flex flex-col">
             {/* HEADER - White background like /profile */}
-            <header className={`sticky top-0 z-50 w-full max-w-[1400px] mx-auto bg-white dark:bg-black border-b border-gray-100 dark:border-gray-800 h-16 flex items-center justify-between px-4 transition-all duration-300 ${selectedItem ? 'backdrop-blur-md bg-white/80 dark:bg-black/80 blur-md opacity-50' : ''}`}>
+            <header className="sticky top-0 z-50 w-full max-w-[1400px] mx-auto bg-white dark:bg-black border-b border-gray-100 dark:border-gray-800 h-16 flex items-center justify-between px-4">
                 {/* Left: Back Button */}
                 <button onClick={handleBack} className="p-2 -ml-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
                     <ArrowLeft className="w-6 h-6 text-gray-900 dark:text-white" />
                 </button>
 
                 {/* Center: Username - smaller and profile photo */}
-                <Link href={`/profile/${author.username || author.id}`} className="flex items-center gap-2 flex-1 ml-2">
+                <Link href={`/profile/${author.id}`} className="flex items-center gap-2 flex-1 ml-2">
                     <Avatar src={author.avatar_url || null} alt={author.username || 'Usuario'} size="sm" />
                     <span className="font-semibold text-[15px] text-gray-900 dark:text-white truncate">{author.username}</span>
                 </Link>
@@ -564,10 +551,10 @@ export default function PostDetailPage() {
             </header>
 
             {/* Desktop Container */}
-            <div className="flex flex-col md:flex-row w-full max-w-[1400px] mx-auto flex-1 md:h-[calc(100vh-64px)]">
+            <div className="flex flex-col md:flex-row w-full max-w-[1400px] mx-auto flex-1 md:h-[calc(100vh-64px)] md:justify-center">
 
             {/* IMAGE CAROUSEL - Swipeable with Framer Motion */}
-            <div className="relative w-full h-auto min-h-[300px] md:w-[60%] md:h-[calc(100vh-64px)] bg-white md:bg-gray-50 dark:bg-black dark:md:bg-[#0a0a0a] border-r-0 md:border-r border-gray-100 dark:border-gray-800 flex-shrink-0 overflow-hidden flex items-center justify-center">
+            <div className="relative w-full h-auto min-h-[50vh] md:w-auto md:max-w-[calc(100%-400px)] md:h-[calc(100vh-64px)] bg-white md:bg-gray-50 dark:bg-black dark:md:bg-[#0a0a0a] flex-shrink-0 overflow-hidden flex items-center justify-center">
                 <AnimatePresence initial={false} mode="wait">
                     <motion.div
                         key={activeSlide}
@@ -588,7 +575,7 @@ export default function PostDetailPage() {
                                 setShowSwipeHint(false);
                             }
                         }}
-                        className="w-full h-full relative cursor-grab active:cursor-grabbing"
+                        className="w-full h-full md:w-auto md:h-full relative cursor-grab active:cursor-grabbing flex items-center justify-center"
                         onDoubleClick={() => {
                             if (!isLiked) toggleLike();
                             setShowHeartAnim(true);
@@ -611,23 +598,21 @@ export default function PostDetailPage() {
                         </AnimatePresence>
 
                         {currentSlide.type === 'photo' ? (
-                            <div className="w-full h-full flex items-center justify-center relative">
-                                <Image
-                                    src={currentSlide.url || '/placeholder.png'}
-                                    alt="Post"
-                                    width={1200}
-                                    height={1200}
-                                    className="w-full h-auto md:h-full max-h-[85vh] md:max-h-[calc(100vh-64px)] object-contain"
-                                    priority
-                                    draggable={false}
-                                />
-                            </div>
+                            <Image
+                                src={currentSlide.url || '/placeholder.png'}
+                                alt="Post"
+                                width={1200}
+                                height={1200}
+                                className="w-full h-auto md:w-auto md:h-full max-h-[85vh] md:max-h-[calc(100vh-64px)] object-contain"
+                                priority
+                                draggable={false}
+                            />
                         ) : (
-                            <div className="w-full h-full relative bg-[#f8f9fa] dark:bg-[#111]">
+                            <div className="w-full aspect-[3/4] md:w-auto md:h-full md:aspect-[3/4] max-h-[85vh] md:max-h-[calc(100vh-64px)] relative bg-[#f8f9fa] dark:bg-[#111]">
                                 <InteractiveOutfitViewer 
                                     outfit={currentSlide.outfit} 
                                     onItemClick={(item) => setSelectedItem(item)}
-                                    className="w-full h-full"
+                                    className="w-full h-full absolute inset-0"
                                     isMobileSticker={true}
                                 />
                             </div>
@@ -690,7 +675,7 @@ export default function PostDetailPage() {
             </div>
 
             {/* RIGHT COLUMN: Actions, Details, Comments */}
-            <div className="flex flex-col w-full min-w-0 md:w-[40%] md:h-[calc(100vh-64px)] bg-white dark:bg-black overflow-x-hidden pb-[72px] md:pb-0">
+            <div className="flex flex-col w-full min-w-0 md:w-[400px] lg:w-[450px] md:h-[calc(100vh-64px)] bg-white dark:bg-black overflow-x-hidden pb-[72px] md:pb-0 border-l border-gray-100 dark:border-gray-800 flex-shrink-0">
                 {/* ACTION BAR - Below image */}
                 <div className="border-b border-gray-100 dark:border-gray-800 px-4 py-3 flex items-center justify-between flex-shrink-0">
                     <div className="flex items-center gap-5">
@@ -791,12 +776,12 @@ export default function PostDetailPage() {
                                 <div className="space-y-4">
                                     {comments.map((comment) => (
                                         <div key={comment.id} className="flex gap-3">
-                                            <Link href={`/profile/${comment.user.username || comment.user.id}`} className="flex-shrink-0">
+                                            <Link href={`/profile/${comment.user.id}`} className="flex-shrink-0">
                                                 <Avatar src={comment.user.avatar_url || null} alt={comment.user.username} size="sm" />
                                             </Link>
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex gap-2 items-baseline flex-wrap">
-                                                    <Link href={`/profile/${comment.user.username || comment.user.id}`} className="font-bold text-[14px] text-gray-900 dark:text-white hover:underline">
+                                                    <Link href={`/profile/${comment.user.id}`} className="font-bold text-[14px] text-gray-900 dark:text-white hover:underline">
                                                         {comment.user.username}
                                                     </Link>
                                                     <span className="text-[14px] text-gray-900 dark:text-white break-words">{comment.content}</span>
@@ -867,12 +852,12 @@ export default function PostDetailPage() {
                             ) : (
                                 comments.map((comment) => (
                                     <div key={comment.id} className="flex gap-3">
-                                        <Link href={`/profile/${comment.user.username || comment.user.id}`} className="flex-shrink-0">
+                                        <Link href={`/profile/${comment.user.id}`} className="flex-shrink-0">
                                             <Avatar src={comment.user.avatar_url || null} alt={comment.user.username} size="md" />
                                         </Link>
                                         <div className="flex-1">
                                             <div className="flex gap-2 items-baseline">
-                                                <Link href={`/profile/${comment.user.username || comment.user.id}`} className="font-bold text-[15px] text-gray-900 dark:text-white hover:underline">
+                                                <Link href={`/profile/${comment.user.id}`} className="font-bold text-[15px] text-gray-900 dark:text-white hover:underline">
                                                     {comment.user.username}
                                                 </Link>
                                                 <span className="text-[15px] text-gray-900 dark:text-white leading-tight break-words">{comment.content}</span>

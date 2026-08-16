@@ -60,6 +60,11 @@ export default function OutfitDetailPage() {
           .select(`
             *,
             outfit_items (
+              position_x,
+              position_y,
+              scale,
+              rotation,
+              layer_order,
               clothing_item:clothing_items (
                 id,
                 name,
@@ -199,21 +204,21 @@ export default function OutfitDetailPage() {
         </div>
       </header>
 
-      <main className="w-full flex flex-col md:flex-row pb-24 md:pb-0 h-[calc(100vh-56px)] overflow-hidden">
+      <main className="w-full flex flex-col md:flex-row pb-24 md:pb-0 md:h-[calc(100vh-56px)] md:justify-center overflow-x-hidden md:overflow-hidden bg-[var(--background)]">
         
         {/* Left Column (Desktop) / Top Half (Mobile) - The Image */}
-        <div className="relative w-full h-[65vh] md:h-full md:w-[60%] shrink-0 bg-[#f8f9fa] dark:bg-[#111] z-0 flex flex-col items-stretch border-b md:border-b-0 md:border-r border-[var(--border-color)]">
+        <div className="relative w-full aspect-[3/4] md:w-auto md:h-full md:aspect-[3/4] md:max-w-[calc(100%-400px)] shrink-0 bg-[#f8f9fa] dark:bg-[#111] z-0 flex items-center justify-center border-b md:border-b-0 md:border-r border-[var(--border-color)]">
           <InteractiveOutfitViewer
             outfit={viewerOutfit as any}
             onItemClick={handleItemClick}
-            className="w-full h-full"
+            className="w-full h-full absolute inset-0"
             isMobileSticker={true}
             selectedItemId={selectedItem?.id}
           />
         </div>
 
         {/* Right Column (Desktop) / Bottom Half (Mobile) - The Details */}
-        <div className="relative w-full flex-1 overflow-y-auto custom-scrollbar bg-[var(--background)]">
+        <div className="relative w-full md:w-[400px] lg:w-[450px] flex-shrink-0 flex flex-col overflow-y-auto custom-scrollbar bg-[var(--background)]">
           <div className="w-full flex flex-col p-4 md:p-6 space-y-6">
             
             {/* Outfit Info */}

@@ -67,7 +67,7 @@ export default function FeedPage() {
         .from('posts')
         .select(`
           id, caption, image_url, created_at, user_id,
-          outfits ( name, outfit_items ( clothing_item:clothing_items ( image_url ) ) ),
+          outfits ( name, outfit_items ( clothing_items ( image_url ) ) ),
           likes_count, comments_count, style_ids
         `)
         .in('user_id', targetIds)
@@ -85,7 +85,7 @@ export default function FeedPage() {
           .from('posts')
           .select(`
             id, caption, image_url, created_at, user_id,
-            outfits ( name, outfit_items ( clothing_item:clothing_items ( image_url ) ) ),
+            outfits ( name, outfit_items ( clothing_items ( image_url ) ) ),
             likes_count, comments_count, style_ids
           `)
           .not('user_id', 'in', `(${targetIds.join(',')})`)
@@ -170,9 +170,9 @@ export default function FeedPage() {
           let displayImage = post.image_url;
 
           if (!displayImage && post.outfits?.outfit_items?.length > 0) {
-            const itemWithImage = post.outfits.outfit_items.find((oi: any) => oi.clothing_item?.image_url || oi.clothing_items?.image_url);
+            const itemWithImage = post.outfits.outfit_items.find((oi: any) => oi.clothing_items?.image_url);
             if (itemWithImage) {
-              displayImage = itemWithImage.clothing_item?.image_url || itemWithImage.clothing_items?.image_url;
+              displayImage = itemWithImage.clothing_items.image_url;
             }
           }
 
