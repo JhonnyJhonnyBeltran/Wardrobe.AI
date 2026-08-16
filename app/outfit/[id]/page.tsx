@@ -32,7 +32,8 @@ interface Outfit {
   favorite: boolean;
   created_at: string;
   outfit_items: Array<{
-    clothing_items: OutfitItem;
+    clothing_item?: OutfitItem;
+    clothing_items?: OutfitItem;
   }>;
 }
 
@@ -59,7 +60,7 @@ export default function OutfitDetailPage() {
           .select(`
             *,
             outfit_items (
-              clothing_items (
+              clothing_item:clothing_items (
                 id,
                 name,
                 category,
@@ -154,9 +155,18 @@ export default function OutfitDetailPage() {
     );
   }
 
-  const outfitItems = outfit.outfit_items
-    ?.map(oi => oi.clothing_items)
-    .filter(Boolean) || [];
+  const outfitItems = (outfit.outfit_items
+    ?.map(oi => oi.clothing_item || oi.clothing_items)
+    .filter(Boolean) as OutfitItem[]) || [];
+
+  // Re-map outfit.outfit_items for InteractiveOutfitViewer
+  const viewerOutfit = {
+    ...outfit,
+    outfit_items: outfit.outfit_items?.map((oi: any) => ({
+      ...oi,
+      clothing_items: oi.clothing_item || oi.clothing_items
+    }))
+  };
 
   return (
     <div className="min-h-screen bg-[var(--background)]">
@@ -169,24 +179,7 @@ export default function OutfitDetailPage() {
           <ArrowLeft className="w-5 h-5 text-[var(--foreground)]" />
         </button>
 
-        <h1 className="text-lg font-semibold text-[var(--foreground)] truncate max-w-[200px]">
-          {outfit.name}
-        </h1>
-
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleCreatePost}
-            className="p-2 hover:bg-[var(--background-secondary)] rounded-full transition-colors text-[var(--brand-pink)]"
-            title="Crear Publicación"
-          >
-            <Send className="w-5 h-5" />
-          </button>
-          <button
-            onClick={handleShare}
-            className="p-2 hover:bg-[var(--background-secondary)] rounded-full transition-colors"
-          >
-            <Share2 className="w-5 h-5 text-[var(--foreground)]" />
-          </button>
+        <div className="flex items-center gap-2 ml-auto">
           {user?.id === outfit.user_id && (
             <>
               <button
@@ -209,9 +202,9 @@ export default function OutfitDetailPage() {
       <main className="w-full flex flex-col md:flex-row pb-24 md:pb-0 h-[calc(100vh-56px)] overflow-hidden">
         
         {/* Left Column (Desktop) / Top Half (Mobile) - The Image */}
-        <div className="relative w-full h-[50vh] md:h-full md:w-[60%] shrink-0 bg-[#f8f9fa] dark:bg-[#111] z-0 flex flex-col items-stretch border-b md:border-b-0 md:border-r border-[var(--border-color)]">
+        <div className="relative w-full h-[65vh] md:h-full md:w-[60%] shrink-0 bg-[#f8f9fa] dark:bg-[#111] z-0 flex flex-col items-stretch border-b md:border-b-0 md:border-r border-[var(--border-color)]">
           <InteractiveOutfitViewer
-            outfit={outfit as any}
+            outfit={viewerOutfit as any}
             onItemClick={handleItemClick}
             className="w-full h-full"
             isMobileSticker={true}
@@ -283,7 +276,7 @@ export default function OutfitDetailPage() {
             {relatedPosts.length > 0 && (
           <section className="space-y-3 pt-4 border-t border-[var(--border-color)]">
             <h3 className="text-lg font-semibold text-[var(--foreground)]">Aparece en ({relatedPosts.length})</h3>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-3">
               {relatedPosts.map((post) => (
                 <Link
                   key={post.id}
