@@ -10,6 +10,7 @@ export { default as OutfitCard } from './OutfitCard';
 export { default as ClothingItem } from './ClothingItem';
 export { default as SlotMachineGenerator, MultiSlotMachineGenerator } from './SlotMachineGenerator';
 export { default as AddItemModal } from './AddItemModal';
+export { default as InfiniteScrollFooter } from './InfiniteScrollFooter';
 export { default as ThemeToggle } from './ThemeToggle';
 export { default as FloatingCreateButton } from './FloatingCreateButton';
 export { default as Logo } from './Logo';

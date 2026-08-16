@@ -1,13 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search as SearchIcon, X, Users, Image as ImageIcon, UserPlus, Check } from 'lucide-react';
+import { Search as SearchIcon, X, Users, Image as ImageIcon, UserPlus, Check, Clock, Trash2 } from 'lucide-react';
 import PostCard, { type Post } from '@/components/Feed/PostCard';
-import { EmptyState } from '@/components';
+import { EmptyState, InfiniteScrollFooter } from '@/components';
 import { supabase } from '@/lib/supabase/client';
 
 import { useUser } from '@/store/userStore';
 import { useUiStore } from '@/store/uiStore';
+import { useSearchHistory } from '@/lib/hooks';
 import Link from 'next/link';
 import { useRef, useCallback } from 'react';
 
@@ -37,6 +38,10 @@ export default function SearchPage() {
   const [usersLoadingMore, setUsersLoadingMore] = useState(false);
   const [postsHasMore, setPostsHasMore] = useState(true);
   const [usersHasMore, setUsersHasMore] = useState(true);
+  const [postsLoadError, setPostsLoadError] = useState(false);
+  const [usersLoadError, setUsersLoadError] = useState(false);
+
+  const { history, addSearch, removeSearch, clearHistory } = useSearchHistory();
 
   const postsPageRef = useRef(0);
   const usersPageRef = useRef(0);
@@ -48,7 +53,7 @@ export default function SearchPage() {
 
 
 
-  // Debounce query
+  // Debounce query for typing
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedQuery(query);
@@ -56,6 +61,15 @@ export default function SearchPage() {
 
     return () => clearTimeout(handler);
   }, [query]);
+
+  // Handle explicit search submission (save to history)
+  const handleSearchSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (query.trim()) {
+      addSearch(query);
+      setDebouncedQuery(query);
+    }
+  };
 
   // Initial load 
   useEffect(() => {
@@ -81,6 +95,7 @@ export default function SearchPage() {
     const to = from + USERS_PER_PAGE - 1;
 
     try {
+      setUsersLoadError(false);
       if (isLoadMore) setUsersLoadingMore(true);
       let query = supabase
         .from('profiles')
@@ -123,7 +138,10 @@ export default function SearchPage() {
       usersPageRef.current = currentPage;
     } catch (error) {
       console.error('Error searching users:', error);
-      if (!isLoadMore) setUserResults([]);
+      if (!isLoadMore) {
+        setUserResults([]);
+      }
+      setUsersLoadError(true);
     } finally {
       if (isLoadMore) setUsersLoadingMore(false);
     }
@@ -211,6 +229,7 @@ export default function SearchPage() {
     const to = from + POSTS_PER_PAGE - 1;
 
     try {
+      setPostsLoadError(false);
       if (isLoadMore) setPostsLoadingMore(true);
       let data: any[] | null = null;
 
@@ -379,29 +398,33 @@ export default function SearchPage() {
 
     } catch (error) {
       console.error('Error searching:', error);
+      if (!isLoadMore) {
+        setResults([]);
+      }
+      setPostsLoadError(true);
     } finally {
       if (isLoadMore) setPostsLoadingMore(false);
     }
   }, []);
 
   const loadMoreUsers = useCallback(() => {
-    if (loading || usersLoadingMore || !usersHasMore) return;
+    if (loading || usersLoadingMore || !usersHasMore || usersLoadError) return;
     searchUsers(debouncedQuery, true);
-  }, [loading, usersLoadingMore, usersHasMore, debouncedQuery, searchUsers]);
+  }, [loading, usersLoadingMore, usersHasMore, usersLoadError, debouncedQuery, searchUsers]);
 
   const loadMorePosts = useCallback(() => {
-    if (loading || postsLoadingMore || !postsHasMore) return;
+    if (loading || postsLoadingMore || !postsHasMore || postsLoadError) return;
     searchPosts(debouncedQuery, true);
-  }, [loading, postsLoadingMore, postsHasMore, debouncedQuery, searchPosts]);
+  }, [loading, postsLoadingMore, postsHasMore, postsLoadError, debouncedQuery, searchPosts]);
 
   // Infinite Scroll Observers
   useEffect(() => {
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
-          if (entry.target === usersObserverElement.current && usersHasMore && !usersLoadingMore && !loading) {
+          if (entry.target === usersObserverElement.current && usersHasMore && !usersLoadingMore && !loading && !usersLoadError) {
             loadMoreUsers();
-          } else if (entry.target === postsObserverElement.current && postsHasMore && !postsLoadingMore && !loading) {
+          } else if (entry.target === postsObserverElement.current && postsHasMore && !postsLoadingMore && !loading && !postsLoadError) {
             loadMorePosts();
           }
         }
@@ -412,7 +435,7 @@ export default function SearchPage() {
     if (postsObserverElement.current) observer.observe(postsObserverElement.current);
 
     return () => observer.disconnect();
-  }, [loadMoreUsers, loadMorePosts, usersHasMore, postsHasMore, usersLoadingMore, postsLoadingMore, loading]);
+  }, [loadMoreUsers, loadMorePosts, usersHasMore, postsHasMore, usersLoadingMore, postsLoadingMore, loading, usersLoadError, postsLoadError]);
 
   return (
     <div className="min-h-[100dvh] w-full max-w-[100vw] overflow-x-hidden bg-[var(--background)] pb-24">
@@ -425,6 +448,7 @@ export default function SearchPage() {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearchSubmit()}
               placeholder="Buscar estilos, prendas, usuarios..."
               className="search-input-no-outline w-full bg-transparent py-4 pl-14 pr-12 text-base font-medium text-[var(--foreground)] placeholder-[var(--foreground-tertiary)]"
             />
@@ -493,11 +517,16 @@ export default function SearchPage() {
                 ))}
 
                 {/* Users Loading More Trigger */}
-                {!loading && (
-                  <div ref={usersObserverElement} className="flex justify-center py-2 h-8">
-                    {usersLoadingMore && <div className="animate-spin w-5 h-5 border-2 border-[var(--brand-pink)] border-t-transparent rounded-full" />}
-                  </div>
-                )}
+                <div ref={usersObserverElement}>
+                  <InfiniteScrollFooter
+                    isLoading={usersLoadingMore}
+                    isError={usersLoadError}
+                    hasMore={usersHasMore}
+                    hasItems={userResults.length > 0}
+                    onRetry={() => loadMoreUsers()}
+                    endMessage="No hay más usuarios."
+                  />
+                </div>
               </div>
             )}
 
@@ -513,17 +542,66 @@ export default function SearchPage() {
                 </div>
 
                 {/* Posts Loading More Trigger (Search) */}
-                {!loading && (
-                  <div ref={postsObserverElement} className="flex justify-center py-6 h-12">
-                    {postsLoadingMore && <div className="animate-spin w-6 h-6 border-2 border-[var(--brand-pink)] border-t-transparent rounded-full" />}
-                  </div>
-                )}
+                <div ref={postsObserverElement}>
+                  <InfiniteScrollFooter
+                    isLoading={postsLoadingMore}
+                    isError={postsLoadError}
+                    hasMore={postsHasMore}
+                    hasItems={results.length > 0}
+                    onRetry={() => loadMorePosts()}
+                    endMessage="No hay más publicaciones."
+                  />
+                </div>
               </div>
             )}
 
             {/* Empty State / Initial Placeholders */}
             {!query && (
-              <div className="space-y-6">
+              <div className="space-y-8">
+                
+                {/* Search History */}
+                {history.length > 0 && (
+                  <div className="px-1">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-sm font-bold text-[var(--foreground)] flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-[var(--foreground-secondary)]" />
+                        Búsquedas Recientes
+                      </h3>
+                      <button 
+                        onClick={clearHistory}
+                        className="text-xs font-medium text-[var(--foreground-tertiary)] hover:text-[var(--brand-pink)] flex items-center gap-1 transition-colors"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        Borrar
+                      </button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {history.map((term, idx) => (
+                        <div key={idx} className="flex items-center bg-[var(--background-secondary)] border border-[var(--border-color)] rounded-full pl-4 pr-2 py-1.5 hover:border-[var(--brand-pink)] transition-colors group">
+                          <button 
+                            onClick={() => {
+                              setQuery(term);
+                              setDebouncedQuery(term);
+                            }}
+                            className="text-sm font-medium text-[var(--foreground-secondary)] group-hover:text-[var(--foreground)] transition-colors"
+                          >
+                            {term}
+                          </button>
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeSearch(term);
+                            }}
+                            className="ml-2 p-1 text-[var(--foreground-tertiary)] hover:text-[var(--brand-pink)] rounded-full transition-colors"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Título de sección si hay posts */}
                 {results.length > 0 && (
                   <div className="mt-2">
@@ -536,11 +614,16 @@ export default function SearchPage() {
                     </div>
 
                     {/* Posts Loading More Trigger (Trending) */}
-                    {!loading && (
-                      <div ref={postsObserverElement} className="flex justify-center py-6 h-12">
-                        {postsLoadingMore && <div className="animate-spin w-6 h-6 border-2 border-[var(--brand-pink)] border-t-transparent rounded-full" />}
-                      </div>
-                    )}
+                    <div ref={postsObserverElement}>
+                      <InfiniteScrollFooter
+                        isLoading={postsLoadingMore}
+                        isError={postsLoadError}
+                        hasMore={postsHasMore}
+                        hasItems={results.length > 0}
+                        onRetry={() => loadMorePosts()}
+                        endMessage="¡Estás al día con las tendencias!"
+                      />
+                    </div>
                   </div>
                 )}
               </div>

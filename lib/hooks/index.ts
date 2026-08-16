@@ -19,3 +19,4 @@ export { useTypingIndicator } from './useTypingIndicator';
 export { useUnreadMessages } from './useUnreadMessages';
 export { useBodyScrollLock } from './useBodyScrollLock';
 export { useDropdownScrollLock } from './useDropdownScrollLock';
+export { useSearchHistory } from './useSearchHistory';

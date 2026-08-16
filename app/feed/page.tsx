@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { SquarePlus, Plus, PlusSquare, Send, Shirt, Layers, Image as ImageIcon, Sparkles } from 'lucide-react';
 import PostCard, { type Post } from '@/components/Feed/PostCard';
 import PremiumAdCard from '@/components/Feed/PremiumAdCard';
-import { LogoMark, EmptyState } from '@/components';
+import { LogoMark, EmptyState, InfiniteScrollFooter } from '@/components';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -21,6 +21,7 @@ export default function FeedPage() {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const { user } = useUser();
   const { toggleCreateMenu } = useUiStore();
   const router = useRouter();
@@ -38,6 +39,7 @@ export default function FeedPage() {
 
   const fetchPosts = useCallback(async (isLoadMore = false) => {
     try {
+      setLoadError(false);
       if (isLoadMore) {
         setLoadingMore(true);
       } else {
@@ -208,7 +210,10 @@ export default function FeedPage() {
       }
     } catch (error: any) {
       console.error('Error fetching posts:', error.message || error);
-      setPosts([]); // Set to empty on error
+      if (!isLoadMore) {
+        setPosts([]); // Set to empty only if not loading more
+      }
+      setLoadError(true);
     } finally {
       setLoading(false);
       setLoadingMore(false);
@@ -224,21 +229,21 @@ export default function FeedPage() {
   }, [user, fetchPosts]);
 
   const loadMorePosts = useCallback(() => {
-    if (loading || loadingMore || !hasMore) return;
+    if (loading || loadingMore || !hasMore || loadError) return;
     fetchPosts(true);
-  }, [loading, loadingMore, hasMore, fetchPosts]);
+  }, [loading, loadingMore, hasMore, loadError, fetchPosts]);
 
   // Intersection Observer for Infinite Scroll
   useEffect(() => {
     const observer = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting && hasMore && !loadingMore && !loading) {
+      if (entries[0].isIntersecting && hasMore && !loadingMore && !loading && !loadError) {
         loadMorePosts();
       }
     }, { threshold: 0.1 });
 
     if (observerElement.current) observer.observe(observerElement.current);
     return () => observer.disconnect();
-  }, [loadMorePosts, hasMore, loadingMore, loading]);
+  }, [loadMorePosts, hasMore, loadingMore, loading, loadError]);
 
   return (
     <div className="min-h-screen bg-[var(--background)] pb-24">
@@ -313,11 +318,16 @@ export default function FeedPage() {
         }
 
         {/* Infinite Scroll Trigger */}
-        {posts.length > 0 && !loading && (
-          <div ref={observerElement} className="h-10 w-full flex items-center justify-center pt-8 pb-12 col-span-full">
-            {loadingMore && <div className="animate-spin w-8 h-8 border-4 border-[var(--brand-pink)] border-t-transparent transition-colors rounded-full" />}
-          </div>
-        )}
+        <div ref={observerElement} className="w-full flex items-center justify-center col-span-full">
+          <InfiniteScrollFooter
+            isLoading={loadingMore}
+            isError={loadError}
+            hasMore={hasMore}
+            hasItems={posts.length > 0}
+            onRetry={() => loadMorePosts()}
+            endMessage="¡Estás al día! Has visto todas las publicaciones."
+          />
+        </div>
       </div>
 
 

@@ -9,7 +9,7 @@ import Image from 'next/image';
 import { supabase } from '@/lib/supabase/client';
 import { getRecentFollowActivity, followUser, unfollowUser, getMyFollowStatusMap, getFollowStatus } from '@/lib/services/followService';
 import { getSmartSuggestions } from '@/lib/services/suggestionService';
-import { LogoMark, Avatar } from '@/components';
+import { LogoMark, Avatar, InfiniteScrollFooter } from '@/components';
 import Link from 'next/link';
 import { useWardrobe } from '@/lib/hooks/useWardrobe';
 import { useRouter } from 'next/navigation';
@@ -41,6 +41,13 @@ export default function NotificationList({ compact = false, onClose }: Notificat
     const [fetchedNotifications, setFetchedNotifications] = useState<Notification[]>([]);
     const realtimeNotifications = useRealtimeStore(state => state.notifications);
     const [loading, setLoading] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [hasMore, setHasMore] = useState(true);
+    const [loadError, setLoadError] = useState(false);
+    
+    const pageRef = useRef(0);
+    const NOTIFS_PER_PAGE = 10;
+    const observerElement = useRef<HTMLDivElement | null>(null);
 
     // Merge fetched and realtime notifications
     const notifications = Array.from(new Map(
@@ -78,172 +85,219 @@ export default function NotificationList({ compact = false, onClose }: Notificat
     }, [user?.id]);
 
 
-    useEffect(() => {
-        let isMounted = true;
-        const controller = new AbortController();
+    const fetchNotifications = async (isLoadMore = false) => {
+        const currentPage = isLoadMore ? pageRef.current + 1 : 0;
+        const from = currentPage * NOTIFS_PER_PAGE;
+        const to = from + NOTIFS_PER_PAGE - 1;
 
-        const fetchNotifications = async () => {
-            // Always start loading when effect runs
-            if (isMounted) setLoading(true);
+        if (isLoadMore) {
+            setLoadingMore(true);
+        } else {
+            setLoading(true);
+        }
+        setLoadError(false);
 
-            if (!user?.id) {
-                if (isMounted) setLoading(false);
-                return;
-            };
+        if (!user?.id) {
+            setLoading(false);
+            setLoadingMore(false);
+            return;
+        }
 
-            const realNotifications: Notification[] = [];
-            const now = new Date();
+        const realNotifications: Notification[] = [];
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const thirtyDaysAgoISO = thirtyDaysAgo.toISOString();
 
-            // Helper to get relative time safely
-            const getTimeAgo = (dateString: string) => {
-                const time = new Date(dateString).getTime();
-                const now = Date.now();
-                const diffInSeconds = Math.floor((now - time) / 1000);
-                
-                // Restricción: Si la fecha es en el futuro (por un dispositivo con la hora mal ajustada)
-                if (diffInSeconds <= 0) return 'Justo ahora';
-                
-                const diffInMinutes = Math.floor(diffInSeconds / 60);
-                if (diffInMinutes < 60) return `hace ${diffInMinutes} ${diffInMinutes === 1 ? 'minuto' : 'minutos'}`;
-                
-                const diffInHours = Math.floor(diffInMinutes / 60);
-                if (diffInHours < 24) return `hace ${diffInHours} ${diffInHours === 1 ? 'hora' : 'horas'}`;
-                
-                const diffInDays = Math.floor(diffInHours / 24);
-                if (diffInDays < 30) return `hace ${diffInDays} ${diffInDays === 1 ? 'día' : 'días'}`;
-                
-                const diffInMonths = Math.floor(diffInDays / 30);
-                if (diffInMonths < 12) return `hace ${diffInMonths} ${diffInMonths === 1 ? 'mes' : 'meses'}`;
-                
-                const diffInYears = Math.floor(diffInDays / 365);
-                return `hace ${diffInYears} ${diffInYears === 1 ? 'año' : 'años'}`;
-            };
+        // Helper to get relative time safely
+        const getTimeAgo = (dateString: string) => {
+            const time = new Date(dateString).getTime();
+            const now = Date.now();
+            const diffInSeconds = Math.floor((now - time) / 1000);
+            
+            if (diffInSeconds <= 0) return 'Justo ahora';
+            
+            const diffInMinutes = Math.floor(diffInSeconds / 60);
+            if (diffInMinutes < 60) return `hace ${diffInMinutes} ${diffInMinutes === 1 ? 'minuto' : 'minutos'}`;
+            
+            const diffInHours = Math.floor(diffInMinutes / 60);
+            if (diffInHours < 24) return `hace ${diffInHours} ${diffInHours === 1 ? 'hora' : 'horas'}`;
+            
+            const diffInDays = Math.floor(diffInHours / 24);
+            if (diffInDays < 30) return `hace ${diffInDays} ${diffInDays === 1 ? 'día' : 'días'}`;
+            
+            const diffInMonths = Math.floor(diffInDays / 30);
+            if (diffInMonths < 12) return `hace ${diffInMonths} ${diffInMonths === 1 ? 'mes' : 'meses'}`;
+            
+            const diffInYears = Math.floor(diffInDays / 365);
+            return `hace ${diffInYears} ${diffInYears === 1 ? 'año' : 'años'}`;
+        };
 
-            // 1. Obtener sugerencias inteligentes
+        // 1. Obtener sugerencias inteligentes (Solo primera página)
+        if (currentPage === 0) {
             const smartSuggestions = await getSmartSuggestions(user.id);
             realNotifications.push(...smartSuggestions);
+        }
 
-            // 2. Fetch Follows (Real Data)
-            try {
-                const follows = await getRecentFollowActivity(user.id, 10);
+        try {
+            // 2. Fetch Follows (Real Data limitadas a 30 días)
+            const { data: followsData } = await supabase
+                .from('follows')
+                .select('*, follower:follower_id(*)')
+                .eq('following_id', user.id)
+                .gte('created_at', thirtyDaysAgoISO)
+                .order('created_at', { ascending: false })
+                .range(from, to);
 
-                if (follows.length > 0) {
-                    follows.forEach((f: any) => {
+            const follows = followsData || [];
+
+            if (follows.length > 0) {
+                follows.forEach((f: any) => {
+                    realNotifications.push({
+                        id: `follow_${f.follower_id}::${f.following_id}`,
+                        type: 'follow',
+                        actor: {
+                            id: f.follower_id,
+                            username: f.follower?.username || '',
+                            name: f.follower?.full_name || f.follower?.username || 'Usuario',
+                            avatar: f.follower?.avatar_url || null
+                        },
+                        time: getTimeAgo(f.created_at),
+                        timestamp: new Date(f.created_at).getTime(),
+                    });
+                });
+            }
+
+            // 3. Fetch Likes & Comments
+            const { data: myPosts } = await supabase
+                .from('posts')
+                .select('id')
+                .eq('user_id', user.id);
+
+            if (myPosts && myPosts.length > 0) {
+                const myPostIds = myPosts.map((p: any) => p.id);
+                // LIKES
+                const { data: likes } = await supabase
+                    .from('likes')
+                    .select(`
+              user_id, post_id, created_at,
+              user:user_id(id, full_name, username, avatar_url),
+              post:post_id(image_url)
+           `)
+                    .in('post_id', myPostIds)
+                    .neq('user_id', user.id) // Avoid self-likes
+                    .gte('created_at', thirtyDaysAgoISO)
+                    .order('created_at', { ascending: false })
+                    .range(from, to);
+
+                if (likes) {
+                    likes.forEach((l: any) => {
                         realNotifications.push({
-                            id: `follow_${f.follower_id}::${f.following_id}`,
-                            type: 'follow',
+                            id: `like_${l.user_id}_${l.post_id}_${l.created_at}`,
+                            type: 'like',
                             actor: {
-                                id: f.follower_id,
-                                username: f.follower?.username || '',
-                                name: f.follower?.full_name || f.follower?.username || 'Usuario',
-                                avatar: f.follower?.avatar_url || null
+                                id: l.user_id,
+                                username: l.user?.username || '',
+                                name: l.user?.full_name || l.user?.username || 'Usuario',
+                                avatar: l.user?.avatar_url || null
                             },
-                            time: getTimeAgo(f.created_at),
-                            timestamp: new Date(f.created_at).getTime(),
+                            time: getTimeAgo(l.created_at),
+                            timestamp: new Date(l.created_at).getTime(),
+                            image: l.post?.image_url,
+                            postId: l.post_id
                         });
                     });
                 }
 
-                // 3. Fetch Likes (Real Data)
-                const { data: myPosts } = await supabase
-                    .from('posts')
-                    .select('id')
-                    .eq('user_id', user.id);
+                // COMMENTS
+                const { data: comments } = await supabase
+                    .from('comments' as any)
+                    .select(`
+              id, user_id, post_id, created_at, content,
+              user:user_id(id, full_name, username, avatar_url),
+              post:post_id(image_url)
+           `)
+                    .in('post_id', myPostIds)
+                    .neq('user_id', user.id) // Avoid self-comments
+                    .gte('created_at', thirtyDaysAgoISO)
+                    .order('created_at', { ascending: false })
+                    .range(from, to);
 
-                if (myPosts && myPosts.length > 0) {
-                    const myPostIds = myPosts.map((p: any) => p.id);
-                    // LIKES
-                    const { data: likes } = await supabase
-                        .from('likes')
-                        .select(`
-                  user_id, post_id, created_at,
-                  user:user_id(id, full_name, username, avatar_url),
-                  post:post_id(image_url)
-               `)
-                        .in('post_id', myPostIds)
-                        .neq('user_id', user.id) // Avoid self-likes
-                        .order('created_at', { ascending: false })
-                        .limit(10);
-
-                    if (likes) {
-                        likes.forEach((l: any) => {
-                            realNotifications.push({
-                                id: `like_${l.user_id}_${l.post_id}_${l.created_at}`,
-                                type: 'like',
-                                actor: {
-                                    id: l.user_id,
-                                    username: l.user?.username || '',
-                                    name: l.user?.full_name || l.user?.username || 'Usuario',
-                                    avatar: l.user?.avatar_url || null
-                                },
-                                time: getTimeAgo(l.created_at),
-                                timestamp: new Date(l.created_at).getTime(),
-                                image: l.post?.image_url,
-                                postId: l.post_id
-                            });
+                if (comments) {
+                    comments.forEach((c: any) => {
+                        realNotifications.push({
+                            id: `comment_${c.id}`,
+                            type: 'comment',
+                            actor: {
+                                id: c.user_id,
+                                username: c.user?.username || '',
+                                name: c.user?.full_name || c.user?.username || 'Usuario',
+                                avatar: c.user?.avatar_url || null
+                            },
+                            content: c.content,
+                            time: getTimeAgo(c.created_at),
+                            timestamp: new Date(c.created_at).getTime(),
+                            image: c.post?.image_url,
+                            postId: c.post_id
                         });
-                    }
-
-                    // COMMENTS
-                    const { data: comments } = await supabase
-                        .from('comments' as any)
-                        .select(`
-                  id, user_id, post_id, created_at, content,
-                  user:user_id(id, full_name, username, avatar_url),
-                  post:post_id(image_url)
-               `)
-                        .in('post_id', myPostIds)
-                        .neq('user_id', user.id) // Avoid self-comments
-                        .order('created_at', { ascending: false })
-                        .limit(10);
-
-                    if (comments) {
-                        comments.forEach((c: any) => {
-                            realNotifications.push({
-                                id: `comment_${c.id}`,
-                                type: 'comment',
-                                actor: {
-                                    id: c.user_id,
-                                    username: c.user?.username || '',
-                                    name: c.user?.full_name || c.user?.username || 'Usuario',
-                                    avatar: c.user?.avatar_url || null
-                                },
-                                content: c.content, // reuse content for comment text
-                                time: getTimeAgo(c.created_at),
-                                timestamp: new Date(c.created_at).getTime(),
-                                image: c.post?.image_url,
-                                postId: c.post_id
-                            });
-                        });
-                    }
+                    });
                 }
-
-            } catch (err) {
-                console.error("Error fetching activity", err);
-            } finally {
-                if (isMounted) setLoading(false);
             }
 
-            // Sort by time (newest first)
-            if (isMounted) {
-                const sortedNotifications = realNotifications.sort((a, b) => b.timestamp - a.timestamp);
+        } catch (err) {
+            console.error("Error fetching activity", err);
+            setLoadError(true);
+        } finally {
+            setLoading(false);
+            setLoadingMore(false);
+        }
+
+        if (!loadError) {
+            const newFetched = realNotifications;
+            
+            if (isLoadMore) {
+                setFetchedNotifications(prev => {
+                    const all = [...prev, ...newFetched];
+                    return Array.from(new Map(all.map(item => [item.id, item])).values())
+                        .sort((a, b) => b.timestamp - a.timestamp);
+                });
+            } else {
+                const sortedNotifications = newFetched.sort((a, b) => b.timestamp - a.timestamp);
                 setFetchedNotifications(sortedNotifications);
                 
-                // Clear badge using the newest notification timestamp + 1 second to avoid microsecond truncation issues in DB
                 const newestTimestamp = sortedNotifications.length > 0 
                     ? new Date(sortedNotifications[0].timestamp + 1000).toISOString() 
                     : undefined;
                 markActivityAsViewed(newestTimestamp);
             }
-        };
 
-        fetchNotifications();
+            setHasMore(newFetched.length > 0);
+            if (newFetched.length > 0) {
+                pageRef.current = currentPage;
+            }
+        }
+    };
 
-        return () => {
-            isMounted = false;
-            controller.abort();
-        };
-    }, [user]);
+    useEffect(() => {
+        fetchNotifications(false);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user?.id]);
+
+    const loadMoreNotifications = () => {
+        if (loading || loadingMore || !hasMore || loadError) return;
+        fetchNotifications(true);
+    };
+
+    // Observers
+    useEffect(() => {
+        const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting && hasMore && !loadingMore && !loading && !loadError) {
+                loadMoreNotifications();
+            }
+        }, { threshold: 0.1 });
+
+        if (observerElement.current) observer.observe(observerElement.current);
+        return () => observer.disconnect();
+    }, [hasMore, loadingMore, loading, loadError]);
 
     const handleDismissSystem = (e: React.MouseEvent, id: string) => {
         e.stopPropagation(); // Prevent triggering the main click
@@ -357,103 +411,107 @@ export default function NotificationList({ compact = false, onClose }: Notificat
                 )}
             </AnimatePresence>
 
-            {/* Seguidos */}
-            {activityNotifications.filter(n => n.type === 'follow').length > 0 && (
-                <section className="space-y-3">
-                    <h2 className="text-xs font-bold text-[var(--foreground-secondary)] uppercase tracking-wider">Seguidos</h2>
+            {/* Actividad Reciente */}
+            {activityNotifications.length > 0 && (
+                <section className="space-y-4">
                     <div className="space-y-4">
-                        {activityNotifications.filter(n => n.type === 'follow').map((notif) => (
-                            <div key={notif.id} className="flex items-center gap-3 group">
-                                <Link href={`/profile/${notif.actor!.username || notif.actor!.id}`} className="relative" onClick={onClose}>
-                                    <Avatar src={notif.actor?.avatar || null} alt={notif.actor!.name} size="md" />
-                                    <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-[var(--background)] flex items-center justify-center text-white bg-[var(--brand-pink)]">
-                                        <UserPlus className="w-2.5 h-2.5" />
+                        {activityNotifications.map((notif) => {
+                            if (notif.type === 'follow') {
+                                return (
+                                    <div key={notif.id} className="flex items-center gap-3 group">
+                                        <Link href={`/profile/${notif.actor!.username || notif.actor!.id}`} className="relative shrink-0" onClick={onClose}>
+                                            <Avatar src={notif.actor?.avatar || null} alt={notif.actor!.name} size="md" />
+                                            <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-[var(--background)] flex items-center justify-center text-white bg-[var(--brand-pink)]">
+                                                <UserPlus className="w-2.5 h-2.5" />
+                                            </div>
+                                        </Link>
+                                        <div className="flex-1 text-sm min-w-0">
+                                            <Link href={`/profile/${notif.actor!.username || notif.actor!.id}`} onClick={onClose} className="font-semibold text-[var(--foreground)] hover:underline truncate">
+                                                {notif.actor!.name}
+                                            </Link>
+                                            <span className="text-[var(--foreground-secondary)]"> comenzó a seguirte.</span>
+                                            <span className="text-[var(--foreground-tertiary)] text-xs ml-2 block sm:inline">{notif.time}</span>
+                                        </div>
+                                        <button
+                                            onClick={() => handleFollow(notif.actor!.id)}
+                                            className={`px-3 py-1 rounded-full text-xs font-semibold hover:opacity-90 transition-opacity shrink-0
+                                                ${(followMap[notif.actor!.id] === 'accepted' || followMap[notif.actor!.id] === 'pending')
+                                                    ? 'bg-[var(--background-secondary)] text-[var(--foreground)] border border-[var(--border-color)]'
+                                                    : 'bg-[var(--brand-pink)] text-white'}`}
+                                        >
+                                            {followMap[notif.actor!.id] === 'accepted' ? 'Siguiendo' :
+                                                followMap[notif.actor!.id] === 'pending' ? 'Solicitado' : 'Seguir'}
+                                        </button>
                                     </div>
-                                </Link>
-                                <div className="flex-1 text-sm">
-                                    <Link href={`/profile/${notif.actor!.username || notif.actor!.id}`} onClick={onClose} className="font-semibold text-[var(--foreground)] hover:underline">
-                                        {notif.actor!.name}
-                                    </Link>
-                                    <span className="text-[var(--foreground-secondary)]"> comenzó a seguirte.</span>
-                                    <span className="text-[var(--foreground-tertiary)] text-xs ml-2 block sm:inline">{notif.time}</span>
-                                </div>
-                                <button
-                                    onClick={() => handleFollow(notif.actor!.id)}
-                                    className={`px-3 py-1 rounded-full text-xs font-semibold hover:opacity-90 transition-opacity whitespace-nowrap
-                      ${(followMap[notif.actor!.id] === 'accepted' || followMap[notif.actor!.id] === 'pending')
-                                            ? 'bg-[var(--background-secondary)] text-[var(--foreground)] border border-[var(--border-color)]'
-                                            : 'bg-[var(--brand-pink)] text-white'}`}
-                                >
-                                    {followMap[notif.actor!.id] === 'accepted' ? 'Siguiendo' :
-                                        followMap[notif.actor!.id] === 'pending' ? 'Solicitado' : 'Seguir'}
-                                </button>
-                            </div>
-                        ))}
+                                );
+                            }
+                            
+                            if (notif.type === 'like') {
+                                return (
+                                    <div key={notif.id} className="flex items-center gap-3 group">
+                                        <Link href={`/profile/${notif.actor!.username || notif.actor!.id}`} className="relative shrink-0" onClick={onClose}>
+                                            <Avatar src={notif.actor?.avatar || null} alt={notif.actor!.name} size="md" />
+                                            <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-[var(--background)] flex items-center justify-center text-white bg-[#FF3040]">
+                                                <Heart className="w-2.5 h-2.5 fill-current" />
+                                            </div>
+                                        </Link>
+                                        <div className="flex-1 text-sm min-w-0">
+                                            <Link href={`/profile/${notif.actor!.username || notif.actor!.id}`} onClick={onClose} className="font-semibold text-[var(--foreground)] hover:underline truncate">
+                                                {notif.actor!.name}
+                                            </Link>
+                                            <span className="text-[var(--foreground-secondary)]"> le gustó tu post.</span>
+                                            <span className="text-[var(--foreground-tertiary)] text-xs ml-2 block sm:inline">{notif.time}</span>
+                                        </div>
+                                        {notif.image && (
+                                            <Link href={`/post/${notif.postId}`} onClick={onClose} className="w-10 h-10 rounded-md overflow-hidden relative border border-[var(--border-color)] hover:opacity-80 transition-opacity shrink-0">
+                                                <Image src={notif.image} alt="Post" fill className="object-cover" />
+                                            </Link>
+                                        )}
+                                    </div>
+                                );
+                            }
+
+                            if (notif.type === 'comment') {
+                                return (
+                                    <div key={notif.id} className="flex items-center gap-3 group">
+                                        <Link href={`/profile/${notif.actor!.username || notif.actor!.id}`} className="relative shrink-0" onClick={onClose}>
+                                            <Avatar src={notif.actor?.avatar || null} alt={notif.actor!.name} size="md" />
+                                            <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-[var(--background)] flex items-center justify-center text-[var(--foreground)] bg-[var(--background-secondary)]">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-message-circle"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" /></svg>
+                                            </div>
+                                        </Link>
+                                        <div className="flex-1 text-sm min-w-0">
+                                            <Link href={`/profile/${notif.actor!.username || notif.actor!.id}`} onClick={onClose} className="font-semibold text-[var(--foreground)] hover:underline truncate">
+                                                {notif.actor!.name}
+                                            </Link>
+                                            <span className="text-[var(--foreground-secondary)] text-wrap break-words"> comentó: "{notif.content}"</span>
+                                            <span className="text-[var(--foreground-tertiary)] text-xs ml-2 block sm:inline">{notif.time}</span>
+                                        </div>
+                                        {notif.image && (
+                                            <Link href={`/post/${notif.postId}`} onClick={onClose} className="w-10 h-10 rounded-md overflow-hidden relative border border-[var(--border-color)] hover:opacity-80 transition-opacity shrink-0">
+                                                <Image src={notif.image} alt="Post" fill className="object-cover" />
+                                            </Link>
+                                        )}
+                                    </div>
+                                );
+                            }
+                            return null;
+                        })}
                     </div>
                 </section>
             )}
 
-            {/* Likes */}
-            {activityNotifications.filter(n => n.type === 'like').length > 0 && (
-                <section className="space-y-3">
-                    <h2 className="text-xs font-bold text-[var(--foreground-secondary)] uppercase tracking-wider">Likes</h2>
-                    <div className="space-y-4">
-                        {activityNotifications.filter(n => n.type === 'like').map((notif) => (
-                            <div key={notif.id} className="flex items-center gap-3 group">
-                                <Link href={`/profile/${notif.actor!.username || notif.actor!.id}`} className="relative" onClick={onClose}>
-                                    <Avatar src={notif.actor?.avatar || null} alt={notif.actor!.name} size="md" />
-                                    <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-[var(--background)] flex items-center justify-center text-white bg-[#FF3040]">
-                                        <Heart className="w-2.5 h-2.5 fill-current" />
-                                    </div>
-                                </Link>
-                                <div className="flex-1 text-sm">
-                                    <Link href={`/profile/${notif.actor!.username || notif.actor!.id}`} onClick={onClose} className="font-semibold text-[var(--foreground)] hover:underline">
-                                        {notif.actor!.name}
-                                    </Link>
-                                    <span className="text-[var(--foreground-secondary)]"> le gustó tu post.</span>
-                                    <span className="text-[var(--foreground-tertiary)] text-xs ml-2 block sm:inline">{notif.time}</span>
-                                </div>
-                                {notif.image && (
-                                    <Link href={`/post/${notif.postId}`} onClick={onClose} className="w-10 h-10 rounded-md overflow-hidden relative border border-[var(--border-color)] hover:opacity-80 transition-opacity shrink-0">
-                                        <Image src={notif.image} alt="Post" fill className="object-cover" />
-                                    </Link>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                </section>
-            )}
-
-            {/* Comentarios */}
-            {activityNotifications.filter(n => n.type === 'comment').length > 0 && (
-                <section className="space-y-3">
-                    <h2 className="text-xs font-bold text-[var(--foreground-secondary)] uppercase tracking-wider">Comentarios</h2>
-                    <div className="space-y-4">
-                        {activityNotifications.filter(n => n.type === 'comment').map((notif) => (
-                            <div key={notif.id} className="flex items-center gap-3 group">
-                                <Link href={`/profile/${notif.actor!.username || notif.actor!.id}`} className="relative" onClick={onClose}>
-                                    <Avatar src={notif.actor?.avatar || null} alt={notif.actor!.name} size="md" />
-                                    <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-[var(--background)] flex items-center justify-center text-[var(--foreground)] bg-[var(--background-secondary)]">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-message-circle"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" /></svg>
-                                    </div>
-                                </Link>
-                                <div className="flex-1 text-sm">
-                                    <Link href={`/profile/${notif.actor!.username || notif.actor!.id}`} onClick={onClose} className="font-semibold text-[var(--foreground)] hover:underline">
-                                        {notif.actor!.name}
-                                    </Link>
-                                    <span className="text-[var(--foreground-secondary)]"> comentó: "{notif.content}"</span>
-                                    <span className="text-[var(--foreground-tertiary)] text-xs ml-2 block sm:inline">{notif.time}</span>
-                                </div>
-                                {notif.image && (
-                                    <Link href={`/post/${notif.postId}`} onClick={onClose} className="w-10 h-10 rounded-md overflow-hidden relative border border-[var(--border-color)] hover:opacity-80 transition-opacity shrink-0">
-                                        <Image src={notif.image} alt="Post" fill className="object-cover" />
-                                    </Link>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                </section>
-            )}
+            {/* Infinite Scroll Footer */}
+            <div ref={observerElement}>
+                <InfiniteScrollFooter
+                    isLoading={loadingMore}
+                    isError={loadError}
+                    hasMore={hasMore}
+                    hasItems={activityNotifications.length > 0}
+                    onRetry={loadMoreNotifications}
+                    endMessage="Estás al día con tus notificaciones"
+                />
+            </div>
         </div>
     );
 }
