@@ -462,7 +462,7 @@ class RealtimeManager {
       // 2. Poll for new likes
       const { data: recentLikes } = await supabase
         .from('likes')
-        .select('id, user_id, post_id, created_at, profiles!inner(username, full_name, avatar_url)')
+        .select('user_id, post_id, created_at, profiles!inner(username, full_name, avatar_url)')
         .in('post_id', myPostIds)
         .gt('created_at', timeSinceLastPoll);
 

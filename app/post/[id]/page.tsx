@@ -257,9 +257,9 @@ export default function PostDetailPage() {
             }
 
             // Sync total likes count in the 'posts' table for efficient popularity sorting
-            const newCount = previousState ? Math.max(0, (post?.likes || 0) - 1) : (post?.likes || 0) + 1;
+            const newCount = previousState ? Math.max(0, (post?.likes_count || 0) - 1) : (post?.likes_count || 0) + 1;
             await (supabase.from('posts') as any)
-                .update({ likes: newCount })
+                .update({ likes_count: newCount })
                 .eq('id', postId);
 
             router.refresh();
