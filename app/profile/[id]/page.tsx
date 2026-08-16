@@ -40,6 +40,7 @@ interface Profile {
   full_name: string | null;
   avatar_url: string | null;
   bio?: string;
+  is_private?: boolean;
 }
 
 export default function PublicProfilePage() {
@@ -482,8 +483,19 @@ export default function PublicProfilePage() {
 
         {/* Content Grid - Exact Style */}
         <div className="min-h-[40vh] relative z-0 hover:z-40">
-          <AnimatePresence mode="wait">
-            {activeTab === 'posts' ? (
+          {profile.is_private && !isFollowedByMe ? (
+            <div className="flex flex-col items-center justify-center pt-16 text-center px-4">
+              <div className="w-20 h-20 bg-[var(--background-secondary)] rounded-full flex items-center justify-center mb-6">
+                <Lock className="w-10 h-10 text-[var(--foreground-secondary)]" />
+              </div>
+              <h3 className="text-xl font-bold mb-2">Este perfil es privado</h3>
+              <p className="text-[var(--foreground-secondary)] max-w-sm">
+                Síguele para ver sus publicaciones y outfits.
+              </p>
+            </div>
+          ) : (
+            <AnimatePresence mode="wait">
+              {activeTab === 'posts' ? (
               <motion.div
                 key="posts"
                 initial={{ opacity: 0 }}
@@ -549,6 +561,7 @@ export default function PublicProfilePage() {
               </motion.div>
             )}
           </AnimatePresence>
+          )}
         </div>
       </main>
     </div>

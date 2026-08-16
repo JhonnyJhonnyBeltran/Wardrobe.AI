@@ -98,7 +98,15 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    if (!isCompleted) {
+    let hasUsername = !!profile?.username;
+
+    if (!hasUsername) {
+      const newResponse = NextResponse.redirect(new URL('/onboarding/username', requestUrl.origin));
+      response.cookies.getAll().forEach((cookie) => {
+        newResponse.cookies.set(cookie.name, cookie.value, cookie);
+      });
+      return newResponse;
+    } else if (!isCompleted) {
       const newResponse = NextResponse.redirect(new URL('/onboarding/preferences', requestUrl.origin));
       // Copy cookies from the base response to ensure they aren't lost
       response.cookies.getAll().forEach((cookie) => {

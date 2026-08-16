@@ -131,6 +131,8 @@ export interface Database {
           visual_style_preferences: string[] | null;
           style_completed: boolean;
           morphology: string | null;
+          is_private: boolean | null;
+          notification_settings: Json | null;
           colorimetry: string | null;
           hair_type: string | null;
           skin_tone: string | null;

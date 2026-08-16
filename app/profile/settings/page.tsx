@@ -39,8 +39,19 @@ export default function SettingsPage() {
     // const { language, setLanguage } = useLanguage();
     const { t } = useTranslation();
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [deleteInput, setDeleteInput] = useState('');
+    const [isDeleting, setIsDeleting] = useState(false);
     const [showStyleForm, setShowStyleForm] = useState(false);
     const [styleNames, setStyleNames] = useState<Record<string, string>>({});
+    
+    // Privacy and notification states
+    const [isPrivate, setIsPrivate] = useState(user?.isPrivate || false);
+    const [notifications, setNotifications] = useState(user?.notificationSettings || { push: true, email: true, comments: true, followers: true, likes: true });
+    
+    // Password state
+    const [showPasswordModal, setShowPasswordModal] = useState(false);
+    const [newPassword, setNewPassword] = useState('');
+    const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
 
     useEffect(() => {
         const fetchStyles = async () => {
@@ -82,17 +93,85 @@ export default function SettingsPage() {
         };
         if (user) {
             fetchStyles();
+            setIsPrivate(user.isPrivate || false);
+            setNotifications(user.notificationSettings || { push: true, email: true, comments: true, followers: true, likes: true });
         }
-    }, [user?.preferredStyles, user?.visualStylePreferences]);
+    }, [user]);
 
     const handleLogout = async () => {
         await signOut();
-        router.push('/');
+        router.push('/auth');
     };
 
-    const handleDeleteAccount = () => {
-        // TODO: Implementar eliminación de cuenta
-        setShowDeleteConfirm(false);
+    const handleDeleteAccount = async () => {
+        if (deleteInput.toLowerCase() !== 'confirmar') return;
+        setIsDeleting(true);
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) throw new Error('No session');
+            
+            const res = await fetch('/api/user/delete', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`
+                },
+                body: JSON.stringify({ userId: user?.id })
+            });
+            
+            if (!res.ok) throw new Error('Error al eliminar');
+            
+            await signOut();
+            router.push('/auth');
+        } catch (error) {
+            console.error('Error deleting account:', error);
+            alert('Hubo un error al eliminar tu cuenta.');
+        } finally {
+            setIsDeleting(false);
+            setShowDeleteConfirm(false);
+        }
+    };
+
+    const handleUpdatePassword = async () => {
+        if (!newPassword || newPassword.length < 6) {
+            alert('La contraseña debe tener al menos 6 caracteres');
+            return;
+        }
+        setIsUpdatingPassword(true);
+        try {
+            const { error } = await supabase.auth.updateUser({ password: newPassword });
+            if (error) throw error;
+            alert('Contraseña actualizada correctamente');
+            setShowPasswordModal(false);
+            setNewPassword('');
+        } catch (error: any) {
+            console.error('Error updating password:', error);
+            alert('Error al actualizar la contraseña: ' + error.message);
+        } finally {
+            setIsUpdatingPassword(false);
+        }
+    };
+
+    const togglePrivacy = async () => {
+        const newVal = !isPrivate;
+        setIsPrivate(newVal);
+        try {
+            await supabase.from('profiles').update({ is_private: newVal }).eq('id', user?.id);
+        } catch (err) {
+            console.error(err);
+            setIsPrivate(!newVal);
+        }
+    };
+
+    const toggleNotification = async (key: string) => {
+        const newVal = { ...notifications, [key]: !notifications[key] };
+        setNotifications(newVal);
+        try {
+            await supabase.from('profiles').update({ notification_settings: newVal }).eq('id', user?.id);
+        } catch (err) {
+            console.error(err);
+            setNotifications(notifications);
+        }
     };
 
     if (!user) return null;
@@ -245,15 +324,21 @@ export default function SettingsPage() {
                         <div className="space-y-3">
                             <label className="flex items-center justify-between p-3 rounded-xl bg-[var(--background-secondary)] cursor-pointer">
                                 <span className="text-sm text-[var(--foreground)]">{t.profile.newFollowers}</span>
-                                <input type="checkbox" className="toggle" defaultChecked />
+                                <div className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors ${notifications.followers ? 'bg-[var(--brand-pink)]' : 'bg-gray-300 dark:bg-gray-700'}`} onClick={() => toggleNotification('followers')}>
+                                    <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${notifications.followers ? 'translate-x-6' : 'translate-x-0'}`} />
+                                </div>
                             </label>
                             <label className="flex items-center justify-between p-3 rounded-xl bg-[var(--background-secondary)] cursor-pointer">
                                 <span className="text-sm text-[var(--foreground)]">{t.profile.likesOnPosts}</span>
-                                <input type="checkbox" className="toggle" defaultChecked />
+                                <div className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors ${notifications.likes ? 'bg-[var(--brand-pink)]' : 'bg-gray-300 dark:bg-gray-700'}`} onClick={() => toggleNotification('likes')}>
+                                    <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${notifications.likes ? 'translate-x-6' : 'translate-x-0'}`} />
+                                </div>
                             </label>
                             <label className="flex items-center justify-between p-3 rounded-xl bg-[var(--background-secondary)] cursor-pointer">
                                 <span className="text-sm text-[var(--foreground)]">{t.profile.comments}</span>
-                                <input type="checkbox" className="toggle" defaultChecked />
+                                <div className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors ${notifications.comments ? 'bg-[var(--brand-pink)]' : 'bg-gray-300 dark:bg-gray-700'}`} onClick={() => toggleNotification('comments')}>
+                                    <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${notifications.comments ? 'translate-x-6' : 'translate-x-0'}`} />
+                                </div>
                             </label>
                         </div>
                     </Card>
@@ -272,11 +357,11 @@ export default function SettingsPage() {
                             </div>
                         </div>
                         <div className="space-y-2">
-                            <Button className="w-full !bg-[var(--background-secondary)] !text-[var(--foreground)]">
+                            <Button 
+                                onClick={() => setShowPasswordModal(true)}
+                                className="w-full !bg-[var(--background-secondary)] !text-[var(--foreground)]"
+                            >
                                 {t.profile.changePassword}
-                            </Button>
-                            <Button className="w-full !bg-[var(--background-secondary)] !text-[var(--foreground)]">
-                                {t.profile.twoFactor}
                             </Button>
                         </div>
                     </Card>
@@ -295,11 +380,9 @@ export default function SettingsPage() {
                         <div className="space-y-3">
                             <label className="flex items-center justify-between p-3 rounded-xl bg-[var(--background-secondary)] cursor-pointer">
                                 <span className="text-sm text-[var(--foreground)]">{t.profile.privateProfile}</span>
-                                <input type="checkbox" className="toggle" />
-                            </label>
-                            <label className="flex items-center justify-between p-3 rounded-xl bg-[var(--background-secondary)] cursor-pointer">
-                                <span className="text-sm text-[var(--foreground)]">{t.profile.showActivity}</span>
-                                <input type="checkbox" className="toggle" defaultChecked />
+                                <div className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors ${isPrivate ? 'bg-[var(--brand-pink)]' : 'bg-gray-300 dark:bg-gray-700'}`} onClick={togglePrivacy}>
+                                    <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${isPrivate ? 'translate-x-6' : 'translate-x-0'}`} />
+                                </div>
                             </label>
                         </div>
                     </Card>
@@ -478,6 +561,61 @@ export default function SettingsPage() {
                     )}
                 </AnimatePresence>
 
+                {/* Password Modal */}
+                <AnimatePresence>
+                    {showPasswordModal && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+                            onClick={() => setShowPasswordModal(false)}
+                        >
+                            <motion.div
+                                initial={{ scale: 0.9, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                exit={{ scale: 0.9, opacity: 0 }}
+                                className="bg-[var(--card-bg)] rounded-3xl p-6 max-w-md w-full"
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                <div className="text-center mb-6">
+                                    <div className="w-16 h-16 rounded-full bg-[var(--brand-pink)]/10 flex items-center justify-center mx-auto mb-4">
+                                        <Key className="w-8 h-8 text-[var(--brand-pink)]" />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-[var(--foreground)] mb-2">
+                                        Cambiar Contraseña
+                                    </h3>
+                                    <p className="text-[var(--foreground-tertiary)] text-sm mb-4">
+                                        Introduce tu nueva contraseña (mínimo 6 caracteres).
+                                    </p>
+                                    <input 
+                                        type="password" 
+                                        value={newPassword}
+                                        onChange={(e) => setNewPassword(e.target.value)}
+                                        placeholder="Nueva contraseña" 
+                                        className="w-full bg-[var(--background-secondary)] text-[var(--foreground)] px-4 py-3 rounded-xl border border-[var(--border-color)] focus:border-[var(--brand-pink)] outline-none"
+                                    />
+                                </div>
+                                <div className="flex gap-3">
+                                    <Button
+                                        onClick={() => setShowPasswordModal(false)}
+                                        className="flex-1 !bg-[var(--background-secondary)] !text-[var(--foreground)]"
+                                    >
+                                        {t.common.cancel}
+                                    </Button>
+                                    <Button
+                                        onClick={handleUpdatePassword}
+                                        disabled={isUpdatingPassword}
+                                        className="flex-1 !bg-[var(--brand-pink)] !text-white disabled:opacity-50"
+                                    >
+                                        {isUpdatingPassword ? 'Guardando...' : 'Guardar'}
+                                    </Button>
+                                </div>
+                            </motion.div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
                 {/* Delete Confirmation Modal */}
                 <AnimatePresence>
                     {showDeleteConfirm && (
@@ -502,9 +640,16 @@ export default function SettingsPage() {
                                     <h3 className="text-xl font-bold text-[var(--foreground)] mb-2">
                                         {t.profile.deleteAccountConfirm}
                                     </h3>
-                                    <p className="text-[var(--foreground-tertiary)] text-sm">
-                                        {t.profile.deleteAccountMessage}
+                                    <p className="text-[var(--foreground-tertiary)] text-sm mb-4">
+                                        Esta acción no se puede deshacer. Por favor, escribe <strong>confirmar</strong> para eliminar tu cuenta y todos tus datos asociados.
                                     </p>
+                                    <input 
+                                        type="text" 
+                                        value={deleteInput}
+                                        onChange={(e) => setDeleteInput(e.target.value)}
+                                        placeholder="Escribe confirmar" 
+                                        className="w-full bg-[var(--background-secondary)] text-[var(--foreground)] px-4 py-3 rounded-xl border border-[var(--border-color)] focus:border-red-500 outline-none"
+                                    />
                                 </div>
                                 <div className="flex gap-3">
                                     <Button
@@ -515,9 +660,10 @@ export default function SettingsPage() {
                                     </Button>
                                     <Button
                                         onClick={handleDeleteAccount}
-                                        className="flex-1 !bg-red-500 hover:!bg-red-600 !text-white"
+                                        disabled={deleteInput.toLowerCase() !== 'confirmar' || isDeleting}
+                                        className="flex-1 !bg-red-500 hover:!bg-red-600 !text-white disabled:opacity-50"
                                     >
-                                        {t.common.delete}
+                                        {isDeleting ? 'Eliminando...' : t.common.delete}
                                     </Button>
                                 </div>
                             </motion.div>

@@ -132,6 +132,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
         usesAccessories: styleSource.uses_accessories,
         visualStylePreferences: styleSource.visual_style_preferences,
         styleCompleted: styleSource.style_completed || false,
+        isPrivate: styleSource.is_private || false,
+        notificationSettings: styleSource.notification_settings || { push: true, email: true },
       }));
     } catch (error) {
       console.error('[UserStore] Error fetching extended user profile from DB:', error);
@@ -163,6 +165,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
           subscriptionTier: SubscriptionTier.FREE,
           createdAt: new Date(session.user.created_at || Date.now()),
           styleCompleted: false,
+          isPrivate: false,
+          notificationSettings: { push: true, email: true },
         };
       });
 

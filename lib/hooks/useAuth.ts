@@ -105,6 +105,8 @@ export function useAuth(): UseAuthReturn {
       usesAccessories: styleSource.uses_accessories,
       visualStylePreferences: styleSource.visual_style_preferences,
       styleCompleted: styleSource.style_completed || false,
+      isPrivate: styleSource.is_private || false,
+      notificationSettings: styleSource.notification_settings || { push: true, email: true },
     });
   };
 

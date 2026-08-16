@@ -28,6 +28,8 @@ export interface UserProfile {
   usesAccessories?: boolean;
   visualStylePreferences?: string[]; // IDs of selected images from visual quiz
   styleCompleted?: boolean; // Has completed the style questionnaire
+  isPrivate?: boolean; // Profile privacy
+  notificationSettings?: { push: boolean; email: boolean } | any;
 }
 
 export interface UserPreferences {
