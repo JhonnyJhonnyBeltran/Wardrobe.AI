@@ -30,9 +30,6 @@ export default function TermsPage() {
                     transition={{ duration: 0.5 }}
                 >
                     <div className="mb-12 text-center">
-                        <div className="w-16 h-16 rounded-full bg-[var(--brand-pink)]/10 flex items-center justify-center mx-auto mb-6">
-                            <ShieldCheck className="w-8 h-8 text-[var(--brand-pink)]" />
-                        </div>
                         <h1 className="text-3xl md:text-5xl font-extrabold text-[var(--foreground)] mb-4 tracking-tight">
                             Términos de Servicio
                         </h1>
