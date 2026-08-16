@@ -11,7 +11,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   // Allow public pages (onboarding and auth)
-  const publicPaths = ['/', '/auth'];
+  const publicPaths = ['/', '/auth', '/terms', '/privacy'];
   const isPublicPath = publicPaths.includes(pathname || '') || pathname?.startsWith('/auth/');
 
   // Redirect if unauthorized
