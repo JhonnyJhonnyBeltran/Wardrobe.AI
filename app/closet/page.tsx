@@ -1200,7 +1200,17 @@ export default function ClosetPage() {
                     }
                     refresh();
                   } else {
-                    // 1. Borrar primero las relaciones en outfit_items para evitar errores de FK
+                    // 1. Unlink posts from outfits to prevent CASCADE delete
+                    const { error: unlinkError } = await supabase
+                      .from('posts')
+                      .update({ outfit_id: null })
+                      .in('outfit_id', idsArray);
+                    
+                    if (unlinkError) {
+                      console.warn('Advertencia al desvincular posts:', unlinkError);
+                    }
+
+                    // 1.5 Borrar primero las relaciones en outfit_items para evitar errores de FK
                     const { error: itemsError } = await supabase
                       .from('outfit_items')
                       .delete()

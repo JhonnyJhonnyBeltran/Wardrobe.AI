@@ -112,6 +112,10 @@ export default function OutfitDetailPage() {
   const handleDelete = async () => {
     haptics.warning();
     if (outfit) {
+      // 1. Unlink posts to prevent cascade delete
+      await supabase.from('posts').update({ outfit_id: null }).eq('outfit_id', outfit.id);
+      
+      // 2. Delete outfit
       await supabase.from('outfits').delete().eq('id', outfit.id);
       haptics.success();
       router.push('/closet');
