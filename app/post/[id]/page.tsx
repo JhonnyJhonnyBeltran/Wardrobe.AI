@@ -221,7 +221,7 @@ export default function PostDetailPage() {
 
         // Optimistic Update
         setIsLiked(!previousState);
-        setLikesCount(previousState ? previousCount - 1 : previousCount + 1);
+        setLikesCount(Math.max(0, previousState ? previousCount - 1 : previousCount + 1));
 
         try {
             let error = null;
@@ -257,7 +257,7 @@ export default function PostDetailPage() {
             }
 
             // Sync total likes count in the 'posts' table for efficient popularity sorting
-            const newCount = previousState ? Math.max(0, (post?.likes_count || 0) - 1) : (post?.likes_count || 0) + 1;
+            const newCount = previousState ? Math.max(0, previousCount - 1) : previousCount + 1;
             await (supabase.from('posts') as any)
                 .update({ likes_count: newCount })
                 .eq('id', postId);
