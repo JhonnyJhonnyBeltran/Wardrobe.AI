@@ -67,7 +67,7 @@ export default function OutfitDetailPage() {
               scale,
               rotation,
               layer_order,
-              clothing_items (
+              clothing_item:clothing_items (
                 id,
                 name,
                 category,
