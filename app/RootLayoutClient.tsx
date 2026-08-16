@@ -9,7 +9,6 @@ import dynamic from "next/dynamic";
 import { UserProvider, ThemeProvider } from "@/store";
 import RealtimeProvider from "@/components/RealtimeProvider";
 import MessageProvider from "@/components/MessageProvider";
-import ConditionalLayout from "@/components/ConditionalLayout";
 import GlobalErrorBoundary from "@/components/GlobalErrorBoundary";
 import SmartModelPreloader from "@/components/SmartModelPreloader";
 
@@ -53,10 +52,8 @@ export default function RootLayoutClient({ children }: RootLayoutClientProps) {
               {/* Non-critical components - loaded dynamically */}
               <SocialListener />
               
-              {/* Main layout */}
-              <ConditionalLayout>
-                {children}
-              </ConditionalLayout>
+              {/* Main content directly (layouts handled by Route Groups) */}
+              {children}
               
               {/* UI overlays - loaded on-demand */}
               <NotificationToastContainer position="top-right" />
