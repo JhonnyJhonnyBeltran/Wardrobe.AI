@@ -131,18 +131,26 @@ export default function OutfitCard({ outfit, isLocked = false, onClick, onEdit, 
 
             </div>
 
-            {/* Favorite Button Overlay - Always visible */}
-            {onToggleFavorite && !isLocked && (
-                <button
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        onToggleFavorite(outfit, outfit.favorite ?? false);
-                    }}
-                    className="absolute top-3 right-3 p-1 z-20 focus:outline-none"
-                >
-                    <Heart className={`w-5 h-5 transition-colors duration-300 ${outfit.favorite ? 'fill-[var(--brand-pink)] text-[var(--brand-pink)]' : 'fill-[#d1d5db] text-[#d1d5db] hover:fill-gray-400 hover:text-gray-400'}`} />
-                </button>
-            )}
+            {/* Right Overlay Actions - Always visible */}
+            <div className="absolute top-3 right-3 flex flex-col items-center gap-2 z-20">
+                {onToggleFavorite && !isLocked && (
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onToggleFavorite(outfit, outfit.favorite ?? false);
+                        }}
+                        className="p-1 focus:outline-none"
+                    >
+                        <Heart className={`w-5 h-5 transition-colors duration-300 ${outfit.favorite ? 'fill-[var(--brand-pink)] text-[var(--brand-pink)]' : 'fill-[#d1d5db] text-[#d1d5db] hover:fill-gray-400 hover:text-gray-400'}`} />
+                    </button>
+                )}
+                {!outfit.is_public && (
+                    <div className="p-1" title="Outfit privado">
+                        <Lock className="w-4 h-4 text-white/80 drop-shadow-md" />
+                    </div>
+                )}
+            </div>
+
 
             {/* Actions Overlay (Visible on Hover/Focus) */}
             {
