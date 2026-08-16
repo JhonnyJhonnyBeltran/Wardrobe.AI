@@ -11,6 +11,7 @@ interface InfiniteScrollFooterProps {
   onRetry: () => void;
   endMessage?: string;
   errorMessage?: string;
+  skeleton?: React.ReactNode;
 }
 
 export default function InfiniteScrollFooter({
@@ -20,7 +21,8 @@ export default function InfiniteScrollFooter({
   hasItems,
   onRetry,
   endMessage = '¡Estás al día! No hay más resultados.',
-  errorMessage = 'No se pudo cargar más contenido.'
+  errorMessage = 'No se pudo cargar más contenido.',
+  skeleton
 }: InfiniteScrollFooterProps) {
   // If we don't have items yet and aren't loading, we usually show an EmptyState, not this footer.
   if (!hasItems && !isLoading && !isError) return null;
@@ -36,11 +38,14 @@ export default function InfiniteScrollFooter({
             exit={{ opacity: 0, scale: 0.9 }}
             className="w-full flex flex-col items-center gap-3"
           >
-            {/* Modern Skeleton Loader - Pulse */}
-            <div className="w-full max-w-sm flex flex-col gap-3 opacity-60 animate-pulse">
-              <div className="h-4 w-2/3 bg-[var(--background-secondary)] rounded-full overflow-hidden" />
-              <div className="h-4 w-1/2 bg-[var(--background-secondary)] rounded-full overflow-hidden" />
-            </div>
+            {skeleton ? (
+              skeleton
+            ) : (
+              <div className="w-full max-w-sm flex flex-col gap-3 opacity-60 animate-pulse">
+                <div className="h-4 w-2/3 bg-[var(--background-secondary)] rounded-full overflow-hidden" />
+                <div className="h-4 w-1/2 bg-[var(--background-secondary)] rounded-full overflow-hidden" />
+              </div>
+            )}
             <p className="text-xs font-medium text-[var(--foreground-secondary)] mt-2">Cargando más...</p>
           </motion.div>
         )}
@@ -71,11 +76,14 @@ export default function InfiniteScrollFooter({
             animate={{ opacity: 1, y: 0 }}
             className="w-full flex flex-col items-center gap-3"
           >
-            {/* Modern Skeleton Loader for infinite illusion - Pulse */}
-            <div className="w-full max-w-sm flex flex-col gap-3 opacity-60 animate-pulse">
-              <div className="h-4 w-2/3 bg-[var(--background-secondary)] rounded-full overflow-hidden" />
-              <div className="h-4 w-1/2 bg-[var(--background-secondary)] rounded-full overflow-hidden" />
-            </div>
+            {skeleton ? (
+              skeleton
+            ) : (
+              <div className="w-full max-w-sm flex flex-col gap-3 opacity-60 animate-pulse">
+                <div className="h-4 w-2/3 bg-[var(--background-secondary)] rounded-full overflow-hidden" />
+                <div className="h-4 w-1/2 bg-[var(--background-secondary)] rounded-full overflow-hidden" />
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

@@ -539,9 +539,17 @@ export default function SearchPage() {
                       <PostCard post={post} hideSaveButton={true} />
                     </div>
                   ))}
+                  {/* Skeleton Cards for infinite loading illusion or actual loading */}
+                  {(postsLoadingMore || !postsHasMore) && (
+                    [...Array(3)].map((_, i) => (
+                      <div key={`skeleton-${i}`} className="break-inside-avoid mb-6">
+                        <div className="rounded-2xl overflow-hidden bg-[var(--background-secondary)] animate-pulse" style={{ height: [180, 220, 240][i % 3] }} />
+                      </div>
+                    ))
+                  )}
                 </div>
 
-                {/* Posts Loading More Trigger (Search) */}
+                {/* Posts Loading More Trigger */}
                 <div ref={postsObserverElement}>
                   <InfiniteScrollFooter
                     isLoading={postsLoadingMore}
@@ -549,7 +557,7 @@ export default function SearchPage() {
                     hasMore={postsHasMore}
                     hasItems={results.length > 0}
                     onRetry={() => loadMorePosts()}
-                    endMessage="No hay más publicaciones."
+                    skeleton={<></>}
                   />
                 </div>
               </div>
@@ -611,6 +619,15 @@ export default function SearchPage() {
                           <PostCard post={post} hideSaveButton={true} />
                         </div>
                       ))}
+                      
+                      {/* Skeleton Cards for infinite loading illusion or actual loading */}
+                      {(postsLoadingMore || !postsHasMore) && (
+                        [...Array(3)].map((_, i) => (
+                          <div key={`skeleton-explore-${i}`} className="break-inside-avoid mb-6">
+                            <div className="rounded-2xl overflow-hidden bg-[var(--background-secondary)] animate-pulse" style={{ height: [180, 220, 240][i % 3] }} />
+                          </div>
+                        ))
+                      )}
                     </div>
 
                     {/* Posts Loading More Trigger (Trending) */}
@@ -621,7 +638,7 @@ export default function SearchPage() {
                         hasMore={postsHasMore}
                         hasItems={results.length > 0}
                         onRetry={() => loadMorePosts()}
-                        endMessage="¡Estás al día con las tendencias!"
+                        skeleton={<></>}
                       />
                     </div>
                   </div>
