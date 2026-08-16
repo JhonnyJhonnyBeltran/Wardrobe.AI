@@ -159,7 +159,7 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
                                                 </motion.button>
                                             </Link>
 
-                                            {onToggleVisibility && (
+                                            {onToggleVisibility && !(outfit.posts && outfit.posts.length > 0) && (
                                                 <motion.button
                                                     whileHover={{ scale: 1.1 }}
                                                     whileTap={{ scale: 0.8 }}

@@ -255,6 +255,7 @@ export default function ClosetPage() {
         .from('outfits')
         .select(`
           *,
+          posts (id),
           outfit_items (
             position_x,
             position_y,

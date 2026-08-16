@@ -146,7 +146,7 @@ export default function OutfitCard({ outfit, isLocked = false, onClick, onEdit, 
                 )}
                 {!outfit.is_public && (
                     <div className="p-1" title="Outfit privado">
-                        <Lock className="w-4 h-4 text-white/80 drop-shadow-md" />
+                        <Lock className="w-5 h-5 text-[#d1d5db]" />
                     </div>
                 )}
             </div>
@@ -156,7 +156,7 @@ export default function OutfitCard({ outfit, isLocked = false, onClick, onEdit, 
             {
                 !isLocked && (
                     <div className="absolute top-2 left-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10 flex-col sm:flex-row">
-                        {onToggleVisibility && (
+                        {onToggleVisibility && !(outfit.posts && outfit.posts.length > 0) && (
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();

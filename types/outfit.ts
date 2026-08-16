@@ -27,6 +27,7 @@ export interface Outfit {
   isPublic?: boolean;
   is_public?: boolean;
   description?: string;
+  posts?: any[];
   // UI Helpers (mapped from DB or calculated)
   style?: string; // e.g. from tags or occasion
   date?: string;  // formatted date string
