@@ -226,22 +226,18 @@ export default function OutfitCalendar() {
   };
 
   const handleRemoveAssignment = async (calendarId: string) => {
-    showModal({
-      title: 'Quitar del calendario',
-      message: '¿Quieres eliminar este outfit del día seleccionado?',
-      type: 'confirm',
-      confirmText: 'Quitar',
-      cancelText: 'Cancelar',
-      onConfirm: async () => {
-        try {
-          const { error } = await (supabase as any).from('calendar_outfits').delete().eq('id', calendarId);
-          if (error) throw error;
-          fetchCalendarData();
-        } catch (err) {
-          console.error('Error removing assignment:', err);
-        }
-      }
-    });
+    try {
+      const { error } = await (supabase as any).from('calendar_outfits').delete().eq('id', calendarId);
+      if (error) throw error;
+      fetchCalendarData();
+    } catch (err) {
+      console.error('Error removing assignment:', err);
+      showModal({
+        title: 'Error',
+        message: 'No se pudo quitar el outfit.',
+        type: 'error',
+      });
+    }
   };
 
   const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];

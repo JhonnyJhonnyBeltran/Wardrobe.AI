@@ -118,8 +118,6 @@ export default function ProfilePage() {
 
   // Delete folder
   const deleteFolder = async (folderId: string) => {
-    if (!confirm('¿Eliminar esta carpeta?')) return;
-
     try {
       const response = await fetch(`/api/save-folders?id=${folderId}`, {
         method: 'DELETE'
@@ -518,18 +516,11 @@ export default function ProfilePage() {
                           <span className="truncate max-w-[150px]">{folder.name}</span>
                         </button>
                         
-                        {/* Botón X para eliminar con Modal */}
+                        {/* Botón X para eliminar */}
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            useUiStore.getState().showModal({
-                              title: '¿Eliminar carpeta?',
-                              message: `¿Estás seguro de que quieres eliminar la carpeta "${folder.name}"? Los posts guardados no se borrarán de tus guardados generales.`,
-                              type: 'warning',
-                              confirmText: 'Eliminar',
-                              cancelText: 'Cancelar',
-                              onConfirm: () => deleteFolder(folder.id)
-                            });
+                            deleteFolder(folder.id);
                           }}
                           className="absolute -top-1 -right-1 p-1 bg-red-500 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity z-10"
                         >

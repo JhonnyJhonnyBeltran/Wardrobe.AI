@@ -111,8 +111,7 @@ export default function OutfitDetailPage() {
 
   const handleDelete = async () => {
     haptics.warning();
-    const confirmDelete = confirm('¿Seguro que quieres eliminar este outfit?');
-    if (confirmDelete && outfit) {
+    if (outfit) {
       await supabase.from('outfits').delete().eq('id', outfit.id);
       haptics.success();
       router.push('/closet');

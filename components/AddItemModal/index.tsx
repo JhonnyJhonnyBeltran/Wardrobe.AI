@@ -188,19 +188,9 @@ export default function AddItemModal({
 
     const handleCloseClick = () => {
         if (!isEditing && image) {
-            useUiStore.getState().showModal({
-                title: '¿Cancelar subida?',
-                message:
-                    'Se perderán los datos de la prenda que estabas añadiendo. ¿Estás seguro?',
-                type: 'warning',
-                confirmText: 'Sí, cancelar',
-                cancelText: 'Seguir editando',
-                onConfirm: () => {
-                    useUiStore.getState().clearPendingUploadItem();
-                    resetForm();
-                    onClose();
-                },
-            });
+            useUiStore.getState().clearPendingUploadItem();
+            resetForm();
+            onClose();
         } else {
             saveToPending();
             onClose();

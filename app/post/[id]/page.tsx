@@ -418,40 +418,31 @@ export default function PostDetailPage() {
     };
     
     // Deletion and Editing handlers
-    const handleDeletePost = () => {
+    const handleDeletePost = async () => {
         if (!user || user.id !== post.user_id) return;
         
-        showModal({
-            title: 'Borrar publicación',
-            message: '¿Estás seguro de que quieres borrar esta publicación? Esta acción no se puede deshacer.',
-            type: 'confirm',
-            confirmText: 'Borrar',
-            cancelText: 'Cancelar',
-            onConfirm: async () => {
-                setDeleting(true);
-                setShowOptions(false);
-                try {
-                    const { error } = await supabase
-                        .from('posts')
-                        .delete()
-                        .eq('id', postId);
-                        
-                    if (error) throw error;
-                    
-                    showSaveToast({ message: "Publicación eliminada", actionLabel: "" });
-                    router.push('/profile');
-                } catch (error) {
-                    console.error('Error deleting post:', error);
-                    showModal({
-                        title: 'Error',
-                        message: 'Error al eliminar la publicación. Por favor, inténtalo de nuevo.',
-                        type: 'error'
-                    });
-                } finally {
-                    setDeleting(false);
-                }
-            }
-        });
+        setDeleting(true);
+        setShowOptions(false);
+        try {
+            const { error } = await supabase
+                .from('posts')
+                .delete()
+                .eq('id', postId);
+                
+            if (error) throw error;
+            
+            showSaveToast({ message: "Publicación eliminada", actionLabel: "" });
+            router.push('/profile');
+        } catch (error) {
+            console.error('Error deleting post:', error);
+            showModal({
+                title: 'Error',
+                message: 'Error al eliminar la publicación. Por favor, inténtalo de nuevo.',
+                type: 'error'
+            });
+        } finally {
+            setDeleting(false);
+        }
     };
     
     const handleEditPost = () => {

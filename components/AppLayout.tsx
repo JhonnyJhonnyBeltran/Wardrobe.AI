@@ -35,17 +35,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
   const handleCancelPending = (e: React.MouseEvent) => {
     e.preventDefault(); // Prevent Link navigation
     e.stopPropagation();
-
-    showModal({
-      title: '¿Cancelar subida?',
-      message: 'Se perderán los datos de la prenda que estabas añadiendo. ¿Estás seguro?',
-      type: 'warning',
-      confirmText: 'Sí, cancelar',
-      cancelText: 'Seguir editando',
-      onConfirm: () => {
-        clearPendingUploadItem();
-      }
-    });
+    clearPendingUploadItem();
   };
 
   const pathname = usePathname();

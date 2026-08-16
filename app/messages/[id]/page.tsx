@@ -429,41 +429,33 @@ export default function ChatPage() {
                             <button
                                 onClick={async () => {
                                     setShowMenu(false);
-                                    showModal({
-                                        title: 'Eliminar conversación',
-                                        message: '¿Estás seguro de que quieres eliminar esta conversación? Esta acción no se puede deshacer.',
-                                        type: 'confirm',
-                                        confirmText: 'Eliminar chat',
-                                        onConfirm: async () => {
-                                            setLoading(true);
-                                            try {
-                                                // Local Storage logic for hiding conversation: store the current latest server timestamp to prevent clock skew
-                                                const deletedChatsStr = localStorage.getItem('deleted_chats');
-                                                const deletedChats = deletedChatsStr ? JSON.parse(deletedChatsStr) : {};
-                                                
-                                                // Encontramos el tiempo del último mensaje en la UI para usar tiempo de servidor y evitar desfase de relojes locales
-                                                const latestMsg = messages.length > 0 ? messages[messages.length - 1] : null;
-                                                const timestampToSave = latestMsg ? new Date(latestMsg.created_at).getTime() + 1000 : Date.now();
-                                                
-                                                deletedChats[targetUserId] = timestampToSave;
-                                                localStorage.setItem('deleted_chats', JSON.stringify(deletedChats));
+                                    setLoading(true);
+                                    try {
+                                        // Local Storage logic for hiding conversation: store the current latest server timestamp to prevent clock skew
+                                        const deletedChatsStr = localStorage.getItem('deleted_chats');
+                                        const deletedChats = deletedChatsStr ? JSON.parse(deletedChatsStr) : {};
+                                        
+                                        // Encontramos el tiempo del último mensaje en la UI para usar tiempo de servidor y evitar desfase de relojes locales
+                                        const latestMsg = messages.length > 0 ? messages[messages.length - 1] : null;
+                                        const timestampToSave = latestMsg ? new Date(latestMsg.created_at).getTime() + 1000 : Date.now();
+                                        
+                                        deletedChats[targetUserId] = timestampToSave;
+                                        localStorage.setItem('deleted_chats', JSON.stringify(deletedChats));
 
-                                                // Call the rpc function to delete conversation logically for this user
-                                                const { error } = await (supabase.rpc as any)('delete_conversation_for_user', {
-                                                    target_user_id: targetUserId
-                                                });
-                                                
-                                                if (error) {
-                                                    console.warn('RPC delete_conversation_for_user not available or failed:', error);
-                                                }
-
-                                                router.push('/messages');
-                                            } catch (e) {
-                                                console.error(e);
-                                                setLoading(false);
-                                            }
+                                        // Call the rpc function to delete conversation logically for this user
+                                        const { error } = await (supabase.rpc as any)('delete_conversation_for_user', {
+                                            target_user_id: targetUserId
+                                        });
+                                        
+                                        if (error) {
+                                            console.warn('RPC delete_conversation_for_user not available or failed:', error);
                                         }
-                                    });
+
+                                        router.push('/messages');
+                                    } catch (e) {
+                                        console.error(e);
+                                        setLoading(false);
+                                    }
                                 }}
                                 className="w-full text-center px-4 py-3 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors font-medium"
                             >

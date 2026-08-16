@@ -141,30 +141,21 @@ export default function SearchPage() {
     const isPrivate = false; // is_private column doesn't exist
 
     if (isFollowing) {
-      showModal({
-        title: 'Dejar de seguir',
-        message: `¿Estás seguro que quieres dejar de seguir a @${targetUser?.username || 'este usuario'}?`,
-        type: 'confirm',
-        confirmText: 'Dejar de seguir',
-        cancelText: 'Cancelar',
-        onConfirm: async () => {
-          try {
-            await supabase
-              .from('follows')
-              .delete()
-              .eq('follower_id', user.id)
-              .eq('following_id', targetUserId);
+      try {
+        await supabase
+          .from('follows')
+          .delete()
+          .eq('follower_id', user.id)
+          .eq('following_id', targetUserId);
 
-            setFollowingIds(prev => {
-              const next = new Set(prev);
-              next.delete(targetUserId);
-              return next;
-            });
-          } catch (error) {
-            console.error('Error unfollowing:', error);
-          }
-        }
-      });
+        setFollowingIds(prev => {
+          const next = new Set(prev);
+          next.delete(targetUserId);
+          return next;
+        });
+      } catch (error) {
+        console.error('Error unfollowing:', error);
+      }
       return;
     }
 

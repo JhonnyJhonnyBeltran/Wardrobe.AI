@@ -237,9 +237,6 @@ export default function PublicProfilePage() {
   const handleBlock = async () => {
     if (!currentUser || !profileId) return;
     
-    const confirmed = confirm('¿Estás seguro de que quieres bloquear a este usuario?');
-    if (!confirmed) return;
-    
     setIsBlocking(true);
     
     if (isBlocked) {
