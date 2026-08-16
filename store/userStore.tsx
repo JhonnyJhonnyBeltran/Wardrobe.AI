@@ -170,12 +170,21 @@ export function UserProvider({ children }: { children: ReactNode }) {
       // we must ensure the app doesn't get stuck loading forever.
       setIsLoading(false);
       
-      // If we got SIGNED_OUT, force a refresh and clear state completely
-      if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+      // If we got SIGNED_OUT or initialized without a session, force a refresh and clear state completely
+      if (event === 'SIGNED_OUT' || event === 'USER_DELETED' || (event === 'INITIAL_SESSION' && !session)) {
         userIdRef.current = null;
         setUser(null);
         if (typeof window !== 'undefined') localStorage.removeItem('wardrobe_user_profile');
-        router.refresh();
+        if (event !== 'INITIAL_SESSION') {
+          router.refresh();
+        } else {
+          // Si estamos arrancando la app y NO hay sesión en Supabase (ej: cookie borrada/expirada),
+          // pero teníamos un usuario cacheado en localStorage, la UI se queda colgada mostrando
+          // las páginas pero sin cargar datos por el fallo de RLS. Forzamos redirección a /login si no estamos ya en login/auth.
+          if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/auth') && window.location.pathname !== '/login' && window.location.pathname !== '/') {
+            router.push('/login');
+          }
+        }
       }
     }
   }, [fetchUserProfile, router]);
