@@ -140,12 +140,12 @@ export default function PublicProfilePage() {
         setIsBlocked(blocked);
 
         // 6. Fetch Outfits unconditionally (public profiles)
-        const { data: outfitsData } = await supabase
+        const { data: outfitsData, error: outfitsError } = await supabase
           .from('outfits')
           .select(`
             *,
             outfit_items (
-              clothing_items (
+              clothing_item:clothing_items (
                 image_url
               )
             )
@@ -153,7 +153,22 @@ export default function PublicProfilePage() {
           .eq('user_id', targetId)
           .order('created_at', { ascending: false });
         
-        setOutfits(outfitsData || []);
+        if (outfitsError) {
+          console.error('[Profile] Error fetching outfits:', outfitsError);
+        }
+        
+        // Ensure outfit_items fallback syntax is mapped correctly just in case
+        const mappedOutfits = (outfitsData || []).map((outfit: any) => {
+           return {
+             ...outfit,
+             outfit_items: outfit.outfit_items?.map((oi: any) => ({
+               ...oi,
+               clothing_items: oi.clothing_item
+             }))
+           };
+        });
+
+        setOutfits(mappedOutfits);
       }
 
     } catch (error) {
