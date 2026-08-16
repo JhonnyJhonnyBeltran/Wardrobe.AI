@@ -256,11 +256,8 @@ export default function PostDetailPage() {
                 throw error;
             }
 
-            // Sync total likes count in the 'posts' table for efficient popularity sorting
-            const newCount = previousState ? Math.max(0, previousCount - 1) : previousCount + 1;
-            await (supabase.from('posts') as any)
-                .update({ likes_count: newCount })
-                .eq('id', postId);
+            // The 'posts.likes_count' is now updated atomically via a PostgreSQL trigger on the 'likes' table
+            // See setup_likes_trigger.sql
 
             router.refresh();
         } catch (error) {
