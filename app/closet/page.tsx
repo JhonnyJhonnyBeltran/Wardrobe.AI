@@ -1358,6 +1358,7 @@ export default function ClosetPage() {
         // @ts-ignore
         outfit={selectedOutfit}
         onToggleFavorite={toggleOutfitFavorite}
+        onToggleVisibility={(outfit) => toggleOutfitVisibility(outfit)}
         onDelete={async (id) => {
           const usage = await checkOutfitUsage([id]);
           const count = usage[id] || 0;

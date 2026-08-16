@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Heart, Share2, Briefcase, PartyPopper, Zap, Flower2, Snowflake, Circle, Layers, Sparkles, Trash2, Edit2, CalendarDays, Rocket, Info } from 'lucide-react';
+import { X, Heart, Share2, Briefcase, PartyPopper, Zap, Flower2, Snowflake, Circle, Layers, Sparkles, Trash2, Edit2, CalendarDays, Rocket, Info, Eye, Lock } from 'lucide-react';
 import Link from 'next/link';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { Outfit } from '@/types/outfit';
@@ -15,6 +15,7 @@ interface OutfitDetailModalProps {
     onDelete?: (id: string) => void;
     onToggleFavorite?: (id: string, currentStatus: boolean) => void;
     onItemClick?: (item: any) => void;
+    onToggleVisibility?: (outfit: Outfit) => void;
 }
 
 const styleConfig: Record<string, { icon: React.ReactNode; label: string }> = {
@@ -27,7 +28,7 @@ const styleConfig: Record<string, { icon: React.ReactNode; label: string }> = {
     'everyday': { icon: <Sparkles className="w-4 h-4" />, label: 'Diario' },
 };
 
-export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleFavorite, onItemClick }: OutfitDetailModalProps) {
+export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleFavorite, onItemClick, onToggleVisibility }: OutfitDetailModalProps) {
     useBodyScrollLock(isOpen);
     const [selectedItemForDetail, setSelectedItemForDetail] = useState<any | null>(null);
     const [mounted, setMounted] = useState(false);
@@ -157,6 +158,21 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
                                                     <span className="text-center">Editar</span>
                                                 </motion.button>
                                             </Link>
+
+                                            {onToggleVisibility && (
+                                                <motion.button
+                                                    whileHover={{ scale: 1.1 }}
+                                                    whileTap={{ scale: 0.9 }}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        onToggleVisibility(outfit);
+                                                    }}
+                                                    className="p-3.5 rounded-xl bg-[var(--background-secondary)]/90 backdrop-blur-md text-[var(--foreground)] hover:bg-[var(--foreground)] hover:text-[var(--background)] transition-all duration-300 h-[52px] w-[52px] flex items-center justify-center"
+                                                    title={outfit.is_public ? "Hacer privado" : "Hacer público"}
+                                                >
+                                                    {outfit.is_public ? <Eye className="w-5 h-5" /> : <Lock className="w-5 h-5" />}
+                                                </motion.button>
+                                            )}
 
                                             {onDelete && (
                                                 <motion.button

@@ -51,9 +51,10 @@ export default function CreateOutfitPage() {
     // Mobile flow state: 'selection' | 'preview' - Skipped 'initial' as per request
     const [mobileStep, setMobileStep] = useState<'selection' | 'preview'>('selection');
 
-    // Outfit name
+    // Outfit metadata
     const [outfitName, setOutfitName] = useState('');
     const [outfitOccasion, setOutfitOccasion] = useState('casual');
+    const [isPublic, setIsPublic] = useState(true);
     const [loading, setLoading] = useState(false);
 
     // State for selected items
@@ -119,6 +120,7 @@ export default function CreateOutfitPage() {
                 if (outfit) {
                     setOutfitName(outfit.name);
                     if (outfit.occasion) setOutfitOccasion(outfit.occasion);
+                    setIsPublic(outfit.is_public ?? true);
 
                     // Reconstruct selections and canvas state
                     const newSelections: Record<string, ClothingItem[]> = {
@@ -356,7 +358,7 @@ export default function CreateOutfitPage() {
                     occasion: outfitOccasion,
                     description: '',
                     season: 'all-season',
-                    is_public: true,
+                    is_public: isPublic,
                     ai_generated: false,
                     image_url: publicImageUrl
                 } as any)
@@ -467,7 +469,7 @@ export default function CreateOutfitPage() {
                         occasion: outfitOccasion,
                         description: '',
                         season: 'all-season', // Default for now
-                        is_public: true,
+                        is_public: isPublic,
                         ai_generated: false,
                         image_url: publicImageUrl
                     } as any)
@@ -732,6 +734,20 @@ export default function CreateOutfitPage() {
                                     </div>
                                 </div>
 
+                                {/* Mobile Public Toggle */}
+                                <div className="bg-[var(--card-bg)] px-5 py-4 border-b border-[var(--border-color)] flex items-center justify-between">
+                                    <div>
+                                        <p className="text-sm font-bold text-[var(--foreground)]">Outfit Público</p>
+                                        <p className="text-[11px] text-[var(--foreground-secondary)] mt-0.5">Visible para todos en tu perfil</p>
+                                    </div>
+                                    <button 
+                                        onClick={() => setIsPublic(!isPublic)}
+                                        className={`w-12 h-6 rounded-full transition-colors relative ${isPublic ? 'bg-[var(--brand-pink)]' : 'bg-gray-300 dark:bg-gray-700'}`}
+                                    >
+                                        <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform shadow-sm ${isPublic ? 'translate-x-6 left-auto right-0.5' : 'translate-x-0.5 left-0'}`} />
+                                    </button>
+                                </div>
+
                                 {/* Canvas Preview - Border removed for cleaner look */}
                                 <div className="w-full bg-white overflow-hidden aspect-[4/5] shadow-sm">
                                     <FreeDragCanvas
@@ -891,6 +907,20 @@ export default function CreateOutfitPage() {
                                     );
                                 })}
                             </div>
+                        </div>
+
+                        {/* Desktop Public Toggle */}
+                        <div className="bg-[var(--card-bg)] rounded-2xl p-4 border border-[var(--border-color)] shadow-sm flex items-center justify-between">
+                            <div>
+                                <p className="text-sm font-bold text-[var(--foreground)]">Outfit Público</p>
+                                <p className="text-[11px] text-[var(--foreground-secondary)] mt-0.5">Visible para todos en tu perfil</p>
+                            </div>
+                            <button 
+                                onClick={() => setIsPublic(!isPublic)}
+                                className={`w-12 h-6 rounded-full transition-colors relative ${isPublic ? 'bg-[var(--brand-pink)]' : 'bg-gray-300 dark:bg-gray-700'}`}
+                            >
+                                <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform shadow-sm ${isPublic ? 'translate-x-6 left-auto right-0.5' : 'translate-x-0.5 left-0'}`} />
+                            </button>
                         </div>
 
                         {/* Canvas */}
