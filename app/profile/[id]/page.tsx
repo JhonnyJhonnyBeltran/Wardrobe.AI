@@ -146,7 +146,7 @@ export default function PublicProfilePage() {
           .select(`
             *,
             outfit_items (
-              clothing_item:clothing_items (
+              clothing_items (
                 image_url
               )
             )
