@@ -44,8 +44,12 @@ export default function NotificationList({ compact = false, onClose }: Notificat
 
     // Merge fetched and realtime notifications
     const notifications = Array.from(new Map(
-        [...realtimeNotifications, ...fetchedNotifications].map(item => [item.id, item])
-    ).values()).sort((a, b) => b.timestamp - a.timestamp);
+        [...realtimeNotifications, ...fetchedNotifications].map((item: any) => [item.id, item])
+    ).values()).sort((a: any, b: any) => {
+        const timeA = a.timestamp || new Date(a.created_at).getTime() || 0;
+        const timeB = b.timestamp || new Date(b.created_at).getTime() || 0;
+        return timeB - timeA;
+    });
 
     const NotificationSkeleton = () => (
         <div className="flex items-start gap-4 p-4 rounded-3xl bg-[var(--background)]/50 border border-[var(--border-color)]/30 animate-pulse">

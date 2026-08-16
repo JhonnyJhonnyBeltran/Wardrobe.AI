@@ -456,8 +456,8 @@ class RealtimeManager {
 
       if (!myPosts || myPosts.length === 0) return;
 
-      const myPostIds = myPosts.map(p => p.id);
-      const postImageMap = new Map(myPosts.map(p => [p.id, p.image_url]));
+      const myPostIds = myPosts.map((p: any) => p.id);
+      const postImageMap = new Map(myPosts.map((p: any) => [p.id, p.image_url]));
 
       // 2. Poll for new likes
       const { data: recentLikes } = await supabase
