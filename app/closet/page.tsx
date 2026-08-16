@@ -276,9 +276,10 @@ export default function ClosetPage() {
         createdAt: new Date(o.created_at),
         occasion: o.occasion,
         items: o.outfit_items.map((oi: any) => {
-            if (!oi.clothing_item) return null;
+            const clothing = oi.clothing_item || oi.clothing_items;
+            if (!clothing) return null;
             return {
-                ...oi.clothing_item,
+                ...clothing,
                 position_x: oi.position_x,
                 position_y: oi.position_y,
                 scale: oi.scale,

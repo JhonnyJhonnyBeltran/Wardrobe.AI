@@ -75,11 +75,7 @@ export default function CreateOutfitPage() {
     const flatItems = useMemo(() => {
         return Object.values(selections).flat();
     }, [selections]);
-
-    // Preview modal state
-    const [showPreview, setShowPreview] = useState(false);
-    const [previewImage, setPreviewImage] = useState<string | null>(null);
-    const [previewLoading, setPreviewLoading] = useState(false);
+    
     const savedOutfitIdRef = useRef<string | null>(null);
 
     // Success Modal State
@@ -310,21 +306,6 @@ export default function CreateOutfitPage() {
     const isEmpty = Object.values(selections).every(items => items.length === 0);
     const totalSelected = Object.values(selections).reduce((sum, items) => sum + items.length, 0);
 
-    // Preview handler
-    const handlePreview = async () => {
-        if (isEmpty) return;
-        setPreviewLoading(true);
-        try {
-            const imageData = await canvasRef.current?.exportToImage();
-            setPreviewImage(imageData || null);
-            setShowPreview(true);
-        } catch (error) {
-            console.error('Error generating preview:', error);
-        } finally {
-            setPreviewLoading(false);
-        }
-    };
-
     // Publish to feed - redirect to create post page
     const handlePublishToFeed = async () => {
         // First save the outfit if not saved yet
@@ -338,13 +319,6 @@ export default function CreateOutfitPage() {
         } else {
             router.push(`/create-post?outfitId=${outfitId}`);
         }
-        setShowPreview(false);
-    };
-
-    // Add to stories
-    const handleAddToStories = async () => {
-        if (!previewImage) return;
-        toast.info('¡Añadiendo a historias! (Funcionalidad en desarrollo)');
     };
 
     // Helper to save outfit without redirecting (for publish flow)
@@ -359,14 +333,7 @@ export default function CreateOutfitPage() {
             }
 
             // Generate Image
-            let finalImage = previewImage;
-            if (!finalImage) {
-                try {
-                    finalImage = await canvasRef.current?.exportToImage() || null;
-                } catch (e) {
-                    console.error("Error generating image on save:", e);
-                }
-            }
+            let finalImage = await canvasRef.current?.exportToImage() || null;
 
             // Upload Image to Storage
             let publicImageUrl = null;
@@ -387,7 +354,7 @@ export default function CreateOutfitPage() {
                     user_id: user.id,
                     name: outfitName,
                     occasion: outfitOccasion,
-                    description: `Outfit con ${totalSelected} prendas`,
+                    description: '',
                     season: 'all-season',
                     is_public: true,
                     ai_generated: false,
@@ -444,14 +411,7 @@ export default function CreateOutfitPage() {
             setLoading(true);
 
             // 1. Generate Image
-            let finalImage = previewImage;
-            if (!finalImage) {
-                try {
-                    finalImage = await canvasRef.current?.exportToImage() || null;
-                } catch (e) {
-                    console.error("Error generating image on save:", e);
-                }
-            }
+            const finalImage = await canvasRef.current?.exportToImage() || null;
 
             // 2. Upload Image to Storage
             let publicImageUrl = null;
@@ -1015,55 +975,6 @@ export default function CreateOutfitPage() {
                                   Ir al Armario
                               </Button>
                          </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            {/* Preview Modal */}
-            <AnimatePresence>
-                {showPreview && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
-                        onClick={() => setShowPreview(false)}
-                    >
-                        <motion.div
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.9, opacity: 0 }}
-                            className="bg-white rounded-3xl overflow-hidden aspect-[4/5] w-auto h-auto max-h-[90vh] max-w-[90vw] flex flex-col shadow-2xl mx-auto"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            {/* Header */}
-                            <div className="flex items-center justify-between p-4 border-b border-gray-100">
-                                <h3 className="text-lg font-semibold text-gray-900">Preview del Outfit</h3>
-                                <button
-                                    onClick={() => setShowPreview(false)}
-                                    className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-                                >
-                                    <X className="w-5 h-5 text-gray-500" />
-                                </button>
-                            </div>
-
-                            {/* Preview Image - FULL VIEW, NO SCROLL */}
-                            <div className="flex-1 flex items-center justify-center bg-white overflow-hidden p-0">
-                                {previewImage ? (
-                                    <img
-                                        src={previewImage}
-                                        alt="Preview"
-                                        className="max-w-full max-h-full object-contain"
-                                    />
-                                ) : (
-                                    <div className="flex items-center justify-center p-12 text-gray-400">
-                                        <p>No se pudo generar la preview</p>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Action Buttons Removed per request */}
-                        </motion.div>
                     </motion.div>
                 )}
             </AnimatePresence>

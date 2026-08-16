@@ -13,6 +13,7 @@ import Avatar from '@/components/Avatar';
 import { useUiStore } from '@/store/uiStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import InteractiveOutfitViewer from '@/components/InteractiveOutfitViewer';
+import ProductModal from '@/components/ProductModal';
 import { haptics } from '@/lib/haptic';
 
 interface Comment {
@@ -901,133 +902,22 @@ export default function PostDetailPage() {
             )}
 
             {/* Garment Detail Modal */}
-            <AnimatePresence>
-            {selectedItem && (
-                <>
-                    {/* Backdrop */}
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm"
-                        onClick={() => setSelectedItem(null)}
-                    />
-
-                    {/* MOBILE: Bottom Sheet with Sticker Effect */}
-                    <motion.div
-                        initial={{ y: "100%" }}
-                        animate={{ y: 0 }}
-                        exit={{ y: "100%" }}
-                        transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                        className="fixed bottom-0 left-0 right-0 z-[110] bg-white dark:bg-[#1a1a1a] rounded-t-[32px] p-6 pt-20 pb-10 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] flex flex-col items-center justify-between min-h-[45vh] md:hidden"
-                    >
-                        <button 
-                            onClick={() => setSelectedItem(null)}
-                            className="absolute top-4 right-4 p-2 bg-gray-100 dark:bg-gray-800 rounded-full text-gray-500 dark:text-gray-400"
-                        >
-                            <X className="w-5 h-5" />
-                        </button>
-
-                        <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-52 h-52 pointer-events-none">
-                            <div className="w-full h-full relative" style={{ filter: 'drop-shadow(0 8px 16px rgba(0,0,0,0.15))' }}>
-                                <Image src={selectedItem.image_url || selectedItem.imageUrl} alt={selectedItem.name || 'Prenda'} fill className="object-contain" />
-                            </div>
-                        </div>
-
-                        <div className="w-full text-center flex-1 flex flex-col justify-between mt-4">
-                            <div>
-                                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{selectedItem.name || 'Nueva prenda'}</h3>
-                                <p className="text-gray-500 dark:text-gray-400 mt-1 text-lg">{selectedItem.brand || 'Sin marca'}</p>
-                                
-                                {selectedItem.category && (
-                                    <p className="text-sm text-gray-400 uppercase tracking-wider mt-4 font-medium">{selectedItem.category}</p>
-                                )}
-
-                                <div className="flex flex-wrap items-center justify-center gap-3 mt-5 mb-2">
-                                    {(selectedItem.color || selectedItem.color_hex || selectedItem.colorHex) && (
-                                        <div className="flex items-center gap-2 p-2 px-4 bg-gray-100 dark:bg-gray-800 rounded-full w-fit">
-                                            <div className="w-4 h-4 rounded-full border border-gray-300 dark:border-gray-600 shadow-sm" style={{ backgroundColor: selectedItem.color_hex || selectedItem.colorHex || selectedItem.color || '#ccc' }} />
-                                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300 capitalize">{selectedItem.color || selectedItem.colorHex || selectedItem.color_hex || 'Color'}</span>
-                                        </div>
-                                    )}
-                                    {selectedItem.size && (
-                                        <div className="flex items-center gap-2 p-2 px-4 bg-gray-100 dark:bg-gray-800 rounded-full w-fit">
-                                            <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Talla</span>
-                                            <span className="text-sm font-bold text-gray-900 dark:text-white">{selectedItem.size}</span>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                            
-                            {(selectedItem.source_url || selectedItem.sourceUrl) && (
-                                <div className="mt-8 w-full">
-                                    <a href={selectedItem.source_url || selectedItem.sourceUrl} target="_blank" rel="noopener noreferrer" className="block w-full bg-black dark:bg-white text-white dark:text-black font-bold py-4 rounded-3xl hover:opacity-90 transition-opacity text-center shadow-lg text-lg">
-                                        Enlace a la web
-                                    </a>
-                                </div>
-                            )}
-                        </div>
-                    </motion.div>
-
-                    {/* DESKTOP: Standard Centered Modal */}
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                        transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                        className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[110] bg-white dark:bg-[#1a1a1a] rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl hidden md:block"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <button
-                            onClick={() => setSelectedItem(null)}
-                            className="absolute top-4 right-4 p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors z-10"
-                        >
-                            <X className="w-5 h-5 text-gray-900 dark:text-white" />
-                        </button>
-
-                        <div className="relative w-full aspect-square rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-800">
-                            {selectedItem.image_url || selectedItem.imageUrl ? (
-                                <Image src={selectedItem.image_url || selectedItem.imageUrl} alt={selectedItem.name} fill className="object-cover" />
-                            ) : (
-                                <div className="w-full h-full flex items-center justify-center text-6xl" style={{ backgroundColor: selectedItem.color_hex || selectedItem.color || '#ccc' }}>👕</div>
-                            )}
-                        </div>
-
-                        <div>
-                            <h3 className="text-xl font-bold text-gray-900 dark:text-white">{selectedItem.name}</h3>
-                            <p className="text-gray-500 dark:text-gray-400 font-medium mt-1">{selectedItem.brand || 'Sin marca'}</p>
-                            {selectedItem.category && (
-                                <p className="text-sm text-gray-400 uppercase tracking-wider mt-2">{selectedItem.category}</p>
-                            )}
-
-                            <div className="flex flex-wrap items-center gap-2 mt-3 mb-6">
-                                {selectedItem.color && (
-                                    <div className="flex items-center gap-2 p-2 px-3 bg-gray-100 dark:bg-gray-800 rounded-xl w-fit">
-                                        <div className="w-3.5 h-3.5 rounded-full border border-gray-300 dark:border-gray-600" style={{ backgroundColor: selectedItem.color_hex || selectedItem.color }} />
-                                        <span className="text-[13px] font-medium text-gray-600 dark:text-gray-300 capitalize">{selectedItem.color}</span>
-                                    </div>
-                                )}
-                                {selectedItem.size && (
-                                    <div className="flex items-center gap-2 p-2 px-3 bg-gray-100 dark:bg-gray-800 rounded-xl w-fit">
-                                        <span className="text-[13px] font-medium text-gray-500 dark:text-gray-400">Talla:</span>
-                                        <span className="text-[13px] font-semibold text-gray-900 dark:text-white">{selectedItem.size}</span>
-                                    </div>
-                                )}
-                            </div>
-
-                            {(selectedItem.source_url || selectedItem.sourceUrl) && (
-                                <div className="mt-4 flex gap-3 w-full">
-                                    <a href={selectedItem.source_url || selectedItem.sourceUrl} target="_blank" rel="noopener noreferrer" className="flex-1 bg-[var(--brand-pink)] text-white font-bold py-3.5 rounded-xl hover:opacity-90 transition-opacity text-center flex items-center justify-center gap-2 shadow-lg shadow-[var(--brand-pink)]/20">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-                                        Enlace a la web
-                                    </a>
-                                </div>
-                            )}
-                        </div>
-                    </motion.div>
-                </>
-            )}
-            </AnimatePresence>
+            <ProductModal
+                isOpen={!!selectedItem}
+                onClose={() => setSelectedItem(null)}
+                item={selectedItem ? ({
+                    id: selectedItem.id,
+                    name: selectedItem.name,
+                    brand: selectedItem.brand,
+                    price: selectedItem.price,
+                    imageUrl: selectedItem.image_url || selectedItem.imageUrl,
+                    sourceUrl: selectedItem.source_url || selectedItem.sourceUrl,
+                    category: selectedItem.category,
+                    color: selectedItem.color,
+                    colorHex: selectedItem.color_hex || selectedItem.colorHex,
+                    size: selectedItem.size
+                } as any) : null}
+            />
         </div>
     );
 }

@@ -43,8 +43,9 @@ export default function InteractiveOutfitViewer({ outfit, onItemClick, className
     
     // Generate programmatic positions for items that lack them
     const itemsWithPositions = items.map((item: any, i: number) => {
-        const clothing = item.clothing_items || item.clothing_item || item;
-        const img = clothing.imageUrl || clothing.image_url;
+        const clothingRaw = item.clothing_items || item.clothing_item || item;
+        const clothing = Array.isArray(clothingRaw) ? clothingRaw[0] : clothingRaw;
+        const img = clothing?.imageUrl || clothing?.image_url;
         
         let x = item.position_x;
         let y = item.position_y;
