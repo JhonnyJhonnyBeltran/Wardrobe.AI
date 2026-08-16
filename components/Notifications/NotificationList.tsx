@@ -421,9 +421,6 @@ export default function NotificationList({ compact = false, onClose }: Notificat
                                     <div key={notif.id} className="flex items-center gap-3 group">
                                         <Link href={`/profile/${notif.actor!.username || notif.actor!.id}`} className="relative shrink-0" onClick={onClose}>
                                             <Avatar src={notif.actor?.avatar || null} alt={notif.actor!.name} size="md" />
-                                            <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-[var(--background)] flex items-center justify-center text-white bg-[var(--brand-pink)]">
-                                                <UserPlus className="w-2.5 h-2.5" />
-                                            </div>
                                         </Link>
                                         <div className="flex-1 text-sm min-w-0">
                                             <Link href={`/profile/${notif.actor!.username || notif.actor!.id}`} onClick={onClose} className="font-semibold text-[var(--foreground)] hover:underline truncate">
@@ -451,9 +448,6 @@ export default function NotificationList({ compact = false, onClose }: Notificat
                                     <div key={notif.id} className="flex items-center gap-3 group">
                                         <Link href={`/profile/${notif.actor!.username || notif.actor!.id}`} className="relative shrink-0" onClick={onClose}>
                                             <Avatar src={notif.actor?.avatar || null} alt={notif.actor!.name} size="md" />
-                                            <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-[var(--background)] flex items-center justify-center text-white bg-[#FF3040]">
-                                                <Heart className="w-2.5 h-2.5 fill-current" />
-                                            </div>
                                         </Link>
                                         <div className="flex-1 text-sm min-w-0">
                                             <Link href={`/profile/${notif.actor!.username || notif.actor!.id}`} onClick={onClose} className="font-semibold text-[var(--foreground)] hover:underline truncate">
@@ -476,9 +470,6 @@ export default function NotificationList({ compact = false, onClose }: Notificat
                                     <div key={notif.id} className="flex items-center gap-3 group">
                                         <Link href={`/profile/${notif.actor!.username || notif.actor!.id}`} className="relative shrink-0" onClick={onClose}>
                                             <Avatar src={notif.actor?.avatar || null} alt={notif.actor!.name} size="md" />
-                                            <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-[var(--background)] flex items-center justify-center text-[var(--foreground)] bg-[var(--background-secondary)]">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-message-circle"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" /></svg>
-                                            </div>
                                         </Link>
                                         <div className="flex-1 text-sm min-w-0">
                                             <Link href={`/profile/${notif.actor!.username || notif.actor!.id}`} onClick={onClose} className="font-semibold text-[var(--foreground)] hover:underline truncate">
