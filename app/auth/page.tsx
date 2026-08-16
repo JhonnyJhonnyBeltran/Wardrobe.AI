@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -226,7 +227,7 @@ export default function AuthPage() {
                     className="relative z-10 w-full max-w-md bg-[var(--card-bg)] border border-[var(--border-color)] rounded-[32px] shadow-2xl p-10 text-center"
                 >
                     <div className="flex justify-center mb-6">
-                        <LogoExtended size="xl" className="text-[var(--foreground)] drop-shadow-sm" />
+                        <Image src="/klozet-logo-dark.png" alt="Klozet Logo" width={80} height={80} className="object-contain drop-shadow-sm" />
                     </div>
                     <div className="w-16 h-16 rounded-full bg-[var(--brand-pink)]/10 flex items-center justify-center mx-auto mb-4">
                         <Mail className="w-8 h-8 text-[var(--brand-pink)]" />
@@ -252,17 +253,49 @@ export default function AuthPage() {
         );
     }
 
+    const Blob = ({ className, delay }: { className: string, delay: number }) => (
+        <motion.div
+            className={`absolute rounded-full mix-blend-screen filter blur-[100px] opacity-30 dark:opacity-40 pointer-events-none ${className}`}
+            animate={{
+                x: [0, 40, -30, 0],
+                y: [0, -50, 30, 0],
+                scale: [1, 1.2, 0.8, 1],
+            }}
+            transition={{
+                duration: 15,
+                repeat: Infinity,
+                repeatType: 'reverse',
+                delay: delay,
+                ease: "easeInOut"
+            }}
+        />
+    );
+
     return (
         <div className="relative min-h-screen flex items-center justify-center p-4 bg-[var(--background)] overflow-hidden">
+            {/* Animated Gradient Background */}
+            <div className="absolute inset-0 z-0 overflow-hidden bg-[var(--background)]">
+                <Blob className="top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-gradient-to-tr from-[var(--brand-pink)] to-purple-500" delay={0} />
+                <Blob className="bottom-[-20%] right-[-10%] w-[60vw] h-[60vw] bg-gradient-to-tl from-indigo-500 to-[var(--brand-pink)]" delay={2} />
+                <Blob className="top-[30%] left-[20%] w-[40vw] h-[40vw] bg-gradient-to-r from-violet-500 to-fuchsia-500" delay={4} />
+            </div>
+
             <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, ease: "easeOut" }}
-                className="relative z-10 w-full max-w-md bg-[var(--card-bg)] border border-[var(--border-color)] rounded-[32px] shadow-2xl overflow-hidden"
+                className="relative z-10 w-full max-w-md bg-[var(--background)]/70 dark:bg-[#0A0A0A]/60 backdrop-blur-2xl border border-[var(--border-color)]/50 rounded-[32px] shadow-2xl overflow-hidden"
             >
                 <div className="p-8 md:p-10">
-                    <div className="flex justify-center mb-28 pt-12 scale-[4]">
-                        <LogoExtended size="xl" className="text-[var(--foreground)] drop-shadow-sm" />
+                    <div className="flex justify-center mb-8">
+                        <Image 
+                            src="/klozet-logo-dark.png" 
+                            alt="Klozet Logo" 
+                            width={160} 
+                            height={160} 
+                            className="object-contain drop-shadow-xl" 
+                            priority
+                        />
                     </div>
 
                     <AnimatePresence mode="wait">
