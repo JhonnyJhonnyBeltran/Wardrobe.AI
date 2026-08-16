@@ -190,9 +190,13 @@ export function UserProvider({ children }: { children: ReactNode }) {
         } else {
           // Si estamos arrancando la app y NO hay sesión en Supabase (ej: cookie borrada/expirada),
           // pero teníamos un usuario cacheado en localStorage, la UI se queda colgada mostrando
-          // las páginas pero sin cargar datos por el fallo de RLS. Forzamos redirección a /login si no estamos ya en login/auth.
-          if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/auth') && window.location.pathname !== '/login' && window.location.pathname !== '/') {
-            router.push('/login');
+          // las páginas pero sin cargar datos por el fallo de RLS. Forzamos redirección a /login si no estamos ya en rutas publicas.
+          if (typeof window !== 'undefined') {
+            const publicRoutes = ['/login', '/', '/terms', '/privacy'];
+            const isPublicRoute = publicRoutes.includes(window.location.pathname) || window.location.pathname.startsWith('/auth') || window.location.pathname.startsWith('/onboarding');
+            if (!isPublicRoute) {
+              router.push('/login');
+            }
           }
         }
       }
