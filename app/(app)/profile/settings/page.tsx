@@ -671,8 +671,12 @@ export default function SettingsPage() {
                     )}
                 </AnimatePresence>
 
-                {/* Version Footer */}
-                <motion.div variants={itemVariants} className="text-center mt-6">
+                {/* Version & Legal Footer */}
+                <motion.div variants={itemVariants} className="text-center mt-8 pb-4">
+                    <p className="text-[11px] text-[var(--foreground-tertiary)] mb-3 leading-relaxed">
+                        Al usar Klozet, aceptas nuestros <br className="sm:hidden" />
+                        <Link href="/terms" className="underline hover:text-[var(--foreground)] transition-colors">Términos de Servicio</Link> y <Link href="/privacy" className="underline hover:text-[var(--foreground)] transition-colors">Política de Privacidad</Link>.
+                    </p>
                     <div className="flex items-center justify-center gap-2 text-xs text-[var(--foreground-tertiary)]">
                         <Smartphone className="w-3 h-3" />
                         <span>Klozet v1.0.0</span>
