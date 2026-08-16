@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff, User, AtSign, CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { Button, LogoExtended } from '@/components';

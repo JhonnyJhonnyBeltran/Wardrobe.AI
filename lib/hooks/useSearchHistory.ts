@@ -19,7 +19,7 @@ export function useSearchHistory() {
 
       if (error) throw error;
       if (data) {
-        setHistory(data.map(item => item.query));
+        setHistory(data.map((item: any) => item.query));
       }
     } catch (e) {
       console.error('Error loading search history:', e);
