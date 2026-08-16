@@ -68,15 +68,22 @@ export default function InfiniteScrollFooter({
           </motion.div>
         )}
 
-        {!hasMore && !isLoading && !isError && hasItems && (
+        {(!hasMore && hasItems && !isError) && (
           <motion.div
-            key="end"
+            key="end-loading"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col items-center gap-2 opacity-60"
+            className="w-full flex flex-col items-center gap-3"
           >
-            <CheckCircle2 className="w-6 h-6 text-[var(--foreground-tertiary)]" />
-            <p className="text-xs font-medium text-[var(--foreground-tertiary)]">{endMessage}</p>
+            {/* Modern Skeleton Loader for infinite illusion */}
+            <div className="w-full max-w-sm flex flex-col gap-3 opacity-60">
+              <div className="h-4 w-2/3 bg-[var(--background-secondary)] rounded-full overflow-hidden relative">
+                <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-[var(--foreground-tertiary)]/10 to-transparent" />
+              </div>
+              <div className="h-4 w-1/2 bg-[var(--background-secondary)] rounded-full overflow-hidden relative">
+                <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-[var(--foreground-tertiary)]/10 to-transparent" />
+              </div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
