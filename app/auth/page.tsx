@@ -227,7 +227,8 @@ export default function AuthPage() {
                     className="relative z-10 w-full max-w-md bg-[var(--card-bg)] border border-[var(--border-color)] rounded-[32px] shadow-2xl p-10 text-center"
                 >
                     <div className="flex justify-center mb-6">
-                        <Image src="/klozet-logo-dark.png" alt="Klozet Logo" width={80} height={80} className="object-contain drop-shadow-sm" />
+                        <Image src="/klozet-logo.png" alt="Klozet Logo" width={80} height={80} className="dark:hidden block object-contain drop-shadow-sm" />
+                        <Image src="/klozet-logo-dark.png" alt="Klozet Logo Dark" width={80} height={80} className="hidden dark:block object-contain drop-shadow-sm" />
                     </div>
                     <div className="w-16 h-16 rounded-full bg-[var(--brand-pink)]/10 flex items-center justify-center mx-auto mb-4">
                         <Mail className="w-8 h-8 text-[var(--brand-pink)]" />
@@ -289,11 +290,19 @@ export default function AuthPage() {
                 <div className="p-8 md:p-10">
                     <div className="flex justify-center mb-8">
                         <Image 
-                            src="/klozet-logo-dark.png" 
+                            src="/klozet-logo.png" 
                             alt="Klozet Logo" 
                             width={160} 
                             height={160} 
-                            className="object-contain drop-shadow-xl" 
+                            className="dark:hidden block object-contain drop-shadow-xl" 
+                            priority
+                        />
+                        <Image 
+                            src="/klozet-logo-dark.png" 
+                            alt="Klozet Logo Dark" 
+                            width={160} 
+                            height={160} 
+                            className="hidden dark:block object-contain drop-shadow-xl" 
                             priority
                         />
                     </div>
