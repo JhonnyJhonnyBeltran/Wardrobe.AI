@@ -28,6 +28,7 @@ interface RealtimeStore {
   // New Activity Methods
   checkActivity: (userId: string) => Promise<void>;
   markActivityAsViewed: (timestampISO?: string) => void;
+  incrementUnreadCount: () => void;
 
   // Online users
   onlineUsers: string[];
@@ -139,6 +140,8 @@ export const useRealtimeStore = create<RealtimeStore>((set, get) => ({
     }
     set({ unreadCount: 0 });
   },
+
+  incrementUnreadCount: () => set(state => ({ unreadCount: state.unreadCount + 1 })),
 
   // Stub methods for compatibility if something else uses them (though we removed usages)
   addNotification: (notification) => set(state => {

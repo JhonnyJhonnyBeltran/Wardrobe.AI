@@ -401,7 +401,14 @@ export default function CreateOutfitPage() {
 
     // Save outfit
     const handleSave = async () => {
-        if (isEmpty || !outfitName.trim()) return;
+        if (isEmpty) {
+            toast.error('No puedes guardar un outfit sin prendas');
+            return;
+        }
+        if (!outfitName.trim()) {
+            toast.error('Ponle un nombre a tu outfit');
+            return;
+        }
 
         try {
             const { data: { user } } = await supabase.auth.getUser();

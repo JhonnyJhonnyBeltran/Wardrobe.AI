@@ -56,6 +56,7 @@ export function useRealtime(options: UseRealtimeOptions = {}) {
         // Subscribe to notifications
         const unsubNotifications = realtimeManager.onNotification((notification) => {
           useRealtimeStore.getState().addNotification(notification);
+          useRealtimeStore.getState().incrementUnreadCount();
           onNotificationRef.current?.(notification);
           // Optionally trigger a re-check if it's a relevant type
           if ((notification as any).type === 'follow') {
