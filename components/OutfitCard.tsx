@@ -7,7 +7,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Lock, Sparkles, Briefcase, Heart, Zap, Flower2, PartyPopper, Circle, Snowflake, ShoppingBag, Layers } from 'lucide-react';
+import { Lock, Sparkles, Briefcase, Heart, Zap, Flower2, PartyPopper, Circle, Snowflake, ShoppingBag, Layers, Globe } from 'lucide-react';
 import type { Outfit } from '@/types/outfit';
 
 interface OutfitCardProps {
@@ -18,6 +18,7 @@ interface OutfitCardProps {
     onShare?: (outfit: Outfit) => void;
     onDelete?: (outfitId: string) => void;
     onToggleFavorite?: (outfit: Outfit, currentFav: boolean) => void;
+    onToggleVisibility?: (outfit: Outfit) => void;
     index?: number;
 }
 
@@ -44,7 +45,7 @@ const styleConfig: Record<string, { icon: React.ReactNode; gradient: string }> =
 
 import { Edit2, Trash2, Share2, Send } from 'lucide-react';
 
-export default function OutfitCard({ outfit, isLocked = false, onClick, onEdit, onDelete, onShare, onToggleFavorite, index = 0 }: OutfitCardProps) {
+export default function OutfitCard({ outfit, isLocked = false, onClick, onEdit, onDelete, onShare, onToggleFavorite, onToggleVisibility, index = 0 }: OutfitCardProps) {
     const styleKey = outfit.occasion || outfit.style || 'everyday';
     const config = styleConfig[styleKey] || { icon: <Layers className="w-3 h-3" />, gradient: 'from-pink-400 to-rose-500' };
 
@@ -146,7 +147,23 @@ export default function OutfitCard({ outfit, isLocked = false, onClick, onEdit, 
             {/* Actions Overlay (Visible on Hover/Focus) */}
             {
                 !isLocked && (
-                    <div className="absolute top-2 left-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
+                    <div className="absolute top-2 left-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10 flex-col sm:flex-row">
+                        {onToggleVisibility && (
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onToggleVisibility(outfit);
+                                }}
+                                className="p-2 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-full shadow-sm hover:bg-white dark:hover:bg-gray-700 transition-colors"
+                                title={outfit.is_public ? "Hacer privado" : "Hacer público"}
+                            >
+                                {outfit.is_public ? (
+                                    <Globe className="w-4 h-4 text-blue-500" />
+                                ) : (
+                                    <Lock className="w-4 h-4 text-gray-500" />
+                                )}
+                            </button>
+                        )}
                         {onEdit && (
                             <button
                                 onClick={(e) => {

@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { ArrowLeft, Edit2, Trash2, Share2, Heart, MessageCircle, Send, Circle, Briefcase, PartyPopper, Zap, Sparkles, Layers } from 'lucide-react';
 import Link from 'next/link';
+import ProductModal from '@/components/ProductModal';
 import { supabase } from '@/lib/supabase/client';
 import { useUser } from '@/store/userStore';
 import { haptics } from '@/lib/haptic';
@@ -45,6 +46,7 @@ export default function OutfitDetailPage() {
   const [relatedPosts, setRelatedPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState<OutfitItem | null>(null);
+  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
 
   const outfitId = params.id as string;
   useBodyScrollLock(!!selectedItem);
@@ -120,6 +122,7 @@ export default function OutfitDetailPage() {
   const handleItemClick = (item: OutfitItem) => {
     haptics.selection();
     setSelectedItem(item);
+    setIsProductModalOpen(true);
   };
 
   const handleShare = () => {
@@ -175,34 +178,13 @@ export default function OutfitDetailPage() {
 
   return (
     <div className="min-h-screen bg-[var(--background)]">
-      {/* Header */}
-      <header className="sticky top-0 z-30 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-color)] px-4 h-14 flex items-center justify-between">
-        <button
-          onClick={() => window.history.length > 2 ? router.back() : router.push('/feed')}
-          className="p-2 -ml-2 hover:bg-[var(--background-secondary)] rounded-full transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5 text-[var(--foreground)]" />
-        </button>
-
-        <div className="flex items-center gap-2 ml-auto">
-          {user?.id === outfit.user_id && (
-            <>
-              <button
-                onClick={handleEdit}
-                className="p-2 hover:bg-[var(--background-secondary)] rounded-full transition-colors"
-              >
-                <Edit2 className="w-5 h-5 text-[var(--brand-pink)]" />
-              </button>
-              <button
-                onClick={handleDelete}
-                className="p-2 hover:bg-[var(--background-secondary)] rounded-full transition-colors"
-              >
-                <Trash2 className="w-5 h-5 text-red-500" />
-              </button>
-            </>
-          )}
-        </div>
-      </header>
+      {/* Floating Back Button */}
+      <button
+        onClick={() => window.history.length > 2 ? router.back() : router.push('/feed')}
+        className="fixed top-4 left-4 z-40 w-10 h-10 bg-[var(--brand-pink)] rounded-full flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-transform"
+      >
+        <ArrowLeft className="w-5 h-5 text-white" />
+      </button>
 
       <main className="w-full flex flex-col md:flex-row pb-24 md:pb-0 md:h-[calc(100vh-56px)] md:justify-center overflow-x-hidden md:overflow-hidden bg-[var(--background)]">
         
@@ -225,9 +207,6 @@ export default function OutfitDetailPage() {
             <section className="space-y-4">
               <div>
                 <h2 className="text-2xl font-bold text-[var(--foreground)]">{outfit.name || 'Outfit sin título'}</h2>
-                {outfit.description && (
-                  <p className="text-[var(--foreground-secondary)] mt-2">{outfit.description}</p>
-                )}
               </div>
 
               {/* Tags Grid (Ocasión y Prendas) */}
@@ -304,46 +283,11 @@ export default function OutfitDetailPage() {
         </div>
       </main>
 
-      {/* Item Detail Modal */}
-      {selectedItem && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-          onClick={() => setSelectedItem(null)}
-        >
-          <div
-            className="bg-[var(--card-bg)] rounded-3xl max-w-md w-full p-6 space-y-4 mb-16 md:mb-0 shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="relative aspect-square rounded-xl overflow-hidden bg-[var(--background-secondary)]">
-              {selectedItem.image_url ? (
-                <Image src={selectedItem.image_url} alt={selectedItem.name} fill className="object-cover" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-6xl">👕</div>
-              )}
-            </div>
-            <div>
-              <h3 className="text-xl font-bold text-[var(--foreground)]">{selectedItem.name}</h3>
-              <p className="text-[var(--foreground-secondary)]">{selectedItem.brand || 'Sin marca'}</p>
-              <p className="text-sm text-[var(--foreground-tertiary)]">{selectedItem.category}</p>
-              {selectedItem.color && (
-                <div className="flex items-center gap-2 mt-2">
-                  <span className="text-sm text-[var(--foreground-tertiary)]">Color:</span>
-                  <div
-                    className="w-4 h-4 rounded-full border border-[var(--border-color)]"
-                    style={{ backgroundColor: selectedItem.color }}
-                  />
-                </div>
-              )}
-            </div>
-            <button
-              onClick={() => setSelectedItem(null)}
-              className="w-full py-3 rounded-full bg-[var(--brand-pink)] text-white font-semibold"
-            >
-              Cerrar
-            </button>
-          </div>
-        </div>
-      )}
+      <ProductModal
+        item={selectedItem as any}
+        isOpen={isProductModalOpen}
+        onClose={() => setIsProductModalOpen(false)}
+      />
     </div>
   );
 }

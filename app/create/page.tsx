@@ -505,9 +505,9 @@ export default function CreateOutfitPage() {
                         user_id: user.id,
                         name: outfitName,
                         occasion: outfitOccasion,
-                        description: `Outfit con ${totalSelected} prendas`,
+                        description: '',
                         season: 'all-season', // Default for now
-                        is_public: false,
+                        is_public: true,
                         ai_generated: false,
                         image_url: publicImageUrl
                     } as any)

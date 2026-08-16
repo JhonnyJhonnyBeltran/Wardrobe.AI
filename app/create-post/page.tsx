@@ -186,6 +186,16 @@ export default function CreatePostPage() {
                 finalImageUrl = originalPost.image_url;
             }
 
+            if (selectedOutfit) {
+                // Business rule: Outfit must be public if published in a post
+                const { error: outfitError } = await supabase
+                    .from('outfits')
+                    .update({ is_public: true })
+                    .eq('id', selectedOutfit.id);
+                
+                if (outfitError) console.error('Error making outfit public:', outfitError);
+            }
+
             if (editingPostId) {
                 // 2. Update Post in DB
                 const { error: updateError } = await (supabase

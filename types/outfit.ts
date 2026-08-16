@@ -25,6 +25,7 @@ export interface Outfit {
   aiGenerated: boolean;
   favorite?: boolean;
   isPublic?: boolean;
+  is_public?: boolean;
   description?: string;
   // UI Helpers (mapped from DB or calculated)
   style?: string; // e.g. from tags or occasion

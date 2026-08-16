@@ -422,6 +422,34 @@ export default function ClosetPage() {
     }
   };
 
+  const toggleOutfitVisibility = async (outfitToToggle: any) => {
+    try {
+      const newVisibility = !outfitToToggle.is_public;
+      
+      // Optimistic update
+      setOutfits(prev => prev.map(o => o.id === outfitToToggle.id ? { ...o, is_public: newVisibility } : o));
+      if (selectedOutfit?.id === outfitToToggle.id) {
+        setSelectedOutfit(prev => prev ? { ...prev, is_public: newVisibility } : null);
+      }
+      
+      // Update DB
+      const { error } = await supabase
+        .from('outfits')
+        .update({ is_public: newVisibility })
+        .eq('id', outfitToToggle.id);
+
+      if (error) {
+        // Revert on error
+        setOutfits(prev => prev.map(o => o.id === outfitToToggle.id ? { ...o, is_public: outfitToToggle.is_public } : o));
+        console.error('Error toggling outfit visibility:', error);
+      } else {
+        toast.success(newVisibility ? 'El outfit ahora es público' : 'El outfit ahora es privado');
+      }
+    } catch (err) {
+      console.error('Unexpected error toggling outfit visibility:', err);
+    }
+  };
+
   const handleEditItem = (id: string) => {
     const itemToEdit = items.find(i => i.id === id);
     if (itemToEdit) {
@@ -916,6 +944,7 @@ export default function ClosetPage() {
                           });
                         }}
                         onToggleFavorite={(outfit, currentFav) => toggleOutfitFavorite(outfit.id, currentFav)}
+                        onToggleVisibility={(outfit) => toggleOutfitVisibility(outfit)}
                       />
                     </div>
                   ))}
