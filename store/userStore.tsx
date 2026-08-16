@@ -159,12 +159,12 @@ export function UserProvider({ children }: { children: ReactNode }) {
         };
       });
 
-      setIsLoading(false);
-
       // Only fetch heavy DB profile on initial load or sign in
       if (isNewUser || event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
         await fetchUserProfile(session.user);
       }
+
+      setIsLoading(false);
     } else {
       // If there is no session (whether SIGNED_OUT, INITIAL_SESSION, or failed TOKEN_REFRESHED)
       // we must ensure the app doesn't get stuck loading forever.
