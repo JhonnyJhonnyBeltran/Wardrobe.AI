@@ -11,6 +11,7 @@ import { useUser } from '@/store/userStore';
 import { haptics } from '@/lib/haptic';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import InteractiveOutfitViewer from '@/components/InteractiveOutfitViewer';
+import { ClothingItem } from '@/components/ClothingItem';
 
 interface OutfitItem {
   id: string;
@@ -240,21 +241,17 @@ export default function OutfitDetailPage() {
               <h3 className="text-lg font-semibold text-[var(--foreground)]">Prendas de este look</h3>
               <div className="grid grid-cols-2 gap-3">
                 {outfitItems.map((item, index) => (
-                  <div
+                  <ClothingItem
                     key={item.id || index}
-                    className="block group cursor-pointer"
+                    id={item.id}
+                    name={item.name}
+                    brand={item.brand}
+                    type={item.category}
+                    color={item.color}
+                    colorHex={(item as any).color_hex}
+                    imageUrl={item.image_url || '/placeholder.png'}
                     onClick={() => handleItemClick(item)}
-                  >
-                    <div className="aspect-square bg-[var(--background-secondary)] rounded-2xl overflow-hidden relative mb-2 flex items-center justify-center border border-transparent hover:border-[var(--border-color)] transition-all">
-                      {item.image_url ? (
-                        <Image src={item.image_url} alt={item.name} fill className="object-cover scale-[0.8] group-hover:scale-[0.85] transition-transform duration-300" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-4xl" style={{ backgroundColor: item.color || '#ccc' }}>👕</div>
-                      )}
-                    </div>
-                    <p className="text-[13px] font-bold text-[var(--foreground)] truncate px-1">{item.name}</p>
-                    <p className="text-[11px] text-[var(--foreground-secondary)] px-1">{item.brand || 'Sin marca'}</p>
-                  </div>
+                  />
                 ))}
               </div>
             </section>
