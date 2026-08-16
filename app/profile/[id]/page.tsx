@@ -525,7 +525,13 @@ export default function PublicProfilePage() {
                         href={`/outfit/${outfit.id}`}
                         className="aspect-square bg-[var(--background-secondary)] relative block z-0 transition-all duration-300 hover:scale-[1.05] hover:z-10 hover:shadow-xl hover:rounded-md group"
                       >
-                        {outfit.outfit_items && Array.isArray(outfit.outfit_items) && outfit.outfit_items.length > 0 ? (
+                        {outfit.image_url ? (
+                          <img
+                            src={outfit.image_url}
+                            alt="Outfit item"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : outfit.outfit_items && Array.isArray(outfit.outfit_items) && outfit.outfit_items.length > 0 ? (
                           <img
                             src={outfit.outfit_items[0]?.clothing_items?.image_url || '/placeholder.png'}
                             alt="Outfit item"
