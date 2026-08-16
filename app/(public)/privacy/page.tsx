@@ -6,57 +6,24 @@ import { ArrowLeft, LockKeyhole } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
-const Blob = ({ className, delay }: { className: string, delay: number }) => (
-    <motion.div
-        className={`fixed rounded-full mix-blend-screen filter blur-[100px] opacity-20 dark:opacity-30 pointer-events-none ${className}`}
-        animate={{
-            x: [0, 40, -30, 0],
-            y: [0, -50, 30, 0],
-            scale: [1, 1.2, 0.8, 1],
-        }}
-        transition={{
-            duration: 15,
-            repeat: Infinity,
-            repeatType: 'reverse',
-            delay: delay,
-            ease: "easeInOut"
-        }}
-    />
-);
-
 export default function PrivacyPage() {
     const router = useRouter();
 
     return (
         <div className="relative min-h-screen bg-[var(--background)] overflow-x-hidden selection:bg-[var(--brand-pink)] selection:text-white">
-            {/* Animated Gradient Background */}
-            <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
-                <Blob className="top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-gradient-to-tr from-[var(--brand-pink)] to-purple-500" delay={0} />
-                <Blob className="bottom-[-20%] right-[-10%] w-[60vw] h-[60vw] bg-gradient-to-tl from-indigo-500 to-[var(--brand-pink)]" delay={2} />
-            </div>
-
-            {/* Header */}
-            <header className="sticky top-0 z-50 bg-[var(--background)]/80 backdrop-blur-xl border-b border-[var(--border-color)]/50">
-                <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
-                    <button 
-                        onClick={() => router.back()}
-                        className="p-2 -ml-2 rounded-full hover:bg-[var(--background-secondary)] transition-colors flex items-center gap-2 text-[var(--foreground-secondary)] hover:text-[var(--foreground)]"
-                    >
-                        <ArrowLeft className="w-5 h-5" />
-                        <span className="text-sm font-medium hidden sm:block">Volver</span>
-                    </button>
-                    
-                    <div className="flex items-center justify-center">
-                        <Image src="/klozet-logo.png" alt="Klozet" width={80} height={24} className="dark:hidden block object-contain" priority />
-                        <Image src="/klozet-logo-dark.png" alt="Klozet" width={80} height={24} className="hidden dark:block object-contain" priority />
-                    </div>
-
-                    <div className="w-[68px]"></div> {/* Spacer for centering */}
-                </div>
-            </header>
-
             {/* Main Content */}
             <main className="relative z-10 max-w-3xl mx-auto px-4 py-12 md:py-20">
+                <div className="mb-12">
+                    <button 
+                        onClick={() => router.push('/auth')}
+                        className="inline-block hover:opacity-80 transition-opacity"
+                        title="Volver a Inicio"
+                    >
+                        <Image src="/klozet-logo.png" alt="Klozet" width={100} height={30} className="dark:hidden block object-contain" priority />
+                        <Image src="/klozet-logo-dark.png" alt="Klozet" width={100} height={30} className="hidden dark:block object-contain" priority />
+                    </button>
+                </div>
+
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
