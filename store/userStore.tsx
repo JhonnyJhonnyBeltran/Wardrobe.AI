@@ -144,6 +144,13 @@ export function UserProvider({ children }: { children: ReactNode }) {
       const isNewUser = session.user.id !== userIdRef.current;
       userIdRef.current = session.user.id;
 
+      // Only fetch heavy DB profile on initial load or sign in
+      const needsProfileFetch = isNewUser || event === 'INITIAL_SESSION' || event === 'SIGNED_IN';
+      
+      if (needsProfileFetch) {
+        setIsLoading(true);
+      }
+
       // Optimistic Hydration: Immediately set user basic info to unblock UI
       setUser((prev) => {
         if (prev && prev.id === session.user.id) return prev; // Keep existing data if just refreshing
@@ -159,8 +166,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         };
       });
 
-      // Only fetch heavy DB profile on initial load or sign in
-      if (isNewUser || event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
+      if (needsProfileFetch) {
         await fetchUserProfile(session.user);
       }
 
