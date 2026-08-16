@@ -382,7 +382,7 @@ export default function ChatPage() {
                         <ArrowLeft className="w-6 h-6" />
                     </button>
                     {targetUser ? (
-                        <div className="flex items-center gap-3 cursor-pointer" onClick={() => router.push(`/profile/${targetUser.id}`)}>
+                        <div className="flex items-center gap-3 cursor-pointer" onClick={() => router.push(`/profile/${targetUser.username || targetUser.id}`)}>
                             <div className="relative">
                                 <div className="w-10 h-10 rounded-full bg-[var(--background-secondary)] overflow-hidden border border-[var(--border-color)]">
                                     {targetUser.avatar_url ? (
@@ -550,7 +550,7 @@ export default function ChatPage() {
                                         {!isMe && (
                                             <div className="w-8 h-8 flex-shrink-0 group relative">
                                                 {showAvatar ? (
-                                                    <Link href={`/profile/${targetUser?.id}`}>
+                                                    <Link href={`/profile/${targetUser?.username || targetUser?.id}`}>
                                                         {targetUser?.avatar_url ? (
                                                             <img src={targetUser.avatar_url} className="w-8 h-8 rounded-full object-cover shadow-sm bg-[var(--background-secondary)] cursor-pointer hover:opacity-80 transition-opacity" />
                                                         ) : (

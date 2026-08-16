@@ -474,7 +474,7 @@ export default function SearchPage() {
                     key={user.id}
                     className="flex items-center gap-4 p-3 bg-[var(--background-secondary)] rounded-xl border border-[var(--border-color)] overflow-hidden"
                   >
-                    <Link href={`/profile/${user.id}`} className="flex items-center gap-4 flex-1 min-w-0">
+                    <Link href={`/profile/${user.username || user.id}`} className="flex items-center gap-4 flex-1 min-w-0">
                       <img
                         src={user.avatar_url || '/placeholder-avatar.png'}
                         alt={user.username}

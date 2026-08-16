@@ -82,7 +82,7 @@ const Toast = memo(function Toast({
       case 'new_follower':
       case 'follow_accepted':
         return notification.sender_id
-          ? `/profile/${notification.sender_id}`
+          ? `/profile/${notification.sender?.username || notification.sender_id}`
           : '/profile';
       case 'like':
       case 'comment':

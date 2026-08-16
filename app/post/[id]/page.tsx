@@ -103,7 +103,7 @@ export default function PostDetailPage() {
                                 scale,
                                 rotation,
                                 layer_order,
-                                clothing_items (id, name, brand, image_url, color, color_hex, category, size, reference)
+                                clothing_item:clothing_items (id, name, brand, image_url, color, color_hex, category, size, reference)
                             )
                         )
                     `)
@@ -145,6 +145,19 @@ export default function PostDetailPage() {
                     .select('id, content, created_at, user_id, profiles(id, username, avatar_url)')
                     .eq('post_id', postId)
                     .order('created_at', { ascending: true });
+
+                // Fix mapped outfit items
+                if (postData.outfits) {
+                    const outfitsList = Array.isArray(postData.outfits) ? postData.outfits : [postData.outfits];
+                    outfitsList.forEach((outfit: any) => {
+                        if (outfit && outfit.outfit_items) {
+                            outfit.outfit_items = outfit.outfit_items.map((oi: any) => ({
+                                ...oi,
+                                clothing_items: oi.clothing_item || oi.clothing_items
+                            }));
+                        }
+                    });
+                }
 
                 setPost(postData);
                 setIsLiked(likeRes.data && (likeRes.data as any[]).length > 0);
@@ -490,7 +503,7 @@ export default function PostDetailPage() {
                 </button>
 
                 {/* Center: Username - smaller and profile photo */}
-                <Link href={`/profile/${author.id}`} className="flex items-center gap-2 flex-1 ml-2">
+                <Link href={`/profile/${author.username || author.id}`} className="flex items-center gap-2 flex-1 ml-2">
                     <Avatar src={author.avatar_url || null} alt={author.username || 'Usuario'} size="sm" />
                     <span className="font-semibold text-[15px] text-gray-900 dark:text-white truncate">{author.username}</span>
                 </Link>
@@ -778,12 +791,12 @@ export default function PostDetailPage() {
                                 <div className="space-y-4">
                                     {comments.map((comment) => (
                                         <div key={comment.id} className="flex gap-3">
-                                            <Link href={`/profile/${comment.user.id}`} className="flex-shrink-0">
+                                            <Link href={`/profile/${comment.user.username || comment.user.id}`} className="flex-shrink-0">
                                                 <Avatar src={comment.user.avatar_url || null} alt={comment.user.username} size="sm" />
                                             </Link>
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex gap-2 items-baseline flex-wrap">
-                                                    <Link href={`/profile/${comment.user.id}`} className="font-bold text-[14px] text-gray-900 dark:text-white hover:underline">
+                                                    <Link href={`/profile/${comment.user.username || comment.user.id}`} className="font-bold text-[14px] text-gray-900 dark:text-white hover:underline">
                                                         {comment.user.username}
                                                     </Link>
                                                     <span className="text-[14px] text-gray-900 dark:text-white break-words">{comment.content}</span>
@@ -854,12 +867,12 @@ export default function PostDetailPage() {
                             ) : (
                                 comments.map((comment) => (
                                     <div key={comment.id} className="flex gap-3">
-                                        <Link href={`/profile/${comment.user.id}`} className="flex-shrink-0">
+                                        <Link href={`/profile/${comment.user.username || comment.user.id}`} className="flex-shrink-0">
                                             <Avatar src={comment.user.avatar_url || null} alt={comment.user.username} size="md" />
                                         </Link>
                                         <div className="flex-1">
                                             <div className="flex gap-2 items-baseline">
-                                                <Link href={`/profile/${comment.user.id}`} className="font-bold text-[15px] text-gray-900 dark:text-white hover:underline">
+                                                <Link href={`/profile/${comment.user.username || comment.user.id}`} className="font-bold text-[15px] text-gray-900 dark:text-white hover:underline">
                                                     {comment.user.username}
                                                 </Link>
                                                 <span className="text-[15px] text-gray-900 dark:text-white leading-tight break-words">{comment.content}</span>

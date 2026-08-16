@@ -417,7 +417,7 @@ export default function ChatPage() {
           </button>
 
           <Link
-            href={`/profile/${targetUserId}`}
+            href={`/profile/${targetUser?.username || targetUserId}`}
             className="flex items-center gap-3 flex-1 min-w-0"
           >
             <div className="relative w-10 h-10 rounded-full bg-[var(--background-secondary)] overflow-hidden flex-shrink-0">
@@ -510,7 +510,7 @@ export default function ChatPage() {
                 @{targetUser?.username}
               </p>
               <Link
-                href={`/profile/${targetUserId}`}
+                href={`/profile/${targetUser?.username || targetUserId}`}
                 className="inline-block mt-3 text-sm text-[var(--brand-pink)] font-semibold"
               >
                 Ver perfil

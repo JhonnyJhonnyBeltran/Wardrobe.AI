@@ -318,7 +318,7 @@ export default function PublicProfilePage() {
               <ArrowLeft className="w-6 h-6 text-[var(--foreground)]" />
             </button>
             <span className="font-bold text-[var(--foreground)] truncate max-w-[200px] sm:max-w-[280px]">
-              {profile.username || 'Perfil'}
+              {profile.username ? `@${profile.username}` : (profile.full_name || 'Perfil')}
             </span>
           </div>
           <button 
