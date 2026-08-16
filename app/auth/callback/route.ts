@@ -20,6 +20,12 @@ export async function GET(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
+      cookieOptions: {
+        name: 'wardrobe-auth',
+        maxAge: 60 * 60 * 24 * 30, // 30 days
+        path: '/',
+        sameSite: 'lax'
+      },
       cookies: {
         getAll() {
           return cookieStore.getAll();

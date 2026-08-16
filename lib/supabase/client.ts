@@ -18,13 +18,8 @@ if (!supabaseUrl || !supabaseAnonKey) {
 const getSupabaseBrowserClient = () => {
   if (typeof window === 'undefined') {
     return createBrowserClient<Database>(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true,
-        storageKey: 'wardrobe_auth_token',
-      },
       cookieOptions: {
+        name: 'wardrobe-auth',
         maxAge: 60 * 60 * 24 * 30, // 30 days
         path: '/',
         sameSite: 'lax'
@@ -42,13 +37,8 @@ const getSupabaseBrowserClient = () => {
   // Use window to persist the instance
   if (!(window as any)._klozetSupabaseClient) {
     (window as any)._klozetSupabaseClient = createBrowserClient<Database>(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true,
-        storageKey: 'wardrobe_auth_token',
-      },
       cookieOptions: {
+        name: 'wardrobe-auth',
         maxAge: 60 * 60 * 24 * 30, // 30 days
         path: '/',
         sameSite: 'lax'
