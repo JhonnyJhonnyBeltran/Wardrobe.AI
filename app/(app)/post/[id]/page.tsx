@@ -14,6 +14,7 @@ import { useUiStore } from '@/store/uiStore';
 import { motion, AnimatePresence } from 'framer-motion';
 import InteractiveOutfitViewer from '@/components/InteractiveOutfitViewer';
 import ProductModal from '@/components/ProductModal';
+import { ClothingItem } from '@/components/ClothingItem';
 import { haptics } from '@/lib/haptic';
 
 interface Comment {
@@ -720,31 +721,17 @@ export default function PostDetailPage() {
                                 const clothing = item.clothing_items;
                                 if (!clothing) return null;
                                 return (
-                                    <button
-                                        key={clothing.id}
+                                    <ClothingItem 
+                                        key={clothing.id} 
+                                        id={clothing.id}
+                                        name={clothing.name}
+                                        brand={clothing.brand}
+                                        type={clothing.category}
+                                        color={clothing.color}
+                                        colorHex={clothing.color_hex}
+                                        imageUrl={clothing.image_url || '/placeholder.png'}
                                         onClick={() => setSelectedItem(clothing)}
-                                        className="block group text-left w-full"
-                                    >
-                                        <div className="aspect-square bg-gray-100 dark:bg-[#222] rounded-xl overflow-hidden relative mb-2">
-                                            <Image
-                                                src={clothing.image_url || '/placeholder.png'}
-                                                alt={clothing.name}
-                                                fill
-                                                className="object-cover group-hover:scale-105 transition-transform duration-300"
-                                            />
-                                        </div>
-                                        <p className="text-[13px] font-bold text-gray-900 dark:text-white truncate">{clothing.name}</p>
-                                        <p className="text-[11px] text-gray-500 dark:text-gray-400">{clothing.brand || 'Sin marca'}</p>
-                                        {clothing.color && (
-                                            <div className="flex items-center gap-1.5 mt-1">
-                                                <div
-                                                    className="w-3 h-3 rounded-full border border-gray-200 dark:border-gray-600"
-                                                    style={{ backgroundColor: clothing.color_hex || clothing.color }}
-                                                />
-                                                <span className="text-[10px] text-gray-400 capitalize">{clothing.color}</span>
-                                            </div>
-                                        )}
-                                    </button>
+                                    />
                                 );
                             })}
                         </div>

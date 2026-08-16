@@ -132,18 +132,38 @@ export default function SettingsPage() {
         }
     };
 
+    const [oldPassword, setOldPassword] = useState('');
+
     const handleUpdatePassword = async () => {
+        if (!oldPassword) {
+            alert('Por favor, introduce tu contraseña actual');
+            return;
+        }
         if (!newPassword || newPassword.length < 6) {
-            alert('La contraseña debe tener al menos 6 caracteres');
+            alert('La nueva contraseña debe tener al menos 6 caracteres');
             return;
         }
         setIsUpdatingPassword(true);
         try {
-            const { error } = await supabase.auth.updateUser({ password: newPassword });
-            if (error) throw error;
+            // Re-authenticate to verify old password
+            if (!user?.email) throw new Error('No se encontró el email del usuario');
+            const { error: signInError } = await supabase.auth.signInWithPassword({
+                email: user.email,
+                password: oldPassword
+            });
+            
+            if (signInError) {
+                throw new Error('La contraseña actual es incorrecta');
+            }
+
+            // If successful, update to new password
+            const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
+            if (updateError) throw updateError;
+            
             alert('Contraseña actualizada correctamente');
             setShowPasswordModal(false);
             setNewPassword('');
+            setOldPassword('');
         } catch (error: any) {
             console.error('Error updating password:', error);
             alert('Error al actualizar la contraseña: ' + error.message);
@@ -568,7 +588,7 @@ export default function SettingsPage() {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+                            className="fixed inset-0 z-[6100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
                             onClick={() => setShowPasswordModal(false)}
                         >
                             <motion.div
@@ -586,15 +606,24 @@ export default function SettingsPage() {
                                         Cambiar Contraseña
                                     </h3>
                                     <p className="text-[var(--foreground-tertiary)] text-sm mb-4">
-                                        Introduce tu nueva contraseña (mínimo 6 caracteres).
+                                        Introduce tu contraseña actual y la nueva contraseña (mínimo 6 caracteres).
                                     </p>
-                                    <input 
-                                        type="password" 
-                                        value={newPassword}
-                                        onChange={(e) => setNewPassword(e.target.value)}
-                                        placeholder="Nueva contraseña" 
-                                        className="w-full bg-[var(--background-secondary)] text-[var(--foreground)] px-4 py-3 rounded-xl border border-[var(--border-color)] focus:border-[var(--brand-pink)] outline-none"
-                                    />
+                                    <div className="space-y-3">
+                                        <input 
+                                            type="password" 
+                                            value={oldPassword}
+                                            onChange={(e) => setOldPassword(e.target.value)}
+                                            placeholder="Contraseña actual" 
+                                            className="w-full bg-[var(--background-secondary)] text-[var(--foreground)] px-4 py-3 rounded-xl border border-[var(--border-color)] focus:border-[var(--brand-pink)] outline-none"
+                                        />
+                                        <input 
+                                            type="password" 
+                                            value={newPassword}
+                                            onChange={(e) => setNewPassword(e.target.value)}
+                                            placeholder="Nueva contraseña" 
+                                            className="w-full bg-[var(--background-secondary)] text-[var(--foreground)] px-4 py-3 rounded-xl border border-[var(--border-color)] focus:border-[var(--brand-pink)] outline-none"
+                                        />
+                                    </div>
                                 </div>
                                 <div className="flex gap-3">
                                     <Button

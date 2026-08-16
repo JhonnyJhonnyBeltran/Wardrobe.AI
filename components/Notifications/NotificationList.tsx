@@ -44,6 +44,7 @@ export default function NotificationList({ compact = false, onClose }: Notificat
     const [loadingMore, setLoadingMore] = useState(false);
     const [hasMore, setHasMore] = useState(true);
     const [loadError, setLoadError] = useState(false);
+    const [lastViewedAt, setLastViewedAt] = useState<number>(0);
     
     const pageRef = useRef(0);
     const NOTIFS_PER_PAGE = 10;
@@ -76,11 +77,14 @@ export default function NotificationList({ compact = false, onClose }: Notificat
     useEffect(() => {
         if (user?.id) {
             getMyFollowStatusMap(user.id).then((map) => {
-                // Convert FollowDisplayStatus to string for simplicity in map
                 const simplifiedMap: Record<string, string> = {};
                 Object.entries(map).forEach(([key, val]) => simplifiedMap[key] = val);
                 setFollowMap(simplifiedMap);
             });
+        }
+        if (typeof window !== 'undefined') {
+            const lv = localStorage.getItem('last_viewed_activity');
+            if (lv) setLastViewedAt(new Date(lv).getTime());
         }
     }, [user?.id]);
 
@@ -416,9 +420,12 @@ export default function NotificationList({ compact = false, onClose }: Notificat
                 <section className="space-y-4">
                     <div className="space-y-4">
                         {activityNotifications.map((notif) => {
+                            const isNew = notif.timestamp > lastViewedAt;
+                            const bgClass = isNew ? "bg-[var(--brand-pink)]/10" : "";
+                            
                             if (notif.type === 'follow') {
                                 return (
-                                    <div key={notif.id} className="flex items-center gap-3 group">
+                                    <div key={notif.id} className={`flex items-center gap-3 group p-3 rounded-2xl transition-colors ${bgClass}`}>
                                         <Link href={`/profile/${notif.actor!.username || notif.actor!.id}`} className="relative shrink-0" onClick={onClose}>
                                             <Avatar src={notif.actor?.avatar || null} alt={notif.actor!.name} size="md" />
                                         </Link>
@@ -445,7 +452,7 @@ export default function NotificationList({ compact = false, onClose }: Notificat
                             
                             if (notif.type === 'like') {
                                 return (
-                                    <div key={notif.id} className="flex items-center gap-3 group">
+                                    <div key={notif.id} className={`flex items-center gap-3 group p-3 rounded-2xl transition-colors ${bgClass}`}>
                                         <Link href={`/profile/${notif.actor!.username || notif.actor!.id}`} className="relative shrink-0" onClick={onClose}>
                                             <Avatar src={notif.actor?.avatar || null} alt={notif.actor!.name} size="md" />
                                         </Link>
@@ -467,7 +474,7 @@ export default function NotificationList({ compact = false, onClose }: Notificat
 
                             if (notif.type === 'comment') {
                                 return (
-                                    <div key={notif.id} className="flex items-center gap-3 group">
+                                    <div key={notif.id} className={`flex items-center gap-3 group p-3 rounded-2xl transition-colors ${bgClass}`}>
                                         <Link href={`/profile/${notif.actor!.username || notif.actor!.id}`} className="relative shrink-0" onClick={onClose}>
                                             <Avatar src={notif.actor?.avatar || null} alt={notif.actor!.name} size="md" />
                                         </Link>

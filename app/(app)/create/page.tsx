@@ -645,10 +645,10 @@ export default function CreateOutfitPage() {
 
                                 {/* Selected Items Summary */}
                                 {totalSelected > 0 && (
-                                    <div className="fixed bottom-[88px] left-0 right-0 px-4 py-3 bg-[var(--background)]/90 backdrop-blur-md border-t border-[var(--border-color)] z-30 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
+                                    <div className="fixed bottom-[96px] md:bottom-28 left-1/2 -translate-x-1/2 px-4 py-2 bg-[var(--background)]/95 backdrop-blur-md border border-[var(--border-color)] rounded-full z-30 shadow-xl max-w-[90vw] overflow-hidden">
                                         <div className="flex gap-2 overflow-x-auto scrollbar-hide items-center">
                                             {flatItems.map((item, idx) => (
-                                                <div key={`${item.id}-${idx}`} className="relative w-12 h-12 rounded-xl bg-[#f8f9fa] dark:bg-[#111] border border-[var(--border-color)] flex-shrink-0 overflow-hidden group">
+                                                <div key={`${item.id}-${idx}`} className="relative w-10 h-10 rounded-full bg-[var(--background-secondary)] border border-[var(--border-color)] flex-shrink-0 overflow-hidden group">
                                                     <img src={item.imageUrl} alt={item.name} className="w-full h-full object-contain p-1" />
                                                     <button 
                                                         onClick={(e) => {
@@ -657,7 +657,7 @@ export default function CreateOutfitPage() {
                                                         }}
                                                         className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                                                     >
-                                                        <X className="w-4 h-4 text-white" />
+                                                        <X className="w-3 h-3 text-white" />
                                                     </button>
                                                 </div>
                                             ))}
@@ -672,12 +672,12 @@ export default function CreateOutfitPage() {
                                             initial={{ opacity: 0, y: 50 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             exit={{ opacity: 0, y: 50 }}
-                                            className="fixed bottom-0 left-0 right-0 p-4 bg-[var(--background)] z-40"
+                                            className="fixed bottom-[16px] md:bottom-8 left-1/2 -translate-x-1/2 z-40 w-auto min-w-[200px]"
                                         >
                                             <Button
                                                 onClick={() => setMobileStep('preview')}
                                                 glow={true}
-                                                className="w-full rounded-full py-4 text-base font-semibold overflow-hidden"
+                                                className="w-full rounded-full py-4 px-8 text-base font-semibold overflow-hidden shadow-2xl"
                                             >
                                                 <motion.span
                                                     key={totalSelected}

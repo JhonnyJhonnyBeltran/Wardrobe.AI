@@ -97,7 +97,7 @@ export const ClothingItem: React.FC<ClothingItemProps> = ({
           whileTap={{ scale: 0.9 }}
           onClick={handleFavoriteClick}
           style={{ WebkitTapHighlightColor: 'transparent' }}
-          className={`absolute top-3 right-3 z-20 p-2 rounded-full bg-black/20 dark:bg-white/20 backdrop-blur-sm transition-all duration-300 focus:outline-none focus:ring-0
+          className={`absolute top-3 right-4 z-20 p-2 rounded-full bg-black/20 dark:bg-white/20 backdrop-blur-sm transition-all duration-300 focus:outline-none focus:ring-0
                      ${isFavorite ? 'opacity-100' : 'opacity-60 hover:opacity-100'}`}
         >
           <motion.div
