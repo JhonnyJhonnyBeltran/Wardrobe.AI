@@ -90,7 +90,7 @@ export default function Sidebar() {
                         : 'text-black'
                       }`}
                   >
-                    <div className="relative flex items-center justify-center">
+                    <div className="relative flex items-center justify-center pointer-events-none">
                       {React.cloneElement(item.icon as React.ReactElement<any>, {
                         strokeWidth: isActive ? 3 : 2,
                         className: `w-[30px] h-[30px] ${(item.icon as any).props.className || ''}`

@@ -399,15 +399,14 @@ export default function ClosetPage() {
     }
   };
 
-  const toggleOutfitFavorite = async (id: string, currentFav: boolean) => {
+  const toggleOutfitFavorite = useCallback(async (outfitToToggle: any, currentFav: boolean) => {
+    const id = outfitToToggle.id || outfitToToggle; // Support both for backwards compatibility
     try {
       const newFavStatus = !currentFav;
       
       // Optimistic update
       setOutfits(prev => prev.map(o => o.id === id ? { ...o, favorite: newFavStatus } : o));
-      if (selectedOutfit?.id === id) {
-        setSelectedOutfit(prev => prev ? { ...prev, favorite: newFavStatus } : null);
-      }
+      setSelectedOutfit(prev => prev && prev.id === id ? { ...prev, favorite: newFavStatus } : prev);
       
       // Update DB
       const { error } = await (supabase.from('outfits') as any)
@@ -417,22 +416,21 @@ export default function ClosetPage() {
       if (error) {
         // Revert on error
         setOutfits(prev => prev.map(o => o.id === id ? { ...o, favorite: currentFav } : o));
+        setSelectedOutfit(prev => prev && prev.id === id ? { ...prev, favorite: currentFav } : prev);
         console.error('Error toggling outfit favorite:', error);
       }
     } catch (err) {
       console.error('Unexpected error toggling outfit favorite:', err);
     }
-  };
+  }, [supabase]);
 
-  const toggleOutfitVisibility = async (outfitToToggle: any) => {
+  const toggleOutfitVisibility = useCallback(async (outfitToToggle: any) => {
     try {
       const newVisibility = !outfitToToggle.is_public;
       
       // Optimistic update
       setOutfits(prev => prev.map(o => o.id === outfitToToggle.id ? { ...o, is_public: newVisibility } : o));
-      if (selectedOutfit?.id === outfitToToggle.id) {
-        setSelectedOutfit(prev => prev ? { ...prev, is_public: newVisibility } : null);
-      }
+      setSelectedOutfit(prev => prev && prev.id === outfitToToggle.id ? { ...prev, is_public: newVisibility } : prev);
       
       // Update DB
       const { error } = await supabase
@@ -443,12 +441,49 @@ export default function ClosetPage() {
       if (error) {
         // Revert on error
         setOutfits(prev => prev.map(o => o.id === outfitToToggle.id ? { ...o, is_public: outfitToToggle.is_public } : o));
+        setSelectedOutfit(prev => prev && prev.id === outfitToToggle.id ? { ...prev, is_public: outfitToToggle.is_public } : prev);
         console.error('Error toggling outfit visibility:', error);
       }
     } catch (err) {
       console.error('Unexpected error toggling outfit visibility:', err);
     }
-  };
+  }, [supabase]);
+
+  const handleOutfitClick = useCallback((outfit: any) => {
+    setSelectedOutfit(outfit);
+  }, []);
+
+  const handleOutfitEdit = useCallback((outfit: any) => {
+    router.push(`/create?outfitId=${outfit.id}`);
+  }, [router]);
+
+  const handleOutfitShare = useCallback((outfit: any) => {
+    router.push(`/create-post?outfitId=${outfit.id}`);
+  }, [router]);
+
+  const handleOutfitDelete = useCallback((id: string) => {
+    // We need to get the latest outfits from a ref or just use state 
+    // Actually we can just pass the outfit directly from OutfitCard instead of just ID.
+    // Let's just say "este outfit" if we can't easily find it without adding outfits to dependency array
+    useUiStore.getState().showModal({
+      title: 'Eliminar outfit',
+      message: `¿Seguro que quieres eliminar este outfit? Esta acción no se puede deshacer.`,
+      type: 'confirm',
+      confirmText: 'Eliminar',
+      cancelText: 'Cancelar',
+      onConfirm: async () => {
+        try {
+          const { error } = await supabase.from('outfits').delete().eq('id', id);
+          if (error) throw error;
+          setOutfits(prev => prev.filter(o => o.id !== id));
+          toast.success('El outfit se ha eliminado de tu armario.');
+        } catch (err) {
+          console.error('Error deleting outfit:', err);
+          toast.error('Error al eliminar el outfit');
+        }
+      }
+    });
+  }, [supabase]);
 
   const handleEditItem = (id: string) => {
     const itemToEdit = items.find(i => i.id === id);
@@ -914,37 +949,12 @@ export default function ClosetPage() {
                       <OutfitCard
                         outfit={outfit}
                         index={0}
-                        onClick={() => {
-                          setSelectedOutfit(outfit);
-                        }}
-                        onEdit={(outfit) => {
-                          router.push(`/create?outfitId=${outfit.id}`);
-                        }}
-                        onShare={(outfit) => {
-                          router.push(`/create-post?outfitId=${outfit.id}`);
-                        }}
-                        onDelete={(id) => {
-                          showModal({
-                            title: 'Eliminar outfit',
-                            message: `¿Seguro que quieres eliminar el outfit "${outfit.name}"? Esta acción no se puede deshacer.`,
-                            type: 'confirm',
-                            confirmText: 'Eliminar',
-                            cancelText: 'Cancelar',
-                            onConfirm: async () => {
-                              try {
-                                const { error } = await supabase.from('outfits').delete().eq('id', id);
-                                if (error) throw error;
-                                setOutfits(prev => prev.filter(o => o.id !== id));
-                                toast.success('El outfit se ha eliminado de tu armario.');
-                              } catch (err) {
-                                console.error('Error deleting outfit:', err);
-                                toast.error('Error al eliminar el outfit');
-                              }
-                            }
-                          });
-                        }}
-                        onToggleFavorite={(outfit, currentFav) => toggleOutfitFavorite(outfit.id, currentFav)}
-                        onToggleVisibility={(outfit) => toggleOutfitVisibility(outfit)}
+                        onClick={handleOutfitClick}
+                        onEdit={handleOutfitEdit}
+                        onShare={handleOutfitShare}
+                        onDelete={handleOutfitDelete}
+                        onToggleFavorite={toggleOutfitFavorite}
+                        onToggleVisibility={toggleOutfitVisibility}
                       />
                     </div>
                   ))}

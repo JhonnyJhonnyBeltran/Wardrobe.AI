@@ -368,10 +368,10 @@ export default function ProfilePage() {
           {/* Right: Settings/Options Button */}
           <Link
             href="/profile/settings"
-            className="p-2 -mr-2 rounded-full transition-colors flex-shrink-0 text-[var(--foreground)] hover:bg-[var(--background-secondary)] md:hover:bg-transparent md:hover:text-[var(--brand-pink)]"
+            className="group p-2 -mr-2 rounded-full transition-colors flex-shrink-0 text-[var(--foreground)] hover:bg-[var(--background-secondary)] md:hover:bg-transparent"
             aria-label="Configuración"
           >
-            <Settings className="w-6 h-6" />
+            <Settings className="w-6 h-6 transition-all duration-300 group-hover:text-[var(--brand-pink)] group-hover:fill-[var(--brand-pink)]" />
           </Link>
         </div>
       </header>
@@ -442,7 +442,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Tab Content */}
-        <div className="min-h-[40vh]">
+        <div className="min-h-[40vh] relative z-0 hover:z-40">
           <AnimatePresence mode="wait">
             {activeTab === 'posts' ? (
               <motion.div
@@ -472,7 +472,7 @@ export default function ProfilePage() {
                       <Link
                         key={post.id}
                         href={`/post/${post.id}`}
-                        className="aspect-square bg-[var(--background-secondary)] relative block z-0 hover:z-10 transition-all duration-300 hover:scale-[1.05] hover:shadow-xl hover:rounded-md"
+                        className="aspect-square bg-[var(--background-secondary)] relative block z-0 hover:z-40 transition-all duration-300 hover:scale-[1.05] hover:shadow-xl hover:rounded-md"
                       >
                         <img src={post.image_url} alt="Post" className="w-full h-full object-cover" />
                       </Link>
@@ -565,7 +565,7 @@ export default function ProfilePage() {
                         <Link
                           key={post.id}
                           href={`/post/${post.id}`}
-                          className="aspect-square bg-[var(--background-secondary)] relative block z-0 hover:z-10 transition-all duration-300 hover:scale-[1.05] hover:shadow-xl hover:rounded-md group"
+                          className="aspect-square bg-[var(--background-secondary)] relative block z-0 hover:z-40 transition-all duration-300 hover:scale-[1.05] hover:shadow-xl hover:rounded-md group"
                         >
                           <img src={post.image_url} alt="Saved Post" className="w-full h-full object-cover" />
                           <div className="absolute top-1 right-1 bg-black/50 p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">

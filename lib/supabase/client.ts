@@ -22,6 +22,12 @@ const getSupabaseBrowserClient = () => {
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: true,
+        storageKey: 'wardrobe_auth_token',
+      },
+      cookieOptions: {
+        maxAge: 60 * 60 * 24 * 30, // 30 days
+        path: '/',
+        sameSite: 'lax'
       },
       global: {
         // Use native fetch to avoid Next.js router fetch patching deadlocks
@@ -40,6 +46,12 @@ const getSupabaseBrowserClient = () => {
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: true,
+        storageKey: 'wardrobe_auth_token',
+      },
+      cookieOptions: {
+        maxAge: 60 * 60 * 24 * 30, // 30 days
+        path: '/',
+        sameSite: 'lax'
       },
       global: {
         fetch: (url, options) => {

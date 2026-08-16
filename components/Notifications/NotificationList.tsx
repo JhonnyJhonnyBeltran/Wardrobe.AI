@@ -38,8 +38,14 @@ interface NotificationListProps {
 
 export default function NotificationList({ compact = false, onClose }: NotificationListProps) {
     const { user } = useUser();
-    const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [fetchedNotifications, setFetchedNotifications] = useState<Notification[]>([]);
+    const realtimeNotifications = useRealtimeStore(state => state.notifications);
     const [loading, setLoading] = useState(true);
+
+    // Merge fetched and realtime notifications
+    const notifications = Array.from(new Map(
+        [...realtimeNotifications, ...fetchedNotifications].map(item => [item.id, item])
+    ).values()).sort((a, b) => b.timestamp - a.timestamp);
 
     const NotificationSkeleton = () => (
         <div className="flex items-start gap-4 p-4 rounded-3xl bg-[var(--background)]/50 border border-[var(--border-color)]/30 animate-pulse">
@@ -217,7 +223,7 @@ export default function NotificationList({ compact = false, onClose }: Notificat
             // Sort by time (newest first)
             if (isMounted) {
                 const sortedNotifications = realNotifications.sort((a, b) => b.timestamp - a.timestamp);
-                setNotifications(sortedNotifications);
+                setFetchedNotifications(sortedNotifications);
                 
                 // Clear badge using the newest notification timestamp + 1 second to avoid microsecond truncation issues in DB
                 const newestTimestamp = sortedNotifications.length > 0 
@@ -239,7 +245,7 @@ export default function NotificationList({ compact = false, onClose }: Notificat
         e.stopPropagation(); // Prevent triggering the main click
         localStorage.setItem('dismissed_system_msg_id', id);
         localStorage.setItem('last_klozet_msg_date', new Date().toISOString());
-        setNotifications(prev => prev.filter(n => n.id !== id));
+        setFetchedNotifications(prev => prev.filter(n => n.id !== id));
     };
 
 

@@ -94,7 +94,7 @@ export default function PostDetailPage() {
                 const { data: postData, error: postError } = await supabase
                     .from('posts')
                     .select(`
-                        id, caption, image_url, created_at, user_id, likes_count, comments_count,
+                        id, caption, image_url, created_at, user_id, likes, comments,
                         profiles (id, username, avatar_url),
                         outfits (
                             id, name, image_url,
@@ -151,7 +151,7 @@ export default function PostDetailPage() {
                 setIsLiked(likeRes.data && (likeRes.data as any[]).length > 0);
                 setIsSaved(saveRes.data && (saveRes.data as any[]).length > 0);
                 setIsFollowing(followStatus === 'accepted');
-                setLikesCount((postData as any)?.likes_count || 0);
+                setLikesCount((postData as any)?.likes || 0);
 
                 // Format comments
                 if (commentsData) {
@@ -257,9 +257,9 @@ export default function PostDetailPage() {
             }
 
             // Sync total likes count in the 'posts' table for efficient popularity sorting
-            const newCount = previousState ? Math.max(0, (post?.likes_count || 0) - 1) : (post?.likes_count || 0) + 1;
+            const newCount = previousState ? Math.max(0, (post?.likes || 0) - 1) : (post?.likes || 0) + 1;
             await (supabase.from('posts') as any)
-                .update({ likes_count: newCount })
+                .update({ likes: newCount })
                 .eq('id', postId);
 
             router.refresh();

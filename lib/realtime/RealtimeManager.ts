@@ -24,6 +24,8 @@ class RealtimeManager {
   private channels: Map<string, RealtimeChannel> = new Map();
   private userId: string | null = null;
   private isInitialized = false;
+  private lastPollTime: number = Date.now();
+  private pollInterval: any = null;
 
   // Callbacks
   private presenceCallbacks: Set<PresenceCallback> = new Set();
@@ -68,6 +70,11 @@ class RealtimeManager {
 
       // 2. Setup presence channel
       await this.setupPresenceChannel(userInfo);
+      
+      // Configure robust polling fallback in case PostgreSQL triggers or replication are disabled
+      this.lastPollTime = Date.now();
+      if (this.pollInterval) clearInterval(this.pollInterval);
+      this.pollInterval = setInterval(() => this.pollRecentActivity(), 15000);
 
       this.isInitialized = true;
       console.log('[RealtimeManager] Initialization complete');
@@ -131,6 +138,18 @@ class RealtimeManager {
           filter: `user_id=eq.${this.userId}`,
         },
         (payload: any) => this.handleNotificationInsert(payload)
+      )
+      // Listen for global likes (frontend fallback for missing triggers)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'likes' },
+        (payload: any) => this.handleGlobalActivity(payload, 'like')
+      )
+      // Listen for global comments (frontend fallback for missing triggers)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'comments' },
+        (payload: any) => this.handleGlobalActivity(payload, 'comment')
       )
       // Listen for broadcast notifications
       .on('broadcast', { event: EVENTS.NOTIFICATION }, (payload: any) => {
@@ -365,6 +384,156 @@ class RealtimeManager {
     this.emitNotification(notification);
   }
 
+  // Fallback handler for likes and comments when DB triggers are missing
+  private async handleGlobalActivity(payload: any, type: 'like' | 'comment') {
+    const activity = payload.new;
+    
+    // Ignore my own likes/comments
+    if (activity.user_id === this.userId) return;
+
+    try {
+      // Check if this post belongs to me
+      const { data: post } = await supabase
+        .from('posts')
+        .select('user_id, image_url')
+        .eq('id', activity.post_id)
+        .single();
+
+      if (post?.user_id === this.userId) {
+        // Fetch sender info
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('username, full_name, avatar_url')
+          .eq('id', activity.user_id)
+          .single();
+
+        const senderName = profile?.username || profile?.full_name || 'Alguien';
+        const message = type === 'like' 
+          ? `@${senderName} le ha dado me gusta a tu publicación.`
+          : `@${senderName} ha comentado en tu publicación.`;
+
+        // Format to match NotificationList expected structure
+        const notification: any = {
+          id: `${type}_${activity.id || Date.now()}`,
+          type: type,
+          title: type === 'like' ? 'Nuevo me gusta' : 'Nuevo comentario',
+          message: message,
+          actor: {
+            id: activity.user_id,
+            username: profile?.username || '',
+            name: senderName,
+            avatar: profile?.avatar_url || null
+          },
+          image: post.image_url,
+          postId: activity.post_id,
+          timestamp: new Date(activity.created_at || new Date()).getTime(),
+          time: 'Justo ahora',
+          read: false,
+          created_at: activity.created_at || new Date().toISOString()
+        };
+
+        this.emitNotification(notification);
+      }
+    } catch (err) {
+      console.error('[RealtimeManager] Error processing global activity:', err);
+    }
+  }
+
+  // Very robust fallback: Poll recent activity every 15 seconds if SQL Realtime config failed
+  private async pollRecentActivity() {
+    if (!this.userId) return;
+
+    try {
+      const now = Date.now();
+      const timeSinceLastPoll = new Date(this.lastPollTime).toISOString();
+      this.lastPollTime = now;
+
+      // 1. Fetch our own posts
+      const { data: myPosts } = await supabase
+        .from('posts')
+        .select('id, image_url')
+        .eq('user_id', this.userId);
+
+      if (!myPosts || myPosts.length === 0) return;
+
+      const myPostIds = myPosts.map(p => p.id);
+      const postImageMap = new Map(myPosts.map(p => [p.id, p.image_url]));
+
+      // 2. Poll for new likes
+      const { data: recentLikes } = await supabase
+        .from('likes')
+        .select('id, user_id, post_id, created_at, profiles!inner(username, full_name, avatar_url)')
+        .in('post_id', myPostIds)
+        .gt('created_at', timeSinceLastPoll);
+
+      // 3. Poll for new comments
+      const { data: recentComments } = await supabase
+        .from('comments' as any)
+        .select('id, user_id, post_id, created_at, content, profiles!inner(username, full_name, avatar_url)')
+        .in('post_id', myPostIds)
+        .gt('created_at', timeSinceLastPoll);
+
+      // Process likes
+      if (recentLikes) {
+        recentLikes.forEach((like: any) => {
+          if (like.user_id === this.userId) return;
+          const profile = Array.isArray(like.profiles) ? like.profiles[0] : like.profiles;
+          const senderName = profile?.username || profile?.full_name || 'Alguien';
+          
+          this.emitNotification({
+            id: `like_${like.id || Date.now()}`,
+            type: 'like',
+            title: 'Nuevo me gusta',
+            message: `@${senderName} le ha dado me gusta a tu publicación.`,
+            actor: {
+              id: like.user_id,
+              username: profile?.username || '',
+              name: senderName,
+              avatar: profile?.avatar_url || null
+            },
+            image: postImageMap.get(like.post_id),
+            postId: like.post_id,
+            timestamp: new Date(like.created_at).getTime(),
+            time: 'Justo ahora',
+            read: false,
+            created_at: like.created_at
+          } as any);
+        });
+      }
+
+      // Process comments
+      if (recentComments) {
+        recentComments.forEach((comment: any) => {
+          if (comment.user_id === this.userId) return;
+          const profile = Array.isArray(comment.profiles) ? comment.profiles[0] : comment.profiles;
+          const senderName = profile?.username || profile?.full_name || 'Alguien';
+          
+          this.emitNotification({
+            id: `comment_${comment.id || Date.now()}`,
+            type: 'comment',
+            title: 'Nuevo comentario',
+            message: `@${senderName} ha comentado: ${comment.content?.substring(0, 40) || ''}`,
+            actor: {
+              id: comment.user_id,
+              username: profile?.username || '',
+              name: senderName,
+              avatar: profile?.avatar_url || null
+            },
+            image: postImageMap.get(comment.post_id),
+            postId: comment.post_id,
+            timestamp: new Date(comment.created_at).getTime(),
+            time: 'Justo ahora',
+            read: false,
+            created_at: comment.created_at
+          } as any);
+        });
+      }
+
+    } catch (err) {
+      console.error('[RealtimeManager] Polling fallback error:', err);
+    }
+  }
+
   private handlePresenceSync(state: Record<string, UserPresence[]>): void {
     this.onlineUsers.clear();
     Object.keys(state).forEach(userId => {
@@ -467,6 +636,12 @@ class RealtimeManager {
     // Clear all timeouts
     this.typingTimeouts.forEach(timeout => clearTimeout(timeout));
     this.typingTimeouts.clear();
+
+    // Clear poll interval
+    if (this.pollInterval) {
+      clearInterval(this.pollInterval);
+      this.pollInterval = null;
+    }
 
     // Unsubscribe from all channels
     for (const [name, channel] of this.channels) {

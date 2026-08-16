@@ -19,6 +19,10 @@ Wardrobe.AI es una plataforma de moda impulsada por IA que permite a los usuario
 - **No utilizar funciones nativas del navegador como `alert()` o `confirm()`. Utilizar siempre modales HTML/React o divs en la interfaz.**
 - Documentar cambios significativos aquí o en archivos dedicados dentro de `./Obsidian`.
 
+## Reglas de Agente (Antigravity)
+- **Registro de Memoria (Bitácora Obligatoria)**: NUNCA asumas cosas a ciegas que puedan romper el código existente. Tienes prohibido sobreescribir o "cargarte" lógica sin apuntar lo que haces. Cuando hagas cambios complejos, repasa siempre qué has hecho y asegúrate de probar su impacto colateral. Usa tu propia memoria para garantizar la estabilidad.
+
+
 ## Onboarding
 - El flujo de inicio rápido para nuevos usuarios está en `/onboarding/preferences` y consta de 3 pasos para optimizar la retención:
   1. **Edad:** Rango de edad del usuario (`age_range`).

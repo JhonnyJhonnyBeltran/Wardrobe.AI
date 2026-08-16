@@ -34,6 +34,36 @@ export function UserProvider({ children }: { children: ReactNode }) {
   
   const userIdRef = useRef<string | null>(null);
 
+  // Instant Hydration from localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cachedUser = localStorage.getItem('wardrobe_user_profile');
+        if (cachedUser) {
+          const parsed = JSON.parse(cachedUser);
+          if (parsed.createdAt) parsed.createdAt = new Date(parsed.createdAt);
+          setUser(parsed);
+          userIdRef.current = parsed.id;
+          setIsLoading(false);
+          console.log('[UserStore] Instantly hydrated user from cache');
+        }
+      } catch (e) {
+        console.error('[UserStore] Failed to parse cached user', e);
+      }
+    }
+  }, []);
+
+  // Sync user state to localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (user) {
+        localStorage.setItem('wardrobe_user_profile', JSON.stringify(user));
+      }
+      // We removed the aggressive `else if (!isLoading)` cache clear here.
+      // Cache is now ONLY cleared explicitly on SIGNED_OUT to preserve sessions.
+    }
+  }, [user, isLoading]);
+
   // Fetch full user profile from DB (no arbitrary timeouts)
   const fetchUserProfile = useCallback(async (authUser: SupabaseUser) => {
     try {
@@ -135,13 +165,16 @@ export function UserProvider({ children }: { children: ReactNode }) {
       if (isNewUser || event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
         await fetchUserProfile(session.user);
       }
-    } else if (event === 'SIGNED_OUT' || event === 'INITIAL_SESSION') {
-      // No session and event is explicitly telling us we are out
-      userIdRef.current = null;
-      setUser(null);
+    } else {
+      // If there is no session (whether SIGNED_OUT, INITIAL_SESSION, or failed TOKEN_REFRESHED)
+      // we must ensure the app doesn't get stuck loading forever.
       setIsLoading(false);
       
-      if (event === 'SIGNED_OUT') {
+      // If we got SIGNED_OUT, force a refresh and clear state completely
+      if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+        userIdRef.current = null;
+        setUser(null);
+        if (typeof window !== 'undefined') localStorage.removeItem('wardrobe_user_profile');
         router.refresh();
       }
     }
@@ -160,7 +193,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
     // Fallback: Just in case INITIAL_SESSION fails to fire due to a bug in Supabase client
     const fallbackTimer = setTimeout(() => {
-      if (isMounted && isLoading) {
+      if (isMounted) {
         console.warn('[UserStore] Auth listener fallback timeout. Forcing loading false.');
         setIsLoading(false);
       }
@@ -171,7 +204,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       subscription.unsubscribe();
       clearTimeout(fallbackTimer);
     };
-  }, [handleSession, isLoading]);
+  }, [handleSession]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {

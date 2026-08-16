@@ -12,7 +12,7 @@ import { supabase } from '@/lib/supabase/client';
 import * as followService from '@/lib/services/followService';
 import OutfitCard from '@/components/OutfitCard';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 
 import {
@@ -58,6 +58,10 @@ export default function PublicProfilePage() {
   const [isBlocking, setIsBlocking] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [outfits, setOutfits] = useState<any[]>([]);
+
+  const handleOutfitClick = useCallback((outfit: any) => {
+    router.push(`/outfit/${outfit.id}`);
+  }, [router]);
   // isMutual removed as outfits are now public
 
   // Stats
@@ -480,7 +484,7 @@ export default function PublicProfilePage() {
         </div>
 
         {/* Content Grid - Exact Style */}
-        <div className="min-h-[40vh]">
+        <div className="min-h-[40vh] relative z-0 hover:z-40">
           <AnimatePresence mode="wait">
             {activeTab === 'posts' ? (
               <motion.div
@@ -504,7 +508,7 @@ export default function PublicProfilePage() {
                       <Link
                         key={post.id}
                         href={`/post/${post.id}`}
-                        className="aspect-square bg-[var(--background-secondary)] relative block z-0 transition-all duration-300 hover:scale-[1.05] hover:z-10 hover:shadow-xl hover:rounded-md"
+                        className="aspect-square bg-[var(--background-secondary)] relative block z-0 transition-all duration-300 hover:scale-[1.05] hover:z-40 hover:shadow-xl hover:rounded-md"
                       >
                         {post.image_url ? (
                           <img src={post.image_url} alt="Post" className="w-full h-full object-cover" />
@@ -540,7 +544,7 @@ export default function PublicProfilePage() {
                         key={outfit.id}
                         outfit={outfit}
                         index={0}
-                        onClick={() => router.push(`/outfit/${outfit.id}`)}
+                        onClick={handleOutfitClick}
                       />
                     ))}
                   </div>

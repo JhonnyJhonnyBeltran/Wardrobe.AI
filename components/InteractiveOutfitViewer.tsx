@@ -13,7 +13,7 @@ interface InteractiveOutfitViewerProps {
     disableInteraction?: boolean;
 }
 
-export default function InteractiveOutfitViewer({ outfit, onItemClick, className = '', isMobileSticker = false, selectedItemId, disableInteraction = false }: InteractiveOutfitViewerProps) {
+const InteractiveOutfitViewer = ({ outfit, onItemClick, className = '', isMobileSticker = false, selectedItemId, disableInteraction = false }: InteractiveOutfitViewerProps) => {
     const [hoveredItemId, setHoveredItemId] = useState<string | null>(null);
     const [isMobile, setIsMobile] = useState(false);
 
@@ -147,4 +147,6 @@ export default function InteractiveOutfitViewer({ outfit, onItemClick, className
             })}
         </div>
     );
-}
+};
+
+export default React.memo(InteractiveOutfitViewer);

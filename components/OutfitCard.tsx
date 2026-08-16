@@ -13,7 +13,7 @@ import type { Outfit } from '@/types/outfit';
 interface OutfitCardProps {
     outfit: Outfit;
     isLocked?: boolean;
-    onClick?: () => void;
+    onClick?: (outfit: Outfit) => void;
     onEdit?: (outfit: Outfit) => void;
     onShare?: (outfit: Outfit) => void;
     onDelete?: (outfitId: string) => void;
@@ -43,9 +43,10 @@ const styleConfig: Record<string, { icon: React.ReactNode; gradient: string }> =
     'Party Ready': { icon: <PartyPopper className="w-3 h-3" />, gradient: 'from-violet-400 to-purple-500' },
 };
 
+import { memo } from 'react';
 import { Edit2, Trash2, Share2, Send } from 'lucide-react';
 
-export default function OutfitCard({ outfit, isLocked = false, onClick, onEdit, onDelete, onShare, onToggleFavorite, onToggleVisibility, index = 0 }: OutfitCardProps) {
+const OutfitCard = ({ outfit, isLocked = false, onClick, onEdit, onDelete, onShare, onToggleFavorite, onToggleVisibility, index = 0 }: OutfitCardProps) => {
     const styleKey = outfit.occasion || outfit.style || 'everyday';
     const config = styleConfig[styleKey] || { icon: <Layers className="w-3 h-3" />, gradient: 'from-pink-400 to-rose-500' };
 
@@ -76,7 +77,7 @@ export default function OutfitCard({ outfit, isLocked = false, onClick, onEdit, 
                 }`}
         >
             {/* Clickable Area */}
-            <div onClick={!isLocked ? onClick : undefined} className="cursor-pointer">
+            <div onClick={!isLocked && onClick ? () => onClick(outfit) : undefined} className="cursor-pointer">
                 {/* Outfit Preview */}
                 <div
                     className={`relative w-full aspect-[4/5] bg-[#f8f9fa] dark:bg-[#111] overflow-hidden ${isLocked ? 'blur-sm' : ''
@@ -245,4 +246,6 @@ export default function OutfitCard({ outfit, isLocked = false, onClick, onEdit, 
             }
         </motion.div >
     );
-}
+};
+
+export default memo(OutfitCard);
