@@ -73,21 +73,19 @@ export default function SettingsPage() {
                 'sporty': 'Deportivo'
             };
 
-            if (validUuids.length > 0) {
-                try {
-                    const { data, error } = await supabase
-                        .from('style_options')
-                        .select('id, name')
-                        .in('id', validUuids);
-                    
-                    if (data && !error) {
-                        data.forEach((style: {id: string; name: string}) => {
-                            map[style.id] = style.name;
-                        });
-                    }
-                } catch (err) {
-                    console.error('Error fetching style names:', err);
+            try {
+                const { data, error } = await supabase
+                    .from('style_options')
+                    .select('id, slug, name');
+                
+                if (data && !error) {
+                    data.forEach((style: {id: string; slug?: string; name: string}) => {
+                        if (style.id) map[style.id] = style.name;
+                        if (style.slug) map[style.slug] = style.name;
+                    });
                 }
+            } catch (err) {
+                console.error('Error fetching style names:', err);
             }
             setStyleNames(map);
         };
@@ -435,10 +433,12 @@ export default function SettingsPage() {
                                             </div>
                                         </div>
                                     )}
-                                    {user.ageRange && (
+                                    {(user.age || user.ageRange) && (
                                         <div>
                                             <div className="text-xs text-[var(--foreground-tertiary)] mb-1">{t.profile.age}</div>
-                                            <div className="font-medium text-[var(--foreground)]">{user.ageRange}</div>
+                                            <div className="font-medium text-[var(--foreground)]">
+                                                {user.age ? `${user.age} años` : user.ageRange}
+                                            </div>
                                         </div>
                                     )}
                                     {(user.height || user.heightRange) && (

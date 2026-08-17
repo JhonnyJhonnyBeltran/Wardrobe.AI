@@ -20,7 +20,8 @@ export interface UserProfile {
   colorimetry?: string; // e.g., 'winter', 'summer'
 
   // Style Questionnaire Fields
-  ageRange?: '18-24' | '25-34' | '35-44' | '45-54' | '55+';
+  age?: number;
+  ageRange?: 'under_18' | '18_24' | '25_34' | '35_44' | '45_plus' | '18-24' | '25-34' | '35-44' | '45-54' | '55+';
   gender?: 'woman' | 'man' | 'other';
   height?: number; // in cm
   heightRange?: 'short' | 'medium' | 'tall';

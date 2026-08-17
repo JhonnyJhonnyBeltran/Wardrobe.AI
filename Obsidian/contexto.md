@@ -24,16 +24,19 @@ Wardrobe.AI es una plataforma de moda impulsada por IA que permite a los usuario
 
 
 ## Onboarding
-- El flujo de inicio rápido para nuevos usuarios está en `/onboarding/preferences` y consta de 3 pasos para optimizar la retención:
-  1. **Edad:** Rango de edad del usuario (`age_range`).
-  2. **Identidad:** Mujer, Hombre u Otro.
-  3. **Estilos:** Selección visual de `style_options`.
-- Al finalizar, se guarda en `profiles` actualizando `style_completed = true`.
+- El flujo de inicio rápido para nuevos usuarios está en `/onboarding/preferences` y consta de 3 pasos optimizados sin emojis ni textos informales:
+  1. **Edad:** Selector deslizable interactivo (`age` numérico con cálculo automático de `age_range`).
+  2. **Catálogo de Género:** Mujer, Hombre o Unisex/Mixto.
+  3. **Estilos:** Catálogo extenso de 32 estilos con fotografías editoriales de personas reales que se adaptan dinámicamente según el género elegido (fotos de hombres si eligió hombre, mujeres si eligió mujer, o combinación equilibrada si eligió unisex).
+- Al finalizar, se guarda en `profiles` actualizando `age`, `age_range`, `gender`, `preferred_styles`, `visual_style_preferences` y `style_completed = true`.
+- Script SQL para la base de datos en `sql/onboarding_styles_and_age.sql`.
 
 ## Motor de Recomendaciones (Search)
-- La pantalla de Búsqueda (`/search`) muestra por defecto los "posts populares".
-- Si el usuario ha seleccionado `preferredStyles` en su onboarding, la consulta utiliza `.overlaps('style_ids', user.preferredStyles)` para filtrar las publicaciones más afines a su estilo antes de ordenarlas por fecha y likes.
-- Se ha añadido la columna `style_ids TEXT[]` a las tablas de `clothing_items`, `outfits` y `posts` para poder enlazar estilos a las prendas.
+- La pantalla de Búsqueda (`/search`) muestra por defecto los posts exploratorios ordenados por un algoritmo de afinidad multicriterio:
+  - **Likes:** Ponderación base de popularidad.
+  - **Morfología y Colorimetría:** Puntuación extra si coincide con el perfil del usuario.
+  - **Afinidad de Estilos:** Coincidencia de etiquetas `style_ids` con `preferredStyles`.
+  - **Afinidad de Edad:** Puntuación adicional según la cercanía de edad entre el usuario que busca y el autor del post (`age` y `age_range`), priorizando publicaciones de personas en rangos de edad similares.
 
 ## Funciones Premium (Roadmap)
 - Existe una estrategia documentada para implementar un Asistente IA Personal como funcionalidad estrella. Ver [premium_ai_feature.md](./premium_ai_feature.md).

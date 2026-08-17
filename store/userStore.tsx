@@ -128,6 +128,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         colorimetry: styleSource.colorimetry,
 
         // Style Profile
+        age: styleSource.age,
         ageRange: styleSource.age_range,
         gender: styleSource.gender,
         height: styleSource.height,

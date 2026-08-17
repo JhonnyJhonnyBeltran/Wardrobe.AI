@@ -248,7 +248,9 @@ export default function SearchPage() {
                             username,
                             avatar_url,
                             morphology,
-                            colorimetry
+                            colorimetry,
+                            age,
+                            age_range
                         ),
                         outfits (
                             name,
@@ -269,6 +271,19 @@ export default function SearchPage() {
           .range(from, to);
 
         if (recentData) {
+          const getApproxAge = (p?: { age?: number; age_range?: string } | null): number | null => {
+            if (!p) return null;
+            if (typeof p.age === 'number' && p.age > 0) return p.age;
+            if (p.age_range === 'under_18') return 16;
+            if (p.age_range === '18_24' || p.age_range === '18-24') return 21;
+            if (p.age_range === '25_34' || p.age_range === '25-34') return 29;
+            if (p.age_range === '35_44' || p.age_range === '35-44') return 39;
+            if (p.age_range === '45_plus' || p.age_range === '45-54' || p.age_range === '55+') return 52;
+            return null;
+          };
+
+          const viewerAge = user?.age || (user?.ageRange ? getApproxAge({ age_range: user.ageRange }) : null);
+
           data = recentData.sort((a: any, b: any) => {
             let scoreA = 0;
             let scoreB = 0;
@@ -285,14 +300,33 @@ export default function SearchPage() {
             if (user?.colorimetry && a.profiles?.colorimetry === user.colorimetry) scoreA += 5;
             if (user?.colorimetry && b.profiles?.colorimetry === user.colorimetry) scoreB += 5;
 
-            // 4. Style match (exact overlap count could give more points)
+            // 4. Style match (overlap count gives points)
             if (user?.preferredStyles && a.style_ids) {
                 const overlapA = a.style_ids.filter((s: string) => user.preferredStyles!.includes(s)).length;
-                scoreA += overlapA * 2;
+                scoreA += overlapA * 3;
             }
             if (user?.preferredStyles && b.style_ids) {
                 const overlapB = b.style_ids.filter((s: string) => user.preferredStyles!.includes(s)).length;
-                scoreB += overlapB * 2;
+                scoreB += overlapB * 3;
+            }
+
+            // 5. Age match / affinity (similar age groups get higher recommendation scores)
+            if (viewerAge) {
+              const ageA = getApproxAge(a.profiles);
+              const ageB = getApproxAge(b.profiles);
+
+              if (ageA) {
+                const diffA = Math.abs(viewerAge - ageA);
+                if (diffA <= 3) scoreA += 6;
+                else if (diffA <= 6) scoreA += 4;
+                else if (diffA <= 10) scoreA += 2;
+              }
+              if (ageB) {
+                const diffB = Math.abs(viewerAge - ageB);
+                if (diffB <= 3) scoreB += 6;
+                else if (diffB <= 6) scoreB += 4;
+                else if (diffB <= 10) scoreB += 2;
+              }
             }
 
             return scoreB - scoreA;
