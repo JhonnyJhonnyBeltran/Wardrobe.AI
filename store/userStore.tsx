@@ -33,6 +33,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const [preferences, setPreferences] = useState<UserPreferences>({});
   
   const userIdRef = useRef<string | null>(null);
+  // Track if we had a cached user on startup — prevents false redirects to /auth
+  // when Supabase INITIAL_SESSION is slow or temporarily fails in production.
+  const hadCachedUserRef = useRef(false);
 
   // Instant Hydration from localStorage
   useEffect(() => {
@@ -44,6 +47,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
           if (parsed.createdAt) parsed.createdAt = new Date(parsed.createdAt);
           setUser(parsed);
           userIdRef.current = parsed.id;
+          hadCachedUserRef.current = true; // Mark that we had a cached session
           setIsLoading(false);
           console.log('[UserStore] Instantly hydrated user from cache');
         }
@@ -149,7 +153,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
       // Only fetch heavy DB profile on initial load or sign in
       const needsProfileFetch = isNewUser || event === 'INITIAL_SESSION' || event === 'SIGNED_IN';
       
-      if (needsProfileFetch) {
+      // Only show loading spinner if we don't already have user data (truly new user).
+      // This prevents the app from showing a spinner during SPA navigation
+      // or when the token refreshes silently in the background.
+      if (needsProfileFetch && isNewUser && !hadCachedUserRef.current) {
         setIsLoading(true);
       }
 
@@ -188,14 +195,14 @@ export function UserProvider({ children }: { children: ReactNode }) {
         if (event !== 'INITIAL_SESSION') {
           router.refresh();
         } else {
-          // Si estamos arrancando la app y NO hay sesión en Supabase (ej: cookie borrada/expirada),
-          // pero teníamos un usuario cacheado en localStorage, la UI se queda colgada mostrando
-          // las páginas pero sin cargar datos por el fallo de RLS. Forzamos redirección a /login si no estamos ya en rutas publicas.
-          if (typeof window !== 'undefined') {
+          // Only redirect on INITIAL_SESSION with no session if there was NO cached user.
+          // If there WAS a cached user, it means the token might be refreshing — don't kick
+          // the user out. The middleware + Supabase client will handle real expired sessions.
+          if (typeof window !== 'undefined' && !hadCachedUserRef.current) {
             const publicRoutes = ['/login', '/', '/terms', '/privacy'];
             const isPublicRoute = publicRoutes.includes(window.location.pathname) || window.location.pathname.startsWith('/auth') || window.location.pathname.startsWith('/onboarding');
             if (!isPublicRoute) {
-              router.push('/login');
+              router.push('/auth');
             }
           }
         }

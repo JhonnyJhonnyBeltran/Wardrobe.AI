@@ -617,7 +617,7 @@ export default function CreateOutfitPage() {
                                                             }`}
                                                     >
                                                         {item.favorite && (
-                                                            <div className="absolute top-2 right-2 z-10 text-[var(--brand-pink)] drop-shadow-md">
+                                                            <div className="absolute top-2 right-3 z-10 text-[var(--brand-pink)] drop-shadow-md">
                                                                 <Heart className="w-4 h-4 fill-current" />
                                                             </div>
                                                         )}
@@ -643,55 +643,7 @@ export default function CreateOutfitPage() {
                                     </div>
                                 </div>
 
-                                {/* Selected Items Summary */}
-                                {totalSelected > 0 && (
-                                    <div className="fixed bottom-[96px] md:bottom-28 left-1/2 -translate-x-1/2 px-4 py-2 bg-[var(--background)]/95 backdrop-blur-md border border-[var(--border-color)] rounded-full z-30 shadow-xl max-w-[90vw] overflow-hidden">
-                                        <div className="flex gap-2 overflow-x-auto scrollbar-hide items-center">
-                                            {flatItems.map((item, idx) => (
-                                                <div key={`${item.id}-${idx}`} className="relative w-10 h-10 rounded-full bg-[var(--background-secondary)] border border-[var(--border-color)] flex-shrink-0 overflow-hidden group">
-                                                    <img src={item.imageUrl} alt={item.name} className="w-full h-full object-contain p-1" />
-                                                    <button 
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleRemoveItem(item.id);
-                                                        }}
-                                                        className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                                                    >
-                                                        <X className="w-3 h-3 text-white" />
-                                                    </button>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Next Button */}
-                                <AnimatePresence>
-                                    {!isEmpty && (
-                                        <motion.div
-                                            initial={{ opacity: 0, y: 50 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            exit={{ opacity: 0, y: 50 }}
-                                            className="fixed bottom-[16px] md:bottom-8 left-1/2 -translate-x-1/2 z-40 w-auto min-w-[200px]"
-                                        >
-                                            <Button
-                                                onClick={() => setMobileStep('preview')}
-                                                glow={true}
-                                                className="w-full rounded-full py-4 px-8 text-base font-semibold overflow-hidden shadow-2xl"
-                                            >
-                                                <motion.span
-                                                    key={totalSelected}
-                                                    initial={{ y: -20, opacity: 0 }}
-                                                    animate={{ y: 0, opacity: 1 }}
-                                                    className="inline-block"
-                                                >
-                                                    Siguiente ({totalSelected})
-                                                </motion.span>
-                                                <ArrowRight className="w-5 h-5 ml-2" />
-                                            </Button>
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
+                                {/* Selected Items Summary and Next Button moved to global layout */}
                             </motion.div>
                         )}
 
@@ -748,10 +700,11 @@ export default function CreateOutfitPage() {
                                         <p className="text-[11px] text-[var(--foreground-secondary)] mt-0.5">Visible para todos en tu perfil</p>
                                     </div>
                                     <button 
+                                        type="button"
                                         onClick={() => setIsPublic(!isPublic)}
-                                        className={`w-12 h-6 rounded-full transition-colors relative ${isPublic ? 'bg-[var(--brand-pink)]' : 'bg-gray-300 dark:bg-gray-700'}`}
+                                        className={`relative inline-flex h-6 w-12 items-center rounded-full transition-colors focus:outline-none ${isPublic ? 'bg-[var(--brand-pink)]' : 'bg-gray-300 dark:bg-gray-700'}`}
                                     >
-                                        <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform shadow-sm ${isPublic ? 'translate-x-6 left-auto right-0.5' : 'translate-x-0.5 left-0'}`} />
+                                        <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform ${isPublic ? 'translate-x-6' : 'translate-x-1'}`} />
                                     </button>
                                 </div>
 
@@ -850,7 +803,7 @@ export default function CreateOutfitPage() {
                                                     }`}
                                             >
                                                 {item.favorite && (
-                                                    <div className="absolute top-2 right-2 z-10 text-[var(--brand-pink)] drop-shadow-md">
+                                                    <div className="absolute top-2 right-3 z-10 text-[var(--brand-pink)] drop-shadow-md">
                                                         <Heart className="w-4 h-4 fill-current" />
                                                     </div>
                                                 )}
@@ -923,10 +876,11 @@ export default function CreateOutfitPage() {
                                 <p className="text-[11px] text-[var(--foreground-secondary)] mt-0.5">Visible para todos en tu perfil</p>
                             </div>
                             <button 
+                                type="button"
                                 onClick={() => setIsPublic(!isPublic)}
-                                className={`w-12 h-6 rounded-full transition-colors relative ${isPublic ? 'bg-[var(--brand-pink)]' : 'bg-gray-300 dark:bg-gray-700'}`}
+                                className={`relative inline-flex h-6 w-12 items-center rounded-full transition-colors focus:outline-none ${isPublic ? 'bg-[var(--brand-pink)]' : 'bg-gray-300 dark:bg-gray-700'}`}
                             >
-                                <div className={`w-5 h-5 bg-white rounded-full absolute top-0.5 transition-transform shadow-sm ${isPublic ? 'translate-x-6 left-auto right-0.5' : 'translate-x-0.5 left-0'}`} />
+                                <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform ${isPublic ? 'translate-x-6' : 'translate-x-1'}`} />
                             </button>
                         </div>
 
@@ -972,6 +926,57 @@ export default function CreateOutfitPage() {
                 </div>
 
             </main>
+
+            {/* Global Floating Actions (Mobile & Desktop) */}
+            <AnimatePresence>
+                {totalSelected > 0 && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 50, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 50, scale: 0.95 }}
+                        className="fixed bottom-[24px] md:bottom-[40px] left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-3 w-auto max-w-[90vw]"
+                    >
+                        {/* Selected Items Summary Pill */}
+                        <div className="flex gap-2 overflow-x-auto scrollbar-hide items-center px-4 py-3 bg-[var(--background)]/80 backdrop-blur-xl border border-[var(--border-color)] rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:shadow-[0_8px_30px_rgba(255,255,255,0.05)] w-full justify-center">
+                            {flatItems.map((item, idx) => (
+                                <div key={`${item.id}-${idx}`} className="relative w-10 h-10 rounded-full bg-[var(--background-secondary)] border border-[var(--border-color)] flex-shrink-0 overflow-hidden group hover:scale-110 transition-transform">
+                                    <img src={item.imageUrl} alt={item.name} className="w-full h-full object-contain p-1" />
+                                    <button 
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleRemoveItem(item.id);
+                                        }}
+                                        className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                    >
+                                        <X className="w-4 h-4 text-white" />
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Next Button Pill (Mobile Only) */}
+                        {mobileStep === 'selection' && (
+                            <div className="lg:hidden w-full">
+                                <Button
+                                    onClick={() => setMobileStep('preview')}
+                                    glow={true}
+                                    className="w-full rounded-full py-3.5 px-8 text-base font-semibold overflow-hidden shadow-2xl"
+                                >
+                                    <motion.span
+                                        key={totalSelected}
+                                        initial={{ y: -20, opacity: 0 }}
+                                        animate={{ y: 0, opacity: 1 }}
+                                        className="inline-block"
+                                    >
+                                        Siguiente ({totalSelected})
+                                    </motion.span>
+                                    <ArrowRight className="w-5 h-5 ml-2" />
+                                </Button>
+                            </div>
+                        )}
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Success Modal */}
             <AnimatePresence>

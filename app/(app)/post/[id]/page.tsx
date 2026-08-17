@@ -718,7 +718,8 @@ export default function PostDetailPage() {
                         <div className="grid grid-cols-2 gap-3">
                             {/* @ts-ignore */}
                             {currentSlide.outfit?.outfit_items.map((item: any) => {
-                                const clothing = item.clothing_items;
+                                const clothingRaw = item.clothing_items || item.clothing_item;
+                                const clothing = Array.isArray(clothingRaw) ? clothingRaw[0] : clothingRaw;
                                 if (!clothing) return null;
                                 return (
                                     <ClothingItem 

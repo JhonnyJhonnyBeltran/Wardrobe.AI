@@ -44,3 +44,17 @@ Wardrobe.AI es una plataforma de moda impulsada por IA que permite a los usuario
 - **Verificación de Google Cloud**: 
   - Registrar el dominio `klozet.es` en Google Search Console.
   - Solicitar y pasar el proceso de Verificación de Aplicación OAuth para eliminar la pantalla de "App no verificada" (Requiere la Landing Page y páginas legales).
+
+## Arquitectura de Sesión y Auth (v2 - Agosto 2026)
+- **Singleton Supabase Client** (`lib/supabase/client.ts`): El cliente se persiste en `window._klozetSupabaseClient` para evitar múltiples instancias GoTrue. En SSR se crea un cliente temporal (sin singleton).
+- **UserStore** (`store/userStore.tsx`): 
+  - Hidratación instantánea desde `localStorage` (`wardrobe_user_profile`) → `isLoading = false` inmediato si hay caché.
+  - `hadCachedUserRef` controla si había sesión en caché para evitar redirects falsos.
+  - `isLoading` sólo se activa en usuarios genuinamente nuevos (sin caché y sin `userIdRef`).
+  - El perfil se obtiene de `profiles` (principal) con fallback a `users` (legacy) y fallback por email.
+- **AuthGuard** (`components/AuthGuard.tsx`):
+  - Si `user` existe, renderiza `{children}` inmediatamente.
+  - Si no hay `user` y había caché: grace period de 3 segundos antes de redirigir (da tiempo al token refresh).
+  - Si no hay `user` y no había caché: redirige a `/auth` inmediatamente.
+- **Onboarding Google**: El callback `/auth/callback/route.ts` redirige a `/onboarding/username` si el perfil no tiene `username`. La página `/onboarding/username` verifica disponibilidad en tiempo real.
+- **Username check en /profile/settings/personal**: Verificación debounced con indicador visual (verde/rojo). No permite guardar si el username está cogido.

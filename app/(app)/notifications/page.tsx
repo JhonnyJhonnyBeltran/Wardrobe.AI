@@ -14,12 +14,6 @@ import { useRealtimeStore } from '@/store/realtimeStore';
 
 export default function NotificationsPage() {
   const router = useRouter();
-  const markActivityAsViewed = useRealtimeStore(state => state.markActivityAsViewed);
-
-  useEffect(() => {
-    // Clear notifications badge when entering the page
-    markActivityAsViewed();
-  }, [markActivityAsViewed]);
 
   const swipeHandlers = useSwipe({
     onSwipeRight: () => router.push('/closet'),

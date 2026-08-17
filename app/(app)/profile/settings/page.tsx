@@ -246,7 +246,7 @@ export default function SettingsPage() {
 
                     {/* Datos personales - Contexto §4F: Avatar, Nombre, Bio, Usuario */}
                     <Link href="/profile/settings/personal">
-                        <Card className="p-5 mb-4 cursor-pointer hover:bg-[var(--card-hover)] transition-colors">
+                        <Card className="p-5 mb-4 cursor-pointer transition-colors">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-xl bg-[var(--brand-pink)]/10 flex items-center justify-center">
                                     <Edit className="w-5 h-5 text-[var(--brand-pink)]" />

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, UserPlus, X, BellOff } from 'lucide-react';
+import { X } from 'lucide-react';
 import { useUser } from '@/store/userStore';
 import { useRealtimeStore } from '@/store/realtimeStore';
 import Image from 'next/image';
@@ -49,6 +49,8 @@ export default function NotificationList({ compact = false, onClose }: Notificat
     const pageRef = useRef(0);
     const NOTIFS_PER_PAGE = 10;
     const observerElement = useRef<HTMLDivElement | null>(null);
+    // Use a ref to ensure we only capture/mark once on mount, regardless of re-renders
+    const hasMarkedViewedRef = useRef(false);
 
     // Merge fetched and realtime notifications
     const notifications = Array.from(new Map(
@@ -82,11 +84,22 @@ export default function NotificationList({ compact = false, onClose }: Notificat
                 setFollowMap(simplifiedMap);
             });
         }
-        if (typeof window !== 'undefined') {
+        // IMPORTANT: Only capture last_viewed_activity once per mount.
+        // If we do this on every user change, we race with re-renders caused by profile
+        // hydration and end up overwriting the timestamp with "now" before notifications are shown.
+        if (!hasMarkedViewedRef.current && typeof window !== 'undefined') {
+            hasMarkedViewedRef.current = true;
             const lv = localStorage.getItem('last_viewed_activity');
-            if (lv) setLastViewedAt(new Date(lv).getTime());
+            if (lv) {
+                setLastViewedAt(new Date(lv).getTime());
+            }
+            // Mark as viewed AFTER capturing the old timestamp into state.
+            // Use a small delay so the state is committed before we update localStorage.
+            setTimeout(() => {
+                markActivityAsViewed(new Date().toISOString());
+            }, 100);
         }
-    }, [user?.id]);
+    }, [user?.id, markActivityAsViewed]);
 
 
     const fetchNotifications = async (isLoadMore = false) => {
@@ -267,11 +280,6 @@ export default function NotificationList({ compact = false, onClose }: Notificat
             } else {
                 const sortedNotifications = newFetched.sort((a, b) => b.timestamp - a.timestamp);
                 setFetchedNotifications(sortedNotifications);
-                
-                const newestTimestamp = sortedNotifications.length > 0 
-                    ? new Date(sortedNotifications[0].timestamp + 1000).toISOString() 
-                    : undefined;
-                markActivityAsViewed(newestTimestamp);
             }
 
             setHasMore(newFetched.length > 0);
@@ -367,15 +375,7 @@ export default function NotificationList({ compact = false, onClose }: Notificat
     }
 
     if (notifications.length === 0) {
-        return (
-            <div className="flex-1 flex flex-col items-center justify-center text-center p-8 gap-4 min-h-[50vh]">
-                <div className="w-16 h-16 rounded-full bg-[var(--background-secondary)] flex items-center justify-center text-[var(--foreground-tertiary)]">
-                    <BellOff className="w-8 h-8 opacity-50" />
-                </div>
-                <p className="text-lg font-medium text-[var(--foreground)]">Estás al día</p>
-                <p className="text-sm text-[var(--foreground-tertiary)]">No tienes notificaciones nuevas</p>
-            </div>
-        );
+        return null;
     }
 
     return (
