@@ -63,7 +63,7 @@ Wardrobe.AI es una plataforma de moda impulsada por IA que permite a los usuario
 - **Username check en /profile/settings/personal**: Verificación debounced con indicador visual (verde/rojo). No permite guardar si el username está cogido.
 
 ## Mejoras y Correcciones Generales (Agosto 2026)
-- **Detalle de Outfit (`/outfit/[id]`)**: Carga reforzada con doble fallback para `outfit_items` y `clothing_items`. Las prendas son interactivas y tocables tanto en el canvas como en la lista inferior, abriendo el modal de detalle de producto (`ProductModal`).
+- **Detalle de Outfit (`/outfit/[id]`)**: Consulta secuencial desacoplada (outfits -> outfit_items -> clothing_items) que previene el error HTTP 400 Bad Request de PostgREST por relaciones anidadas en schema cache. Las prendas son 100% interactivas en lienzo y lista inferior, cargando el modal de detalle (`ProductModal`).
 - **Feed y Notificaciones en Móvil**: Eliminada la animación de movimiento/shimmer del skeleton en móvil para evitar saltos y vibraciones visuales molestas.
 - **Likes en Búsqueda (`/search`)**: Consulta de likes del usuario sincronizada con Supabase para marcar con corazón rosa (`isLiked`) las publicaciones a las que el usuario ya dio like.
 - **Motor de Recomendaciones Dinámico por Likes (`/search`)**: Extrae en tiempo real los estilos de los últimos 30 posts a los que el usuario dio like y aplica un multiplicador de afinidad dinámica (+2.5 a +8 pts extra) que se suma a las preferencias del perfil (+3 pts), morfología (+5), colorimetría (+5) y edad (+2 a +6).
