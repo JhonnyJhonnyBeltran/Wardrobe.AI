@@ -1537,20 +1537,12 @@ select option:checked {
    ============================================ */
 
 .skeleton {
-  background: linear-gradient(90deg,
-      var(--gray-100) 0%,
-      var(--gray-200) 50%,
-      var(--gray-100) 100%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
+  background-color: var(--background-secondary);
   border-radius: var(--radius-md);
 }
 
 .dark .skeleton {
-  background: linear-gradient(90deg,
-      #1A1A1A 0%,
-      #262626 50%,
-      #1A1A1A 100%);
+  background-color: var(--background-secondary);
 }
 
 /* ============================================

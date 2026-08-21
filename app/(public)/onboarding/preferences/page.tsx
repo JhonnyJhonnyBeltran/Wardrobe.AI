@@ -487,7 +487,6 @@ export default function PreferencesPage() {
             router.push('/closet');
         } catch (err: any) {
             console.error('Error saving onboarding preferences:', err);
-            alert('Error guardando preferencias. Intenta de nuevo.');
             setIsSaving(false);
         }
     };

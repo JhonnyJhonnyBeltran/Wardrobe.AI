@@ -42,5 +42,4 @@ export { TypingIndicator, TypingIndicatorInline } from './TypingIndicator';
 
 // Message components
 export { MessageBadge, MessageDot, MessageBadgeWrapper } from './MessageBadge';
-export { ConversationItem } from './ConversationItem';
-export { default as MessageProvider } from './MessageProvider';
+export { default as DiscoveredStyleBanner } from './DiscoveredStyleBanner';

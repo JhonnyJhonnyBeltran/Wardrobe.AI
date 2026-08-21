@@ -282,12 +282,14 @@ export default function FeedPage() {
       <div className="px-3 pt-4 md:px-6">
         {
           loading ? (
-            <div className="masonry-grid">
-              {[...Array(12)].map((_, i) => (
-                <div key={i} className="break-inside-avoid mb-6">
-                  <div className="rounded-2xl overflow-hidden bg-[var(--background-secondary)] skeleton" style={{ height: [180, 220, 260, 200, 240][i % 5] }} />
-                </div>
-              ))}
+            <div className="hidden md:block">
+              <div className="masonry-grid">
+                {[...Array(8)].map((_, i) => (
+                  <div key={i} className="break-inside-avoid mb-6">
+                    <div className="rounded-2xl overflow-hidden bg-[var(--background-secondary)]" style={{ height: [180, 220, 260, 200, 240][i % 5] }} />
+                  </div>
+                ))}
+              </div>
             </div>
           ) : posts.length === 0 ? (
             <EmptyState

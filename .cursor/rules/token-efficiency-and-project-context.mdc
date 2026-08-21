@@ -1,0 +1,54 @@
+---
+description: Minimizar tokens leyendo la documentación del proyecto antes de actuar
+alwaysApply: true
+---
+
+# Eficiencia de tokens y contexto del proyecto
+
+## Antes de implementar
+
+1. **Consulta la documentación relevante** del proyecto (no adivines arquitectura ni convenciones).
+2. **Lee solo lo que aplique** a la tarea; no cargues todo el repo de golpe.
+3. **Amplía el contexto** cuando la tarea toque un sistema documentado, haya planes activos o falte información para decidir bien.
+
+## Índice de documentación (Wardrobe.AI)
+
+| Área | Archivo |
+|------|---------|
+| Pipeline de moda | `docs/FASHION_DATA_PIPELINE.md` |
+| Scraping | `docs/SCRAPING_SYSTEM.md` |
+| Procesamiento de imágenes | `docs/IMAGE_PROCESSING_FRONTEND.md` |
+| Generador de outfits | `docs/OUTFIT_GENERATOR.md` |
+| Perfil de estilo | `docs/USER_STYLE_PROFILE.md` |
+| Perfil social | `docs/SOCIAL_PROFILE_UPDATE.md` |
+| Optimización general | `docs/OPTIMIZATION_GUIDE.md` |
+| Build time | `docs/BUILD_TIME_OPTIMIZATION.md` |
+| Planes activos | `plans/*.md` |
+| Fashion bot | `services/fashion-bot/README.md` |
+| UI / diseño | `.agents/skills/ui-ux-pro-max-skill/stack/docs/STACK.md` |
+
+## Reglas de ahorro de tokens
+
+- **Buscar antes de leer**: usa `Grep` / `Glob` para localizar archivos; abre solo los necesarios.
+- **Lecturas acotadas**: en archivos grandes, usa `offset`/`limit`; evita volcar logs o diffs enormes.
+- **No repetir contexto**: si un doc ya está en la conversación, no lo releas salvo que haya cambiado.
+- **Excluir ruido**: no leas `.agents/skills/**` salvo trabajo de UI/diseño; ignora `node_modules`, `.git`, builds.
+- **Respuestas concisas**: código mínimo, sin repetir lo que el usuario ya sabe; cita con `startLine:endLine:path`.
+- **Paralelizar**: agrupa lecturas/búsquedas independientes en una sola ronda de herramientas.
+
+## Cuándo ampliar contexto
+
+Amplía (lee más docs o más código) si:
+
+- La tarea cruza módulos (p. ej. scraping + pipeline + frontend).
+- El plan en `plans/` menciona el archivo o feature que vas a tocar.
+- Encuentras convenciones no documentadas en código vecino — lee 1–2 archivos de referencia, no todo el directorio.
+- Un cambio puede romper optimizaciones descritas en `docs/OPTIMIZATION_GUIDE.md` o `docs/BUILD_TIME_OPTIMIZATION.md`.
+
+## Flujo recomendado
+
+```
+Tarea → identificar docs del índice → Grep en código → leer docs + archivos clave → implementar
+```
+
+Si tras leer la doc relevante sigue faltando contexto, amplía de forma incremental hasta poder actuar con certeza.

@@ -204,7 +204,6 @@ export default function SearchPage() {
             } as any);
 
           setPendingRequestIds(prev => new Set(prev).add(targetUserId));
-          alert('Solicitud de seguimiento enviada. El usuario debe aceptar tu solicitud.');
         } else {
           // Auto-follow public profile
           await supabase
@@ -263,8 +262,31 @@ export default function SearchPage() {
                         likes (count)
                     `);
 
-        // We removed the strict .overlaps filter so the feed isn't empty if styles don't perfectly match.
-        // The client-side sorting algorithm will still prioritize matches!
+        // Dynamic Like Style Affinity: extract styles from posts the user recently liked
+        let recentLikedStylesMap: Record<string, number> = {};
+        if (user?.id) {
+          try {
+            const { data: recentLikesData } = await supabase
+              .from('likes')
+              .select('post_id, posts (style_ids)')
+              .eq('user_id', user.id)
+              .order('created_at', { ascending: false })
+              .limit(30);
+
+            if (recentLikesData && recentLikesData.length > 0) {
+              recentLikesData.forEach((item: any) => {
+                const sIds = item.posts?.style_ids;
+                if (Array.isArray(sIds)) {
+                  sIds.forEach((s: string) => {
+                    recentLikedStylesMap[s] = (recentLikedStylesMap[s] || 0) + 1;
+                  });
+                }
+              });
+            }
+          } catch (e) {
+            console.warn('Could not fetch dynamic like style affinities:', e);
+          }
+        }
 
         const { data: recentData } = await postsQuery
           .order('created_at', { ascending: false })
@@ -300,7 +322,7 @@ export default function SearchPage() {
             if (user?.colorimetry && a.profiles?.colorimetry === user.colorimetry) scoreA += 5;
             if (user?.colorimetry && b.profiles?.colorimetry === user.colorimetry) scoreB += 5;
 
-            // 4. Style match (overlap count gives points)
+            // 4. Style match (onboarding preferences)
             if (user?.preferredStyles && a.style_ids) {
                 const overlapA = a.style_ids.filter((s: string) => user.preferredStyles!.includes(s)).length;
                 scoreA += overlapA * 3;
@@ -308,6 +330,22 @@ export default function SearchPage() {
             if (user?.preferredStyles && b.style_ids) {
                 const overlapB = b.style_ids.filter((s: string) => user.preferredStyles!.includes(s)).length;
                 scoreB += overlapB * 3;
+            }
+
+            // 4.1 Dynamic Like Style Affinity (Styles from recently liked posts)
+            if (a.style_ids && Object.keys(recentLikedStylesMap).length > 0) {
+              a.style_ids.forEach((s: string) => {
+                if (recentLikedStylesMap[s]) {
+                  scoreA += Math.min(recentLikedStylesMap[s] * 2.5, 8);
+                }
+              });
+            }
+            if (b.style_ids && Object.keys(recentLikedStylesMap).length > 0) {
+              b.style_ids.forEach((s: string) => {
+                if (recentLikedStylesMap[s]) {
+                  scoreB += Math.min(recentLikedStylesMap[s] * 2.5, 8);
+                }
+              });
             }
 
             // 5. Age match / affinity (similar age groups get higher recommendation scores)
@@ -342,6 +380,7 @@ export default function SearchPage() {
             image_url,
             created_at,
             user_id,
+            style_ids,
             outfits (
                 name,
                 outfit_items (
@@ -374,6 +413,24 @@ export default function SearchPage() {
             profilesData.forEach((p: any) => {
               profilesMap[p.id] = p;
             });
+          }
+        }
+
+        // Check which posts the current user has liked and saved
+        let likedPostIds = new Set<string>();
+        let savedPostIds = new Set<string>();
+
+        if (user?.id) {
+          const postIds = data.map((p: any) => p.id);
+          const [likesRes, savesRes] = await Promise.all([
+            supabase.from('likes' as any).select('post_id').eq('user_id', user.id).in('post_id', postIds),
+            supabase.from('saves' as any).select('post_id').eq('user_id', user.id).in('post_id', postIds)
+          ]);
+          if (likesRes.data) {
+            (likesRes.data as any[]).forEach((l: any) => likedPostIds.add(l.post_id));
+          }
+          if (savesRes.data) {
+            (savesRes.data as any[]).forEach((s: any) => savedPostIds.add(s.post_id));
           }
         }
 
@@ -410,10 +467,11 @@ export default function SearchPage() {
               avatar: authorAvatar
             },
             likes: likesCount,
-            comments: 0, // Placeholder
-            isLiked: false, // Placeholder
+            comments: 0,
+            isLiked: likedPostIds.has(item.id),
+            isSaved: savedPostIds.has(item.id),
             user_id: item.user_id,
-            description: item.caption // Added description
+            description: item.caption
           };
         });
 

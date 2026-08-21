@@ -22,8 +22,8 @@ export interface Post {
     comments: number;
     isLiked?: boolean;
     isSaved?: boolean;
-    description?: string; // Add description for text-only posts
-    isSuggested?: boolean; // Indicate if post is a recommendation
+    description?: string;
+    isSuggested?: boolean;
 }
 
 interface PostCardProps {
@@ -32,10 +32,6 @@ interface PostCardProps {
     hideSaveButton?: boolean;
 }
 
-/**
- * PostCard - Minimalista estilo Pinterest via User Request.
- * Sin botones visibles. Clic navega al detalle.
- */
 export default function PostCard({ post, onClick, hideSaveButton = false }: PostCardProps) {
     const [isHovered, setIsHovered] = useState(false);
     const [isSavedState, setIsSavedState] = useState(post.isSaved || false);
@@ -55,7 +51,7 @@ export default function PostCard({ post, onClick, hideSaveButton = false }: Post
         longPressTimer.current = setTimeout(() => {
             haptics.heavy();
             setIsLongPressing(true);
-        }, 500); // 500ms to trigger long press
+        }, 500);
     };
 
     const handleTouchEnd = () => {
@@ -84,14 +80,13 @@ export default function PostCard({ post, onClick, hideSaveButton = false }: Post
         e.stopPropagation();
 
         if (isLongPressing) {
-            setIsLongPressing(false); // Close overlay after saving in mobile
+            setIsLongPressing(false);
         }
 
         const previousState = isSavedState;
         setIsSavedState(!previousState);
 
         if (!previousState) {
-            // Optimistic save
             showSaveToast({
                 message: "Guardado",
                 actionLabel: "Añadir a carpeta",
@@ -111,7 +106,6 @@ export default function PostCard({ post, onClick, hideSaveButton = false }: Post
                 setIsSavedState(previousState);
             }
         } else {
-            // Unsave
             try {
                 const res = await fetch(`/api/saves?post_id=${post.id}`, { method: 'DELETE' });
                 if (!res.ok) throw new Error('Unsave failed');
@@ -127,9 +121,7 @@ export default function PostCard({ post, onClick, hideSaveButton = false }: Post
     if (!post.imageUrl) {
         return (
             <div onClick={handleNavigation} className="block w-full h-full outline-none">
-                <div
-                    className="group relative rounded-2xl overflow-hidden bg-[var(--card-bg)] shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer p-6 flex flex-col gap-4 border border-[var(--border-color)] h-full w-full"
-                >
+                <div className="group relative rounded-2xl overflow-hidden bg-[var(--card-bg)] shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer p-6 flex flex-col gap-4 border border-[var(--border-color)] h-full w-full">
                     <div className="flex items-center gap-2">
                         <Avatar src={post.author.avatar || null} alt={post.author.name} size="sm" />
                         <span className="text-xs font-medium text-[var(--foreground-secondary)]">{post.author.name}</span>
@@ -138,8 +130,8 @@ export default function PostCard({ post, onClick, hideSaveButton = false }: Post
                         {post.title || post.description}
                     </p>
                     <div className="flex items-center gap-1 text-xs mt-auto">
-                        <Heart className={cn("w-3 h-3 transition-colors", post.isLiked ? "fill-[var(--brand-pink)] text-[var(--brand-pink)]" : "text-[var(--foreground-tertiary)]")} />
-                        <span className={cn(post.isLiked ? "text-[var(--brand-pink)] font-medium" : "text-[var(--foreground-tertiary)]")}>{post.likes}</span>
+                        <Heart className={cn("w-3.5 h-3.5 transition-colors", post.isLiked ? "fill-[var(--brand-pink)] text-[var(--brand-pink)]" : "text-[var(--foreground-tertiary)]")} />
+                        <span className={cn(post.isLiked ? "text-[var(--brand-pink)] font-semibold" : "text-[var(--foreground-tertiary)]")}>{post.likes}</span>
                     </div>
                 </div>
             </div>
@@ -188,7 +180,7 @@ export default function PostCard({ post, onClick, hideSaveButton = false }: Post
                             sizes="(max-width: 768px) 50vw, (max-width: 1024px) 25vw, 16vw"
                         />
 
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-60" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-60" />
 
                         {post.isSuggested && (
                             <div className="absolute top-3 left-3 bg-white/20 backdrop-blur-md px-2 py-1 rounded-full border border-white/30 flex items-center gap-1 shadow-sm">
@@ -196,15 +188,23 @@ export default function PostCard({ post, onClick, hideSaveButton = false }: Post
                             </div>
                         )}
 
-                        <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <div className={cn(
+                            "absolute bottom-3 left-3 right-3 flex items-center justify-between transition-opacity duration-300",
+                            post.isLiked ? "opacity-100" : "opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
+                        )}>
                             <div className="flex items-center gap-2 text-white/90">
                                 <Avatar src={post.author.avatar || null} alt={post.author.name} size="xs" className="border border-white/20" />
                                 <span className="text-xs font-medium truncate max-w-[100px]">{post.author.name}</span>
                             </div>
                             {(post.likes > 0 || post.isLiked) && (
-                                <div className="flex items-center gap-1 text-white/90 bg-black/20 backdrop-blur-sm px-2 py-1 rounded-full border border-white/5">
-                                    <Heart className={cn("w-3 h-3 transition-colors", post.isLiked ? "fill-[var(--brand-pink)] text-[var(--brand-pink)]" : "fill-white/50 text-white/50")} />
-                                    <span className={cn("text-xs font-medium", post.isLiked && "text-[var(--brand-pink)]")}>{post.likes}</span>
+                                <div className={cn(
+                                    "flex items-center gap-1 backdrop-blur-md px-2 py-1 rounded-full border shadow-sm transition-colors",
+                                    post.isLiked
+                                        ? "bg-black/60 border-[var(--brand-pink)]/40 text-[var(--brand-pink)]"
+                                        : "bg-black/30 border-white/10 text-white/90"
+                                )}>
+                                    <Heart className={cn("w-3.5 h-3.5 transition-colors", post.isLiked ? "fill-[var(--brand-pink)] text-[var(--brand-pink)]" : "fill-white/60 text-white/60")} />
+                                    <span className={cn("text-xs font-semibold", post.isLiked ? "text-[var(--brand-pink)]" : "text-white")}>{post.likes}</span>
                                 </div>
                             )}
                         </div>

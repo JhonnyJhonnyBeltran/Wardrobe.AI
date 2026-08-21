@@ -101,12 +101,17 @@ export default function SettingsPage() {
         router.push('/auth');
     };
 
+    const [deleteError, setDeleteError] = useState<string | null>(null);
+    const [passwordError, setPasswordError] = useState<string | null>(null);
+    const [passwordSuccess, setPasswordSuccess] = useState(false);
+
     const handleDeleteAccount = async () => {
-        if (deleteInput.toLowerCase() !== 'confirmar') return;
+        if (deleteInput.trim().toLowerCase() !== 'confirmar') return;
         setIsDeleting(true);
+        setDeleteError(null);
         try {
             const { data: { session } } = await supabase.auth.getSession();
-            if (!session) throw new Error('No session');
+            if (!session) throw new Error('No se pudo verificar la sesión.');
             
             const res = await fetch('/api/user/delete', {
                 method: 'POST',
@@ -117,28 +122,38 @@ export default function SettingsPage() {
                 body: JSON.stringify({ userId: user?.id })
             });
             
-            if (!res.ok) throw new Error('Error al eliminar');
+            if (!res.ok) {
+                const errData = await res.json().catch(() => ({}));
+                throw new Error(errData.error || 'Error al eliminar la cuenta');
+            }
             
+            // Clean local cache
+            if (typeof window !== 'undefined') {
+                localStorage.removeItem('wardrobe_user_profile');
+                localStorage.removeItem('last_viewed_activity');
+                localStorage.removeItem('search_history');
+            }
             await signOut();
             router.push('/auth');
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error deleting account:', error);
-            alert('Hubo un error al eliminar tu cuenta.');
+            setDeleteError(error?.message || 'Hubo un error al eliminar tu cuenta.');
         } finally {
             setIsDeleting(false);
-            setShowDeleteConfirm(false);
         }
     };
 
     const [oldPassword, setOldPassword] = useState('');
 
     const handleUpdatePassword = async () => {
+        setPasswordError(null);
+        setPasswordSuccess(false);
         if (!oldPassword) {
-            alert('Por favor, introduce tu contraseña actual');
+            setPasswordError('Por favor, introduce tu contraseña actual');
             return;
         }
         if (!newPassword || newPassword.length < 6) {
-            alert('La nueva contraseña debe tener al menos 6 caracteres');
+            setPasswordError('La nueva contraseña debe tener al menos 6 caracteres');
             return;
         }
         setIsUpdatingPassword(true);
@@ -158,13 +173,16 @@ export default function SettingsPage() {
             const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
             if (updateError) throw updateError;
             
-            alert('Contraseña actualizada correctamente');
-            setShowPasswordModal(false);
-            setNewPassword('');
-            setOldPassword('');
+            setPasswordSuccess(true);
+            setTimeout(() => {
+                setShowPasswordModal(false);
+                setNewPassword('');
+                setOldPassword('');
+                setPasswordSuccess(false);
+            }, 1200);
         } catch (error: any) {
             console.error('Error updating password:', error);
-            alert('Error al actualizar la contraseña: ' + error.message);
+            setPasswordError(error.message || 'Error al actualizar la contraseña');
         } finally {
             setIsUpdatingPassword(false);
         }
@@ -624,10 +642,21 @@ export default function SettingsPage() {
                                             className="w-full bg-[var(--background-secondary)] text-[var(--foreground)] px-4 py-3 rounded-xl border border-[var(--border-color)] focus:border-[var(--brand-pink)] outline-none"
                                         />
                                     </div>
+
+                                    {passwordError && (
+                                        <p className="text-red-500 text-xs mt-3">{passwordError}</p>
+                                    )}
+                                    {passwordSuccess && (
+                                        <p className="text-green-500 text-xs mt-3 font-semibold">¡Contraseña actualizada correctamente!</p>
+                                    )}
                                 </div>
                                 <div className="flex gap-3">
                                     <Button
-                                        onClick={() => setShowPasswordModal(false)}
+                                        onClick={() => {
+                                            setShowPasswordModal(false);
+                                            setPasswordError(null);
+                                            setPasswordSuccess(false);
+                                        }}
                                         className="flex-1 !bg-[var(--background-secondary)] !text-[var(--foreground)]"
                                     >
                                         {t.common.cancel}
@@ -679,17 +708,23 @@ export default function SettingsPage() {
                                         placeholder="Escribe confirmar" 
                                         className="w-full bg-[var(--background-secondary)] text-[var(--foreground)] px-4 py-3 rounded-xl border border-[var(--border-color)] focus:border-red-500 outline-none"
                                     />
+                                    {deleteError && (
+                                        <p className="text-red-500 text-xs mt-3">{deleteError}</p>
+                                    )}
                                 </div>
                                 <div className="flex gap-3">
                                     <Button
-                                        onClick={() => setShowDeleteConfirm(false)}
+                                        onClick={() => {
+                                            setShowDeleteConfirm(false);
+                                            setDeleteError(null);
+                                        }}
                                         className="flex-1 !bg-[var(--background-secondary)] !text-[var(--foreground)]"
                                     >
                                         {t.common.cancel}
                                     </Button>
                                     <Button
                                         onClick={handleDeleteAccount}
-                                        disabled={deleteInput.toLowerCase() !== 'confirmar' || isDeleting}
+                                        disabled={deleteInput.trim().toLowerCase() !== 'confirmar' || isDeleting}
                                         className="flex-1 !bg-red-500 hover:!bg-red-600 !text-white disabled:opacity-50"
                                     >
                                         {isDeleting ? 'Eliminando...' : t.common.delete}

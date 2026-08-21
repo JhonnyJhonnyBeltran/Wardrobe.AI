@@ -365,13 +365,7 @@ export default function NotificationList({ compact = false, onClose }: Notificat
     const activityNotifications = notifications.filter(n => n.type !== 'system');
 
     if (loading) {
-        return (
-            <div className={`space-y-4 flex-1 w-full ${compact ? 'p-2' : 'p-4'}`}>
-                {Array.from({ length: 4 }).map((_, i) => (
-                    <NotificationSkeleton key={i} />
-                ))}
-            </div>
-        );
+        return null;
     }
 
     if (notifications.length === 0) {
