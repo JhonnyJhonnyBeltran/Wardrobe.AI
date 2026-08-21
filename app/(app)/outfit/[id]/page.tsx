@@ -27,6 +27,8 @@ interface OutfitItem {
   price?: string;
   source_url?: string;
   sourceUrl?: string;
+  reference?: string;
+  size?: string;
 }
 
 interface OutfitOwner {
@@ -69,7 +71,6 @@ export default function OutfitDetailPage() {
   const [relatedPosts, setRelatedPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedItem, setSelectedItem] = useState<OutfitItem | null>(null);
-  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
 
   const outfitId = params.id as string;
   useBodyScrollLock(!!selectedItem);
@@ -80,7 +81,7 @@ export default function OutfitDetailPage() {
     const fetchOutfitData = async () => {
       setLoading(true);
       try {
-        // Strategy 1: Try server-side API
+        // Strategy 1: Try server-side API (which bypasses client RLS)
         try {
           const res = await fetch(`/api/outfits/${outfitId}`);
           if (res.ok) {
@@ -96,8 +97,8 @@ export default function OutfitDetailPage() {
           console.warn('[OutfitDetail] API fetch failed, falling back to direct client query:', apiErr);
         }
 
-        // Strategy 2: Client-side direct query fallback
-        console.log('[OutfitDetail] Running direct Supabase fallback fetch');
+        // Strategy 2: Client-side query
+        console.log('[OutfitDetail] Running direct Supabase fetch');
         const { data: outfitData, error: outfitErr } = await supabase
           .from('outfits')
           .select('*')
@@ -181,22 +182,27 @@ export default function OutfitDetailPage() {
   const handleItemClick = (item: any) => {
     if (!item) return;
     haptics.selection();
+    const clothingRaw = item.clothing_items || item.clothing_item || item.clothing || item;
+    const clothing = Array.isArray(clothingRaw) ? clothingRaw[0] : clothingRaw;
+    if (!clothing) return;
+
     const normalizedItem: OutfitItem = {
-      id: item.id,
-      name: item.name || 'Prenda',
-      category: item.category || 'Prenda',
-      image_url: item.image_url || item.imageUrl || '',
-      imageUrl: item.image_url || item.imageUrl || '',
-      brand: item.brand || 'Klozet',
-      color: item.color || '',
-      color_hex: item.color_hex || item.colorHex || '',
-      colorHex: item.color_hex || item.colorHex || '',
-      price: item.price,
-      source_url: item.source_url || item.sourceUrl,
-      sourceUrl: item.source_url || item.sourceUrl
+      id: clothing.id,
+      name: clothing.name || 'Prenda',
+      category: clothing.category || clothing.type || 'Prenda',
+      image_url: clothing.image_url || clothing.imageUrl || '',
+      imageUrl: clothing.image_url || clothing.imageUrl || '',
+      brand: clothing.brand || 'Klozet',
+      color: clothing.color || '',
+      color_hex: clothing.color_hex || clothing.colorHex || '',
+      colorHex: clothing.color_hex || clothing.colorHex || '',
+      price: clothing.price,
+      source_url: clothing.source_url || clothing.sourceUrl,
+      sourceUrl: clothing.source_url || clothing.sourceUrl,
+      reference: clothing.reference,
+      size: clothing.size
     };
     setSelectedItem(normalizedItem);
-    setIsProductModalOpen(true);
   };
 
   if (loading) {
@@ -239,7 +245,9 @@ export default function OutfitDetailPage() {
         colorHex: c.color_hex,
         price: c.price,
         source_url: c.source_url,
-        sourceUrl: c.source_url
+        sourceUrl: c.source_url,
+        reference: c.reference,
+        size: c.size
       };
     })
     .filter(Boolean) as OutfitItem[]) || [];
@@ -282,7 +290,7 @@ export default function OutfitDetailPage() {
         <div className="relative w-full md:w-[400px] lg:w-[450px] flex-shrink-0 flex flex-col overflow-y-auto custom-scrollbar bg-[var(--background)]">
           <div className="w-full flex flex-col p-4 md:p-6 space-y-6">
             
-            {/* Creator Profile Header (if from another user or public profile) */}
+            {/* Creator Profile Header */}
             {outfit.owner && (
               <Link 
                 href={user?.id === outfit.owner.id ? '/profile' : `/profile/${outfit.owner.username || outfit.owner.id}`}
@@ -388,16 +396,21 @@ export default function OutfitDetailPage() {
       {/* Product Detail Modal */}
       <ProductModal
         item={selectedItem ? ({
-          ...selectedItem,
+          id: selectedItem.id,
+          name: selectedItem.name,
+          brand: selectedItem.brand,
+          type: selectedItem.category,
+          category: selectedItem.category,
+          color: selectedItem.color,
+          colorHex: selectedItem.colorHex || selectedItem.color_hex,
           imageUrl: selectedItem.imageUrl || selectedItem.image_url,
           sourceUrl: selectedItem.sourceUrl || selectedItem.source_url,
-          colorHex: selectedItem.colorHex || selectedItem.color_hex,
+          price: selectedItem.price,
+          reference: selectedItem.reference,
+          size: selectedItem.size
         } as any) : null}
-        isOpen={isProductModalOpen}
-        onClose={() => {
-          setIsProductModalOpen(false);
-          setSelectedItem(null);
-        }}
+        isOpen={!!selectedItem}
+        onClose={() => setSelectedItem(null)}
       />
     </div>
   );
