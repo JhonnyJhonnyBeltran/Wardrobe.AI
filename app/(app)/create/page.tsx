@@ -10,7 +10,31 @@ import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, Save, ArrowRight, Shirt, Wand2, Eye, X, Share2, Camera, Check, Briefcase, PartyPopper, Zap, Heart, Sparkles, Circle } from 'lucide-react';
+import { 
+    ArrowLeft, 
+    Save, 
+    ArrowRight, 
+    Shirt, 
+    Wand2, 
+    Eye, 
+    X, 
+    Share2, 
+    Camera, 
+    Check, 
+    Briefcase, 
+    PartyPopper, 
+    Zap, 
+    Heart, 
+    Sparkles, 
+    Circle,
+    Coffee, 
+    Crown, 
+    Flame, 
+    Palmtree, 
+    Moon, 
+    Sun, 
+    Snowflake 
+} from 'lucide-react';
 import { Button } from '@/components';
 import { useWardrobe } from '@/lib/hooks/useWardrobe';
 import { ClothingItem } from '@/types/clothing';
@@ -25,20 +49,19 @@ import Image from 'next/image';
 import { useUiStore } from '@/store/uiStore';
 
 const OUTFIT_OCCASIONS = [
-    { id: 'casual', label: 'Casual', icon: Circle },
     { id: 'everyday', label: 'Diario', icon: Sparkles },
+    { id: 'casual', label: 'Casual', icon: Coffee },
+    { id: 'streetwear', label: 'Streetwear', icon: Flame },
     { id: 'business', label: 'Negocios', icon: Briefcase },
-    { id: 'formal', label: 'Formal', icon: Briefcase },
+    { id: 'formal', label: 'Formal', icon: Crown },
     { id: 'party', label: 'Fiesta', icon: PartyPopper },
-    { id: 'sport', label: 'Deporte', icon: Zap },
     { id: 'date', label: 'Cita', icon: Heart },
-    { id: 'streetwear', label: 'Streetwear', icon: Sparkles },
-    { id: 'vacation', label: 'Vacaciones', icon: Sparkles },
-    { id: 'evening', label: 'Noche', icon: Sparkles },
-    { id: 'wedding', label: 'Boda', icon: Sparkles },
-    { id: 'beach', label: 'Playa', icon: Sparkles },
-    { id: 'winter', label: 'Invierno', icon: Sparkles },
-    { id: 'summer', label: 'Verano', icon: Sparkles },
+    { id: 'sport', label: 'Deporte', icon: Zap },
+    { id: 'vacation', label: 'Vacaciones', icon: Palmtree },
+    { id: 'evening', label: 'Noche', icon: Moon },
+    { id: 'beach', label: 'Playa', icon: Sun },
+    { id: 'winter', label: 'Invierno', icon: Snowflake },
+    { id: 'summer', label: 'Verano', icon: Sun },
 ];
 
 export default function CreateOutfitPage() {
@@ -53,7 +76,7 @@ export default function CreateOutfitPage() {
 
     // Outfit metadata
     const [outfitName, setOutfitName] = useState('');
-    const [outfitOccasion, setOutfitOccasion] = useState('casual');
+    const [outfitOccasion, setOutfitOccasion] = useState<string | null>(null);
     const [isPublic, setIsPublic] = useState(true);
     const [loading, setLoading] = useState(false);
 
@@ -444,8 +467,8 @@ export default function CreateOutfitPage() {
                 // UPDATE existing outfit
                 const updatePayload: any = {
                     name: outfitName,
-                    occasion: outfitOccasion,
-                    description: `Outfit con ${totalSelected} prendas`,
+                    occasion: outfitOccasion || null,
+                    description: '',
                     updated_at: new Date().toISOString()
                 };
 
@@ -473,7 +496,7 @@ export default function CreateOutfitPage() {
                     .insert({
                         user_id: user.id,
                         name: outfitName,
-                        occasion: outfitOccasion,
+                        occasion: outfitOccasion || null,
                         description: '',
                         season: 'all-season', // Default for now
                         is_public: isPublic,
@@ -669,19 +692,32 @@ export default function CreateOutfitPage() {
                                         className="w-full px-4 py-3 bg-[var(--background-secondary)] rounded-xl text-[var(--foreground)] outline-none mb-4"
                                     />
 
-                                    <label className="block text-sm font-medium text-[var(--foreground-secondary)] mb-2">
-                                        Tipo de Outfit
-                                    </label>
+                                    <div className="flex items-center justify-between mb-2">
+                                        <label className="block text-sm font-medium text-[var(--foreground-secondary)]">
+                                            Ocasión (Opcional)
+                                        </label>
+                                        {outfitOccasion && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setOutfitOccasion(null)}
+                                                className="text-[11px] text-[var(--brand-pink)] hover:underline font-medium"
+                                            >
+                                                Desmarcar
+                                            </button>
+                                        )}
+                                    </div>
                                     <div className="flex flex-wrap gap-2">
                                         {OUTFIT_OCCASIONS.map((occ) => {
                                             const Icon = occ.icon;
+                                            const isSelected = outfitOccasion === occ.id;
                                             return (
                                                 <button
                                                     key={occ.id}
-                                                    onClick={() => setOutfitOccasion(occ.id)}
+                                                    type="button"
+                                                    onClick={() => setOutfitOccasion(isSelected ? null : occ.id)}
                                                     className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all ${
-                                                        outfitOccasion === occ.id
-                                                            ? 'bg-[var(--brand-pink)] text-white'
+                                                        isSelected
+                                                            ? 'bg-[var(--brand-pink)] text-white shadow-sm'
                                                             : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:bg-[var(--border-color)]'
                                                     }`}
                                                 >
@@ -730,7 +766,7 @@ export default function CreateOutfitPage() {
 
                                 {/* Preview & Save Buttons */}
                                 <AnimatePresence>
-                                    {!isEmpty && outfitName.trim().length > 0 && outfitOccasion && (
+                                    {!isEmpty && outfitName.trim().length > 0 && (
                                         <motion.div
                                             initial={{ opacity: 0, y: 50 }}
                                             animate={{ opacity: 1, y: 0 }}
@@ -845,19 +881,32 @@ export default function CreateOutfitPage() {
                                 className="w-full px-4 py-3 bg-[var(--background-secondary)] rounded-xl text-sm text-[var(--foreground)] outline-none focus:ring-2 focus:ring-[var(--brand-pink)] transition-all mb-4"
                             />
 
-                            <label className="block text-sm font-medium text-[var(--foreground-secondary)] mb-2">
-                                Tipo de Outfit
-                            </label>
+                            <div className="flex items-center justify-between mb-2">
+                                <label className="block text-sm font-medium text-[var(--foreground-secondary)]">
+                                    Ocasión (Opcional)
+                                </label>
+                                {outfitOccasion && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setOutfitOccasion(null)}
+                                        className="text-[11px] text-[var(--brand-pink)] hover:underline font-medium"
+                                    >
+                                        Desmarcar
+                                    </button>
+                                )}
+                            </div>
                             <div className="flex flex-wrap gap-2">
                                 {OUTFIT_OCCASIONS.map((occ) => {
                                     const Icon = occ.icon;
+                                    const isSelected = outfitOccasion === occ.id;
                                     return (
                                         <button
                                             key={occ.id}
-                                            onClick={() => setOutfitOccasion(occ.id)}
+                                            type="button"
+                                            onClick={() => setOutfitOccasion(isSelected ? null : occ.id)}
                                             className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-all ${
-                                                outfitOccasion === occ.id
-                                                    ? 'bg-[var(--brand-pink)] text-white'
+                                                isSelected
+                                                    ? 'bg-[var(--brand-pink)] text-white shadow-sm'
                                                     : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:bg-[var(--border-color)]'
                                             }`}
                                         >
@@ -903,7 +952,7 @@ export default function CreateOutfitPage() {
                             </div>
 
                             <AnimatePresence>
-                                {!isEmpty && outfitName.trim().length > 0 && outfitOccasion && (
+                                {!isEmpty && outfitName.trim().length > 0 && (
                                     <motion.div 
                                         initial={{ opacity: 0, height: 0 }}
                                         animate={{ opacity: 1, height: 'auto' }}

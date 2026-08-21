@@ -3,7 +3,23 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { ArrowLeft, Layers } from 'lucide-react';
+import { 
+  ArrowLeft, 
+  Layers, 
+  Coffee, 
+  Sparkles, 
+  Briefcase, 
+  Crown, 
+  PartyPopper, 
+  Zap, 
+  Heart, 
+  Flame, 
+  Palmtree, 
+  Moon, 
+  Sun, 
+  Snowflake, 
+  Tag 
+} from 'lucide-react';
 import Link from 'next/link';
 import ProductModal from '@/components/ProductModal';
 import Avatar from '@/components/Avatar';
@@ -13,6 +29,30 @@ import { haptics } from '@/lib/haptic';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import InteractiveOutfitViewer from '@/components/InteractiveOutfitViewer';
 import { ClothingItem } from '@/components/ClothingItem';
+
+const getOccasionInfo = (occ?: string) => {
+  if (!occ || typeof occ !== 'string') return null;
+  const key = occ.trim().toLowerCase();
+  if (!key || key === 'none' || key === 'null') return null;
+  
+  const map: Record<string, { label: string; icon: any }> = {
+    everyday: { label: 'Diario', icon: Sparkles },
+    casual: { label: 'Casual', icon: Coffee },
+    streetwear: { label: 'Streetwear', icon: Flame },
+    business: { label: 'Negocios', icon: Briefcase },
+    formal: { label: 'Formal', icon: Crown },
+    party: { label: 'Fiesta', icon: PartyPopper },
+    date: { label: 'Cita', icon: Heart },
+    sport: { label: 'Deporte', icon: Zap },
+    vacation: { label: 'Vacaciones', icon: Palmtree },
+    evening: { label: 'Noche', icon: Moon },
+    wedding: { label: 'Boda', icon: Crown },
+    beach: { label: 'Playa', icon: Sun },
+    winter: { label: 'Invierno', icon: Snowflake },
+    summer: { label: 'Verano', icon: Sun },
+  };
+  return map[key] || { label: occ, icon: Tag };
+};
 
 export default function ProfileOutfitDetailPage() {
   const params = useParams();
@@ -197,6 +237,9 @@ export default function ProfileOutfitDetailPage() {
       ? `/profile/${profileParam}` 
       : '/profile';
 
+  const occInfo = getOccasionInfo(outfit.occasion);
+  const OccIcon = occInfo ? occInfo.icon : null;
+
   return (
     <div className="min-h-screen bg-[var(--background)]">
       {/* Floating Back Button */}
@@ -245,34 +288,20 @@ export default function ProfileOutfitDetailPage() {
             )}
 
             {/* Outfit Info */}
-            <section className="space-y-4">
+            <section className="space-y-3">
               <div>
-                <h1 className="text-2xl font-bold text-[var(--foreground)]">{outfit.name || 'Outfit sin título'}</h1>
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <h1 className="text-2xl font-bold text-[var(--foreground)]">{outfit.name || 'Outfit sin título'}</h1>
+                  {occInfo && OccIcon && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] border border-[var(--brand-pink)]/20">
+                      <OccIcon className="w-3.5 h-3.5" />
+                      {occInfo.label}
+                    </span>
+                  )}
+                </div>
                 {outfit.description && (
-                  <p className="text-sm text-[var(--foreground-secondary)] mt-1">{outfit.description}</p>
+                  <p className="text-sm text-[var(--foreground-secondary)] mt-1.5">{outfit.description}</p>
                 )}
-              </div>
-
-              {/* Tags Grid (Ocasión y Prendas) */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="flex items-center gap-3 p-3 bg-[var(--background-secondary)] rounded-2xl">
-                    <div className="w-8 h-8 rounded-full bg-[var(--brand-pink)]/10 flex items-center justify-center text-[var(--brand-pink)]">
-                        <Layers className="w-4 h-4" />
-                    </div>
-                    <div>
-                        <p className="text-[10px] text-[var(--foreground-tertiary)] uppercase font-bold tracking-wider">Ocasión</p>
-                        <p className="text-sm font-bold text-[var(--foreground)] capitalize">{outfit.occasion || outfit.style || 'Casual'}</p>
-                    </div>
-                </div>
-                <div className="flex items-center gap-3 p-3 bg-[var(--background-secondary)] rounded-2xl">
-                    <div className="w-8 h-8 rounded-full bg-[var(--brand-pink)]/10 flex items-center justify-center text-[var(--brand-pink)]">
-                        <Layers className="w-4 h-4" />
-                    </div>
-                    <div>
-                        <p className="text-[10px] text-[var(--foreground-tertiary)] uppercase font-bold tracking-wider">Prendas</p>
-                        <p className="text-sm font-bold text-[var(--foreground)]">{validItems.length}</p>
-                    </div>
-                </div>
               </div>
             </section>
 

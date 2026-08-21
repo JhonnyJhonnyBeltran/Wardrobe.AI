@@ -1,7 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Heart, Share2, Briefcase, PartyPopper, Zap, Flower2, Snowflake, Circle, Layers, Sparkles, Trash2, Edit2, CalendarDays, Rocket, Info, Eye, Lock } from 'lucide-react';
+import { 
+    X, 
+    Heart, 
+    Share2, 
+    Briefcase, 
+    PartyPopper, 
+    Zap, 
+    Flower2, 
+    Snowflake, 
+    Layers, 
+    Sparkles, 
+    Trash2, 
+    Edit2, 
+    CalendarDays, 
+    Rocket, 
+    Info, 
+    Eye, 
+    Lock,
+    Coffee,
+    Crown,
+    Flame,
+    Palmtree,
+    Moon,
+    Sun,
+    Tag
+} from 'lucide-react';
 import Link from 'next/link';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { Outfit } from '@/types/outfit';
@@ -19,13 +44,20 @@ interface OutfitDetailModalProps {
 }
 
 const styleConfig: Record<string, { icon: React.ReactNode; label: string }> = {
-    'casual': { icon: <Circle className="w-4 h-4" />, label: 'Casual' },
-    'formal': { icon: <Briefcase className="w-4 h-4" />, label: 'Formal' },
-    'party': { icon: <PartyPopper className="w-4 h-4" />, label: 'Fiesta' },
-    'sport': { icon: <Zap className="w-4 h-4" />, label: 'Deporte' },
-    'date': { icon: <Heart className="w-4 h-4" />, label: 'Cita' },
-    'business': { icon: <Briefcase className="w-4 h-4" />, label: 'Negocios' },
-    'everyday': { icon: <Sparkles className="w-4 h-4" />, label: 'Diario' },
+    'everyday': { icon: <Sparkles className="w-3.5 h-3.5" />, label: 'Diario' },
+    'casual': { icon: <Coffee className="w-3.5 h-3.5" />, label: 'Casual' },
+    'streetwear': { icon: <Flame className="w-3.5 h-3.5" />, label: 'Streetwear' },
+    'business': { icon: <Briefcase className="w-3.5 h-3.5" />, label: 'Negocios' },
+    'formal': { icon: <Crown className="w-3.5 h-3.5" />, label: 'Formal' },
+    'party': { icon: <PartyPopper className="w-3.5 h-3.5" />, label: 'Fiesta' },
+    'date': { icon: <Heart className="w-3.5 h-3.5" />, label: 'Cita' },
+    'sport': { icon: <Zap className="w-3.5 h-3.5" />, label: 'Deporte' },
+    'vacation': { icon: <Palmtree className="w-3.5 h-3.5" />, label: 'Vacaciones' },
+    'evening': { icon: <Moon className="w-3.5 h-3.5" />, label: 'Noche' },
+    'wedding': { icon: <Crown className="w-3.5 h-3.5" />, label: 'Boda' },
+    'beach': { icon: <Sun className="w-3.5 h-3.5" />, label: 'Playa' },
+    'winter': { icon: <Snowflake className="w-3.5 h-3.5" />, label: 'Invierno' },
+    'summer': { icon: <Sun className="w-3.5 h-3.5" />, label: 'Verano' },
 };
 
 export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleFavorite, onItemClick, onToggleVisibility }: OutfitDetailModalProps) {
@@ -117,28 +149,14 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
                                 <div className="w-full flex flex-col md:pb-10">
                                     {/* Outfit Info */}
                                     <div className="px-6 py-5">
-                                        <h2 className="text-2xl font-bold text-[var(--foreground)] mb-4">{outfit.name || 'Outfit sin título'}</h2>
-                                        
-                                        {/* Details Grid */}
-                                        <div className="grid grid-cols-2 gap-3 mb-6">
-                                            <div className="flex items-center gap-3 p-3 bg-[var(--background-secondary)]/90 backdrop-blur-md md:bg-[var(--background-secondary)] rounded-2xl">
-                                                <div className="w-8 h-8 rounded-full bg-[var(--brand-pink)]/10 flex items-center justify-center text-[var(--brand-pink)]">
+                                        <div className="flex items-center gap-2.5 flex-wrap mb-4">
+                                            <h2 className="text-2xl font-bold text-[var(--foreground)]">{outfit.name || 'Outfit sin título'}</h2>
+                                            {outfit.occasion && config && (
+                                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] border border-[var(--brand-pink)]/20">
                                                     {config.icon}
-                                                </div>
-                                                <div>
-                                                    <p className="text-[10px] text-[var(--foreground-tertiary)] uppercase font-bold tracking-wider">Ocasión</p>
-                                                    <p className="text-sm font-bold text-[var(--foreground)] capitalize">{config.label}</p>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-3 p-3 bg-[var(--background-secondary)]/90 backdrop-blur-md md:bg-[var(--background-secondary)] rounded-2xl">
-                                                <div className="w-8 h-8 rounded-full bg-[var(--brand-pink)]/10 flex items-center justify-center text-[var(--brand-pink)]">
-                                                    <Layers className="w-4 h-4" />
-                                                </div>
-                                                <div>
-                                                    <p className="text-[10px] text-[var(--foreground-tertiary)] uppercase font-bold tracking-wider">Prendas</p>
-                                                    <p className="text-sm font-bold text-[var(--foreground)]">{items.length}</p>
-                                                </div>
-                                            </div>
+                                                    {config.label}
+                                                </span>
+                                            )}
                                         </div>
 
                                         {/* Action Buttons */}

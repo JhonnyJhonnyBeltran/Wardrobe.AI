@@ -72,6 +72,9 @@ Wardrobe.AI es una plataforma de moda impulsada por IA que permite a los usuario
 - **Gestión y Eliminación de Carpetas (`/profile` & `/api/save-folders`)**: Modal de confirmación con aviso explícito (*"Todas las publicaciones guardadas en esta carpeta se borrarán definitivamente de tus guardados"*). Al confirmar, la API elimina en cascada las asociaciones en `save_folder_items`, las publicaciones guardadas correspondientes en `saves` y la carpeta en `save_folders`.
 - **Eliminación Total de Cuenta (`/api/user/delete`)**: Eliminación completa en cascada de comentarios, likes, guardados, carpetas, follows, notificaciones, mensajes, conversaciones vacías, outfits, prendas del armario, fotos en Storage (`avatars`, `clothing-images`), perfil en base de datos y registro de autenticación en `auth.users`.
 - **Ruta y Acceso a CloSy AI (`/closy`)**: El botón "Crear con IA" en `/closet` redirige a la ruta dedicada `/closy` para interactuar con la asistente virtual de estilismo.
+- **Ocasión Opcional y Diseño Limpio en Outfits**: 
+  - En `/create`: La ocasión ya no es obligatoria ni se asigna "Casual" por defecto; es un selector opcional desmarcable y el outfit puede guardarse sin ocasión (`occasion: null`).
+  - En `/outfit/[id]`, `/profile/[id]/outfit/[outfitId]` y `OutfitDetailModal`: Se eliminaron las cajas cuadradas forzadas de "Ocasión" y "Prendas". Ahora la ocasión solo se muestra como una insignia sutil junto al título si el usuario la seleccionó expresamente, con iconografía refinada (`Coffee`, `Crown`, `Flame`, `Palmtree`, `Moon`, `Zap`, `Heart`, etc.).
 
 ---
 
