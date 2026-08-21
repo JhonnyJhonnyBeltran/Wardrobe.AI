@@ -106,6 +106,8 @@ En cada conversación, el backend alimenta a CloSy con:
 ### 5. Formato de Salida y UI Interactiva
 - **Respuesta Conversacional**: Explicación estilística de por qué combina el look.
 - **JSON de Outfit Estructurado**: CloSy devuelve un payload con los `clothing_item_ids` exactos elegidos de su armario.
-- **Renderizado Visual en el Chat**: La UI de `/closy` renderiza tarjetas interactivas de las prendas recomendadas y un botón directo *"Guardar este Outfit en mi Armario"*, que genera el look en la base de datos con 1 solo toque.
+- **Renderizado Visual en el Chat**: La UI de `/closy` renderiza tarjetas interactivas de las prendas recomendadas y un botón directo *"✨ Guardar Outfit en mi Armario"*, que genera el look en la base de datos (`outfits` + `outfit_items`) con 1 solo toque mediante `/api/closy/save-outfit`.
+- **Integración con ProductModal**: Al tocar cualquier prenda recomendada en el chat se abre el modal completo de detalles.
+- **Manejo de Rate Limiting en UI**: Muestra el contador diario de consultas restantes y avisa si se supera la frecuencia por minuto.
 
 
