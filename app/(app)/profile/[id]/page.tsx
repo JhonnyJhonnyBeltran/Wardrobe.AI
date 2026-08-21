@@ -61,8 +61,9 @@ export default function PublicProfilePage() {
   const [outfits, setOutfits] = useState<any[]>([]);
 
   const handleOutfitClick = useCallback((outfit: any) => {
-    router.push(`/outfit/${outfit.id}`);
-  }, [router]);
+    const userSlug = profile?.username || profileId;
+    router.push(`/profile/${userSlug}/outfit/${outfit.id}`);
+  }, [router, profile?.username, profileId]);
   // isMutual removed as outfits are now public
 
   // Stats

@@ -62,7 +62,8 @@ Wardrobe.AI es una plataforma de moda impulsada por IA que permite a los usuario
 - **Onboarding Google**: El callback `/auth/callback/route.ts` redirige a `/onboarding/username` si el perfil no tiene `username`. La página `/onboarding/username` verifica disponibilidad en tiempo real.
 - **Username check en /profile/settings/personal**: Verificación debounced con indicador visual (verde/rojo). No permite guardar si el username está cogido.
 
-- **Endpoint y Detalle de Outfit (`/api/outfits/[id]` y `/outfit/[id]`)**: Endpoint de servidor con permisos administrativos (`service_role`) que resuelve el outfit, el creador (`owner`), todas las prendas asociadas (`clothing_items` sin bloqueo de RLS) y los posts donde aparece el look (`posts`). En el frontend se muestra el avatar y nombre del creador con enlace a su perfil, el lienzo interactivo, la lista de prendas y la sección "Aparece en".
+- **Nueva Ruta de Outfits por Perfil (`/profile/[id]/outfit/[outfitId]`)**: Ruta contextual que vincula el look al perfil del creador (`@username` o `UUID`), cargando el usuario, el outfit, todas las prendas (`clothing_items`) interactivas y la sección *"Aparece en"* con acceso directo a posts.
+- **Detalle de Outfit Directo (`/outfit/[id]`)**: Soporte y fallback directo para enlaces existentes.
 - **Feed y Notificaciones en Móvil**: Eliminada la animación de movimiento/shimmer del skeleton en móvil para evitar saltos y vibraciones visuales molestas.
 - **Likes en Búsqueda (`/search`)**: Consulta de likes del usuario sincronizada con Supabase para marcar con corazón rosa (`isLiked`) las publicaciones a las que el usuario ya dio like.
 - **Motor de Recomendaciones Dinámico por Likes (`/search`)**: Extrae en tiempo real los estilos de los últimos 30 posts a los que el usuario dio like y aplica un multiplicador de afinidad dinámica (+2.5 a +8 pts extra) que se suma a las preferencias del perfil (+3 pts), morfología (+5), colorimetría (+5) y edad (+2 a +6).
