@@ -148,6 +148,45 @@ export default function PostDetailPage() {
                     .eq('post_id', postId)
                     .order('created_at', { ascending: true });
 
+                // Ensure outfit items and garments are fully resolved even if join had missing clothing_items
+                if (postData?.outfits) {
+                    const outfitObj = Array.isArray(postData.outfits) ? postData.outfits[0] : postData.outfits;
+                    let oiList = outfitObj?.outfit_items || [];
+
+                    // If outfit_items was empty, fetch them directly
+                    if (oiList.length === 0 && outfitObj?.id) {
+                        const { data: directOi } = await supabase
+                            .from('outfit_items')
+                            .select('position_x, position_y, scale, rotation, layer_order, clothing_item_id, clothing_items (id, name, brand, image_url, color, color_hex, category, size, reference)')
+                            .eq('outfit_id', outfitObj.id);
+                        if (directOi && directOi.length > 0) {
+                            oiList = directOi;
+                            outfitObj.outfit_items = oiList;
+                        }
+                    }
+
+                    // Check if clothing_item_id exists but clothing_items is missing
+                    const missingIds = oiList
+                        .filter((oi: any) => !oi.clothing_items && !oi.clothing_item && oi.clothing_item_id)
+                        .map((oi: any) => oi.clothing_item_id);
+
+                    if (missingIds.length > 0) {
+                        const { data: clothesList } = await supabase
+                            .from('clothing_items')
+                            .select('id, name, brand, image_url, color, color_hex, category, size, reference, source_url')
+                            .in('id', missingIds);
+
+                        if (clothesList) {
+                            const map = new Map(clothesList.map((c: any) => [c.id, c]));
+                            oiList = oiList.map((oi: any) => ({
+                                ...oi,
+                                clothing_items: oi.clothing_items || oi.clothing_item || map.get(oi.clothing_item_id)
+                            }));
+                            outfitObj.outfit_items = oiList;
+                        }
+                    }
+                }
+
                 setPost(postData);
                 setIsLiked(likeRes.data && (likeRes.data as any[]).length > 0);
                 setIsSaved(saveRes.data && (saveRes.data as any[]).length > 0);
