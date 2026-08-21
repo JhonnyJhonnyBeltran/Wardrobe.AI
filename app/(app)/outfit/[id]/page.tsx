@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { ArrowLeft, Layers, User as UserIcon } from 'lucide-react';
+import { ArrowLeft, Layers } from 'lucide-react';
 import Link from 'next/link';
 import ProductModal from '@/components/ProductModal';
 import Avatar from '@/components/Avatar';
@@ -14,63 +14,14 @@ import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import InteractiveOutfitViewer from '@/components/InteractiveOutfitViewer';
 import { ClothingItem } from '@/components/ClothingItem';
 
-interface OutfitItem {
-  id: string;
-  name: string;
-  category: string;
-  image_url: string;
-  imageUrl?: string;
-  brand: string;
-  color: string;
-  color_hex?: string;
-  colorHex?: string;
-  price?: string;
-  source_url?: string;
-  sourceUrl?: string;
-  reference?: string;
-  size?: string;
-}
-
-interface OutfitOwner {
-  id: string;
-  username: string;
-  full_name?: string;
-  avatar_url?: string;
-  bio?: string;
-}
-
-interface Outfit {
-  id: string;
-  user_id: string;
-  name: string;
-  description: string;
-  image_url: string;
-  occasion: string;
-  season: string;
-  is_public: boolean;
-  favorite: boolean;
-  created_at: string;
-  owner?: OutfitOwner;
-  outfit_items: Array<{
-    position_x?: number;
-    position_y?: number;
-    scale?: number;
-    rotation?: number;
-    layer_order?: number;
-    clothing_item_id?: string;
-    clothing_item?: OutfitItem;
-    clothing_items?: OutfitItem;
-  }>;
-}
-
 export default function OutfitDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { user } = useUser();
-  const [outfit, setOutfit] = useState<Outfit | null>(null);
+  const [outfit, setOutfit] = useState<any | null>(null);
   const [relatedPosts, setRelatedPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedItem, setSelectedItem] = useState<OutfitItem | null>(null);
+  const [selectedItem, setSelectedItem] = useState<any | null>(null);
 
   const outfitId = params.id as string;
   useBodyScrollLock(!!selectedItem);
@@ -78,131 +29,113 @@ export default function OutfitDetailPage() {
   useEffect(() => {
     if (!outfitId) return;
 
-    const fetchOutfitData = async () => {
+    const loadData = async () => {
       setLoading(true);
       try {
-        // Strategy 1: Try server-side API (which bypasses client RLS)
-        try {
-          const res = await fetch(`/api/outfits/${outfitId}`);
-          if (res.ok) {
-            const data = await res.json();
-            if (data.outfit) {
-              setOutfit(data.outfit);
-              setRelatedPosts(data.posts || []);
-              setLoading(false);
-              return;
+        // 1. Fetch Outfit with joined profiles and outfit_items (EXACT same query structure as /post/[id])
+        const { data: outfitData, error: outfitError } = await supabase
+          .from('outfits')
+          .select(`
+            id, name, description, image_url, occasion, season, is_public, favorite, created_at, user_id,
+            profiles (id, username, avatar_url),
+            outfit_items (
+              position_x,
+              position_y,
+              scale,
+              rotation,
+              layer_order,
+              clothing_items (id, name, brand, image_url, color, color_hex, category, size, reference)
+            )
+          `)
+          .eq('id', outfitId)
+          .single();
+
+        if (outfitError) {
+          console.error('[OutfitDetail] Error fetching outfit:', outfitError);
+        }
+
+        let outfitObj = outfitData as any;
+
+        if (outfitObj) {
+          let oiList = outfitObj.outfit_items || [];
+
+          // Fallback 1: If outfit_items was empty, fetch them directly
+          if (oiList.length === 0) {
+            const { data: directOi } = await supabase
+              .from('outfit_items')
+              .select('position_x, position_y, scale, rotation, layer_order, clothing_item_id, clothing_items (id, name, brand, image_url, color, color_hex, category, size, reference)')
+              .eq('outfit_id', outfitId);
+            if (directOi && directOi.length > 0) {
+              oiList = directOi;
+              outfitObj.outfit_items = oiList;
             }
           }
-        } catch (apiErr) {
-          console.warn('[OutfitDetail] API fetch failed, falling back to direct client query:', apiErr);
-        }
 
-        // Strategy 2: Client-side query
-        console.log('[OutfitDetail] Running direct Supabase fetch');
-        const { data: outfitData, error: outfitErr } = await supabase
-          .from('outfits')
-          .select('*')
-          .eq('id', outfitId)
-          .maybeSingle();
+          // Fallback 2: If clothing_items relation didn't populate, fetch by IDs
+          const missingIds = oiList
+            .filter((oi: any) => !oi.clothing_items && !oi.clothing_item && oi.clothing_item_id)
+            .map((oi: any) => oi.clothing_item_id);
 
-        if (outfitErr || !outfitData) {
-          console.error('[OutfitDetail] Could not find outfit:', outfitErr);
-          setOutfit(null);
-          setLoading(false);
-          return;
-        }
+          if (missingIds.length > 0) {
+            const { data: clothesList } = await supabase
+              .from('clothing_items')
+              .select('id, name, brand, image_url, color, color_hex, category, size, reference, source_url')
+              .in('id', missingIds);
 
-        // Fetch owner
-        let ownerData = null;
-        if (outfitData.user_id) {
-          const { data: p } = await supabase
-            .from('profiles')
-            .select('id, username, full_name, avatar_url, bio')
-            .eq('id', outfitData.user_id)
-            .maybeSingle();
-          ownerData = p;
-        }
-
-        // Fetch outfit items
-        const { data: itemsData } = await supabase
-          .from('outfit_items')
-          .select('*')
-          .eq('outfit_id', outfitId);
-
-        const rawItems = itemsData || [];
-        const clothingIds = rawItems.map((oi: any) => oi.clothing_item_id).filter(Boolean);
-
-        const clothesMap = new Map<string, any>();
-        if (clothingIds.length > 0) {
-          const { data: clothesList } = await supabase
-            .from('clothing_items')
-            .select('id, name, category, color, color_hex, image_url, original_image_url, brand, size, fabric, reference, source_url')
-            .in('id', clothingIds);
-
-          if (clothesList) {
-            clothesList.forEach((c: any) => clothesMap.set(c.id, c));
+            if (clothesList) {
+              const map = new Map(clothesList.map((c: any) => [c.id, c]));
+              oiList = oiList.map((oi: any) => ({
+                ...oi,
+                clothing_items: oi.clothing_items || oi.clothing_item || map.get(oi.clothing_item_id)
+              }));
+              outfitObj.outfit_items = oiList;
+            }
           }
         }
 
-        const resolvedItems = rawItems.map((oi: any) => {
-          const clothing = clothesMap.get(oi.clothing_item_id) || null;
-          return {
-            ...oi,
-            clothing_item: clothing,
-            clothing_items: clothing,
-            clothing: clothing
-          };
-        });
-
-        // Fetch related posts
+        // 2. Fetch related posts ("Aparece en")
+        let relatedPostsList: any[] = [];
         const { data: postsData } = await supabase
           .from('posts')
           .select('id, image_url, caption, created_at, user_id, likes_count, comments_count')
           .eq('outfit_id', outfitId)
           .order('created_at', { ascending: false });
 
-        setOutfit({
-          ...outfitData,
-          owner: ownerData,
-          outfit_items: resolvedItems
-        });
-        setRelatedPosts(postsData || []);
+        if (postsData && postsData.length > 0) {
+          relatedPostsList = postsData;
+        } else if (outfitObj?.image_url) {
+          // Fallback by image URL
+          const { data: imgPosts } = await supabase
+            .from('posts')
+            .select('id, image_url, caption, created_at, user_id, likes_count, comments_count')
+            .eq('image_url', outfitObj.image_url)
+            .order('created_at', { ascending: false });
+          if (imgPosts && imgPosts.length > 0) {
+            relatedPostsList = imgPosts;
+          }
+        }
+
+        setOutfit(outfitObj);
+        setRelatedPosts(relatedPostsList);
 
       } catch (err) {
-        console.error('[OutfitDetail] Fatal error fetching outfit:', err);
+        console.error('[OutfitDetail] Error in loadData:', err);
         setOutfit(null);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchOutfitData();
+    loadData();
   }, [outfitId]);
 
-  const handleItemClick = (item: any) => {
+  const handleItemSelect = (item: any) => {
     if (!item) return;
     haptics.selection();
     const clothingRaw = item.clothing_items || item.clothing_item || item.clothing || item;
     const clothing = Array.isArray(clothingRaw) ? clothingRaw[0] : clothingRaw;
     if (!clothing) return;
-
-    const normalizedItem: OutfitItem = {
-      id: clothing.id,
-      name: clothing.name || 'Prenda',
-      category: clothing.category || clothing.type || 'Prenda',
-      image_url: clothing.image_url || clothing.imageUrl || '',
-      imageUrl: clothing.image_url || clothing.imageUrl || '',
-      brand: clothing.brand || 'Klozet',
-      color: clothing.color || '',
-      color_hex: clothing.color_hex || clothing.colorHex || '',
-      colorHex: clothing.color_hex || clothing.colorHex || '',
-      price: clothing.price,
-      source_url: clothing.source_url || clothing.sourceUrl,
-      sourceUrl: clothing.source_url || clothing.sourceUrl,
-      reference: clothing.reference,
-      size: clothing.size
-    };
-    setSelectedItem(normalizedItem);
+    setSelectedItem(clothing);
   };
 
   if (loading) {
@@ -228,39 +161,21 @@ export default function OutfitDetailPage() {
     );
   }
 
-  // Extract items for list and viewer
-  const outfitItems: OutfitItem[] = (outfit.outfit_items
-    ?.map(oi => {
-      const c = oi.clothing_items || oi.clothing_item;
-      if (!c) return null;
+  const authorRaw = outfit.profiles;
+  const author = Array.isArray(authorRaw) ? authorRaw[0] : (authorRaw || {});
+
+  // Extract valid items
+  const validItems = (outfit.outfit_items || [])
+    .map((item: any) => {
+      const clothingRaw = item.clothing_items || item.clothing_item;
+      const clothing = Array.isArray(clothingRaw) ? clothingRaw[0] : clothingRaw;
+      if (!clothing) return null;
       return {
-        id: c.id,
-        name: c.name,
-        category: c.category,
-        image_url: c.image_url,
-        imageUrl: c.image_url,
-        brand: c.brand,
-        color: c.color,
-        color_hex: c.color_hex,
-        colorHex: c.color_hex,
-        price: c.price,
-        source_url: c.source_url,
-        sourceUrl: c.source_url,
-        reference: c.reference,
-        size: c.size
+        ...item,
+        clothing
       };
     })
-    .filter(Boolean) as OutfitItem[]) || [];
-
-  // Mapped for InteractiveOutfitViewer
-  const viewerOutfit = {
-    ...outfit,
-    items: outfit.outfit_items?.map((oi: any) => ({
-      ...oi,
-      clothing_items: oi.clothing_items || oi.clothing_item,
-      clothing: oi.clothing_items || oi.clothing_item
-    }))
-  };
+    .filter(Boolean);
 
   return (
     <div className="min-h-screen bg-[var(--background)]">
@@ -275,14 +190,13 @@ export default function OutfitDetailPage() {
 
       <main className="w-full flex flex-col md:flex-row pb-24 md:pb-0 md:h-[calc(100vh-56px)] md:justify-center overflow-x-hidden md:overflow-hidden bg-[var(--background)]">
         
-        {/* Left Column (Desktop) / Top Half (Mobile) - The Interactive Canvas Image */}
+        {/* Left Column (Desktop) / Top Half (Mobile) - The Interactive Canvas Image (EXACT match to /post/[id]) */}
         <div className="relative w-full aspect-[3/4] md:w-auto md:h-full md:aspect-[3/4] md:max-w-[calc(100%-400px)] shrink-0 bg-[#f8f9fa] dark:bg-[#111] z-0 flex items-center justify-center border-b md:border-b-0 md:border-r border-[var(--border-color)]">
           <InteractiveOutfitViewer
-            outfit={viewerOutfit as any}
-            onItemClick={handleItemClick}
+            outfit={outfit}
+            onItemClick={handleItemSelect}
             className="w-full h-full absolute inset-0"
             isMobileSticker={true}
-            selectedItemId={selectedItem?.id}
           />
         </div>
 
@@ -291,20 +205,20 @@ export default function OutfitDetailPage() {
           <div className="w-full flex flex-col p-4 md:p-6 space-y-6">
             
             {/* Creator Profile Header */}
-            {outfit.owner && (
+            {author?.username && (
               <Link 
-                href={user?.id === outfit.owner.id ? '/profile' : `/profile/${outfit.owner.username || outfit.owner.id}`}
+                href={user?.id === author.id ? '/profile' : `/profile/${author.username}`}
                 className="flex items-center gap-3 p-3 bg-[var(--background-secondary)]/50 hover:bg-[var(--background-secondary)] rounded-2xl border border-[var(--border-color)]/50 transition-colors"
               >
                 <Avatar 
-                  src={outfit.owner.avatar_url || null} 
-                  alt={outfit.owner.username} 
+                  src={author.avatar_url || null} 
+                  alt={author.username} 
                   size="sm" 
                 />
                 <div className="min-w-0 flex-1">
                   <p className="text-xs text-[var(--foreground-tertiary)] uppercase font-bold tracking-wider">Creador del look</p>
                   <p className="text-sm font-bold text-[var(--foreground)] truncate">
-                    {outfit.owner.full_name || `@${outfit.owner.username}`}
+                    @{author.username}
                   </p>
                 </div>
               </Link>
@@ -327,7 +241,7 @@ export default function OutfitDetailPage() {
                     </div>
                     <div>
                         <p className="text-[10px] text-[var(--foreground-tertiary)] uppercase font-bold tracking-wider">Ocasión</p>
-                        <p className="text-sm font-bold text-[var(--foreground)] capitalize">{outfit.occasion || (outfit as any).style || 'Casual'}</p>
+                        <p className="text-sm font-bold text-[var(--foreground)] capitalize">{outfit.occasion || outfit.style || 'Casual'}</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-3 p-3 bg-[var(--background-secondary)] rounded-2xl">
@@ -336,30 +250,30 @@ export default function OutfitDetailPage() {
                     </div>
                     <div>
                         <p className="text-[10px] text-[var(--foreground-tertiary)] uppercase font-bold tracking-wider">Prendas</p>
-                        <p className="text-sm font-bold text-[var(--foreground)]">{outfitItems.length}</p>
+                        <p className="text-sm font-bold text-[var(--foreground)]">{validItems.length}</p>
                     </div>
                 </div>
               </div>
             </section>
 
-            {/* Items Grid */}
+            {/* Items Grid (EXACT match to /post/[id]) */}
             <section className="space-y-4">
-              <h3 className="text-lg font-semibold text-[var(--foreground)]">Prendas de este look ({outfitItems.length})</h3>
-              {outfitItems.length === 0 ? (
+              <h3 className="text-lg font-semibold text-[var(--foreground)]">Prendas de este look ({validItems.length})</h3>
+              {validItems.length === 0 ? (
                 <p className="text-sm text-[var(--foreground-tertiary)]">No hay prendas registradas para este outfit.</p>
               ) : (
                 <div className="grid grid-cols-2 gap-3">
-                  {outfitItems.map((item, index) => (
+                  {validItems.map(({ clothing }: any) => (
                     <ClothingItem
-                      key={item.id || index}
-                      id={item.id}
-                      name={item.name}
-                      brand={item.brand}
-                      type={item.category}
-                      color={item.color}
-                      colorHex={item.color_hex || item.colorHex}
-                      imageUrl={item.image_url || item.imageUrl || '/placeholder.png'}
-                      onClick={() => handleItemClick(item)}
+                      key={clothing.id}
+                      id={clothing.id}
+                      name={clothing.name}
+                      brand={clothing.brand}
+                      type={clothing.category}
+                      color={clothing.color}
+                      colorHex={clothing.color_hex}
+                      imageUrl={clothing.image_url || '/placeholder.png'}
+                      onClick={() => setSelectedItem(clothing)}
                     />
                   ))}
                 </div>
@@ -393,7 +307,7 @@ export default function OutfitDetailPage() {
         </div>
       </main>
 
-      {/* Product Detail Modal */}
+      {/* Product Detail Modal (EXACT match to /post/[id]) */}
       <ProductModal
         item={selectedItem ? ({
           id: selectedItem.id,
@@ -402,9 +316,9 @@ export default function OutfitDetailPage() {
           type: selectedItem.category,
           category: selectedItem.category,
           color: selectedItem.color,
-          colorHex: selectedItem.colorHex || selectedItem.color_hex,
-          imageUrl: selectedItem.imageUrl || selectedItem.image_url,
-          sourceUrl: selectedItem.sourceUrl || selectedItem.source_url,
+          colorHex: selectedItem.color_hex || selectedItem.colorHex,
+          imageUrl: selectedItem.image_url || selectedItem.imageUrl,
+          sourceUrl: selectedItem.source_url || selectedItem.sourceUrl,
           price: selectedItem.price,
           reference: selectedItem.reference,
           size: selectedItem.size
