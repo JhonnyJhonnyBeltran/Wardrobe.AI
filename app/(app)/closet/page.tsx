@@ -646,7 +646,7 @@ export default function ClosetPage() {
                 Crear Outfit
               </motion.button>
             </Link>
-            <Link href="/premium" className="flex-1">
+            <Link href="/closy" className="flex-1">
               <motion.button 
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}

@@ -71,4 +71,38 @@ Wardrobe.AI es una plataforma de moda impulsada por IA que permite a los usuario
 - **Etiquetado de Estilos en Publicaciones (`/create-post`)**: Selector multi-etiqueta que permite asociar uno o varios estilos (ej: `y2k`, `techwear`, `streetwear`) a cada post, pre-cargando los estilos del usuario o del outfit vinculado y persistiendo `style_ids TEXT[]` en Supabase.
 - **Gestión y Eliminación de Carpetas (`/profile` & `/api/save-folders`)**: Modal de confirmación con aviso explícito (*"Todas las publicaciones guardadas en esta carpeta se borrarán definitivamente de tus guardados"*). Al confirmar, la API elimina en cascada las asociaciones en `save_folder_items`, las publicaciones guardadas correspondientes en `saves` y la carpeta en `save_folders`.
 - **Eliminación Total de Cuenta (`/api/user/delete`)**: Eliminación completa en cascada de comentarios, likes, guardados, carpetas, follows, notificaciones, mensajes, conversaciones vacías, outfits, prendas del armario, fotos en Storage (`avatars`, `clothing-images`), perfil en base de datos y registro de autenticación en `auth.users`.
+- **Ruta y Acceso a CloSy AI (`/closy`)**: El botón "Crear con IA" en `/closet` redirige a la ruta dedicada `/closy` para interactuar con la asistente virtual de estilismo.
+
+---
+
+## 🤖 CloSy AI - Asistente y Estilista Inteligente Personal (Roadmap & Arquitectura)
+
+### 1. Visión y Propósito
+**CloSy** es el asistente conversacional (estilo ChatGPT) integrado en Wardrobe.AI. Su objetivo es recomendar outfits completos y combinaciones de prendas reales del armario del usuario según la ocasión, el clima, el estilo deseado o dudas de moda cotidianas.
+
+### 2. Modelo de IA Económico y Gratuito
+- **Modelo recomendado**: **Google Gemini 2.0 Flash / 1.5 Flash** (vía Google AI Studio API o SDK oficial `@google/genai`).
+  - **Ventaja de coste**: Tier gratuito generoso (15 RPM / 1M tokens/minuto / 1,500 RPD gratuitas en Google AI Studio sin coste).
+  - **Capacidad de contexto**: Ventana de contexto masiva (1M+ tokens), lo que permite indexar el armario entero del usuario con todas sus propiedades JSON en cada prompt sin truncar datos.
+  - **Alternativa de respaldo**: Groq con LLaMA-3.3-70B-Versatile o DeepSeek-V3 por su altísima velocidad y coste prácticamente nulo ($0.10/1M tokens).
+
+### 3. Seguridad y Rate Limiting Anti-Abuso
+- **Autenticación Obligatoria**: El endpoint `/api/closy/chat` valida la sesión del usuario mediante token de Supabase (`auth.getUser()`). Peticiones anónimas o sin sesión son bloqueadas (`401 Unauthorized`).
+- **Rate Limiting por Usuario / IP**:
+  - Implementación con límite de ventana deslizante (Sliding Window / Token Bucket) en Edge o base de datos.
+  - Límites sugeridos: **10 mensajes por minuto** y **50 mensajes diarios** para usuarios estándar (ampliable en planes premium).
+  - Bloqueo y headers de respuesta `X-RateLimit-Remaining` y `Retry-After` para evitar abusos o llamadas automatizadas maliciosas.
+- **Sanitización y Guardrails**: Validación de longitud máxima de prompt (500 caracteres por mensaje) y filtrado de inyecciones de sistema.
+
+### 4. Indexación de Datos del Usuario (System Context)
+En cada conversación, el backend alimenta a CloSy con:
+1. **Prendas del armario (`clothing_items`)**: ID, nombre, categoría (top, bottom, shoes, jacket, accessories), color, hex, marca, estación, tejido y URL de imagen.
+2. **Outfits existentes (`outfits` + `outfit_items`)**: Combinaciones previas que el usuario ya ha armado o guardado.
+3. **Preferencias del perfil (`profiles`)**: Estilos preferidos (`preferred_styles`), morfología corporal (`body_shape`), colorimetría (`season_palette`), género y edad.
+
+### 5. Formato de Salida y UI Interactiva
+- **Respuesta Conversacional**: Explicación estilística de por qué combina el look.
+- **JSON de Outfit Estructurado**: CloSy devuelve un payload con los `clothing_item_ids` exactos elegidos de su armario.
+- **Renderizado Visual en el Chat**: La UI de `/closy` renderiza tarjetas interactivas de las prendas recomendadas y un botón directo *"Guardar este Outfit en mi Armario"*, que genera el look en la base de datos con 1 solo toque.
+
 
