@@ -3,23 +3,26 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Sparkles, 
   Send, 
-  Bot, 
   ArrowLeft, 
   Shirt, 
   Check, 
   Plus, 
   Layers, 
   Loader2, 
-  AlertCircle,
-  ExternalLink,
-  Tag
+  History, 
+  Trash2, 
+  X, 
+  Sparkles, 
+  MessageSquare,
+  Search,
+  ExternalLink
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/store/userStore';
+import { supabase } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 import { haptics } from '@/lib/haptic';
 import ProductModal from '@/components/ProductModal';
@@ -36,11 +39,34 @@ interface ChatMessage {
   } | null;
   highlighted_items?: Array<any>;
   follow_up_suggestions?: string[];
-  timestamp: Date;
+  timestamp: Date | string;
   savedOutfitId?: string;
 }
 
-export default function ClosyPage() {
+interface Conversation {
+  id: string;
+  title: string;
+  updatedAt: number;
+  messages: ChatMessage[];
+}
+
+const STORAGE_KEY = 'klosy_conversations_v1';
+const MAX_CONVERSATIONS = 5;
+
+const INITIAL_MESSAGE: ChatMessage = {
+  id: 'welcome',
+  role: 'assistant',
+  content: '¡Hola! Puedes preguntarme cualquier cosa sobre tu ropa y estoy lista para ayudarte a crear cualquier look.',
+  follow_up_suggestions: [
+    'Arma un look casual con mis prendas',
+    'Recomiéndame un outfit para una cena',
+    'Outfit formal para el trabajo o reunión',
+    'Look cómodo para fin de semana'
+  ],
+  timestamp: new Date()
+};
+
+export default function KlosyPage() {
   const router = useRouter();
   const { user } = useUser();
   const [inputMessage, setInputMessage] = useState('');
@@ -48,26 +74,137 @@ export default function ClosyPage() {
   const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
   const [savingOutfitMap, setSavingOutfitMap] = useState<Record<string, boolean>>({});
   const [rateLimitInfo, setRateLimitInfo] = useState<{ remainingDay?: number }>({});
+  
+  // Drawers
+  const [showWardrobeDrawer, setShowWardrobeDrawer] = useState(false);
+  const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
+  
+  // Wardrobe Items Cache
+  const [wardrobeClothes, setWardrobeClothes] = useState<any[]>([]);
+  const [loadingWardrobe, setLoadingWardrobe] = useState(false);
+  const [wardrobeSearch, setWardrobeSearch] = useState('');
+
+  // Conversations State (Max 5)
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [activeConversationId, setActiveConversationId] = useState<string>('default');
+  const [messages, setMessages] = useState<ChatMessage[]>([INITIAL_MESSAGE]);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  useBodyScrollLock(!!selectedProduct);
+  useBodyScrollLock(!!selectedProduct || showWardrobeDrawer || showHistoryDrawer);
 
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: 'welcome',
-      role: 'assistant',
-      content: `¡Hola ${user?.username ? `@${user.username}` : ''}! Soy **CloSy**, tu estilista inteligente personal. 
-
-He indexado las prendas de tu armario, tus outfits y tus preferencias de estilo. ¿Para qué ocasión o momento necesitas que te arme un look hoy?`,
-      follow_up_suggestions: [
-        'Arma un look casual con mis prendas',
-        'Recomiéndame un outfit para una cena',
-        'Outfit formal para el trabajo o reunión',
-        'Look cómodo para fin de semana'
-      ],
-      timestamp: new Date()
+  // Load conversations from localStorage
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const parsed: Conversation[] = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setConversations(parsed);
+          setActiveConversationId(parsed[0].id);
+          setMessages(parsed[0].messages || [INITIAL_MESSAGE]);
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn('[Klosy] Could not load stored conversations:', e);
     }
-  ]);
+
+    // Default initialization
+    const initialConv: Conversation = {
+      id: 'default',
+      title: 'Conversación inicial',
+      updatedAt: Date.now(),
+      messages: [INITIAL_MESSAGE]
+    };
+    setConversations([initialConv]);
+  }, []);
+
+  // Save conversations to localStorage
+  const persistConversations = (convList: Conversation[]) => {
+    try {
+      const trimmed = convList.slice(0, MAX_CONVERSATIONS);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed));
+      setConversations(trimmed);
+    } catch (e) {
+      console.warn('[Klosy] Error saving conversations:', e);
+    }
+  };
+
+  // Fetch Wardrobe Clothes for the right drawer
+  const fetchWardrobe = async () => {
+    if (!user || wardrobeClothes.length > 0) return;
+    setLoadingWardrobe(true);
+    try {
+      const { data } = await supabase
+        .from('clothing_items')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+      setWardrobeClothes(data || []);
+    } catch (err) {
+      console.error('[Klosy] Error fetching wardrobe:', err);
+    } finally {
+      setLoadingWardrobe(false);
+    }
+  };
+
+  const openWardrobe = () => {
+    haptics.selection();
+    setShowWardrobeDrawer(true);
+    fetchWardrobe();
+  };
+
+  // Create a new conversation
+  const handleNewConversation = () => {
+    haptics.selection();
+    const newId = `conv_${Date.now()}`;
+    const newConv: Conversation = {
+      id: newId,
+      title: 'Nueva conversación',
+      updatedAt: Date.now(),
+      messages: [INITIAL_MESSAGE]
+    };
+
+    const updated = [newConv, ...conversations.filter(c => c.id !== 'default')].slice(0, MAX_CONVERSATIONS);
+    persistConversations(updated);
+    setActiveConversationId(newId);
+    setMessages([INITIAL_MESSAGE]);
+    setShowHistoryDrawer(false);
+    toast.success('Nueva conversación iniciada');
+  };
+
+  // Switch active conversation
+  const handleSelectConversation = (conv: Conversation) => {
+    haptics.selection();
+    setActiveConversationId(conv.id);
+    setMessages(conv.messages || [INITIAL_MESSAGE]);
+    setShowHistoryDrawer(false);
+  };
+
+  // Delete conversation
+  const handleDeleteConversation = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    haptics.selection();
+    const filtered = conversations.filter(c => c.id !== id);
+    if (filtered.length === 0) {
+      const resetConv: Conversation = {
+        id: `conv_${Date.now()}`,
+        title: 'Nueva conversación',
+        updatedAt: Date.now(),
+        messages: [INITIAL_MESSAGE]
+      };
+      persistConversations([resetConv]);
+      setActiveConversationId(resetConv.id);
+      setMessages([INITIAL_MESSAGE]);
+    } else {
+      persistConversations(filtered);
+      if (activeConversationId === id) {
+        setActiveConversationId(filtered[0].id);
+        setMessages(filtered[0].messages);
+      }
+    }
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -90,13 +227,13 @@ He indexado las prendas de tu armario, tus outfits y tus preferencias de estilo.
       timestamp: new Date()
     };
 
-    setMessages(prev => [...prev, userMsg]);
+    const updatedMessages = [...messages, userMsg];
+    setMessages(updatedMessages);
     setInputMessage('');
     setIsTyping(true);
 
     try {
-      // Prepare history for context
-      const historyPayload = messages.map(m => ({
+      const historyPayload = updatedMessages.map(m => ({
         role: m.role,
         content: m.content
       }));
@@ -116,7 +253,7 @@ He indexado las prendas de tu armario, tus outfits y tus preferencias de estilo.
         if (res.status === 429) {
           toast.error(data.error || 'Has alcanzado el límite de consultas por hoy');
         } else {
-          toast.error(data.error || 'Error al consultar a CloSy AI');
+          toast.error(data.error || 'Error al consultar a Klosy');
         }
         setIsTyping(false);
         return;
@@ -137,11 +274,27 @@ He indexado las prendas de tu armario, tus outfits y tus preferencias de estilo.
       };
 
       haptics.success();
-      setMessages(prev => [...prev, assistantMsg]);
+      const finalMessages = [...updatedMessages, assistantMsg];
+      setMessages(finalMessages);
+
+      // Update current conversation in directory
+      const autoTitle = text.slice(0, 32) + (text.length > 32 ? '...' : '');
+      const updatedConvs = conversations.map(c => {
+        if (c.id === activeConversationId) {
+          return {
+            ...c,
+            title: c.title === 'Nueva conversación' || c.title === 'Conversación inicial' ? autoTitle : c.title,
+            updatedAt: Date.now(),
+            messages: finalMessages
+          };
+        }
+        return c;
+      });
+      persistConversations(updatedConvs);
 
     } catch (err: any) {
-      console.error('[CloSy] Chat error:', err);
-      toast.error('No se pudo conectar con CloSy AI. Revisa tu conexión.');
+      console.error('[Klosy] Chat error:', err);
+      toast.error('No se pudo conectar con Klosy. Revisa tu conexión.');
     } finally {
       setIsTyping(false);
     }
@@ -171,28 +324,49 @@ He indexado las prendas de tu armario, tus outfits y tus preferencias de estilo.
       }
 
       haptics.success();
-      toast.success('¡Outfit guardado en tu armario!');
+      toast.success('Outfit guardado en tu armario');
 
-      setMessages(prev => prev.map(m => {
+      const updated = messages.map(m => {
         if (m.id === msgId) {
           return { ...m, savedOutfitId: data.outfit_id };
         }
         return m;
-      }));
+      });
+      setMessages(updated);
+
+      // Persist in active conversation
+      const updatedConvs = conversations.map(c => {
+        if (c.id === activeConversationId) {
+          return { ...c, messages: updated };
+        }
+        return c;
+      });
+      persistConversations(updatedConvs);
 
     } catch (err: any) {
-      console.error('[CloSy] Save outfit error:', err);
+      console.error('[Klosy] Save outfit error:', err);
       toast.error(err?.message || 'Error al guardar outfit');
     } finally {
       setSavingOutfitMap(prev => ({ ...prev, [msgId]: false }));
     }
   };
 
+  // Filter wardrobe clothes for right drawer
+  const filteredWardrobe = wardrobeClothes.filter(c => {
+    if (!wardrobeSearch) return true;
+    const q = wardrobeSearch.toLowerCase();
+    return (
+      (c.name || '').toLowerCase().includes(q) ||
+      (c.category || '').toLowerCase().includes(q) ||
+      (c.color || '').toLowerCase().includes(q)
+    );
+  });
+
   return (
-    <div className="min-h-screen bg-[var(--background)] flex flex-col justify-between max-w-3xl mx-auto border-x border-[var(--border-color)]/30 pb-20 md:pb-6">
+    <div className="min-h-screen bg-[var(--background)] flex flex-col justify-between max-w-3xl mx-auto pb-20 md:pb-6">
       
-      {/* Header */}
-      <header className="sticky top-0 z-30 bg-[var(--background)]/85 backdrop-blur-xl border-b border-[var(--border-color)]/50 px-4 h-16 flex items-center justify-between">
+      {/* Header - Completely borderless & weightless */}
+      <header className="sticky top-0 z-30 bg-[var(--background)]/85 backdrop-blur-xl px-4 h-16 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.back()}
@@ -201,37 +375,62 @@ He indexado las prendas de tu armario, tus outfits y tus preferencias de estilo.
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
+          
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-2xl bg-gradient-to-tr from-[var(--brand-pink)] to-purple-600 flex items-center justify-center text-white shadow-md shadow-[var(--brand-pink)]/20">
-              <Sparkles className="w-5 h-5" />
+            <div className="relative w-9 h-9 rounded-2xl overflow-hidden shadow-sm flex items-center justify-center bg-pink-100 dark:bg-pink-950/40">
+              <Image
+                src="/klosy-avatar.png"
+                alt="Klosy"
+                fill
+                className="object-contain p-0.5"
+                priority
+              />
             </div>
             <div>
               <h1 className="text-base font-bold text-[var(--foreground)] flex items-center gap-1.5 leading-tight">
-                CloSy AI
-                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-[var(--brand-pink)]/10 text-[var(--brand-pink)]">
-                  Estilista
-                </span>
+                Klosy
               </h1>
               <p className="text-xs text-[var(--foreground-tertiary)]">
                 {rateLimitInfo.remainingDay !== undefined 
-                  ? `${rateLimitInfo.remainingDay} consultas restantes hoy` 
-                  : 'Asistente de armario y estilo'}
+                  ? `${rateLimitInfo.remainingDay} consultas hoy` 
+                  : 'Tu estilista de moda'}
               </p>
             </div>
           </div>
         </div>
 
-        <Link
-          href="/closet"
-          className="p-2 text-xs font-semibold text-[var(--foreground-secondary)] hover:text-[var(--foreground)] flex items-center gap-1 rounded-xl hover:bg-[var(--background-secondary)] transition-colors"
-        >
-          <Shirt className="w-4 h-4 text-[var(--brand-pink)]" />
-          <span className="hidden sm:inline">Mi Armario</span>
-        </Link>
+        {/* Right Action Icons (History & Wardrobe Drawer) */}
+        <div className="flex items-center gap-1">
+          {/* Conversations History Icon */}
+          <button
+            onClick={() => {
+              haptics.selection();
+              setShowHistoryDrawer(true);
+            }}
+            className="p-2.5 text-[var(--foreground-secondary)] hover:text-[var(--foreground)] rounded-full hover:bg-[var(--background-secondary)] transition-colors relative"
+            title="Conversaciones guardadas"
+            aria-label="Historial de conversaciones"
+          >
+            <History className="w-5 h-5" />
+            {conversations.length > 1 && (
+              <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-[var(--brand-pink)]" />
+            )}
+          </button>
+
+          {/* Wardrobe Drawer Icon (Only Icon) */}
+          <button
+            onClick={openWardrobe}
+            className="p-2.5 text-[var(--foreground-secondary)] hover:text-[var(--foreground)] rounded-full hover:bg-[var(--background-secondary)] transition-colors"
+            title="Ver mis prendas"
+            aria-label="Ver mis prendas"
+          >
+            <Shirt className="w-5 h-5 text-[var(--brand-pink)]" />
+          </button>
+        </div>
       </header>
 
-      {/* Messages Container */}
-      <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
+      {/* Messages Container - Clean, open, no harsh borders */}
+      <div className="flex-1 overflow-y-auto px-4 md:px-6 py-4 space-y-6">
         {messages.map((msg) => (
           <motion.div
             key={msg.id}
@@ -240,8 +439,13 @@ He indexado las prendas de tu armario, tus outfits y tus preferencias de estilo.
             className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             {msg.role === 'assistant' && (
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[var(--brand-pink)] to-purple-600 flex items-center justify-center text-white flex-shrink-0 mt-1 shadow-sm">
-                <Bot className="w-4 h-4" />
+              <div className="relative w-8 h-8 rounded-xl overflow-hidden shadow-sm flex items-center justify-center bg-pink-100 dark:bg-pink-950/40 flex-shrink-0 mt-1">
+                <Image
+                  src="/klosy-avatar.png"
+                  alt="Klosy"
+                  fill
+                  className="object-contain p-0.5"
+                />
               </div>
             )}
 
@@ -251,8 +455,8 @@ He indexado las prendas de tu armario, tus outfits y tus preferencias de estilo.
               <div
                 className={`rounded-2xl p-4 text-sm leading-relaxed ${
                   msg.role === 'user'
-                    ? 'bg-[var(--brand-pink)] text-white font-medium rounded-tr-sm shadow-md'
-                    : 'bg-[var(--card-bg)] text-[var(--foreground)] border border-[var(--border-color)]/60 rounded-tl-sm shadow-sm'
+                    ? 'bg-[var(--brand-pink)] text-white font-medium rounded-tr-sm shadow-sm'
+                    : 'bg-[var(--card-bg)] text-[var(--foreground)] border border-[var(--border-color)]/50 rounded-tl-sm shadow-sm'
                 }`}
               >
                 <div className="whitespace-pre-line prose dark:prose-invert prose-sm max-w-none">
@@ -260,9 +464,9 @@ He indexado las prendas de tu armario, tus outfits y tus preferencias de estilo.
                 </div>
               </div>
 
-              {/* Recommended Outfit Card Preview (if generated by CloSy) */}
+              {/* Recommended Outfit Card Preview */}
               {msg.recommended_outfit && msg.recommended_outfit.items && msg.recommended_outfit.items.length > 0 && (
-                <div className="bg-[var(--card-bg)]/90 backdrop-blur-xl border border-[var(--brand-pink)]/30 rounded-2xl p-4 shadow-lg space-y-3">
+                <div className="bg-[var(--card-bg)]/90 backdrop-blur-xl border border-[var(--brand-pink)]/30 rounded-2xl p-4 shadow-md space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="w-6 h-6 rounded-lg bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] flex items-center justify-center">
@@ -319,7 +523,7 @@ He indexado las prendas de tu armario, tus outfits y tus preferencias de estilo.
                         className="flex-1 py-2.5 px-4 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-emerald-500/20 transition-colors"
                       >
                         <Check className="w-4 h-4" />
-                        <span>¡Guardado en tu Armario! Ver look</span>
+                        <span>Guardado en tu Armario</span>
                       </Link>
                     ) : (
                       <button
@@ -371,8 +575,13 @@ He indexado las prendas de tu armario, tus outfits y tus preferencias de estilo.
             animate={{ opacity: 1 }}
             className="flex items-center gap-3 text-xs text-[var(--foreground-tertiary)]"
           >
-            <div className="w-8 h-8 rounded-xl bg-[var(--background-secondary)] flex items-center justify-center">
-              <Bot className="w-4 h-4 text-[var(--brand-pink)] animate-pulse" />
+            <div className="relative w-8 h-8 rounded-xl overflow-hidden shadow-sm flex items-center justify-center bg-pink-100 dark:bg-pink-950/40 flex-shrink-0">
+              <Image
+                src="/klosy-avatar.png"
+                alt="Klosy"
+                fill
+                className="object-contain p-0.5"
+              />
             </div>
             <div className="flex gap-1 py-2 px-3 bg-[var(--card-bg)] border border-[var(--border-color)]/50 rounded-2xl">
               <span className="w-1.5 h-1.5 bg-[var(--brand-pink)] rounded-full animate-bounce" />
@@ -398,8 +607,8 @@ He indexado las prendas de tu armario, tus outfits y tus preferencias de estilo.
             type="text"
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
-            placeholder="Pregúntale a CloSy sobre un outfit, combinación o evento..."
-            className="w-full pl-4 pr-12 py-3.5 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-2xl text-sm text-[var(--foreground)] placeholder-[var(--foreground-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)]/40 transition-all font-medium shadow-sm"
+            placeholder="Pregúntale a Klosy sobre qué ponerte o cómo combinar tu ropa..."
+            className="w-full pl-4 pr-12 py-3.5 bg-[var(--card-bg)] border border-[var(--border-color)]/60 rounded-2xl text-sm text-[var(--foreground)] placeholder-[var(--foreground-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)]/40 transition-all font-medium shadow-sm"
           />
           <button
             type="submit"
@@ -411,6 +620,206 @@ He indexado las prendas de tu armario, tus outfits y tus preferencias de estilo.
           </button>
         </form>
       </div>
+
+      {/* RIGHT DRAWER: User's Wardrobe Clothes */}
+      <AnimatePresence>
+        {showWardrobeDrawer && (
+          <div className="fixed inset-0 z-[7000] flex justify-end">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+              onClick={() => setShowWardrobeDrawer(false)}
+            />
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 26, stiffness: 280 }}
+              className="relative w-full max-w-sm h-full bg-[var(--background)] shadow-2xl flex flex-col z-10 border-l border-[var(--border-color)]/50"
+            >
+              {/* Drawer Header */}
+              <div className="p-4 border-b border-[var(--border-color)]/50 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Shirt className="w-5 h-5 text-[var(--brand-pink)]" />
+                  <h3 className="font-bold text-base text-[var(--foreground)]">Mis Prendas</h3>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--background-secondary)] font-semibold text-[var(--foreground-secondary)]">
+                    {wardrobeClothes.length}
+                  </span>
+                </div>
+                <button
+                  onClick={() => setShowWardrobeDrawer(false)}
+                  className="p-1.5 rounded-full hover:bg-[var(--background-secondary)] transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Search in Wardrobe */}
+              <div className="p-3 border-b border-[var(--border-color)]/30">
+                <div className="relative flex items-center">
+                  <Search className="w-4 h-4 text-[var(--foreground-tertiary)] absolute left-3" />
+                  <input
+                    type="text"
+                    value={wardrobeSearch}
+                    onChange={(e) => setWardrobeSearch(e.target.value)}
+                    placeholder="Buscar prenda o color..."
+                    className="w-full pl-9 pr-3 py-2 bg-[var(--background-secondary)] rounded-xl text-xs text-[var(--foreground)] focus:outline-none focus:ring-1 focus:ring-[var(--brand-pink)]"
+                  />
+                </div>
+              </div>
+
+              {/* Garments List */}
+              <div className="flex-1 overflow-y-auto p-3 space-y-2">
+                {loadingWardrobe ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="w-6 h-6 animate-spin text-[var(--brand-pink)]" />
+                  </div>
+                ) : filteredWardrobe.length === 0 ? (
+                  <div className="text-center py-12 px-4">
+                    <Shirt className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+                    <p className="text-sm font-semibold text-[var(--foreground)]">No hay prendas</p>
+                    <p className="text-xs text-[var(--foreground-tertiary)] mt-1">
+                      {wardrobeSearch ? 'No se encontraron prendas para esa búsqueda' : 'Añade ropa a tu armario para verla aquí'}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2.5">
+                    {filteredWardrobe.map((item) => (
+                      <div
+                        key={item.id}
+                        className="bg-[var(--card-bg)] border border-[var(--border-color)]/50 rounded-2xl p-2.5 flex flex-col justify-between hover:border-[var(--brand-pink)]/50 transition-colors group"
+                      >
+                        <div
+                          onClick={() => setSelectedProduct(item)}
+                          className="cursor-pointer"
+                        >
+                          <div className="relative w-full aspect-square rounded-xl bg-[var(--background-secondary)] overflow-hidden mb-2 flex items-center justify-center">
+                            {item.image_url || item.original_image_url ? (
+                              <Image
+                                src={item.image_url || item.original_image_url}
+                                alt={item.name}
+                                fill
+                                className="object-contain p-1 group-hover:scale-105 transition-transform"
+                              />
+                            ) : (
+                              <Shirt className="w-6 h-6 text-gray-400" />
+                            )}
+                          </div>
+                          <p className="text-xs font-bold text-[var(--foreground)] truncate">{item.name}</p>
+                          <p className="text-[10px] text-[var(--foreground-tertiary)] capitalize truncate">{item.category}</p>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowWardrobeDrawer(false);
+                            handleSend(`¿Cómo puedo combinar mi ${item.name} (${item.category})?`);
+                          }}
+                          className="mt-2 w-full py-1.5 px-2 bg-[var(--brand-pink)]/10 hover:bg-[var(--brand-pink)] text-[var(--brand-pink)] hover:text-white rounded-lg text-[11px] font-semibold transition-colors flex items-center justify-center gap-1"
+                        >
+                          <span>Combinar</span>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* DRAWER: Conversations Directory (Max 5) */}
+      <AnimatePresence>
+        {showHistoryDrawer && (
+          <div className="fixed inset-0 z-[7000] flex justify-start">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+              onClick={() => setShowHistoryDrawer(false)}
+            />
+            <motion.div
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'spring', damping: 26, stiffness: 280 }}
+              className="relative w-full max-w-sm h-full bg-[var(--background)] shadow-2xl flex flex-col z-10 border-r border-[var(--border-color)]/50"
+            >
+              {/* Directory Header */}
+              <div className="p-4 border-b border-[var(--border-color)]/50 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <History className="w-5 h-5 text-[var(--brand-pink)]" />
+                  <h3 className="font-bold text-base text-[var(--foreground)]">Conversaciones</h3>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--background-secondary)] font-semibold text-[var(--foreground-secondary)]">
+                    {conversations.length}/5
+                  </span>
+                </div>
+                <button
+                  onClick={() => setShowHistoryDrawer(false)}
+                  className="p-1.5 rounded-full hover:bg-[var(--background-secondary)] transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* New Conversation Button */}
+              <div className="p-3 border-b border-[var(--border-color)]/30">
+                <button
+                  type="button"
+                  onClick={handleNewConversation}
+                  className="w-full py-2.5 px-4 bg-[var(--brand-pink)] text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity shadow-md shadow-[var(--brand-pink)]/20"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Nueva conversación</span>
+                </button>
+              </div>
+
+              {/* Conversations List */}
+              <div className="flex-1 overflow-y-auto p-3 space-y-2">
+                {conversations.map((conv) => {
+                  const isActive = conv.id === activeConversationId;
+                  return (
+                    <div
+                      key={conv.id}
+                      onClick={() => handleSelectConversation(conv)}
+                      className={`group p-3 rounded-2xl flex items-center justify-between cursor-pointer transition-all ${
+                        isActive
+                          ? 'bg-[var(--brand-pink)]/10 border border-[var(--brand-pink)]/30 text-[var(--brand-pink)]'
+                          : 'bg-[var(--card-bg)] border border-[var(--border-color)]/40 hover:bg-[var(--background-secondary)] text-[var(--foreground)]'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                        <MessageSquare className="w-4 h-4 flex-shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-bold truncate">{conv.title}</p>
+                          <p className="text-[10px] text-[var(--foreground-tertiary)]">
+                            {new Date(conv.updatedAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+
+                      {conversations.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={(e) => handleDeleteConversation(conv.id, e)}
+                          className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                          title="Eliminar conversación"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Product Detail Modal */}
       <ProductModal

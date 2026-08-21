@@ -652,8 +652,10 @@ export default function ClosetPage() {
                 whileTap={{ scale: 0.98 }}
                 className="w-full py-3 px-4 rounded-xl bg-[var(--background-secondary)] text-[var(--foreground-secondary)] font-semibold flex items-center justify-center gap-2 border border-[var(--border-color)] relative overflow-hidden group hover:border-[var(--brand-pink)]/50 transition-all"
               >
-                <Wand2 className="w-5 h-5 group-hover:text-[var(--brand-pink)] transition-colors" />
-                Crear con IA
+                <div className="relative w-5 h-5 rounded-full overflow-hidden flex-shrink-0">
+                  <Image src="/klosy-avatar.png" alt="Klosy" fill className="object-contain" />
+                </div>
+                <span>Klosy</span>
               </motion.button>
             </Link>
           </div>

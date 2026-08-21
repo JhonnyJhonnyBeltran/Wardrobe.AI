@@ -71,10 +71,12 @@ Wardrobe.AI es una plataforma de moda impulsada por IA que permite a los usuario
 - **Etiquetado de Estilos en Publicaciones (`/create-post`)**: Selector multi-etiqueta que permite asociar uno o varios estilos (ej: `y2k`, `techwear`, `streetwear`) a cada post, pre-cargando los estilos del usuario o del outfit vinculado y persistiendo `style_ids TEXT[]` en Supabase.
 - **Gestión y Eliminación de Carpetas (`/profile` & `/api/save-folders`)**: Modal de confirmación con aviso explícito (*"Todas las publicaciones guardadas en esta carpeta se borrarán definitivamente de tus guardados"*). Al confirmar, la API elimina en cascada las asociaciones en `save_folder_items`, las publicaciones guardadas correspondientes en `saves` y la carpeta en `save_folders`.
 - **Eliminación Total de Cuenta (`/api/user/delete`)**: Eliminación completa en cascada de comentarios, likes, guardados, carpetas, follows, notificaciones, mensajes, conversaciones vacías, outfits, prendas del armario, fotos en Storage (`avatars`, `clothing-images`), perfil en base de datos y registro de autenticación en `auth.users`.
-- **Ruta y Acceso a CloSy AI (`/closy`)**: El botón "Crear con IA" en `/closet` redirige a la ruta dedicada `/closy` para interactuar con la asistente virtual de estilismo.
-- **Ocasión Opcional y Diseño Limpio en Outfits**: 
-  - En `/create`: La ocasión ya no es obligatoria ni se asigna "Casual" por defecto; es un selector opcional desmarcable y el outfit puede guardarse sin ocasión (`occasion: null`).
-  - En `/outfit/[id]`, `/profile/[id]/outfit/[outfitId]` y `OutfitDetailModal`: Se eliminaron las cajas cuadradas forzadas de "Ocasión" y "Prendas". Ahora la ocasión solo se muestra como una insignia sutil junto al título si el usuario la seleccionó expresamente, con iconografía refinada (`Coffee`, `Crown`, `Flame`, `Palmtree`, `Moon`, `Zap`, `Heart`, etc.).
+- **Asistente y Estilista Klosy (`/closy` & `/api/closy/chat`)**: 
+  - **Identidad de Marca**: Personaje e icono mascota oficial `klosy-avatar.png` (personaje rosa en forma de "K" con ojos expresivos). Tono natural, humano y cercano, eliminando lenguaje técnico o robótico.
+  - **Diseño Flotante y Sin Bordes**: Vista de chat limpia, abierta y sin marcos pesados.
+  - **Cajón de Armario Rápido (Icono Superior Derecho)**: Botón de icono minimalista que despliega un cajón lateral con todas las prendas del usuario (`clothing_items`), buscador y botón para consultar combinaciones directamente a Klosy.
+  - **Directorio de Conversaciones (Máximo 5)**: Historial persistente en cliente que permite guardar, alternar y borrar hasta 5 conversaciones independientes con Klosy.
+  - **Recomendación y Guardado en 1 Toque**: Genera tarjetas visuales de outfits y prendas reales con guardado directo en base de datos (`/api/closy/save-outfit`).
 
 ---
 
