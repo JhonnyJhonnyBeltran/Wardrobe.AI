@@ -151,9 +151,12 @@ export default function PublicProfilePage() {
           .select(`
             *,
             outfit_items (
-              clothing_items (
-                image_url
-              )
+              position_x,
+              position_y,
+              scale,
+              rotation,
+              layer_order,
+              clothing_item_id
             )
           `)
           .eq('user_id', targetId)
@@ -163,16 +166,32 @@ export default function PublicProfilePage() {
           console.error('[Profile] Error fetching outfits:', outfitsError);
         }
         
-        // Ensure outfit_items fallback syntax is mapped correctly just in case
-        const mappedOutfits = (outfitsData || []).map((outfit: any) => {
-           return {
-             ...outfit,
-             outfit_items: outfit.outfit_items?.map((oi: any) => ({
-               ...oi,
-               clothing_items: oi.clothing_item
-             }))
-           };
-        });
+        let mappedOutfits = outfitsData || [];
+        const allClothingIds = [
+          ...new Set(
+            (outfitsData || []).flatMap((o: any) =>
+              (o.outfit_items || []).map((oi: any) => oi.clothing_item_id).filter(Boolean)
+            )
+          )
+        ];
+
+        if (allClothingIds.length > 0) {
+          const { data: clothesList } = await supabase
+            .from('clothing_items')
+            .select('id, image_url, name, brand, category, color, color_hex')
+            .in('id', allClothingIds);
+
+          const clothesMap = new Map((clothesList || []).map((c: any) => [c.id, c]));
+
+          mappedOutfits = (outfitsData || []).map((outfit: any) => ({
+            ...outfit,
+            outfit_items: (outfit.outfit_items || []).map((oi: any) => ({
+              ...oi,
+              clothing_items: clothesMap.get(oi.clothing_item_id),
+              clothing_item: clothesMap.get(oi.clothing_item_id)
+            }))
+          }));
+        }
 
         setOutfits(mappedOutfits);
       }

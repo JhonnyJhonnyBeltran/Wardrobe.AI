@@ -70,112 +70,86 @@ export default function OutfitDetailPage() {
     const fetchOutfit = async () => {
       setLoading(true);
       try {
-        // 1. Fetch outfit with joined outfit_items
-        const { data, error } = await supabase
+        // 1. Fetch outfit record directly (no nested PostgREST joins to avoid 400 schema-cache errors)
+        const { data: outfitData, error: outfitError } = await supabase
           .from('outfits')
-          .select(`
-            *,
-            outfit_items (
-              position_x,
-              position_y,
-              scale,
-              rotation,
-              layer_order,
-              clothing_item_id,
-              clothing_items (
-                id,
-                name,
-                category,
-                image_url,
-                brand,
-                color,
-                color_hex,
-                price,
-                source_url
-              )
-            )
-          `)
+          .select('*')
           .eq('id', outfitId)
-          .single();
+          .maybeSingle();
 
-        if (error) throw error;
-
-        let outfitData = data as any;
-        let itemsList = outfitData?.outfit_items || [];
-
-        // Fallback 1: If outfit_items was empty or not joined, fetch directly from outfit_items table
-        if (!itemsList || itemsList.length === 0) {
-          const { data: directItems } = await supabase
-            .from('outfit_items')
-            .select(`
-              position_x,
-              position_y,
-              scale,
-              rotation,
-              layer_order,
-              clothing_item_id,
-              clothing_items (
-                id,
-                name,
-                category,
-                image_url,
-                brand,
-                color,
-                color_hex,
-                price,
-                source_url
-              )
-            `)
-            .eq('outfit_id', outfitId);
-
-          if (directItems && directItems.length > 0) {
-            itemsList = directItems;
-            outfitData = {
-              ...outfitData,
-              outfit_items: itemsList
-            };
-          }
+        if (outfitError) {
+          console.error('Error fetching outfit row:', outfitError);
+          throw outfitError;
         }
 
-        // Fallback 2: If clothing_items relation didn't populate in the join, fetch them manually by ID
-        const missingIds = (itemsList || [])
-          .filter((oi: any) => !oi.clothing_items && !oi.clothing_item && oi.clothing_item_id)
-          .map((oi: any) => oi.clothing_item_id);
+        if (!outfitData) {
+          console.warn('No outfit found for id:', outfitId);
+          setOutfit(null);
+          setLoading(false);
+          return;
+        }
 
-        if (missingIds.length > 0) {
-          const { data: clothes } = await supabase
+        // 2. Fetch outfit items for this outfit
+        const { data: itemsData, error: itemsError } = await supabase
+          .from('outfit_items')
+          .select('*')
+          .eq('outfit_id', outfitId);
+
+        if (itemsError) {
+          console.warn('Error fetching outfit_items:', itemsError);
+        }
+
+        const rawItems = itemsData || [];
+
+        // 3. Fetch clothing items by ID with explicit valid columns
+        const clothingIds = rawItems
+          .map((oi: any) => oi.clothing_item_id)
+          .filter(Boolean);
+
+        const clothesMap = new Map<string, any>();
+
+        if (clothingIds.length > 0) {
+          const { data: clothesData, error: clothesError } = await supabase
             .from('clothing_items')
-            .select('*')
-            .in('id', missingIds);
+            .select('id, name, category, image_url, brand, color, color_hex, size, reference, source_url')
+            .in('id', clothingIds);
 
-          if (clothes && clothes.length > 0) {
-            const clothesMap = new Map(clothes.map((c: any) => [c.id, c]));
-            itemsList = itemsList.map((oi: any) => ({
-              ...oi,
-              clothing_items: oi.clothing_items || oi.clothing_item || clothesMap.get(oi.clothing_item_id)
-            }));
-            outfitData = {
-              ...outfitData,
-              outfit_items: itemsList
-            };
+          if (!clothesError && clothesData) {
+            clothesData.forEach((c: any) => clothesMap.set(c.id, c));
           }
         }
 
-        setOutfit(outfitData);
+        // 4. Merge items with clothing details
+        const resolvedItems = rawItems.map((oi: any) => {
+          const clothing = clothesMap.get(oi.clothing_item_id);
+          return {
+            ...oi,
+            clothing_item: clothing,
+            clothing_items: clothing,
+            clothing: clothing
+          };
+        });
 
-        // Fetch related posts
+        const fullOutfit: Outfit = {
+          ...outfitData,
+          outfit_items: resolvedItems
+        };
+
+        setOutfit(fullOutfit);
+
+        // 5. Fetch related posts that link to this outfit
         const { data: postsData } = await supabase
           .from('posts')
           .select('id, image_url, caption')
           .eq('outfit_id', outfitId)
           .order('created_at', { ascending: false });
-        
+
         if (postsData) {
           setRelatedPosts(postsData);
         }
 
       } catch (err) {
-        console.error('Error fetching outfit:', err);
+        console.error('Error in fetchOutfit flow:', err);
       } finally {
         setLoading(false);
       }
@@ -216,10 +190,11 @@ export default function OutfitDetailPage() {
   if (!outfit) {
     return (
       <div className="min-h-screen bg-[var(--background)] flex flex-col items-center justify-center p-4">
-        <p className="text-[var(--foreground)]">Outfit no encontrado</p>
+        <p className="text-[var(--foreground)] font-semibold text-lg">Outfit no encontrado</p>
+        <p className="text-sm text-[var(--foreground-tertiary)] mt-1">Este outfit no existe o es privado.</p>
         <button
-          onClick={() => router.back()}
-          className="mt-4 text-[var(--brand-pink)] font-medium"
+          onClick={() => window.history.length > 2 ? router.back() : router.push('/feed')}
+          className="mt-6 px-6 py-2.5 bg-[var(--brand-pink)] text-white rounded-full font-semibold shadow-md hover:opacity-90 transition-all active:scale-95"
         >
           Volver
         </button>
