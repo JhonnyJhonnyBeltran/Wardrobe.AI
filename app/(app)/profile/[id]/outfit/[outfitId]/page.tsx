@@ -34,7 +34,23 @@ export default function ProfileOutfitDetailPage() {
     const loadData = async () => {
       setLoading(true);
       try {
-        // 1. Fetch Outfit with joined profiles and outfit_items (EXACT same query structure as /post/[id])
+        // Strategy 1: Server-side API (bypasses RLS to fetch all garments and creator profile)
+        try {
+          const res = await fetch(`/api/outfits/${outfitId}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data?.outfit) {
+              setOutfit(data.outfit);
+              setRelatedPosts(data.posts || []);
+              setLoading(false);
+              return;
+            }
+          }
+        } catch (apiErr) {
+          console.warn('[ProfileOutfit] Server API fetch fallback to direct Supabase:', apiErr);
+        }
+
+        // Strategy 2: Direct Supabase Fetch (same structure as /post/[id])
         const { data: outfitData, error: outfitError } = await supabase
           .from('outfits')
           .select(`
@@ -51,10 +67,6 @@ export default function ProfileOutfitDetailPage() {
           `)
           .eq('id', outfitId)
           .single();
-
-        if (outfitError) {
-          console.error('[ProfileOutfit] Error fetching outfit:', outfitError);
-        }
 
         let outfitObj = outfitData as any;
 
@@ -95,7 +107,7 @@ export default function ProfileOutfitDetailPage() {
           }
         }
 
-        // 2. Fetch related posts ("Aparece en")
+        // Fetch related posts ("Aparece en")
         let relatedPostsList: any[] = [];
         const { data: postsData } = await supabase
           .from('posts')
@@ -106,7 +118,6 @@ export default function ProfileOutfitDetailPage() {
         if (postsData && postsData.length > 0) {
           relatedPostsList = postsData;
         } else if (outfitObj?.image_url) {
-          // Fallback by image URL
           const { data: imgPosts } = await supabase
             .from('posts')
             .select('id, image_url, caption, created_at, user_id, likes_count, comments_count')
@@ -163,13 +174,14 @@ export default function ProfileOutfitDetailPage() {
     );
   }
 
-  const authorRaw = outfit.profiles;
+  const authorRaw = outfit.profiles || outfit.owner;
   const author = Array.isArray(authorRaw) ? authorRaw[0] : (authorRaw || {});
 
   // Extract valid items
-  const validItems = (outfit.outfit_items || [])
+  const allRawItems = outfit.outfit_items || outfit.items || [];
+  const validItems = allRawItems
     .map((item: any) => {
-      const clothingRaw = item.clothing_items || item.clothing_item;
+      const clothingRaw = item.clothing_items || item.clothing_item || item.clothing || item;
       const clothing = Array.isArray(clothingRaw) ? clothingRaw[0] : clothingRaw;
       if (!clothing) return null;
       return {
@@ -177,7 +189,7 @@ export default function ProfileOutfitDetailPage() {
         clothing
       };
     })
-    .filter(Boolean);
+    .filter((v: any) => v && v.clothing && (v.clothing.image_url || v.clothing.imageUrl));
 
   const backUrl = author?.username 
     ? `/profile/${author.username}` 
@@ -198,7 +210,7 @@ export default function ProfileOutfitDetailPage() {
 
       <main className="w-full flex flex-col md:flex-row pb-24 md:pb-0 md:h-[calc(100vh-56px)] md:justify-center overflow-x-hidden md:overflow-hidden bg-[var(--background)]">
         
-        {/* Left Column (Desktop) / Top Half (Mobile) - The Interactive Canvas Image (EXACT match to /post/[id]) */}
+        {/* Left Column (Desktop) / Top Half (Mobile) - The Interactive Canvas Image */}
         <div className="relative w-full aspect-[3/4] md:w-auto md:h-full md:aspect-[3/4] md:max-w-[calc(100%-400px)] shrink-0 bg-[#f8f9fa] dark:bg-[#111] z-0 flex items-center justify-center border-b md:border-b-0 md:border-r border-[var(--border-color)]">
           <InteractiveOutfitViewer
             outfit={outfit}
@@ -264,24 +276,24 @@ export default function ProfileOutfitDetailPage() {
               </div>
             </section>
 
-            {/* Items Grid (EXACT match to /post/[id]) */}
+            {/* Items Grid */}
             <section className="space-y-4">
               <h3 className="text-lg font-semibold text-[var(--foreground)]">Prendas de este look ({validItems.length})</h3>
               {validItems.length === 0 ? (
                 <p className="text-sm text-[var(--foreground-tertiary)]">No hay prendas registradas para este outfit.</p>
               ) : (
                 <div className="grid grid-cols-2 gap-3">
-                  {validItems.map(({ clothing }: any) => (
+                  {validItems.map(({ clothing }: any, idx: number) => (
                     <ClothingItem
-                      key={clothing.id}
+                      key={clothing.id || idx}
                       id={clothing.id}
                       name={clothing.name}
                       brand={clothing.brand}
                       type={clothing.category}
                       color={clothing.color}
                       colorHex={clothing.color_hex}
-                      imageUrl={clothing.image_url || '/placeholder.png'}
-                      onClick={() => setSelectedItem(clothing)}
+                      imageUrl={clothing.image_url || clothing.imageUrl || '/placeholder.png'}
+                      onClick={() => handleItemSelect(clothing)}
                     />
                   ))}
                 </div>
@@ -315,7 +327,7 @@ export default function ProfileOutfitDetailPage() {
         </div>
       </main>
 
-      {/* Product Detail Modal (EXACT match to /post/[id]) */}
+      {/* Product Detail Modal */}
       <ProductModal
         item={selectedItem ? ({
           id: selectedItem.id,

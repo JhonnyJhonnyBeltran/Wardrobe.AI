@@ -108,17 +108,27 @@ export async function GET(
             .eq('outfit_id', outfitId)
             .order('created_at', { ascending: false });
 
-        if (postsError) {
-            console.warn('[OutfitAPI] Error fetching related posts:', postsError);
+        let finalPosts = postsData || [];
+        if (finalPosts.length === 0 && outfit.image_url) {
+            const { data: imgPosts } = await supabaseAdmin
+                .from('posts')
+                .select('id, image_url, caption, created_at, user_id, likes_count, comments_count')
+                .eq('image_url', outfit.image_url)
+                .order('created_at', { ascending: false });
+            if (imgPosts && imgPosts.length > 0) {
+                finalPosts = imgPosts;
+            }
         }
 
         return NextResponse.json({
             outfit: {
                 ...outfit,
                 owner,
-                outfit_items: resolvedItems
+                profiles: owner,
+                outfit_items: resolvedItems,
+                items: resolvedItems
             },
-            posts: postsData || []
+            posts: finalPosts
         });
 
     } catch (err: any) {
