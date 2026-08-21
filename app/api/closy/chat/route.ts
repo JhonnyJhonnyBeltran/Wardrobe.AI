@@ -145,7 +145,8 @@ REGLAS ABSOLUTAS:
 2. NUNCA inventes prendas con IDs ficticios. Si recomiendas un outfit, usa los IDs exactos provistos en "wardrobe.items".
 3. Ten en cuenta la morfología del usuario (${context.user.bodyShape || 'estándar'}), su paleta de colorimetría (${context.user.seasonPalette || 'neutra'}), y sus estilos preferidos (${context.user.preferredStyles.join(', ') || 'casual, moderno'}).
 4. Si el usuario pide un outfit o recomendación sobre qué ponerse, responde explicando la armonía del look (colores, proporciones, texturas) y genera el objeto JSON "recommended_outfit" con los item_ids exactos.
-5. Devuelve SIEMPRE tu respuesta en formato JSON estrictamente válido según este esquema:
+5. NO uses emojis en tus respuestas ni en los títulos de los outfits. Mantén una redacción limpia, sobria, elegante y profesional en Markdown.
+6. Devuelve SIEMPRE tu respuesta en formato JSON estrictamente válido según este esquema:
 {
   "message": "Texto conversacional en Markdown con tu explicación experta de estilo.",
   "recommended_outfit": {
@@ -234,7 +235,7 @@ function generateHeuristicStylingResponse(userPrompt: string, context: any) {
     return {
       message: `¡Hola ${context.user.username}! Veo que aún no tienes prendas registradas en tu armario. 
       
-Para poder armarte looks personalizados y decirte qué ponerte, sube fotos de tus prendas en la sección **Armario** (pestaña inferior). ¡En cuanto tengas un par de prendas podré crear decenas de combinaciones para ti! ✨`,
+Para poder armarte looks personalizados y decirte qué ponerte, sube fotos de tus prendas en la sección **Armario** (pestaña inferior). ¡En cuanto tengas un par de prendas podré crear decenas de combinaciones para ti!`,
       recommended_outfit: null,
       highlighted_item_ids: [],
       follow_up_suggestions: [

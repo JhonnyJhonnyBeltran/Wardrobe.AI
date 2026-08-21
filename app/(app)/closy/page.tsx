@@ -60,10 +60,10 @@ export default function ClosyPage() {
 
 He indexado las prendas de tu armario, tus outfits y tus preferencias de estilo. ¿Para qué ocasión o momento necesitas que te arme un look hoy?`,
       follow_up_suggestions: [
-        '✨ Arma un look casual con mis prendas',
-        '🌙 Recomiéndame un outfit para una cena',
-        '💼 Outfit formal para el trabajo o reunión',
-        '👟 Look cómodo para fin de semana'
+        'Arma un look casual con mis prendas',
+        'Recomiéndame un outfit para una cena',
+        'Outfit formal para el trabajo o reunión',
+        'Look cómodo para fin de semana'
       ],
       timestamp: new Date()
     }
@@ -336,7 +336,7 @@ He indexado las prendas de tu armario, tus outfits y tus preferencias de estilo.
                         ) : (
                           <>
                             <Sparkles className="w-4 h-4" />
-                            <span>✨ Guardar Outfit en mi Armario</span>
+                            <span>Guardar Outfit en mi Armario</span>
                           </>
                         )}
                       </button>

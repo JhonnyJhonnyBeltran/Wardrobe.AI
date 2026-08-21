@@ -473,7 +473,7 @@ export default function ProfilePage() {
 
           <div className="pb-6 border-b border-[var(--border-color)]">
             <h2 className="font-bold text-sm">{user.name}</h2>
-            <p className="text-sm text-[var(--foreground-secondary)] whitespace-pre-wrap">{user.bio || 'Amante de la moda ✨'}</p>
+            <p className="text-sm text-[var(--foreground-secondary)] whitespace-pre-wrap">{user.bio || 'Amante de la moda'}</p>
             <div className="flex flex-wrap gap-2 mt-4 mb-4">
               <Link href="/profile/settings" className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[var(--brand-pink)] text-white font-semibold text-sm hover:opacity-90 transition-opacity">
                 Editar perfil
