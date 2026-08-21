@@ -127,22 +127,35 @@ export default function ProfileOutfitDetailPage() {
           }
         }
 
-        // 3. Fetch Outfit Items
-        const { data: itemsData } = await supabase
+        // 3. Fetch Outfit Items with joined clothing items
+        let rawItems: any[] = [];
+        const { data: itemsDataWithJoin } = await supabase
           .from('outfit_items')
-          .select('*')
+          .select('*, clothing_item:clothing_items(id, name, category, color, color_hex, image_url, original_image_url, brand, size, fabric, reference, source_url)')
           .eq('outfit_id', outfitId);
 
-        const rawItems = itemsData || [];
-        const clothingIds = rawItems.map((oi: any) => oi.clothing_item_id).filter(Boolean);
+        if (itemsDataWithJoin && itemsDataWithJoin.length > 0) {
+          rawItems = itemsDataWithJoin;
+        } else {
+          // Fallback if join wasn't supported
+          const { data: itemsDataPlain } = await supabase
+            .from('outfit_items')
+            .select('*')
+            .eq('outfit_id', outfitId);
+          rawItems = itemsDataPlain || [];
+        }
 
-        // 4. Fetch Clothing Items by ID
+        // 4. Fetch Missing Clothing Items by ID if any wasn't populated
+        const missingClothingIds = rawItems
+          .filter((oi: any) => !oi.clothing_item && !oi.clothing_items && oi.clothing_item_id)
+          .map((oi: any) => oi.clothing_item_id);
+
         const clothesMap = new Map<string, any>();
-        if (clothingIds.length > 0) {
+        if (missingClothingIds.length > 0) {
           const { data: clothesList } = await supabase
             .from('clothing_items')
             .select('id, name, category, color, color_hex, image_url, original_image_url, brand, size, fabric, reference, source_url')
-            .in('id', clothingIds);
+            .in('id', missingClothingIds);
 
           if (clothesList) {
             clothesList.forEach((c: any) => clothesMap.set(c.id, c));
@@ -151,7 +164,7 @@ export default function ProfileOutfitDetailPage() {
 
         // 5. Merge items
         const resolvedItems = rawItems.map((oi: any) => {
-          const clothing = clothesMap.get(oi.clothing_item_id) || null;
+          const clothing = oi.clothing_item || oi.clothing_items || clothesMap.get(oi.clothing_item_id) || null;
           return {
             ...oi,
             clothing_item: clothing,
@@ -160,19 +173,34 @@ export default function ProfileOutfitDetailPage() {
           };
         });
 
-        // 6. Fetch related posts
+        // 6. Fetch related posts ("Aparece en")
+        let relatedPostsList: any[] = [];
         const { data: postsData } = await supabase
           .from('posts')
           .select('id, image_url, caption, created_at, user_id, likes_count, comments_count')
           .eq('outfit_id', outfitId)
           .order('created_at', { ascending: false });
 
+        if (postsData && postsData.length > 0) {
+          relatedPostsList = postsData;
+        } else if (outfitData.image_url) {
+          // Fallback: match by outfit composite image URL
+          const { data: imgPosts } = await supabase
+            .from('posts')
+            .select('id, image_url, caption, created_at, user_id, likes_count, comments_count')
+            .eq('image_url', outfitData.image_url)
+            .order('created_at', { ascending: false });
+          if (imgPosts && imgPosts.length > 0) {
+            relatedPostsList = imgPosts;
+          }
+        }
+
         setOutfit({
           ...outfitData,
           owner: resolvedProfile || undefined,
           outfit_items: resolvedItems
         });
-        setRelatedPosts(postsData || []);
+        setRelatedPosts(relatedPostsList);
 
       } catch (err) {
         console.error('[ProfileOutfit] Error in loadData:', err);
