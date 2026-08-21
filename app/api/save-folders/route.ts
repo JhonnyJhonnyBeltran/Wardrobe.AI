@@ -152,11 +152,23 @@ export async function DELETE(request: NextRequest) {
       .eq('id', id)
       .single();
 
-    if (!existing || existing.user_id !== user.id) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    // 1. Find all save IDs in this folder
+    const { data: folderItems } = await supabase
+      .from('save_folder_items')
+      .select('save_id')
+      .eq('folder_id', id);
+
+    const saveIds = (folderItems || []).map((fi: any) => fi.save_id).filter(Boolean);
+
+    // 2. Delete linkages
+    await supabase.from('save_folder_items').delete().eq('folder_id', id);
+
+    // 3. Delete the actual saves for this user
+    if (saveIds.length > 0) {
+      await supabase.from('saves').delete().in('id', saveIds).eq('user_id', user.id);
     }
 
-    await supabase.from('save_folder_items').delete().eq('folder_id', id);
+    // 4. Delete the folder
     await supabase.from('save_folders').delete().eq('id', id);
 
     return NextResponse.json({ success: true });

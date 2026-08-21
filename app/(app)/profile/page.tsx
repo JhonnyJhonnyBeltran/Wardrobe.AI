@@ -66,6 +66,8 @@ export default function ProfilePage() {
   const [showCreateFolder, setShowCreateFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
+  const [folderToDelete, setFolderToDelete] = useState<SaveFolder | null>(null);
+  const [isDeletingFolder, setIsDeletingFolder] = useState(false);
   const [savedPostsWithoutFolder, setSavedPostsWithoutFolder] = useState<any[]>([]);
 
 
@@ -116,21 +118,27 @@ export default function ProfilePage() {
     }
   };
 
-  // Delete folder
-  const deleteFolder = async (folderId: string) => {
+  // Confirm and Delete folder
+  const confirmDeleteFolder = async () => {
+    if (!folderToDelete) return;
+    setIsDeletingFolder(true);
     try {
-      const response = await fetch(`/api/save-folders?id=${folderId}`, {
+      const response = await fetch(`/api/save-folders?id=${folderToDelete.id}`, {
         method: 'DELETE'
       });
       const data = await response.json();
       if (data.success) {
-        setFolders(folders.filter(f => f.id !== folderId));
-        if (selectedFolder?.id === folderId) {
+        setFolders(prev => prev.filter(f => f.id !== folderToDelete.id));
+        if (selectedFolder?.id === folderToDelete.id) {
           setSelectedFolder(null);
+          setSavedPosts([]);
         }
+        setFolderToDelete(null);
       }
     } catch (error) {
       console.error('Error deleting folder:', error);
+    } finally {
+      setIsDeletingFolder(false);
     }
   };
 
@@ -342,6 +350,65 @@ export default function ProfilePage() {
         )}
       </AnimatePresence>
 
+      {/* Delete Folder Confirmation Modal with Warning */}
+      <AnimatePresence>
+        {folderToDelete && (
+          <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              onClick={() => !isDeletingFolder && setFolderToDelete(null)}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-sm bg-[var(--card-bg)] rounded-3xl shadow-2xl overflow-hidden border border-[var(--border-color)] p-6 text-center"
+            >
+              <div className="w-14 h-14 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center mx-auto mb-4 border border-red-500/20">
+                <Trash2 className="w-6 h-6" />
+              </div>
+
+              <h2 className="text-lg font-bold text-[var(--foreground)] mb-2">
+                ¿Eliminar carpeta &ldquo;{folderToDelete.name}&rdquo;?
+              </h2>
+
+              <p className="text-sm text-[var(--foreground-secondary)] leading-relaxed mb-6">
+                Todas las publicaciones guardadas en esta carpeta se borrarán definitivamente de tus guardados. Esta acción no se puede deshacer.
+              </p>
+
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setFolderToDelete(null)}
+                  disabled={isDeletingFolder}
+                  className="flex-1 py-3 px-4 bg-[var(--background-secondary)] text-[var(--foreground)] rounded-xl font-medium transition-colors hover:bg-[var(--border-color)] disabled:opacity-50"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmDeleteFolder}
+                  disabled={isDeletingFolder}
+                  className="flex-1 py-3 px-4 bg-red-500 text-white rounded-xl font-semibold transition-all hover:bg-red-600 disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-red-500/20 active:scale-95"
+                >
+                  {isDeletingFolder ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Borrando...</span>
+                    </>
+                  ) : (
+                    <span>Eliminar</span>
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Header */}
       <header className="sticky top-0 z-30 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-color)]/50">
         <div className="flex items-center justify-between px-4 h-14 w-full md:max-w-[70%] mx-auto">
@@ -519,13 +586,15 @@ export default function ProfilePage() {
                           <span className="truncate max-w-[150px]">{folder.name}</span>
                         </button>
                         
-                        {/* Botón X para eliminar */}
+                        {/* Botón X para eliminar con confirmación */}
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            deleteFolder(folder.id);
+                            setFolderToDelete(folder);
                           }}
-                          className="absolute -top-1 -right-1 p-1 bg-red-500 rounded-full shadow-sm opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                          className="absolute -top-1.5 -right-1.5 p-1 bg-red-500 hover:bg-red-600 rounded-full shadow-md opacity-80 md:opacity-0 md:group-hover:opacity-100 transition-all z-10 text-white hover:scale-110 active:scale-95"
+                          title={`Eliminar carpeta ${folder.name}`}
+                          aria-label={`Eliminar carpeta ${folder.name}`}
                         >
                           <X className="w-3 h-3 text-white" />
                         </button>
@@ -534,11 +603,22 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
-                {/* Saved Posts without Folder */}
+                {/* Saved Posts Section */}
                 <div className="p-4">
-                  <h3 className="font-semibold text-sm text-[var(--foreground)] mb-3">
-                    {selectedFolder ? `${selectedFolder.name}` : 'Guardados'}
-                  </h3>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold text-sm text-[var(--foreground)]">
+                      {selectedFolder ? `${selectedFolder.name}` : 'Guardados'}
+                    </h3>
+                    {selectedFolder && (
+                      <button
+                        onClick={() => setFolderToDelete(selectedFolder)}
+                        className="text-xs text-red-500 hover:text-red-600 flex items-center gap-1 font-semibold px-2.5 py-1 rounded-lg hover:bg-red-500/10 transition-colors"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Eliminar carpeta</span>
+                      </button>
+                    )}
+                  </div>
 
                   {isLoading ? (
                     <div className="grid grid-cols-3 gap-0.5">
