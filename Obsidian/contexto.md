@@ -76,7 +76,9 @@ Wardrobe.AI es una plataforma de moda impulsada por IA que permite a los usuario
   - **Diseño Flotante y Sin Bordes**: Vista de chat limpia, abierta y sin marcos pesados.
   - **Cajón de Armario Rápido (Icono Superior Derecho)**: Botón de icono minimalista que despliega un cajón lateral con todas las prendas del usuario (`clothing_items`), buscador y botón para consultar combinaciones directamente a Klosy.
   - **Directorio de Conversaciones (Máximo 5)**: Historial persistente en cliente que permite guardar, alternar y borrar hasta 5 conversaciones independientes con Klosy.
-  - **Recomendación y Guardado en 1 Toque**: Genera tarjetas visuales de outfits y prendas reales con guardado directo en base de datos (`/api/closy/save-outfit`).
+  - **Montaje Directo en el Lienzo (`/create?itemIds=...`)**: En lugar de guardar a ciegas, Klosy ofrece el botón *"Montar y editar en el lienzo"*, cargando automáticamente las prendas recomendadas en los slots correspondientes (`top`, `bottom`, `shoes`, etc.) y posicionándolas en el canvas interactivo para que el usuario pueda moverlas, escalarlas y rotarlas a su gusto.
+  - **Razonamiento Situacional Profundo**: Klosy analiza críticamente si el armario del usuario cuenta con prendas para la ocasión pedida (ej: boda, gala, playa, nieve). Si el usuario carece de prendas adecuadas, se lo explica con total sinceridad, describe qué tipo de prendas serían las ideales y le muestra la opción más formal o cercana que tiene en su armario actualmente.
+  - **Renderizado de Texto Limpio**: Formateador propio de Markdown sin artefactos de puntuación, resaltando negritas y listas con viñetas elegantes.
 
 ---
 

@@ -222,6 +222,97 @@ export default function CreateOutfitPage() {
         fetchOutfit();
     }, [outfitId, router]);
 
+    // Load preselected items if coming from Klosy AI or external link (itemIds param)
+    const itemIdsParam = searchParams.get('itemIds') || searchParams.get('items');
+    const outfitNameParam = searchParams.get('name') || searchParams.get('outfitName');
+    const occasionParam = searchParams.get('occasion');
+
+    useEffect(() => {
+        if (outfitId || !itemIdsParam) return;
+
+        const loadPreselectedItems = async () => {
+            setLoading(true);
+            try {
+                const ids = itemIdsParam.split(',').map(id => id.trim()).filter(Boolean);
+                if (ids.length === 0) return;
+
+                const { data: clothesList, error } = await supabase
+                    .from('clothing_items')
+                    .select('*')
+                    .in('id', ids);
+
+                if (error) throw error;
+
+                if (clothesList && clothesList.length > 0) {
+                    if (outfitNameParam) setOutfitName(decodeURIComponent(outfitNameParam));
+                    if (occasionParam) setOutfitOccasion(decodeURIComponent(occasionParam));
+
+                    const newSelections: Record<string, ClothingItem[]> = {
+                        headwear: [], top: [], layer: [], bottom: [], shoes: [], accessories: []
+                    };
+                    const newCanvasState: Record<string, any> = {};
+
+                    clothesList.forEach((item: any, idx: number) => {
+                        const clothingItem: ClothingItem = {
+                            id: item.id,
+                            imageUrl: item.image_url || item.original_image,
+                            category: item.category as any,
+                            name: item.name,
+                            brand: item.brand,
+                            color: item.color as any,
+                            originalImageUrl: item.original_image,
+                            favorite: item.is_favorite,
+                            createdAt: new Date(item.created_at || Date.now()),
+                            season: item.season || [],
+                            tags: item.tags || [],
+                        };
+
+                        let slot = 'accessories';
+                        let defaultY = 50;
+                        const cat = (clothingItem.category || '').toLowerCase();
+                        if (['top', 'shirt', 'blouse', 't-shirt', 'sweater', 'jersey', 'topwear'].some(s => cat.includes(s))) {
+                            slot = 'top';
+                            defaultY = 32;
+                        } else if (['bottom', 'pants', 'skirt', 'jeans', 'shorts', 'dress', 'bottomwear'].some(s => cat.includes(s))) {
+                            slot = 'bottom';
+                            defaultY = 62;
+                        } else if (['shoes', 'boots', 'sneakers', 'sandals', 'footwear'].some(s => cat.includes(s))) {
+                            slot = 'shoes';
+                            defaultY = 86;
+                        } else if (['outerwear', 'jacket', 'coat', 'blazer'].some(s => cat.includes(s))) {
+                            slot = 'layer';
+                            defaultY = 35;
+                        } else if (cat.includes('headwear') || clothingItem.name.toLowerCase().includes('gorra') || clothingItem.name.toLowerCase().includes('sombrero')) {
+                            slot = 'headwear';
+                            defaultY = 12;
+                        }
+
+                        if (newSelections[slot]) {
+                            newSelections[slot].push(clothingItem);
+                        }
+
+                        newCanvasState[item.id] = {
+                            x: 50 + (slot === 'layer' ? 12 : 0) + (idx % 2 === 1 ? -4 : 4),
+                            y: defaultY,
+                            scale: 1,
+                            rotation: 0,
+                            zIndex: idx + 1
+                        };
+                    });
+
+                    setSelections(newSelections);
+                    setCanvasState(newCanvasState);
+                    setMobileStep('preview');
+                }
+            } catch (e) {
+                console.error('[CreateOutfit] Error loading preselected items:', e);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadPreselectedItems();
+    }, [outfitId, itemIdsParam, outfitNameParam, occasionParam]);
 
     // Filter states
     const [searchQuery, setSearchQuery] = useState('');

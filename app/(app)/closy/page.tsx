@@ -16,7 +16,7 @@ import {
   Sparkles, 
   MessageSquare,
   Search,
-  ExternalLink
+  Wand2
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -66,13 +66,71 @@ const INITIAL_MESSAGE: ChatMessage = {
   timestamp: new Date()
 };
 
+function FormattedMessageText({ content, isUser }: { content: string; isUser?: boolean }) {
+  // Normalize punctuation spacing around bold asterisks e.g. " , **Nike**" -> ", **Nike**"
+  const cleaned = (content || '')
+    .replace(/\s+,\s+\*\*/g, ', **')
+    .replace(/\s+,\s+/g, ', ')
+    .trim();
+
+  const paragraphs = cleaned.split(/\n\n+/);
+
+  return (
+    <div className="space-y-2.5 text-sm leading-relaxed">
+      {paragraphs.map((para, pIdx) => {
+        const lines = para.split(/\n/);
+        return (
+          <div key={pIdx} className="space-y-1">
+            {lines.map((line, lIdx) => {
+              const isBullet = line.trim().startsWith('- ') || line.trim().startsWith('* ');
+              const textContent = isBullet ? line.trim().substring(2) : line;
+
+              // Parse bold tokens **...**
+              const parts = textContent.split(/(\*\*[^*]+\*\*)/g);
+
+              const formattedParts = parts.map((part, partIdx) => {
+                if (part.startsWith('**') && part.endsWith('**')) {
+                  const boldText = part.slice(2, -2);
+                  return (
+                    <strong 
+                      key={partIdx} 
+                      className={`font-bold ${isUser ? 'text-white' : 'text-[var(--foreground)]'}`}
+                    >
+                      {boldText}
+                    </strong>
+                  );
+                }
+                return <span key={partIdx}>{part}</span>;
+              });
+
+              if (isBullet) {
+                return (
+                  <div key={lIdx} className="flex items-start gap-2 my-1 pl-1">
+                    <span className={`w-1.5 h-1.5 rounded-full mt-2 flex-shrink-0 ${isUser ? 'bg-white' : 'bg-[var(--brand-pink)]'}`} />
+                    <span className="flex-1">{formattedParts}</span>
+                  </div>
+                );
+              }
+
+              return (
+                <div key={lIdx}>
+                  {formattedParts}
+                </div>
+              );
+            })}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function KlosyPage() {
   const router = useRouter();
   const { user } = useUser();
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
-  const [savingOutfitMap, setSavingOutfitMap] = useState<Record<string, boolean>>({});
   const [rateLimitInfo, setRateLimitInfo] = useState<{ remainingDay?: number }>({});
   
   // Drawers
@@ -300,57 +358,6 @@ export default function KlosyPage() {
     }
   };
 
-  const handleSaveRecommendedOutfit = async (msgId: string, outfit: any) => {
-    if (!outfit || !outfit.items || outfit.items.length === 0) return;
-
-    setSavingOutfitMap(prev => ({ ...prev, [msgId]: true }));
-    haptics.selection();
-
-    try {
-      const res = await fetch('/api/closy/save-outfit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: outfit.name,
-          occasion: outfit.occasion,
-          items: outfit.items
-        })
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Error al guardar outfit');
-      }
-
-      haptics.success();
-      toast.success('Outfit guardado en tu armario');
-
-      const updated = messages.map(m => {
-        if (m.id === msgId) {
-          return { ...m, savedOutfitId: data.outfit_id };
-        }
-        return m;
-      });
-      setMessages(updated);
-
-      // Persist in active conversation
-      const updatedConvs = conversations.map(c => {
-        if (c.id === activeConversationId) {
-          return { ...c, messages: updated };
-        }
-        return c;
-      });
-      persistConversations(updatedConvs);
-
-    } catch (err: any) {
-      console.error('[Klosy] Save outfit error:', err);
-      toast.error(err?.message || 'Error al guardar outfit');
-    } finally {
-      setSavingOutfitMap(prev => ({ ...prev, [msgId]: false }));
-    }
-  };
-
   // Filter wardrobe clothes for right drawer
   const filteredWardrobe = wardrobeClothes.filter(c => {
     if (!wardrobeSearch) return true;
@@ -451,17 +458,15 @@ export default function KlosyPage() {
 
             <div className={`space-y-3.5 max-w-[90%] sm:max-w-[85%] ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
               
-              {/* Text Bubble */}
+              {/* Text Bubble with Clean Markdown Formatter */}
               <div
-                className={`rounded-2xl p-4 text-sm leading-relaxed ${
+                className={`rounded-2xl p-4 shadow-sm ${
                   msg.role === 'user'
-                    ? 'bg-[var(--brand-pink)] text-white font-medium rounded-tr-sm shadow-sm'
-                    : 'bg-[var(--card-bg)] text-[var(--foreground)] border border-[var(--border-color)]/50 rounded-tl-sm shadow-sm'
+                    ? 'bg-[var(--brand-pink)] text-white font-medium rounded-tr-sm'
+                    : 'bg-[var(--card-bg)] text-[var(--foreground)] border border-[var(--border-color)]/50 rounded-tl-sm'
                 }`}
               >
-                <div className="whitespace-pre-line prose dark:prose-invert prose-sm max-w-none">
-                  {msg.content}
-                </div>
+                <FormattedMessageText content={msg.content} isUser={msg.role === 'user'} />
               </div>
 
               {/* Recommended Outfit Card Preview */}
@@ -515,36 +520,15 @@ export default function KlosyPage() {
                     ))}
                   </div>
 
-                  {/* Action: Save Outfit to Wardrobe */}
+                  {/* Action: Open in Canvas to customize & position */}
                   <div className="pt-1 flex items-center justify-between gap-3">
-                    {msg.savedOutfitId ? (
-                      <Link
-                        href="/closet"
-                        className="flex-1 py-2.5 px-4 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-emerald-500/20 transition-colors"
-                      >
-                        <Check className="w-4 h-4" />
-                        <span>Guardado en tu Armario</span>
-                      </Link>
-                    ) : (
-                      <button
-                        type="button"
-                        disabled={savingOutfitMap[msg.id]}
-                        onClick={() => handleSaveRecommendedOutfit(msg.id, msg.recommended_outfit)}
-                        className="flex-1 py-2.5 px-4 bg-[var(--brand-pink)] text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 hover:opacity-90 active:scale-95 transition-all shadow-md shadow-[var(--brand-pink)]/20 disabled:opacity-50"
-                      >
-                        {savingOutfitMap[msg.id] ? (
-                          <>
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            <span>Guardando outfit...</span>
-                          </>
-                        ) : (
-                          <>
-                            <Sparkles className="w-4 h-4" />
-                            <span>Guardar Outfit en mi Armario</span>
-                          </>
-                        )}
-                      </button>
-                    )}
+                    <Link
+                      href={`/create?itemIds=${(msg.recommended_outfit.items || []).map((i: any) => i.id).join(',')}&name=${encodeURIComponent(msg.recommended_outfit.name || 'Look Klosy')}&occasion=${encodeURIComponent(msg.recommended_outfit.occasion || '')}`}
+                      className="flex-1 py-2.5 px-4 bg-[var(--brand-pink)] text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all shadow-md shadow-[var(--brand-pink)]/20"
+                    >
+                      <Layers className="w-4 h-4" />
+                      <span>Montar y editar en el lienzo</span>
+                    </Link>
                   </div>
                 </div>
               )}

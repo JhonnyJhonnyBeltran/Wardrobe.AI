@@ -5,6 +5,7 @@ export interface UserStylingContext {
     id: string;
     username?: string;
     fullName?: string;
+    bio?: string;
     preferredStyles: string[];
     bodyShape?: string;
     seasonPalette?: string;
@@ -22,6 +23,8 @@ export interface UserStylingContext {
       brand?: string;
       fabric?: string;
       season?: string;
+      tags?: string[];
+      reference?: string;
       imageUrl?: string;
     }>;
     categoryCounts: Record<string, number>;
@@ -36,7 +39,7 @@ export interface UserStylingContext {
 }
 
 /**
- * Builds a complete structured styling context for CloSy AI
+ * Builds a complete structured styling context for Klosy AI
  */
 export async function buildUserStylingContext(
   supabase: SupabaseClient,
@@ -46,14 +49,14 @@ export async function buildUserStylingContext(
     // 1. Fetch Profile Preferences
     const { data: profile } = await supabase
       .from('profiles')
-      .select('id, username, full_name, preferred_styles, body_shape, season_palette, gender, age')
+      .select('id, username, full_name, bio, preferred_styles, body_shape, season_palette, gender, age')
       .eq('id', userId)
       .maybeSingle();
 
-    // 2. Fetch User's Clothing Items
+    // 2. Fetch User's Clothing Items with extended attributes
     const { data: clothes } = await supabase
       .from('clothing_items')
-      .select('id, name, category, color, color_hex, brand, fabric, season, image_url, original_image_url')
+      .select('id, name, category, color, color_hex, brand, fabric, season, tags, reference, image_url, original_image_url')
       .eq('user_id', userId);
 
     const clothingList = (clothes || []).map((c: any) => ({
@@ -65,6 +68,8 @@ export async function buildUserStylingContext(
       brand: c.brand,
       fabric: c.fabric,
       season: c.season,
+      tags: c.tags || [],
+      reference: c.reference,
       imageUrl: c.image_url || c.original_image_url
     }));
 
@@ -132,6 +137,7 @@ export async function buildUserStylingContext(
         id: userId,
         username: profile?.username || 'Usuario',
         fullName: profile?.full_name,
+        bio: profile?.bio,
         preferredStyles: profile?.preferred_styles || [],
         bodyShape: profile?.body_shape,
         seasonPalette: profile?.season_palette,
