@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { ArrowLeft, Layers } from 'lucide-react';
+import { ArrowLeft, Layers, User as UserIcon } from 'lucide-react';
 import Link from 'next/link';
 import ProductModal from '@/components/ProductModal';
-import { supabase } from '@/lib/supabase/client';
+import Avatar from '@/components/Avatar';
 import { useUser } from '@/store/userStore';
 import { haptics } from '@/lib/haptic';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
@@ -28,6 +28,14 @@ interface OutfitItem {
   sourceUrl?: string;
 }
 
+interface OutfitOwner {
+  id: string;
+  username: string;
+  full_name?: string;
+  avatar_url?: string;
+  bio?: string;
+}
+
 interface Outfit {
   id: string;
   user_id: string;
@@ -39,6 +47,7 @@ interface Outfit {
   is_public: boolean;
   favorite: boolean;
   created_at: string;
+  owner?: OutfitOwner;
   outfit_items: Array<{
     position_x?: number;
     position_y?: number;
@@ -67,95 +76,31 @@ export default function OutfitDetailPage() {
   useEffect(() => {
     if (!outfitId) return;
 
-    const fetchOutfit = async () => {
+    const fetchOutfitData = async () => {
       setLoading(true);
       try {
-        // 1. Fetch outfit record directly (no nested PostgREST joins to avoid 400 schema-cache errors)
-        const { data: outfitData, error: outfitError } = await supabase
-          .from('outfits')
-          .select('*')
-          .eq('id', outfitId)
-          .maybeSingle();
-
-        if (outfitError) {
-          console.error('Error fetching outfit row:', outfitError);
-          throw outfitError;
+        // Fetch via server-side API to bypass client RLS and get all garments and posts
+        const res = await fetch(`/api/outfits/${outfitId}`);
+        if (!res.ok) {
+          throw new Error(`HTTP Error: ${res.status}`);
         }
 
-        if (!outfitData) {
-          console.warn('No outfit found for id:', outfitId);
+        const data = await res.json();
+        if (data.outfit) {
+          setOutfit(data.outfit);
+          setRelatedPosts(data.posts || []);
+        } else {
           setOutfit(null);
-          setLoading(false);
-          return;
         }
-
-        // 2. Fetch outfit items for this outfit
-        const { data: itemsData, error: itemsError } = await supabase
-          .from('outfit_items')
-          .select('*')
-          .eq('outfit_id', outfitId);
-
-        if (itemsError) {
-          console.warn('Error fetching outfit_items:', itemsError);
-        }
-
-        const rawItems = itemsData || [];
-
-        // 3. Fetch clothing items by ID with explicit valid columns
-        const clothingIds = rawItems
-          .map((oi: any) => oi.clothing_item_id)
-          .filter(Boolean);
-
-        const clothesMap = new Map<string, any>();
-
-        if (clothingIds.length > 0) {
-          const { data: clothesData, error: clothesError } = await supabase
-            .from('clothing_items')
-            .select('id, name, category, image_url, brand, color, color_hex, size, reference, source_url')
-            .in('id', clothingIds);
-
-          if (!clothesError && clothesData) {
-            clothesData.forEach((c: any) => clothesMap.set(c.id, c));
-          }
-        }
-
-        // 4. Merge items with clothing details
-        const resolvedItems = rawItems.map((oi: any) => {
-          const clothing = clothesMap.get(oi.clothing_item_id);
-          return {
-            ...oi,
-            clothing_item: clothing,
-            clothing_items: clothing,
-            clothing: clothing
-          };
-        });
-
-        const fullOutfit: Outfit = {
-          ...outfitData,
-          outfit_items: resolvedItems
-        };
-
-        setOutfit(fullOutfit);
-
-        // 5. Fetch related posts that link to this outfit
-        const { data: postsData } = await supabase
-          .from('posts')
-          .select('id, image_url, caption')
-          .eq('outfit_id', outfitId)
-          .order('created_at', { ascending: false });
-
-        if (postsData) {
-          setRelatedPosts(postsData);
-        }
-
       } catch (err) {
-        console.error('Error in fetchOutfit flow:', err);
+        console.error('Error fetching outfit via API:', err);
+        setOutfit(null);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchOutfit();
+    fetchOutfitData();
   }, [outfitId]);
 
   const handleItemClick = (item: any) => {
@@ -191,7 +136,7 @@ export default function OutfitDetailPage() {
     return (
       <div className="min-h-screen bg-[var(--background)] flex flex-col items-center justify-center p-4">
         <p className="text-[var(--foreground)] font-semibold text-lg">Outfit no encontrado</p>
-        <p className="text-sm text-[var(--foreground-tertiary)] mt-1">Este outfit no existe o es privado.</p>
+        <p className="text-sm text-[var(--foreground-tertiary)] mt-1">Este look no existe o ha sido eliminado.</p>
         <button
           onClick={() => window.history.length > 2 ? router.back() : router.push('/feed')}
           className="mt-6 px-6 py-2.5 bg-[var(--brand-pink)] text-white rounded-full font-semibold shadow-md hover:opacity-90 transition-all active:scale-95"
@@ -262,6 +207,26 @@ export default function OutfitDetailPage() {
         <div className="relative w-full md:w-[400px] lg:w-[450px] flex-shrink-0 flex flex-col overflow-y-auto custom-scrollbar bg-[var(--background)]">
           <div className="w-full flex flex-col p-4 md:p-6 space-y-6">
             
+            {/* Creator Profile Header (if from another user or public profile) */}
+            {outfit.owner && (
+              <Link 
+                href={user?.id === outfit.owner.id ? '/profile' : `/profile/${outfit.owner.username || outfit.owner.id}`}
+                className="flex items-center gap-3 p-3 bg-[var(--background-secondary)]/50 hover:bg-[var(--background-secondary)] rounded-2xl border border-[var(--border-color)]/50 transition-colors"
+              >
+                <Avatar 
+                  src={outfit.owner.avatar_url || null} 
+                  alt={outfit.owner.username} 
+                  size="sm" 
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs text-[var(--foreground-tertiary)] uppercase font-bold tracking-wider">Creador del look</p>
+                  <p className="text-sm font-bold text-[var(--foreground)] truncate">
+                    {outfit.owner.full_name || `@${outfit.owner.username}`}
+                  </p>
+                </div>
+              </Link>
+            )}
+
             {/* Outfit Info */}
             <section className="space-y-4">
               <div>
@@ -296,9 +261,9 @@ export default function OutfitDetailPage() {
 
             {/* Items Grid */}
             <section className="space-y-4">
-              <h3 className="text-lg font-semibold text-[var(--foreground)]">Prendas de este look</h3>
+              <h3 className="text-lg font-semibold text-[var(--foreground)]">Prendas de este look ({outfitItems.length})</h3>
               {outfitItems.length === 0 ? (
-                <p className="text-sm text-[var(--foreground-tertiary)]">No se pudieron cargar las prendas individuales de este outfit.</p>
+                <p className="text-sm text-[var(--foreground-tertiary)]">No hay prendas registradas para este outfit.</p>
               ) : (
                 <div className="grid grid-cols-2 gap-3">
                   {outfitItems.map((item, index) => (
@@ -327,7 +292,7 @@ export default function OutfitDetailPage() {
                     <Link
                       key={post.id}
                       href={`/post/${post.id}`}
-                      className="aspect-square bg-[var(--background-secondary)] relative block rounded-xl overflow-hidden hover:opacity-90 transition-opacity"
+                      className="aspect-square bg-[var(--background-secondary)] relative block rounded-xl overflow-hidden hover:opacity-90 transition-opacity border border-[var(--border-color)]/30"
                     >
                       {post.image_url ? (
                         <Image src={post.image_url} alt="Post" fill className="object-cover" />
