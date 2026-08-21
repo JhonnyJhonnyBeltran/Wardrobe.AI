@@ -7,6 +7,7 @@ import { ArrowLeft, Layers, User as UserIcon } from 'lucide-react';
 import Link from 'next/link';
 import ProductModal from '@/components/ProductModal';
 import Avatar from '@/components/Avatar';
+import { supabase } from '@/lib/supabase/client';
 import { useUser } from '@/store/userStore';
 import { haptics } from '@/lib/haptic';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
@@ -79,21 +80,95 @@ export default function OutfitDetailPage() {
     const fetchOutfitData = async () => {
       setLoading(true);
       try {
-        // Fetch via server-side API to bypass client RLS and get all garments and posts
-        const res = await fetch(`/api/outfits/${outfitId}`);
-        if (!res.ok) {
-          throw new Error(`HTTP Error: ${res.status}`);
+        // Strategy 1: Try server-side API
+        try {
+          const res = await fetch(`/api/outfits/${outfitId}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.outfit) {
+              setOutfit(data.outfit);
+              setRelatedPosts(data.posts || []);
+              setLoading(false);
+              return;
+            }
+          }
+        } catch (apiErr) {
+          console.warn('[OutfitDetail] API fetch failed, falling back to direct client query:', apiErr);
         }
 
-        const data = await res.json();
-        if (data.outfit) {
-          setOutfit(data.outfit);
-          setRelatedPosts(data.posts || []);
-        } else {
+        // Strategy 2: Client-side direct query fallback
+        console.log('[OutfitDetail] Running direct Supabase fallback fetch');
+        const { data: outfitData, error: outfitErr } = await supabase
+          .from('outfits')
+          .select('*')
+          .eq('id', outfitId)
+          .maybeSingle();
+
+        if (outfitErr || !outfitData) {
+          console.error('[OutfitDetail] Could not find outfit:', outfitErr);
           setOutfit(null);
+          setLoading(false);
+          return;
         }
+
+        // Fetch owner
+        let ownerData = null;
+        if (outfitData.user_id) {
+          const { data: p } = await supabase
+            .from('profiles')
+            .select('id, username, full_name, avatar_url, bio')
+            .eq('id', outfitData.user_id)
+            .maybeSingle();
+          ownerData = p;
+        }
+
+        // Fetch outfit items
+        const { data: itemsData } = await supabase
+          .from('outfit_items')
+          .select('*')
+          .eq('outfit_id', outfitId);
+
+        const rawItems = itemsData || [];
+        const clothingIds = rawItems.map((oi: any) => oi.clothing_item_id).filter(Boolean);
+
+        const clothesMap = new Map<string, any>();
+        if (clothingIds.length > 0) {
+          const { data: clothesList } = await supabase
+            .from('clothing_items')
+            .select('id, name, category, color, color_hex, image_url, original_image_url, brand, size, fabric, reference, source_url')
+            .in('id', clothingIds);
+
+          if (clothesList) {
+            clothesList.forEach((c: any) => clothesMap.set(c.id, c));
+          }
+        }
+
+        const resolvedItems = rawItems.map((oi: any) => {
+          const clothing = clothesMap.get(oi.clothing_item_id) || null;
+          return {
+            ...oi,
+            clothing_item: clothing,
+            clothing_items: clothing,
+            clothing: clothing
+          };
+        });
+
+        // Fetch related posts
+        const { data: postsData } = await supabase
+          .from('posts')
+          .select('id, image_url, caption, created_at, user_id, likes_count, comments_count')
+          .eq('outfit_id', outfitId)
+          .order('created_at', { ascending: false });
+
+        setOutfit({
+          ...outfitData,
+          owner: ownerData,
+          outfit_items: resolvedItems
+        });
+        setRelatedPosts(postsData || []);
+
       } catch (err) {
-        console.error('Error fetching outfit via API:', err);
+        console.error('[OutfitDetail] Fatal error fetching outfit:', err);
         setOutfit(null);
       } finally {
         setLoading(false);

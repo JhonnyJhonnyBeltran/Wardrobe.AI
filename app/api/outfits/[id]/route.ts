@@ -3,25 +3,28 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(
     request: NextRequest,
-    context: { params: Promise<{ id: string }> }
+    props: { params: Promise<{ id: string }> | { id: string } }
 ) {
     try {
-        const { id: outfitId } = await context.params;
+        const resolvedParams = await props.params;
+        const outfitId = resolvedParams?.id;
 
         if (!outfitId) {
             return NextResponse.json({ error: 'Missing outfit ID' }, { status: 400 });
         }
 
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-        const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+        const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 
+                           process.env.SUPABASE_SERVICE_KEY || 
+                           process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-        if (!supabaseUrl || !supabaseServiceKey) {
-            console.error('[OutfitAPI] Missing Supabase service role credentials');
+        if (!supabaseUrl || !serviceKey) {
+            console.error('[OutfitAPI] Missing Supabase credentials');
             return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
         }
 
-        // Use service role admin client to safely retrieve outfit, clothes and posts without RLS restrictions
-        const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+        // Create Supabase client (service role if available, fallback to anon)
+        const supabaseAdmin = createClient(supabaseUrl, serviceKey, {
             auth: {
                 autoRefreshToken: false,
                 persistSession: false
