@@ -62,6 +62,17 @@ export default function NotificationsPage() {
     const router = useRouter();
     const { settings, updateSetting } = useNotificationSettingsStore();
 
+    const handleTogglePopups = async (enabled: boolean) => {
+        updateSetting('popupToasts', enabled);
+        if (enabled && typeof window !== 'undefined' && 'Notification' in window) {
+            if (Notification.permission === 'default') {
+                try {
+                    await Notification.requestPermission();
+                } catch (e) {}
+            }
+        }
+    };
+
     return (
         <div className="min-h-screen bg-[var(--background)] pb-24 md:pb-8">
             {/* Header */}
@@ -85,22 +96,22 @@ export default function NotificationsPage() {
 
             {/* Main Content */}
             <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
-                {/* Popups en pantalla */}
+                {/* Popups en pantalla y escritorio */}
                 <motion.div
                     initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.05 }}
                 >
                     <h2 className="text-xs font-bold text-[var(--foreground-secondary)] uppercase tracking-wider mb-3 px-1">
-                        Visualización en Pantalla
+                        Alertas en Pantalla y Escritorio
                     </h2>
                     <Card className="px-5 divide-y divide-[var(--border-color)]">
                         <NotificationOption
                             icon={<Smartphone className="w-5 h-5 text-[var(--brand-pink)]" />}
-                            title="Avisos emergentes (Pop-ups)"
-                            description="Mostrar avisos flotantes cuando recibas actividad en la app"
+                            title="Avisos emergentes y de escritorio"
+                            description="Mostrar avisos flotantes en pantalla y notificaciones del navegador"
                             enabled={settings.popupToasts}
-                            onChange={(val) => updateSetting('popupToasts', val)}
+                            onChange={handleTogglePopups}
                         />
                     </Card>
                 </motion.div>

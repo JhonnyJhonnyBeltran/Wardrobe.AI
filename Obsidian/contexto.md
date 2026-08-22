@@ -205,10 +205,18 @@ En cada conversación, el backend alimenta a CloSy con:
 - **Estado vacío centrado**: En móvil y escritorio, cuando no hay conversaciones se muestra un estado centrado con botón de acción rosa (`Plus`) para abrir inmediatamente el modal de nueva conversación.
 - **Z-Index y Difuminado de Navegación**: Todos los modales se renderizan en `z-[9999]` con fondo difuminado `backdrop-blur-md` ocultando/blurreando la barra de navegación inferior (`TabBar`).
 
-### 3. Notificaciones & Recordatorios Inteligentes
+### 3. Notificaciones, Alertas de Escritorio & Recordatorios Inteligentes cada 3 Horas
+- **Motor de Recordatorios Periódicos (`lib/hooks/usePeriodicReminders.ts`)**:
+  - Cada 3 horas se lanza un recordatorio motivador inteligente (en pop-up flotante y en notificación nativa de escritorio/navegador) para incentivar la subida de prendas y el uso de Kloe:
+    - *"Sé que es un rollo añadir prendas, pero más rollo es no saber qué ponerte un día especial 😉. ¡Sube 3 prendas hoy a tu armario!"*
+    - *"¿Tienes 2 minutos? Añade tus prendas favoritas a tu armario y deja que Kloe combine tus looks."*
+    - *"Tu armario inteligente te espera. Sube una prenda hoy y crea tu próximo outfit perfecto."*
+  - Al pulsar la notificación, se enfoca la ventana y navega directamente a `/closet` o `/closet/kloe`.
+- **Notificaciones Nativas de Escritorio (Desktop Push / Browser Notifications)**:
+  - Integradas en `components/RealtimeProvider.tsx`. Si el usuario tiene permisos concedidos y tiene activados los avisos, se muestran alertas del sistema operativo / escritorio tanto para actividad social como para recordatorios de Kloe.
 - **Control Granular en Ajustes (`/profile/settings/notifications`)**:
-  - Store persistente `useNotificationSettingsStore` que gestiona preferencias de alertas: Pop-ups en pantalla, Seguidores, Me gusta, Comentarios, Mensajes directos, Recordatorios Kloe y Email.
-  - Si el usuario desactiva un tipo de notificación (ej. seguidores o me gustas), los avisos emergentes (toasts) no aparecerán en pantalla, pero **la actividad siempre se registra y los corazones llegan a la app** en la pestaña de actividad (`/notifications`).
+  - Store persistente `useNotificationSettingsStore` que gestiona preferencias de alertas: Pop-ups en pantalla y escritorio, Seguidores, Me gusta, Comentarios, Mensajes directos, Recordatorios Kloe y Email.
+  - Si el usuario desactiva un tipo de notificación (ej. seguidores o me gustas), los avisos emergentes (toasts) y notificaciones de escritorio no aparecerán, pero **la actividad siempre se registra y los corazones llegan a la app** en la pestaña de actividad (`/notifications`).
 - Al pulsar un recordatorio o consejo de Kloe, navega directamente a `/closet/kloe` (abriendo el modal de suscripción a Klozet Pro si el usuario es Free), `/create` o `/closet`, sin alertas intermedias.
 
 ### 4. Visualizador de Foto de Perfil (Avatar Zoom Lightbox)
