@@ -326,7 +326,18 @@ export default function KlosyPage() {
 
       if (!res.ok) {
         if (res.status === 429) {
-          toast.error(data.error || 'Has alcanzado el límite de consultas por hoy');
+          const limitMsg: ChatMessage = {
+            id: String(Date.now() + 1),
+            role: 'assistant',
+            content: data.message || data.error || 'Has alcanzado el límite de consultas por hoy para cuidar los recursos de estilismo. ¡Hablamos mañana con más ideas y nuevos looks para tu armario!',
+            timestamp: new Date()
+          };
+          const finalMessages = [...updatedMessages, limitMsg];
+          setMessages(finalMessages);
+          if (data.isDailyLimit || data.rate_limit?.remaining_day === 0) {
+            setRateLimitInfo({ remainingDay: 0 });
+          }
+          toast.warning('Límite de consultas alcanzado');
         } else {
           toast.error(data.error || 'Error al consultar a Klosy');
         }

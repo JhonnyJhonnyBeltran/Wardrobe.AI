@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { checkRateLimit } from '@/lib/closy/rateLimiter';
+import { checkRateLimit, checkIpRateLimit } from '@/lib/closy/rateLimiter';
 import { buildUserStylingContext } from '@/lib/closy/contextIndexer';
 
 interface ChatRequestPayload {
@@ -8,9 +8,49 @@ interface ChatRequestPayload {
   history?: Array<{ role: 'user' | 'assistant'; content: string }>;
 }
 
+/**
+ * Quick helper to fetch image bytes and return base64 inline_data for Gemini
+ */
+async function fetchImageAsBase64(url: string): Promise<{ mimeType: string; data: string } | null> {
+  if (!url || typeof url !== 'string' || !url.startsWith('http')) return null;
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 2000);
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeout);
+    if (!res.ok) return null;
+    const arrayBuffer = await res.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    if (buffer.length > 2 * 1024 * 1024) return null; // Skip if > 2MB
+    const contentType = res.headers.get('content-type') || 'image/jpeg';
+    const mimeType = contentType.includes('png') ? 'image/png' : (contentType.includes('webp') ? 'image/webp' : 'image/jpeg');
+    return {
+      mimeType,
+      data: buffer.toString('base64')
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
-    // 1. Authenticate user
+    // 1. IP Abuse Protection
+    const forwarded = request.headers.get('x-forwarded-for');
+    const clientIp = forwarded ? forwarded.split(',')[0].trim() : '127.0.0.1';
+    
+    if (!checkIpRateLimit(clientIp)) {
+      return NextResponse.json(
+        { 
+          error: 'Demasiadas peticiones desde tu dirección IP. Por favor espera un momento.',
+          message: 'Demasiadas peticiones desde tu dirección IP. Por favor espera un momento.',
+          limitReached: true
+        },
+        { status: 429 }
+      );
+    }
+
+    // 2. Authenticate user
     const supabase = await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
@@ -21,12 +61,35 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 2. Apply Rate Limiting
-    const rateLimit = checkRateLimit(user.id);
+    // 3. Parse input body with size restriction
+    let body: ChatRequestPayload;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Formato de petición inválido' }, { status: 400 });
+    }
+
+    const userPrompt = (body.message || '').trim();
+
+    if (!userPrompt) {
+      return NextResponse.json({ error: 'El mensaje no puede estar vacío' }, { status: 400 });
+    }
+
+    if (userPrompt.length > 500) {
+      return NextResponse.json({ error: 'El mensaje supera el límite de 500 caracteres' }, { status: 400 });
+    }
+
+    // 4. Apply Per-User Rate Limiting & Token Budgeting
+    const estimatedTokens = Math.ceil(userPrompt.length / 4) + 600;
+    const rateLimit = checkRateLimit(user.id, estimatedTokens);
+    
     if (!rateLimit.allowed) {
       return NextResponse.json(
         { 
           error: rateLimit.reason || 'Has alcanzado el límite de peticiones',
+          message: rateLimit.reason || 'Has alcanzado el límite de peticiones con Klosy por hoy.',
+          limitReached: true,
+          isDailyLimit: rateLimit.isDailyLimit,
           retryAfter: rateLimit.retryAfterSeconds 
         },
         { 
@@ -40,22 +103,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 3. Parse input body
-    const body: ChatRequestPayload = await request.json();
-    const userPrompt = (body.message || '').trim();
-
-    if (!userPrompt) {
-      return NextResponse.json({ error: 'El mensaje no puede estar vacío' }, { status: 400 });
-    }
-
-    if (userPrompt.length > 600) {
-      return NextResponse.json({ error: 'El mensaje supera el límite de 600 caracteres' }, { status: 400 });
-    }
-
-    // 4. Index User Context (Clothes, Outfits, Profile Preferences, Liked Styles)
+    // 5. Index User Context (Clothes, Outfits, Profile Preferences, Liked Styles)
     const context = await buildUserStylingContext(supabase, user.id);
 
-    // 5. Call AI Engine (Gemini 2.0 Flash / 1.5 Flash with fallback)
+    // 6. Call AI Engine (Gemini with Multimodal Image Recognition)
     const geminiApiKey = process.env.GEMINI_API_KEY || 
                          process.env.GOOGLE_API_KEY || 
                          process.env.NEXT_PUBLIC_GEMINI_API_KEY;
@@ -127,7 +178,7 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * Invokes Google Gemini 2.0 Flash / 1.5 Flash via REST API with JSON structured output and dual fallback
+ * Invokes Google Gemini 3.6 Flash / Flash Latest with Multimodal Image Recognition
  */
 async function callGeminiAssistant(
   apiKey: string,
@@ -143,15 +194,19 @@ Tu personalidad es cercana, experta, culta en moda, elocuente y empática. Habla
 PRINCIPIOS DE ESTILISMO Y RESPUESTA INTELIGENTE:
 1. ASESORAMIENTO DE ALTO NIVEL:
    - Responde siempre con criterio real de moda: explica las reglas de etiqueta para cada ocasión (bodas de día o noche, galas, entrevistas, cóctel), códigos de vestimenta, combinación de texturas (ej: contrastar cuero brillante con punto mate o denim), teoría del color, proporciones de silueta y calzado adecuado.
-2. ANÁLISIS DE LAS PRENDAS DEL USUARIO:
-   - Revisa el armario del usuario provisto en el contexto.
+2. ANÁLISIS MULTIMODAL DE FOTOS DE PRENDAS:
+   - Se te adjuntan las fotografías reales de las prendas del armario del usuario.
+   - Si una prenda tiene un nombre genérico o incorrecto en los metadatos de la base de datos (por ejemplo: "Nueva prenda", "asdf", "Camiseta" cuando en la foto se ve claramente que es una sudadera con capucha, o "Zapatillas" cuando en la foto son unas Nike Shox):
+     * OBSERVA LA FOTO DIRECTAMENTE: Analiza el color real, estampado, tejido visual, logotipo, tipo de prenda y corte.
+     * NÓMBRALA EN TU RESPUESTA POR LO QUE VES EN LA FOTO (ej: "tu sudadera oversize con capucha", "tus zapatillas Nike Shox R4 plateadas", "tu cazadora vaquera azul").
+     * Utiliza lo que ves en las fotos para evaluar con precisión la armonía visual del look.
+3. ANÁLISIS DE LAS PRENDAS DEL USUARIO:
+   - Revisa el armario del usuario provisto en el contexto y las fotos.
    - Si el usuario te pide qué ponerse para una ocasión (ej: boda, evento formal, cita, viaje):
      * Primero dale el consejo canónico y experto de lo que esa ocasión exige (ej: "Para una boda de tarde lo ideal es un traje en azul marino o gris marengo, camisa de vestir blanca o celeste, corbata de seda y zapatos oxford o mocasines de piel").
      * Luego evalúa qué tiene en su armario:
        - Si tiene prendas adecuadas, indícale cómo combinarlas y colócalas en "recommended_outfit".
        - Si su armario no tiene prendas de esa etiqueta (ej: solo tiene zapatillas y sudaderas urbanas), sé sincera y elegante: explícale que su armario no cuenta con las piezas clave para esa etiqueta, recomiéndale qué prendas buscar y preséntale la opción más formal o limpia que tenga actualmente como alternativa de emergencia.
-3. CONSULTAS DE TENDENCIAS O COMBINACIONES:
-   - Si el usuario te habla de una tendencia (como prendas de cuero, baggy jeans, tailoring oversize) o cómo combinar una pieza concreta, dale una explicación estilística detallada sobre cómo equilibrar volúmenes, paletas cromáticas y accesorios.
 4. FORMATO:
    - Redacta en Markdown limpio, con excelente ortografía, párrafos fluidos y viñetas para desglosar consejos.
    - NO incluyas emojis en el texto.
@@ -173,13 +228,25 @@ PRINCIPIOS DE ESTILISMO Y RESPUESTA INTELIGENTE:
       parts: [{ text: h.content }]
     }));
 
-    const contents = [
-      ...recentHistory,
+    // Fetch visual images for up to 10 garments in parallel
+    const itemsToFetch = (context.wardrobe.items || []).slice(0, 10);
+    const imageFetches = await Promise.allSettled(
+      itemsToFetch.map(async (item: any) => {
+        if (!item.imageUrl) return null;
+        const imgData = await fetchImageAsBase64(item.imageUrl);
+        if (!imgData) return null;
+        return {
+          id: item.id,
+          name: item.name,
+          category: item.category,
+          imgData
+        };
+      })
+    );
+
+    const userParts: any[] = [
       {
-        role: 'user',
-        parts: [
-          {
-            text: `
+        text: `
 PERFIL DEL USUARIO:
 - Nombre: ${context.user.username}
 - Biografía / Estilo personal: ${context.user.bio || 'Sin especificar'}
@@ -188,7 +255,7 @@ PERFIL DEL USUARIO:
 - Estilos favoritos: ${context.user.preferredStyles.join(', ') || 'Moda actual'}
 - Total de prendas registradas: ${context.wardrobe.totalItems}
 
-ARMARIO DEL USUARIO:
+METADATOS DEL ARMARIO (Puede contener nombres genéricos o incompletos):
 ${JSON.stringify(context.wardrobe.items.map((i: any) => ({
   id: i.id,
   name: i.name,
@@ -199,12 +266,37 @@ ${JSON.stringify(context.wardrobe.items.map((i: any) => ({
   season: i.season,
   tags: i.tags
 })))}
+`
+      }
+    ];
 
-PREGUNTA DEL USUARIO:
+    // Append visual images of garments so Gemini can directly inspect them
+    imageFetches.forEach(res => {
+      if (res.status === 'fulfilled' && res.value) {
+        userParts.push({
+          text: `FOTO REAL DE LA PRENDA (ID: "${res.value.id}", Nombre en BD: "${res.value.name}", Categoría en BD: "${res.value.category}"):`
+        });
+        userParts.push({
+          inline_data: {
+            mime_type: res.value.imgData.mimeType,
+            data: res.value.imgData.data
+          }
+        });
+      }
+    });
+
+    userParts.push({
+      text: `
+PETICIÓN DEL USUARIO:
 "${userPrompt}"
 `
-          }
-        ]
+    });
+
+    const contents = [
+      ...recentHistory,
+      {
+        role: 'user',
+        parts: userParts
       }
     ];
 
