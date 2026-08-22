@@ -16,7 +16,9 @@ import {
   Sparkles, 
   MessageSquare,
   Search,
-  Bot
+  Bot,
+  Crown,
+  Bookmark
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -57,12 +59,12 @@ const MAX_CONVERSATIONS = 5;
 const INITIAL_MESSAGE: ChatMessage = {
   id: 'welcome',
   role: 'assistant',
-  content: '¡Hola! Puedes preguntarme cualquier cosa sobre tu ropa y estoy lista para ayudarte a crear cualquier look.',
+  content: '¡Hola! Soy Kloe, tu estilista personal. Puedo analizar todas las prendas de tu armario y tus looks guardados para ayudarte a crear cualquier outfit.',
   follow_up_suggestions: [
     'Arma un look casual con mis prendas',
     'Recomiéndame un outfit para una cena',
     'Outfit formal para el trabajo o reunión',
-    'Look cómodo para fin de semana'
+    'Recrear uno de mis looks guardados'
   ],
   timestamp: new Date()
 };
@@ -85,7 +87,6 @@ function FormattedMessageText({ content, isUser }: { content: string; isUser?: b
               const isBullet = line.trim().startsWith('- ') || line.trim().startsWith('* ');
               const textContent = isBullet ? line.trim().substring(2) : line;
 
-              // Parse bold tokens **...**
               const parts = textContent.split(/(\*\*[^*]+\*\*)/g);
 
               const formattedParts = parts.map((part, partIdx) => {
@@ -123,22 +124,25 @@ function FormattedMessageText({ content, isUser }: { content: string; isUser?: b
 
 export default function KloePage() {
   const router = useRouter();
-  const { user, isPremium, togglePremium } = useUser();
+  const { user, isPremium } = useUser();
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [typingStep, setTypingStep] = useState(0);
   const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
-  const [rateLimitInfo, setRateLimitInfo] = useState<{ remainingDay?: number }>({});
   const [showProModal, setShowProModal] = useState(false);
   
   // Drawers
   const [showWardrobeDrawer, setShowWardrobeDrawer] = useState(false);
   const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
+  const [showSavedDrawer, setShowSavedDrawer] = useState(false);
   
-  // Wardrobe Items Cache
+  // Wardrobe & Saved Items Cache
   const [wardrobeClothes, setWardrobeClothes] = useState<any[]>([]);
   const [loadingWardrobe, setLoadingWardrobe] = useState(false);
   const [wardrobeSearch, setWardrobeSearch] = useState('');
+
+  const [savedPosts, setSavedPosts] = useState<any[]>([]);
+  const [loadingSaved, setLoadingSaved] = useState(false);
 
   // Conversations State (Max 5)
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -168,7 +172,14 @@ export default function KloePage() {
     return () => clearInterval(interval);
   }, [isTyping]);
 
-  useBodyScrollLock(showWardrobeDrawer || showHistoryDrawer);
+  useBodyScrollLock(showWardrobeDrawer || showHistoryDrawer || showSavedDrawer);
+
+  // Open Pro modal if user is not premium on mount
+  useEffect(() => {
+    if (!isPremium()) {
+      setShowProModal(true);
+    }
+  }, [isPremium]);
 
   // Load conversations from local storage
   useEffect(() => {
@@ -223,10 +234,51 @@ export default function KloePage() {
     }
   };
 
+  // Fetch user's saved items for drawer
+  const fetchSavedPosts = async () => {
+    if (!user?.id) return;
+    setLoadingSaved(true);
+    try {
+      const { data, error } = await supabase
+        .from('saves')
+        .select(`
+          id,
+          post_id,
+          posts (
+            id,
+            caption,
+            description,
+            title,
+            image_url,
+            media_url,
+            media_urls
+          )
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      const mapped = (data || [])
+        .map((s: any) => s.posts)
+        .filter(Boolean);
+
+      setSavedPosts(mapped);
+    } catch (err) {
+      console.error('[Kloe] Error fetching saved posts:', err);
+    } finally {
+      setLoadingSaved(false);
+    }
+  };
+
   const openWardrobe = () => {
     haptics.selection();
     setShowWardrobeDrawer(true);
     fetchWardrobe();
+  };
+
+  const openSaved = () => {
+    haptics.selection();
+    setShowSavedDrawer(true);
+    fetchSavedPosts();
   };
 
   // Create a new conversation
@@ -276,6 +328,11 @@ export default function KloePage() {
 
   // Send message handler
   const handleSend = async (customMessage?: string) => {
+    if (!isPremium()) {
+      setShowProModal(true);
+      return;
+    }
+
     const text = (customMessage || inputMessage).trim();
     if (!text || isTyping) return;
 
@@ -311,21 +368,17 @@ export default function KloePage() {
 
       if (!res.ok) {
         if (res.status === 429) {
-          toast.warning(data.error || 'Has alcanzado el límite diario con Kloe');
+          setShowProModal(true);
           const botMsg: ChatMessage = {
             id: `kloe_${Date.now()}`,
             role: 'assistant',
-            content: data.message || 'Has alcanzado el límite de consultas por hoy. ¡Hablamos mañana!',
+            content: data.message || 'Has alcanzado el límite de consultas diarias. ¡Desbloquea Klozet Premium para acceso ilimitado!',
             timestamp: new Date()
           };
           setMessages(prev => [...prev, botMsg]);
           return;
         }
         throw new Error(data.error || 'Error en la respuesta');
-      }
-
-      if (data.rate_limit) {
-        setRateLimitInfo({ remainingDay: data.rate_limit.remaining_day });
       }
 
       const botMsg: ChatMessage = {
@@ -341,7 +394,6 @@ export default function KloePage() {
       const finalMessages = [...updatedMessages, botMsg];
       setMessages(finalMessages);
 
-      // Auto title on first prompt
       let title = text.slice(0, 30);
       if (text.length > 30) title += '...';
 
@@ -393,9 +445,9 @@ export default function KloePage() {
       <header className="sticky top-0 z-30 bg-[var(--background)]/85 backdrop-blur-xl px-4 h-16 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => router.back()}
-            className="p-2 -ml-2 rounded-full hover:bg-[var(--background-secondary)] text-[var(--foreground)] transition-colors"
-            aria-label="Volver"
+            onClick={() => router.push('/closet')}
+            className="p-2 -ml-2 rounded-full hover:bg-[var(--background-secondary)] text-[var(--foreground)] transition-colors cursor-pointer"
+            aria-label="Volver al armario"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -435,7 +487,7 @@ export default function KloePage() {
               haptics.selection();
               setShowHistoryDrawer(true);
             }}
-            className="p-2.5 text-[var(--foreground-secondary)] hover:text-[var(--foreground)] rounded-full hover:bg-[var(--background-secondary)] transition-colors relative"
+            className="p-2.5 text-[var(--foreground-secondary)] hover:text-[var(--foreground)] rounded-full hover:bg-[var(--background-secondary)] transition-colors relative cursor-pointer"
             title="Conversaciones guardadas"
             aria-label="Historial de conversaciones"
           >
@@ -445,9 +497,20 @@ export default function KloePage() {
             )}
           </button>
 
+          {/* Saved Inspirations Drawer */}
+          <button
+            onClick={openSaved}
+            className="p-2.5 text-[var(--foreground-secondary)] hover:text-[var(--foreground)] rounded-full hover:bg-[var(--background-secondary)] transition-colors cursor-pointer"
+            title="Ver looks guardados"
+            aria-label="Ver looks guardados"
+          >
+            <Bookmark className="w-5 h-5 text-purple-400" />
+          </button>
+
+          {/* Wardrobe Drawer */}
           <button
             onClick={openWardrobe}
-            className="p-2.5 text-[var(--foreground-secondary)] hover:text-[var(--foreground)] rounded-full hover:bg-[var(--background-secondary)] transition-colors"
+            className="p-2.5 text-[var(--foreground-secondary)] hover:text-[var(--foreground)] rounded-full hover:bg-[var(--background-secondary)] transition-colors cursor-pointer"
             title="Ver mis prendas"
             aria-label="Ver mis prendas"
           >
@@ -464,19 +527,19 @@ export default function KloePage() {
           <motion.div 
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-pink-500/10 border border-[var(--brand-pink)]/30 rounded-2xl p-3 flex items-center justify-between shadow-xs"
+            className="bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-pink-500/10 border border-[var(--brand-pink)]/30 rounded-2xl p-3.5 flex items-center justify-between shadow-sm"
           >
             <div className="flex items-center gap-2.5">
-              <Sparkles className="w-4 h-4 text-[var(--brand-pink)] flex-shrink-0" />
-              <p className="text-xs text-[var(--foreground-secondary)]">
-                Estás en el plan <strong className="text-[var(--foreground)]">Free</strong>. Activa Kloe Pro para consultas ilimitadas y análisis de fotos.
+              <Sparkles className="w-5 h-5 text-[var(--brand-pink)] flex-shrink-0" />
+              <p className="text-xs text-[var(--foreground-secondary)] leading-relaxed">
+                Estás en el plan <strong className="text-[var(--foreground)]">Free</strong>. Desbloquea <strong className="text-[var(--brand-pink)]">Klozet Premium</strong> para hablar con Kloe y crear looks ilimitados.
               </p>
             </div>
             <button
               onClick={() => setShowProModal(true)}
-              className="text-[11px] font-bold px-3 py-1.5 bg-[var(--brand-pink)] text-white rounded-xl hover:opacity-90 transition-opacity flex-shrink-0 shadow-xs ml-2 cursor-pointer"
+              className="text-xs font-bold px-3.5 py-2 bg-[var(--brand-pink)] text-white rounded-xl hover:opacity-90 transition-opacity flex-shrink-0 shadow-sm ml-2 cursor-pointer"
             >
-              Activar
+              Desbloquear
             </button>
           </motion.div>
         )}
@@ -502,7 +565,7 @@ export default function KloePage() {
 
             <div className={`max-w-[85%] sm:max-w-[78%] flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
               
-              {/* Message Bubble with smooth glass style */}
+              {/* Message Bubble */}
               <div
                 className={`p-4 rounded-3xl ${
                   msg.role === 'user'
@@ -601,7 +664,6 @@ export default function KloePage() {
               transition={{ type: 'spring', damping: 20, stiffness: 300 }}
               className="flex gap-3 items-center justify-start"
             >
-              {/* Floating pulsing mascot */}
               <motion.div 
                 animate={{ y: [0, -4, 0] }}
                 transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
@@ -616,7 +678,6 @@ export default function KloePage() {
               </motion.div>
 
               <div className="bg-[var(--card-bg)] border border-[var(--border-color)] px-4 py-3 rounded-2xl rounded-tl-xs shadow-xs flex items-center gap-3">
-                {/* 3 Bouncing Gradient Dots */}
                 <div className="flex items-center gap-1.5">
                   {[0, 1, 2].map((dot) => (
                     <motion.span
@@ -633,7 +694,6 @@ export default function KloePage() {
                   ))}
                 </div>
                 
-                {/* Dynamic cycling thinking text */}
                 <span className="text-xs text-[var(--foreground-secondary)] font-medium">
                   {thinkingMessages[typingStep]}
                 </span>
@@ -645,37 +705,56 @@ export default function KloePage() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Floating Bottom Input Bar */}
+      {/* Floating Bottom Input Bar or Locked Premium Bar */}
       <div className="sticky bottom-0 bg-[var(--background)]/90 backdrop-blur-xl px-4 py-3 border-t border-[var(--border-color)]">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSend();
-          }}
-          className="flex items-center gap-2 bg-[var(--background-secondary)] rounded-full px-4 py-2 border border-[var(--border-color)] focus-within:border-[var(--brand-pink)] transition-all shadow-xs"
-        >
-          <input
-            ref={inputRef}
-            type="text"
-            value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
-            placeholder="Pregúntale a Kloe sobre tus prendas u outfits..."
-            disabled={isTyping}
-            className="flex-1 bg-transparent text-sm text-[var(--foreground)] outline-none placeholder:text-[var(--foreground-tertiary)]"
-          />
-          <button
-            type="submit"
-            disabled={!inputMessage.trim() || isTyping}
-            className={`p-2 rounded-full transition-all ${
-              inputMessage.trim() && !isTyping
-                ? 'bg-[var(--brand-pink)] text-white hover:scale-105 shadow-sm'
-                : 'text-[var(--foreground-tertiary)] opacity-50 cursor-not-allowed'
-            }`}
-            aria-label="Enviar mensaje"
+        {isPremium() ? (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSend();
+            }}
+            className="flex items-center gap-2 bg-[var(--background-secondary)] rounded-full px-4 py-2 border border-[var(--border-color)] focus-within:border-[var(--brand-pink)] transition-all shadow-xs"
           >
-            <Send className="w-4 h-4" />
-          </button>
-        </form>
+            <input
+              ref={inputRef}
+              type="text"
+              value={inputMessage}
+              onChange={(e) => setInputMessage(e.target.value)}
+              placeholder="Pregúntale a Kloe sobre tus prendas u outfits..."
+              disabled={isTyping}
+              className="flex-1 bg-transparent text-sm text-[var(--foreground)] outline-none placeholder:text-[var(--foreground-tertiary)]"
+            />
+            <button
+              type="submit"
+              disabled={!inputMessage.trim() || isTyping}
+              className={`p-2 rounded-full transition-all ${
+                inputMessage.trim() && !isTyping
+                  ? 'bg-[var(--brand-pink)] text-white hover:scale-105 shadow-sm'
+                  : 'text-[var(--foreground-tertiary)] opacity-50 cursor-not-allowed'
+              }`}
+              aria-label="Enviar mensaje"
+            >
+              <Send className="w-4 h-4" />
+            </button>
+          </form>
+        ) : (
+          <div className="flex items-center justify-between gap-3 bg-gradient-to-r from-pink-500/15 via-purple-500/10 to-pink-500/15 border border-[var(--brand-pink)]/40 rounded-2xl p-3 shadow-md">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-8 h-8 rounded-full bg-[var(--brand-pink)] text-white flex items-center justify-center flex-shrink-0 shadow-xs">
+                <Crown className="w-4 h-4" />
+              </div>
+              <p className="text-xs text-[var(--foreground)] font-semibold truncate">
+                Desbloquea el chat y estilismo con <strong className="text-[var(--brand-pink)]">Klozet Premium</strong>
+              </p>
+            </div>
+            <button
+              onClick={() => setShowProModal(true)}
+              className="px-4 py-2 bg-[var(--brand-pink)] hover:bg-[#ff3377] text-white font-bold text-xs rounded-xl shadow-sm transition-all flex-shrink-0 cursor-pointer"
+            >
+              Desbloquear
+            </button>
+          </div>
+        )}
       </div>
 
       {/* History Drawer */}
@@ -710,7 +789,6 @@ export default function KloePage() {
                   </button>
                 </div>
 
-                {/* New Chat Button */}
                 <button
                   onClick={handleNewConversation}
                   className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-[var(--brand-pink)] text-white font-bold text-sm shadow-sm hover:opacity-90 transition-opacity"
@@ -719,7 +797,6 @@ export default function KloePage() {
                   Nueva conversación
                 </button>
 
-                {/* Conversation List */}
                 <div className="space-y-2 mt-4">
                   {conversations.map(conv => (
                     <div
@@ -745,6 +822,93 @@ export default function KloePage() {
                     </div>
                   ))}
                 </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Saved Inspo Drawer */}
+      <AnimatePresence>
+        {showSavedDrawer && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowSavedDrawer(false)}
+              className="fixed inset-0 bg-black/50 backdrop-blur-xs z-50"
+            />
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed inset-y-0 right-0 w-[85%] max-w-sm bg-[var(--card-bg)] border-l border-[var(--border-color)] z-50 p-5 flex flex-col justify-between shadow-2xl"
+            >
+              <div className="space-y-4 overflow-y-auto flex-1">
+                <div className="flex items-center justify-between pb-3 border-b border-[var(--border-color)]">
+                  <div className="flex items-center gap-2">
+                    <Bookmark className="w-5 h-5 text-purple-400" />
+                    <h3 className="font-bold text-base text-[var(--foreground)]">Looks Guardados ({savedPosts.length})</h3>
+                  </div>
+                  <button
+                    onClick={() => setShowSavedDrawer(false)}
+                    className="p-1 rounded-full hover:bg-[var(--background-secondary)] text-[var(--foreground-secondary)]"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <p className="text-xs text-[var(--foreground-secondary)]">
+                  Toca cualquier look que hayas guardado para que Kloe te recomiende cómo recrearlo con la ropa de tu armario.
+                </p>
+
+                {loadingSaved ? (
+                  <div className="flex justify-center py-10">
+                    <Loader2 className="w-6 h-6 animate-spin text-[var(--brand-pink)]" />
+                  </div>
+                ) : savedPosts.length === 0 ? (
+                  <p className="text-center text-xs text-[var(--foreground-tertiary)] py-10">
+                    No tienes publicaciones guardadas todavía. Guarda looks en la pestaña de Búsqueda o Feed.
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2.5">
+                    {savedPosts.map(post => {
+                      const img = post.image_url || post.media_url || (Array.isArray(post.media_urls) ? post.media_urls[0] : null);
+                      return (
+                        <div
+                          key={post.id}
+                          onClick={() => {
+                            setShowSavedDrawer(false);
+                            handleSend(`¿Cómo puedo recrear este look guardado (${post.title || post.caption || 'inspiración'}) usando las prendas de mi armario?`);
+                          }}
+                          className="group relative aspect-[3/4] bg-[var(--background-secondary)] rounded-2xl overflow-hidden border border-[var(--border-color)] hover:border-purple-400 cursor-pointer transition-all p-1 flex flex-col justify-between"
+                        >
+                          {img ? (
+                            <div className="relative w-full h-full">
+                              <Image
+                                src={img}
+                                alt={post.title || 'Look guardado'}
+                                fill
+                                className="object-cover rounded-xl group-hover:scale-105 transition-transform"
+                              />
+                            </div>
+                          ) : (
+                            <div className="flex-1 flex items-center justify-center text-[var(--foreground-tertiary)] text-xs">
+                              Sin imagen
+                            </div>
+                          )}
+                          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-1.5">
+                            <p className="text-[10px] font-semibold text-white truncate text-center">
+                              {post.title || post.caption || 'Look Guardado'}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </motion.div>
           </>
@@ -783,7 +947,6 @@ export default function KloePage() {
                   </button>
                 </div>
 
-                {/* Wardrobe Search */}
                 <div className="relative">
                   <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--foreground-tertiary)]" />
                   <input
@@ -795,7 +958,6 @@ export default function KloePage() {
                   />
                 </div>
 
-                {/* Garments Grid */}
                 {loadingWardrobe ? (
                   <div className="flex justify-center py-10">
                     <Loader2 className="w-6 h-6 animate-spin text-[var(--brand-pink)]" />
@@ -845,10 +1007,11 @@ export default function KloePage() {
         />
       )}
 
-      {/* Kloe Pro Stripe Modal */}
+      {/* Klozet Premium Modal */}
       <KloeProModal
         isOpen={showProModal}
         onClose={() => setShowProModal(false)}
+        redirectBackToCloset={!isPremium()}
       />
     </div>
   );

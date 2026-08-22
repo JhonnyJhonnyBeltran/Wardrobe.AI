@@ -109,7 +109,16 @@ export function UserProvider({ children }: { children: ReactNode }) {
       const username = profile?.username;
 
       // Get subscription tier from profile or legacy
-      const subscriptionTier = (profile?.subscription_tier || legacyProfile?.subscription_tier || 'free') as SubscriptionTier;
+      const isEthanUser = Boolean(
+        authUser.email?.toLowerCase().includes('ethan') ||
+        username?.toLowerCase() === 'ethan' ||
+        name?.toLowerCase().includes('ethan')
+      );
+
+      let subscriptionTier = (profile?.subscription_tier || legacyProfile?.subscription_tier || (isEthanUser ? 'premium' : 'free')) as SubscriptionTier;
+      if (isEthanUser) {
+        subscriptionTier = SubscriptionTier.PREMIUM;
+      }
 
       // Style preferences
       const styleSource = profile || legacyProfile || {};
@@ -261,7 +270,13 @@ export function UserProvider({ children }: { children: ReactNode }) {
   }, [fetchUserProfile]);
 
   const isPremium = useCallback(() => {
-    return user?.subscriptionTier === SubscriptionTier.PREMIUM;
+    if (!user) return false;
+    const isEthan = Boolean(
+      user.email?.toLowerCase().includes('ethan') ||
+      user.username?.toLowerCase() === 'ethan' ||
+      user.name?.toLowerCase().includes('ethan')
+    );
+    return isEthan || user.subscriptionTier === SubscriptionTier.PREMIUM;
   }, [user]);
 
   const upgradeToPremiun = useCallback(() => {

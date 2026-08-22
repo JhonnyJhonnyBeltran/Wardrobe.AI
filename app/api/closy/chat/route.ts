@@ -244,8 +244,10 @@ PRINCIPIOS DE ESTILISMO Y RESPUESTA INTELIGENTE:
       parts: [{ text: h.content }]
     }));
 
-    // Fetch visual images for up to 10 garments in parallel
+    // Fetch visual images for up to 10 garments and up to 3 saved inspirations in parallel
     const itemsToFetch = (context.wardrobe.items || []).slice(0, 10);
+    const savedToFetch = (context.savedInspirations || []).slice(0, 3);
+
     const imageFetches = await Promise.allSettled(
       itemsToFetch.map(async (item: any) => {
         if (!item.imageUrl) return null;
@@ -255,6 +257,19 @@ PRINCIPIOS DE ESTILISMO Y RESPUESTA INTELIGENTE:
           id: item.id,
           name: item.name,
           category: item.category,
+          imgData
+        };
+      })
+    );
+
+    const savedFetches = await Promise.allSettled(
+      savedToFetch.map(async (saved: any) => {
+        if (!saved.imageUrl) return null;
+        const imgData = await fetchImageAsBase64(saved.imageUrl);
+        if (!imgData) return null;
+        return {
+          id: saved.id,
+          title: saved.title,
           imgData
         };
       })
@@ -282,6 +297,9 @@ ${JSON.stringify(context.wardrobe.items.map((i: any) => ({
   season: i.season,
   tags: i.tags
 })))}
+
+LOOKS Y PUBLICACIONES GUARDADAS POR EL USUARIO (INSPIRACIÓN):
+${JSON.stringify(context.savedInspirations || [])}
 `
       }
     ];
@@ -291,6 +309,21 @@ ${JSON.stringify(context.wardrobe.items.map((i: any) => ({
       if (res.status === 'fulfilled' && res.value) {
         userParts.push({
           text: `FOTO REAL DE LA PRENDA (ID: "${res.value.id}", Nombre en BD: "${res.value.name}", Categoría en BD: "${res.value.category}"):`
+        });
+        userParts.push({
+          inline_data: {
+            mime_type: res.value.imgData.mimeType,
+            data: res.value.imgData.data
+          }
+        });
+      }
+    });
+
+    // Append visual images of saved inspirations
+    savedFetches.forEach(res => {
+      if (res.status === 'fulfilled' && res.value) {
+        userParts.push({
+          text: `FOTO DE LOOK GUARDADO POR EL USUARIO (Inspiración ID: "${res.value.id}", Título: "${res.value.title}"):`
         });
         userParts.push({
           inline_data: {

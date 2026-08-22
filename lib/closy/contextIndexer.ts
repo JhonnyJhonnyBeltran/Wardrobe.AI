@@ -36,6 +36,13 @@ export interface UserStylingContext {
     itemIds: string[];
   }>;
   recentLikedStyles: string[];
+  savedInspirations?: Array<{
+    id: string;
+    title?: string;
+    description?: string;
+    imageUrl?: string;
+    styleIds?: string[];
+  }>;
 }
 
 /**
@@ -132,6 +139,49 @@ export async function buildUserStylingContext(
       console.warn('[ContextIndexer] Could not fetch liked styles:', likeErr);
     }
 
+    // 5. Fetch User's Saved Posts & Inspo Outfits
+    let savedInspirations: Array<{
+      id: string;
+      title?: string;
+      description?: string;
+      imageUrl?: string;
+      styleIds?: string[];
+    }> = [];
+
+    try {
+      const { data: savedEntries } = await supabase
+        .from('saves')
+        .select(`
+          post_id,
+          posts (
+            id,
+            caption,
+            description,
+            title,
+            style_ids,
+            image_url,
+            media_url,
+            media_urls
+          )
+        `)
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      savedInspirations = (savedEntries || [])
+        .map((s: any) => s.posts)
+        .filter(Boolean)
+        .map((p: any) => ({
+          id: p.id,
+          title: p.title || p.caption || p.description || 'Look Guardado',
+          description: p.description || p.caption,
+          imageUrl: p.image_url || p.media_url || (Array.isArray(p.media_urls) ? p.media_urls[0] : undefined),
+          styleIds: p.style_ids || []
+        }));
+    } catch (saveErr) {
+      console.warn('[ContextIndexer] Could not fetch saved posts:', saveErr);
+    }
+
     return {
       user: {
         id: userId,
@@ -150,7 +200,8 @@ export async function buildUserStylingContext(
         categoryCounts
       },
       existingOutfits,
-      recentLikedStyles
+      recentLikedStyles,
+      savedInspirations
     };
   } catch (error) {
     console.error('[ContextIndexer] Error building context:', error);
@@ -165,7 +216,8 @@ export async function buildUserStylingContext(
         categoryCounts: {}
       },
       existingOutfits: [],
-      recentLikedStyles: []
+      recentLikedStyles: [],
+      savedInspirations: []
     };
   }
 }

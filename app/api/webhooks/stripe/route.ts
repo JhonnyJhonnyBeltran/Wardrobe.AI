@@ -19,7 +19,6 @@ export async function POST(request: NextRequest) {
     if (webhookSecret && signature) {
       event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
     } else {
-      // Fallback in local dev/testing without webhook secret
       event = JSON.parse(body);
     }
   } catch (err: any) {
@@ -35,18 +34,60 @@ export async function POST(request: NextRequest) {
         const customerId = session.customer;
         const subscriptionId = session.subscription;
 
-        if (userId) {
+        if (userId && subscriptionId) {
+          // Fetch full subscription details from Stripe
+          const subscription: any = await stripe.subscriptions.retrieve(subscriptionId as string);
+          const priceId = subscription.items?.data[0]?.price?.id;
+          const interval = subscription.items?.data[0]?.price?.recurring?.interval;
+          const plan = interval === 'year' ? 'yearly' : 'monthly';
+          const periodEnd = subscription.current_period_end
+            ? new Date(subscription.current_period_end * 1000).toISOString()
+            : null;
+
           await supabaseAdmin
             .from('profiles')
             .update({
               is_premium: true,
               subscription_tier: 'premium',
+              subscription_plan: plan,
+              subscription_status: subscription.status || 'active',
+              subscription_period_end: periodEnd,
               stripe_customer_id: customerId,
-              stripe_subscription_id: subscriptionId
+              stripe_subscription_id: subscriptionId,
+              stripe_price_id: priceId
             } as any)
             .eq('id', userId);
           
-          console.log(`[StripeWebhook] User ${userId} upgraded to Premium`);
+          console.log(`[StripeWebhook] User ${userId} upgraded to Premium (${plan}, expires: ${periodEnd})`);
+        }
+        break;
+      }
+
+      case 'customer.subscription.updated': {
+        const subscription: any = event.data.object;
+        const customerId = subscription.customer;
+        const priceId = subscription.items?.data[0]?.price?.id;
+        const interval = subscription.items?.data[0]?.price?.recurring?.interval;
+        const plan = interval === 'year' ? 'yearly' : 'monthly';
+        const isActive = subscription.status === 'active' || subscription.status === 'trialing';
+        const periodEnd = subscription.current_period_end
+          ? new Date(subscription.current_period_end * 1000).toISOString()
+          : null;
+
+        if (customerId) {
+          await supabaseAdmin
+            .from('profiles')
+            .update({
+              is_premium: isActive,
+              subscription_tier: isActive ? 'premium' : 'free',
+              subscription_plan: isActive ? plan : 'none',
+              subscription_status: subscription.status,
+              subscription_period_end: periodEnd,
+              stripe_price_id: priceId
+            } as any)
+            .eq('stripe_customer_id', customerId);
+
+          console.log(`[StripeWebhook] Subscription updated for customer ${customerId}: status=${subscription.status}, active=${isActive}`);
         }
         break;
       }
@@ -60,11 +101,14 @@ export async function POST(request: NextRequest) {
             .from('profiles')
             .update({
               is_premium: false,
-              subscription_tier: 'free'
+              subscription_tier: 'free',
+              subscription_plan: 'none',
+              subscription_status: 'canceled',
+              stripe_subscription_id: null
             } as any)
             .eq('stripe_customer_id', customerId);
 
-          console.log(`[StripeWebhook] Customer ${customerId} downgraded to Free`);
+          console.log(`[StripeWebhook] Customer ${customerId} subscription cancelled and downgraded to Free`);
         }
         break;
       }

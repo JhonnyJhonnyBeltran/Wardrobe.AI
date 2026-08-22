@@ -155,24 +155,6 @@ export default function Sidebar() {
             );
           })}
         </nav>
-
-        {/* Premium Button */}
-        <div className="pb-4">
-          {!isPremium() ? (
-            <Link href="/premium">
-              <div className="w-12 h-12 rounded-full bg-[var(--brand-pink)] flex items-center justify-center text-white shadow-lg hover:scale-105 active:scale-95 transition-all group relative cursor-pointer">
-                <Crown className="w-5 h-5" />
-                <div className="absolute left-full ml-3 px-2 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50">
-                  Get Premium
-                </div>
-              </div>
-            </Link>
-          ) : (
-            <div className="w-12 h-12 rounded-full bg-[var(--background-secondary)] flex items-center justify-center text-[var(--brand-pink)] cursor-default">
-              <Crown className="w-5 h-5" />
-            </div>
-          )}
-        </div>
       </aside>
 
       {/* Desktop Notifications Popover */}

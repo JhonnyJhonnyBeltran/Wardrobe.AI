@@ -149,14 +149,24 @@ En cada conversación, el backend alimenta a CloSy con:
   - Badge visual de estado `PRO` / `FREE · Pro` en la cabecera.
   - Switch de activación directa (Turn ON / Turn OFF) en `/profile/settings` para alternar el estado Premium de forma instantánea.
 
-### 3. Arquitectura de Integración con Stripe
+### 3. Arquitectura de Integración con Stripe y Base de Datos
+- **Esquema de Base de Datos (`public.profiles`)**:
+  - `is_premium BOOLEAN DEFAULT false`: Estado activo de suscripción.
+  - `subscription_tier TEXT DEFAULT 'free'`: Nivel de servicio (`free` o `premium`).
+  - `subscription_plan TEXT DEFAULT 'none'`: Tipo de plan (`monthly` o `yearly`).
+  - `subscription_status TEXT DEFAULT 'inactive'`: Estado del pago (`active`, `canceled`, `past_due`, `inactive`).
+  - `subscription_period_end TIMESTAMPTZ`: Fecha de renovación o expiración del plan.
+  - `stripe_customer_id TEXT`, `stripe_subscription_id TEXT`, `stripe_price_id TEXT`.
+  - **Vista SQL de Monitoreo (`public.v_user_subscriptions`)**: Permite consultar qué usuarios están pagando, si son anuales o mensuales y cuándo renuevan.
+- **Acceso Exclusivo para Ethan**:
+  - El usuario Ethan cuenta con suscripción **Kloe Pro Vitalicia Activa** por defecto en base de datos y cliente (`userStore.tsx`), mientras que todos los demás usuarios inician en el plan Free hasta contratar en Stripe.
 - **Stripe Checkout Sessions (`/api/stripe/checkout`)**:
   - Creación de sesión de suscripción vinculada al `user_id` de Supabase en `client_reference_id` y `customer_email`.
-  - Configuración con IVA automático (`automatic_tax: { enabled: true }`) o precio con impuestos incluidos.
+  - Soporte automático para Apple Pay, Google Pay y Tarjetas con cifrado SSL.
 - **Stripe Webhooks (`/api/webhooks/stripe`)**:
-  - `checkout.session.completed` / `customer.subscription.created`: Actualiza `profiles.subscription_tier = 'premium'`, `profiles.is_premium = true` y guarda `stripe_customer_id` y `stripe_subscription_id`.
+  - `checkout.session.completed` / `customer.subscription.created`: Recupera el plan exacto (`monthly` o `yearly`), fecha de expiración y actualiza `profiles` con Service Role de Supabase.
   - `customer.subscription.deleted` / `customer.subscription.updated`: Si el usuario cancela o expira el pago, actualiza el estado a `subscription_tier = 'free'` y `is_premium = false`.
-- **Stripe Customer Portal (`/api/stripe/portal`)**:
-  - Permite a los usuarios gestionar sus facturas, cambiar de tarjeta o cancelar la suscripción de forma automática sin soporte manual.
+- **Inspección de Inspiración y Looks Guardados**:
+  - Kloe indexa las publicaciones guardadas del usuario (`saves` $\rightarrow$ `posts`) y analiza sus fotografías para que el usuario pueda pedir recrear o combinar looks a partir de sus fotos guardadas.
 
 
