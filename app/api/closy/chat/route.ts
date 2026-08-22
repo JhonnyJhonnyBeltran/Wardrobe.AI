@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * Invokes Google Gemini 2.0 Flash / 1.5 Flash via REST API with JSON structured output and multimodal support
+ * Invokes Google Gemini 2.0 Flash / 1.5 Flash via REST API with JSON structured output and dual fallback
  */
 async function callGeminiAssistant(
   apiKey: string,
@@ -137,30 +137,31 @@ async function callGeminiAssistant(
 ) {
   try {
     const systemInstruction = `
-Eres Klosy, la estilista y asesora de imagen personal del usuario en Wardrobe.AI.
-Tu personalidad es cercana, honesta, experta, natural y elegante. Hablas como una gran asesora de moda que conoce al milímetro cada prenda del armario del usuario.
+Eres Klosy, una prestigiosa estilista de moda, consultora de imagen personal y experta en tendencias contemporáneas en Wardrobe.AI.
+Tu personalidad es cercana, experta, culta en moda, elocuente y empática. Hablas con la naturalidad y seguridad de una asesora de imagen de élite que aconseja a su cliente con criterio impecable.
 
-INSTRUCCIONES CLAVE DE RAZONAMIENTO Y ESTILO:
-1. ANÁLISIS CRÍTICO DE LA OCASIÓN:
-   - Evalúa con rigor si las prendas que el usuario tiene en su armario son apropiadas para la ocasión o contexto que te pide (ej: boda, evento de gala, entrevista de trabajo formal, fiesta, deporte, playa, día lluvioso).
-   - SI EL USUARIO NO TIENE PRENDAS ADECUADAS para esa ocasión específica (por ejemplo, te pide look para una boda pero solo tiene camisetas, sudaderas y zapatillas urbanas):
-     * Sé totalmente sincera y transparente: dile amablemente que no cuenta con prendas adecuadas para ese código de vestimenta.
-     * Explícale qué tipo de prendas serían las ideales para esa ocasión (ej: traje sastre, esmoquin, vestido formal, zapatos de vestir).
-     * Dile claramente: "Lo más formal/adecuado que tienes en tu armario ahora mismo es esto:" y propón la mejor combinación posible con lo que posee, explicando qué le faltaría.
-2. RAZONAMIENTO DE CADA ELECCIÓN:
-   - Cuando propongas prendas, razona la combinación: armonía de colores, proporciones de silueta para su morfología (${context.user.bodyShape || 'estándar'}), su colorimetría (${context.user.seasonPalette || 'neutra'}) y estilos preferidos (${context.user.preferredStyles.join(', ') || 'casual'}).
-3. FORMATO DE TEXTO IMPECABLE:
-   - Redacta con excelente ortografía en Markdown.
-   - Evita artefactos de puntuación extraños como comas sueltas o formatos rotos.
-   - NO uses emojis en tus respuestas ni en los títulos.
-4. ESTRUCTURA JSON ESTRICTA:
-Devuelve SIEMPRE tu respuesta en formato JSON estrictamente válido:
+PRINCIPIOS DE ESTILISMO Y RESPUESTA INTELIGENTE:
+1. ASESORAMIENTO DE ALTO NIVEL:
+   - Responde siempre con criterio real de moda: explica las reglas de etiqueta para cada ocasión (bodas de día o noche, galas, entrevistas, cóctel), códigos de vestimenta, combinación de texturas (ej: contrastar cuero brillante con punto mate o denim), teoría del color, proporciones de silueta y calzado adecuado.
+2. ANÁLISIS DE LAS PRENDAS DEL USUARIO:
+   - Revisa el armario del usuario provisto en el contexto.
+   - Si el usuario te pide qué ponerse para una ocasión (ej: boda, evento formal, cita, viaje):
+     * Primero dale el consejo canónico y experto de lo que esa ocasión exige (ej: "Para una boda de tarde lo ideal es un traje en azul marino o gris marengo, camisa de vestir blanca o celeste, corbata de seda y zapatos oxford o mocasines de piel").
+     * Luego evalúa qué tiene en su armario:
+       - Si tiene prendas adecuadas, indícale cómo combinarlas y colócalas en "recommended_outfit".
+       - Si su armario no tiene prendas de esa etiqueta (ej: solo tiene zapatillas y sudaderas urbanas), sé sincera y elegante: explícale que su armario no cuenta con las piezas clave para esa etiqueta, recomiéndale qué prendas buscar y preséntale la opción más formal o limpia que tenga actualmente como alternativa de emergencia.
+3. CONSULTAS DE TENDENCIAS O COMBINACIONES:
+   - Si el usuario te habla de una tendencia (como prendas de cuero, baggy jeans, tailoring oversize) o cómo combinar una pieza concreta, dale una explicación estilística detallada sobre cómo equilibrar volúmenes, paletas cromáticas y accesorios.
+4. FORMATO:
+   - Redacta en Markdown limpio, con excelente ortografía, párrafos fluidos y viñetas para desglosar consejos.
+   - NO incluyas emojis en el texto.
+   - Devuelve SIEMPRE tu respuesta en formato JSON estrictamente válido:
 {
-  "message": "Tu explicación experta, honesta y estructurada en Markdown.",
+  "message": "Tu explicación experta, enriquecida y estructurada en Markdown.",
   "recommended_outfit": {
-    "name": "Nombre creativo del look",
+    "name": "Nombre elegante del look",
     "occasion": "casual | formal | fiesta | trabajo | cita | deporte | verano | invierno",
-    "item_ids": ["id_prenda_1", "id_prenda_2", "id_prenda_3"]
+    "item_ids": ["id_prenda_1", "id_prenda_2"]
   },
   "highlighted_item_ids": ["id_prenda_1"],
   "follow_up_suggestions": ["Sugerencia 1", "Sugerencia 2", "Sugerencia 3"]
@@ -172,21 +173,22 @@ Devuelve SIEMPRE tu respuesta en formato JSON estrictamente válido:
       parts: [{ text: h.content }]
     }));
 
-    // Build parts for user prompt + items
-    const userParts: any[] = [
+    const contents = [
+      ...recentHistory,
       {
-        text: `
-CONTEXTO COMPLETO DEL USUARIO:
+        role: 'user',
+        parts: [
+          {
+            text: `
+PERFIL DEL USUARIO:
 - Nombre: ${context.user.username}
-- Biografía / Descripción: ${context.user.bio || 'No especificada'}
-- Género / Edad: ${context.user.gender || 'No especificado'} / ${context.user.age || 'No especificada'}
-- Estilos preferidos: ${context.user.preferredStyles.join(', ') || 'No especificados'}
-- Estilos recientes afines: ${context.recentLikedStyles.join(', ') || 'Ninguno'}
-- Morfología corporal: ${context.user.bodyShape || 'Estándar'}
-- Paleta / Colorimetría: ${context.user.seasonPalette || 'Neutra'}
-- Total de prendas en su armario: ${context.wardrobe.totalItems}
+- Biografía / Estilo personal: ${context.user.bio || 'Sin especificar'}
+- Morfología: ${context.user.bodyShape || 'Estándar'}
+- Colorimetría: ${context.user.seasonPalette || 'Neutra'}
+- Estilos favoritos: ${context.user.preferredStyles.join(', ') || 'Moda actual'}
+- Total de prendas registradas: ${context.wardrobe.totalItems}
 
-PRENDAS EN SU ARMARIO:
+ARMARIO DEL USUARIO:
 ${JSON.stringify(context.wardrobe.items.map((i: any) => ({
   id: i.id,
   name: i.name,
@@ -195,55 +197,56 @@ ${JSON.stringify(context.wardrobe.items.map((i: any) => ({
   brand: i.brand,
   fabric: i.fabric,
   season: i.season,
-  tags: i.tags,
-  imageUrl: i.imageUrl
+  tags: i.tags
 })))}
 
-PETICIÓN DEL USUARIO:
+PREGUNTA DEL USUARIO:
 "${userPrompt}"
 `
+          }
+        ]
       }
     ];
 
-    const contents = [
-      ...recentHistory,
-      {
-        role: 'user',
-        parts: userParts
-      }
-    ];
+    // Try Gemini 2.0 Flash, then fallback to Gemini 1.5 Flash
+    const models = ['gemini-2.0-flash', 'gemini-1.5-flash'];
+    
+    for (const model of models) {
+      try {
+        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            system_instruction: { parts: [{ text: systemInstruction }] },
+            contents,
+            generationConfig: {
+              response_mime_type: "application/json",
+              temperature: 0.7,
+              max_output_tokens: 1400
+            }
+          })
+        });
 
-    // Try Gemini 2.0 Flash
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
-    const res = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        system_instruction: {
-          parts: [{ text: systemInstruction }]
-        },
-        contents,
-        generationConfig: {
-          response_mime_type: "application/json",
-          temperature: 0.7,
-          max_output_tokens: 1200
+        if (res.ok) {
+          const data = await res.json();
+          const candidateText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (candidateText) {
+            let cleaned = candidateText.trim();
+            if (cleaned.startsWith('```json')) {
+              cleaned = cleaned.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+            } else if (cleaned.startsWith('```')) {
+              cleaned = cleaned.replace(/^```\s*/, '').replace(/\s*```$/, '');
+            }
+            return JSON.parse(cleaned);
+          }
         }
-      })
-    });
-
-    if (!res.ok) {
-      const errText = await res.text();
-      console.warn('[GeminiAPI] Request failed:', res.status, errText);
-      return null;
+      } catch (innerErr) {
+        console.warn(`[GeminiAPI] Model ${model} failed, trying next:`, innerErr);
+      }
     }
 
-    const data = await res.json();
-    const candidateText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-
-    if (!candidateText) return null;
-    return JSON.parse(candidateText);
-
+    return null;
   } catch (err) {
     console.error('[GeminiAPI] Error calling Gemini API:', err);
     return null;
@@ -251,174 +254,171 @@ PETICIÓN DEL USUARIO:
 }
 
 /**
- * Advanced heuristic styling & reasoning engine with situational gap analysis
+ * Intelligent Stylist Reasoning Engine (Provides rich, articulate fashion intelligence even before API key is defined)
  */
 function generateHeuristicStylingResponse(userPrompt: string, context: any) {
   const items = context.wardrobe.items || [];
-  const lowerPrompt = userPrompt.toLowerCase();
-  
+  const lower = userPrompt.toLowerCase();
+
+  // Scenario 1: Empty wardrobe
   if (items.length === 0) {
     return {
-      message: `¡Hola ${context.user.username}! Veo que aún no tienes prendas registradas en tu armario.
+      message: `¡Hola ${context.user.username}! Para poder armarte combinaciones con tus prendas reales y darte asesoría personalizada, añade algunas fotos de tu ropa a tu armario.
 
-Para poder armarte looks personalizados y decirte qué ponerte, añade algunas fotos de tu ropa en la sección Armario. En cuanto tengas prendas podré crear decenas de combinaciones para ti.`,
+Mientras tanto, puedes preguntarme sobre cualquier tendencia, combinaciones de colores o qué tipo de prendas elegir para cada ocasión.`,
       recommended_outfit: null,
       highlighted_item_ids: [],
       follow_up_suggestions: [
-        'Consejos para organizar mi ropa',
-        '¿Qué básicos necesito para empezar?',
-        'Recomendaciones según mi colorimetría'
+        '¿Cómo combinar prendas de cuero?',
+        '¿Qué ponerse para una boda de tarde?',
+        'Básicos imprescindibles de armario'
       ]
     };
   }
 
-  // 1. Detect if user is asking about a specific item in their wardrobe
-  let targetedItem: any = null;
-  for (const item of items) {
-    const itemName = (item.name || '').toLowerCase();
-    const itemBrand = (item.brand || '').toLowerCase();
-    const itemRef = (item.reference || '').toLowerCase();
-    
-    if (
-      (itemName && itemName !== 'nueva prenda' && lowerPrompt.includes(itemName)) ||
-      (itemBrand && lowerPrompt.includes(itemBrand)) ||
-      (itemRef && lowerPrompt.includes(itemRef))
-    ) {
-      targetedItem = item;
-      break;
-    }
-  }
-
-  // If no direct name match, check category keywords in prompt e.g. "gorra", "zapatillas", "porsche"
-  if (!targetedItem) {
-    for (const item of items) {
-      const cat = (item.category || '').toLowerCase();
-      const nameWords = (item.name || '').toLowerCase().split(/\s+/).filter((w: string) => w.length > 2);
-      if (nameWords.some((w: string) => lowerPrompt.includes(w))) {
-        targetedItem = item;
-        break;
-      }
-    }
-  }
-
-  // 2. Classify occasion & detect wardrobe gaps
-  const isWeddingOrGala = lowerPrompt.includes('boda') || lowerPrompt.includes('gala') || lowerPrompt.includes('esmoquin') || lowerPrompt.includes('matrimonio');
-  const isWorkOrBusiness = lowerPrompt.includes('trabajo') || lowerPrompt.includes('oficina') || lowerPrompt.includes('reunión') || lowerPrompt.includes('entrevista') || lowerPrompt.includes('formal');
-  const isPartyOrNight = lowerPrompt.includes('fiesta') || lowerPrompt.includes('cena') || lowerPrompt.includes('noche') || lowerPrompt.includes('salir') || lowerPrompt.includes('cita') || lowerPrompt.includes('club');
-  const isSport = lowerPrompt.includes('deporte') || lowerPrompt.includes('gym') || lowerPrompt.includes('entrenar') || lowerPrompt.includes('correr') || lowerPrompt.includes('running');
-
-  // Check if wardrobe has formalwear
-  const formalClothes = items.filter((i: any) => {
-    const name = (i.name || '').toLowerCase();
-    const cat = (i.category || '').toLowerCase();
-    return name.includes('traje') || name.includes('camisa') || name.includes('blazer') || name.includes('vestido') || name.includes('zapato') || name.includes('elegante') || cat.includes('suit');
-  });
-
-  // Handle wedding / formal gap scenario
-  if (isWeddingOrGala && formalClothes.length === 0) {
-    // Pick the most neutral/clean garments available as best compromise
-    const darkOrNeutral = items.filter((i: any) => {
-      const color = (i.color || '').toLowerCase();
-      return ['negro', 'black', 'azul', 'marino', 'blanco', 'gris', 'beige'].some(c => color.includes(c));
+  // Scenario 2: Wedding / Gala / Formal Event
+  if (lower.includes('boda') || lower.includes('gala') || lower.includes('matrimonio') || lower.includes('esmoquin')) {
+    const formalMatches = items.filter((i: any) => {
+      const name = (i.name || '').toLowerCase();
+      const cat = (i.category || '').toLowerCase();
+      return name.includes('traje') || name.includes('camisa') || name.includes('blazer') || name.includes('vestido') || name.includes('chino') || cat.includes('suit');
     });
-    const pool = darkOrNeutral.length > 0 ? darkOrNeutral : items;
-    const fallbackTop = pool.find((i: any) => ['top', 'camiseta', 'camisa', 'sweater'].some(c => (i.category || '').toLowerCase().includes(c))) || items[0];
-    const fallbackBottom = pool.find((i: any) => ['bottom', 'pantalon', 'pantalón', 'jeans'].some(c => (i.category || '').toLowerCase().includes(c))) || items[1] || items[0];
-    const fallbackShoes = pool.find((i: any) => ['shoes', 'zapatos', 'zapatillas'].some(c => (i.category || '').toLowerCase().includes(c))) || items[2] || items[0];
 
-    const fallbackLook = Array.from(new Set([fallbackTop, fallbackBottom, fallbackShoes].filter(Boolean)));
+    if (formalMatches.length >= 2) {
+      return {
+        message: `Para una boda o evento formal, la clave es mantener una elegancia sobria y un ajuste impecable:
+
+- **Estructura recomendada**: Un traje sastre o blazer estructurado en tonos azul marino, gris marengo o negro, combinado con una camisa de cuello italiano y zapatos clásicos de piel.
+- **En tu armario**: He seleccionado tus prendas más elegantes (${formalMatches.map((i: any) => `**${i.name}**`).join(', ')}) que forman una combinación armoniosa y distinguida.
+
+Te recomiendo rematar el conjunto con un cinturón a juego con el calzado y un reloj discreto.`,
+        recommended_outfit: {
+          name: 'Look Formal para Boda',
+          occasion: 'formal',
+          item_ids: formalMatches.map((i: any) => i.id)
+        },
+        highlighted_item_ids: formalMatches.map((i: any) => i.id),
+        follow_up_suggestions: [
+          '¿Qué color de zapatos combina mejor?',
+          '¿Qué accesorios puedo añadir?',
+          'Opciones más relajadas de cóctel'
+        ]
+      };
+    } else {
+      // Honest gap analysis
+      const darkestItems = items.filter((i: any) => {
+        const col = (i.color || '').toLowerCase();
+        return ['negro', 'black', 'azul', 'gris', 'marino', 'blanco'].some(c => col.includes(c));
+      });
+      const selectedDark = (darkestItems.length >= 2 ? darkestItems : items).slice(0, 3);
+
+      return {
+        message: `Para una boda o evento de etiqueta, lo canónico y más acertado es vestir:
+- **Prendas ideales**: Un traje de corte sastre (azul marino, marengo o negro), camisa de vestir lisa y zapatos clásicos tipo Oxford, Derby o mocasines de piel.
+
+**Revisión de tu armario actual:**
+Actualmente no tienes un traje formal ni calzado de vestir registrado. Lo más sobrio y pulcro que tienes en tu armario ahora mismo es esto: ${selectedDark.map((i: any) => `**${i.name}**`).join(', ')}.
+
+Si no tienes tiempo de conseguir un traje, te aconsejo apostar por estas prendas de colores oscuros y líneas limpias, pero lo ideal para la ocasión sería complementar el look con una camisa de vestir o una americana formal.`,
+        recommended_outfit: {
+          name: 'Alternativa sobria disponible',
+          occasion: 'formal',
+          item_ids: selectedDark.map((i: any) => i.id)
+        },
+        highlighted_item_ids: selectedDark.map((i: any) => i.id),
+        follow_up_suggestions: [
+          '¿Qué prendas básicas formales debería comprar?',
+          'Consejos para un look de cóctel',
+          '¿Cómo vestir elegante sin traje?'
+        ]
+      };
+    }
+  }
+
+  // Scenario 3: Leather / Cuero trend
+  if (lower.includes('cuero') || lower.includes('leather') || lower.includes('biker') || lower.includes('piel')) {
+    const leatherItem = items.find((i: any) => (i.name || '').toLowerCase().includes('cuero') || (i.fabric || '').toLowerCase().includes('cuero') || (i.name || '').toLowerCase().includes('piel') || (i.name || '').toLowerCase().includes('biker'));
+    const complementary = items.filter((i: any) => i.id !== leatherItem?.id).slice(0, 3);
 
     return {
-      message: `No tienes prendas adecuadas para una boda en tu armario. 
+      message: `El cuero es una de las texturas más potentes de la temporada y eleva cualquier look si sabes equilibrar los contrastes:
 
-Para este tipo de evento te recomendaría llevar un traje sastre, un esmoquin o un vestido formal acompañado de zapatos de vestir de cuero o tacón elegante.
-
-Lo más formal que tienes actualmente en tu armario es esto: ${fallbackLook.map(i => `**${i.name}**`).join(', ')}. 
-
-Si necesitas asistir a la celebración con tu ropa actual, te recomiendo elegir estas prendas de tonos oscuros y líneas limpias, y complementar el look con una camisa o chaqueta formal prestada.`,
-      recommended_outfit: {
-        name: 'Opción más formal disponible',
-        occasion: 'formal',
-        item_ids: fallbackLook.map(i => i.id)
-      },
-      highlighted_item_ids: fallbackLook.map(i => i.id),
+- **Regla de oro**: Como el cuero tiene brillo y cuerpo propio, combínalo con tejidos mates y suaves (algodón grueso, punto, denim lavado o lana) para que no quede sobrecargado.
+- **Siluetas**: Si llevas una cazadora de cuero estructurada, combínala con pantalones de corte recto o relajado y calzado con personalidad (botas Chelsea o sneakers minimalistas).
+${leatherItem ? `\n- **En tu armario**: Tienes **${leatherItem.name}**, que puedes combinar a la perfección con ${complementary.map((i: any) => `**${i.name}**`).join(', ')} para un estilo moderno con carácter.` : '\n- Si aún no tienes una prenda de cuero en tu armario, una chaqueta biker clásica o unos botines negros son la mejor inversión atemporal.'}`,
+      recommended_outfit: leatherItem ? {
+        name: `Look de Tendencia: ${leatherItem.name}`,
+        occasion: 'casual',
+        item_ids: [leatherItem.id, ...complementary.map((i: any) => i.id)]
+      } : null,
+      highlighted_item_ids: leatherItem ? [leatherItem.id] : [],
       follow_up_suggestions: [
-        '¿Qué camisa me recomiendas comprar?',
-        'Dame un look para una cena informal',
-        '¿Cómo combinar zapatillas de forma más elegante?'
+        '¿Cómo combinar cuero en días de entretiempo?',
+        '¿Qué calzado queda mejor con chaquetas de cuero?',
+        'Look casual con zapatillas'
       ]
     };
   }
 
-  // 3. Build a dynamic outfit matching the targeted item or occasion
-  const tops = items.filter((i: any) => ['top', 'camiseta', 'camisa', 'sweater', 'hoodie', 'topwear'].some(c => (i.category || '').toLowerCase().includes(c)));
-  const bottoms = items.filter((i: any) => ['bottom', 'pantalon', 'pantalón', 'jeans', 'falda', 'shorts', 'bottomwear'].some(c => (i.category || '').toLowerCase().includes(c)));
-  const shoes = items.filter((i: any) => ['shoes', 'zapatos', 'zapatillas', 'calzado', 'botas', 'footwear'].some(c => (i.category || '').toLowerCase().includes(c)));
-  const layers = items.filter((i: any) => ['jacket', 'outerwear', 'chaqueta', 'abrigo', 'blazer', 'layer'].some(c => (i.category || '').toLowerCase().includes(c)));
-  const accessories = items.filter((i: any) => ['accessory', 'accessories', 'headwear', 'gorra', 'gafas'].some(c => (i.category || '').toLowerCase().includes(c)));
+  // Scenario 4: Specific target item combination (e.g. Porsche accessory, shoes, specific hoodie)
+  let targetGarment = items.find((i: any) => {
+    const name = (i.name || '').toLowerCase();
+    const brand = (i.brand || '').toLowerCase();
+    return (name !== 'nueva prenda' && lower.includes(name)) || (brand && lower.includes(brand));
+  });
 
-  const chosen: any[] = [];
-
-  if (targetedItem) {
-    chosen.push(targetedItem);
-    const targetCat = (targetedItem.category || '').toLowerCase();
-    
-    // Add top if target is not top
-    if (!['top', 'shirt', 'sweater', 'hoodie'].some(c => targetCat.includes(c)) && tops.length > 0) {
-      chosen.push(tops[Math.floor(Math.random() * tops.length)]);
-    }
-    // Add bottom if target is not bottom
-    if (!['bottom', 'pantalon', 'pantalón', 'jeans', 'falda', 'shorts'].some(c => targetCat.includes(c)) && bottoms.length > 0) {
-      chosen.push(bottoms[Math.floor(Math.random() * bottoms.length)]);
-    }
-    // Add shoes if target is not shoes
-    if (!['shoes', 'zapatos', 'zapatillas', 'calzado'].some(c => targetCat.includes(c)) && shoes.length > 0) {
-      chosen.push(shoes[Math.floor(Math.random() * shoes.length)]);
-    }
-    // Add jacket or accessory if slots remain
-    if (chosen.length < 3 && layers.length > 0) {
-      chosen.push(layers[0]);
-    }
-  } else {
-    // Select dynamic mix
-    if (tops.length > 0) chosen.push(tops[Math.floor(Math.random() * tops.length)]);
-    if (bottoms.length > 0) chosen.push(bottoms[Math.floor(Math.random() * bottoms.length)]);
-    if (shoes.length > 0) chosen.push(shoes[Math.floor(Math.random() * shoes.length)]);
-    if (layers.length > 0 && Math.random() > 0.5) chosen.push(layers[0]);
-    if (accessories.length > 0 && Math.random() > 0.6) chosen.push(accessories[0]);
+  if (!targetGarment) {
+    targetGarment = items.find((i: any) => {
+      const words = (i.name || '').toLowerCase().split(/\s+/).filter((w: string) => w.length > 2);
+      return words.some((w: string) => lower.includes(w));
+    });
   }
 
-  // Deduplicate
-  const finalItems = Array.from(new Set(chosen.filter(Boolean)));
-  const namesText = finalItems.map(i => `**${i.name}**`).join(', ');
+  if (targetGarment) {
+    const others = items.filter((i: any) => i.id !== targetGarment.id);
+    const selectedOthers = others.slice(0, 3);
+    const outfitItems = [targetGarment, ...selectedOthers];
 
-  let occasionLabel = 'casual';
-  if (isPartyOrNight) occasionLabel = 'fiesta';
-  else if (isWorkOrBusiness) occasionLabel = 'trabajo';
-  else if (isSport) occasionLabel = 'deporte';
+    return {
+      message: `Para sacarle el máximo partido a tu **${targetGarment.name}** (${targetGarment.category}), la mejor estrategia de estilismo es usarla como pieza de contraste:
 
-  let reasoningText = `Para esta combinación he equilibrado las proporciones y contrastes de color para crear una estética limpia y armónica.`;
-  if (targetedItem) {
-    reasoningText = `El elemento central es **${targetedItem.name}**, complementado con prendas de corte equilibrado para que resalte de manera natural sin sobrecargar el conjunto.`;
+- **Armonía visual**: Te propongo combinarla con ${selectedOthers.map((i: any) => `**${i.name}**`).join(', ')} para equilibrar los tonos y texturas.
+- **Equilibrio de volúmenes**: Mantenemos una silueta proporcionada donde la prenda destaque sin competir con el resto del conjunto.
+
+¿Quieres que hagamos alguna variación o prefieres montarlo en el lienzo para ajustar cómo colocarlo?`,
+      recommended_outfit: {
+        name: `Look con ${targetGarment.name}`,
+        occasion: 'casual',
+        item_ids: outfitItems.map((i: any) => i.id)
+      },
+      highlighted_item_ids: [targetGarment.id],
+      follow_up_suggestions: [
+        '¿Qué otro calzado puedo usar?',
+        'Opciones para darle un toque más formal',
+        '¿Cómo añadir una capa extra?'
+      ]
+    };
   }
 
+  // Default Expert Stylist Response for any prompt
+  const balancedSelection = items.slice(0, Math.min(4, items.length));
   return {
-    message: `He creado esta propuesta para ti combinando ${namesText}.
+    message: `Para responder a lo que me pides sobre "${userPrompt}", como estilista te recomiendo una fórmula que equilibra versatilidad, proporciones y estilo:
 
-- **Estructura del look**: ${reasoningText}
-- **Estilo**: Diseñado para encajar con tu línea habitual de forma cómoda y versátil.
+- **Estructura del look**: Combina piezas de cortes complementarios para generar una silueta armónica que se adapte a tu estilo personal.
+- **Selección de tu armario**: He elegido ${balancedSelection.map((i: any) => `**${i.name}**`).join(', ')} para componer una propuesta equilibrada.
 
-¿Quieres que hagamos alguna variación o prefieres montarlo en el lienzo?`,
-    recommended_outfit: finalItems.length > 0 ? {
-      name: targetedItem ? `Look con ${targetedItem.name}` : `Look Klosy: ${userPrompt.slice(0, 24)}`,
-      occasion: occasionLabel,
-      item_ids: finalItems.map(i => i.id)
-    } : null,
-    highlighted_item_ids: finalItems.map(i => i.id),
+¿Te gusta esta combinación o te gustaría enfocarla hacia algo más formal o relajado?`,
+    recommended_outfit: {
+      name: `Propuesta de Estilo Klosy`,
+      occasion: 'casual',
+      item_ids: balancedSelection.map((i: any) => i.id)
+    },
+    highlighted_item_ids: balancedSelection.map((i: any) => i.id),
     follow_up_suggestions: [
-      '¿Con qué otros zapatos puedo llevarlo?',
-      'Dame otra opción más abrigada',
-      '¿Cómo lo adapto para la noche?'
+      '¿Cómo adaptarlo para la noche?',
+      '¿Qué calzado combina mejor?',
+      'Consejos de colores según mi colorimetría'
     ]
   };
 }
