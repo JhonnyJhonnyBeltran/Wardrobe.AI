@@ -362,7 +362,9 @@ export default function OutfitDetailPage() {
           sourceUrl: selectedItem.source_url || selectedItem.sourceUrl,
           price: selectedItem.price,
           reference: selectedItem.reference,
-          size: selectedItem.size
+          size: selectedItem.size,
+          fabric: selectedItem.fabric,
+          season: selectedItem.season
         } as any) : null}
         isOpen={!!selectedItem}
         onClose={() => setSelectedItem(null)}

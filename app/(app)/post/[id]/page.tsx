@@ -91,73 +91,83 @@ export default function PostDetailPage() {
             try {
                 console.log('[PostDetail] Fetching data for post:', postId);
 
-                // 1. Fetch Post Details
-                const { data: postData, error: postError } = await supabase
-                    .from('posts')
-                    .select(`
-                        id, caption, image_url, created_at, user_id, likes_count, comments_count,
-                        profiles (id, username, avatar_url),
-                        outfits (
-                            id, name, image_url,
-                            outfit_items (
-                                position_x,
-                                position_y,
-                                scale,
-                                rotation,
-                                layer_order,
-                                clothing_items (id, name, brand, image_url, color, color_hex, category, size, reference)
+                let postData: any = null;
+
+                // Strategy 1: Server API with Admin Service Role (Bypasses RLS on public garments)
+                try {
+                    const apiRes = await fetch(`/api/posts/${postId}`);
+                    if (apiRes.ok) {
+                        const resJson = await apiRes.json();
+                        if (resJson?.post) {
+                            postData = resJson.post;
+                        }
+                    }
+                } catch (apiErr) {
+                    console.warn('[PostDetail] Server API fetch fallback to Supabase:', apiErr);
+                }
+
+                // Strategy 2: Direct Supabase Client
+                if (!postData) {
+                    const { data: directPost, error: postError } = await supabase
+                        .from('posts')
+                        .select(`
+                            id, caption, image_url, created_at, user_id, likes_count, comments_count, outfit_id,
+                            profiles (id, username, avatar_url),
+                            outfits (
+                                id, name, image_url, occasion,
+                                outfit_items (
+                                    position_x,
+                                    position_y,
+                                    scale,
+                                    rotation,
+                                    layer_order,
+                                    clothing_item_id,
+                                    clothing_items (id, name, brand, image_url, color, color_hex, category, size, reference, fabric, season, source_url)
+                                )
                             )
-                        )
-                    `)
-                    .eq('id', postId as any)
-                    .single();
+                        `)
+                        .eq('id', postId as any)
+                        .single();
 
-                if (postError) {
-                    console.error('[PostDetail] Post fetch error:', postError);
-                    throw postError;
+                    if (postError) {
+                        console.error('[PostDetail] Post fetch error:', postError);
+                        throw postError;
+                    }
+                    postData = directPost;
                 }
 
-                let likeRes: any = { data: [] }, saveRes: any = { data: [] }, followStatus = null;
+                // If post has outfit_id but outfits is null, fetch outfit directly
+                if (postData && !postData.outfits && postData.outfit_id) {
+                    try {
+                        const { data: directOutfit } = await supabase
+                            .from('outfits')
+                            .select(`
+                                id, name, image_url, occasion,
+                                outfit_items (
+                                    position_x, position_y, scale, rotation, layer_order, clothing_item_id,
+                                    clothing_items (id, name, brand, image_url, color, color_hex, category, size, reference, fabric, season, source_url)
+                                )
+                            `)
+                            .eq('id', postData.outfit_id)
+                            .maybeSingle();
 
-                if (user) {
-                    console.log('[PostDetail] Checking interactions for user:', user.id);
-                    // 2. Fetch Interaction Status (Parallel)
-                    const [l, s, f] = await Promise.all([
-                        supabase.from('likes' as any).select('user_id').eq('post_id', postId).eq('user_id', user.id),
-                        supabase.from('saves' as any).select('user_id').eq('post_id', postId).eq('user_id', user.id),
-                        // @ts-ignore
-                        followService.getFollowStatus(user.id, postData.user_id),
-                    ]);
-                    likeRes = l;
-                    saveRes = s;
-                    followStatus = f;
-                    console.log('[PostDetail] Interaction results:', { 
-                        liked: l.data && (l.data as any[]).length > 0,
-                        saved: s.data && (s.data as any[]).length > 0,
-                        likesError: l.error ? { message: l.error.message, details: l.error.details, code: l.error.code } : null,
-                        savesError: s.error ? { message: s.error.message, details: s.error.details, code: s.error.code } : null
-                    });
-                } else {
-                    console.log('[PostDetail] No user session found for interaction check');
+                        if (directOutfit) {
+                            postData.outfits = directOutfit;
+                            postData.outfit = directOutfit;
+                        }
+                    } catch (e) {}
                 }
-
-                // Comments
-                const { data: commentsData } = await supabase
-                    .from('comments' as any)
-                    .select('id, content, created_at, user_id, profiles(id, username, avatar_url)')
-                    .eq('post_id', postId)
-                    .order('created_at', { ascending: true });
 
                 // Ensure outfit items and garments are fully resolved even if join had missing clothing_items
-                if (postData?.outfits) {
-                    const outfitObj = Array.isArray(postData.outfits) ? postData.outfits[0] : postData.outfits;
+                if (postData?.outfits || postData?.outfit) {
+                    const outfitObj = Array.isArray(postData.outfits) ? postData.outfits[0] : (postData.outfits || postData.outfit);
                     let oiList = outfitObj?.outfit_items || [];
 
                     // If outfit_items was empty, fetch them directly
                     if (oiList.length === 0 && outfitObj?.id) {
                         const { data: directOi } = await supabase
                             .from('outfit_items')
-                            .select('position_x, position_y, scale, rotation, layer_order, clothing_item_id, clothing_items (id, name, brand, image_url, color, color_hex, category, size, reference)')
+                            .select('position_x, position_y, scale, rotation, layer_order, clothing_item_id, clothing_items (id, name, brand, image_url, color, color_hex, category, size, reference, fabric, season, source_url)')
                             .eq('outfit_id', outfitObj.id);
                         if (directOi && directOi.length > 0) {
                             oiList = directOi;
@@ -173,7 +183,7 @@ export default function PostDetailPage() {
                     if (missingIds.length > 0) {
                         const { data: clothesList } = await supabase
                             .from('clothing_items')
-                            .select('id, name, brand, image_url, color, color_hex, category, size, reference, source_url')
+                            .select('id, name, brand, image_url, color, color_hex, category, size, reference, fabric, season, source_url')
                             .in('id', missingIds);
 
                         if (clothesList) {
@@ -185,7 +195,30 @@ export default function PostDetailPage() {
                             outfitObj.outfit_items = oiList;
                         }
                     }
+                    postData.outfits = outfitObj;
+                    postData.outfit = outfitObj;
                 }
+
+                let likeRes: any = { data: [] }, saveRes: any = { data: [] }, followStatus = null;
+
+                if (user) {
+                    const [l, s, f] = await Promise.all([
+                        supabase.from('likes' as any).select('user_id').eq('post_id', postId).eq('user_id', user.id),
+                        supabase.from('saves' as any).select('user_id').eq('post_id', postId).eq('user_id', user.id),
+                        // @ts-ignore
+                        followService.getFollowStatus(user.id, postData.user_id),
+                    ]);
+                    likeRes = l;
+                    saveRes = s;
+                    followStatus = f;
+                }
+
+                // Comments
+                const { data: commentsData } = await supabase
+                    .from('comments' as any)
+                    .select('id, content, created_at, user_id, profiles(id, username, avatar_url)')
+                    .eq('post_id', postId)
+                    .order('created_at', { ascending: true });
 
                 setPost(postData);
                 setIsLiked(likeRes.data && (likeRes.data as any[]).length > 0);
@@ -750,95 +783,107 @@ export default function PostDetailPage() {
                     </div>
                 )}
 
-                {/* OUTFIT ITEMS SECTION - Only show when on outfit slide */}
-                {currentSlide.type === 'outfit' && (
-                    <div className="px-4 py-4 border-t border-gray-100 dark:border-gray-800">
-                        <h3 className="font-bold text-[15px] text-gray-900 dark:text-white mb-4">Prendas del look</h3>
-                        <div className="grid grid-cols-2 gap-3">
-                            {/* @ts-ignore */}
-                            {currentSlide.outfit?.outfit_items.map((item: any) => {
-                                const clothingRaw = item.clothing_items || item.clothing_item;
-                                const clothing = Array.isArray(clothingRaw) ? clothingRaw[0] : clothingRaw;
-                                if (!clothing) return null;
-                                return (
+                {/* OUTFIT ITEMS SECTION - Always show when post has garments */}
+                {(() => {
+                    const outfitObject = post?.outfits || post?.outfit;
+                    const rawOutfitItems = outfitObject?.outfit_items || outfitObject?.items || [];
+                    const postGarments = rawOutfitItems
+                        .map((item: any) => {
+                            const clothingRaw = item.clothing_items || item.clothing_item || item.clothing || item;
+                            const clothing = Array.isArray(clothingRaw) ? clothingRaw[0] : clothingRaw;
+                            return clothing;
+                        })
+                        .filter((c: any) => c && (c.image_url || c.imageUrl));
+
+                    if (postGarments.length === 0) return null;
+
+                    return (
+                        <div className="px-4 py-4 border-t border-gray-100 dark:border-gray-800">
+                            <div className="flex items-center justify-between mb-3">
+                                <h3 className="font-bold text-[15px] text-gray-900 dark:text-white">Prendas del look ({postGarments.length})</h3>
+                                {outfitObject?.id && (
+                                    <Link 
+                                        href={`/outfit/${outfitObject.id}`}
+                                        className="text-xs font-semibold text-[var(--brand-pink)] hover:underline"
+                                    >
+                                        Ver outfit →
+                                    </Link>
+                                )}
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                {postGarments.map((clothing: any, idx: number) => (
                                     <ClothingItem 
-                                        key={clothing.id} 
+                                        key={clothing.id || idx} 
                                         id={clothing.id}
                                         name={clothing.name}
                                         brand={clothing.brand}
                                         type={clothing.category}
                                         color={clothing.color}
-                                        colorHex={clothing.color_hex}
-                                        imageUrl={clothing.image_url || '/placeholder.png'}
+                                        colorHex={clothing.color_hex || clothing.colorHex}
+                                        imageUrl={clothing.image_url || clothing.imageUrl || '/placeholder.png'}
                                         onClick={() => setSelectedItem(clothing)}
                                     />
-                                );
-                            })}
+                                ))}
+                            </div>
                         </div>
-                    </div>
-                )}
+                    );
+                })()}
 
-                {/* COMMENTS SECTION - Below description */}
-                {currentSlide.type !== 'outfit' && (
-                    <>
-                        <div className="px-4 py-4 border-t border-gray-100 dark:border-gray-800">
-                            <h3 className="font-bold text-[15px] text-gray-900 dark:text-white mb-4">Comentarios ({comments.length})</h3>
+                {/* COMMENTS SECTION */}
+                <div className="px-4 py-4 border-t border-gray-100 dark:border-gray-800">
+                    <h3 className="font-bold text-[15px] text-gray-900 dark:text-white mb-4">Comentarios ({comments.length})</h3>
 
-                            {comments.length === 0 ? (
-                                <div className="text-center py-6 text-gray-400">
-                                    <p className="text-sm">Sé el primero en comentar.</p>
-                                </div>
-                            ) : (
-                                <div className="space-y-4">
-                                    {comments.map((comment) => (
-                                        <div key={comment.id} className="flex gap-3">
-                                            <Link href={`/profile/${comment.user.id}`} className="flex-shrink-0">
-                                                <Avatar src={comment.user.avatar_url || null} alt={comment.user.username} size="sm" />
+                    {comments.length === 0 ? (
+                        <div className="text-center py-6 text-gray-400">
+                            <p className="text-sm">Sé el primero en comentar.</p>
+                        </div>
+                    ) : (
+                        <div className="space-y-4">
+                            {comments.map((comment) => (
+                                <div key={comment.id} className="flex gap-3">
+                                    <Link href={`/profile/${comment.user.id}`} className="flex-shrink-0">
+                                        <Avatar src={comment.user.avatar_url || null} alt={comment.user.username} size="sm" />
+                                    </Link>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex gap-2 items-baseline flex-wrap">
+                                            <Link href={`/profile/${comment.user.id}`} className="font-bold text-[14px] text-gray-900 dark:text-white hover:underline">
+                                                {comment.user.username}
                                             </Link>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex gap-2 items-baseline flex-wrap">
-                                                    <Link href={`/profile/${comment.user.id}`} className="font-bold text-[14px] text-gray-900 dark:text-white hover:underline">
-                                                        {comment.user.username}
-                                                    </Link>
-                                                    <span className="text-[14px] text-gray-900 dark:text-white break-words">{comment.content}</span>
-                                                </div>
-                                                <div className="flex gap-3 mt-1 text-[11px] font-medium text-gray-400">
-                                                    <span>{new Date(comment.created_at).toLocaleDateString()}</span>
-                                                    <button className="hover:text-gray-600">Responder</button>
-                                                </div>
-                                            </div>
+                                            <span className="text-[14px] text-gray-900 dark:text-white break-words">{comment.content}</span>
                                         </div>
-                                    ))}
+                                        <div className="flex gap-3 mt-1 text-[11px] font-medium text-gray-400">
+                                            <span>{new Date(comment.created_at).toLocaleDateString()}</span>
+                                            <button className="hover:text-gray-600">Responder</button>
+                                        </div>
+                                    </div>
                                 </div>
-                            )}
+                            ))}
                         </div>
-                    </>
-                )}
+                    )}
+                </div>
             </div>
 
             {/* Add Comment Input - Hidden on mobile, sticky bottom on desktop */}
-            {currentSlide.type !== 'outfit' && (
-                <form onSubmit={handleAddComment} className="hidden md:flex px-4 py-4 border-t border-gray-100 dark:border-gray-800 gap-3 items-center md:sticky md:bottom-0 bg-white dark:bg-black flex-shrink-0 w-full z-10">
-                    <Avatar src={user?.avatar || null} alt="Tú" size="sm" />
-                    <div className="flex-1">
-                        <input
-                            ref={commentInputRef}
-                            type="text"
-                            placeholder="Añadir comentario..."
-                            className="w-full bg-gray-100 dark:bg-gray-800 rounded-full px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 outline-none focus:ring-2 focus:ring-gray-200 dark:focus:ring-gray-700"
-                            value={newComment}
-                            onChange={(e) => setNewComment(e.target.value)}
-                        />
-                    </div>
-                    <button
-                        type="submit"
-                        disabled={!newComment.trim() || submittingComment}
-                        className="text-[var(--brand-pink)] font-bold text-sm hover:text-[var(--brand-pink-dark)] disabled:opacity-50 transition-colors"
-                    >
-                        Publicar
-                    </button>
-                </form>
-            )}
+            <form onSubmit={handleAddComment} className="hidden md:flex px-4 py-4 border-t border-gray-100 dark:border-gray-800 gap-3 items-center md:sticky md:bottom-0 bg-white dark:bg-black flex-shrink-0 w-full z-10">
+                <Avatar src={user?.avatar || null} alt="Tú" size="sm" />
+                <div className="flex-1">
+                    <input
+                        ref={commentInputRef}
+                        type="text"
+                        placeholder="Añadir comentario..."
+                        className="w-full bg-gray-100 dark:bg-gray-800 rounded-full px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 outline-none focus:ring-2 focus:ring-gray-200 dark:focus:ring-gray-700"
+                        value={newComment}
+                        onChange={(e) => setNewComment(e.target.value)}
+                    />
+                </div>
+                <button
+                    type="submit"
+                    disabled={!newComment.trim() || submittingComment}
+                    className="text-[var(--brand-pink)] font-bold text-sm hover:text-[var(--brand-pink-dark)] disabled:opacity-50 transition-colors"
+                >
+                    Publicar
+                </button>
+            </form>
 
             </div> {/* End Right Column */}
             </div> {/* End Desktop Container */}
@@ -930,7 +975,10 @@ export default function PostDetailPage() {
                     category: selectedItem.category,
                     color: selectedItem.color,
                     colorHex: selectedItem.color_hex || selectedItem.colorHex,
-                    size: selectedItem.size
+                    size: selectedItem.size,
+                    fabric: selectedItem.fabric,
+                    season: selectedItem.season,
+                    reference: selectedItem.reference
                 } as any) : null}
             />
         </div>

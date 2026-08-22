@@ -245,4 +245,17 @@ En cada conversación, el backend alimenta a CloSy con:
     - `useFeedStore` (`store/feedStore.ts`): Mantiene el feed de publicaciones activas y posición de scroll.
   - **Patrón Stale-While-Revalidate (SWR)**: Al navegar entre `/profile`, `/closet`, `/feed`, etc., el contenido se renderiza instantáneamente desde la memoria (0 ms de espera), mientras en segundo plano se sincronizan cambios silenciosamente sin bloquear ni parpadear la interfaz.
 
+### 8. Auditoría de Indexación de Kloe y Resolución de Prendas en Posts y Outfits
+- **Indexación Multimodal en Kloe (`/api/closy/chat` y `lib/closy/contextIndexer.ts`)**:
+  - Indexa automáticamente:
+    1. **Prendas del armario**: ID, categoría, colores, tejidos, temporadas, marcas y fotos reales de las prendas en base64 para inspección visual directa por Gemini Vision.
+    2. **Outfits previos**: Combinaciones creadas por el usuario con sus IDs de prendas.
+    3. **Estilos favoritos**: Gustos estéticos extraídos de las interacciones recientes del feed y preferencias de morfología y colorimetría del perfil.
+    4. **Inspiración guardada**: Posts guardados por el usuario como referencias visuales de estilo.
+  - Kloe evalúa la armonía cromática y estilística a través de las fotos reales y devuelve sugerencias de looks en `recommended_outfit` con `item_ids` resolviendo prendas reales de su armario.
+- **Resolución y Detalle de Prendas en Posts y Outfits (`/post/[id]`, `/outfit/[id]`, `/profile/[id]/outfit/[outfitId]`)**:
+  - Implementado endpoint `/api/posts/[id]` y `/api/outfits/[id]` para resolver completamente las prendas asociadas (`outfit_items` $\rightarrow$ `clothing_items`) sin bloqueos de RLS al ver contenido público de otros usuarios.
+  - **Prendas Siempre Visibles y Clicables**: Tanto en la vista de posts como en la vista de outfits de perfiles, la sección *"Prendas del look"* se muestra de forma destacada.
+  - **Modal de Detalle (`ProductModal`)**: Al pulsar sobre cualquier prenda del look (en la lista o en el lienzo interactivo), se abre el modal con la foto ampliada, nombre, marca, color, categoría, tejido, temporada, talla y enlace a la tienda si está disponible.
+
 
