@@ -225,11 +225,16 @@ En cada conversación, el backend alimenta a CloSy con:
 ### 5. Configuración de Stripe en Producción
 - Claves de Stripe (`STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_PRICE_ID_MONTHLY`, `STRIPE_PRICE_ID_YEARLY`) configuradas para cobros reales con soporte para Apple Pay, Google Pay y tarjetas.
 
-### 6. Detección Automática por IA de Prendas y Categoría "Otros" (`/api/analyze-clothing`)
+### 6. Detección Automática por IA de Prendas, Libros y Moderación de Seguridad (`/api/analyze-clothing`)
 - **Clasificación Multimodal Instantánea**: Al tomar o subir la foto de una prenda u objeto, mientras se elimina el fondo en local con IA, el backend analiza la fotografía con **Gemini Vision**:
   - Detecta automáticamente el tipo exacto: *Camiseta (`top`), Camisa (`shirt`), Jersey (`sweater`), Sudadera (`hoodie`), Chaqueta/Cazadora (`jacket`), Abrigo/Parka (`outerwear`), Pantalón (`bottom`), Shorts (`shorts`), Falda (`skirt`), Vestido (`dress`), Calzado/Zapatillas (`shoes`), Bolso/Mochila (`bag`), Accesorio (`accessory`) u Otros (`other`)*.
-  - **Categoría "Otros" (`other`)**: Permite subir libros, figuras, coleccionables, productos o cualquier objeto no textil.
-  - Asigna automáticamente por defecto en el formulario el nombre sugerido (ej: *"Sudadera Oversize Negra"*, *"Cazadora Vaquera Azul"*, *"Libro de Moda"*), el color principal, su código hexadecimal, el tejido y la temporada recomendada, ahorrando al usuario tener que rellenarlo manualmente.
+  - **Categoría "Otros" y Detección de Libros (`other`)**:
+    - Si se sube un **libro**, novela, cómic o libro de texto, la IA lo reconoce explícitamente, lo clasifica como `other`, detecta el título/temática visible en la portada para sugerir el nombre (ej: *"Libro: El Principito"*), y asigna el tejido como *"Papel / Tapa dura"*.
+    - Permite guardar también figuras, coleccionables, productos o cualquier objeto cotidiano no textil.
+  - **Filtro de Moderación y Eliminación Automática de Contenido Inapropiado**:
+    - La IA examina la imagen en busca de contenido no permitido: desnudez, pornografía o contenido sexual explícito/sugerente, violencia, armas, drogas ilícitas o símbolos de odio.
+    - Si se detecta contenido inapropiado, **la imagen es eliminada inmediatamente del formulario** (`setImage(null)`), bloqueando su almacenamiento y notificando al usuario con un aviso de infracción de las normas comunitarias de Klozet.
+  - Asigna automáticamente por defecto en el formulario el nombre sugerido, color principal, su código hexadecimal, tejido y temporada recomendada.
   - **Filtros en el Armario (`/closet`)**: La barra de categorías incluye ahora todas las nuevas categorías y la pestaña "Otros" para explorar y filtrar fácilmente todo el inventario.
 
 

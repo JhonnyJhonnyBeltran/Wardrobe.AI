@@ -204,6 +204,21 @@ export function useAddItemForm({
                 // Await AI analysis and auto-fill attributes
                 try {
                     const aiAnalysis = await analyzePromise;
+
+                    // ── Inappropriate Content Moderation Check ──
+                    if (aiAnalysis && aiAnalysis.isInappropriate) {
+                        setImage(null);
+                        setOriginalImage(null);
+                        setProcessedImage(null);
+                        setSelectedFile(null);
+                        setProcessingStage('error');
+                        setError(
+                            aiAnalysis.inappropriateReason || 
+                            '⚠️ Imagen no permitida: Hemos eliminado la imagen porque contiene contenido inapropiado que no cumple con las normas de la comunidad.'
+                        );
+                        return;
+                    }
+
                     if (aiAnalysis && aiAnalysis.category) {
                         setFormData(prev => ({
                             ...prev,

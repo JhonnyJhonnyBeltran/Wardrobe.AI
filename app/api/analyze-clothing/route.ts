@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-interface AnalyzeResponse {
+export interface AnalyzeResponse {
   category: 'top' | 'shirt' | 'sweater' | 'hoodie' | 'jacket' | 'outerwear' | 'bottom' | 'shorts' | 'skirt' | 'dress' | 'shoes' | 'bag' | 'accessory' | 'other';
   name: string;
   color: string;
   colorHex: string;
   fabric: string;
   season: 'spring' | 'summer' | 'autumn' | 'winter' | 'all-season';
+  isInappropriate: boolean;
+  inappropriateReason?: string;
 }
 
 export async function POST(request: NextRequest) {
@@ -33,37 +35,50 @@ export async function POST(request: NextRequest) {
         color: 'Negro',
         colorHex: '#000000',
         fabric: 'Algodón',
-        season: 'all-season'
+        season: 'all-season',
+        isInappropriate: false
       });
     }
 
     // Call Gemini Flash Vision model
     const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
-    const prompt = `Analiza esta imagen y clasifica el objeto o prenda con precisión.
-Categorías válidas:
-- "top": Camiseta, top, tirantes, crop top, polo.
-- "shirt": Camisa formal o casual, blusa con botones.
-- "sweater": Jersey, suéter de punto, cárdigan.
-- "hoodie": Sudadera con capucha o sudadera deportiva sin capucha.
-- "jacket": Chaqueta, cazadora vaquera, blazer, bomber, biker de cuero.
-- "outerwear": Abrigo largo, gabardina, parka, plumífero, abrigo de lana.
-- "bottom": Pantalón largo, jeans, vaqueros, joggers, chinos, leggings.
-- "shorts": Pantalón corto, bermudas, shorts.
-- "skirt": Falda (corta, midi o larga).
-- "dress": Vestido, mono, enterizo.
-- "shoes": Zapatos, zapatillas sneakers, botas, botines, sandalias, tacones.
-- "bag": Bolso, mochila, riñonera, cartera, maletín.
-- "accessory": Gorra, sombrero, bufanda, cinturón, gafas de sol, reloj, joyería, corbata.
-- "other": Libros, figuras, objetos cotidianos, productos, coleccionables, electrónicos o cualquier cosa no textil.
+    const prompt = `Eres el sistema de visión e inteligencia artificial de Klozet.
+Tu tarea es:
+1. MODERACIÓN Y SEGURIDAD ESTRICTA:
+   Evalúa si la imagen contiene contenido inapropiado:
+   - Desnudez, pornografía, partes íntimas o contenido sexual explícito/sugerente.
+   - Violencia explícita, sangre, armas, autolesiones o gore.
+   - Símbolos de odio, drogas ilícitas, gestos ofensivos o contenido denigrante.
+   Si detectas CUALQUIERA de estos elementos, debes marcar "isInappropriate": true y describir la razón en "inappropriateReason".
+
+2. CLASIFICACIÓN DEL ARTÍCULO:
+   Si la imagen es segura ("isInappropriate": false), clasifica el objeto con máxima precisión:
+   - "other": LIBROS (novelas, ensayos, cómics, libros de texto), cuadernos, agendas, figuras, tecnología, coleccionables, tazas o cualquier objeto cotidiano NO textil.
+     * Si es un LIBRO: detecta el título o temática visible en la portada y pon el nombre como "Libro: [Título]" o "Libro [Temática]".
+   - "top": Camiseta, top, tirantes, crop top, polo.
+   - "shirt": Camisa formal o casual, blusa con botones.
+   - "sweater": Jersey, suéter de punto, cárdigan.
+   - "hoodie": Sudadera con capucha o sudadera deportiva sin capucha.
+   - "jacket": Chaqueta, cazadora vaquera, blazer, bomber, biker de cuero.
+   - "outerwear": Abrigo largo, gabardina, parka, plumífero, abrigo de lana.
+   - "bottom": Pantalón largo, jeans, vaqueros, joggers, chinos, leggings.
+   - "shorts": Pantalón corto, bermudas, shorts.
+   - "skirt": Falda (corta, midi o larga).
+   - "dress": Vestido, mono, enterizo.
+   - "shoes": Zapatos, zapatillas sneakers, botas, botines, sandalias, tacones.
+   - "bag": Bolso, mochila, riñonera, cartera, maletín.
+   - "accessory": Gorra, sombrero, bufanda, cinturón, gafas de sol, reloj, joyería, corbata.
 
 Devuelve EXCLUSIVAMENTE un JSON válido sin bloques markdown ni texto extra con esta estructura:
 {
+  "isInappropriate": false,
+  "inappropriateReason": null,
   "category": "top" | "shirt" | "sweater" | "hoodie" | "jacket" | "outerwear" | "bottom" | "shorts" | "skirt" | "dress" | "shoes" | "bag" | "accessory" | "other",
-  "name": "Nombre descriptivo y natural en español (ej: Sudadera Oversize Negra, Cazadora Vaquera Azul, Libro de Moda, etc.)",
+  "name": "Nombre descriptivo y natural en español (ej: Libro: El Principito, Sudadera Oversize Negra, Cazadora Denim, etc.)",
   "color": "Nombre en español del color principal (ej: Negro, Blanco, Azul, Beige, Rojo, etc.)",
   "colorHex": "#hex aproximado del color principal",
-  "fabric": "Algodón | Poliéster | Cuero | Denim | Lana | Seda | Lino | Punto | Terciopelo | Papel / Tapa dura | Sintético | Otro",
+  "fabric": "Papel / Tapa dura | Tapa blanda | Algodón | Poliéster | Cuero | Denim | Lana | Seda | Lino | Punto | Sintético | Otro",
   "season": "all-season" | "spring" | "summer" | "autumn" | "winter"
 }`;
 
@@ -99,7 +114,8 @@ Devuelve EXCLUSIVAMENTE un JSON válido sin bloques markdown ni texto extra con 
         color: 'Negro',
         colorHex: '#000000',
         fabric: 'Algodón',
-        season: 'all-season'
+        season: 'all-season',
+        isInappropriate: false
       });
     }
 
@@ -121,7 +137,8 @@ Devuelve EXCLUSIVAMENTE un JSON válido sin bloques markdown ni texto extra con 
       color: 'Negro',
       colorHex: '#000000',
       fabric: 'Algodón',
-      season: 'all-season'
+      season: 'all-season',
+      isInappropriate: false
     });
 
   } catch (error: any) {
