@@ -9,3 +9,5 @@ export * from './messageStore';
 export * from './wardrobeStore';
 export { useUiStore } from './uiStore';
 export * from './notificationSettingsStore';
+export * from './profileStore';
+export * from './feedStore';

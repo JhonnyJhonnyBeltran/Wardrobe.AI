@@ -50,7 +50,9 @@ export const useWardrobeStore = create<WardrobeState>((set, get) => ({
     if (isLoadMore) {
       set({ loadingMore: true });
     } else {
-      set({ loading: true, page: 0 });
+      if (get().items.length === 0) {
+        set({ loading: true, page: 0 });
+      }
     }
     set({ error: null });
 

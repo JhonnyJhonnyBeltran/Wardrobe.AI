@@ -243,7 +243,12 @@ export default function ClosetPage() {
     if (isLoadMore) {
       setOutfitsLoadingMore(true);
     } else {
-      setOutfitsLoading(true);
+      setOutfits(prev => {
+        if (prev.length === 0) {
+          setOutfitsLoading(true);
+        }
+        return prev;
+      });
     }
 
     const currentPage = isLoadMore ? outfitsPageRef.current + 1 : 0;

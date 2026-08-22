@@ -14,13 +14,13 @@ import { supabase } from '@/lib/supabase/client';
 
 import { useMessageStore, selectTotalUnread, selectBadgeVisible } from '@/store/messageStore';
 import { useUser } from '@/store/userStore';
+import { useFeedStore } from '@/store/feedStore';
 import { getFollowing } from '@/lib/services/followService';
 
 export default function FeedPage() {
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { posts, setPosts, hasMore, setHasMore } = useFeedStore();
+  const [loading, setLoading] = useState(posts.length === 0);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const { user } = useUser();
   const { toggleCreateMenu } = useUiStore();
@@ -30,8 +30,6 @@ export default function FeedPage() {
   // More posts per page on desktop for full scroll
   const POSTS_PER_PAGE = 12;
   const observerElement = useRef<HTMLDivElement | null>(null);
-
-
 
   // Message notifications
   const messageUnreadCount = useMessageStore(selectTotalUnread);
@@ -43,7 +41,9 @@ export default function FeedPage() {
       if (isLoadMore) {
         setLoadingMore(true);
       } else {
-        setLoading(true);
+        if (posts.length === 0) {
+          setLoading(true);
+        }
       }
 
       if (!user) {

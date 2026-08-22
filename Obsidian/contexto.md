@@ -237,6 +237,12 @@ En cada conversación, el backend alimenta a CloSy con:
     - La IA examina la imagen en busca de contenido no permitido: desnudez, pornografía o contenido sexual explícito/sugerente, violencia, armas, drogas ilícitas o símbolos de odio.
     - Si se detecta contenido inapropiado, **la imagen es eliminada inmediatamente del formulario** (`setImage(null)`), bloqueando su almacenamiento y notificando al usuario con un aviso de infracción de las normas comunitarias de Klozet.
   - Asigna automáticamente por defecto en el formulario el nombre sugerido, color principal, su código hexadecimal, tejido y temporada recomendada.
-  - **Filtros en el Armario (`/closet`)**: La barra de categorías incluye ahora todas las nuevas categorías y la pestaña "Otros" para explorar y filtrar fácilmente todo el inventario.
+### 7. Arquitectura de Caché en Memoria y Navegación Instantánea SPA (Patrón SWR)
+- **Navegación Fluida sin Parpadeos (Zero Skeleton Flicker)**:
+  - Implementados stores globales de Zustand para almacenar en memoria el estado de las páginas principales:
+    - `useProfileStore` (`store/profileStore.ts`): Almacena publicaciones propias, publicaciones guardadas por carpetas, carpetas de guardados y estadísticas del perfil (`posts`, `followers`, `following`).
+    - `useWardrobeStore` (`store/wardrobeStore.ts`): Mantiene en memoria las prendas del usuario sin disparar skeletons al volver a `/closet`.
+    - `useFeedStore` (`store/feedStore.ts`): Mantiene el feed de publicaciones activas y posición de scroll.
+  - **Patrón Stale-While-Revalidate (SWR)**: Al navegar entre `/profile`, `/closet`, `/feed`, etc., el contenido se renderiza instantáneamente desde la memoria (0 ms de espera), mientras en segundo plano se sincronizan cambios silenciosamente sin bloquear ni parpadear la interfaz.
 
 

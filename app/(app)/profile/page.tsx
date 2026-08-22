@@ -43,55 +43,39 @@ function Button({ className, children, ...props }: any) {
   )
 }
 
-type TabType = 'posts' | 'saved';
+import { useProfileStore, SaveFolder } from '@/store/profileStore';
 
-interface SaveFolder {
-  id: string;
-  name: string;
-  icon?: string;
-  color?: string;
-  preview_images?: string[];
-}
+type TabType = 'posts' | 'saved';
 
 export default function ProfilePage() {
   const { user } = useUser();
   const { t } = useTranslation();
   const router = useRouter();
   const { openFolderModal, setCreateMenuOpen, refetchTrigger } = useUiStore();
-  const [activeTab, setActiveTab] = useState<TabType>('posts');
+  
+  // Connect to persistent in-memory Profile Store
+  const {
+    posts,
+    savedPosts,
+    folders,
+    profileStats,
+    selectedFolder,
+    activeTab,
+    isLoading,
+    setActiveTab,
+    setSelectedFolder,
+    setFolders,
+    setSavedPosts,
+    fetchProfileData,
+    fetchFolders
+  } = useProfileStore();
 
-  // Folder state
-  const [folders, setFolders] = useState<SaveFolder[]>([]);
-  const [selectedFolder, setSelectedFolder] = useState<SaveFolder | null>(null);
   const [showCreateFolder, setShowCreateFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
   const [folderToDelete, setFolderToDelete] = useState<SaveFolder | null>(null);
   const [isDeletingFolder, setIsDeletingFolder] = useState(false);
-  const [savedPostsWithoutFolder, setSavedPostsWithoutFolder] = useState<any[]>([]);
   const [showAvatarModal, setShowAvatarModal] = useState(false);
-
-  // Real data state
-  const [profileStats, setProfileStats] = useState({
-    posts: 0,
-    followers: 0,
-    following: 0
-  });
-  const [posts, setPosts] = useState<any[]>([]);
-  const [savedPosts, setSavedPosts] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const fetchFolders = async () => {
-    try {
-      const response = await fetch('/api/save-folders');
-      const data = await response.json();
-      if (data.folders) {
-        setFolders(data.folders);
-      }
-    } catch (error) {
-      console.error('Error fetching folders:', error);
-    }
-  };
 
   // Create folder
   const createFolder = async () => {
@@ -127,7 +111,7 @@ export default function ProfilePage() {
       });
       const data = await response.json();
       if (data.success) {
-        setFolders(prev => prev.filter(f => f.id !== folderToDelete.id));
+        setFolders((prev: SaveFolder[]) => prev.filter((f: SaveFolder) => f.id !== folderToDelete.id));
         if (selectedFolder?.id === folderToDelete.id) {
           setSelectedFolder(null);
           setSavedPosts([]);
@@ -141,99 +125,12 @@ export default function ProfilePage() {
     }
   };
 
+  // Initial mount: load data into store if not already cached
   useEffect(() => {
-    let isMounted = true;
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
-
-    const fetchProfileData = async () => {
-      if (!user) return;
-
-      try {
-        setIsLoading(true);
-        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(user.id);
-        if (!isUuid) {
-          setProfileStats({ posts: 0, followers: 0, following: 0 });
-          setPosts([]);
-          setSavedPosts([]);
-          setIsLoading(false);
-          return;
-        }
-
-        // 1. Fetch Stats
-        const { count: postCount } = await supabase
-          .from('posts')
-          .select('*', { count: 'exact', head: true })
-          .eq('user_id', user.id)
-          .abortSignal(controller.signal);
-
-        const followersCount = await followService.getFollowersCount(user.id);
-        const followingCount = await followService.getFollowingCount(user.id);
-
-        if (isMounted) {
-          setProfileStats({ posts: postCount || 0, followers: followersCount, following: followingCount });
-        }
-
-        // 2. Fetch Posts (My Posts)
-        const { data: postsData } = await supabase
-          .from('posts')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .abortSignal(controller.signal);
-
-        if (isMounted) {
-          setPosts(postsData || []);
-        }
-
-        // 3. Fetch SAVED Posts (Posts saved by user)
-        const { data: savesData } = await supabase
-          .from('saves')
-          .select(`
-            id,
-            created_at,
-            posts (*)
-          `)
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .abortSignal(controller.signal);
-
-        // Extract posts from the join
-        const formattedSavedPosts = (savesData || [])
-          .map((save: any) => ({
-            ...save.posts,
-            save_id: save.id
-          }))
-          .filter((post: any) => post !== null);
-
-        if (isMounted) {
-          setSavedPosts(formattedSavedPosts);
-        }
-
-        // 4. Fetch folders
-        await fetchFolders();
-
-      } catch (error: any) {
-        console.error('Error fetching profile:', error);
-        if (error.name !== 'AbortError' && isMounted) {
-          setProfileStats({ posts: 0, followers: 0, following: 0 });
-          setPosts([]);
-          setSavedPosts([]);
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    fetchProfileData();
-
-    return () => {
-      isMounted = false;
-      clearTimeout(timeoutId);
-    };
-  }, [user, refetchTrigger]);
+    if (user?.id) {
+      fetchProfileData(user.id);
+    }
+  }, [user?.id, refetchTrigger, fetchProfileData]);
 
   // Fetch saved posts when folder is selected
   useEffect(() => {
