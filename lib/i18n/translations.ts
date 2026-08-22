@@ -55,11 +55,20 @@ export interface Translations {
   // Item Types
   itemTypes: {
     top: string;
+    shirt: string;
+    sweater: string;
+    hoodie: string;
+    jacket: string;
     bottom: string;
+    shorts: string;
+    skirt: string;
     dress: string;
     outerwear: string;
     shoes: string;
+    bag: string;
+    accessory: string;
     accessories: string;
+    other: string;
   };
 
   // Profile
@@ -313,12 +322,21 @@ export const translations: Record<Language, Translations> = {
       thisItem: 'esta prenda',
     },
     itemTypes: {
-      top: 'Parte superior',
-      bottom: 'Parte inferior',
+      top: 'Camiseta / Top',
+      shirt: 'Camisa',
+      sweater: 'Jersey / Suéter',
+      hoodie: 'Sudadera',
+      jacket: 'Chaqueta / Cazadora',
+      bottom: 'Pantalón',
+      shorts: 'Shorts',
+      skirt: 'Falda',
       dress: 'Vestido',
       outerwear: 'Abrigo',
-      shoes: 'Zapatos',
+      shoes: 'Zapatos / Sneakers',
+      bag: 'Bolso / Mochila',
+      accessory: 'Accesorios',
       accessories: 'Accesorios',
+      other: 'Otros (Libros, objetos, etc.)',
     },
     profile: {
       settings: 'Configuración',
@@ -561,12 +579,21 @@ export const translations: Record<Language, Translations> = {
       thisItem: 'this item',
     },
     itemTypes: {
-      top: 'Top',
-      bottom: 'Bottom',
+      top: 'T-Shirt / Top',
+      shirt: 'Shirt',
+      sweater: 'Sweater',
+      hoodie: 'Hoodie / Sweatshirt',
+      jacket: 'Jacket',
+      bottom: 'Pants / Trousers',
+      shorts: 'Shorts',
+      skirt: 'Skirt',
       dress: 'Dress',
-      outerwear: 'Outerwear',
-      shoes: 'Shoes',
+      outerwear: 'Coat / Outerwear',
+      shoes: 'Shoes / Sneakers',
+      bag: 'Bag / Backpack',
+      accessory: 'Accessories',
       accessories: 'Accessories',
+      other: 'Others (Books, objects, etc.)',
     },
     profile: {
       settings: 'Settings',

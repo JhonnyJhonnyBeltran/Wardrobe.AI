@@ -27,17 +27,22 @@ export interface Brand {
   display_order: number;
 }
 
-// Fallback constants for when database is unavailable
+// Fallback constants for when database is unavailable or partial
 const DEFAULT_CATEGORIES = [
   { value: 'top', label: 'Top / Camiseta' },
-  { value: 'shirt', label: 'Camisa' },
+  { value: 'shirt', label: 'Camisa / Blusa' },
   { value: 'sweater', label: 'Jersey / Suéter' },
-  { value: 'bottom', label: 'Pantalón' },
+  { value: 'hoodie', label: 'Sudadera' },
+  { value: 'jacket', label: 'Chaqueta / Cazadora' },
+  { value: 'outerwear', label: 'Abrigo / Parka' },
+  { value: 'bottom', label: 'Pantalón / Jeans' },
+  { value: 'shorts', label: 'Pantalón corto / Shorts' },
   { value: 'skirt', label: 'Falda' },
-  { value: 'dress', label: 'Vestido' },
-  { value: 'outerwear', label: 'Abrigo / Chaqueta' },
-  { value: 'shoes', label: 'Calzado' },
-  { value: 'accessory', label: 'Accesorio' },
+  { value: 'dress', label: 'Vestido / Mono' },
+  { value: 'shoes', label: 'Calzado / Zapatillas' },
+  { value: 'bag', label: 'Bolso / Mochila' },
+  { value: 'accessory', label: 'Accesorio / Joyería' },
+  { value: 'other', label: 'Otros (Libros, objetos, etc.)' },
 ];
 
 const DEFAULT_BRANDS = [
@@ -89,13 +94,20 @@ export function useCategoriesAndBrands(): UseCategoriesAndBrandsResult {
 
       if (categoriesError) {
         console.error('[useCategoriesAndBrands] Error fetching categories:', categoriesError);
-        // Fall back to defaults
       } else if (categoriesData && categoriesData.length > 0) {
-        const formattedCategories = categoriesData.map((cat: any) => ({
+        const dbCategories = categoriesData.map((cat: any) => ({
           value: cat.slug,
           label: cat.name,
         }));
-        setCategories(formattedCategories);
+        
+        // Merge DB categories with default categories to guarantee all options (like 'other', 'hoodie', etc.) are present
+        const mergedCategories = [...dbCategories];
+        for (const def of DEFAULT_CATEGORIES) {
+          if (!mergedCategories.some(c => c.value === def.value)) {
+            mergedCategories.push(def);
+          }
+        }
+        setCategories(mergedCategories);
       }
 
       // Fetch brands

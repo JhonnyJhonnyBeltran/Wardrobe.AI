@@ -6,12 +6,17 @@ export enum ClothingCategory {
   TOP = 'top',
   SHIRT = 'shirt',
   SWEATER = 'sweater',
+  HOODIE = 'hoodie',
+  JACKET = 'jacket',
   BOTTOM = 'bottom',
+  SHORTS = 'shorts',
   SKIRT = 'skirt',
   DRESS = 'dress',
   OUTERWEAR = 'outerwear',
   SHOES = 'shoes',
+  BAG = 'bag',
   ACCESSORY = 'accessory',
+  OTHER = 'other',
 }
 
 export enum ClothingColor {

@@ -225,4 +225,11 @@ En cada conversación, el backend alimenta a CloSy con:
 ### 5. Configuración de Stripe en Producción
 - Claves de Stripe (`STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_PRICE_ID_MONTHLY`, `STRIPE_PRICE_ID_YEARLY`) configuradas para cobros reales con soporte para Apple Pay, Google Pay y tarjetas.
 
+### 6. Detección Automática por IA de Prendas y Categoría "Otros" (`/api/analyze-clothing`)
+- **Clasificación Multimodal Instantánea**: Al tomar o subir la foto de una prenda u objeto, mientras se elimina el fondo en local con IA, el backend analiza la fotografía con **Gemini Vision**:
+  - Detecta automáticamente el tipo exacto: *Camiseta (`top`), Camisa (`shirt`), Jersey (`sweater`), Sudadera (`hoodie`), Chaqueta/Cazadora (`jacket`), Abrigo/Parka (`outerwear`), Pantalón (`bottom`), Shorts (`shorts`), Falda (`skirt`), Vestido (`dress`), Calzado/Zapatillas (`shoes`), Bolso/Mochila (`bag`), Accesorio (`accessory`) u Otros (`other`)*.
+  - **Categoría "Otros" (`other`)**: Permite subir libros, figuras, coleccionables, productos o cualquier objeto no textil.
+  - Asigna automáticamente por defecto en el formulario el nombre sugerido (ej: *"Sudadera Oversize Negra"*, *"Cazadora Vaquera Azul"*, *"Libro de Moda"*), el color principal, su código hexadecimal, el tejido y la temporada recomendada, ahorrando al usuario tener que rellenarlo manualmente.
+  - **Filtros en el Armario (`/closet`)**: La barra de categorías incluye ahora todas las nuevas categorías y la pestaña "Otros" para explorar y filtrar fácilmente todo el inventario.
+
 

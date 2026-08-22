@@ -87,17 +87,22 @@ export const COLOR_OPTIONS = [
     { name: 'Lavanda', hex: '#E6E6FA' },
 ];
 
-// Clothing type/category options
+// Clothing & item type/category options
 export const TYPE_OPTIONS = [
     { value: 'top', label: 'Top / Camiseta' },
-    { value: 'shirt', label: 'Camisa' },
+    { value: 'shirt', label: 'Camisa / Blusa' },
     { value: 'sweater', label: 'Jersey / Suéter' },
-    { value: 'bottom', label: 'Pantalón' },
+    { value: 'hoodie', label: 'Sudadera' },
+    { value: 'jacket', label: 'Chaqueta / Cazadora' },
+    { value: 'outerwear', label: 'Abrigo / Parka' },
+    { value: 'bottom', label: 'Pantalón / Jeans' },
+    { value: 'shorts', label: 'Pantalón corto / Shorts' },
     { value: 'skirt', label: 'Falda' },
-    { value: 'dress', label: 'Vestido' },
-    { value: 'outerwear', label: 'Abrigo / Chaqueta' },
-    { value: 'shoes', label: 'Calzado' },
-    { value: 'accessory', label: 'Accesorio' },
+    { value: 'dress', label: 'Vestido / Mono' },
+    { value: 'shoes', label: 'Calzado / Zapatillas' },
+    { value: 'bag', label: 'Bolso / Mochila' },
+    { value: 'accessory', label: 'Accesorio / Joyería' },
+    { value: 'other', label: 'Otros (Libros, objetos, etc.)' },
 ];
 
 // Season options

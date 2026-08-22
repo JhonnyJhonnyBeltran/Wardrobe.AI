@@ -169,6 +169,18 @@ export function useAddItemForm({
             });
         });
 
+        // Start AI classification in background
+        const analyzePromise = fetch('/api/analyze-clothing', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ imageBase64: originalDataUrl })
+        })
+        .then(res => res.ok ? res.json() : null)
+        .catch(err => {
+            console.warn('[AddItemForm] AI classification fallback:', err);
+            return null;
+        });
+
         try {
             const processResult = await processClothingImage(
                 file,
@@ -189,18 +201,31 @@ export function useAddItemForm({
                 setImage(processResult.imageUrl);
                 setProcessingStage('complete');
 
-                setTimeout(async () => {
-                    try {
+                // Await AI analysis and auto-fill attributes
+                try {
+                    const aiAnalysis = await analyzePromise;
+                    if (aiAnalysis && aiAnalysis.category) {
+                        setFormData(prev => ({
+                            ...prev,
+                            name: prev.name.trim() ? prev.name : (aiAnalysis.name || prev.name),
+                            type: aiAnalysis.category || prev.type,
+                            color: aiAnalysis.color || prev.color,
+                            colorHex: aiAnalysis.colorHex || prev.colorHex,
+                            fabric: aiAnalysis.fabric || prev.fabric,
+                            season: aiAnalysis.season || prev.season,
+                        }));
+                    } else {
+                        // Fallback dominant color extraction
                         const dominantColor = await extractDominantColor(processResult.imageUrl!);
                         setFormData(prev => ({
                             ...prev,
                             color: dominantColor.name,
                             colorHex: dominantColor.hex
                         }));
-                    } catch (colorError) {
-                        console.warn('Failed to extract dominant color:', colorError);
                     }
-                }, 50);
+                } catch (colorError) {
+                    console.warn('Failed to extract dominant color / AI analysis:', colorError);
+                }
             } else {
                 setProcessingStage('error');
                 if (processResult.error) {

@@ -556,7 +556,22 @@ export default function ClosetPage() {
       return matchesSearch && matchesFavorites;
     });
 
-  const categories = ['top', 'shirt', 'sweater', 'bottom', 'skirt', 'dress', 'outerwear', 'shoes', 'accessory'];
+  const categories = [
+    'top',
+    'shirt',
+    'sweater',
+    'hoodie',
+    'jacket',
+    'outerwear',
+    'bottom',
+    'shorts',
+    'skirt',
+    'dress',
+    'shoes',
+    'bag',
+    'accessory',
+    'other',
+  ];
 
   const toggleCategory = (category: string) => {
     setSelectedCategories(prev => {
