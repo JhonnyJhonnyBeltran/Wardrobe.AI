@@ -125,27 +125,34 @@ En cada conversación, el backend alimenta a CloSy con:
 
 ## 💳 Modelo de Negocio, Monetización y Arquitectura Stripe
 
-### 1. Modelo Freemium y Suscripción Klosy Pro
+### 1. Modelo Freemium y Suscripción Kloe Pro
 - **Plan Free (Gratuito)**:
   - Armario con hasta 30 prendas.
-  - 5 consultas de prueba con Klosy al día.
-  - Creación y montaje de outfits en lienzo.
-- **Plan Klosy Pro (3,99 € - 4,99 € / mes o 29,99 € / año)**:
-  - Consultas y estilismo ilimitado con Klosy con análisis multimodal de fotos.
+  - Consultas de prueba diarias con Kloe.
+  - Creación y montaje de outfits en lienzo interactivo.
+- **Plan Kloe Pro (2,99 € / mes [IVA incl.] o 24,99 € / año [IVA incl.])**:
+  - Consultas y estilismo ilimitado con Kloe con análisis multimodal de fotos.
   - Armario ilimitado y categorización con IA.
   - Programación ilimitada en el Calendario de Outfits.
-  - Margen de beneficio unitario estimado: **> 90%** (Gasto medio por usuario en Gemini Flash: ~0,15 € - 0,25 €/mes).
+  - **Desglose Fiscal y Unitario por Usuario (Mensual 2,99 €)**:
+    - PVP Cobrado al Usuario: **2,99 €**
+    - Impuestos (21% IVA España): **- 0,52 €** (Base Imponible Neta: 2,47 €)
+    - Comisión Pasarela Stripe (1,4% + 0,25 €): **- 0,29 €**
+    - Coste IA Gemini Flash (40 consultas/mes con Zero-Token Caching): **- 0,012 €**
+    - Coste Infraestructura / Supabase: **- 0,01 €**
+    - **Beneficio Neto Limpio:** **2,16 € / mes por usuario activo** (> 72% de margen neto tras impuestos y comisiones).
 
 ### 2. Disparadores Orgánicos In-App (Estilo Duolingo)
-- **Banner en `/closet`**: *"¿Qué me pongo hoy? Pídele a Klosy que te arme un look con tu ropa en segundos"*.
-- **Banner en `/create`**: *"¿Quieres que Klosy te ayude? Combina tus prendas con IA en segundos"*.
-- **Control de Acceso en `/closet/klosy`**:
+- **Banner en `/closet`**: *"¿Qué me pongo hoy? Pídele a Kloe que te arme un look con tu ropa en segundos"*.
+- **Banner en `/create`**: *"¿Quieres que Kloe te ayude? Combina tus prendas con IA en segundos"*.
+- **Control de Acceso en `/closet/kloe`**:
   - Badge visual de estado `PRO` / `FREE · Pro` en la cabecera.
   - Switch de activación directa (Turn ON / Turn OFF) en `/profile/settings` para alternar el estado Premium de forma instantánea.
 
 ### 3. Arquitectura de Integración con Stripe
 - **Stripe Checkout Sessions (`/api/stripe/checkout`)**:
   - Creación de sesión de suscripción vinculada al `user_id` de Supabase en `client_reference_id` y `customer_email`.
+  - Configuración con IVA automático (`automatic_tax: { enabled: true }`) o precio con impuestos incluidos.
 - **Stripe Webhooks (`/api/webhooks/stripe`)**:
   - `checkout.session.completed` / `customer.subscription.created`: Actualiza `profiles.subscription_tier = 'premium'`, `profiles.is_premium = true` y guarda `stripe_customer_id` y `stripe_subscription_id`.
   - `customer.subscription.deleted` / `customer.subscription.updated`: Si el usuario cancela o expira el pago, actualiza el estado a `subscription_tier = 'free'` y `is_premium = false`.
