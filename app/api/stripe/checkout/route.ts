@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json().catch(() => ({}));
     const plan = body.plan === 'yearly' ? 'yearly' : 'monthly';
 
-    // Price IDs from env or defaults
+    // Live Price IDs for Klozet Premium
     let priceId = plan === 'yearly'
       ? (process.env.STRIPE_PRICE_ID_YEARLY || process.env.STRIPE_PRODUCT_ID_YEARLY || 'price_1U7DiWCt6LJbs620MmU8s5Vr')
       : (process.env.STRIPE_PRICE_ID_MONTHLY || process.env.STRIPE_PRODUCT_ID_MONTHLY || 'price_1U7DeHCt6LJbs620osDLmL2m');
@@ -38,25 +38,43 @@ export async function POST(request: NextRequest) {
 
     let customerId = profile?.stripe_customer_id;
 
-    if (!customerId && user.email) {
-      const customer = await stripe.customers.create({
-        email: user.email,
-        metadata: {
-          supabase_user_id: user.id
+    // Verify existing customer exists in live mode
+    if (customerId) {
+      try {
+        const existingCustomer = await stripe.customers.retrieve(customerId);
+        if ((existingCustomer as any).deleted) {
+          customerId = null;
         }
-      });
-      customerId = customer.id;
+      } catch (err) {
+        // Customer not found in current live environment
+        customerId = null;
+      }
+    }
 
-      await supabase
-        .from('profiles')
-        .update({ stripe_customer_id: customerId } as any)
-        .eq('id', user.id);
+    // Create fresh customer if needed
+    if (!customerId && user.email) {
+      try {
+        const customer = await stripe.customers.create({
+          email: user.email,
+          metadata: {
+            supabase_user_id: user.id
+          }
+        });
+        customerId = customer.id;
+
+        await supabase
+          .from('profiles')
+          .update({ stripe_customer_id: customerId } as any)
+          .eq('id', user.id);
+      } catch (custErr) {
+        console.warn('[StripeCheckout] Warning creating customer:', custErr);
+      }
     }
 
     // Create Stripe Checkout Session (Supports Apple Pay, Google Pay, Card, Link)
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
-      customer: customerId,
+      customer: customerId || undefined,
       customer_email: customerId ? undefined : user.email,
       client_reference_id: user.id,
       line_items: [

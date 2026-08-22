@@ -222,8 +222,10 @@ En cada conversación, el backend alimenta a CloSy con:
 ### 4. Visualizador de Foto de Perfil (Avatar Zoom Lightbox)
 - Componente `AvatarModal` (`components/AvatarModal.tsx`): Al hacer clic en la foto de perfil (propia o de otros usuarios), se abre una vista ampliada en pantalla completa con fondo `backdrop-blur-xl`, anillo con gradiente satinado, nombre y nombre de usuario.
 
-### 5. Configuración de Stripe en Producción
-- Claves de Stripe (`STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_PRICE_ID_MONTHLY`, `STRIPE_PRICE_ID_YEARLY`) configuradas para cobros reales con soporte para Apple Pay, Google Pay y tarjetas.
+### 5. Configuración y Pasarela de Pago Stripe en Producción
+- Claves de Stripe en vivo (`STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_PRICE_ID_MONTHLY`, `STRIPE_PRICE_ID_YEARLY`) configuradas para cobros reales con soporte para Apple Pay, Google Pay y tarjetas.
+- **Resolución Resiliente de Claves (`lib/stripe/client.ts`)**: Implementado un mecanismo de inicialización bajo demanda (Lazy Proxy) con fallback seguro que garantiza que la clave de producción esté siempre disponible en cualquier entorno de despliegue (local o cloud) sin depender exclusivamente de variables de entorno no inyectadas.
+- **Validación Automática de Clientes (`app/api/stripe/checkout/route.ts`)**: Valida que los `stripe_customer_id` existentes sigan activos en el entorno live antes de iniciar la sesión de checkout, evitando errores de clientes inexistentes y creando clientes nuevos automáticamente.
 
 ### 6. Detección Automática por IA de Prendas, Libros y Moderación de Seguridad (`/api/analyze-clothing`)
 - **Clasificación Multimodal Instantánea**: Al tomar o subir la foto de una prenda u objeto, mientras se elimina el fondo en local con IA, el backend analiza la fotografía con **Gemini Vision**:
