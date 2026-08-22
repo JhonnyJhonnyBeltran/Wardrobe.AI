@@ -646,13 +646,13 @@ export default function ClosetPage() {
                 Crear Outfit
               </motion.button>
             </Link>
-            <Link href="/closy" className="flex-1">
+            <Link href="/closet/klosy" className="flex-1">
               <motion.button 
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 className="w-full py-3 px-4 rounded-xl bg-[var(--background-secondary)] text-[var(--foreground-secondary)] font-semibold flex items-center justify-center gap-2 border border-[var(--border-color)] relative overflow-hidden group hover:border-[var(--brand-pink)]/50 transition-all"
               >
-                <div className="relative w-5 h-5 rounded-full overflow-hidden flex-shrink-0">
+                <div className="relative w-6 h-6 flex-shrink-0 flex items-center justify-center">
                   <Image src="/klosy-avatar.png" alt="Klosy" fill className="object-contain" />
                 </div>
                 <span>Klosy</span>
