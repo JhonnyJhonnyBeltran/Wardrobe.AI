@@ -15,18 +15,16 @@ export async function POST(request: NextRequest) {
     const plan = body.plan === 'yearly' ? 'yearly' : 'monthly';
 
     // Price IDs from env or defaults
-    const monthlyPriceId = process.env.STRIPE_PRICE_ID_MONTHLY || process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_MONTHLY;
-    const yearlyPriceId = process.env.STRIPE_PRICE_ID_YEARLY || process.env.NEXT_PUBLIC_STRIPE_PRICE_ID_YEARLY;
+    let priceId = plan === 'yearly'
+      ? (process.env.STRIPE_PRICE_ID_YEARLY || process.env.STRIPE_PRODUCT_ID_YEARLY || 'price_1U7DiWCt6LJbs620MmU8s5Vr')
+      : (process.env.STRIPE_PRICE_ID_MONTHLY || process.env.STRIPE_PRODUCT_ID_MONTHLY || 'price_1U7DeHCt6LJbs620osDLmL2m');
 
-    const priceId = plan === 'yearly' ? yearlyPriceId : monthlyPriceId;
-
-    if (!priceId) {
-      return NextResponse.json(
-        { 
-          error: `No se ha configurado el Price ID para el plan ${plan}. Por favor añade STRIPE_PRICE_ID_${plan.toUpperCase()} a tus variables de entorno.` 
-        }, 
-        { status: 500 }
-      );
+    // If a product ID (prod_...) was provided instead of a price ID (price_...), fetch its default price
+    if (priceId.startsWith('prod_')) {
+      const prices = await stripe.prices.list({ product: priceId, active: true, limit: 1 });
+      if (prices.data.length > 0) {
+        priceId = prices.data[0].id;
+      }
     }
 
     const origin = request.headers.get('origin') || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
@@ -55,9 +53,8 @@ export async function POST(request: NextRequest) {
         .eq('id', user.id);
     }
 
-    // Create Stripe Checkout Session
+    // Create Stripe Checkout Session (Supports Apple Pay, Google Pay, Card, Link)
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
       mode: 'subscription',
       customer: customerId,
       customer_email: customerId ? undefined : user.email,

@@ -43,3 +43,4 @@ export { TypingIndicator, TypingIndicatorInline } from './TypingIndicator';
 // Message components
 export { MessageBadge, MessageDot, MessageBadgeWrapper } from './MessageBadge';
 export { default as DiscoveredStyleBanner } from './DiscoveredStyleBanner';
+export { default as KloeProModal } from './KloeProModal';

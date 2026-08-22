@@ -26,6 +26,7 @@ import { supabase } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 import { haptics } from '@/lib/haptic';
 import ProductModal from '@/components/ProductModal';
+import KloeProModal from '@/components/KloeProModal';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 
 interface ChatMessage {
@@ -128,6 +129,7 @@ export default function KloePage() {
   const [typingStep, setTypingStep] = useState(0);
   const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
   const [rateLimitInfo, setRateLimitInfo] = useState<{ remainingDay?: number }>({});
+  const [showProModal, setShowProModal] = useState(false);
   
   // Drawers
   const [showWardrobeDrawer, setShowWardrobeDrawer] = useState(false);
@@ -416,9 +418,12 @@ export default function KloePage() {
                 PRO
               </span>
             ) : (
-              <Link href="/profile/settings" className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[var(--background-secondary)] text-[var(--foreground-tertiary)] hover:text-[var(--brand-pink)] transition-colors border border-[var(--border-color)]">
+              <button
+                onClick={() => setShowProModal(true)}
+                className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[var(--background-secondary)] text-[var(--foreground-tertiary)] hover:text-[var(--brand-pink)] transition-colors border border-[var(--border-color)] cursor-pointer"
+              >
                 FREE · Pro
-              </Link>
+              </button>
             )}
           </div>
         </div>
@@ -467,12 +472,12 @@ export default function KloePage() {
                 Estás en el plan <strong className="text-[var(--foreground)]">Free</strong>. Activa Kloe Pro para consultas ilimitadas y análisis de fotos.
               </p>
             </div>
-            <Link
-              href="/profile/settings"
-              className="text-[11px] font-bold px-3 py-1.5 bg-[var(--brand-pink)] text-white rounded-xl hover:opacity-90 transition-opacity flex-shrink-0 shadow-xs ml-2"
+            <button
+              onClick={() => setShowProModal(true)}
+              className="text-[11px] font-bold px-3 py-1.5 bg-[var(--brand-pink)] text-white rounded-xl hover:opacity-90 transition-opacity flex-shrink-0 shadow-xs ml-2 cursor-pointer"
             >
               Activar
-            </Link>
+            </button>
           </motion.div>
         )}
 
@@ -839,6 +844,12 @@ export default function KloePage() {
           item={selectedProduct}
         />
       )}
+
+      {/* Kloe Pro Stripe Modal */}
+      <KloeProModal
+        isOpen={showProModal}
+        onClose={() => setShowProModal(false)}
+      />
     </div>
   );
 }
