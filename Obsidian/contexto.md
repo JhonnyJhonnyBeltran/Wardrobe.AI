@@ -184,4 +184,12 @@ En cada conversación, el backend alimenta a CloSy con:
 - **Control de Robots (`app/robots.ts` $\rightarrow$ `/robots.txt`)**: Permite indexar páginas públicas (Feed, Search, Outfits, Perfiles) y bloquea rutas privadas.
 - **Manifest PWA (`public/manifest.json`)**: Configuración optimizada para instalación móvil y categorización en buscadores.
 
+---
+
+## 🎨 Diseño Visual de la Pantalla de Login (`/auth`)
+- **Mesh Gradient Atmosférico**: Fondo oscuro profundo con mallas radiales en rosa magenta (`#FF2D78`), púrpura violeta (`#7C3AED`) e índigo profundo (`#3B82F6`).
+- **Orbes Flotantes Suaves**: Animación sutil con `framer-motion` de movimiento elíptico y respiración.
+- **Overlay de Malla de Puntos (Dot Matrix Grid)**: Textura sutil a escala 32px que aporta estética de producto digital premium.
+- **Tarjeta Glassmorphic con Borde en Gradiente**: Cristal ahumado con `backdrop-blur-3xl`, borde con gradiente de luz y sombra volumétrica.
+
 

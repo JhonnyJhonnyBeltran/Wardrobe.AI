@@ -254,16 +254,16 @@ export default function AuthPage() {
         );
     }
 
-    const Blob = ({ className, delay }: { className: string, delay: number }) => (
+    const AmbientOrb = ({ className, delay, duration = 18 }: { className: string, delay: number, duration?: number }) => (
         <motion.div
-            className={`absolute rounded-full mix-blend-screen filter blur-[100px] opacity-30 dark:opacity-40 pointer-events-none ${className}`}
+            className={`absolute rounded-full filter blur-[110px] pointer-events-none opacity-45 dark:opacity-50 ${className}`}
             animate={{
-                x: [0, 40, -30, 0],
-                y: [0, -50, 30, 0],
-                scale: [1, 1.2, 0.8, 1],
+                x: [0, 50, -40, 0],
+                y: [0, -60, 40, 0],
+                scale: [1, 1.15, 0.9, 1],
             }}
             transition={{
-                duration: 15,
+                duration: duration,
                 repeat: Infinity,
                 repeatType: 'reverse',
                 delay: delay,
@@ -273,22 +273,42 @@ export default function AuthPage() {
     );
 
     return (
-        <div className="relative min-h-screen flex items-center justify-center p-4 bg-[var(--background)] overflow-hidden">
-            {/* Animated Gradient Background */}
-            <div className="absolute inset-0 z-0 overflow-hidden bg-[var(--background)]">
-                <Blob className="top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-gradient-to-tr from-[var(--brand-pink)] to-purple-500" delay={0} />
-                <Blob className="bottom-[-20%] right-[-10%] w-[60vw] h-[60vw] bg-gradient-to-tl from-indigo-500 to-[var(--brand-pink)]" delay={2} />
-                <Blob className="top-[30%] left-[20%] w-[40vw] h-[40vw] bg-gradient-to-r from-violet-500 to-fuchsia-500" delay={4} />
+        <div className="relative min-h-screen flex items-center justify-center p-4 bg-[#09090c] overflow-hidden selection:bg-[var(--brand-pink)] selection:text-white">
+            {/* Multi-layered Professional Gradient Mesh */}
+            <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+                {/* Radial Glow Centers */}
+                <div className="absolute -top-[25%] left-1/2 -translate-x-1/2 w-[800px] h-[550px] bg-gradient-to-b from-[var(--brand-pink)]/25 via-purple-600/15 to-transparent rounded-full blur-[120px] opacity-70" />
+                <div className="absolute -bottom-[20%] -right-[10%] w-[600px] h-[600px] bg-gradient-to-tl from-indigo-600/20 via-[var(--brand-pink)]/15 to-transparent rounded-full blur-[130px] opacity-60" />
+                <div className="absolute top-[40%] -left-[15%] w-[500px] h-[500px] bg-gradient-to-tr from-violet-600/20 via-pink-500/10 to-transparent rounded-full blur-[120px] opacity-50" />
+
+                {/* Animated Floating Ambient Orbs */}
+                <AmbientOrb className="top-[5%] left-[10%] w-[380px] h-[380px] bg-[var(--brand-pink)]" delay={0} duration={16} />
+                <AmbientOrb className="bottom-[10%] right-[15%] w-[450px] h-[450px] bg-gradient-to-tl from-indigo-500 to-purple-600" delay={2} duration={20} />
+                <AmbientOrb className="top-[45%] right-[25%] w-[300px] h-[300px] bg-gradient-to-r from-fuchsia-500 to-[var(--brand-pink)]" delay={4} duration={18} />
+
+                {/* Subtle Modern Dot-Matrix Grid Overlay */}
+                <div 
+                    className="absolute inset-0 opacity-[0.18] dark:opacity-[0.22] mix-blend-plus-lighter"
+                    style={{
+                        backgroundImage: `radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.4) 1px, transparent 0)`,
+                        backgroundSize: '32px 32px'
+                    }}
+                />
+
+                {/* Subtle Vignette */}
+                <div className="absolute inset-0 bg-radial from-transparent via-black/30 to-black/80" />
             </div>
 
+            {/* Glassmorphic Auth Card Container with Gradient Border */}
             <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, ease: "easeOut" }}
-                className="relative z-10 w-full max-w-md bg-[var(--background)]/70 dark:bg-[#0A0A0A]/60 backdrop-blur-2xl border border-[var(--border-color)]/50 rounded-[32px] shadow-2xl overflow-hidden"
+                initial={{ opacity: 0, y: 30, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                className="relative z-10 w-full max-w-md p-[1px] rounded-[36px] bg-gradient-to-b from-white/20 via-white/5 to-[var(--brand-pink)]/25 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)]"
             >
-                <div className="p-8 md:p-10">
-                    <div className="flex justify-center mb-8">
+                <div className="w-full bg-[#111116]/85 dark:bg-[#0d0d12]/90 backdrop-blur-3xl rounded-[35px] p-8 md:p-10 border border-white/5 overflow-hidden">
+                    <div className="flex justify-center mb-8 relative">
+                        <div className="absolute inset-0 bg-[var(--brand-pink)]/20 rounded-full blur-2xl -z-10 scale-75" />
                         <Image 
                             src="/klozet-logo.png" 
                             alt="Klozet Logo" 
