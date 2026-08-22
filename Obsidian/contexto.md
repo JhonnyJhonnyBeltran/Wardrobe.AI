@@ -74,6 +74,7 @@ Wardrobe.AI es una plataforma de moda impulsada por IA que permite a los usuario
 - **Asistente y Estilista Klosy (`/closet/klosy` & `/api/closy/chat`)**: 
   - **Identidad de Marca**: Personaje e icono mascota oficial `klosy-avatar.png` (personaje rosa en forma de "K" con ojos expresivos), renderizado como icono flotante transparente sin burbujas ni fondos añadidos. Tono natural, humano y cercano, eliminando lenguaje técnico o robótico.
   - **Ubicación y Navbar Activo**: Vive en la ruta `/closet/klosy`, manteniendo el icono central del Armario (`closet`) activo en el TabBar inferior y en la barra lateral.
+  - **Barra de Input Flotante Idéntica a Mensajes**: Contenedor redondeado `rounded-[24px]` con fondo `backdrop-blur-xl`, textarea auto-expandible, soporte para envío con tecla Enter y botón de envío circular animado idéntico al de `/messages/[id]`.
   - **Diseño Flotante y Sin Bordes**: Vista de chat limpia, abierta y sin marcos pesados. Cabecera con título limpio **Klosy**.
   - **Cajón de Armario Rápido (Icono Superior Derecho)**: Botón de icono minimalista que despliega un cajón lateral con todas las prendas del usuario (`clothing_items`), buscador y botón para consultar combinaciones directamente a Klosy.
   - **Directorio de Conversaciones (Máximo 5)**: Historial persistente en cliente que permite guardar, alternar y borrar hasta 5 conversaciones independientes con Klosy.

@@ -271,6 +271,19 @@ export default function KlosyPage() {
     scrollToBottom();
   }, [messages, isTyping]);
 
+  const handleTyping = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInputMessage(e.target.value);
+    e.target.style.height = 'auto';
+    e.target.style.height = `${e.target.scrollHeight}px`;
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
   const handleSend = async (textToSend?: string) => {
     const text = (textToSend || inputMessage).trim();
     if (!text || isTyping) return;
@@ -287,6 +300,11 @@ export default function KlosyPage() {
     const updatedMessages = [...messages, userMsg];
     setMessages(updatedMessages);
     setInputMessage('');
+    
+    // Reset textarea height
+    const textarea = document.getElementById('chat-input') as HTMLTextAreaElement;
+    if (textarea) textarea.style.height = 'auto';
+
     setIsTyping(true);
 
     try {
@@ -573,31 +591,41 @@ export default function KlosyPage() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Bar */}
-      <div className="p-4 pt-2">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSend();
-          }}
-          className="relative flex items-center"
-        >
-          <input
-            type="text"
-            value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
-            placeholder="Pregúntale a Klosy sobre qué ponerte o cómo combinar tu ropa..."
-            className="w-full pl-4 pr-12 py-3.5 bg-[var(--card-bg)] border border-[var(--border-color)]/60 rounded-2xl text-sm text-[var(--foreground)] placeholder-[var(--foreground-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)]/40 transition-all font-medium shadow-sm"
-          />
-          <button
-            type="submit"
-            disabled={!inputMessage.trim() || isTyping}
-            className="absolute right-2 p-2.5 bg-[var(--brand-pink)] text-white rounded-xl disabled:opacity-40 hover:opacity-90 active:scale-95 transition-all shadow-md shadow-[var(--brand-pink)]/20"
-            aria-label="Enviar mensaje"
-          >
-            <Send className="w-4 h-4" />
-          </button>
-        </form>
+      {/* Input Area - Floating (Same as /messages) */}
+      <div className="pb-[calc(env(safe-area-inset-bottom,0px)+16px)] pt-2 px-4 md:px-6 shrink-0 bg-transparent">
+        <div className="w-full">
+          <div className="flex items-end gap-2">
+            <div className="flex-1 bg-[var(--background)]/90 backdrop-blur-xl rounded-[24px] border border-[var(--border-color)] shadow-lg flex items-end pr-1.5 pl-4 transition-all focus-within:border-[var(--brand-pink)]/50 focus-within:ring-1 focus-within:ring-[var(--brand-pink)]/20">
+              <textarea
+                id="chat-input"
+                value={inputMessage}
+                onChange={handleTyping}
+                onKeyDown={handleKeyDown}
+                placeholder="Escribe un mensaje..."
+                className="w-full bg-transparent max-h-32 min-h-[46px] py-3 text-[15px] resize-none text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] !outline-none !ring-0 border-none !shadow-none"
+                rows={1}
+              />
+              <div className="flex items-center h-[46px] flex-shrink-0">
+                <AnimatePresence>
+                  {inputMessage.trim() && (
+                    <motion.button
+                      initial={{ scale: 0.5, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0.5, opacity: 0 }}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => handleSend()}
+                      disabled={isTyping}
+                      className="p-2.5 bg-[var(--brand-pink)] text-white rounded-full shadow-lg shadow-[var(--brand-pink)]/20 flex items-center justify-center transition-all"
+                    >
+                      <Send className="w-4.5 h-4.5" />
+                    </motion.button>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* RIGHT DRAWER: User's Wardrobe Clothes */}
