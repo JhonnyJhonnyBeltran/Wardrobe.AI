@@ -26,7 +26,6 @@ export function getStripe(): Stripe {
   }
 
   return new Stripe(key, {
-    apiVersion: '2025-02-24.acacia' as any,
     appInfo: {
       name: 'Wardrobe.AI',
       version: '1.0.0'
