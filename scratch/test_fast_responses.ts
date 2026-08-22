@@ -4,7 +4,7 @@ const testCases = [
   // 1. Greetings
   { input: 'hola', expectedFast: true, type: 'greeting' },
   { input: 'buenas!', expectedFast: true, type: 'greeting' },
-  { input: 'hey klosy', expectedFast: true, type: 'greeting' },
+  { input: 'hey kloe', expectedFast: true, type: 'greeting' },
   { input: 'buenos dias', expectedFast: true, type: 'greeting' },
   { input: 'buenas noches', expectedFast: true, type: 'greeting' },
   { input: 'hola que tal', expectedFast: true, type: 'greeting' },
@@ -13,7 +13,7 @@ const testCases = [
   // 2. Thanks
   { input: 'gracias', expectedFast: true, type: 'thanks' },
   { input: 'Muchas gracias!', expectedFast: true, type: 'thanks' },
-  { input: 'mil gracias klosy', expectedFast: true, type: 'thanks' },
+  { input: 'mil gracias kloe', expectedFast: true, type: 'thanks' },
   { input: 'muchisimas gracias', expectedFast: true, type: 'thanks' },
   { input: 'grx', expectedFast: true, type: 'thanks' },
   { input: 'ty', expectedFast: true, type: 'thanks' },
@@ -33,7 +33,7 @@ const testCases = [
 
   // 4. Farewells
   { input: 'adios', expectedFast: true, type: 'farewell' },
-  { input: 'chao klosy', expectedFast: true, type: 'farewell' },
+  { input: 'chao kloe', expectedFast: true, type: 'farewell' },
   { input: 'hasta luego', expectedFast: true, type: 'farewell' },
   { input: 'hasta manana', expectedFast: true, type: 'farewell' },
   { input: 'nos vemos', expectedFast: true, type: 'farewell' },

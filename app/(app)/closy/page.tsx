@@ -7,7 +7,7 @@ export default function ClosyRedirectPage() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace('/closet/klosy');
+    router.replace('/closet/kloe');
   }, [router]);
 
   return (

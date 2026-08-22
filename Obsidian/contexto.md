@@ -71,26 +71,25 @@ Wardrobe.AI es una plataforma de moda impulsada por IA que permite a los usuario
 - **Etiquetado de Estilos en Publicaciones (`/create-post`)**: Selector multi-etiqueta que permite asociar uno o varios estilos (ej: `y2k`, `techwear`, `streetwear`) a cada post, pre-cargando los estilos del usuario o del outfit vinculado y persistiendo `style_ids TEXT[]` en Supabase.
 - **Gestión y Eliminación de Carpetas (`/profile` & `/api/save-folders`)**: Modal de confirmación con aviso explícito (*"Todas las publicaciones guardadas en esta carpeta se borrarán definitivamente de tus guardados"*). Al confirmar, la API elimina en cascada las asociaciones en `save_folder_items`, las publicaciones guardadas correspondientes en `saves` y la carpeta en `save_folders`.
 - **Eliminación Total de Cuenta (`/api/user/delete`)**: Eliminación completa en cascada de comentarios, likes, guardados, carpetas, follows, notificaciones, mensajes, conversaciones vacías, outfits, prendas del armario, fotos en Storage (`avatars`, `clothing-images`), perfil en base de datos y registro de autenticación en `auth.users`.
-- **Asistente y Estilista Klosy (`/closet/klosy` & `/api/closy/chat`)**: 
-  - **Identidad de Marca**: Personaje e icono mascota oficial `klosy-avatar.png` (personaje rosa en forma de "K" con ojos expresivos), renderizado como icono flotante transparente sin burbujas ni fondos añadidos. Tono natural, humano y cercano, eliminando lenguaje técnico o robótico.
-  - **Ubicación y Navbar Activo**: Vive en la ruta `/closet/klosy`, manteniendo el icono central del Armario (`closet`) activo en el TabBar inferior y en la barra lateral.
-  - **Análisis Visual Multimodal de Fotos de Prendas**: Klosy descarga y analiza directamente las fotografías reales de las prendas del armario del usuario a través de los modelos de visión de Gemini (`gemini-3.6-flash`). Si una prenda tiene un nombre genérico o incorrecto en la base de datos (ej: *"Nueva prenda"*, *"asdf"*, *"Camiseta"* cuando en la foto es una sudadera o *"Zapatillas"* cuando son unas Nike Shox), Klosy **observa la imagen directamente**, identifica el corte, color real, logotipos y tejido, y la nombra correctamente por lo que realmente es en su asesoría de estilismo.
-  - **Seguridad y Rate Limiting Multi-Capa**: 
-    - Protección anti-abuso y DDoS por IP (`15 req/min`).
-    - Límite por usuario autenticado (`8 req/min`, `40 req/día`, `60.000 tokens/día`).
-    - Restricción de longitud de mensaje (`<= 500 caracteres`).
-    - Mensajes de límite en personaje: cuando se alcanza la cuota, Klosy responde de forma educada y natural explicando que ha llegado al límite diario para cuidar los recursos y reanudará al día siguiente.
-  - **Directorio de Conversaciones (Máximo 5)**: Historial persistente en cliente que permite guardar, alternar y borrar hasta 5 conversaciones independientes con Klosy.
-  - **Montaje Directo en el Lienzo (`/create?itemIds=...`)**: En lugar de guardar a ciegas, Klosy ofrece el botón *"Montar y editar en el lienzo"*, cargando automáticamente las prendas recomendadas en los slots correspondientes (`top`, `bottom`, `shoes`, etc.) y posicionándolas en el canvas interactivo para que el usuario pueda moverlas, escalarlas y rotarlas a su gusto.
-  - **Razonamiento Situacional y Detección de Prendas Clave**: Klosy analiza la prenda exacta que el usuario quiere combinar (ej: accesorios, zapatillas concretas o sudaderas), la sitúa como ancla del look y compone el resto del outfit de forma dinámica y no repetitiva. Si el usuario pide un evento incompatible con su armario (ej: boda o gala formal y solo tiene ropa urbana), Klosy le avisa con total sinceridad, le aconseja el código de vestimenta apropiado y le muestra la opción más formal disponible en su armario.
-  - **Renderizado de Texto Limpio**: Formateador propio de Markdown sin artefactos de puntuación, resaltando negritas y listas con viñetas elegantes.
+- **Asistente y Estilista Kloe (`/closet/kloe` & `/api/closy/chat`)**: 
+  - **Identidad de Marca**: Personaje e icono mascota oficial `kloe-avatar.png` (personaje rosa en forma de "K" con ojos expresivos), renderizado como icono flotante transparente sin burbujas ni fondos añadidos. Tono natural, humano y cercano, eliminando lenguaje técnico o robótico.
+  - **Acceso desde Armario (`/closet`)**: Botón oficial nombrado *"Crear con IA"* con icono de mascota e indicador visual sutil, más banner orgánico contextual de recomendación.
+  - **Animaciones Avanzadas de Chat**:
+    - Animación flotante/pulsante del avatar de Kloe durante el pensamiento.
+    - 3 puntos de carga con rebote elástico progresivo y textos dinámicos rotativos (*"Pensando en tu estilo..."*, *"Analizando las prendas de tu armario..."*, *"Buscando la combinación perfecta..."*).
+    - Entrada con física spring elástica de los mensajes enviados del usuario y de las respuestas de Kloe.
+  - **Ubicación y Navbar Activo**: Vive en la ruta `/closet/kloe`, manteniendo el icono central del Armario (`closet`) activo en el TabBar inferior y en la barra lateral (con redirección transparente desde `/closet/klosy` y `/closy`).
+  - **Análisis Visual Multimodal de Fotos de Prendas**: Kloe descarga y analiza directamente las fotografías reales de las prendas del armario del usuario a través de los modelos de visión de Gemini (`gemini-3.6-flash`). Si una prenda tiene un nombre genérico o incorrecto en la base de datos, Kloe observa la foto directamente e identifica el color real, corte, estampados y logos.
+  - **Directorio de Conversaciones (Máximo 5)**: Historial persistente en cliente que permite guardar, alternar y borrar hasta 5 conversaciones independientes con Kloe.
+  - **Montaje Directo en el Lienzo (`/create?itemIds=...`)**: Kloe ofrece el botón *"Montar y editar en el lienzo"*, cargando automáticamente las prendas recomendadas en los slots correspondientes (`top`, `bottom`, `shoes`, etc.) y posicionándolas en el canvas interactivo.
+  - **Razonamiento Situacional y Detección de Prendas Clave**: Kloe analiza la prenda exacta que el usuario quiere combinar, la sitúa como ancla del look y compone el resto del outfit de forma dinámica.
 
 ---
 
-## 🤖 CloSy AI - Asistente y Estilista Inteligente Personal (Roadmap & Arquitectura)
+## 🤖 Kloe AI - Asistente y Estilista Inteligente Personal (Roadmap & Arquitectura)
 
 ### 1. Visión y Propósito
-**CloSy** es el asistente conversacional (estilo ChatGPT) integrado en Wardrobe.AI. Su objetivo es recomendar outfits completos y combinaciones de prendas reales del armario del usuario según la ocasión, el clima, el estilo deseado o dudas de moda cotidianas.
+**Kloe** es la asistente conversacional integrada en Wardrobe.AI. Su objetivo es recomendar outfits completos y combinaciones de prendas reales del armario del usuario según la ocasión, el clima, el estilo deseado o dudas de moda cotidianas.
 
 ### 2. Modelo de IA Económico y Gratuito
 - **Modelo recomendado**: **Google Gemini 2.0 Flash / 1.5 Flash** (vía Google AI Studio API o SDK oficial `@google/genai`).

@@ -263,7 +263,7 @@ export default function SettingsPage() {
                         {t.profile.configuration}
                     </h2>
 
-                    {/* Suscripción & Klosy Pro Toggle Switch */}
+                    {/* Suscripción & Kloe Pro Toggle Switch */}
                     <Card className="p-5 mb-4 border border-[var(--brand-pink)]/30 bg-gradient-to-r from-[var(--card-bg)] via-[var(--brand-pink)]/5 to-[var(--card-bg)] shadow-sm">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
@@ -272,7 +272,7 @@ export default function SettingsPage() {
                                 </div>
                                 <div>
                                     <div className="flex items-center gap-2">
-                                        <span className="font-bold text-[var(--foreground)]">Klosy Pro</span>
+                                        <span className="font-bold text-[var(--foreground)]">Kloe Pro</span>
                                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                                             isPremium()
                                                 ? 'bg-[var(--brand-pink)] text-white shadow-xs'
@@ -284,7 +284,7 @@ export default function SettingsPage() {
                                     <div className="text-xs text-[var(--foreground-tertiary)] mt-0.5">
                                         {isPremium() 
                                             ? 'Estilista con IA ilimitada y análisis de fotos' 
-                                            : 'Activa Klosy Pro para estilismo ilimitado'}
+                                            : 'Activa Kloe Pro para estilismo ilimitado'}
                                     </div>
                                 </div>
                             </div>
@@ -294,7 +294,7 @@ export default function SettingsPage() {
                                     const willBePremium = !isPremium();
                                     await togglePremium(willBePremium);
                                     if (willBePremium) {
-                                        toast.success('¡Klosy Pro Activado! Tienes acceso ilimitado a Klosy');
+                                        toast.success('¡Kloe Pro Activado! Tienes acceso ilimitado a Kloe');
                                     } else {
                                         toast.info('Plan gratuito activado');
                                     }
@@ -302,7 +302,7 @@ export default function SettingsPage() {
                                 className={`relative inline-flex h-6 w-12 items-center rounded-full transition-colors focus:outline-none cursor-pointer ${
                                     isPremium() ? 'bg-[var(--brand-pink)]' : 'bg-gray-300 dark:bg-gray-700'
                                 }`}
-                                aria-label="Alternar suscripción Klosy Pro"
+                                aria-label="Alternar suscripción Kloe Pro"
                             >
                                 <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform ${
                                     isPremium() ? 'translate-x-6' : 'translate-x-1'

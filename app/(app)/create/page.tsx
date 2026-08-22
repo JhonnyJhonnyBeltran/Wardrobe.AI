@@ -1072,16 +1072,16 @@ export default function CreateOutfitPage() {
                             />
                         </div>
 
-                        {/* Duolingo-style Organic Klosy Banner */}
-                        <Link href="/closet/klosy" className="block">
+                        {/* Duolingo-style Organic Kloe Banner */}
+                        <Link href="/closet/kloe" className="block">
                             <div className="bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-pink-500/10 border border-[var(--brand-pink)]/30 rounded-2xl p-3.5 flex items-center justify-between hover:border-[var(--brand-pink)]/60 transition-all shadow-sm group">
                                 <div className="flex items-center gap-3">
                                     <div className="relative w-8 h-8 flex-shrink-0 flex items-center justify-center">
-                                        <Image src="/klosy-avatar.png" alt="Klosy" fill className="object-contain group-hover:scale-110 transition-transform" />
+                                        <Image src="/kloe-avatar.png" alt="Kloe" fill className="object-contain group-hover:scale-110 transition-transform" />
                                     </div>
                                     <div>
                                         <p className="text-xs font-bold text-[var(--foreground)] flex items-center gap-1">
-                                            ¿Quieres que Klosy te ayude?
+                                            ¿Quieres que Kloe te ayude?
                                         </p>
                                         <p className="text-[11px] text-[var(--foreground-tertiary)]">
                                             Combina tus prendas con IA en segundos

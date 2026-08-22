@@ -188,7 +188,7 @@ export function getFastCourtesyResponse(rawPrompt: string, username?: string): F
   if (faqKeywords.some(k => normalized.includes(k))) {
     return {
       isFastResponse: true,
-      message: `¡Soy **Klosy**, tu estilista personal con IA! 🤖✨ Puedo:\n\n` +
+      message: `¡Soy **Kloe**, tu estilista personal con IA! 🤖✨ Puedo:\n\n` +
         `• **Analizar tu armario real** y crear outfits completos y equilibrados.\n` +
         `• **Adaptar looks a eventos**: bodas, citas, trabajo, fiestas o diario.\n` +
         `• **Combinar prendas difíciles**: dime qué zapatillas o prenda quieres llevar y te armo el resto.\n` +
