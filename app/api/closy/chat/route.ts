@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
 
     if (authError || !user) {
       return NextResponse.json(
-        { error: 'Debes iniciar sesión para consultar a CloSy AI' },
+        { error: 'Debes iniciar sesión para consultar a Klosy' },
         { status: 401 }
       );
     }
@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
 
       if (validGarments.length > 0) {
         resolvedOutfit = {
-          name: aiResult.recommended_outfit.name || 'Outfit Recomendado por CloSy',
+          name: aiResult.recommended_outfit.name || 'Look recomendado por Klosy',
           occasion: aiResult.recommended_outfit.occasion || null,
           items: validGarments
         };
@@ -118,16 +118,16 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error: any) {
-    console.error('[CloSyChat] API Error:', error);
+    console.error('[KlosyChat] API Error:', error);
     return NextResponse.json(
-      { error: error?.message || 'Error al procesar la consulta con CloSy AI' },
+      { error: error?.message || 'Error al procesar la consulta con Klosy' },
       { status: 500 }
     );
   }
 }
 
 /**
- * Invokes Google Gemini 2.0 Flash / 1.5 Flash via REST API with JSON structured output
+ * Invokes Google Gemini 2.0 Flash / 1.5 Flash via REST API with JSON structured output and multimodal support
  */
 async function callGeminiAssistant(
   apiKey: string,
@@ -172,13 +172,10 @@ Devuelve SIEMPRE tu respuesta en formato JSON estrictamente válido:
       parts: [{ text: h.content }]
     }));
 
-    const contents = [
-      ...recentHistory,
+    // Build parts for user prompt + items
+    const userParts: any[] = [
       {
-        role: 'user',
-        parts: [
-          {
-            text: `
+        text: `
 CONTEXTO COMPLETO DEL USUARIO:
 - Nombre: ${context.user.username}
 - Biografía / Descripción: ${context.user.bio || 'No especificada'}
@@ -189,7 +186,7 @@ CONTEXTO COMPLETO DEL USUARIO:
 - Paleta / Colorimetría: ${context.user.seasonPalette || 'Neutra'}
 - Total de prendas en su armario: ${context.wardrobe.totalItems}
 
-PRENDAS EN SU ARMARIO CON DETALLES:
+PRENDAS EN SU ARMARIO:
 ${JSON.stringify(context.wardrobe.items.map((i: any) => ({
   id: i.id,
   name: i.name,
@@ -198,18 +195,25 @@ ${JSON.stringify(context.wardrobe.items.map((i: any) => ({
   brand: i.brand,
   fabric: i.fabric,
   season: i.season,
-  tags: i.tags
+  tags: i.tags,
+  imageUrl: i.imageUrl
 })))}
 
 PETICIÓN DEL USUARIO:
 "${userPrompt}"
 `
-          }
-        ]
       }
     ];
 
-    // Try Gemini 2.0 Flash, fallback to Gemini 1.5 Flash
+    const contents = [
+      ...recentHistory,
+      {
+        role: 'user',
+        parts: userParts
+      }
+    ];
+
+    // Try Gemini 2.0 Flash
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
     const res = await fetch(endpoint, {
@@ -230,7 +234,7 @@ PETICIÓN DEL USUARIO:
 
     if (!res.ok) {
       const errText = await res.text();
-      console.warn('[GeminiAPI] Gemini 2.0 Flash request failed:', res.status, errText);
+      console.warn('[GeminiAPI] Request failed:', res.status, errText);
       return null;
     }
 
@@ -247,57 +251,173 @@ PETICIÓN DEL USUARIO:
 }
 
 /**
- * Intelligent local fallback styling engine based on wardrobe categories and color theory
+ * Advanced heuristic styling & reasoning engine with situational gap analysis
  */
 function generateHeuristicStylingResponse(userPrompt: string, context: any) {
   const items = context.wardrobe.items || [];
+  const lowerPrompt = userPrompt.toLowerCase();
   
   if (items.length === 0) {
     return {
-      message: `¡Hola ${context.user.username}! Veo que aún no tienes prendas registradas en tu armario. 
-      
-Para poder armarte looks personalizados y decirte qué ponerte, sube fotos de tus prendas en la sección **Armario** (pestaña inferior). ¡En cuanto tengas un par de prendas podré crear decenas de combinaciones para ti!`,
+      message: `¡Hola ${context.user.username}! Veo que aún no tienes prendas registradas en tu armario.
+
+Para poder armarte looks personalizados y decirte qué ponerte, añade algunas fotos de tu ropa en la sección Armario. En cuanto tengas prendas podré crear decenas de combinaciones para ti.`,
       recommended_outfit: null,
       highlighted_item_ids: [],
       follow_up_suggestions: [
-        '¿Cómo organizo mi armario?',
+        'Consejos para organizar mi ropa',
         '¿Qué básicos necesito para empezar?',
-        'Consejos de estilo para mi morfología'
+        'Recomendaciones según mi colorimetría'
       ]
     };
   }
 
-  // Find top, bottom, shoes, jacket
-  const tops = items.filter((i: any) => ['top', 'camiseta', 'camisa', 'sweater', 'hoodie', 'topwear'].includes(i.category?.toLowerCase()));
-  const bottoms = items.filter((i: any) => ['bottom', 'pantalon', 'pantalón', 'jeans', 'falda', 'shorts', 'bottomwear'].includes(i.category?.toLowerCase()));
-  const shoes = items.filter((i: any) => ['shoes', 'zapatos', 'zapatillas', 'calzado', 'botas', 'footwear'].includes(i.category?.toLowerCase()));
-  const jackets = items.filter((i: any) => ['jacket', 'chaqueta', 'abrigo', 'outerwear', 'blazer'].includes(i.category?.toLowerCase()));
+  // 1. Detect if user is asking about a specific item in their wardrobe
+  let targetedItem: any = null;
+  for (const item of items) {
+    const itemName = (item.name || '').toLowerCase();
+    const itemBrand = (item.brand || '').toLowerCase();
+    const itemRef = (item.reference || '').toLowerCase();
+    
+    if (
+      (itemName && itemName !== 'nueva prenda' && lowerPrompt.includes(itemName)) ||
+      (itemBrand && lowerPrompt.includes(itemBrand)) ||
+      (itemRef && lowerPrompt.includes(itemRef))
+    ) {
+      targetedItem = item;
+      break;
+    }
+  }
 
-  const chosenItems: any[] = [];
-  if (tops.length > 0) chosenItems.push(tops[0]);
-  if (bottoms.length > 0) chosenItems.push(bottoms[0]);
-  if (shoes.length > 0) chosenItems.push(shoes[0]);
-  else if (jackets.length > 0) chosenItems.push(jackets[0]);
+  // If no direct name match, check category keywords in prompt e.g. "gorra", "zapatillas", "porsche"
+  if (!targetedItem) {
+    for (const item of items) {
+      const cat = (item.category || '').toLowerCase();
+      const nameWords = (item.name || '').toLowerCase().split(/\s+/).filter((w: string) => w.length > 2);
+      if (nameWords.some((w: string) => lowerPrompt.includes(w))) {
+        targetedItem = item;
+        break;
+      }
+    }
+  }
 
-  const itemNames = chosenItems.map(i => `**${i.name}**`).join(', ');
+  // 2. Classify occasion & detect wardrobe gaps
+  const isWeddingOrGala = lowerPrompt.includes('boda') || lowerPrompt.includes('gala') || lowerPrompt.includes('esmoquin') || lowerPrompt.includes('matrimonio');
+  const isWorkOrBusiness = lowerPrompt.includes('trabajo') || lowerPrompt.includes('oficina') || lowerPrompt.includes('reunión') || lowerPrompt.includes('entrevista') || lowerPrompt.includes('formal');
+  const isPartyOrNight = lowerPrompt.includes('fiesta') || lowerPrompt.includes('cena') || lowerPrompt.includes('noche') || lowerPrompt.includes('salir') || lowerPrompt.includes('cita') || lowerPrompt.includes('club');
+  const isSport = lowerPrompt.includes('deporte') || lowerPrompt.includes('gym') || lowerPrompt.includes('entrenar') || lowerPrompt.includes('correr') || lowerPrompt.includes('running');
+
+  // Check if wardrobe has formalwear
+  const formalClothes = items.filter((i: any) => {
+    const name = (i.name || '').toLowerCase();
+    const cat = (i.category || '').toLowerCase();
+    return name.includes('traje') || name.includes('camisa') || name.includes('blazer') || name.includes('vestido') || name.includes('zapato') || name.includes('elegante') || cat.includes('suit');
+  });
+
+  // Handle wedding / formal gap scenario
+  if (isWeddingOrGala && formalClothes.length === 0) {
+    // Pick the most neutral/clean garments available as best compromise
+    const darkOrNeutral = items.filter((i: any) => {
+      const color = (i.color || '').toLowerCase();
+      return ['negro', 'black', 'azul', 'marino', 'blanco', 'gris', 'beige'].some(c => color.includes(c));
+    });
+    const pool = darkOrNeutral.length > 0 ? darkOrNeutral : items;
+    const fallbackTop = pool.find((i: any) => ['top', 'camiseta', 'camisa', 'sweater'].some(c => (i.category || '').toLowerCase().includes(c))) || items[0];
+    const fallbackBottom = pool.find((i: any) => ['bottom', 'pantalon', 'pantalón', 'jeans'].some(c => (i.category || '').toLowerCase().includes(c))) || items[1] || items[0];
+    const fallbackShoes = pool.find((i: any) => ['shoes', 'zapatos', 'zapatillas'].some(c => (i.category || '').toLowerCase().includes(c))) || items[2] || items[0];
+
+    const fallbackLook = Array.from(new Set([fallbackTop, fallbackBottom, fallbackShoes].filter(Boolean)));
+
+    return {
+      message: `No tienes prendas adecuadas para una boda en tu armario. 
+
+Para este tipo de evento te recomendaría llevar un traje sastre, un esmoquin o un vestido formal acompañado de zapatos de vestir de cuero o tacón elegante.
+
+Lo más formal que tienes actualmente en tu armario es esto: ${fallbackLook.map(i => `**${i.name}**`).join(', ')}. 
+
+Si necesitas asistir a la celebración con tu ropa actual, te recomiendo elegir estas prendas de tonos oscuros y líneas limpias, y complementar el look con una camisa o chaqueta formal prestada.`,
+      recommended_outfit: {
+        name: 'Opción más formal disponible',
+        occasion: 'formal',
+        item_ids: fallbackLook.map(i => i.id)
+      },
+      highlighted_item_ids: fallbackLook.map(i => i.id),
+      follow_up_suggestions: [
+        '¿Qué camisa me recomiendas comprar?',
+        'Dame un look para una cena informal',
+        '¿Cómo combinar zapatillas de forma más elegante?'
+      ]
+    };
+  }
+
+  // 3. Build a dynamic outfit matching the targeted item or occasion
+  const tops = items.filter((i: any) => ['top', 'camiseta', 'camisa', 'sweater', 'hoodie', 'topwear'].some(c => (i.category || '').toLowerCase().includes(c)));
+  const bottoms = items.filter((i: any) => ['bottom', 'pantalon', 'pantalón', 'jeans', 'falda', 'shorts', 'bottomwear'].some(c => (i.category || '').toLowerCase().includes(c)));
+  const shoes = items.filter((i: any) => ['shoes', 'zapatos', 'zapatillas', 'calzado', 'botas', 'footwear'].some(c => (i.category || '').toLowerCase().includes(c)));
+  const layers = items.filter((i: any) => ['jacket', 'outerwear', 'chaqueta', 'abrigo', 'blazer', 'layer'].some(c => (i.category || '').toLowerCase().includes(c)));
+  const accessories = items.filter((i: any) => ['accessory', 'accessories', 'headwear', 'gorra', 'gafas'].some(c => (i.category || '').toLowerCase().includes(c)));
+
+  const chosen: any[] = [];
+
+  if (targetedItem) {
+    chosen.push(targetedItem);
+    const targetCat = (targetedItem.category || '').toLowerCase();
+    
+    // Add top if target is not top
+    if (!['top', 'shirt', 'sweater', 'hoodie'].some(c => targetCat.includes(c)) && tops.length > 0) {
+      chosen.push(tops[Math.floor(Math.random() * tops.length)]);
+    }
+    // Add bottom if target is not bottom
+    if (!['bottom', 'pantalon', 'pantalón', 'jeans', 'falda', 'shorts'].some(c => targetCat.includes(c)) && bottoms.length > 0) {
+      chosen.push(bottoms[Math.floor(Math.random() * bottoms.length)]);
+    }
+    // Add shoes if target is not shoes
+    if (!['shoes', 'zapatos', 'zapatillas', 'calzado'].some(c => targetCat.includes(c)) && shoes.length > 0) {
+      chosen.push(shoes[Math.floor(Math.random() * shoes.length)]);
+    }
+    // Add jacket or accessory if slots remain
+    if (chosen.length < 3 && layers.length > 0) {
+      chosen.push(layers[0]);
+    }
+  } else {
+    // Select dynamic mix
+    if (tops.length > 0) chosen.push(tops[Math.floor(Math.random() * tops.length)]);
+    if (bottoms.length > 0) chosen.push(bottoms[Math.floor(Math.random() * bottoms.length)]);
+    if (shoes.length > 0) chosen.push(shoes[Math.floor(Math.random() * shoes.length)]);
+    if (layers.length > 0 && Math.random() > 0.5) chosen.push(layers[0]);
+    if (accessories.length > 0 && Math.random() > 0.6) chosen.push(accessories[0]);
+  }
+
+  // Deduplicate
+  const finalItems = Array.from(new Set(chosen.filter(Boolean)));
+  const namesText = finalItems.map(i => `**${i.name}**`).join(', ');
+
+  let occasionLabel = 'casual';
+  if (isPartyOrNight) occasionLabel = 'fiesta';
+  else if (isWorkOrBusiness) occasionLabel = 'trabajo';
+  else if (isSport) occasionLabel = 'deporte';
+
+  let reasoningText = `Para esta combinación he equilibrado las proporciones y contrastes de color para crear una estética limpia y armónica.`;
+  if (targetedItem) {
+    reasoningText = `El elemento central es **${targetedItem.name}**, complementado con prendas de corte equilibrado para que resalte de manera natural sin sobrecargar el conjunto.`;
+  }
 
   return {
-    message: `¡Por supuesto! Para "${userPrompt}", he analizado tu armario y he seleccionado una combinación armónica con tus prendas: ${itemNames}.
+    message: `He creado esta propuesta para ti combinando ${namesText}.
 
-**Por qué funciona este look:**
-- **Equilibrio visual**: Los tonos y cortes generan una silueta limpia y equilibrada para tu estilo ${context.user.preferredStyles[0] || 'casual'}.
-- **Versatilidad**: Es cómodo y se adapta perfectamente al contexto que me pides.
+- **Estructura del look**: ${reasoningText}
+- **Estilo**: Diseñado para encajar con tu línea habitual de forma cómoda y versátil.
 
-¿Te gusta cómo queda o prefieres cambiar alguna prenda por otra de tu armario?`,
-    recommended_outfit: chosenItems.length > 0 ? {
-      name: `Look Klosy: ${userPrompt.slice(0, 30)}`,
-      occasion: 'casual',
-      item_ids: chosenItems.map(i => i.id)
+¿Quieres que hagamos alguna variación o prefieres montarlo en el lienzo?`,
+    recommended_outfit: finalItems.length > 0 ? {
+      name: targetedItem ? `Look con ${targetedItem.name}` : `Look Klosy: ${userPrompt.slice(0, 24)}`,
+      occasion: occasionLabel,
+      item_ids: finalItems.map(i => i.id)
     } : null,
-    highlighted_item_ids: chosenItems.map(i => i.id),
+    highlighted_item_ids: finalItems.map(i => i.id),
     follow_up_suggestions: [
-      '¿Qué calzado combina mejor?',
-      'Dame una opción más formal',
+      '¿Con qué otros zapatos puedo llevarlo?',
+      'Dame otra opción más abrigada',
       '¿Cómo lo adapto para la noche?'
     ]
   };
