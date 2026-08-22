@@ -208,8 +208,8 @@ PREGUNTA DEL USUARIO:
       }
     ];
 
-    // Try Gemini 2.0 Flash, then fallback to Gemini 1.5 Flash
-    const models = ['gemini-2.0-flash', 'gemini-1.5-flash'];
+    // Models available for Gemini API
+    const models = ['gemini-3.6-flash', 'gemini-flash-latest', 'gemini-3.5-flash', 'gemini-2.5-flash'];
     
     for (const model of models) {
       try {
