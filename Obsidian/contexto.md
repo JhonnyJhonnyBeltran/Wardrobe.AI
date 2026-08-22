@@ -113,10 +113,40 @@ En cada conversación, el backend alimenta a CloSy con:
 3. **Preferencias del perfil (`profiles`)**: Estilos preferidos (`preferred_styles`), morfología corporal (`body_shape`), colorimetría (`season_palette`), género y edad.
 
 ### 5. Formato de Salida y UI Interactiva
-- **Respuesta Conversacional**: Explicación estilística de por qué combina el look.
-- **JSON de Outfit Estructurado**: CloSy devuelve un payload con los `clothing_item_ids` exactos elegidos de su armario.
-- **Renderizado Visual en el Chat**: La UI de `/closy` renderiza tarjetas interactivas de las prendas recomendadas y un botón directo *"✨ Guardar Outfit en mi Armario"*, que genera el look en la base de datos (`outfits` + `outfit_items`) con 1 solo toque mediante `/api/closy/save-outfit`.
-- **Integración con ProductModal**: Al tocar cualquier prenda recomendada en el chat se abre el modal completo de detalles.
-- **Manejo de Rate Limiting en UI**: Muestra el contador diario de consultas restantes y avisa si se supera la frecuencia por minuto.
+- **Respuesta Conversacional**: Explicación estilística experta y estructurada de por qué combina el look.
+- **JSON de Outfit Estructurado**: Klosy devuelve un payload con los `clothing_item_ids` exactos elegidos de su armario.
+- **Renderizado Visual en el Chat**: La UI de `/closet/klosy` renderiza tarjetas interactivas de las prendas recomendadas y el botón *"Montar y editar en el lienzo"*, cargando las prendas en `/create` listas para mover y escalar.
+- **Programación de Outfits en Calendario (`scheduled_for`)**: El usuario puede asignar una fecha específica en el calendario tanto al crear o editar un look en `/create` (con selector de fecha nativo en móvil y escritorio) como al pedirle a Klosy looks para una fecha concreta (`/create?scheduledDate=YYYY-MM-DD`).
+
+---
+
+## 💳 Modelo de Negocio, Monetización y Arquitectura Stripe
+
+### 1. Modelo Freemium y Suscripción Klosy Pro
+- **Plan Free (Gratuito)**:
+  - Armario con hasta 30 prendas.
+  - 5 consultas de prueba con Klosy al día.
+  - Creación y montaje de outfits en lienzo.
+- **Plan Klosy Pro (3,99 € - 4,99 € / mes o 29,99 € / año)**:
+  - Consultas y estilismo ilimitado con Klosy con análisis multimodal de fotos.
+  - Armario ilimitado y categorización con IA.
+  - Programación ilimitada en el Calendario de Outfits.
+  - Margen de beneficio unitario estimado: **> 90%** (Gasto medio por usuario en Gemini Flash: ~0,15 € - 0,25 €/mes).
+
+### 2. Disparadores Orgánicos In-App (Estilo Duolingo)
+- **Banner en `/closet`**: *"¿Qué me pongo hoy? Pídele a Klosy que te arme un look con tu ropa en segundos"*.
+- **Banner en `/create`**: *"¿Quieres que Klosy te ayude? Combina tus prendas con IA en segundos"*.
+- **Control de Acceso en `/closet/klosy`**:
+  - Badge visual de estado `PRO` / `FREE · Pro` en la cabecera.
+  - Switch de activación directa (Turn ON / Turn OFF) en `/profile/settings` para alternar el estado Premium de forma instantánea.
+
+### 3. Arquitectura de Integración con Stripe
+- **Stripe Checkout Sessions (`/api/stripe/checkout`)**:
+  - Creación de sesión de suscripción vinculada al `user_id` de Supabase en `client_reference_id` y `customer_email`.
+- **Stripe Webhooks (`/api/webhooks/stripe`)**:
+  - `checkout.session.completed` / `customer.subscription.created`: Actualiza `profiles.subscription_tier = 'premium'`, `profiles.is_premium = true` y guarda `stripe_customer_id` y `stripe_subscription_id`.
+  - `customer.subscription.deleted` / `customer.subscription.updated`: Si el usuario cancela o expira el pago, actualiza el estado a `subscription_tier = 'free'` y `is_premium = false`.
+- **Stripe Customer Portal (`/api/stripe/portal`)**:
+  - Permite a los usuarios gestionar sus facturas, cambiar de tarjeta o cancelar la suscripción de forma automática sin soporte manual.
 
 

@@ -126,7 +126,7 @@ function FormattedMessageText({ content, isUser }: { content: string; isUser?: b
 
 export default function KlosyPage() {
   const router = useRouter();
-  const { user } = useUser();
+  const { user, isPremium, togglePremium } = useUser();
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
@@ -425,6 +425,15 @@ export default function KlosyPage() {
             <h1 className="text-lg font-bold text-[var(--foreground)] leading-none">
               Klosy
             </h1>
+            {isPremium() ? (
+              <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-[var(--brand-pink)] text-white shadow-xs tracking-wider">
+                PRO
+              </span>
+            ) : (
+              <Link href="/profile/settings" className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[var(--background-secondary)] text-[var(--foreground-tertiary)] hover:text-[var(--brand-pink)] transition-colors border border-[var(--border-color)]">
+                FREE · Pro
+              </Link>
+            )}
           </div>
         </div>
 
@@ -460,6 +469,24 @@ export default function KlosyPage() {
 
       {/* Messages Container - Clean, open, no harsh borders */}
       <div className="flex-1 overflow-y-auto px-4 md:px-6 py-4 space-y-6">
+        
+        {/* Free Tier Upgrade Banner */}
+        {!isPremium() && (
+          <div className="bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-pink-500/10 border border-[var(--brand-pink)]/30 rounded-2xl p-3 flex items-center justify-between shadow-xs">
+            <div className="flex items-center gap-2.5">
+              <Sparkles className="w-4 h-4 text-[var(--brand-pink)] flex-shrink-0" />
+              <p className="text-xs text-[var(--foreground-secondary)]">
+                Estás en el plan <strong className="text-[var(--foreground)]">Free</strong>. Activa Klosy Pro para consultas ilimitadas y análisis de fotos.
+              </p>
+            </div>
+            <Link
+              href="/profile/settings"
+              className="text-[11px] font-bold px-3 py-1.5 bg-[var(--brand-pink)] text-white rounded-xl hover:opacity-90 transition-opacity flex-shrink-0 shadow-xs ml-2"
+            >
+              Activar
+            </Link>
+          </div>
+        )}
         {messages.map((msg) => (
           <motion.div
             key={msg.id}

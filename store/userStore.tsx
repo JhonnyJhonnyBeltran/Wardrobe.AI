@@ -21,6 +21,7 @@ interface UserContextType extends UserState {
   setPreferences: (preferences: UserPreferences) => void;
   isPremium: () => boolean;
   upgradeToPremiun: () => void;
+  togglePremium: (enable?: boolean) => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
 
@@ -267,6 +268,27 @@ export function UserProvider({ children }: { children: ReactNode }) {
     setUser((prev) => prev ? { ...prev, subscriptionTier: SubscriptionTier.PREMIUM } : null);
   }, []);
 
+  const togglePremium = useCallback(async (enable?: boolean) => {
+    if (!user) return;
+    const shouldBePremium = enable !== undefined ? enable : user.subscriptionTier !== SubscriptionTier.PREMIUM;
+    const newTier = shouldBePremium ? SubscriptionTier.PREMIUM : SubscriptionTier.FREE;
+
+    // Optimistic UI update
+    setUser(prev => prev ? { ...prev, subscriptionTier: newTier } : null);
+
+    try {
+      await supabase
+        .from('profiles')
+        .update({ 
+          subscription_tier: newTier,
+          is_premium: shouldBePremium 
+        } as any)
+        .eq('id', user.id);
+    } catch (err) {
+      console.warn('[UserStore] Could not persist subscription tier to DB:', err);
+    }
+  }, [user]);
+
   const value = useMemo(() => ({
     user,
     setUser,
@@ -275,8 +297,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
     isLoading,
     isPremium,
     upgradeToPremiun,
+    togglePremium,
     refreshProfile
-  }), [user, preferences, isLoading, isPremium, upgradeToPremiun, refreshProfile]);
+  }), [user, preferences, isLoading, isPremium, upgradeToPremiun, togglePremium, refreshProfile]);
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
 }

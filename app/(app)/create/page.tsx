@@ -33,7 +33,8 @@ import {
     Palmtree, 
     Moon, 
     Sun, 
-    Snowflake 
+    Snowflake,
+    Calendar
 } from 'lucide-react';
 import { Button } from '@/components';
 import { useWardrobe } from '@/lib/hooks/useWardrobe';
@@ -46,6 +47,7 @@ import { MobileItemSelector } from '@/components/Creator/MobileItemSelector';
 import { supabase } from '@/lib/supabase/client';
 import { uploadImage, BUCKETS } from '@/lib/supabase/storage';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useUiStore } from '@/store/uiStore';
 
 const OUTFIT_OCCASIONS = [
@@ -314,7 +316,16 @@ export default function CreateOutfitPage() {
         loadPreselectedItems();
     }, [outfitId, itemIdsParam, outfitNameParam, occasionParam]);
 
+    const scheduledDateParam = searchParams.get('date') || searchParams.get('scheduledDate') || searchParams.get('scheduled_for');
+
+    useEffect(() => {
+        if (scheduledDateParam) {
+            setScheduledDate(decodeURIComponent(scheduledDateParam));
+        }
+    }, [scheduledDateParam]);
+
     // Filter states
+    const [scheduledDate, setScheduledDate] = useState(scheduledDateParam ? decodeURIComponent(scheduledDateParam) : '');
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedColors, setSelectedColors] = useState<string[]>([]);
     const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
@@ -559,6 +570,7 @@ export default function CreateOutfitPage() {
                 const updatePayload: any = {
                     name: outfitName,
                     occasion: outfitOccasion || null,
+                    scheduled_for: scheduledDate || null,
                     description: '',
                     updated_at: new Date().toISOString()
                 };
@@ -588,6 +600,7 @@ export default function CreateOutfitPage() {
                         user_id: user.id,
                         name: outfitName,
                         occasion: outfitOccasion || null,
+                        scheduled_for: scheduledDate || null,
                         description: '',
                         season: 'all-season', // Default for now
                         is_public: isPublic,
@@ -820,6 +833,31 @@ export default function CreateOutfitPage() {
                                     </div>
                                 </div>
 
+                                {/* Mobile Calendar Scheduling */}
+                                <div className="bg-[var(--card-bg)] px-5 py-4 border-b border-[var(--border-color)] space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <Calendar className="w-4 h-4 text-[var(--brand-pink)]" />
+                                            <p className="text-sm font-bold text-[var(--foreground)]">Día en el Calendario</p>
+                                        </div>
+                                        {scheduledDate && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setScheduledDate('')}
+                                                className="text-[11px] text-[var(--brand-pink)] hover:underline font-medium"
+                                            >
+                                                Quitar fecha
+                                            </button>
+                                        )}
+                                    </div>
+                                    <input
+                                        type="date"
+                                        value={scheduledDate}
+                                        onChange={(e) => setScheduledDate(e.target.value)}
+                                        className="w-full px-3.5 py-2.5 bg-[var(--background-secondary)] rounded-xl text-xs text-[var(--foreground)] border border-[var(--border-color)] focus:outline-none focus:ring-1 focus:ring-[var(--brand-pink)] font-medium"
+                                    />
+                                </div>
+
                                 {/* Mobile Public Toggle */}
                                 <div className="bg-[var(--card-bg)] px-5 py-4 border-b border-[var(--border-color)] flex items-center justify-between">
                                     <div>
@@ -1008,6 +1046,53 @@ export default function CreateOutfitPage() {
                                 })}
                             </div>
                         </div>
+
+                        {/* Desktop Calendar Scheduling */}
+                        <div className="bg-[var(--card-bg)] rounded-2xl p-4 border border-[var(--border-color)] shadow-sm space-y-2">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <Calendar className="w-4 h-4 text-[var(--brand-pink)]" />
+                                    <p className="text-sm font-bold text-[var(--foreground)]">Día en el Calendario</p>
+                                </div>
+                                {scheduledDate && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setScheduledDate('')}
+                                        className="text-[11px] text-[var(--brand-pink)] hover:underline"
+                                    >
+                                        Quitar fecha
+                                    </button>
+                                )}
+                            </div>
+                            <input
+                                type="date"
+                                value={scheduledDate}
+                                onChange={(e) => setScheduledDate(e.target.value)}
+                                className="w-full px-3.5 py-2.5 bg-[var(--background-secondary)] rounded-xl text-xs text-[var(--foreground)] border border-[var(--border-color)] focus:outline-none focus:ring-1 focus:ring-[var(--brand-pink)] font-medium"
+                            />
+                        </div>
+
+                        {/* Duolingo-style Organic Klosy Banner */}
+                        <Link href="/closet/klosy" className="block">
+                            <div className="bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-pink-500/10 border border-[var(--brand-pink)]/30 rounded-2xl p-3.5 flex items-center justify-between hover:border-[var(--brand-pink)]/60 transition-all shadow-sm group">
+                                <div className="flex items-center gap-3">
+                                    <div className="relative w-8 h-8 flex-shrink-0 flex items-center justify-center">
+                                        <Image src="/klosy-avatar.png" alt="Klosy" fill className="object-contain group-hover:scale-110 transition-transform" />
+                                    </div>
+                                    <div>
+                                        <p className="text-xs font-bold text-[var(--foreground)] flex items-center gap-1">
+                                            ¿Quieres que Klosy te ayude?
+                                        </p>
+                                        <p className="text-[11px] text-[var(--foreground-tertiary)]">
+                                            Combina tus prendas con IA en segundos
+                                        </p>
+                                    </div>
+                                </div>
+                                <span className="text-xs font-bold text-[var(--brand-pink)] flex items-center gap-1">
+                                    Abrir <Sparkles className="w-3 h-3" />
+                                </span>
+                            </div>
+                        </Link>
 
                         {/* Desktop Public Toggle */}
                         <div className="bg-[var(--card-bg)] rounded-2xl p-4 border border-[var(--border-color)] shadow-sm flex items-center justify-between">
