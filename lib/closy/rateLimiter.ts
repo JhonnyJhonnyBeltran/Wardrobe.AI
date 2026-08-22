@@ -16,7 +16,7 @@ const ipLimits = new Map<string, number[]>();
 
 // Configuration Limits
 const MAX_PER_MINUTE_USER = 8;    // Max 8 requests/minute per user
-const MAX_PER_DAY_USER = 40;       // Max 40 requests/day per user
+const MAX_PER_DAY_USER = 30;       // Max 30 requests/day per user (to maintain margins & quality)
 const MAX_TOKENS_PER_DAY = 60000;  // Max estimated tokens/day per user
 const MAX_PER_MINUTE_IP = 15;      // Max 15 requests/minute per IP (anti-DDoS/scraping)
 const ONE_MINUTE_MS = 60 * 1000;
@@ -91,14 +91,14 @@ export function checkRateLimit(userId: string, estimatedPromptTokens: number = 2
     };
   }
 
-  // Check daily request count or token budget limit
+  // Check daily request count or token budget limit (30 messages/day)
   if (record.dayCount >= MAX_PER_DAY_USER || record.tokensUsedToday >= MAX_TOKENS_PER_DAY) {
     return {
       allowed: false,
       remainingMinute: 0,
       remainingDay: 0,
       retryAfterSeconds: 3600,
-      reason: 'Has alcanzado tu límite de conversación conmigo por hoy para cuidar los recursos de estilismo. ¡Hablamos mañana con más ideas y nuevos looks para tu armario!',
+      reason: 'Has agotado tus 30 mensajes diarios con Kloe. Tu límite se restablecerá mañana a las 00:00 para que puedas seguir creando looks increíbles.',
       isDailyLimit: true
     };
   }
@@ -111,7 +111,8 @@ export function checkRateLimit(userId: string, estimatedPromptTokens: number = 2
   return {
     allowed: true,
     remainingMinute: MAX_PER_MINUTE_USER - record.timestamps.length,
-    remainingDay: MAX_PER_DAY_USER - record.dayCount,
+    remainingDay: Math.max(0, MAX_PER_DAY_USER - record.dayCount),
     isDailyLimit: false
   };
 }
+

@@ -343,16 +343,14 @@ export default function ProfilePage() {
           <div className="flex items-center gap-8 mb-6">
             <button 
               onClick={() => setShowAvatarModal(true)}
-              className="w-24 h-24 rounded-full bg-gradient-to-tr from-[var(--brand-pink)]/40 via-purple-500/30 to-indigo-500/30 p-0.5 shadow-lg hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer group"
+              className="w-24 h-24 rounded-full overflow-hidden hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer group shrink-0"
               title="Ver foto de perfil"
             >
-              <div className="w-full h-full rounded-full bg-[var(--background)] p-0.5 overflow-hidden">
-                <img
-                  src={user.avatar || `https://ui-avatars.com/api/?name=${user.email}&background=random`}
-                  alt="Profile"
-                  className="w-full h-full rounded-full object-cover group-hover:opacity-90 transition-opacity"
-                />
-              </div>
+              <img
+                src={user.avatar || `https://ui-avatars.com/api/?name=${user.email}&background=random`}
+                alt="Profile"
+                className="w-full h-full rounded-full object-cover group-hover:opacity-90 transition-opacity"
+              />
             </button>
 
             <div className="flex-1 flex justify-around text-center">

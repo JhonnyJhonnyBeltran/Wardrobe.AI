@@ -7,7 +7,7 @@ import { useUser } from '@/store/userStore';
 import { useRealtimeStore } from '@/store/realtimeStore';
 import Image from 'next/image';
 import { supabase } from '@/lib/supabase/client';
-import { getRecentFollowActivity, followUser, unfollowUser, getMyFollowStatusMap, getFollowStatus } from '@/lib/services/followService';
+import { getRecentFollowActivity, followUser, unfollowUser, getMyFollowStatusMap, getFollowStatus, acceptFollowRequest, rejectFollowRequest } from '@/lib/services/followService';
 import { getSmartSuggestions } from '@/lib/services/suggestionService';
 import { LogoMark, Avatar, InfiniteScrollFooter } from '@/components';
 import Link from 'next/link';
@@ -17,7 +17,7 @@ import { useRouter } from 'next/navigation';
 // Types
 export interface Notification {
     id: string;
-    type: 'like' | 'follow' | 'system' | 'comment';
+    type: 'like' | 'follow' | 'follow_request' | 'system' | 'comment';
     actor?: {
         id: string;
         username: string;
@@ -169,9 +169,10 @@ export default function NotificationList({ compact = false, onClose }: Notificat
 
             if (follows.length > 0) {
                 follows.forEach((f: any) => {
+                    const isPending = f.status === 'pending';
                     realNotifications.push({
                         id: `follow_${f.follower_id}::${f.following_id}`,
-                        type: 'follow',
+                        type: isPending ? 'follow_request' : 'follow',
                         actor: {
                             id: f.follower_id,
                             username: f.follower?.username || '',
@@ -374,6 +375,18 @@ export default function NotificationList({ compact = false, onClose }: Notificat
         }
     };
 
+    const handleAcceptFollow = async (followerId: string, notifId: string) => {
+        if (!user) return;
+        setFetchedNotifications(prev => prev.filter(n => n.id !== notifId));
+        await acceptFollowRequest(followerId, user.id);
+    };
+
+    const handleRejectFollow = async (followerId: string, notifId: string) => {
+        if (!user) return;
+        setFetchedNotifications(prev => prev.filter(n => n.id !== notifId));
+        await rejectFollowRequest(followerId, user.id);
+    };
+
     const hasSystem = notifications.some(n => n.type === 'system');
     const activityNotifications = notifications.filter(n => n.type !== 'system');
 
@@ -429,6 +442,37 @@ export default function NotificationList({ compact = false, onClose }: Notificat
                             const isNew = notif.timestamp > lastViewedAt;
                             const bgClass = isNew ? "bg-[var(--brand-pink)]/10" : "";
                             
+                            if (notif.type === 'follow_request') {
+                                return (
+                                    <div key={notif.id} className={`flex items-center gap-3 group p-3 rounded-2xl transition-colors bg-[var(--brand-pink)]/10 border border-[var(--brand-pink)]/20`}>
+                                        <Link href={`/profile/${notif.actor!.username || notif.actor!.id}`} className="relative shrink-0" onClick={onClose}>
+                                            <Avatar src={notif.actor?.avatar || null} alt={notif.actor!.name} size="md" />
+                                        </Link>
+                                        <div className="flex-1 text-sm min-w-0">
+                                            <Link href={`/profile/${notif.actor!.username || notif.actor!.id}`} onClick={onClose} className="font-semibold text-[var(--foreground)] hover:underline truncate">
+                                                {notif.actor!.name}
+                                            </Link>
+                                            <span className="text-[var(--foreground-secondary)]"> quiere seguirte.</span>
+                                            <span className="text-[var(--foreground-tertiary)] text-xs ml-2 block sm:inline">{notif.time}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2 shrink-0">
+                                            <button
+                                                onClick={() => handleAcceptFollow(notif.actor!.id, notif.id)}
+                                                className="px-3 py-1.5 rounded-full text-xs font-bold bg-[var(--brand-pink)] text-white hover:bg-[var(--brand-pink-dark)] transition-colors shadow-sm"
+                                            >
+                                                Aceptar
+                                            </button>
+                                            <button
+                                                onClick={() => handleRejectFollow(notif.actor!.id, notif.id)}
+                                                className="px-3 py-1.5 rounded-full text-xs font-semibold bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:bg-[var(--border-color)] transition-colors"
+                                            >
+                                                Rechazar
+                                            </button>
+                                        </div>
+                                    </div>
+                                );
+                            }
+
                             if (notif.type === 'follow') {
                                 return (
                                     <div key={notif.id} className={`flex items-center gap-3 group p-3 rounded-2xl transition-colors ${bgClass}`}>

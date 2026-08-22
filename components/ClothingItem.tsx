@@ -12,6 +12,8 @@ import { Heart, ShoppingBag, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useTranslation } from '@/lib/i18n';
 
+import { resolveImageUrl } from '@/lib/imageUtils';
+
 export interface ClothingItemProps {
   id: string;
   name: string;
@@ -44,6 +46,7 @@ export const ClothingItem: React.FC<ClothingItemProps> = ({
   const { t } = useTranslation();
   const [imageError, setImageError] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const resolvedSrc = resolveImageUrl(imageUrl);
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -55,7 +58,6 @@ export const ClothingItem: React.FC<ClothingItemProps> = ({
 
   const handleDeleteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    // La confirmación ya la maneja el componente padre (ClosetPage) con el modal del sistema
     onDelete?.(id);
   };
 
@@ -70,13 +72,13 @@ export const ClothingItem: React.FC<ClothingItemProps> = ({
       style={{ WebkitTapHighlightColor: 'transparent' }}
     >
       {/* Card Container */}
-      <div className="relative aspect-square overflow-hidden rounded-3xl bg-[#f8f9fa] dark:bg-[#111] border border-[var(--border-color)]">
+      <div className="relative aspect-square overflow-hidden rounded-3xl bg-[#f8f9fa] dark:bg-[#18181b] border border-[var(--border-color)]">
 
         {/* Image or Placeholder */}
         <div className="w-full h-full flex items-center justify-center relative z-10">
-          {!imageError && imageUrl ? (
+          {!imageError && resolvedSrc ? (
             <img
-              src={imageUrl}
+              src={resolvedSrc}
               alt={name}
               className="w-full h-full object-contain p-2"
               loading="lazy"

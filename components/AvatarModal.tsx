@@ -57,26 +57,24 @@ export default function AvatarModal({
             <X className="w-6 h-6" />
           </button>
 
-          {/* Large Avatar Container */}
-          <div className="relative w-64 h-64 sm:w-72 sm:h-72 rounded-full p-1.5 bg-gradient-to-tr from-[var(--brand-pink)] via-purple-500 to-indigo-500 shadow-[0_20px_50px_rgba(255,45,120,0.35)] mb-6">
-            <div className="w-full h-full rounded-full overflow-hidden bg-[#121216] relative">
-              {hasValidSrc ? (
-                <Image
-                  src={src!}
-                  alt={name || username || 'Avatar'}
-                  fill
-                  className="object-cover"
-                  sizes="320px"
-                  priority
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[var(--brand-pink)] to-[#d63384]">
-                  <span className="text-7xl font-bold text-white leading-none select-none">
-                    {initial}
-                  </span>
-                </div>
-              )}
-            </div>
+          {/* Large Avatar Container - Pure circle, no borders or colorful rings */}
+          <div className="relative w-64 h-64 sm:w-72 sm:h-72 rounded-full overflow-hidden shadow-2xl mb-6 bg-[#121216]">
+            {hasValidSrc ? (
+              <Image
+                src={src!}
+                alt={name || username || 'Avatar'}
+                fill
+                className="object-cover"
+                sizes="320px"
+                priority
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-[var(--brand-pink)]">
+                <span className="text-7xl font-bold text-white leading-none select-none">
+                  {initial}
+                </span>
+              </div>
+            )}
           </div>
 
           {/* User Details */}

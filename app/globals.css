@@ -123,26 +123,26 @@ html {
   padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem);
 }
 
-/* ===== DARK MODE (Contexto §6A: Negro puro + Gris carbón) ===== */
+/* ===== DARK MODE (Soft Modern Charcoal / Dark Graphite) ===== */
 .dark {
-  --background: var(--pure-black);
-  --background-secondary: #121212;
-  --background-tertiary: #1C1C1E;
-  --foreground: var(--pure-white);
-  --foreground-secondary: #A1A1A6;
-  --foreground-tertiary: #737373;
+  --background: #111113;
+  --background-secondary: #18181b;
+  --background-tertiary: #222227;
+  --foreground: #f4f4f6;
+  --foreground-secondary: #a1a1aa;
+  --foreground-tertiary: #71717a;
 
-  --card-bg: #121212;
-  --card-hover: #1C1C1E;
+  --card-bg: #18181b;
+  --card-hover: #222227;
 
-  --border-color: rgba(255, 255, 255, 0.1);
-  --border-hover: rgba(255, 255, 255, 0.15);
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(255, 255, 255, 0.14);
 
   /* Enhanced floating shadows for dark mode */
-  --shadow-float: 0 2px 8px rgba(0, 0, 0, 0.6);
-  --shadow-float-hover: 0 8px 24px rgba(0, 0, 0, 0.8);
-  --shadow-float-strong: 0 12px 40px rgba(0, 0, 0, 0.9);
-  --shadow-glow-pink: 0 0 32px rgba(255, 102, 196, 0.4);
+  --shadow-float: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-float-hover: 0 8px 24px rgba(0, 0, 0, 0.6);
+  --shadow-float-strong: 0 12px 40px rgba(0, 0, 0, 0.7);
+  --shadow-glow-pink: 0 0 32px rgba(255, 102, 196, 0.3);
 }
 
 /* ============================================

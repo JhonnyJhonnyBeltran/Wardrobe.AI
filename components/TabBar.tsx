@@ -92,7 +92,7 @@ export default function TabBar() {
                     whileTap={{ scale: 0.9 }}
                     className={`
                       w-[32px] h-[32px] transition-colors duration-200
-                      ${isActive ? 'bg-[var(--brand-pink)]' : 'bg-black dark:bg-white'}
+                      ${isActive ? 'bg-[var(--brand-pink)]' : 'bg-[var(--foreground)]'}
                     `}
                     style={{
                       maskImage: `url(${LOGO_MASK_URL})`,
@@ -111,7 +111,7 @@ export default function TabBar() {
                     whileTap={{ scale: 0.9 }}
                     className={`relative transition-colors duration-200 ${isActive
                       ? 'text-[var(--brand-pink)]'
-                      : 'text-black dark:text-white'
+                      : 'text-[var(--foreground)]'
                       }`}
                   >
                     {/* Icon */}
@@ -129,9 +129,9 @@ export default function TabBar() {
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
                           exit={{ scale: 0 }}
-                          className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-[3px] flex items-center justify-center bg-[var(--brand-pink)] text-white text-[10px] font-bold rounded-full leading-none z-20"
+                          className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-[var(--brand-pink)] text-white text-[10px] font-bold rounded-full border-2 border-[var(--background)] shadow-sm pointer-events-none"
                         >
-                          {badgeCount > 99 ? '+99' : badgeCount}
+                          {getBadgeCount(tab.labelKey) > 99 ? '+99' : getBadgeCount(tab.labelKey)}
                         </motion.div>
                       )}
                     </AnimatePresence>

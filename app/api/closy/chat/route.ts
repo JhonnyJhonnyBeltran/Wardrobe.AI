@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { checkRateLimit, checkIpRateLimit } from '@/lib/closy/rateLimiter';
 import { buildUserStylingContext } from '@/lib/closy/contextIndexer';
 import { getFastCourtesyResponse } from '@/lib/closy/fastResponses';
+import { resolveImageUrl } from '@/lib/imageUtils';
 
 interface ChatRequestPayload {
   message: string;
@@ -12,8 +13,11 @@ interface ChatRequestPayload {
 /**
  * Quick helper to fetch image bytes and return base64 inline_data for Gemini
  */
-async function fetchImageAsBase64(url: string): Promise<{ mimeType: string; data: string } | null> {
-  if (!url || typeof url !== 'string' || !url.startsWith('http')) return null;
+async function fetchImageAsBase64(rawUrl: string): Promise<{ mimeType: string; data: string } | null> {
+  if (!rawUrl || typeof rawUrl !== 'string') return null;
+  const url = resolveImageUrl(rawUrl);
+  if (!url || !url.startsWith('http')) return null;
+
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 2000);
@@ -80,30 +84,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'El mensaje supera el límite de 500 caracteres' }, { status: 400 });
     }
 
-    // 4. Fast Courtesy & Acknowledgement Interceptor (0 LLM Tokens Spent)
-    const fastResponse = getFastCourtesyResponse(userPrompt, user.email?.split('@')[0]);
-    if (fastResponse) {
-      return NextResponse.json({
-        message: fastResponse.message,
-        recommended_outfit: null,
-        highlighted_items: [],
-        follow_up_suggestions: fastResponse.follow_up_suggestions,
-        rate_limit: {
-          remaining_minute: 8,
-          remaining_day: 40
-        }
-      });
-    }
-
-    // 5. Apply Per-User Rate Limiting & Token Budgeting
+    // 4. Apply Per-User Daily Rate Limiting (Strict 30 messages/day for cost & quality control)
     const estimatedTokens = Math.ceil(userPrompt.length / 4) + 600;
     const rateLimit = checkRateLimit(user.id, estimatedTokens);
     
     if (!rateLimit.allowed) {
       return NextResponse.json(
         { 
-          error: rateLimit.reason || 'Has alcanzado el límite de peticiones',
-          message: rateLimit.reason || 'Has alcanzado el límite de peticiones con Klosy por hoy.',
+          error: rateLimit.reason || 'Has alcanzado el límite de 30 consultas diarias',
+          message: rateLimit.reason || 'Has agotado tus 30 mensajes diarios con Kloe. Tu límite se restablecerá mañana a las 00:00 para que puedas seguir creando looks increíbles.',
           limitReached: true,
           isDailyLimit: rateLimit.isDailyLimit,
           retryAfter: rateLimit.retryAfterSeconds 
@@ -119,10 +108,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 6. Index User Context (Clothes, Outfits, Profile Preferences, Liked Styles)
+    // 5. Index User Context (Clothes with Photos, Outfits, Profile Preferences, Liked Styles)
     const context = await buildUserStylingContext(supabase, user.id);
 
-    // 6. Call AI Engine (Gemini with Multimodal Image Recognition)
+    // 6. Call True AI Engine (Google Gemini 3.6 Flash with Direct Multimodal Vision Analysis)
     const geminiApiKey = process.env.GEMINI_API_KEY || 
                          process.env.GOOGLE_API_KEY || 
                          process.env.NEXT_PUBLIC_GEMINI_API_KEY;
@@ -133,7 +122,7 @@ export async function POST(request: NextRequest) {
       aiResult = await callGeminiAssistant(geminiApiKey, userPrompt, context, body.history || []);
     }
 
-    // Fallback if no API key or API call failed
+    // Fallback if no API key or network glitch
     if (!aiResult) {
       aiResult = generateHeuristicStylingResponse(userPrompt, context);
     }
@@ -144,12 +133,21 @@ export async function POST(request: NextRequest) {
     let resolvedOutfit = null;
     if (aiResult.recommended_outfit && Array.isArray(aiResult.recommended_outfit.item_ids)) {
       const validGarments = aiResult.recommended_outfit.item_ids
-        .map((id: string) => clothesMap.get(id))
+        .map((id: string) => {
+          const raw = clothesMap.get(id);
+          if (!raw) return null;
+          const resolvedImg = resolveImageUrl(raw.imageUrl || (raw as any).image_url || (raw as any).original_image_url || (raw as any).original_image);
+          return {
+            ...raw,
+            image_url: resolvedImg,
+            imageUrl: resolvedImg
+          };
+        })
         .filter(Boolean);
 
       if (validGarments.length > 0) {
         resolvedOutfit = {
-          name: aiResult.recommended_outfit.name || 'Look recomendado por Klosy',
+          name: aiResult.recommended_outfit.name || 'Look recomendado por Kloe',
           occasion: aiResult.recommended_outfit.occasion || null,
           items: validGarments
         };
@@ -160,7 +158,16 @@ export async function POST(request: NextRequest) {
     let resolvedHighlightedItems: any[] = [];
     if (Array.isArray(aiResult.highlighted_item_ids)) {
       resolvedHighlightedItems = aiResult.highlighted_item_ids
-        .map((id: string) => clothesMap.get(id))
+        .map((id: string) => {
+          const raw = clothesMap.get(id);
+          if (!raw) return null;
+          const resolvedImg = resolveImageUrl(raw.imageUrl || (raw as any).image_url || (raw as any).original_image_url || (raw as any).original_image);
+          return {
+            ...raw,
+            image_url: resolvedImg,
+            imageUrl: resolvedImg
+          };
+        })
         .filter(Boolean);
     }
 
@@ -207,34 +214,54 @@ async function callGeminiAssistant(
 Eres Kloe, una prestigiosa estilista de moda, consultora de imagen personal y experta en tendencias contemporáneas en Wardrobe.AI.
 Tu personalidad es cercana, experta, culta en moda, elocuente y empática. Hablas con la naturalidad y seguridad de una asesora de imagen de élite que aconseja a su cliente con criterio impecable.
 
-PRINCIPIOS DE ESTILISMO Y RESPUESTA INTELIGENTE:
-1. ASESORAMIENTO DE ALTO NIVEL:
-   - Responde siempre con criterio real de moda: explica las reglas de etiqueta para cada ocasión (bodas de día o noche, galas, entrevistas, cóctel), códigos de vestimenta, combinación de texturas (ej: contrastar cuero brillante con punto mate o denim), teoría del color, proporciones de silueta y calzado adecuado.
-2. ANÁLISIS MULTIMODAL DE FOTOS DE PRENDAS:
+REGLAS CRÍTICAS DE DISCERNIMIENTO Y RECONOCIMIENTO DE PRENDAS (OBLIGATORIO):
+1. DISCERNIMIENTO SEMÁNTICO Y FUNCIONAL DE PRENDAS:
+   - El usuario puede haberle asignado a sus prendas nombres coloquiales, abreviaturas, jerga de calle o nombres de marcas (por ejemplo: "Sudaca Scoopers", "Chupa de cuero", "Pitillos Zara", "Bambas Nike", "Suda gris", "Tejanos rotos", "Jordan 4", "Rebe beige", "Cargo militar").
+   - NUNCA te limites a leer el término superficialmente; DEBES DISCERNIR Y COMPRENDER LA VERDADERA NATURALEZA Y FUNCIÓN ANATÓMICA DE CADA PRENDA:
+     * Si contiene "sudaca", "suda", "hoodie", "crewneck", "buzo", "scoopers" o en la foto se aprecia $\rightarrow$ Es una SUDADERA / CAPA EXTERIOR (Outerwear / Layering).
+     * Si contiene "chupa", "biker", "cazo", "americana", "blazer", "parka", "cazadora", "jacket", "bomber", "abrigo" $\rightarrow$ Es una CHAQUETA O ABRIGO (Outerwear).
+     * Si contiene "tejanos", "pitillos", "baggy", "pantalones", "jogger", "cargo", "chándal", "pants", "shorts", "falda" $\rightarrow$ Es una PRENDA INFERIOR (Bottom).
+     * Si contiene "bambas", "sneakers", "jordans", "dunks", "botines", "zapas", "mocasines", "botas", "sandalias" $\rightarrow$ Es CALZADO (Shoes).
+     * Si contiene "rebe", "sueter", "sweater", "knit", "cardigan", "jersey" $\rightarrow$ Es PRENDA DE PUNTO / JERSEY (Knitwear / Outerwear).
+     * Si contiene "cami", "tee", "t-shirt", "polo", "camisa", "blusa" $\rightarrow$ Es una CAMISETA O CAMISA (Top).
+   - Utiliza tanto los metadatos como la semántica del nombre y la inspección visual de la fotografía para categorizar internamente con 100% de precisión cada prenda en: Top, Outerwear, Bottom, Shoes o Accessory.
+
+2. COMPOSICIÓN MULTI-COMPONENTE POR CAPAS (OBLIGATORIO):
+   - Un outfit realista y vestible NUNCA puede consistir en múltiples prendas de la misma categoría base (por ejemplo: JAMÁS pongas 2 o 3 camisetas juntas ni 2 pantalones).
+   - Todo outfit recomendado en "recommended_outfit.item_ids" DEBE componerse seleccionando 1 prenda de distintas categorías anatómicas:
+     * 1x Capa Superior / Top (Camiseta, Camisa, Top o Polo)
+     * 1x Capa Exterior / Abrigo (Opcional según ocasión o clima: Sudadera con capucha, Jersey, Cazadora, Chaqueta vaquera, Americana o Abrigo)
+     * 1x Capa Inferior / Pantalón (Pantalón de vestir, Vaqueros/Jeans, Chándal, Shorts o Falda)
+     * 1x Calzado (Zapatillas, Sneakers, Zapatos de vestir o Botas)
+     * 1x Accesorio (Opcional: Bolso, Mochila, Gorra, Gafas de sol, Joyas o Cinturón)
+
+3. ANÁLISIS MULTIMODAL DE FOTOS DE PRENDAS:
    - Se te adjuntan las fotografías reales de las prendas del armario del usuario.
-   - Si una prenda tiene un nombre genérico o incorrecto en los metadatos de la base de datos (por ejemplo: "Nueva prenda", "asdf", "Camiseta" cuando en la foto se ve claramente que es una sudadera con capucha, o "Zapatillas" cuando en la foto son unas Nike Shox):
+   - Si una prenda tiene un nombre genérico o incorrecto en los metadatos de la base de datos (por ejemplo: "Nueva prenda", "asdf", "Camiseta" cuando en la foto se ve claramente que es una sudadera con capucha, o "Zapatillas" cuando en la foto son unas botas):
      * OBSERVA LA FOTO DIRECTAMENTE: Analiza el color real, estampado, tejido visual, logotipo, tipo de prenda y corte.
-     * NÓMBRALA EN TU RESPUESTA POR LO QUE VES EN LA FOTO (ej: "tu sudadera oversize con capucha", "tus zapatillas Nike Shox R4 plateadas", "tu cazadora vaquera azul").
-     * Utiliza lo que ves en las fotos para evaluar con precisión la armonía visual del look.
-3. ANÁLISIS DE LAS PRENDAS DEL USUARIO:
-   - Revisa el armario del usuario provisto en el contexto y las fotos.
-   - Si el usuario te pide qué ponerse para una ocasión (ej: boda, evento formal, cita, viaje):
-     * Primero dale el consejo canónico y experto de lo que esa ocasión exige (ej: "Para una boda de tarde lo ideal es un traje en azul marino o gris marengo, camisa de vestir blanca o celeste, corbata de seda y zapatos oxford o mocasines de piel").
-     * Luego evalúa qué tiene en su armario:
-       - Si tiene prendas adecuadas, indícale cómo combinarlas y colócalas en "recommended_outfit".
-       - Si su armario no tiene prendas de esa etiqueta (ej: solo tiene zapatillas y sudaderas urbanas), sé sincera y elegante: explícale que su armario no cuenta con las piezas clave para esa etiqueta, recomiéndale qué prendas buscar y preséntale la opción más formal o limpia que tenga actualmente como alternativa de emergencia.
-4. FORMATO:
-   - Redacta en Markdown limpio, con excelente ortografía, párrafos fluidos y viñetas para desglosar consejos.
+     * NÓMBRALA EN TU RESPUESTA POR LO QUE VES EN LA FOTO (ej: "tu sudadera oversize gris con capucha", "tus zapatillas retro", "tu pantalón cargo negro").
+     * Utiliza lo que ves en las fotos para evaluar con precisión la armonía cromática y texturas del look.
+
+4. TRATAMIENTO DE SALUDOS, CORTESÍAS Y CONVERSACIÓN NATURAL ("HOLA", "QUÉ TAL", "¿QUÉ ME RECOMIENDAS?", ETC.):
+   - NUNCA respondas con frases genéricas, secas o robóticas.
+   - Responde de forma cálida, elocuente y con tu criterio de asesora de imagen de élite, DEMOSTRANDO QUE CONOCES SU ARMARIO:
+     * Saluda cordialmente por su nombre.
+     * Menciona de forma natural y contextual 1 o 2 prendas reales que ves en su armario (ej: "Estaba viendo tu armario y tienes piezas estupendas como tu [Prenda 1] o tu [Prenda 2]...").
+     * Pregúntale para qué ocasión o momento del día necesita un look hoy (ej: día a día casual, cena, trabajo/reunión, fiesta, o combinar una prenda en específico).
+     * En "follow_up_suggestions", aporta 3 ideas variadas y atractivas acordes a sus prendas.
+
+5. FORMATO DE SALIDA:
+   - Redacta en Markdown limpio, con excelente ortografía y viñetas para desglosar consejos.
    - NO incluyas emojis en el texto.
    - Devuelve SIEMPRE tu respuesta en formato JSON estrictamente válido:
 {
   "message": "Tu explicación experta, enriquecida y estructurada en Markdown.",
   "recommended_outfit": {
-    "name": "Nombre elegante del look",
+    "name": "Nombre elegante del look (o null si solo es un saludo/conversación)",
     "occasion": "casual | formal | fiesta | trabajo | cita | deporte | verano | invierno",
-    "item_ids": ["id_prenda_1", "id_prenda_2"]
+    "item_ids": ["id_top", "id_outerwear_opcional", "id_bottom", "id_shoes", "id_accessory_opcional"]
   },
-  "highlighted_item_ids": ["id_prenda_1"],
+  "highlighted_item_ids": ["id_prenda_principal"],
   "follow_up_suggestions": ["Sugerencia 1", "Sugerencia 2", "Sugerencia 3"]
 }
 `;
@@ -244,9 +271,9 @@ PRINCIPIOS DE ESTILISMO Y RESPUESTA INTELIGENTE:
       parts: [{ text: h.content }]
     }));
 
-    // Fetch visual images for up to 10 garments and up to 3 saved inspirations in parallel
-    const itemsToFetch = (context.wardrobe.items || []).slice(0, 10);
-    const savedToFetch = (context.savedInspirations || []).slice(0, 3);
+    // Fetch visual images for up to 18 garments and up to 4 saved inspirations in parallel
+    const itemsToFetch = (context.wardrobe.items || []).slice(0, 18);
+    const savedToFetch = (context.savedInspirations || []).slice(0, 4);
 
     const imageFetches = await Promise.allSettled(
       itemsToFetch.map(async (item: any) => {
@@ -349,8 +376,8 @@ PETICIÓN DEL USUARIO:
       }
     ];
 
-    // Models available for Gemini API
-    const models = ['gemini-3.6-flash', 'gemini-flash-latest', 'gemini-3.5-flash', 'gemini-2.5-flash'];
+    // Models available for Gemini API (Prioritizing Gemini 3.6 Flash)
+    const models = ['gemini-3.6-flash', 'gemini-3.1-pro-preview'];
     
     for (const model of models) {
       try {
@@ -364,7 +391,7 @@ PETICIÓN DEL USUARIO:
             generationConfig: {
               response_mime_type: "application/json",
               temperature: 0.7,
-              max_output_tokens: 1400
+              max_output_tokens: 1600
             }
           })
         });
@@ -381,6 +408,9 @@ PETICIÓN DEL USUARIO:
             }
             return JSON.parse(cleaned);
           }
+        } else {
+          const errData = await res.json().catch(() => null);
+          console.warn(`[GeminiAPI] Model ${model} returned status ${res.status}:`, errData?.error?.message || res.statusText);
         }
       } catch (innerErr) {
         console.warn(`[GeminiAPI] Model ${model} failed, trying next:`, innerErr);
@@ -394,6 +424,133 @@ PETICIÓN DEL USUARIO:
   }
 }
 
+function buildLayeredOutfit(items: any[], targetItem?: any): any[] {
+  if (!items || items.length === 0) return [];
+
+  const categorize = (item: any) => {
+    const name = (item.name || '').toLowerCase();
+    const cat = (item.category || '').toLowerCase();
+    const brand = (item.brand || '').toLowerCase();
+    const fabric = (item.fabric || '').toLowerCase();
+    const tags = Array.isArray(item.tags) ? item.tags.map((t: string) => t.toLowerCase()) : [];
+    const text = `${name} ${cat} ${brand} ${fabric} ${tags.join(' ')}`;
+
+    // 1. Footwear
+    if (
+      cat.includes('shoe') || cat.includes('sneaker') || cat.includes('boot') || cat.includes('footwear') ||
+      text.includes('zapatilla') || text.includes('zapato') || text.includes('bota') || text.includes('botin') || text.includes('botín') ||
+      text.includes('bamba') || text.includes('sneaker') || text.includes('jordan') || text.includes('dunk') || text.includes('mocas') ||
+      text.includes('loafer') || text.includes('sandalia') || text.includes('tacón') || text.includes('tacon') || text.includes('chancla') ||
+      text.includes('slide') || text.includes('crocs') || text.includes('yeezy') || text.includes('vans') || text.includes('converse')
+    ) {
+      return 'shoes';
+    }
+
+    // 2. Outerwear / Layering / Hoodies / Jackets / Sweaters / Coats
+    if (
+      cat.includes('hoodie') || cat.includes('jacket') || cat.includes('outerwear') || cat.includes('sweater') || cat.includes('coat') ||
+      text.includes('sudaca') || text.includes('sudadera') || text.includes('suda') || text.includes('hoodie') || text.includes('crewneck') ||
+      text.includes('chaqueta') || text.includes('cazadora') || text.includes('cazo') || text.includes('chupa') || text.includes('biker') ||
+      text.includes('bomber') || text.includes('abrigo') || text.includes('jersey') || text.includes('sueter') || text.includes('suéter') ||
+      text.includes('blazer') || text.includes('cardigan') || text.includes('cárdigan') || text.includes('rebeca') || text.includes('rebe') ||
+      text.includes('anorak') || text.includes('parka') || text.includes('polar') || text.includes('fleece') || text.includes('chaleco') ||
+      text.includes('gabardina') || text.includes('trench') || text.includes('windbreaker') || text.includes('cortavientos') || text.includes('scoopers')
+    ) {
+      return 'outerwear';
+    }
+
+    // 3. Bottoms
+    if (
+      cat.includes('bottom') || cat.includes('pant') || cat.includes('jean') || cat.includes('short') || cat.includes('skirt') ||
+      text.includes('pantalon') || text.includes('pantalón') || text.includes('vaquero') || text.includes('tejanos') || text.includes('jean') ||
+      text.includes('pitillo') || text.includes('baggy') || text.includes('cargo') || text.includes('jogger') || text.includes('chandal') ||
+      text.includes('chándal') || text.includes('short') || text.includes('falda') || text.includes('bermuda') || text.includes('legging') ||
+      text.includes('chino') || text.includes('culotte')
+    ) {
+      return 'bottom';
+    }
+
+    // 4. Accessories
+    if (
+      cat.includes('bag') || cat.includes('accessor') || cat.includes('other') ||
+      text.includes('bolso') || text.includes('mochila') || text.includes('gorra') || text.includes('gorro') || text.includes('beanie') ||
+      text.includes('gafas') || text.includes('reloj') || text.includes('cinturon') || text.includes('cinturón') || text.includes('bufanda') ||
+      text.includes('collar') || text.includes('anillo') || text.includes('tote') || text.includes('cartera')
+    ) {
+      return 'accessory';
+    }
+
+    // 5. Default Tops (Camisetas, camisas, polos, tops)
+    return 'top';
+  };
+
+  const pool = {
+    top: [] as any[],
+    outerwear: [] as any[],
+    bottom: [] as any[],
+    shoes: [] as any[],
+    accessory: [] as any[]
+  };
+
+  items.forEach(item => {
+    const layer = categorize(item);
+    pool[layer as keyof typeof pool].push(item);
+  });
+
+  const selected: any[] = [];
+  const selectedIds = new Set<string>();
+
+  if (targetItem) {
+    selected.push(targetItem);
+    selectedIds.add(targetItem.id);
+  }
+
+  const targetLayer = targetItem ? categorize(targetItem) : null;
+
+  // Add 1 bottom if not already selected
+  if (targetLayer !== 'bottom' && pool.bottom.length > 0) {
+    const b = pool.bottom.find(i => !selectedIds.has(i.id));
+    if (b) { selected.push(b); selectedIds.add(b.id); }
+  }
+
+  // Add 1 top if not already selected
+  if (targetLayer !== 'top' && pool.top.length > 0) {
+    const t = pool.top.find(i => !selectedIds.has(i.id));
+    if (t) { selected.push(t); selectedIds.add(t.id); }
+  }
+
+  // Add 1 footwear if not already selected
+  if (targetLayer !== 'shoes' && pool.shoes.length > 0) {
+    const s = pool.shoes.find(i => !selectedIds.has(i.id));
+    if (s) { selected.push(s); selectedIds.add(s.id); }
+  }
+
+  // Add 1 outerwear if available and not selected
+  if (targetLayer !== 'outerwear' && pool.outerwear.length > 0) {
+    const o = pool.outerwear.find(i => !selectedIds.has(i.id));
+    if (o) { selected.push(o); selectedIds.add(o.id); }
+  }
+
+  // Add 1 accessory if available and not selected
+  if (targetLayer !== 'accessory' && pool.accessory.length > 0) {
+    const a = pool.accessory.find(i => !selectedIds.has(i.id));
+    if (a) { selected.push(a); selectedIds.add(a.id); }
+  }
+
+  // If still fewer than 2 items, add any remaining distinct item
+  if (selected.length < 2) {
+    for (const item of items) {
+      if (!selectedIds.has(item.id)) {
+        selected.push(item);
+        selectedIds.add(item.id);
+        if (selected.length >= 3) break;
+      }
+    }
+  }
+
+  return selected;
+}
+
 /**
  * Intelligent Stylist Reasoning Engine (Provides rich, articulate fashion intelligence even before API key is defined)
  */
@@ -404,7 +561,7 @@ function generateHeuristicStylingResponse(userPrompt: string, context: any) {
   // Scenario 1: Empty wardrobe
   if (items.length === 0) {
     return {
-      message: `¡Hola ${context.user.username}! Para poder armarte combinaciones con tus prendas reales y darte asesoría personalizada, añade algunas fotos de tu ropa a tu armario.
+      message: `¡Hola ${context.user.username || ''}! Para poder armarte combinaciones con tus prendas reales y darte asesoría personalizada, añade algunas fotos de tu ropa a tu armario.
 
 Mientras tanto, puedes preguntarme sobre cualquier tendencia, combinaciones de colores o qué tipo de prendas elegir para cada ocasión.`,
       recommended_outfit: null,
@@ -417,7 +574,27 @@ Mientras tanto, puedes preguntarme sobre cualquier tendencia, combinaciones de c
     };
   }
 
-  // Scenario 2: Wedding / Gala / Formal Event
+  // Scenario 2: Greetings & Natural check-ins with wardrobe context
+  const isGreeting = ['hola', 'buenas', 'hey', 'ey', 'holi', 'que tal', 'como estas', 'buenos dias', 'buenas tardes', 'buenas noches'].some(g => lower === g || lower.startsWith(g + ' ') || lower.endsWith(' ' + g));
+  if (isGreeting && items.length > 0) {
+    const sampleItems = items.slice(0, 2).map((i: any) => `**${i.name}**`).join(' y ');
+    return {
+      message: `¡Hola ${context.user.username || ''}! Qué gusto saludarte.
+
+Estaba revisando las prendas de tu armario y veo que tenemos piezas estupendas con las que podemos jugar hoy, como tu ${sampleItems}.
+
+¿Para qué momento u ocasión quieres que preparemos un look? Dime si buscas algo casual para el día a día, un conjunto formal para el trabajo o cena, o si te apetece combinar una prenda en específico.`,
+      recommended_outfit: null,
+      highlighted_item_ids: items.slice(0, 2).map((i: any) => i.id),
+      follow_up_suggestions: [
+        'Arma un look casual con mis prendas',
+        'Recomiéndame un outfit para una cena',
+        'Outfit formal para el trabajo'
+      ]
+    };
+  }
+
+  // Scenario 3: Wedding / Gala / Formal Event
   if (lower.includes('boda') || lower.includes('gala') || lower.includes('matrimonio') || lower.includes('esmoquin')) {
     const formalMatches = items.filter((i: any) => {
       const name = (i.name || '').toLowerCase();
@@ -446,7 +623,6 @@ Te recomiendo rematar el conjunto con un cinturón a juego con el calzado y un r
         ]
       };
     } else {
-      // Honest gap analysis
       const darkestItems = items.filter((i: any) => {
         const col = (i.color || '').toLowerCase();
         return ['negro', 'black', 'azul', 'gris', 'marino', 'blanco'].some(c => col.includes(c));
@@ -501,61 +677,87 @@ ${leatherItem ? `\n- **En tu armario**: Tienes **${leatherItem.name}**, que pued
     };
   }
 
-  // Scenario 4: Specific target item combination (e.g. Porsche accessory, shoes, specific hoodie)
+  // Scenario 4: Target item combination - with semantic slang matching (e.g. "sudaca", "scoopers", "tejanos")
   let targetGarment = items.find((i: any) => {
     const name = (i.name || '').toLowerCase();
     const brand = (i.brand || '').toLowerCase();
-    return (name !== 'nueva prenda' && lower.includes(name)) || (brand && lower.includes(brand));
+    return (name !== 'nueva prenda' && (lower.includes(name) || (brand && lower.includes(brand))));
   });
 
   if (!targetGarment) {
     targetGarment = items.find((i: any) => {
-      const words = (i.name || '').toLowerCase().split(/\s+/).filter((w: string) => w.length > 2);
+      const words = (i.name || '').toLowerCase().split(/[\s_-]+/).filter((w: string) => w.length > 2);
       return words.some((w: string) => lower.includes(w));
     });
   }
 
+  // Slang alias matching (e.g. user asks for "sudaca", find a hoodie/sudadera in wardrobe)
+  if (!targetGarment) {
+    if (lower.includes('sudaca') || lower.includes('sudadera') || lower.includes('hoodie')) {
+      targetGarment = items.find((i: any) => {
+        const cat = (i.category || '').toLowerCase();
+        const n = (i.name || '').toLowerCase();
+        return cat.includes('hoodie') || cat.includes('outerwear') || n.includes('sudaca') || n.includes('sudadera') || n.includes('hoodie');
+      });
+    } else if (lower.includes('chupa') || lower.includes('cazadora') || lower.includes('chaqueta')) {
+      targetGarment = items.find((i: any) => {
+        const cat = (i.category || '').toLowerCase();
+        const n = (i.name || '').toLowerCase();
+        return cat.includes('jacket') || n.includes('chaqueta') || n.includes('cazadora') || n.includes('chupa');
+      });
+    } else if (lower.includes('tejanos') || lower.includes('vaqueros') || lower.includes('jeans')) {
+      targetGarment = items.find((i: any) => {
+        const cat = (i.category || '').toLowerCase();
+        const n = (i.name || '').toLowerCase();
+        return cat.includes('bottom') || cat.includes('jean') || n.includes('vaquero') || n.includes('tejano') || n.includes('jean');
+      });
+    } else if (lower.includes('bambas') || lower.includes('zapas') || lower.includes('sneakers')) {
+      targetGarment = items.find((i: any) => {
+        const cat = (i.category || '').toLowerCase();
+        const n = (i.name || '').toLowerCase();
+        return cat.includes('shoe') || n.includes('zapatilla') || n.includes('sneaker') || n.includes('bamba');
+      });
+    }
+  }
+
+  const layeredOutfit = buildLayeredOutfit(items, targetGarment);
+
   if (targetGarment) {
-    const others = items.filter((i: any) => i.id !== targetGarment.id);
-    const selectedOthers = others.slice(0, 3);
-    const outfitItems = [targetGarment, ...selectedOthers];
-
     return {
-      message: `Para sacarle el máximo partido a tu **${targetGarment.name}** (${targetGarment.category}), la mejor estrategia de estilismo es usarla como pieza de contraste:
+      message: `Para sacarle el máximo partido a tu **${targetGarment.name}** (${targetGarment.category}), he armado un outfit equilibrado de pies a cabeza combinando distintas capas:
 
-- **Armonía visual**: Te propongo combinarla con ${selectedOthers.map((i: any) => `**${i.name}**`).join(', ')} para equilibrar los tonos y texturas.
-- **Equilibrio de volúmenes**: Mantenemos una silueta proporcionada donde la prenda destaque sin competir con el resto del conjunto.
+- **Estructura del look**: ${layeredOutfit.map((i: any) => `**${i.name}** (${i.category})`).join(' + ')}.
+- **Equilibrio visual**: Contrastamos texturas y volúmenes para que cada pieza cumpla su función anatómica en el conjunto sin sobrecargar.
 
-¿Quieres que hagamos alguna variación o prefieres montarlo en el lienzo para ajustar cómo colocarlo?`,
+¿Quieres que lo ajustemos con otros zapatos o prendas de abrigo?`,
       recommended_outfit: {
         name: `Look con ${targetGarment.name}`,
         occasion: 'casual',
-        item_ids: outfitItems.map((i: any) => i.id)
+        item_ids: layeredOutfit.map((i: any) => i.id)
       },
       highlighted_item_ids: [targetGarment.id],
       follow_up_suggestions: [
         '¿Qué otro calzado puedo usar?',
         'Opciones para darle un toque más formal',
-        '¿Cómo añadir una capa extra?'
+        '¿Cómo añadir una capa extra de abrigo?'
       ]
     };
   }
 
-  // Default Expert Stylist Response for any prompt
-  const balancedSelection = items.slice(0, Math.min(4, items.length));
+  // Default Balanced Multi-layer Stylist Outfit
   return {
-    message: `Para responder a lo que me pides sobre "${userPrompt}", como estilista te recomiendo una fórmula que equilibra versatilidad, proporciones y estilo:
+    message: `Para responder a lo que me pides sobre "${userPrompt}", he compuesto un look completo combinando diferentes capas y categorías de tu armario:
 
-- **Estructura del look**: Combina piezas de cortes complementarios para generar una silueta armónica que se adapte a tu estilo personal.
-- **Selección de tu armario**: He elegido ${balancedSelection.map((i: any) => `**${i.name}**`).join(', ')} para componer una propuesta equilibrada.
+- **Composición del look**: ${layeredOutfit.map((i: any) => `**${i.name}** (${i.category})`).join(' + ')}.
+- **Criterio de estilismo**: Equilibramos prendas superiores, inferiores y calzado para lograr una silueta armónica y funcional.
 
-¿Te gusta esta combinación o te gustaría enfocarla hacia algo más formal o relajado?`,
+¿Te gusta esta combinación o quieres explorar una opción más formal o deportiva?`,
     recommended_outfit: {
-      name: `Propuesta de Estilo Klosy`,
+      name: `Propuesta de Estilo Kloe`,
       occasion: 'casual',
-      item_ids: balancedSelection.map((i: any) => i.id)
+      item_ids: layeredOutfit.map((i: any) => i.id)
     },
-    highlighted_item_ids: balancedSelection.map((i: any) => i.id),
+    highlighted_item_ids: layeredOutfit.map((i: any) => i.id),
     follow_up_suggestions: [
       '¿Cómo adaptarlo para la noche?',
       '¿Qué calzado combina mejor?',

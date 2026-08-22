@@ -247,15 +247,54 @@ En cada conversación, el backend alimenta a CloSy con:
 
 ### 8. Auditoría de Indexación de Kloe y Resolución de Prendas en Posts y Outfits
 - **Indexación Multimodal en Kloe (`/api/closy/chat` y `lib/closy/contextIndexer.ts`)**:
-  - Indexa automáticamente:
-    1. **Prendas del armario**: ID, categoría, colores, tejidos, temporadas, marcas y fotos reales de las prendas en base64 para inspección visual directa por Gemini Vision.
-    2. **Outfits previos**: Combinaciones creadas por el usuario con sus IDs de prendas.
-    3. **Estilos favoritos**: Gustos estéticos extraídos de las interacciones recientes del feed y preferencias de morfología y colorimetría del perfil.
-    4. **Inspiración guardada**: Posts guardados por el usuario como referencias visuales de estilo.
-  - Kloe evalúa la armonía cromática y estilística a través de las fotos reales y devuelve sugerencias de looks en `recommended_outfit` con `item_ids` resolviendo prendas reales de su armario.
+  - Indexa prendas con fotos reales en base64 para inspección visual directa por Gemini Vision, combinaciones previas, estilos favoritos y posts guardados.
 - **Resolución y Detalle de Prendas en Posts y Outfits (`/post/[id]`, `/outfit/[id]`, `/profile/[id]/outfit/[outfitId]`)**:
-  - Implementado endpoint `/api/posts/[id]` y `/api/outfits/[id]` para resolver completamente las prendas asociadas (`outfit_items` $\rightarrow$ `clothing_items`) sin bloqueos de RLS al ver contenido público de otros usuarios.
-  - **Prendas Siempre Visibles y Clicables**: Tanto en la vista de posts como en la vista de outfits de perfiles, la sección *"Prendas del look"* se muestra de forma destacada.
-  - **Modal de Detalle (`ProductModal`)**: Al pulsar sobre cualquier prenda del look (en la lista o en el lienzo interactivo), se abre el modal con la foto ampliada, nombre, marca, color, categoría, tejido, temporada, talla y enlace a la tienda si está disponible.
+  - Endpoints dedicados para resolver prendas completas de cualquier outfit público sin bloqueos de RLS. Prendas clicables con modal de detalle `ProductModal`.
+
+### 9. Mejoras Integradas de Sistema, Kloe AI, Notificaciones, Privacidad y Probador Virtual (Agosto 2026)
+- **Normalización de Precios de Suscripción Stripe**:
+  - Plan Mensual: **3,99 €/mes**.
+  - Plan Anual: **29,99 €/año** (~2,49 €/mes con ahorro del 37%).
+  - Textos de banners, modales de suscripción y botones de checkout unificados en toda la plataforma.
+- **Persistencia y Resiliencia en Notificaciones (`components/Notifications/NotificationList.tsx`)**:
+  - Las notificaciones de likes, comentarios y follows se mantienen visibles en una ventana de **30 días**, evitando que la bandeja se quede vacía tras cambiar de pestaña o cerrar sesión.
+  - Indicador visual distintivo (`bg-[var(--brand-pink)]/10`) para notificaciones recibidas desde la última visita.
+- **Kloe: Armado Inteligente de Outfits Completos por Capas**:
+  - En lugar de recomendar una sola prenda o combinaciones incompletas, Kloe estructura looks equilibrados de pies a cabeza con **3 o más prendas** respetando las categorías anatómicas: *capa superior (top) + inferior (pantalón/falda) + calzado + prenda de abrigo o accesorio*.
+  - Justificación de estilismo profesional, volumen y contraste cromático.
+- **Paleta Dark Mode Suave y Pulida (`globals.css`, `Sidebar.tsx`, `TabBar.tsx`)**:
+  - Reemplazados los negros absolutos y bordes duros por una escala de grises oscuros elegantes: fondo `--background: #09090b`, tarjetas `--background-secondary: #121215`, elevación `--background-tertiary: #18181b` y bordes sutiles `--border-color: rgba(255, 255, 255, 0.08)`.
+- **Perfiles Privados Funcionales y Solicitudes de Seguimiento (`/profile/[id]`, `/profile/settings/privacy`, `/notifications`)**:
+  - Control de privacidad en Ajustes sincronizado con `profiles.is_private`.
+  - Si un usuario tiene la cuenta privada, los usuarios que no lo sigan no pueden ver sus posts ni sus outfits y ven el candado de perfil privado con el botón de "Seguir" (que envía solicitud con estado `pending`).
+  - Al recibir una solicitud de seguimiento, aparece en la bandeja de Notificaciones con botones de acción **"Aceptar"** y **"Rechazar"** que actualizan el estado a `accepted` o eliminan la solicitud respectivamente.
+- **Resiliencia en Carga de Imágenes de Prendas (`lib/imageUtils.ts`)**:
+  - Función `resolveImageUrl` que normaliza URLs relativas de Supabase Storage, buckets de prendas (`clothing/`), avatares y URLs remotas con fallback visual animado ante fallos de carga.
+- **Probador Virtual por IA y Avatar Personal en Kloe (`/api/closy/generate-avatar` y `components/AvatarCalibrationModal.tsx`)**:
+  - **Función Estrictamente Opcional**: Si el usuario pulsa en probar look o abrir la calibración sin fotos, se le presenta primero una pantalla informativa detallada indicando qué se necesita (*3 fotos de rostro con buena luz de frente y perfil, y 3 fotos de cuerpo entero de pie de frente y de lado*), con la opción clara **"No quiero crear mi avatar ahora"** para descartarlo en cualquier momento sin bloquear su uso.
+  - **Acceso Permanente**: El usuario puede calibrar o editar sus 6 fotos de referencia cuando quiera desde el icono de la cámara situado en la esquina superior derecha del chat de Kloe.
+- **Discernimiento Semántico y Reconocimiento Anatómico de Prendas en Kloe (`/api/closy/chat`)**:
+  - Kloe no se limita al nombre literal o superficial de una prenda: cuenta con un motor semántico multimodal que discierne su verdadera naturaleza funcional aunque el usuario le haya puesto nombres coloquiales, abreviaturas o nombres de marcas (ej: *"Sudaca Scoopers"* es reconocida y tratada instantáneamente como una **sudadera / capa de abrigo**, *"Pitillos Zara"* como **pantalón**, *"Bambas Nike / Jordan"* como **calzado**, etc.).
+### 10. Motor de IA Real Multimodal en Kloe, Rate Limit Diario y Razonamiento Estilístico (Agosto 2026)
+- **Eliminación Total de Respuestas Preprogramadas / Canned**:
+  - Se eliminó cualquier interceptor de respuestas rápidas estáticas (`fastResponses`).
+  - Todas las consultas, saludos y peticiones de asesoría son procesadas directamente por el modelo de IA **Google Gemini 3.6 Flash** en tiempo real.
+- **Inspección Visual Multimodal de Armario**:
+  - Kloe recibe las fotografías reales de las prendas del usuario convertidas a base64 (hasta 18 prendas en paralelo) para analizar visualmente la textura, el tejido, el tono cromático exacto y el corte real antes de dar consejos de estilismo u outfits para ocasiones específicas (bodas, cenas formales, oficina, casual).
+- **Límite Estricto de 30 Consultas Diarias por Usuario (`lib/closy/rateLimiter.ts`)**:
+  - Configurado `MAX_PER_DAY_USER = 30` consultas al día por usuario para proteger márgenes y costes de API de visión.
+  - Al alcanzar el límite de 30 mensajes, la interfaz muestra de forma amigable y sin bloqueos: *"Has agotado tus 30 mensajes diarios con Kloe. Tu límite se restablecerá mañana a las 00:00 para que puedas seguir creando looks increíbles."*
+- **Tratamiento Contextual e Inteligente de Saludos y Cortesías**:
+  - Los saludos casuales ("hola", "buenas", "qué tal", etc.) no devuelven textos estáticos repetitivos: la IA responde de forma cálida, cercana y personalizada saludando por el nombre del usuario y mencionando de forma natural prendas reales de su armario, invitándole a armar combinaciones para ocasiones concretas (diario, cena, trabajo, cita) con sugerencias de seguimiento dinámicas.
+- **Experiencia de Pensamiento y Razonamiento en Tiempo Real**:
+  - La interfaz de Kloe (`/closet/kloe`) muestra fases dinámicas mientras la IA analiza:
+    1. *"Inspeccionando fotos y prendas de tu armario..."*
+    2. *"Analizando armonía de colores, tejidos y morfología..."*
+    3. *"Equilibrando capas, proporciones y código de vestimenta..."*
+    4. *"Estructurando el look y redactando tu asesoría de estilo..."*
+
+
+
+
 
 

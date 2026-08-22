@@ -58,12 +58,22 @@ function NotificationOption({ icon, title, description, enabled, onChange }: Not
     );
 }
 
+import { useEffect } from 'react';
+import { useUser } from '@/store/userStore';
+
 export default function NotificationsPage() {
     const router = useRouter();
-    const { settings, updateSetting } = useNotificationSettingsStore();
+    const { user } = useUser();
+    const { settings, updateSetting, loadFromDatabase, isSaving } = useNotificationSettingsStore();
+
+    useEffect(() => {
+        if (user?.id) {
+            loadFromDatabase(user.id);
+        }
+    }, [user?.id, loadFromDatabase]);
 
     const handleTogglePopups = async (enabled: boolean) => {
-        updateSetting('popupToasts', enabled);
+        await updateSetting('popupToasts', enabled, user?.id);
         if (enabled && typeof window !== 'undefined' && 'Notification' in window) {
             if (Notification.permission === 'default') {
                 try {
@@ -71,6 +81,10 @@ export default function NotificationsPage() {
                 } catch (e) {}
             }
         }
+    };
+
+    const handleUpdate = (key: keyof NotificationSettings, val: boolean) => {
+        updateSetting(key, val, user?.id);
     };
 
     return (
@@ -131,35 +145,35 @@ export default function NotificationsPage() {
                             title="Seguidores"
                             description="Nuevos seguidores y solicitudes de amistad"
                             enabled={settings.follows}
-                            onChange={(val) => updateSetting('follows', val)}
+                            onChange={(val) => handleUpdate('follows', val)}
                         />
                         <NotificationOption
                             icon={<Heart className="w-5 h-5 text-[var(--brand-pink)]" />}
                             title="Me gusta"
                             description="Reacciones y likes en tus looks compartidos"
                             enabled={settings.likes}
-                            onChange={(val) => updateSetting('likes', val)}
+                            onChange={(val) => handleUpdate('likes', val)}
                         />
                         <NotificationOption
                             icon={<MessageCircle className="w-5 h-5 text-[var(--brand-pink)]" />}
                             title="Comentarios"
                             description="Comentarios y respuestas en tus publicaciones"
                             enabled={settings.comments}
-                            onChange={(val) => updateSetting('comments', val)}
+                            onChange={(val) => handleUpdate('comments', val)}
                         />
                         <NotificationOption
                             icon={<Bell className="w-5 h-5 text-[var(--brand-pink)]" />}
                             title="Mensajes directos"
                             description="Avisos de nuevos chats y conversaciones privadas"
                             enabled={settings.messages}
-                            onChange={(val) => updateSetting('messages', val)}
+                            onChange={(val) => handleUpdate('messages', val)}
                         />
                         <NotificationOption
                             icon={<Sparkles className="w-5 h-5 text-[var(--brand-pink)]" />}
                             title="Recordatorios y Asesora Kloe"
                             description="Sugerencias de looks diarios y consejos de estilismo"
                             enabled={settings.reminders}
-                            onChange={(val) => updateSetting('reminders', val)}
+                            onChange={(val) => handleUpdate('reminders', val)}
                         />
                     </Card>
                 </motion.div>
@@ -179,7 +193,7 @@ export default function NotificationsPage() {
                             title="Novedades por email"
                             description="Recibe resúmenes de actividad y noticias en tu correo"
                             enabled={settings.email}
-                            onChange={(val) => updateSetting('email', val)}
+                            onChange={(val) => handleUpdate('email', val)}
                         />
                     </Card>
                 </motion.div>

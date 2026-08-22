@@ -49,26 +49,43 @@ interface ProfileRow {
 // ─── Core CRUD ───────────────────────────────────────────────────────────────
 
 /**
- * Create a follow relationship directly (no approval needed).
- * Uses upsert with `ignoreDuplicates` to prevent constraint violations.
+ * Create or request a follow relationship.
+ * If target user has is_private === true, sets status = 'pending'.
+ * Otherwise sets status = 'accepted'.
  */
 export async function followUser(
   followerId: string,
   followingId: string,
-  status: FollowStatus = 'accepted',
-): Promise<{ success: boolean; error?: string }> {
+  explicitStatus?: FollowStatus,
+): Promise<{ success: boolean; status: FollowDisplayStatus; error?: string }> {
+  let targetStatus: FollowStatus = explicitStatus || 'accepted';
+
+  if (!explicitStatus) {
+    try {
+      const { data: targetProfile } = await supabase
+        .from('profiles')
+        .select('is_private')
+        .eq('id', followingId)
+        .maybeSingle();
+
+      if (targetProfile && (targetProfile as any).is_private) {
+        targetStatus = 'pending';
+      }
+    } catch (e) {}
+  }
+
   const { error } = await supabase
     .from(TABLE)
     .upsert(
-      { follower_id: followerId, following_id: followingId, status } as never,
-      { onConflict: 'follower_id,following_id', ignoreDuplicates: true },
+      { follower_id: followerId, following_id: followingId, status: targetStatus } as never,
+      { onConflict: 'follower_id,following_id' },
     );
 
-  if (error) return { success: false, error: error.message };
-  return { success: true };
+  if (error) return { success: false, status: 'none', error: error.message };
+  return { success: true, status: targetStatus };
 }
 
-/** Remove a follow relationship entirely. */
+/** Remove a follow relationship or cancel request entirely. */
 export async function unfollowUser(
   followerId: string,
   followingId: string,
@@ -83,9 +100,36 @@ export async function unfollowUser(
   return { success: true };
 }
 
+export async function cancelFollowRequest(
+  followerId: string,
+  followingId: string,
+): Promise<{ success: boolean; error?: string }> {
+  return unfollowUser(followerId, followingId);
+}
+
+export async function acceptFollowRequest(
+  followerId: string,
+  followingId: string,
+): Promise<{ success: boolean; error?: string }> {
+  const { error } = await supabase
+    .from(TABLE)
+    .update({ status: 'accepted' } as never)
+    .eq('follower_id', followerId)
+    .eq('following_id', followingId);
+
+  if (error) return { success: false, error: error.message };
+  return { success: true };
+}
+
+export async function rejectFollowRequest(
+  followerId: string,
+  followingId: string,
+): Promise<{ success: boolean; error?: string }> {
+  return unfollowUser(followerId, followingId);
+}
+
 /**
  * Update the status of an existing follow row.
- * Note: With direct follow, this is mainly for backwards compatibility.
  */
 export async function updateFollowStatus(
   followerId: string,

@@ -68,7 +68,7 @@ export default function Sidebar() {
 
   return (
     <>
-      <aside className={`hidden md:flex flex-col w-[72px] h-screen sticky top-0 bg-white border-r border-[var(--border-color)] z-[5001] items-center py-6 will-change-transform isolate transition-all duration-300 ${storeTabBarHidden ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+      <aside className={`hidden md:flex flex-col w-[72px] h-screen sticky top-0 bg-[var(--background)]/90 backdrop-blur-md border-r border-[var(--border-color)] z-[5001] items-center py-6 will-change-transform isolate transition-all duration-300 ${storeTabBarHidden ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
         {/* Nav Items */}
         <nav className="flex-1 flex flex-col gap-6 w-full items-center">
           {navItems.map((item, index) => {
@@ -87,7 +87,7 @@ export default function Sidebar() {
                     className={`flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-200 
                             ${isActive
                         ? 'text-[var(--brand-pink)]'
-                        : 'text-black'
+                        : 'text-[var(--foreground)] hover:text-[var(--brand-pink)]'
                       }`}
                   >
                     <div className="relative flex items-center justify-center pointer-events-none">
@@ -109,14 +109,14 @@ export default function Sidebar() {
                     className={`flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-200 
                         ${isActive
                         ? 'text-[var(--brand-pink)]'
-                        : 'text-black'
+                        : 'text-[var(--foreground)] hover:text-[var(--brand-pink)]'
                       }`}
                   >
                     <div className="relative flex items-center justify-center">
                       {item.isLogoMark ? (
                         <motion.div
                           whileTap={{ scale: 0.9 }}
-                          className={`w-[27px] h-[27px] transition-colors duration-200 ${isActive ? 'bg-[var(--brand-pink)]' : 'bg-black'}`}
+                          className={`w-[27px] h-[27px] transition-colors duration-200 ${isActive ? 'bg-[var(--brand-pink)]' : 'bg-[var(--foreground)]'}`}
                           style={{
                             maskImage: `url(/klozet-logo-dark.png)`,
                             WebkitMaskImage: `url(/klozet-logo-dark.png)`,
@@ -137,7 +137,7 @@ export default function Sidebar() {
                           })}
 
                           {badgeCount > 0 && item.labelKey !== 'search' && (
-                            <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1.5 flex items-center justify-center bg-[var(--brand-pink)] text-white text-[10px] font-bold rounded-full border-2 border-white">
+                            <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1.5 flex items-center justify-center bg-[var(--brand-pink)] text-white text-[10px] font-bold rounded-full border-2 border-[var(--background)]">
                               {badgeCount > 99 ? '+99' : badgeCount}
                             </span>
                           )}
@@ -148,7 +148,7 @@ export default function Sidebar() {
                 )}
 
                 {/* Tooltip */}
-                <div className="absolute left-full ml-3 px-2 py-1 bg-black text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50">
+                <div className="absolute left-full ml-3 px-2.5 py-1.5 bg-[var(--background-secondary)] text-[var(--foreground)] border border-[var(--border-color)] text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50">
                   {item.labelKey.charAt(0).toUpperCase() + item.labelKey.slice(1)}
                 </div>
               </div>

@@ -209,11 +209,22 @@ export default function PublicProfilePage() {
   const handleFollow = async () => {
     if (!currentUser || !profileId) return;
 
-    // Optimistic update
-    setFollowStatus('accepted');
-    setIsFollowedByMe(true);
-
     const targetId = profile?.id || profileId;
+    const isPrivate = Boolean(profile?.is_private);
+
+    if (followStatus === 'pending') {
+      // Cancel follow request
+      setFollowStatus('none');
+      setIsFollowedByMe(false);
+      await followService.cancelFollowRequest(currentUser.id, targetId);
+      return;
+    }
+
+    // Optimistic update
+    const nextStatus = isPrivate ? 'pending' : 'accepted';
+    setFollowStatus(nextStatus);
+    setIsFollowedByMe(!isPrivate);
+
     const result = await followService.followUser(currentUser.id, targetId);
 
     if (!result.success) {
@@ -221,11 +232,16 @@ export default function PublicProfilePage() {
       setIsFollowedByMe(false);
       console.error('Error following:', result.error);
     } else {
-      // Update follower count
-      setProfileStats(prev => ({
-        ...prev,
-        followers: prev.followers + 1
-      }));
+      setFollowStatus(result.status);
+      if (result.status === 'accepted') {
+        setIsFollowedByMe(true);
+        setProfileStats(prev => ({
+          ...prev,
+          followers: prev.followers + 1
+        }));
+      } else {
+        setIsFollowedByMe(false);
+      }
     }
   };
 
@@ -245,11 +261,12 @@ export default function PublicProfilePage() {
       setIsFollowedByMe(previousStatus === 'accepted');
       console.error('Error unfollowing:', result.error);
     } else {
-      // Update follower count
-      setProfileStats(prev => ({
-        ...prev,
-        followers: Math.max(0, prev.followers - 1)
-      }));
+      if (previousStatus === 'accepted') {
+        setProfileStats(prev => ({
+          ...prev,
+          followers: Math.max(0, prev.followers - 1)
+        }));
+      }
     }
   };
 
@@ -380,27 +397,25 @@ export default function PublicProfilePage() {
         {/* Profile Info */}
         <div className="px-5 pt-6">
           <div className="flex items-center gap-8 mb-6">
-            {/* Avatar - Exact Style */}
+            {/* Avatar - Clean circular without border */}
             <button
               onClick={() => setShowAvatarModal(true)}
-              className="w-24 h-24 rounded-full bg-gradient-to-tr from-[var(--brand-pink)]/40 via-purple-500/30 to-indigo-500/30 p-0.5 shadow-lg flex-shrink-0 hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer group"
+              className="w-24 h-24 rounded-full overflow-hidden flex-shrink-0 hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer group"
               title="Ver foto de perfil"
             >
-              <div className="w-full h-full rounded-full bg-[var(--background)] p-0.5 overflow-hidden">
-                {profile.avatar_url ? (
-                  <img
-                    src={profile.avatar_url}
-                    alt={profile.full_name || ''}
-                    className="w-full h-full rounded-full object-cover group-hover:opacity-90 transition-opacity"
-                  />
-                ) : (
-                  <div className="w-full h-full rounded-full bg-gradient-to-br from-[var(--brand-pink)] to-[var(--brand-pink-dark)] flex items-center justify-center">
-                    <span className="text-3xl md:text-4xl font-bold text-white">
-                      {(profile.full_name || profile.username || '?')[0].toUpperCase()}
-                    </span>
-                  </div>
-                )}
-              </div>
+              {profile.avatar_url ? (
+                <img
+                  src={profile.avatar_url}
+                  alt={profile.full_name || ''}
+                  className="w-full h-full object-cover group-hover:opacity-90 transition-opacity"
+                />
+              ) : (
+                <div className="w-full h-full bg-[var(--brand-pink)] flex items-center justify-center">
+                  <span className="text-3xl md:text-4xl font-bold text-white">
+                    {(profile.full_name || profile.username || '?')[0].toUpperCase()}
+                  </span>
+                </div>
+              )}
             </button>
 
             {/* Stats - Exact Style */}

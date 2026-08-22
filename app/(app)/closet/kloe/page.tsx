@@ -29,7 +29,10 @@ import { toast } from 'sonner';
 import { haptics } from '@/lib/haptic';
 import ProductModal from '@/components/ProductModal';
 import KloeProModal from '@/components/KloeProModal';
+import AvatarCalibrationModal from '@/components/AvatarCalibrationModal';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
+import { resolveImageUrl } from '@/lib/imageUtils';
+import { Camera } from 'lucide-react';
 
 interface ChatMessage {
   id: string;
@@ -131,6 +134,16 @@ export default function KloePage() {
   const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
   const [showProModal, setShowProModal] = useState(false);
   
+  // Avatar Virtual Try-On
+  const [showCalibrationModal, setShowCalibrationModal] = useState(false);
+  const [generatingAvatarForMsgId, setGeneratingAvatarForMsgId] = useState<string | null>(null);
+  const [tryOnResult, setTryOnResult] = useState<{
+    isOpen: boolean;
+    avatarUrl: string;
+    outfitName: string;
+    summary?: string;
+  } | null>(null);
+
   // Drawers
   const [showWardrobeDrawer, setShowWardrobeDrawer] = useState(false);
   const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
@@ -152,12 +165,61 @@ export default function KloePage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Cycling thinking messages
+  const handleTryOnAvatar = async (msg: ChatMessage) => {
+    if (!user?.id) {
+      toast.error('Inicia sesión para probar looks en tu avatar virtual');
+      return;
+    }
+
+    if (!isPremium()) {
+      setShowProModal(true);
+      return;
+    }
+
+    const itemIds = (msg.recommended_outfit?.items || []).map(i => i.id);
+    if (itemIds.length === 0) return;
+
+    setGeneratingAvatarForMsgId(msg.id);
+    try {
+      const res = await fetch('/api/closy/generate-avatar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: user.id,
+          itemIds,
+          outfitName: msg.recommended_outfit?.name || 'Look Kloe'
+        })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || data.needs_calibration) {
+        setShowCalibrationModal(true);
+        toast.info('Sube tus 6 fotos de calibración para que Kloe pueda modelar tu avatar virtual.');
+        return;
+      }
+
+      setTryOnResult({
+        isOpen: true,
+        avatarUrl: data.avatar_image_url,
+        outfitName: msg.recommended_outfit?.name || 'Look Kloe',
+        summary: data.outfit_summary
+      });
+      haptics.success();
+    } catch (err) {
+      console.error('[Kloe] Error generating avatar try-on:', err);
+      toast.error('Error al generar el avatar virtual. Inténtalo de nuevo.');
+    } finally {
+      setGeneratingAvatarForMsgId(null);
+    }
+  };
+
+  // Cycling thinking messages with realistic AI Stylist reasoning stages
   const thinkingMessages = [
-    'Pensando en tu estilo...',
-    'Analizando las prendas de tu armario...',
-    'Buscando la combinación perfecta...',
-    'Ajustando los detalles del look...'
+    'Inspeccionando fotos y prendas de tu armario...',
+    'Analizando armonía de colores, tejidos y morfología...',
+    'Equilibrando capas, proporciones y código de vestimenta...',
+    'Estructurando el look y redactando tu asesoría de estilo...'
   ];
 
   useEffect(() => {
@@ -165,7 +227,7 @@ export default function KloePage() {
     if (isTyping) {
       interval = setInterval(() => {
         setTypingStep((prev) => (prev + 1) % thinkingMessages.length);
-      }, 2000);
+      }, 1600);
     } else {
       setTypingStep(0);
     }
@@ -368,14 +430,15 @@ export default function KloePage() {
 
       if (!res.ok) {
         if (res.status === 429) {
-          setShowProModal(true);
+          const limitMsg = data.message || 'Has agotado tus 30 mensajes diarios con Kloe. Tu límite se restablecerá mañana a las 00:00 para que puedas seguir creando looks increíbles.';
           const botMsg: ChatMessage = {
             id: `kloe_${Date.now()}`,
             role: 'assistant',
-            content: data.message || 'Has alcanzado el límite de consultas diarias. ¡Desbloquea Klozet Premium para acceso ilimitado!',
+            content: limitMsg,
             timestamp: new Date()
           };
           setMessages(prev => [...prev, botMsg]);
+          toast.info('Límite de 30 consultas diarias alcanzado');
           return;
         }
         throw new Error(data.error || 'Error en la respuesta');
@@ -497,6 +560,16 @@ export default function KloePage() {
             )}
           </button>
 
+          {/* Avatar Calibration Button */}
+          <button
+            onClick={() => setShowCalibrationModal(true)}
+            className="p-2.5 text-[var(--foreground-secondary)] hover:text-[var(--brand-pink)] rounded-full hover:bg-[var(--background-secondary)] transition-colors cursor-pointer"
+            title="Calibrar mi avatar virtual (6 fotos)"
+            aria-label="Calibrar mi avatar"
+          >
+            <Camera className="w-5 h-5 text-[var(--brand-pink)]" />
+          </button>
+
           {/* Saved Inspirations Drawer */}
           <button
             onClick={openSaved}
@@ -603,36 +676,86 @@ export default function KloePage() {
 
                   {/* Garments Preview Grid */}
                   <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                    {msg.recommended_outfit.items.map((item: any) => (
+                    {msg.recommended_outfit.items.map((item: any) => {
+                      const imgSrc = resolveImageUrl(item.image_url || item.imageUrl || item.original_image_url || item.original_image);
+                      return (
+                        <div
+                          key={item.id}
+                          onClick={() => setSelectedProduct(item)}
+                          className="group relative aspect-square bg-[var(--background-secondary)] rounded-xl overflow-hidden border border-[var(--border-color)] hover:border-[var(--brand-pink)] cursor-pointer transition-all flex items-center justify-center"
+                        >
+                          <img
+                            src={imgSrc}
+                            alt={item.name}
+                            className="w-full h-full object-contain p-1.5 group-hover:scale-105 transition-transform"
+                            loading="lazy"
+                            onError={(e) => {
+                              (e.target as HTMLElement).style.opacity = '0.5';
+                            }}
+                          />
+                          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-1">
+                            <p className="text-[9px] font-medium text-white truncate text-center">
+                              {item.name}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Direct Canvas & Virtual Try-On Action Buttons */}
+                  <div className="flex flex-col gap-2 pt-1">
+                    <button
+                      onClick={() => handleTryOnAvatar(msg)}
+                      disabled={generatingAvatarForMsgId === msg.id}
+                      className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-[var(--brand-pink)] via-purple-600 to-indigo-600 hover:opacity-95 text-white text-xs font-bold shadow-md shadow-[var(--brand-pink)]/20 transition-all active:scale-98 disabled:opacity-50 cursor-pointer"
+                    >
+                      {generatingAvatarForMsgId === msg.id ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Generando avatar virtual...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-4 h-4" />
+                          ✨ Probar look en mi avatar virtual
+                        </>
+                      )}
+                    </button>
+
+                    <Link
+                      href={`/create?itemIds=${(msg.recommended_outfit.items || []).map((i: any) => i.id).join(',')}&name=${encodeURIComponent(msg.recommended_outfit.name || 'Look Kloe')}&occasion=${encodeURIComponent(msg.recommended_outfit.occasion || '')}`}
+                      className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-[var(--background-secondary)] hover:bg-[var(--border-color)] text-[var(--foreground)] border border-[var(--border-color)] text-xs font-semibold transition-colors"
+                    >
+                      <Layers className="w-4 h-4 text-[var(--brand-pink)]" />
+                      Montar y editar en el lienzo
+                    </Link>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Highlighted Garments Row */}
+              {msg.highlighted_items && msg.highlighted_items.length > 0 && !msg.recommended_outfit && (
+                <div className="flex items-center gap-2 overflow-x-auto py-2.5 max-w-full no-scrollbar">
+                  {msg.highlighted_items.map((item: any) => {
+                    const imgSrc = resolveImageUrl(item.image_url || item.imageUrl || item.original_image_url || item.original_image);
+                    return (
                       <div
                         key={item.id}
                         onClick={() => setSelectedProduct(item)}
-                        className="group relative aspect-square bg-[var(--background-secondary)] rounded-xl overflow-hidden border border-[var(--border-color)] hover:border-[var(--brand-pink)] cursor-pointer transition-all"
+                        className="group relative w-16 h-16 shrink-0 bg-[var(--background-secondary)] rounded-2xl overflow-hidden border border-[var(--border-color)] hover:border-[var(--brand-pink)] cursor-pointer transition-all flex items-center justify-center shadow-xs"
+                        title={item.name}
                       >
-                        <Image
-                          src={item.image_url || item.original_image}
+                        <img
+                          src={imgSrc}
                           alt={item.name}
-                          fill
-                          className="object-contain p-1.5 group-hover:scale-105 transition-transform"
+                          className="w-full h-full object-contain p-1.5 group-hover:scale-105 transition-transform"
+                          loading="lazy"
                         />
-                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-1">
-                          <p className="text-[9px] font-medium text-white truncate text-center">
-                            {item.name}
-                          </p>
-                        </div>
                       </div>
-                    ))}
-                  </div>
-
-                  {/* Direct Canvas Action Button */}
-                  <Link
-                    href={`/create?itemIds=${(msg.recommended_outfit.items || []).map((i: any) => i.id).join(',')}&name=${encodeURIComponent(msg.recommended_outfit.name || 'Look Kloe')}&occasion=${encodeURIComponent(msg.recommended_outfit.occasion || '')}`}
-                    className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[var(--brand-pink)] hover:bg-[#ff3377] text-white text-xs font-bold shadow-sm transition-colors"
-                  >
-                    <Layers className="w-4 h-4" />
-                    Montar y editar en el lienzo
-                  </Link>
-                </motion.div>
+                    );
+                  })}
+                </div>
               )}
 
               {/* Follow-up Quick Suggestions */}
@@ -1013,6 +1136,74 @@ export default function KloePage() {
         onClose={() => setShowProModal(false)}
         redirectBackToCloset={!isPremium()}
       />
+
+      {/* Avatar Calibration Modal (6 Photos) */}
+      <AvatarCalibrationModal
+        isOpen={showCalibrationModal}
+        onClose={() => setShowCalibrationModal(false)}
+        onCalibrationComplete={() => {
+          setShowCalibrationModal(false);
+          toast.success('¡Avatar virtual calibrado con éxito! Ahora puedes probarte looks con Kloe.');
+        }}
+      />
+
+      {/* Virtual Try-On Result Modal */}
+      <AnimatePresence>
+        {tryOnResult?.isOpen && (
+          <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/80 backdrop-blur-md"
+              onClick={() => setTryOnResult(null)}
+            />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="relative w-full max-w-sm bg-[var(--background)] rounded-3xl shadow-2xl border border-[var(--border-color)] overflow-hidden p-6 z-10 text-center"
+            >
+              <button
+                onClick={() => setTryOnResult(null)}
+                className="absolute top-4 right-4 p-2 rounded-full text-[var(--foreground-secondary)] hover:text-[var(--foreground)] hover:bg-[var(--background-secondary)] transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] text-xs font-bold mb-3">
+                <Sparkles className="w-3.5 h-3.5" />
+                Avatar Virtual Kloe
+              </div>
+
+              <h3 className="text-lg font-bold text-[var(--foreground)] mb-1">
+                {tryOnResult.outfitName}
+              </h3>
+              {tryOnResult.summary && (
+                <p className="text-xs text-[var(--foreground-secondary)] mb-4 truncate">
+                  {tryOnResult.summary}
+                </p>
+              )}
+
+              {/* Avatar Render */}
+              <div className="relative aspect-[3/4] w-full rounded-2xl overflow-hidden shadow-inner bg-[var(--background-secondary)] mb-4 border border-[var(--border-color)]">
+                <img
+                  src={tryOnResult.avatarUrl}
+                  alt="Avatar Virtual"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+
+              <button
+                onClick={() => setTryOnResult(null)}
+                className="w-full py-3 rounded-xl bg-[var(--brand-pink)] text-white text-xs font-bold shadow-sm hover:opacity-90 transition-opacity"
+              >
+                Guardar o Cerrar
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

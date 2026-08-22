@@ -4,12 +4,14 @@
  * Privacy Settings Page - Configuración de privacidad
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Shield, Eye, Database, Share2, Download, FileText } from 'lucide-react';
 import { Card, Button } from '@/components';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from '@/lib/i18n';
+import { useUser } from '@/store/userStore';
+import { supabase } from '@/lib/supabase/client';
 
 interface ToggleSwitchProps {
     enabled: boolean;
@@ -60,22 +62,55 @@ function PrivacyOption({ icon, title, description, enabled, onChange }: PrivacyO
 export default function PrivacyPage() {
     const router = useRouter();
     const { t } = useTranslation();
+    const { user } = useUser();
 
     // Privacy settings
     const [privacy, setPrivacy] = useState({
-        publicProfile: false,
+        isPrivate: false,
         shareAnalytics: true,
         personalizedRecommendations: true,
         saveHistory: true,
     });
+    const [isSaving, setIsSaving] = useState(false);
 
-    const updatePrivacy = (key: keyof typeof privacy) => (value: boolean) => {
+    useEffect(() => {
+        if (!user?.id) return;
+        const fetchPrivacy = async () => {
+            const { data } = await supabase
+                .from('profiles')
+                .select('is_private')
+                .eq('id', user.id)
+                .maybeSingle();
+
+            if (data) {
+                setPrivacy(prev => ({
+                    ...prev,
+                    isPrivate: Boolean((data as any).is_private)
+                }));
+            }
+        };
+        fetchPrivacy();
+    }, [user?.id]);
+
+    const updatePrivacy = (key: keyof typeof privacy) => async (value: boolean) => {
         setPrivacy(prev => ({ ...prev, [key]: value }));
-        // TODO: Guardar en backend
+        
+        if (key === 'isPrivate' && user?.id) {
+            try {
+                setIsSaving(true);
+                await supabase
+                    .from('profiles')
+                    .update({ is_private: value } as any)
+                    .eq('id', user.id);
+            } catch (err) {
+                console.error('Error updating privacy:', err);
+            } finally {
+                setIsSaving(false);
+            }
+        }
     };
 
     const handleDownloadData = () => {
-        // TODO: Implementar descarga de datos
         alert('Preparando descarga de tus datos...');
     };
 
@@ -85,7 +120,7 @@ export default function PrivacyPage() {
             <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="sticky top-0 z-40 glass-strong border-b border-[var(--border-color)] px-4 py-3"
+                className="sticky top-0 z-40 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-color)] px-4 py-3"
             >
                 <div className="flex items-center justify-between max-w-4xl mx-auto">
                     <button
@@ -109,15 +144,15 @@ export default function PrivacyPage() {
                     transition={{ delay: 0.1 }}
                 >
                     <h2 className="text-sm font-semibold text-[var(--foreground-secondary)] uppercase tracking-wider mb-4">
-                        {t.privacyPage.visibility}
+                        Visibilidad de la cuenta
                     </h2>
                     <Card className="px-5">
                         <PrivacyOption
                             icon={<Eye className="w-5 h-5 text-[var(--brand-pink)]" />}
-                            title={t.privacyPage.publicProfile}
-                            description={t.privacyPage.publicProfileDesc}
-                            enabled={privacy.publicProfile}
-                            onChange={updatePrivacy('publicProfile')}
+                            title="Cuenta privada"
+                            description="Solo las personas que apruebes podrán ver tus publicaciones, outfits y seguidores"
+                            enabled={privacy.isPrivate}
+                            onChange={updatePrivacy('isPrivate')}
                         />
                         <PrivacyOption
                             icon={<Share2 className="w-5 h-5 text-[var(--brand-pink)]" />}

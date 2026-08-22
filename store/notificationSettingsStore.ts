@@ -2,6 +2,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { supabase } from '@/lib/supabase/client';
 
 export interface NotificationSettings {
   popupToasts: boolean; // Master toggle for on-screen popups
@@ -15,7 +16,10 @@ export interface NotificationSettings {
 
 interface NotificationSettingsState {
   settings: NotificationSettings;
-  updateSetting: (key: keyof NotificationSettings, value: boolean) => void;
+  isSaving: boolean;
+  updateSetting: (key: keyof NotificationSettings, value: boolean, userId?: string) => Promise<void>;
+  setAllSettings: (newSettings: NotificationSettings) => void;
+  loadFromDatabase: (userId: string) => Promise<void>;
   isNotificationTypeAllowed: (type: string) => boolean;
 }
 
@@ -33,14 +37,55 @@ export const useNotificationSettingsStore = create<NotificationSettingsState>()(
   persist(
     (set, get) => ({
       settings: defaultSettings,
+      isSaving: false,
 
-      updateSetting: (key, value) => {
-        set((state) => ({
-          settings: {
-            ...state.settings,
-            [key]: value,
-          },
-        }));
+      setAllSettings: (settings) => set({ settings }),
+
+      updateSetting: async (key, value, userId) => {
+        const updated = {
+          ...get().settings,
+          [key]: value,
+        };
+        set({ settings: updated });
+
+        if (userId) {
+          try {
+            set({ isSaving: true });
+            await supabase
+              .from('profiles')
+              .update({
+                notification_preferences: updated,
+              } as any)
+              .eq('id', userId);
+          } catch (err) {
+            console.warn('[NotificationSettingsStore] Failed to sync to Supabase:', err);
+          } finally {
+            set({ isSaving: false });
+          }
+        }
+      },
+
+      loadFromDatabase: async (userId) => {
+        if (!userId) return;
+        try {
+          const { data } = await supabase
+            .from('profiles')
+            .select('notification_preferences')
+            .eq('id', userId)
+            .maybeSingle();
+
+          if (data && (data as any).notification_preferences) {
+            const prefs = (data as any).notification_preferences;
+            set({
+              settings: {
+                ...defaultSettings,
+                ...prefs,
+              }
+            });
+          }
+        } catch (err) {
+          console.warn('[NotificationSettingsStore] Error loading preferences from DB:', err);
+        }
       },
 
       isNotificationTypeAllowed: (type: string) => {
@@ -58,9 +103,7 @@ export const useNotificationSettingsStore = create<NotificationSettingsState>()(
             return settings.follows;
           case 'new_message':
             return settings.messages;
-          case 'system':
-          case 'outfit_shared':
-          case 'reminder':
+          case 'kloe_reminder':
             return settings.reminders;
           default:
             return true;
@@ -68,7 +111,7 @@ export const useNotificationSettingsStore = create<NotificationSettingsState>()(
       },
     }),
     {
-      name: 'klozet_notification_settings',
+      name: 'wardrobe_notification_settings',
     }
   )
 );
