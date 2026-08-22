@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { checkRateLimit, checkIpRateLimit } from '@/lib/closy/rateLimiter';
 import { buildUserStylingContext } from '@/lib/closy/contextIndexer';
+import { getFastCourtesyResponse } from '@/lib/closy/fastResponses';
 
 interface ChatRequestPayload {
   message: string;
@@ -79,7 +80,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'El mensaje supera el límite de 500 caracteres' }, { status: 400 });
     }
 
-    // 4. Apply Per-User Rate Limiting & Token Budgeting
+    // 4. Fast Courtesy & Acknowledgement Interceptor (0 LLM Tokens Spent)
+    const fastResponse = getFastCourtesyResponse(userPrompt, user.email?.split('@')[0]);
+    if (fastResponse) {
+      return NextResponse.json({
+        message: fastResponse.message,
+        recommended_outfit: null,
+        highlighted_items: [],
+        follow_up_suggestions: fastResponse.follow_up_suggestions,
+        rate_limit: {
+          remaining_minute: 8,
+          remaining_day: 40
+        }
+      });
+    }
+
+    // 5. Apply Per-User Rate Limiting & Token Budgeting
     const estimatedTokens = Math.ceil(userPrompt.length / 4) + 600;
     const rateLimit = checkRateLimit(user.id, estimatedTokens);
     
@@ -103,7 +119,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 5. Index User Context (Clothes, Outfits, Profile Preferences, Liked Styles)
+    // 6. Index User Context (Clothes, Outfits, Profile Preferences, Liked Styles)
     const context = await buildUserStylingContext(supabase, user.id);
 
     // 6. Call AI Engine (Gemini with Multimodal Image Recognition)

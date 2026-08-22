@@ -98,12 +98,16 @@ Wardrobe.AI es una plataforma de moda impulsada por IA que permite a los usuario
   - **Capacidad de contexto**: Ventana de contexto masiva (1M+ tokens), lo que permite indexar el armario entero del usuario con todas sus propiedades JSON en cada prompt sin truncar datos.
   - **Alternativa de respaldo**: Groq con LLaMA-3.3-70B-Versatile o DeepSeek-V3 por su altísima velocidad y coste prácticamente nulo ($0.10/1M tokens).
 
-### 3. Seguridad y Rate Limiting Anti-Abuso
+### 3. Seguridad, Rate Limiting y Motor de Respuestas Rápidas Zero-Token
 - **Autenticación Obligatoria**: El endpoint `/api/closy/chat` valida la sesión del usuario mediante token de Supabase (`auth.getUser()`). Peticiones anónimas o sin sesión son bloqueadas (`401 Unauthorized`).
+- **Motor de Respuestas Rápidas Zero-Token (`lib/closy/fastResponses.ts`)**:
+  - Intercepta automáticamente cortesías, saludos, agradecimientos, confirmaciones simples ("vale", "ok", "genial"), despedidas ("adiós", "chao") y elogios.
+  - **Ahorro total de tokens y coste**: No llama a la API de Gemini ni indexa el contexto de imágenes de la base de datos para frases de cortesía simples (consumo de 0 tokens LLM, 0 coste y latencia inmediata < 5ms).
+  - Incluye biblioteca con **+25 respuestas dinámicas en personaje**, variaciones aleatorias para no sonar robótico y botones sugeridos de seguimiento.
+  - Si el mensaje incluye una petición real de moda (ej: *"gracias, ¿cómo puedo combinar mis botas?"*), el motor detecta la intención y lo transfiere automáticamente a Gemini.
 - **Rate Limiting por Usuario / IP**:
-  - Implementación con límite de ventana deslizante (Sliding Window / Token Bucket) en Edge o base de datos.
-  - Límites sugeridos: **10 mensajes por minuto** y **50 mensajes diarios** para usuarios estándar (ampliable en planes premium).
-  - Bloqueo y headers de respuesta `X-RateLimit-Remaining` y `Retry-After` para evitar abusos o llamadas automatizadas maliciosas.
+  - Implementación con ventana deslizante y presupuesto de tokens (`15 req/min IP`, `8 req/min Usuario`, `40 req/día`, `60.000 tokens/día`).
+  - Bloqueo y headers de respuesta `X-RateLimit-Remaining` y `Retry-After` para evitar abusos.
 - **Sanitización y Guardrails**: Validación de longitud máxima de prompt (500 caracteres por mensaje) y filtrado de inyecciones de sistema.
 
 ### 4. Indexación de Datos del Usuario (System Context)
