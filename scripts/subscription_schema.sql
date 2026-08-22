@@ -65,10 +65,10 @@ SELECT
   p.subscription_period_end,
   p.stripe_customer_id,
   p.stripe_subscription_id,
-  p.created_at
+  u.created_at
 FROM public.profiles p
 LEFT JOIN auth.users u ON p.id = u.id
-ORDER BY p.is_premium DESC, p.created_at DESC;
+ORDER BY p.is_premium DESC, u.created_at DESC;
 
--- 6. Helper query to check paid users (You can run this anytime to monitor revenue):
+-- 6. Helper query to check paid users:
 -- SELECT * FROM public.v_user_subscriptions WHERE is_premium = TRUE;
