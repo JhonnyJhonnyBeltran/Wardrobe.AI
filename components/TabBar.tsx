@@ -73,7 +73,7 @@ export default function TabBar() {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 md:hidden z-[6000] pb-safe bg-[var(--background)]/80 backdrop-blur-xl border-t border-[var(--border-color)]/50 will-change-transform isolate">
+    <nav className="fixed bottom-0 left-0 right-0 md:hidden z-40 pb-safe bg-[var(--background)]/80 backdrop-blur-xl border-t border-[var(--border-color)]/50 will-change-transform isolate">
       <div className="relative flex justify-between items-center h-[72px] px-2">
         {tabs.map((tab) => {
           const isActive = pathname === tab.href || (tab.href !== '/feed' && pathname.startsWith(tab.href + '/'));

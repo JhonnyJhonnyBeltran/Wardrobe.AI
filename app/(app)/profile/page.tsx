@@ -27,7 +27,7 @@ import {
   Loader2
 } from 'lucide-react';
 
-import { Avatar, Button as UiButton, OutfitCard, EmptyState, Skeleton, SkeletonProfile, DiscoveredStyleBanner } from '@/components';
+import { Avatar, Button as UiButton, OutfitCard, EmptyState, Skeleton, SkeletonProfile, DiscoveredStyleBanner, AvatarModal } from '@/components';
 import FolderPreview from '@/components/FolderPreview';
 import { useUiStore } from '@/store/uiStore';
 
@@ -69,8 +69,7 @@ export default function ProfilePage() {
   const [folderToDelete, setFolderToDelete] = useState<SaveFolder | null>(null);
   const [isDeletingFolder, setIsDeletingFolder] = useState(false);
   const [savedPostsWithoutFolder, setSavedPostsWithoutFolder] = useState<any[]>([]);
-
-
+  const [showAvatarModal, setShowAvatarModal] = useState(false);
 
   // Real data state
   const [profileStats, setProfileStats] = useState({
@@ -445,15 +444,19 @@ export default function ProfilePage() {
         {/* Profile Info */}
         <div className="px-5 pt-6">
           <div className="flex items-center gap-8 mb-6">
-            <div className="w-24 h-24 rounded-full bg-gray-200 p-0.5 shadow-lg">
-              <div className="w-full h-full rounded-full bg-[var(--background)] p-0.5">
+            <button 
+              onClick={() => setShowAvatarModal(true)}
+              className="w-24 h-24 rounded-full bg-gradient-to-tr from-[var(--brand-pink)]/40 via-purple-500/30 to-indigo-500/30 p-0.5 shadow-lg hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer group"
+              title="Ver foto de perfil"
+            >
+              <div className="w-full h-full rounded-full bg-[var(--background)] p-0.5 overflow-hidden">
                 <img
                   src={user.avatar || `https://ui-avatars.com/api/?name=${user.email}&background=random`}
                   alt="Profile"
-                  className="w-full h-full rounded-full object-cover"
+                  className="w-full h-full rounded-full object-cover group-hover:opacity-90 transition-opacity"
                 />
               </div>
-            </div>
+            </button>
 
             <div className="flex-1 flex justify-around text-center">
               <div>
@@ -656,6 +659,15 @@ export default function ProfilePage() {
         </div>
 
       </main>
+
+      {/* Fullscreen Avatar Modal */}
+      <AvatarModal
+        isOpen={showAvatarModal}
+        onClose={() => setShowAvatarModal(false)}
+        src={user.avatar || null}
+        name={user.name || undefined}
+        username={user.username || undefined}
+      />
     </div>
   );
 }

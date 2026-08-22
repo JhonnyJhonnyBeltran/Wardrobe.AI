@@ -78,43 +78,60 @@ export default function FeedPage() {
 
       if (postsError) throw postsError;
 
-      // 2. Fetch suggested posts (For You) based on preferredStyles
+      // 2. Fetch suggested posts based on preferredStyles & affinity
       let suggestedPostsData: any[] = [];
-      // Only fetch suggestions if we are on the first few pages to avoid overwhelming
-      if (user.preferredStyles && user.preferredStyles.length > 0 && currentPage < 3) {
-        // Find 3 suggested posts per page
-        const { data: suggestions } = await supabase
+      const userStyles = user.preferredStyles || [];
+
+      if (userStyles.length > 0) {
+        let query = supabase
           .from('posts')
           .select(`
             id, caption, image_url, created_at, user_id,
             outfits ( name, outfit_items ( clothing_items ( image_url ) ) ),
             likes_count, comments_count, style_ids
           `)
-          .not('user_id', 'in', `(${targetIds.join(',')})`)
-          .overlaps('style_ids', user.preferredStyles)
-          .order('likes_count', { ascending: false }) // Popular items
-          .range(currentPage * 3, (currentPage * 3) + 2);
-          
-        if (suggestions) {
-          // Tag them as suggested
+          .overlaps('style_ids', userStyles)
+          .order('likes_count', { ascending: false });
+
+        if (targetIds.length > 0) {
+          query = query.not('user_id', 'in', `(${targetIds.join(',')})`);
+        }
+
+        const { data: suggestions } = await query.range(currentPage * 6, (currentPage * 6) + 5);
+        if (suggestions && suggestions.length > 0) {
           suggestedPostsData = suggestions.map((p: any) => ({ ...p, isSuggested: true }));
         }
       }
 
-      // Mix them: Insert 1 suggested post every 3 regular posts
+      // If user has 0 following or no posts from following, fetch general community explore posts
+      if ((!followingPostsData || followingPostsData.length === 0) && suggestedPostsData.length === 0 && currentPage === 0) {
+        const { data: explorePosts } = await supabase
+          .from('posts')
+          .select(`
+            id, caption, image_url, created_at, user_id,
+            outfits ( name, outfit_items ( clothing_items ( image_url ) ) ),
+            likes_count, comments_count, style_ids
+          `)
+          .order('created_at', { ascending: false })
+          .limit(POSTS_PER_PAGE);
+
+        if (explorePosts && explorePosts.length > 0) {
+          suggestedPostsData = explorePosts.map((p: any) => ({ ...p, isSuggested: true }));
+        }
+      }
+
+      // Mix following posts and suggested posts
       let mixedPosts: any[] = [];
       const mainPosts = followingPostsData || [];
       
       let sIdx = 0;
       for (let i = 0; i < mainPosts.length; i++) {
         mixedPosts.push(mainPosts[i]);
-        // Insert a suggestion every 3 posts
-        if ((i + 1) % 3 === 0 && sIdx < suggestedPostsData.length) {
+        if ((i + 1) % 2 === 0 && sIdx < suggestedPostsData.length) {
           mixedPosts.push(suggestedPostsData[sIdx]);
           sIdx++;
         }
       }
-      // Add remaining suggestions at the end if the main feed is short
       while (sIdx < suggestedPostsData.length) {
         mixedPosts.push(suggestedPostsData[sIdx]);
         sIdx++;
@@ -166,9 +183,6 @@ export default function FeedPage() {
         const postsData = mixedPosts;
 
         const formattedPosts = postsData.map((post: any) => {
-          // Determine display image:
-          // 1. Real Uploaded Image (post.image_url)
-          // 2. Outfit Image (first item)
           let displayImage = post.image_url;
 
           if (!displayImage && post.outfits?.outfit_items?.length > 0) {
@@ -178,15 +192,12 @@ export default function FeedPage() {
             }
           }
 
-          // Fallback if still no image (shouldn't happen if validation works, but mostly for old data)
-          // If no image is found, we pass null to PostCard which handles text-only card
-
           const profile = profilesMap[post.user_id];
 
           return {
             id: post.id,
             title: post.caption || post.outfits?.name || 'Publicación sin título',
-            description: post.caption, // For text-only fallback
+            description: post.caption,
             imageUrl: displayImage,
             author: {
               name: profile?.username || 'Usuario',
@@ -199,30 +210,36 @@ export default function FeedPage() {
             isSuggested: post.isSuggested
           };
         });
+
         if (isLoadMore) {
           setPosts(prev => [...prev, ...formattedPosts]);
         } else {
           setPosts(formattedPosts);
         }
 
-        setHasMore(postsData.length === POSTS_PER_PAGE);
+        setHasMore(postsData.length >= POSTS_PER_PAGE);
         pageRef.current = currentPage;
+      } else {
+        if (!isLoadMore) {
+          setPosts([]);
+        }
+        setHasMore(false);
       }
     } catch (error: any) {
       console.error('Error fetching posts:', error.message || error);
       if (!isLoadMore) {
-        setPosts([]); // Set to empty only if not loading more
+        setPosts([]);
       }
+      setHasMore(false);
       setLoadError(true);
     } finally {
       setLoading(false);
       setLoadingMore(false);
     }
-  }, [user?.id]);
+  }, [user?.id, user?.preferredStyles]);
 
   // Initial Fetch - fetch when user is available or changes
   useEffect(() => {
-    // Only fetch if user is loaded (not null)
     if (user) {
       fetchPosts(false);
     }
@@ -235,6 +252,7 @@ export default function FeedPage() {
 
   // Intersection Observer for Infinite Scroll
   useEffect(() => {
+    if (!hasMore || loading || loadingMore) return;
     const observer = new IntersectionObserver((entries) => {
       if (entries[0].isIntersecting && hasMore && !loadingMore && !loading && !loadError) {
         loadMorePosts();
@@ -247,10 +265,9 @@ export default function FeedPage() {
 
   return (
     <div className="min-h-screen bg-[var(--background)] pb-24">
-      {/* Header Mejorado */}
+      {/* Header */}
       <header className="sticky top-0 z-30 bg-[var(--background)]/95 backdrop-blur-lg border-b border-[var(--border-color)]/50 md:hidden">
         <div className="px-5 h-16 flex items-center justify-between">
-          {/* Left: + Button instead of Logo */}
           <button
             onClick={toggleCreateMenu}
             className="p-2.5 -ml-2 text-[var(--brand-pink)] hover:bg-[var(--background-secondary)] rounded-full transition-all duration-200 transform hover:scale-110"
@@ -258,12 +275,9 @@ export default function FeedPage() {
             <Plus className="w-6 h-6" />
           </button>
 
-          {/* Center: Title */}
           <h1 className="text-xl font-bold tracking-tight text-[var(--foreground)] absolute left-1/2 -translate-x-1/2">Para ti</h1>
 
-          {/* Right: Actions */}
           <div className="flex items-center gap-1">
-            {/* Messages */}
             <Link href="/messages">
               <button className="p-2.5 -mr-1 text-[var(--brand-pink)] hover:bg-[var(--background-secondary)] rounded-full transition-all duration-200 transform hover:scale-110 relative">
                 <Send className="w-6 h-6" />
@@ -278,7 +292,7 @@ export default function FeedPage() {
         </div>
       </header>
 
-      {/* Feed Content - Masonry Grid con mejor diseño */}
+      {/* Feed Content */}
       <div className="px-3 pt-4 md:px-6">
         {
           loading ? (
@@ -296,9 +310,9 @@ export default function FeedPage() {
               icon={PlusSquare}
               title="No hay publicaciones aún."
               description="Sé el primero en compartir tu estilo con la comunidad."
-              actionLabel="Crear post"
+              actionLabel="Crear publicación"
               actionHref="/create-post"
-              fullHeight={false}
+              fullHeight={true}
             />
           ) : (
             <div className="masonry-grid">
@@ -307,7 +321,6 @@ export default function FeedPage() {
                   <div className="break-inside-avoid mb-6">
                     <PostCard post={post} />
                   </div>
-                  {/* Insert Premium Ad Card every 15 posts on desktop */}
                   {(index + 1) % 15 === 0 && (
                     <div key={`premium-ad-${index}`} className="break-inside-avoid mb-6 col-span-full">
                       <PremiumAdCard />
@@ -316,8 +329,7 @@ export default function FeedPage() {
                 </div>
               ))}
 
-              {/* Skeleton Cards for infinite loading illusion or actual loading */}
-              {(loadingMore || (!hasMore && posts.length >= 12)) && (
+              {loadingMore && (
                 [...Array(3)].map((_, i) => (
                   <div key={`skeleton-${i}`} className="break-inside-avoid mb-6">
                     <div className="rounded-2xl overflow-hidden bg-[var(--background-secondary)] animate-pulse" style={{ height: [180, 220, 240][i % 3] }} />
@@ -328,17 +340,19 @@ export default function FeedPage() {
           )
         }
 
-        {/* Infinite Scroll Trigger */}
-        <div ref={observerElement} className="w-full flex items-center justify-center col-span-full">
-          <InfiniteScrollFooter
-            isLoading={loadingMore}
-            isError={loadError}
-            hasMore={hasMore}
-            hasItems={posts.length > 0}
-            onRetry={() => loadMorePosts()}
-            skeleton={<></>}
-          />
-        </div>
+        {/* Infinite Scroll Trigger only if there are posts */}
+        {posts.length > 0 && hasMore && (
+          <div ref={observerElement} className="w-full flex items-center justify-center col-span-full">
+            <InfiniteScrollFooter
+              isLoading={loadingMore}
+              isError={loadError}
+              hasMore={hasMore}
+              hasItems={posts.length > 0}
+              onRetry={() => loadMorePosts()}
+              skeleton={<></>}
+            />
+          </div>
+        )}
       </div>
 
 

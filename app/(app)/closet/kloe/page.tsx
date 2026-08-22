@@ -500,17 +500,17 @@ export default function KloePage() {
           {/* Saved Inspirations Drawer */}
           <button
             onClick={openSaved}
-            className="p-2.5 text-[var(--foreground-secondary)] hover:text-[var(--foreground)] rounded-full hover:bg-[var(--background-secondary)] transition-colors cursor-pointer"
+            className="p-2.5 text-[var(--foreground)] hover:text-[var(--brand-pink)] rounded-full hover:bg-[var(--background-secondary)] transition-colors cursor-pointer"
             title="Ver looks guardados"
             aria-label="Ver looks guardados"
           >
-            <Bookmark className="w-5 h-5 text-purple-400" />
+            <Bookmark className="w-5 h-5 text-[var(--brand-pink)]" />
           </button>
 
           {/* Wardrobe Drawer */}
           <button
             onClick={openWardrobe}
-            className="p-2.5 text-[var(--foreground-secondary)] hover:text-[var(--foreground)] rounded-full hover:bg-[var(--background-secondary)] transition-colors cursor-pointer"
+            className="p-2.5 text-[var(--foreground)] hover:text-[var(--brand-pink)] rounded-full hover:bg-[var(--background-secondary)] transition-colors cursor-pointer"
             title="Ver mis prendas"
             aria-label="Ver mis prendas"
           >
@@ -849,7 +849,7 @@ export default function KloePage() {
               <div className="space-y-4 overflow-y-auto flex-1">
                 <div className="flex items-center justify-between pb-3 border-b border-[var(--border-color)]">
                   <div className="flex items-center gap-2">
-                    <Bookmark className="w-5 h-5 text-purple-400" />
+                    <Bookmark className="w-5 h-5 text-[var(--brand-pink)]" />
                     <h3 className="font-bold text-base text-[var(--foreground)]">Looks Guardados ({savedPosts.length})</h3>
                   </div>
                   <button

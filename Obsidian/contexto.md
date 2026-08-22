@@ -192,4 +192,29 @@ En cada conversación, el backend alimenta a CloSy con:
 - **Overlay de Malla de Puntos (Dot Matrix Grid)**: Textura sutil a escala 32px que aporta estética de producto digital premium.
 - **Tarjeta Glassmorphic con Borde en Gradiente**: Cristal ahumado con `backdrop-blur-3xl`, borde con gradiente de luz y sombra volumétrica.
 
+---
+
+## ⚡ Experiencia de Usuario, Feed y Mensajería
+
+### 1. Feed Personalizado por Preferencias de Estilo (`/feed`)
+- Algoritmo de recomendación que prioriza publicaciones con `style_ids` afines a las preferencias del usuario (`user.preferredStyles`).
+- Si no hay seguidos o publicaciones, muestra fallback de contenido popular y comunitario sin bloqueos.
+- **Estado vacío limpio**: Si no hay publicaciones, muestra `EmptyState` y oculta completamente el loader infinito (`InfiniteScrollFooter`).
+
+### 2. Mensajes & Bandeja de Entrada (`/messages`)
+- **Estado vacío centrado**: En móvil y escritorio, cuando no hay conversaciones se muestra un estado centrado con botón de acción rosa (`Plus`) para abrir inmediatamente el modal de nueva conversación.
+- **Z-Index y Difuminado de Navegación**: Todos los modales se renderizan en `z-[9999]` con fondo difuminado `backdrop-blur-md` ocultando/blurreando la barra de navegación inferior (`TabBar`).
+
+### 3. Notificaciones & Recordatorios Inteligentes
+- **Control Granular en Ajustes (`/profile/settings/notifications`)**:
+  - Store persistente `useNotificationSettingsStore` que gestiona preferencias de alertas: Pop-ups en pantalla, Seguidores, Me gusta, Comentarios, Mensajes directos, Recordatorios Kloe y Email.
+  - Si el usuario desactiva un tipo de notificación (ej. seguidores o me gustas), los avisos emergentes (toasts) no aparecerán en pantalla, pero **la actividad siempre se registra y los corazones llegan a la app** en la pestaña de actividad (`/notifications`).
+- Al pulsar un recordatorio o consejo de Kloe, navega directamente a `/closet/kloe` (abriendo el modal de suscripción a Klozet Pro si el usuario es Free), `/create` o `/closet`, sin alertas intermedias.
+
+### 4. Visualizador de Foto de Perfil (Avatar Zoom Lightbox)
+- Componente `AvatarModal` (`components/AvatarModal.tsx`): Al hacer clic en la foto de perfil (propia o de otros usuarios), se abre una vista ampliada en pantalla completa con fondo `backdrop-blur-xl`, anillo con gradiente satinado, nombre y nombre de usuario.
+
+### 5. Configuración de Stripe en Producción
+- Claves de Stripe (`STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_PRICE_ID_MONTHLY`, `STRIPE_PRICE_ID_YEARLY`) configuradas para cobros reales con soporte para Apple Pay, Google Pay y tarjetas.
+
 

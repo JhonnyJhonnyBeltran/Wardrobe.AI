@@ -9,6 +9,7 @@ import { memo, useEffect, useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, MessageCircle, UserPlus, Heart, Bell } from 'lucide-react';
 import { useRealtimeStore } from '@/store/realtimeStore';
+import { useNotificationSettingsStore } from '@/store/notificationSettingsStore';
 import type { Notification, NotificationType } from '@/lib/realtime';
 import Link from 'next/link';
 import Avatar from '@/components/Avatar';
@@ -88,8 +89,20 @@ const Toast = memo(function Toast({
       case 'comment':
         const postId = notification.data?.post_id || notification.data?.postId;
         return postId ? `/post/${postId}` : '/profile';
+      case 'system':
+      case 'outfit_shared':
+        if (notification.data?.targetUrl && typeof notification.data.targetUrl === 'string') {
+          return notification.data.targetUrl;
+        }
+        if (notification.message?.toLowerCase().includes('kloe') || notification.title?.toLowerCase().includes('kloe') || notification.message?.toLowerCase().includes('inteligencia')) {
+          return '/closet/kloe';
+        }
+        if (notification.message?.toLowerCase().includes('outfit') || notification.message?.toLowerCase().includes('calendario')) {
+          return '/create';
+        }
+        return '/closet';
       default:
-        return null;
+        return '/closet';
     }
   };
 
@@ -218,14 +231,15 @@ export const NotificationToastContainer = memo(function NotificationToastContain
   duration = 5000,
 }: NotificationToastContainerProps) {
   const notifications = useRealtimeStore(state => state.notifications);
+  const isNotificationTypeAllowed = useNotificationSettingsStore(state => state.isNotificationTypeAllowed);
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
 
-  // Derive visible toasts from notifications (no useState needed)
+  // Derive visible toasts filtered by user preferences
   const visibleToasts = useMemo(() => {
     return notifications
-      .filter(n => !n.read && !dismissedIds.has(n.id))
+      .filter(n => !n.read && !dismissedIds.has(n.id) && isNotificationTypeAllowed(n.type))
       .slice(0, maxVisible);
-  }, [notifications, maxVisible, dismissedIds]);
+  }, [notifications, maxVisible, dismissedIds, isNotificationTypeAllowed]);
 
   const handleDismiss = useCallback((id: string) => {
     setDismissedIds(prev => new Set(prev).add(id));

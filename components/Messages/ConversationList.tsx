@@ -2,6 +2,7 @@
 
 import { ConversationItem } from '@/components/ConversationItem';
 import { useUser } from '@/store/userStore';
+import { Plus } from 'lucide-react';
 
 interface ConversationListProps {
     conversations: Array<{
@@ -18,6 +19,7 @@ interface ConversationListProps {
     }>;
     activeConversationId?: string;
     onConversationClick: (id: string) => void;
+    onNewMessage?: () => void;
     loading?: boolean;
 }
 
@@ -25,6 +27,7 @@ export function ConversationList({
     conversations,
     activeConversationId,
     onConversationClick,
+    onNewMessage,
     loading = false
 }: ConversationListProps) {
     const { user } = useUser();
@@ -47,8 +50,26 @@ export function ConversationList({
 
     if (conversations.length === 0) {
         return (
-            <div className="flex flex-col items-center justify-center h-full text-center px-4 py-20">
-                <p className="text-[var(--foreground-secondary)] text-sm">No hay conversaciones aún</p>
+            <div className="flex flex-col items-center justify-center h-full text-center px-6 py-24">
+                <button
+                    onClick={onNewMessage}
+                    className="w-14 h-14 rounded-full bg-[var(--brand-pink)] text-white flex items-center justify-center mb-3 shadow-[0_8px_20px_rgba(255,45,120,0.35)] hover:scale-105 active:scale-95 transition-all"
+                    title="Nueva conversación"
+                >
+                    <Plus className="w-7 h-7" />
+                </button>
+                <p className="text-[var(--foreground)] font-bold text-sm">No hay conversaciones</p>
+                <p className="text-[var(--foreground-secondary)] text-xs mt-1 max-w-[200px] mb-4">
+                    Inicia un nuevo chat con tus amigos.
+                </p>
+                {onNewMessage && (
+                    <button
+                        onClick={onNewMessage}
+                        className="px-4 py-2 rounded-xl bg-[var(--brand-pink)] text-white text-xs font-bold shadow-sm hover:opacity-95 active:scale-95 transition-all"
+                    >
+                        Iniciar conversación
+                    </button>
+                )}
             </div>
         );
     }

@@ -249,6 +249,7 @@ export default function MessagesLayout({ children }: { children: React.ReactNode
                             conversations={filteredConversations}
                             activeConversationId={activeConversationId || undefined}
                             onConversationClick={handleConversationClick}
+                            onNewMessage={() => setShowNewMessageModal(true)}
                             loading={loading}
                         />
                     </div>

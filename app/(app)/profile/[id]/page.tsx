@@ -11,6 +11,7 @@ import { useTranslation } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase/client';
 import * as followService from '@/lib/services/followService';
 import OutfitCard from '@/components/OutfitCard';
+import AvatarModal from '@/components/AvatarModal';
 import Link from 'next/link';
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -58,6 +59,7 @@ export default function PublicProfilePage() {
   const [isBlocked, setIsBlocked] = useState(false);
   const [isBlocking, setIsBlocking] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
+  const [showAvatarModal, setShowAvatarModal] = useState(false);
   const [outfits, setOutfits] = useState<any[]>([]);
 
   const handleOutfitClick = useCallback((outfit: any) => {
@@ -379,13 +381,17 @@ export default function PublicProfilePage() {
         <div className="px-5 pt-6">
           <div className="flex items-center gap-8 mb-6">
             {/* Avatar - Exact Style */}
-            <div className="w-24 h-24 rounded-full bg-gray-200 p-0.5 shadow-lg flex-shrink-0">
-              <div className="w-full h-full rounded-full bg-[var(--background)] p-0.5">
+            <button
+              onClick={() => setShowAvatarModal(true)}
+              className="w-24 h-24 rounded-full bg-gradient-to-tr from-[var(--brand-pink)]/40 via-purple-500/30 to-indigo-500/30 p-0.5 shadow-lg flex-shrink-0 hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer group"
+              title="Ver foto de perfil"
+            >
+              <div className="w-full h-full rounded-full bg-[var(--background)] p-0.5 overflow-hidden">
                 {profile.avatar_url ? (
                   <img
                     src={profile.avatar_url}
                     alt={profile.full_name || ''}
-                    className="w-full h-full rounded-full object-cover"
+                    className="w-full h-full rounded-full object-cover group-hover:opacity-90 transition-opacity"
                   />
                 ) : (
                   <div className="w-full h-full rounded-full bg-gradient-to-br from-[var(--brand-pink)] to-[var(--brand-pink-dark)] flex items-center justify-center">
@@ -395,7 +401,7 @@ export default function PublicProfilePage() {
                   </div>
                 )}
               </div>
-            </div>
+            </button>
 
             {/* Stats - Exact Style */}
             <div className="flex-1 flex justify-around text-center">
@@ -584,6 +590,15 @@ export default function PublicProfilePage() {
           )}
         </div>
       </main>
+
+      {/* Fullscreen Avatar Modal */}
+      <AvatarModal
+        isOpen={showAvatarModal}
+        onClose={() => setShowAvatarModal(false)}
+        src={profile.avatar_url}
+        name={profile.full_name || undefined}
+        username={profile.username || undefined}
+      />
     </div>
   );
 }

@@ -387,8 +387,24 @@ export default function MessagesPage() {
                                 />
                             ))}
                             {filteredConversations.length === 0 && (
-                                <div className="text-center py-12">
-                                    <p className="text-[var(--foreground-tertiary)]">No hay mensajes</p>
+                                <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
+                                    <button
+                                        onClick={() => setShowNewConversationModal(true)}
+                                        className="w-16 h-16 rounded-full bg-[var(--brand-pink)] text-white flex items-center justify-center mb-4 shadow-[0_8px_25px_rgba(255,45,120,0.4)] hover:scale-105 active:scale-95 transition-all duration-200"
+                                        title="Nueva conversación"
+                                    >
+                                        <Plus className="w-8 h-8" />
+                                    </button>
+                                    <h3 className="text-base font-bold text-[var(--foreground)] mb-1">No hay conversaciones</h3>
+                                    <p className="text-xs text-[var(--foreground-secondary)] max-w-xs mb-5">
+                                        Empieza un nuevo chat con tus amigos o conéctate con creadores de estilo.
+                                    </p>
+                                    <button
+                                        onClick={() => setShowNewConversationModal(true)}
+                                        className="px-5 py-2.5 rounded-xl bg-[var(--brand-pink)] text-white text-xs font-bold shadow-md hover:opacity-95 active:scale-95 transition-all"
+                                    >
+                                        Iniciar conversación
+                                    </button>
                                 </div>
                             )}
                         </div>
@@ -397,13 +413,25 @@ export default function MessagesPage() {
             </div>
         </div>
 
-            {/* Desktop: placeholder when no conversation selected (layout shows list on left) - Contexto §4C */}
+            {/* Desktop: placeholder when no conversation selected */}
             <div className="hidden md:flex flex-1 flex-col items-center justify-center p-8 text-center min-h-0">
-                <div className="w-16 h-16 rounded-full bg-[var(--background-secondary)] flex items-center justify-center mb-4">
-                    <Plus className="w-8 h-8 text-[var(--foreground-tertiary)]" />
-                </div>
-                <p className="text-[var(--foreground-secondary)] font-medium">Selecciona una conversación</p>
-                <p className="text-sm text-[var(--foreground-tertiary)] mt-1">o inicia un chat desde Búsqueda</p>
+                <button
+                    onClick={() => setShowNewConversationModal(true)}
+                    className="w-16 h-16 rounded-full bg-[var(--brand-pink)] text-white flex items-center justify-center mb-4 shadow-[0_8px_25px_rgba(255,45,120,0.4)] hover:scale-105 active:scale-95 transition-all duration-200"
+                    title="Nueva conversación"
+                >
+                    <Plus className="w-8 h-8" />
+                </button>
+                <p className="text-[var(--foreground)] font-bold text-base">Iniciar una conversación</p>
+                <p className="text-xs text-[var(--foreground-secondary)] mt-1 max-w-xs mb-4">
+                    Selecciona una conversación de la lista o pulsa para iniciar un nuevo chat.
+                </p>
+                <button
+                    onClick={() => setShowNewConversationModal(true)}
+                    className="px-5 py-2.5 rounded-xl bg-[var(--brand-pink)] text-white text-xs font-bold shadow-md hover:opacity-95 active:scale-95 transition-all"
+                >
+                    Nueva conversación
+                </button>
             </div>
 
             {/* New Conversation Modal */}
@@ -413,11 +441,11 @@ export default function MessagesPage() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[6010] flex items-end md:items-center justify-center"
+                        className="fixed inset-0 z-[9999] flex items-end md:items-center justify-center"
                         onClick={() => setShowNewConversationModal(false)}
                     >
-                        {/* Backdrop */}
-                        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+                        {/* Backdrop with blur */}
+                        <div className="absolute inset-0 bg-black/60 backdrop-blur-md" />
 
                         {/* Modal Content */}
                         <motion.div
@@ -425,7 +453,7 @@ export default function MessagesPage() {
                             animate={{ y: 0 }}
                             exit={{ y: '100%' }}
                             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                            className="relative w-full md:max-w-md md:rounded-2xl bg-[var(--background)] md:max-h-[70vh] rounded-t-2xl overflow-hidden"
+                            className="relative w-full md:max-w-md md:rounded-2xl bg-[var(--background)] md:max-h-[70vh] rounded-t-2xl overflow-hidden shadow-2xl border border-[var(--border-color)]"
                             onClick={(e) => e.stopPropagation()}
                         >
                             {/* Header */}

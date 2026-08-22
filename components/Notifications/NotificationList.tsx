@@ -318,16 +318,29 @@ export default function NotificationList({ compact = false, onClose }: Notificat
         setFetchedNotifications(prev => prev.filter(n => n.id !== id));
     };
 
-
-    // Handler for System Notification Click -> Create Outfit
-    const handleSystemClick = () => {
-        if (!wardrobeItems || wardrobeItems.length === 0) {
-            // Simple alert for now, could be a toast
-            alert('Añade prendas a tu armario antes de crear outfits');
+    // Handler for System/Reminder Notification Click
+    const handleSystemClick = (notif: Notification) => {
+        if (onClose) onClose();
+        
+        // AI / Stylist prompt -> go to /closet/kloe (opens KloeProModal if Free)
+        if (
+            notif.id?.includes('use_ai') ||
+            notif.content?.toLowerCase().includes('kloe') ||
+            notif.content?.toLowerCase().includes('inteligencia') ||
+            notif.content?.toLowerCase().includes('estilista')
+        ) {
+            router.push('/closet/kloe');
             return;
         }
-        if (onClose) onClose();
-        router.push('/create');
+
+        // Outfits / Calendar prompt -> go to /create
+        if (notif.id?.includes('first_outfit') || notif.id?.includes('calendar')) {
+            router.push('/create');
+            return;
+        }
+
+        // Clothes / Wardrobe prompt -> go to /closet
+        router.push('/closet');
     };
 
     // Handler for Follow/Unfollow - Direct follow (no pending)
@@ -385,9 +398,8 @@ export default function NotificationList({ compact = false, onClose }: Notificat
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, height: 0, marginTop: 0, marginBottom: 0 }}
-                                onClick={handleSystemClick}
-                                className={`relative p-4 rounded-xl bg-[var(--background-secondary)] border border-[var(--brand-pink)]/20 flex items-start gap-4 pr-10 cursor-pointer hover:bg-[var(--background-secondary)]/80 transition-colors
-                   ${(!wardrobeItems || wardrobeItems.length === 0) ? 'opacity-90' : ''}`}
+                                onClick={() => handleSystemClick(notif)}
+                                className="relative p-4 rounded-xl bg-[var(--background-secondary)] border border-[var(--brand-pink)]/20 flex items-start gap-4 pr-10 cursor-pointer hover:bg-[var(--background-secondary)]/80 transition-colors"
                             >
                                 <button
                                     onClick={(e) => handleDismissSystem(e, notif.id)}
