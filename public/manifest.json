@@ -1,10 +1,25 @@
 {
-  "name": "Klozet - Fashion Assistant",
+  "name": "Klozet - Red Social de Moda y Armario Virtual IA",
   "short_name": "Klozet",
-  "description": "Your personal AI-powered fashion assistant and wardrobe manager",
-  "start_url": "/",
+  "description": "Digitaliza tu armario, genera outfits perfectos con inteligencia artificial y comparte tu estilo en la red social de moda.",
+  "start_url": "/feed",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#FF69B4",
-  "orientation": "portrait-primary"
+  "background_color": "#09090b",
+  "theme_color": "#FF2D78",
+  "orientation": "portrait-primary",
+  "categories": ["fashion", "social", "lifestyle", "shopping"],
+  "icons": [
+    {
+      "src": "/klozet-logo-dark.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/klozet-logo-dark.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
 }

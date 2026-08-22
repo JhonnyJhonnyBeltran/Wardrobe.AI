@@ -169,4 +169,19 @@ En cada conversación, el backend alimenta a CloSy con:
 - **Inspección de Inspiración y Looks Guardados**:
   - Kloe indexa las publicaciones guardadas del usuario (`saves` $\rightarrow$ `posts`) y analiza sus fotografías para que el usuario pueda pedir recrear o combinar looks a partir de sus fotos guardadas.
 
+---
+
+## 🔍 Estrategia de SEO & Posicionamiento en Google
+
+### 1. Palabras Clave Principales y Posicionamiento
+- **Palabra Clave Primaria**: `Closet` / `Klozet` / `Genera outfits con inteligencia artificial` / `Red social de moda`.
+- **Estructura del Título SEO**: `Closet & Klozet | Genera Outfits con Inteligencia Artificial & Red Social de Moda`.
+- **Meta Descripción Optimizada**: `Klozet es la red social de moda y armario virtual inteligente número 1. Digitaliza tu ropa, genera outfits perfectos con inteligencia artificial, comparte tu estilo con la comunidad y recibe estilismo 24/7 con tu asesora IA Kloe.`
+
+### 2. Infraestructura Técnica de Indexación
+- **JSON-LD Schema (`app/layout.tsx`)**: Esquema de datos estructurados para Google Knowledge Graph (`WebApplication`, `Organization`, `WebSite`, `AggregateRating: 4.9`, `SearchAction`).
+- **Sitemap Dinámico (`app/sitemap.ts` $\rightarrow$ `/sitemap.xml`)**: Genera el mapa XML indexable para rastreadores web.
+- **Control de Robots (`app/robots.ts` $\rightarrow$ `/robots.txt`)**: Permite indexar páginas públicas (Feed, Search, Outfits, Perfiles) y bloquea rutas privadas.
+- **Manifest PWA (`public/manifest.json`)**: Configuración optimizada para instalación móvil y categorización en buscadores.
+
 
