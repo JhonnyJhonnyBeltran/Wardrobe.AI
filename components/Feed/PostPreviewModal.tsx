@@ -145,6 +145,7 @@ export default function PostPreviewModal({
       hasSwiped.current = false;
       return;
     }
+    e.preventDefault();
     e.stopPropagation();
     onClose();
     router.push(`/post/${postId}`);

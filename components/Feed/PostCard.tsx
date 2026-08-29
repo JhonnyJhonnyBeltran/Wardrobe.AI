@@ -61,6 +61,9 @@ export default function PostCard({ post, onClick, hideSaveButton = false }: Post
 
     const handleTouchEnd = () => {
         if (longPressTimer.current) clearTimeout(longPressTimer.current);
+        setTimeout(() => {
+            isLongPressedRef.current = false;
+        }, 150);
     };
 
     const handleTouchMove = () => {
@@ -222,7 +225,10 @@ export default function PostCard({ post, onClick, hideSaveButton = false }: Post
             {/* Fullscreen Mobile Long-Press Preview Modal */}
             <PostPreviewModal
                 isOpen={showPreviewModal}
-                onClose={() => setShowPreviewModal(false)}
+                onClose={() => {
+                    setShowPreviewModal(false);
+                    isLongPressedRef.current = false;
+                }}
                 postId={post.id}
                 initialImageUrl={post.imageUrl}
                 postTitle={post.title}
