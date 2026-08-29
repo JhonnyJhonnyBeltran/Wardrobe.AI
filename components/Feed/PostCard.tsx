@@ -40,6 +40,8 @@ export default function PostCard({ post, onClick, hideSaveButton = false }: Post
     const { showSaveToast, openFolderModal, triggerRefetch } = useUiStore();
     const router = useRouter();
 
+    const cardRef = useRef<HTMLDivElement>(null);
+    const [sourceRect, setSourceRect] = useState<{ top: number; left: number; width: number; height: number } | null>(null);
     const longPressTimer = useRef<NodeJS.Timeout | null>(null);
     const isLongPressedRef = useRef(false);
 
@@ -52,6 +54,15 @@ export default function PostCard({ post, onClick, hideSaveButton = false }: Post
         if (longPressTimer.current) clearTimeout(longPressTimer.current);
         longPressTimer.current = setTimeout(() => {
             isLongPressedRef.current = true;
+            if (cardRef.current) {
+                const rect = cardRef.current.getBoundingClientRect();
+                setSourceRect({
+                    top: rect.top,
+                    left: rect.left,
+                    width: rect.width,
+                    height: rect.height,
+                });
+            }
             try {
                 haptics.heavy();
             } catch {}
@@ -146,6 +157,7 @@ export default function PostCard({ post, onClick, hideSaveButton = false }: Post
     return (
         <>
             <motion.div
+                ref={cardRef}
                 onClick={handleNavigation}
                 onTouchStart={handleTouchStart}
                 onTouchEnd={handleTouchEnd}
@@ -182,21 +194,14 @@ export default function PostCard({ post, onClick, hideSaveButton = false }: Post
                             "absolute bottom-3 left-3 right-3 hidden md:flex items-center justify-between transition-opacity duration-300",
                             post.isLiked ? "opacity-100" : "opacity-0 group-hover:opacity-100"
                         )}>
-                            <div className="flex items-center gap-2 text-white/90">
-                                <Avatar src={post.author.avatar || null} alt={post.author.name} size="xs" className="border border-white/20" />
-                                <span className="text-xs font-medium truncate max-w-[100px]">{post.author.name}</span>
+                            <div className="flex items-center gap-2">
+                                <Avatar src={post.author.avatar || null} alt={post.author.name} size="sm" />
+                                <span className="text-xs font-semibold text-white truncate max-w-[120px] drop-shadow-md">{post.author.name}</span>
                             </div>
-                            {(post.likes > 0 || post.isLiked) && (
-                                <div className={cn(
-                                    "flex items-center gap-1 backdrop-blur-md px-2 py-1 rounded-full border shadow-sm transition-colors",
-                                    post.isLiked
-                                        ? "bg-black/60 border-[var(--brand-pink)]/40 text-[var(--brand-pink)]"
-                                        : "bg-black/30 border-white/10 text-white/90"
-                                )}>
-                                    <Heart className={cn("w-3.5 h-3.5 transition-colors", post.isLiked ? "fill-[var(--brand-pink)] text-[var(--brand-pink)]" : "fill-white/60 text-white/60")} />
-                                    <span className={cn("text-xs font-semibold", post.isLiked ? "text-[var(--brand-pink)]" : "text-white")}>{post.likes}</span>
-                                </div>
-                            )}
+                            <div className="flex items-center gap-1 text-white text-xs drop-shadow-md">
+                                <Heart className={cn("w-4 h-4 transition-colors", post.isLiked ? "fill-[var(--brand-pink)] text-[var(--brand-pink)]" : "text-white")} />
+                                <span>{post.likes}</span>
+                            </div>
                         </div>
                     </div>
                     
@@ -235,6 +240,7 @@ export default function PostCard({ post, onClick, hideSaveButton = false }: Post
                 isSaved={isSavedState}
                 onToggleSave={toggleQuickSave}
                 hideSaveButton={hideSaveButton}
+                sourceRect={sourceRect}
             />
         </>
     );

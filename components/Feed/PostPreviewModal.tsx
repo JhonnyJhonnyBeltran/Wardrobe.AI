@@ -16,6 +16,7 @@ interface PostPreviewModalProps {
   isSaved?: boolean;
   onToggleSave?: (e: React.MouseEvent) => void;
   hideSaveButton?: boolean;
+  sourceRect?: { top: number; left: number; width: number; height: number } | null;
 }
 
 export default function PostPreviewModal({
@@ -27,6 +28,7 @@ export default function PostPreviewModal({
   isSaved = false,
   onToggleSave,
   hideSaveButton = false,
+  sourceRect = null,
 }: PostPreviewModalProps) {
   const router = useRouter();
   const [activeSlide, setActiveSlide] = useState<number>(0);
@@ -39,6 +41,35 @@ export default function PostPreviewModal({
   const touchEndX = useRef<number | null>(null);
   const touchStartY = useRef<number | null>(null);
   const hasSwiped = useRef<boolean>(false);
+
+  // Compute fluid launch animation originating from the clicked post card
+  const getInitialOrigin = () => {
+    if (!sourceRect || typeof window === 'undefined') {
+      return { x: 0, y: 30, scale: 0.85, opacity: 0 };
+    }
+
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+
+    const targetWidth = Math.min(340, windowWidth - 32);
+
+    const targetCenterX = windowWidth / 2;
+    const targetCenterY = windowHeight / 2;
+
+    const sourceCenterX = sourceRect.left + sourceRect.width / 2;
+    const sourceCenterY = sourceRect.top + sourceRect.height / 2;
+
+    const deltaX = sourceCenterX - targetCenterX;
+    const deltaY = sourceCenterY - targetCenterY;
+    const initialScale = Math.max(0.35, Math.min(0.9, sourceRect.width / targetWidth));
+
+    return {
+      x: deltaX,
+      y: deltaY,
+      scale: initialScale,
+      opacity: 0.4,
+    };
+  };
 
   useEffect(() => {
     setIsSavedState(isSaved);
@@ -178,12 +209,17 @@ export default function PostPreviewModal({
             }}
           />
 
-          {/* Modal Card with Spring Expand Animation */}
+          {/* Modal Card with Spring Expand Animation from Post Card Position */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.82, y: 25 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.82, y: 25 }}
-            transition={{ type: 'spring', stiffness: 340, damping: 28 }}
+            initial={getInitialOrigin()}
+            animate={{ opacity: 1, scale: 1, x: 0, y: 0 }}
+            exit={getInitialOrigin()}
+            transition={{
+              type: 'spring',
+              stiffness: 340,
+              damping: 28,
+              mass: 0.8,
+            }}
             onClick={handleCardClick}
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
