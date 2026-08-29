@@ -667,7 +667,7 @@ export default function SearchPage() {
                 <div className="masonry-grid">
                   {results.map(post => (
                     <div key={post.id} className="break-inside-avoid mb-6">
-                      <PostCard post={post} hideSaveButton={true} />
+                      <PostCard post={post} />
                     </div>
                   ))}
                   {/* Skeleton Cards for infinite loading illusion or actual loading */}
@@ -747,7 +747,7 @@ export default function SearchPage() {
                     <div className="masonry-grid">
                       {results.map(post => (
                         <div key={post.id} className="break-inside-avoid mb-6">
-                          <PostCard post={post} hideSaveButton={true} />
+                          <PostCard post={post} />
                         </div>
                       ))}
                       
