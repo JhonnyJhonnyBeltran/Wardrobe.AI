@@ -115,10 +115,14 @@ export function UserProvider({ children }: { children: ReactNode }) {
         name?.toLowerCase().includes('ethan')
       );
 
-      let subscriptionTier = (profile?.subscription_tier || legacyProfile?.subscription_tier || (isEthanUser ? 'premium' : 'free')) as SubscriptionTier;
-      if (isEthanUser) {
-        subscriptionTier = SubscriptionTier.PREMIUM;
-      }
+      const isPremiumFromDb = Boolean(
+        profile?.is_premium ||
+        legacyProfile?.is_premium ||
+        profile?.subscription_tier === 'premium' ||
+        legacyProfile?.subscription_tier === 'premium'
+      );
+
+      let subscriptionTier = (isPremiumFromDb || isEthanUser ? SubscriptionTier.PREMIUM : SubscriptionTier.FREE);
 
       // Style preferences
       const styleSource = profile || legacyProfile || {};

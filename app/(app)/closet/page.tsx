@@ -13,7 +13,7 @@ import {
   Heart, Grid3x3, List, Search, Filter, Plus, Wand2, X, Shirt, Layers, Share2, Trash2, Check, CalendarDays, Sparkles
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { Button, Card, FloatingCreateButton, OutfitCard, ClothingItem, NotificationToastContainer, WardrobeSelectionModal, OutfitDetailModal, EmptyState, SkeletonCard } from '@/components';
+import { Button, Card, FloatingCreateButton, OutfitCard, ClothingItem, NotificationToastContainer, WardrobeSelectionModal, OutfitDetailModal, EmptyState, SkeletonCard, PullToRefresh } from '@/components';
 import AddItemModal from '@/components/AddItemModal';
 import ProductModal from '@/components/ProductModal';
 import BubbleToggle from '@/components/BubbleToggle';
@@ -642,13 +642,14 @@ export default function ClosetPage() {
 
   return (
     <>
-    <motion.div
-      className="min-h-screen bg-[var(--background)] pb-24 md:pb-8 relative overflow-hidden touch-pan-y"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.3 }}
-    >
+    <PullToRefresh onRefresh={async () => { await refresh(); }}>
+      <motion.div
+        className="min-h-screen bg-[var(--background)] pb-24 md:pb-8 relative overflow-hidden touch-pan-y"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.3 }}
+      >
 
       {/* Header Sticky & Auto-hide */}
       <header className={`sticky top-0 z-40 bg-[var(--background)]/95 backdrop-blur-md pb-2 transition-transform duration-300 supports-[ios]:pt-safe-top ${isHeaderVisible ? 'translate-y-0' : '-translate-y-full'}`}>
@@ -1297,7 +1298,8 @@ export default function ClosetPage() {
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.div>
+      </motion.div>
+    </PullToRefresh>
 
       {/* Modals — moved outside draggable container to fix fixed positioning */}
       <AddItemModal

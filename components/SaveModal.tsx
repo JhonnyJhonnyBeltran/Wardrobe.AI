@@ -96,14 +96,18 @@ export default function SaveModal() {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[5995] flex items-end md:items-center justify-center px-4 pb-[calc(var(--tabbar-height)+16px)] md:pb-0 md:p-4 pointer-events-none">
+      <div className="fixed inset-0 z-[9999] flex items-end md:items-center justify-center px-4 pb-[calc(var(--tabbar-height)+16px)] md:pb-0 md:p-4">
         {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-          onClick={closeFolderModal}
+          className="absolute inset-0 bg-black/70 backdrop-blur-md cursor-pointer"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            closeFolderModal();
+          }}
         />
 
         {/* Modal / Bottom Sheet */}
@@ -112,8 +116,10 @@ export default function SaveModal() {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: "100%", opacity: 0 }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          className="relative w-full max-w-md bg-[var(--background)] rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] md:max-h-[70vh] border border-[var(--border-color)] pointer-events-auto"
-          onClick={(e) => e.stopPropagation()}
+          className="relative z-10 w-full max-w-md bg-[var(--background)] rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] md:max-h-[70vh] border border-[var(--border-color)]"
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
         >
           {/* Drag Handle (Mobile) */}
           <div className="w-full flex justify-center pt-3 pb-1 md:hidden" onClick={closeFolderModal}>

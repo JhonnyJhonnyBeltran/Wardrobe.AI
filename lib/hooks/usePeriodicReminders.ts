@@ -104,27 +104,28 @@ export function usePeriodicReminders() {
   useEffect(() => {
     if (!user) return;
 
-    // Check on mount if 3 hours elapsed
+    if (typeof window !== 'undefined') {
+      // Always reset baseline timestamp on app mount to current session time
+      localStorage.setItem(STORAGE_KEY, Date.now().toString());
+    }
+
     const checkReminder = () => {
       if (typeof window === 'undefined') return;
       const lastStr = localStorage.getItem(STORAGE_KEY);
-      const lastTime = lastStr ? parseInt(lastStr, 10) : 0;
+      const lastTime = lastStr ? parseInt(lastStr, 10) : Date.now();
       const now = Date.now();
 
-      if (!lastTime || now - lastTime >= REMINDER_INTERVAL_MS) {
+      if (now - lastTime >= REMINDER_INTERVAL_MS) {
         triggerReminder();
       }
     };
 
-    // Check shortly after load (e.g. 5 seconds)
-    const initialTimeout = setTimeout(checkReminder, 5000);
-
-    // Periodic check every 15 minutes to see if 3 hours reached
-    timerRef.current = setInterval(checkReminder, 15 * 60 * 1000);
+    // Periodic check every 30 minutes while app is running
+    timerRef.current = setInterval(checkReminder, 30 * 60 * 1000);
 
     return () => {
-      clearTimeout(initialTimeout);
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, [user?.id, settings.reminders, settings.popupToasts]);
 }
+

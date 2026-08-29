@@ -83,6 +83,10 @@ export async function POST(request: NextRequest) {
           quantity: 1
         }
       ],
+      metadata: {
+        supabase_user_id: user.id,
+        plan
+      },
       subscription_data: {
         metadata: {
           supabase_user_id: user.id,

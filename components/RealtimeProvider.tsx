@@ -11,6 +11,7 @@ import { useRealtime } from '@/lib/hooks/useRealtime';
 import { usePeriodicReminders } from '@/lib/hooks/usePeriodicReminders';
 import { useUser } from '@/store/userStore';
 import { useNotificationSettingsStore } from '@/store/notificationSettingsStore';
+import { sendSystemNotification, requestSystemNotificationPermission } from '@/lib/notifications/desktopNotification';
 
 interface RealtimeProviderProps {
   children: React.ReactNode;
@@ -28,10 +29,24 @@ export function RealtimeProvider({
   const { user } = useUser();
   const { settings, isNotificationTypeAllowed } = useNotificationSettingsStore();
 
+  // Register service worker for mobile/desktop native push notifications
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+      navigator.serviceWorker
+        .register('/sw.js')
+        .then((registration) => {
+          console.log('[ServiceWorker] Registered with scope:', registration.scope);
+        })
+        .catch((err) => {
+          console.warn('[ServiceWorker] Registration failed:', err);
+        });
+    }
+  }, []);
+
   // Initialize periodic 3-hour smart reminders
   usePeriodicReminders();
 
-  // Initialize realtime listener with desktop notification support
+  // Initialize realtime listener with desktop/mobile system notification support
   useRealtime({
     autoConnect: !!user?.id,
     onNotification: (notification) => {
@@ -40,38 +55,29 @@ export function RealtimeProvider({
         return;
       }
 
-      // Show native desktop notification if permission granted
-      if (showToasts && typeof window !== 'undefined' && 'Notification' in window) {
-        if (Notification.permission === 'granted' && settings.popupToasts) {
-          try {
-            const targetUrl: string = typeof notification.data?.targetUrl === 'string'
-              ? notification.data.targetUrl
-              : (
-                notification.type === 'new_message' && notification.data?.sender_id
-                  ? `/messages/${notification.data.sender_id}`
-                  : notification.type === 'like' || notification.type === 'comment'
-                  ? `/post/${notification.data?.post_id || ''}`
-                  : '/notifications'
-              );
+      // Show native desktop/mobile system notification ONLY for live fresh notifications (< 2 minutes old)
+      const notifTime = notification.created_at ? new Date(notification.created_at).getTime() : Date.now();
+      const isFresh = Date.now() - notifTime < 2 * 60 * 1000;
 
-            const desktopNotif = new Notification(notification.title || 'Klozet', {
-              body: notification.message || 'Tienes nueva actividad en Klozet',
-              icon: notification.sender?.avatar_url || '/klozet-logo-dark.png',
-              badge: '/klozet-logo-dark.png',
-              tag: notification.id,
-            });
+      if (showToasts && settings.popupToasts && isFresh) {
+        const targetUrl: string = typeof notification.data?.targetUrl === 'string'
+          ? notification.data.targetUrl
+          : (
+            notification.type === 'new_message' && notification.data?.sender_id
+              ? `/messages/${notification.data.sender_id}`
+              : notification.type === 'like' || notification.type === 'comment'
+              ? `/post/${notification.data?.post_id || ''}`
+              : '/notifications'
+          );
 
-            desktopNotif.onclick = () => {
-              window.focus();
-              if (targetUrl) {
-                window.location.href = targetUrl;
-              }
-              desktopNotif.close();
-            };
-          } catch (err) {
-            console.warn('Desktop notification error:', err);
-          }
-        }
+        sendSystemNotification({
+          title: notification.title || 'Klozet',
+          body: notification.message || 'Tienes nueva actividad en Klozet',
+          icon: notification.sender?.avatar_url || '/klozet-logo-dark.png',
+          badge: '/klozet-logo-dark.png',
+          tag: notification.id,
+          data: { url: targetUrl }
+        });
       }
 
       // Call custom handler
@@ -79,11 +85,11 @@ export function RealtimeProvider({
     },
   });
 
-  // Auto-request desktop notification permission if push setting is on and user is authenticated
+  // Auto-request desktop/mobile notification permission if setting is on and user is authenticated
   useEffect(() => {
     if (typeof window !== 'undefined' && 'Notification' in window && user) {
       if (Notification.permission === 'default' && settings.popupToasts) {
-        Notification.requestPermission().catch(() => {});
+        requestSystemNotificationPermission().catch(() => {});
       }
     }
   }, [user, settings.popupToasts]);

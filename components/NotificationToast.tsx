@@ -234,10 +234,18 @@ export const NotificationToastContainer = memo(function NotificationToastContain
   const isNotificationTypeAllowed = useNotificationSettingsStore(state => state.isNotificationTypeAllowed);
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
 
-  // Derive visible toasts filtered by user preferences
+  // Derive visible toasts filtered by user preferences and freshness (< 45s)
   const visibleToasts = useMemo(() => {
+    const now = Date.now();
     return notifications
-      .filter(n => !n.read && !dismissedIds.has(n.id) && isNotificationTypeAllowed(n.type))
+      .filter(n => {
+        if (n.read || dismissedIds.has(n.id) || !isNotificationTypeAllowed(n.type)) return false;
+        if (n.created_at) {
+          const diff = now - new Date(n.created_at).getTime();
+          if (diff > 45 * 1000) return false;
+        }
+        return true;
+      })
       .slice(0, maxVisible);
   }, [notifications, maxVisible, dismissedIds, isNotificationTypeAllowed]);
 

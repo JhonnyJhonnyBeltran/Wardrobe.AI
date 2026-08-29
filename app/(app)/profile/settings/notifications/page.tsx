@@ -5,10 +5,14 @@
  */
 
 import { motion } from 'framer-motion';
-import { ArrowLeft, Bell, Mail, Smartphone, Heart, MessageCircle, UserPlus, Sparkles, Check } from 'lucide-react';
+import { ArrowLeft, Bell, Mail, Smartphone, Heart, MessageCircle, UserPlus, Sparkles, Check, Send } from 'lucide-react';
 import { Card } from '@/components';
 import { useRouter } from 'next/navigation';
 import { useNotificationSettingsStore, NotificationSettings } from '@/store/notificationSettingsStore';
+import { sendSystemNotification, requestSystemNotificationPermission } from '@/lib/notifications/desktopNotification';
+import { toast } from 'sonner';
+import { useState, useEffect } from 'react';
+import { useUser } from '@/store/userStore';
 
 interface ToggleSwitchProps {
     enabled: boolean;
@@ -20,7 +24,7 @@ function ToggleSwitch({ enabled, onChange }: ToggleSwitchProps) {
         <button
             type="button"
             onClick={() => onChange(!enabled)}
-            className={`relative w-12 h-7 rounded-full transition-colors ${
+            className={`relative w-12 h-7 rounded-full transition-colors cursor-pointer ${
                 enabled ? 'bg-[var(--brand-pink)]' : 'bg-[var(--background-tertiary)]'
             }`}
         >
@@ -58,13 +62,11 @@ function NotificationOption({ icon, title, description, enabled, onChange }: Not
     );
 }
 
-import { useEffect } from 'react';
-import { useUser } from '@/store/userStore';
-
 export default function NotificationsPage() {
     const router = useRouter();
     const { user } = useUser();
     const { settings, updateSetting, loadFromDatabase, isSaving } = useNotificationSettingsStore();
+    const [isTesting, setIsTesting] = useState(false);
 
     useEffect(() => {
         if (user?.id) {
@@ -74,13 +76,35 @@ export default function NotificationsPage() {
 
     const handleTogglePopups = async (enabled: boolean) => {
         await updateSetting('popupToasts', enabled, user?.id);
-        if (enabled && typeof window !== 'undefined' && 'Notification' in window) {
-            if (Notification.permission === 'default') {
-                try {
-                    await Notification.requestPermission();
-                } catch (e) {}
+        if (enabled) {
+            const permission = await requestSystemNotificationPermission();
+            if (permission === 'granted') {
+                toast.success('Notificaciones de escritorio y móvil activadas');
+            } else if (permission === 'denied') {
+                toast.error('Has bloqueado las notificaciones en tu navegador o dispositivo');
             }
         }
+    };
+
+    const handleTestNotification = async () => {
+        setIsTesting(true);
+        const permission = await requestSystemNotificationPermission();
+        if (permission === 'granted') {
+            const sent = await sendSystemNotification({
+                title: 'Klozet',
+                body: '✨ ¡Notificación de prueba recibida con éxito en tu dispositivo!',
+                icon: '/klozet-logo-dark.png',
+                data: { url: '/notifications' }
+            });
+            if (sent) {
+                toast.success('¡Notificación enviada a tu centro de notificaciones!');
+            } else {
+                toast.info('Revisa los permisos de notificación de tu navegador.');
+            }
+        } else {
+            toast.error('Activa los permisos de notificación en tu navegador/móvil');
+        }
+        setIsTesting(false);
     };
 
     const handleUpdate = (key: keyof NotificationSettings, val: boolean) => {
@@ -98,7 +122,7 @@ export default function NotificationsPage() {
                 <div className="flex items-center justify-between max-w-2xl mx-auto">
                     <button
                         onClick={() => router.back()}
-                        className="flex items-center gap-2 text-[var(--foreground-secondary)] hover:text-[var(--foreground)] transition-colors p-1"
+                        className="flex items-center gap-2 text-[var(--foreground-secondary)] hover:text-[var(--foreground)] transition-colors p-1 cursor-pointer"
                     >
                         <ArrowLeft className="w-5 h-5" />
                         <span className="text-sm font-medium">Volver</span>
@@ -117,16 +141,30 @@ export default function NotificationsPage() {
                     transition={{ delay: 0.05 }}
                 >
                     <h2 className="text-xs font-bold text-[var(--foreground-secondary)] uppercase tracking-wider mb-3 px-1">
-                        Alertas en Pantalla y Escritorio
+                        Notificaciones de Sistema (Escritorio y Móvil)
                     </h2>
                     <Card className="px-5 divide-y divide-[var(--border-color)]">
                         <NotificationOption
                             icon={<Smartphone className="w-5 h-5 text-[var(--brand-pink)]" />}
-                            title="Avisos emergentes y de escritorio"
-                            description="Mostrar avisos flotantes en pantalla y notificaciones del navegador"
+                            title="Notificaciones de Escritorio y Móvil (Push)"
+                            description="Recibe avisos en la bandeja de notificaciones de tu ordenador o teléfono"
                             enabled={settings.popupToasts}
                             onChange={handleTogglePopups}
                         />
+                        <div className="py-3 flex items-center justify-between">
+                            <span className="text-xs text-[var(--foreground-tertiary)]">
+                                Comprueba cómo se ve una notificación en tu sistema
+                            </span>
+                            <button
+                                type="button"
+                                onClick={handleTestNotification}
+                                disabled={isTesting}
+                                className="px-3.5 py-1.5 rounded-xl bg-[var(--background-secondary)] hover:bg-[var(--brand-pink)]/15 text-[var(--foreground)] hover:text-[var(--brand-pink)] border border-[var(--border-color)] text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5"
+                            >
+                                <Send className="w-3.5 h-3.5" />
+                                Probar notificación
+                            </button>
+                        </div>
                     </Card>
                 </motion.div>
 

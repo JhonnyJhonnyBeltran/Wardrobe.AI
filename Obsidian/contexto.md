@@ -21,6 +21,7 @@ Wardrobe.AI es una plataforma de moda impulsada por IA que permite a los usuario
 
 ## Reglas de Agente (Antigravity)
 - **Registro de Memoria (Bitácora Obligatoria)**: NUNCA asumas cosas a ciegas que puedan romper el código existente. Tienes prohibido sobreescribir o "cargarte" lógica sin apuntar lo que haces. Cuando hagas cambios complejos, repasa siempre qué has hecho y asegúrate de probar su impacto colateral. Usa tu propia memoria para garantizar la estabilidad.
+- **Commit Obligatorio tras Cada Implementación Exitosa**: Siempre que se complete una funcionalidad o corrección y se haya validado satisfactoriamente la compilación con `npm run build` sin errores, es OBLIGATORIO realizar un `git commit` con un mensaje descriptivo y claro de los cambios realizados.
 
 
 ## Onboarding
@@ -292,6 +293,47 @@ En cada conversación, el backend alimenta a CloSy con:
     2. *"Analizando armonía de colores, tejidos y morfología..."*
     3. *"Equilibrando capas, proporciones y código de vestimenta..."*
     4. *"Estructurando el look y redactando tu asesoría de estilo..."*
+
+### 11. Notificaciones de Sistema, Caché SWR, Pull-to-Refresh y Pasarela Stripe (Agosto 2026)
+- **Notificaciones Nativas del Sistema (Escritorio y Móvil)**:
+  - Implementado `lib/notifications/desktopNotification.ts` y Service Worker `public/sw.js`.
+  - Envía notificaciones directas al centro de notificaciones de Windows, macOS y a la bandeja de notificaciones del móvil (Android/iOS PWA) mediante `registration.showNotification` y `Notification` API con icono de la app, sonido, vibración y redirección al hacer clic.
+  - Botón de prueba *"Probar notificación"* en `/profile/settings/notifications` para verificar permisos y recepción al instante.
+- **Persistencia y Caché en Memoria SWR en Perfil, Search, Closet y Feed**:
+  - `store/searchStore.ts`, `store/profileStore.ts`, `store/wardrobeStore.ts` y `store/feedStore.ts` retienen las publicaciones, prendas y resultados en memoria.
+  - Al volver hacia atrás o alternar pestañas, los datos cargan de inmediato en 0ms sin parpadeos de skeletons en blanco.
+- **Gesto "Pull to Refresh" (Deslizar hacia abajo para recargar) en Móvil**:
+  - Componente `components/PullToRefresh.tsx` activo en móvil para **Feed (`/feed`), Search (`/search`), Closet (`/closet`) y Perfil (`/profile`)**.
+  - Detecta cuando el usuario está en el top de la pantalla y desliza hacia abajo, mostrando un spinner flotante con física elástica, vibración háptica al alcanzar el umbral de disparo y revalidación asíncrona de datos.
+- **Ajustes de Perfil Limpios (`/profile/settings`)**:
+  - Eliminada la tarjeta del plan pro de la pantalla principal de ajustes.
+- **Pasarela de Suscripción Stripe Operativa**:
+  - Creación de Stripe Checkout Sessions en modo suscripción con soporte de Apple Pay, Google Pay, tarjetas bancarias y Link.
+  - Página `/premium` actualizada con selector de planes (3,99 €/mes y 29,99 €/año) y pasarela conectada directamente a `/api/stripe/checkout`.
+- **Diseño Ultra Limpio de Cards en Móvil (Feed y Search)**:
+  - En las tarjetas de posts (`components/Feed/PostCard.tsx`), en vista móvil se ocultan el nombre/avatar del autor, el contador de likes y el degradado inferior (`hidden md:flex`), ofreciendo una cuadrícula visual inmersiva de imágenes a pantalla completa estilo Pinterest/Instagram donde el protagonismo es 100% de la prenda y el outfit. En escritorio se mantiene la información completa al hacer hover.
+
+### 12. Login Adaptativo al Sistema, Notificaciones Vistas en BD y Feed Móvil con Preview y Guardado (Agosto 2026)
+- **Página de Login Adaptativa (`app/(public)/auth/page.tsx`)**:
+  - En **Modo Claro**: Fondo blanco limpio (`bg-gray-50`), tarjeta de cristal blanco brillante, tipografías oscuras de alto contraste (`text-gray-900`), inputs con fondo claro (`bg-gray-50`) y bordes nítidos, botón de Google adaptativo y **logo oscuro con letras negras (`/klozet-logo.png`)** para legibilidad perfecta.
+  - En **Modo Oscuro**: Fondo grafito oscuro (`dark:bg-[#09090c]`), tarjeta oscura translúcida (`dark:bg-[#0d0d12]/90`), tipografías blancas (`dark:text-white`), inputs oscuros (`dark:bg-[#16161c]`) y **logo claro con letras blancas (`/klozet-logo-dark.png`)**.
+- **Persistencia en Base de Datos de Notificaciones Vistas (`public.notifications`)**:
+  - `store/realtimeStore.ts` y `components/Notifications/NotificationList.tsx`: Cada vez que se leen o marcan notificaciones, se ejecuta `UPDATE notifications SET read = true WHERE user_id = :id AND read = false`, persistiendo permanentemente en Supabase que están leídas.
+  - Sincronización del timestamp `last_viewed_activity` con `profiles.notification_settings` en la base de datos y `localStorage`.
+  - `components/NotificationToast.tsx` y `components/RealtimeProvider.tsx`: Se agregaron filtros de frescura (< 45s) y validación de `!notification.read`, impidiendo que notificaciones de sesiones pasadas se muestren como popups emergentes al volver a abrir la app.
+- **Diseño Ultra Limpio en Móvil para Feed y Buscador (`components/Feed/PostCard.tsx`)**:
+  - En las tarjetas de posts, en vista móvil se ocultan el nombre/avatar del autor, el contador de likes y el degradado inferior (`hidden md:flex`), ofreciendo una cuadrícula visual inmersiva de imágenes estilo editorial a pantalla completa.
+- **Vista Previa de Post, Look y Guardado al Mantener Presionado en Móvil (`components/Feed/PostPreviewModal.tsx`)**:
+  - Al mantener presionada una publicación en móvil (~450ms), se emite un pulso háptico y se despliega un modal con fondo difuminado completo (`backdrop-blur-2xl`) que cubre la pantalla y los navbars superior e inferior.
+  - La imagen se amplía con animación de resorte (`spring`) y esquinas redondeadas (`rounded-[36px]`).
+  - Consulta en tiempo real a Supabase el post y su outfit asociado (`outfits.image_url` o prendas). Muestra inicialmente la fotografía del post y, tras **2 segundos**, se desliza automáticamente de forma suave revelando el look/outfit del post con indicadores interactivos de paginación (`● ○` → `○ ●`).
+  - **Botón flotante "Guardar / Guardado" integrado**: Permite guardar o añadir la publicación a carpetas directamente desde el modal de vista previa.
+  - Al pulsar fuera de la imagen (en el fondo desenfocado) el modal se cierra con animación. Al pulsar sobre la imagen o tarjeta del modal, se abre directamente la página completa de la publicación (`/post/[id]`).
+
+
+
+
+
 
 
 

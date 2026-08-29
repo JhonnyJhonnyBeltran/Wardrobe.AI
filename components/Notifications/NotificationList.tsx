@@ -89,17 +89,18 @@ export default function NotificationList({ compact = false, onClose }: Notificat
         // hydration and end up overwriting the timestamp with "now" before notifications are shown.
         if (!hasMarkedViewedRef.current && typeof window !== 'undefined') {
             hasMarkedViewedRef.current = true;
-            const lv = localStorage.getItem('last_viewed_activity');
+            const lv = localStorage.getItem('last_viewed_activity') || (user?.notificationSettings as any)?.last_viewed_activity;
             if (lv) {
                 setLastViewedAt(new Date(lv).getTime());
+            } else {
+                setLastViewedAt(Date.now());
             }
             // Mark as viewed AFTER capturing the old timestamp into state.
-            // Use a small delay so the state is committed before we update localStorage.
             setTimeout(() => {
                 markActivityAsViewed(new Date().toISOString());
             }, 100);
         }
-    }, [user?.id, markActivityAsViewed]);
+    }, [user?.id, user?.notificationSettings, markActivityAsViewed]);
 
 
     const fetchNotifications = async (isLoadMore = false) => {

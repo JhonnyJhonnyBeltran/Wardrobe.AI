@@ -263,54 +263,6 @@ export default function SettingsPage() {
                         {t.profile.configuration}
                     </h2>
 
-                    {/* Suscripción & Kloe Pro Toggle Switch */}
-                    <Card className="p-5 mb-4 border border-[var(--brand-pink)]/30 bg-gradient-to-r from-[var(--card-bg)] via-[var(--brand-pink)]/5 to-[var(--card-bg)] shadow-sm">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-xl bg-[var(--brand-pink)]/15 flex items-center justify-center text-[var(--brand-pink)]">
-                                    <Crown className="w-5 h-5" />
-                                </div>
-                                <div>
-                                    <div className="flex items-center gap-2">
-                                        <span className="font-bold text-[var(--foreground)]">Kloe Pro</span>
-                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                                            isPremium()
-                                                ? 'bg-[var(--brand-pink)] text-white shadow-xs'
-                                                : 'bg-[var(--background-secondary)] text-[var(--foreground-tertiary)]'
-                                        }`}>
-                                            {isPremium() ? 'ACTIVO' : 'FREE'}
-                                        </span>
-                                    </div>
-                                    <div className="text-xs text-[var(--foreground-tertiary)] mt-0.5">
-                                        {isPremium() 
-                                            ? 'Estilista con IA ilimitada y análisis de fotos' 
-                                            : 'Activa Kloe Pro para estilismo ilimitado'}
-                                    </div>
-                                </div>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={async () => {
-                                    const willBePremium = !isPremium();
-                                    await togglePremium(willBePremium);
-                                    if (willBePremium) {
-                                        toast.success('¡Kloe Pro Activado! Tienes acceso ilimitado a Kloe');
-                                    } else {
-                                        toast.info('Plan gratuito activado');
-                                    }
-                                }}
-                                className={`relative inline-flex h-6 w-12 items-center rounded-full transition-colors focus:outline-none cursor-pointer ${
-                                    isPremium() ? 'bg-[var(--brand-pink)]' : 'bg-gray-300 dark:bg-gray-700'
-                                }`}
-                                aria-label="Alternar suscripción Kloe Pro"
-                            >
-                                <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform ${
-                                    isPremium() ? 'translate-x-6' : 'translate-x-1'
-                                }`} />
-                            </button>
-                        </div>
-                    </Card>
-
                     {/* Datos personales - Contexto §4F: Avatar, Nombre, Bio, Usuario */}
                     <Link href="/profile/settings/personal">
                         <Card className="p-5 mb-4 cursor-pointer transition-colors">

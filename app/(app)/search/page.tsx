@@ -3,31 +3,40 @@
 import { useState, useEffect } from 'react';
 import { Search as SearchIcon, X, Users, Image as ImageIcon, UserPlus, Check, Clock, Trash2 } from 'lucide-react';
 import PostCard, { type Post } from '@/components/Feed/PostCard';
-import { EmptyState, InfiniteScrollFooter } from '@/components';
+import { EmptyState, InfiniteScrollFooter, PullToRefresh } from '@/components';
 import { supabase } from '@/lib/supabase/client';
 
 import { useUser } from '@/store/userStore';
 import { useUiStore } from '@/store/uiStore';
+import { useSearchStore, SearchUserProfile } from '@/store/searchStore';
 import { useSearchHistory } from '@/lib/hooks';
 import Link from 'next/link';
 import { useRef, useCallback } from 'react';
 
-interface UserProfile {
-  id: string;
-  username: string;
-  full_name: string;
-  avatar_url?: string;
-  bio?: string;
-  followers_count?: number;
-  following_count?: number;
-}
+type UserProfile = SearchUserProfile;
 
 export default function SearchPage() {
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState<Post[]>([]);
-  const [userResults, setUserResults] = useState<UserProfile[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [debouncedQuery, setDebouncedQuery] = useState('');
+  const {
+    query,
+    debouncedQuery,
+    results,
+    userResults,
+    explorePosts,
+    loading,
+    postsHasMore,
+    usersHasMore,
+    hasInitialLoaded,
+    setQuery,
+    setDebouncedQuery,
+    setResults,
+    setUserResults,
+    setExplorePosts,
+    setLoading,
+    setPostsHasMore,
+    setUsersHasMore,
+    setHasInitialLoaded
+  } = useSearchStore();
+
   const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
   const [pendingRequestIds, setPendingRequestIds] = useState<Set<string>>(new Set());
   const { user } = useUser();
@@ -36,8 +45,6 @@ export default function SearchPage() {
   // Pagination states
   const [postsLoadingMore, setPostsLoadingMore] = useState(false);
   const [usersLoadingMore, setUsersLoadingMore] = useState(false);
-  const [postsHasMore, setPostsHasMore] = useState(true);
-  const [usersHasMore, setUsersHasMore] = useState(true);
   const [postsLoadError, setPostsLoadError] = useState(false);
   const [usersLoadError, setUsersLoadError] = useState(false);
 
@@ -51,16 +58,14 @@ export default function SearchPage() {
   const postsObserverElement = useRef<HTMLDivElement | null>(null);
   const usersObserverElement = useRef<HTMLDivElement | null>(null);
 
-
-
   // Debounce query for typing
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedQuery(query);
-    }, 500);
+    }, 400);
 
     return () => clearTimeout(handler);
-  }, [query]);
+  }, [query, setDebouncedQuery]);
 
   // Handle explicit search submission (save to history)
   const handleSearchSubmit = (e?: React.FormEvent) => {
@@ -71,20 +76,47 @@ export default function SearchPage() {
     }
   };
 
-  // Initial load 
-  useEffect(() => {
-    setLoading(true);
+  // Refresh handler for pull to refresh
+  const handleRefresh = async () => {
+    postsPageRef.current = 0;
+    usersPageRef.current = 0;
     if (debouncedQuery.trim()) {
-      // Unified search - fetch both posts and users simultaneously
+      await Promise.all([
+        searchPosts(debouncedQuery.trim(), false),
+        searchUsers(debouncedQuery.trim(), false)
+      ]);
+    } else {
+      await searchPosts('', false);
+    }
+  };
+
+  // Initial load with SWR in-memory caching
+  useEffect(() => {
+    if (debouncedQuery.trim()) {
+      // If we don't have results yet, show loading
+      if (results.length === 0) {
+        setLoading(true);
+      }
       const cleanQuery = debouncedQuery.trim();
       Promise.all([
         searchPosts(cleanQuery, false),
         searchUsers(cleanQuery, false)
       ]).finally(() => setLoading(false));
     } else {
-      // Fetch default trending/popular posts when no query
+      // If we already have explorePosts cached, display them instantly!
+      if (explorePosts.length > 0) {
+        setResults(explorePosts);
+        setLoading(false);
+        // Background revalidate silently
+        searchPosts('', false);
+      } else {
+        setLoading(true);
+        searchPosts('', false).finally(() => {
+          setLoading(false);
+          setHasInitialLoaded(true);
+        });
+      }
       setUserResults([]);
-      searchPosts('', false).finally(() => setLoading(false));
     }
   }, [debouncedQuery]);
 
@@ -477,8 +509,14 @@ export default function SearchPage() {
 
         if (isLoadMore) {
           setResults(prev => [...prev, ...formattedPosts]);
+          if (!searchTerm.trim()) {
+            setExplorePosts(prev => [...prev, ...formattedPosts]);
+          }
         } else {
           setResults(formattedPosts);
+          if (!searchTerm.trim()) {
+            setExplorePosts(formattedPosts);
+          }
         }
 
         setPostsHasMore(data.length === POSTS_PER_PAGE);
@@ -530,8 +568,9 @@ export default function SearchPage() {
   }, [loadMoreUsers, loadMorePosts, usersHasMore, postsHasMore, usersLoadingMore, postsLoadingMore, loading, usersLoadError, postsLoadError]);
 
   return (
-    <div className="min-h-[100dvh] w-full max-w-[100vw] overflow-x-hidden bg-[var(--background)] pb-24">
-      {/* Floating Header */}
+    <PullToRefresh onRefresh={handleRefresh}>
+      <div className="min-h-[100dvh] w-full max-w-[100vw] overflow-x-hidden bg-[var(--background)] pb-24">
+        {/* Floating Header */}
       <div className="fixed top-4 md:top-6 left-0 right-0 z-[4980] px-4 pointer-events-none flex justify-center">
         <div className="w-full max-w-2xl pointer-events-auto">
           <div className="relative w-full rounded-full bg-[var(--background)]/90 backdrop-blur-xl border border-[var(--border-color)] shadow-lg overflow-hidden transition-all duration-300 focus-within:shadow-xl focus-within:border-[var(--brand-pink)]">
@@ -775,6 +814,7 @@ export default function SearchPage() {
           }
         }
       `}</style>
-    </div>
+      </div>
+    </PullToRefresh>
   );
 }

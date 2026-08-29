@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { SquarePlus, Plus, PlusSquare, Send, Shirt, Layers, Image as ImageIcon, Sparkles } from 'lucide-react';
 import PostCard, { type Post } from '@/components/Feed/PostCard';
 import PremiumAdCard from '@/components/Feed/PremiumAdCard';
-import { LogoMark, EmptyState, InfiniteScrollFooter } from '@/components';
+import { LogoMark, EmptyState, InfiniteScrollFooter, PullToRefresh } from '@/components';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -264,122 +264,122 @@ export default function FeedPage() {
   }, [loadMorePosts, hasMore, loadingMore, loading, loadError]);
 
   return (
-    <div className="min-h-screen bg-[var(--background)] pb-24">
-      {/* Header */}
-      <header className="sticky top-0 z-30 bg-[var(--background)]/95 backdrop-blur-lg border-b border-[var(--border-color)]/50 md:hidden">
-        <div className="px-5 h-16 flex items-center justify-between">
-          <button
-            onClick={toggleCreateMenu}
-            className="p-2.5 -ml-2 text-[var(--brand-pink)] hover:bg-[var(--background-secondary)] rounded-full transition-all duration-200 transform hover:scale-110"
-          >
-            <Plus className="w-6 h-6" />
-          </button>
+    <PullToRefresh onRefresh={() => fetchPosts(false)}>
+      <div className="min-h-screen bg-[var(--background)] pb-24 md:pb-8">
+        {/* Top Header */}
+        <header className="sticky top-0 z-30 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-color)]">
+          <div className="px-5 h-16 flex items-center justify-between">
+            <button
+              onClick={toggleCreateMenu}
+              className="p-2.5 -ml-2 text-[var(--brand-pink)] hover:bg-[var(--background-secondary)] rounded-full transition-all duration-200 transform hover:scale-110"
+            >
+              <Plus className="w-6 h-6" />
+            </button>
 
-          <h1 className="text-xl font-bold tracking-tight text-[var(--foreground)] absolute left-1/2 -translate-x-1/2">Para ti</h1>
+            <h1 className="text-xl font-bold tracking-tight text-[var(--foreground)] absolute left-1/2 -translate-x-1/2">Para ti</h1>
 
-          <div className="flex items-center gap-1">
-            <Link href="/messages">
-              <button className="p-2.5 -mr-1 text-[var(--brand-pink)] hover:bg-[var(--background-secondary)] rounded-full transition-all duration-200 transform hover:scale-110 relative">
-                <Send className="w-6 h-6" />
-                {messageBadgeVisible && messageUnreadCount > 0 && (
-                  <span className="absolute top-1 right-0.5 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-[var(--brand-pink)] text-white text-[10px] font-bold rounded-full border-2 border-[var(--background)] shadow-sm">
-                    {messageUnreadCount > 99 ? '+99' : messageUnreadCount}
-                  </span>
-                )}
-              </button>
-            </Link>
+            <div className="flex items-center gap-1">
+              <Link href="/messages">
+                <button className="p-2.5 -mr-1 text-[var(--brand-pink)] hover:bg-[var(--background-secondary)] rounded-full transition-all duration-200 transform hover:scale-110 relative">
+                  <Send className="w-6 h-6" />
+                  {messageBadgeVisible && messageUnreadCount > 0 && (
+                    <span className="absolute top-1 right-0.5 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-[var(--brand-pink)] text-white text-[10px] font-bold rounded-full border-2 border-[var(--background)] shadow-sm">
+                      {messageUnreadCount > 99 ? '+99' : messageUnreadCount}
+                    </span>
+                  )}
+                </button>
+              </Link>
+            </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      {/* Feed Content */}
-      <div className="px-3 pt-4 md:px-6">
-        {
-          loading ? (
-            <div className="hidden md:block">
+        {/* Feed Content */}
+        <div className="px-3 pt-4 md:px-6">
+          {
+            loading ? (
+              <div className="hidden md:block">
+                <div className="masonry-grid">
+                  {[...Array(8)].map((_, i) => (
+                    <div key={i} className="break-inside-avoid mb-6">
+                      <div className="rounded-2xl overflow-hidden bg-[var(--background-secondary)]" style={{ height: [180, 220, 260, 200, 240][i % 5] }} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : posts.length === 0 ? (
+              <EmptyState
+                icon={PlusSquare}
+                title="No hay publicaciones aún."
+                description="Sé el primero en compartir tu estilo con la comunidad."
+                actionLabel="Crear publicación"
+                actionHref="/create-post"
+                fullHeight={true}
+              />
+            ) : (
               <div className="masonry-grid">
-                {[...Array(8)].map((_, i) => (
-                  <div key={i} className="break-inside-avoid mb-6">
-                    <div className="rounded-2xl overflow-hidden bg-[var(--background-secondary)]" style={{ height: [180, 220, 260, 200, 240][i % 5] }} />
+                {posts.map((post, index) => (
+                  <div key={post.id} className="contents">
+                    <div className="break-inside-avoid mb-6">
+                      <PostCard post={post} />
+                    </div>
+                    {(index + 1) % 15 === 0 && (
+                      <div key={`premium-ad-${index}`} className="break-inside-avoid mb-6 col-span-full">
+                        <PremiumAdCard />
+                      </div>
+                    )}
                   </div>
                 ))}
-              </div>
-            </div>
-          ) : posts.length === 0 ? (
-            <EmptyState
-              icon={PlusSquare}
-              title="No hay publicaciones aún."
-              description="Sé el primero en compartir tu estilo con la comunidad."
-              actionLabel="Crear publicación"
-              actionHref="/create-post"
-              fullHeight={true}
-            />
-          ) : (
-            <div className="masonry-grid">
-              {posts.map((post, index) => (
-                <div key={post.id} className="contents">
-                  <div className="break-inside-avoid mb-6">
-                    <PostCard post={post} />
-                  </div>
-                  {(index + 1) % 15 === 0 && (
-                    <div key={`premium-ad-${index}`} className="break-inside-avoid mb-6 col-span-full">
-                      <PremiumAdCard />
+
+                {loadingMore && (
+                  [...Array(3)].map((_, i) => (
+                    <div key={`skeleton-${i}`} className="break-inside-avoid mb-6">
+                      <div className="rounded-2xl overflow-hidden bg-[var(--background-secondary)] animate-pulse" style={{ height: [180, 220, 240][i % 3] }} />
                     </div>
-                  )}
-                </div>
-              ))}
+                  ))
+                )}
+              </div>
+            )
+          }
 
-              {loadingMore && (
-                [...Array(3)].map((_, i) => (
-                  <div key={`skeleton-${i}`} className="break-inside-avoid mb-6">
-                    <div className="rounded-2xl overflow-hidden bg-[var(--background-secondary)] animate-pulse" style={{ height: [180, 220, 240][i % 3] }} />
-                  </div>
-                ))
-              )}
+          {/* Infinite Scroll Trigger only if there are posts */}
+          {posts.length > 0 && hasMore && (
+            <div ref={observerElement} className="w-full flex items-center justify-center col-span-full">
+              <InfiniteScrollFooter
+                isLoading={loadingMore}
+                isError={loadError}
+                hasMore={hasMore}
+                hasItems={posts.length > 0}
+                onRetry={() => loadMorePosts()}
+                skeleton={<></>}
+              />
             </div>
-          )
-        }
+          )}
+        </div>
 
-        {/* Infinite Scroll Trigger only if there are posts */}
-        {posts.length > 0 && hasMore && (
-          <div ref={observerElement} className="w-full flex items-center justify-center col-span-full">
-            <InfiniteScrollFooter
-              isLoading={loadingMore}
-              isError={loadError}
-              hasMore={hasMore}
-              hasItems={posts.length > 0}
-              onRetry={() => loadMorePosts()}
-              skeleton={<></>}
-            />
-          </div>
-        )}
+        <style jsx global>{`
+          .masonry-grid {
+            column-count: 2;
+            column-gap: 0.5rem;
+          }
+          @media (min-width: 768px) {
+            .masonry-grid {
+              column-count: 3;
+              column-gap: 1rem;
+            }
+          }
+          @media (min-width: 1024px) {
+            .masonry-grid {
+              column-count: 4;
+              column-gap: 1rem;
+            }
+          }
+          @media (min-width: 1440px) {
+            .masonry-grid {
+              column-count: 5;
+            }
+          }
+        `}</style>
       </div>
-
-
-
-      <style jsx global>{`
-        .masonry-grid {
-          column-count: 2;
-          column-gap: 0.5rem;
-        }
-        @media (min-width: 768px) {
-          .masonry-grid {
-            column-count: 3;
-            column-gap: 1rem;
-          }
-        }
-        @media (min-width: 1024px) {
-          .masonry-grid {
-            column-count: 4;
-            column-gap: 1rem;
-          }
-        }
-        @media (min-width: 1440px) {
-          .masonry-grid {
-            column-count: 5;
-          }
-        }
-      `}</style>
-    </div>
+    </PullToRefresh>
   );
 }

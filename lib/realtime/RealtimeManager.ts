@@ -36,6 +36,7 @@ class RealtimeManager {
   // State
   private onlineUsers: Set<string> = new Set();
   private typingTimeouts: Map<string, NodeJS.Timeout> = new Map();
+  private sessionStartTime: number = Date.now();
 
   private constructor() {}
 
@@ -62,9 +63,20 @@ class RealtimeManager {
     }
 
     this.userId = userId;
+    this.sessionStartTime = Date.now();
+    this.lastPollTime = Date.now();
     console.log('[RealtimeManager] Initializing for user:', userId);
 
     try {
+      // 0. Mark existing DB notifications as read so they never re-trigger
+      supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('user_id', userId)
+        .eq('read', false)
+        .then(() => {})
+        .catch(() => {});
+
       // 1. Setup global notifications channel
       await this.setupGlobalChannel();
 
@@ -72,7 +84,6 @@ class RealtimeManager {
       await this.setupPresenceChannel(userInfo);
       
       // Configure robust polling fallback in case PostgreSQL triggers or replication are disabled
-      this.lastPollTime = Date.now();
       if (this.pollInterval) clearInterval(this.pollInterval);
       this.pollInterval = setInterval(() => this.pollRecentActivity(), 15000);
 
@@ -445,7 +456,8 @@ class RealtimeManager {
 
     try {
       const now = Date.now();
-      const timeSinceLastPoll = new Date(this.lastPollTime).toISOString();
+      const cutoff = Math.max(this.lastPollTime, this.sessionStartTime);
+      const timeSinceLastPoll = new Date(cutoff).toISOString();
       this.lastPollTime = now;
 
       // 1. Fetch our own posts

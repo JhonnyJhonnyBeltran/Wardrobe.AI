@@ -27,7 +27,7 @@ import {
   Loader2
 } from 'lucide-react';
 
-import { Avatar, Button as UiButton, OutfitCard, EmptyState, Skeleton, SkeletonProfile, DiscoveredStyleBanner, AvatarModal } from '@/components';
+import { Avatar, Button as UiButton, OutfitCard, EmptyState, Skeleton, SkeletonProfile, DiscoveredStyleBanner, AvatarModal, PullToRefresh } from '@/components';
 import FolderPreview from '@/components/FolderPreview';
 import { useUiStore } from '@/store/uiStore';
 
@@ -181,7 +181,8 @@ export default function ProfilePage() {
   );
 
   return (
-    <div className="min-h-screen bg-[var(--background)] pb-24">
+    <PullToRefresh onRefresh={async () => { if (user?.id) await fetchProfileData(user.id, true); }}>
+      <div className="min-h-screen bg-[var(--background)] pb-24">
 
       {/* Create Folder Modal */}
       <AnimatePresence>
@@ -559,10 +560,11 @@ export default function ProfilePage() {
       <AvatarModal
         isOpen={showAvatarModal}
         onClose={() => setShowAvatarModal(false)}
-        src={user.avatar || null}
-        name={user.name || undefined}
-        username={user.username || undefined}
+        src={user?.avatar || null}
+        name={user?.name || undefined}
+        username={user?.username || undefined}
       />
-    </div>
+      </div>
+    </PullToRefresh>
   );
 }

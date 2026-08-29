@@ -72,13 +72,35 @@ export const useRealtimeStore = create<RealtimeStore>((set, get) => ({
   lastViewedActivity: null,
 
   checkActivity: async (userId: string) => {
-    // 1. Get last viewed time from local storage
-    const lastViewed = typeof window !== 'undefined' ? localStorage.getItem('last_viewed_activity') : null;
-    const lastViewedDate = lastViewed ? new Date(lastViewed) : new Date(0); // Epoch if never viewed
-
-    // 2. Count new activity (Follows, Likes, Comments)
     const { supabase } = await import('@/lib/supabase/client');
 
+    // 1. Get last viewed time from local storage or profile
+    let lastViewed = typeof window !== 'undefined' ? localStorage.getItem('last_viewed_activity') : null;
+
+    if (!lastViewed) {
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('notification_settings')
+          .eq('id', userId)
+          .maybeSingle();
+
+        const dbLastViewed = (profile?.notification_settings as any)?.last_viewed_activity;
+        if (dbLastViewed) {
+          lastViewed = dbLastViewed;
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('last_viewed_activity', dbLastViewed);
+          }
+        }
+      } catch (err) {
+        console.warn('[RealtimeStore] Error fetching db last_viewed:', err);
+      }
+    }
+
+    // Default to last 24 hours if completely new, avoiding full historical dump
+    const lastViewedDate = lastViewed ? new Date(lastViewed) : new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+    // 2. Count new activity (Follows, Likes, Comments)
     try {
       // First, get all my posts to check for likes and comments
       const { data: myPosts } = await supabase
@@ -132,31 +154,87 @@ export const useRealtimeStore = create<RealtimeStore>((set, get) => ({
   },
 
   markActivityAsViewed: (timestampISO?: string) => {
-    // If a specific server timestamp is provided (from the newest notification), use it.
-    // Otherwise, fallback to current time + 5 minutes.
-    const now = timestampISO || new Date(Date.now() + 5 * 60000).toISOString();
+    const now = timestampISO || new Date().toISOString();
     if (typeof window !== 'undefined') {
       localStorage.setItem('last_viewed_activity', now);
     }
     set({ unreadCount: 0 });
+
+    // Sync to Supabase in background
+    import('@/lib/supabase/client').then(async ({ supabase }) => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          // 1. Mark all rows in notifications table as read
+          await supabase
+            .from('notifications')
+            .update({ read: true })
+            .eq('user_id', user.id)
+            .eq('read', false);
+
+          // 2. Update profile timestamp
+          const { data: currentProfile } = await supabase
+            .from('profiles')
+            .select('notification_settings')
+            .eq('id', user.id)
+            .maybeSingle();
+
+          const currentSettings = (currentProfile?.notification_settings as Record<string, any>) || {};
+          await supabase
+            .from('profiles')
+            .update({
+              notification_settings: {
+                ...currentSettings,
+                last_viewed_activity: now,
+              }
+            } as any)
+            .eq('id', user.id);
+        }
+      } catch (err) {
+        console.warn('[RealtimeStore] Could not sync last_viewed / mark notifications read:', err);
+      }
+    }).catch(() => {});
   },
 
   incrementUnreadCount: () => set(state => ({ unreadCount: state.unreadCount + 1 })),
 
-  // Stub methods for compatibility if something else uses them (though we removed usages)
+  // Stub methods for compatibility
   addNotification: (notification) => set(state => {
-    // Evitar duplicados
+    // Only add if not already read and recent (< 60s)
+    if (notification.read) return state;
+    if (notification.created_at) {
+      const diff = Date.now() - new Date(notification.created_at).getTime();
+      if (diff > 60 * 1000) return state;
+    }
     if (state.notifications.some(n => n.id === notification.id)) return state;
     return {
       notifications: [notification, ...state.notifications].slice(0, 10),
     };
   }),
-  markAsRead: (id) => set(state => ({
-    notifications: state.notifications.map(n => n.id === id ? { ...n, read: true } : n)
-  })),
-  markAllAsRead: () => set(state => ({
-    notifications: state.notifications.map(n => ({ ...n, read: true }))
-  })),
+  markAsRead: (id) => {
+    set(state => ({
+      notifications: state.notifications.map(n => n.id === id ? { ...n, read: true } : n)
+    }));
+    import('@/lib/supabase/client').then(async ({ supabase }) => {
+      try {
+        await supabase.from('notifications').update({ read: true }).eq('id', id);
+      } catch {}
+    });
+  },
+  markAllAsRead: () => {
+    set(state => ({
+      notifications: state.notifications.map(n => ({ ...n, read: true })),
+      unreadCount: 0,
+    }));
+    import('@/lib/supabase/client').then(async ({ supabase }) => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          await supabase.from('notifications').update({ read: true }).eq('user_id', user.id).eq('read', false);
+        }
+      } catch {}
+    });
+  },
   removeNotification: (id) => set(state => ({
     notifications: state.notifications.filter(n => n.id !== id)
   })),
