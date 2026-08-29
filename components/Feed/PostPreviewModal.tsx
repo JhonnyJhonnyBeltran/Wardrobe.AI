@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Sparkles, Layers, Loader2, ExternalLink, Bookmark } from 'lucide-react';
+import { Loader2, Bookmark } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
 
 interface PostPreviewModalProps {
@@ -34,6 +34,11 @@ export default function PostPreviewModal({
   const [outfitImage, setOutfitImage] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [isSavedState, setIsSavedState] = useState<boolean>(isSaved);
+
+  const touchStartX = useRef<number | null>(null);
+  const touchEndX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
+  const hasSwiped = useRef<boolean>(false);
 
   useEffect(() => {
     setIsSavedState(isSaved);
@@ -107,7 +112,39 @@ export default function PostPreviewModal({
     };
   }, [isOpen, outfitImage]);
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.targetTouches[0].clientX;
+    touchStartY.current = e.targetTouches[0].clientY;
+    touchEndX.current = null;
+    hasSwiped.current = false;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.targetTouches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    if (touchStartX.current === null || touchEndX.current === null) return;
+    const distanceX = touchStartX.current - touchEndX.current;
+    const minSwipeDistance = 35;
+
+    if (Math.abs(distanceX) > minSwipeDistance) {
+      hasSwiped.current = true;
+      if (distanceX > 0 && outfitImage) {
+        // Deslizar a la izquierda: Ir al outfit
+        setActiveSlide(1);
+      } else if (distanceX < 0) {
+        // Deslizar a la derecha: Volver a la foto del post
+        setActiveSlide(0);
+      }
+    }
+  };
+
   const handleCardClick = (e: React.MouseEvent) => {
+    if (hasSwiped.current) {
+      hasSwiped.current = false;
+      return;
+    }
     e.stopPropagation();
     onClose();
     router.push(`/post/${postId}`);
@@ -126,35 +163,42 @@ export default function PostPreviewModal({
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center p-4 selection:bg-[var(--brand-pink)] selection:text-white">
-          {/* Blurred Backdrop - Covers entire screen including navbars */}
+          {/* Translucent Blurred Backdrop - Lets the page content and navbar show through blurred smoothly */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
-            className="absolute inset-0 bg-black/80 backdrop-blur-2xl"
-            onClick={onClose}
+            className="absolute inset-0 bg-black/40 backdrop-blur-xl dark:bg-black/50"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onClose();
+            }}
           />
 
           {/* Modal Card with Spring Expand Animation */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.82, y: 30 }}
+            initial={{ opacity: 0, scale: 0.82, y: 25 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.82, y: 30 }}
+            exit={{ opacity: 0, scale: 0.82, y: 25 }}
             transition={{ type: 'spring', stiffness: 340, damping: 28 }}
             onClick={handleCardClick}
-            className="relative z-10 w-full max-w-[340px] sm:max-w-[380px] aspect-[3/4] sm:aspect-[4/5] rounded-[36px] overflow-hidden shadow-[0_30px_90px_-15px_rgba(0,0,0,0.9)] border border-white/20 bg-[#121216] cursor-pointer group"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            className="relative z-10 w-full max-w-[340px] sm:max-w-[380px] aspect-[3/4] sm:aspect-[4/5] rounded-[36px] overflow-hidden shadow-[0_25px_70px_-15px_rgba(0,0,0,0.6)] border border-white/20 dark:border-white/15 bg-[#121216] cursor-pointer group"
           >
-            {/* Sliding Image Container */}
-            <div className="relative w-full h-full overflow-hidden">
+            {/* Sliding Image Container without foggy vignette */}
+            <div className="relative w-full h-full overflow-hidden select-none">
               <AnimatePresence initial={false} mode="wait">
                 {activeSlide === 0 ? (
                   <motion.div
                     key="post-slide"
-                    initial={{ opacity: 0, x: -30 }}
+                    initial={{ opacity: 0, x: -40 }}
                     animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -100 }}
-                    transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                    exit={{ opacity: 0, x: -80 }}
+                    transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
                     className="absolute inset-0 w-full h-full"
                   >
                     {postImage ? (
@@ -175,10 +219,10 @@ export default function PostPreviewModal({
                 ) : (
                   <motion.div
                     key="outfit-slide"
-                    initial={{ opacity: 0, x: 100 }}
+                    initial={{ opacity: 0, x: 80 }}
                     animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 30 }}
-                    transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                    exit={{ opacity: 0, x: 40 }}
+                    transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
                     className="absolute inset-0 w-full h-full"
                   >
                     {outfitImage ? (
@@ -199,44 +243,20 @@ export default function PostPreviewModal({
                 )}
               </AnimatePresence>
 
-              {/* Gradient Vignette */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 pointer-events-none" />
-
-              {/* Top Status Pill */}
-              <div className="absolute top-4 left-4 right-4 flex items-center justify-between pointer-events-none">
-                <div className="bg-black/50 backdrop-blur-md border border-white/20 px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg">
-                  {activeSlide === 0 ? (
-                    <>
-                      <Sparkles className="w-3.5 h-3.5 text-[var(--brand-pink)]" />
-                      <span className="text-xs font-semibold text-white tracking-wide">Publicación</span>
-                    </>
-                  ) : (
-                    <>
-                      <Layers className="w-3.5 h-3.5 text-[var(--brand-pink)]" />
-                      <span className="text-xs font-semibold text-white tracking-wide">Look Completo</span>
-                    </>
-                  )}
-                </div>
-
-                <div className="bg-black/50 backdrop-blur-md border border-white/20 px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg text-white/90">
-                  <span className="text-[11px] font-medium">Tocar para abrir</span>
-                  <ExternalLink className="w-3 h-3" />
-                </div>
-              </div>
-
               {/* Bottom Pagination Dots */}
-              <div className="absolute bottom-4 left-0 right-0 flex flex-col items-center gap-2 pointer-events-none">
-                {outfitImage && (
-                  <div className="flex items-center gap-2 bg-black/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
+              {outfitImage && (
+                <div className="absolute bottom-4 left-0 right-0 flex justify-center z-10">
+                  <div className="flex items-center gap-2 bg-black/40 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/20 shadow-lg">
                     <button
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
                         setActiveSlide(0);
                       }}
-                      className={`w-2 h-2 rounded-full transition-all ${
-                        activeSlide === 0 ? 'bg-[var(--brand-pink)] w-5' : 'bg-white/40'
+                      className={`h-2 rounded-full transition-all ${
+                        activeSlide === 0 ? 'bg-[var(--brand-pink)] w-6' : 'bg-white/50 w-2 hover:bg-white'
                       }`}
+                      aria-label="Ver foto de la publicación"
                     />
                     <button
                       type="button"
@@ -244,13 +264,14 @@ export default function PostPreviewModal({
                         e.stopPropagation();
                         setActiveSlide(1);
                       }}
-                      className={`w-2 h-2 rounded-full transition-all ${
-                        activeSlide === 1 ? 'bg-[var(--brand-pink)] w-5' : 'bg-white/40'
+                      className={`h-2 rounded-full transition-all ${
+                        activeSlide === 1 ? 'bg-[var(--brand-pink)] w-6' : 'bg-white/50 w-2 hover:bg-white'
                       }`}
+                      aria-label="Ver foto del look"
                     />
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </motion.div>
 
@@ -278,3 +299,4 @@ export default function PostPreviewModal({
     </AnimatePresence>
   );
 }
+
