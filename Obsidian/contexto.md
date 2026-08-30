@@ -341,6 +341,21 @@ En cada conversación, el backend alimenta a CloSy con:
   - Elevación de la capa modal de guardado a `z-[100000]`.
   - Al abrir el modal de guardar en carpeta desde la vista previa (vía *"Añadir a carpeta"* en el toast), el modal aparece inmediatamente en primer plano nítido y enfocado por encima de la vista previa, sin quedar oscurecido ni con efecto borroso.
 
+### 15. Carga de 40 Posts por Bloque y Caché Persistente Sin Tiempos de Espera (Agosto 2026)
+- **Feed (`app/(app)/feed/page.tsx` y `store/feedStore.ts`)**:
+  - Carga masiva de **40 posts por bloque** (`POSTS_PER_PAGE = 40`) de un tirón.
+  - Al hacer scroll infinito hacia abajo, se cargan bloques sucesivos de 40 posts más.
+  - **Caché Persistente con Zustand & LocalStorage (`klozet_feed_cache`)**: Guarda los 40 posts en memoria local para que al abrir la app o regresar de cualquier otra pantalla la carga sea **instantánea (0ms)** sin pantallas de carga ni spinners. Revalidación silenciosa en segundo plano (SWR) sólo si los datos tienen más de 2 minutos.
+- **Búsqueda y Explorar (`app/(app)/search/page.tsx` y `store/searchStore.ts`)**:
+  - Cuadrícula de explorar configurada a **40 posts por página** (`POSTS_PER_PAGE = 40`).
+  - Al scrollear carga otras 40 publicaciones con afinidad de estilo y likes.
+  - **Caché Persistente (`klozet_search_cache`)**: Persiste los 40 posts exploratorios para navegación inmediata sin parpadeos.
+- **Perfil de Usuario (`app/(app)/profile/page.tsx` y `store/profileStore.ts`)**:
+  - Tanto la pestaña de Posts como la de Guardados cargan **40 publicaciones de un tirón** (`PROFILE_POSTS_PER_PAGE = 40`).
+  - Infinite scroll integrado con `IntersectionObserver` que descarga 40 publicaciones adicionales al llegar al final.
+  - **Caché Persistente (`klozet_profile_cache`)**: Los datos del perfil (avatar, estadísticas, carpetas, publicaciones y guardados) se muestran de inmediato desde caché sin mostrar skeletons molestos cuando ya hay contenido cargado.
+
+
 
 
 

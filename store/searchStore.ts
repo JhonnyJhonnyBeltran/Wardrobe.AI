@@ -1,6 +1,7 @@
 'use client';
 
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import { type Post } from '@/components/Feed/PostCard';
 
 export interface SearchUserProfile {
@@ -42,56 +43,69 @@ interface SearchState {
   resetSearch: () => void;
 }
 
-export const useSearchStore = create<SearchState>((set, get) => ({
-  query: '',
-  debouncedQuery: '',
-  results: [],
-  userResults: [],
-  explorePosts: [],
-  loading: false,
-  postsHasMore: true,
-  usersHasMore: true,
-  postsPage: 0,
-  usersPage: 0,
-  hasInitialLoaded: false,
-  lastFetchedAt: 0,
+export const useSearchStore = create<SearchState>()(
+  persist(
+    (set, get) => ({
+      query: '',
+      debouncedQuery: '',
+      results: [],
+      userResults: [],
+      explorePosts: [],
+      loading: false,
+      postsHasMore: true,
+      usersHasMore: true,
+      postsPage: 0,
+      usersPage: 0,
+      hasInitialLoaded: false,
+      lastFetchedAt: 0,
 
-  setQuery: (query) => set({ query }),
-  setDebouncedQuery: (debouncedQuery) => set({ debouncedQuery }),
-  
-  setResults: (updater) => {
-    const current = get().results;
-    const next = typeof updater === 'function' ? updater(current) : updater;
-    set({ results: next });
-  },
+      setQuery: (query) => set({ query }),
+      setDebouncedQuery: (debouncedQuery) => set({ debouncedQuery }),
+      
+      setResults: (updater) => {
+        const current = get().results;
+        const next = typeof updater === 'function' ? updater(current) : updater;
+        set({ results: next });
+      },
 
-  setUserResults: (updater) => {
-    const current = get().userResults;
-    const next = typeof updater === 'function' ? updater(current) : updater;
-    set({ userResults: next });
-  },
+      setUserResults: (updater) => {
+        const current = get().userResults;
+        const next = typeof updater === 'function' ? updater(current) : updater;
+        set({ userResults: next });
+      },
 
-  setExplorePosts: (updater) => {
-    const current = get().explorePosts;
-    const next = typeof updater === 'function' ? updater(current) : updater;
-    set({ explorePosts: next, lastFetchedAt: Date.now() });
-  },
+      setExplorePosts: (updater) => {
+        const current = get().explorePosts;
+        const next = typeof updater === 'function' ? updater(current) : updater;
+        set({ explorePosts: next, lastFetchedAt: Date.now(), hasInitialLoaded: true });
+      },
 
-  setLoading: (loading) => set({ loading }),
-  setPostsHasMore: (postsHasMore) => set({ postsHasMore }),
-  setUsersHasMore: (usersHasMore) => set({ usersHasMore }),
-  setPostsPage: (postsPage) => set({ postsPage }),
-  setUsersPage: (usersPage) => set({ usersPage }),
-  setHasInitialLoaded: (hasInitialLoaded) => set({ hasInitialLoaded }),
+      setLoading: (loading) => set({ loading }),
+      setPostsHasMore: (postsHasMore) => set({ postsHasMore }),
+      setUsersHasMore: (usersHasMore) => set({ usersHasMore }),
+      setPostsPage: (postsPage) => set({ postsPage }),
+      setUsersPage: (usersPage) => set({ usersPage }),
+      setHasInitialLoaded: (hasInitialLoaded) => set({ hasInitialLoaded }),
 
-  resetSearch: () => set({
-    query: '',
-    debouncedQuery: '',
-    results: [],
-    userResults: [],
-    postsPage: 0,
-    usersPage: 0,
-    postsHasMore: true,
-    usersHasMore: true
-  })
-}));
+      resetSearch: () => set({
+        query: '',
+        debouncedQuery: '',
+        results: get().explorePosts,
+        userResults: [],
+        postsPage: 0,
+        usersPage: 0,
+        postsHasMore: true,
+        usersHasMore: true
+      })
+    }),
+    {
+      name: 'klozet_search_cache',
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        explorePosts: state.explorePosts.slice(0, 40),
+        lastFetchedAt: state.lastFetchedAt,
+        hasInitialLoaded: state.hasInitialLoaded,
+      }),
+    }
+  )
+);

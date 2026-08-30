@@ -52,8 +52,8 @@ export default function SearchPage() {
 
   const postsPageRef = useRef(0);
   const usersPageRef = useRef(0);
-  const POSTS_PER_PAGE = 8;
-  const USERS_PER_PAGE = 10;
+  const POSTS_PER_PAGE = 40;
+  const USERS_PER_PAGE = 20;
 
   const postsObserverElement = useRef<HTMLDivElement | null>(null);
   const usersObserverElement = useRef<HTMLDivElement | null>(null);
@@ -107,8 +107,11 @@ export default function SearchPage() {
       if (explorePosts.length > 0) {
         setResults(explorePosts);
         setLoading(false);
-        // Background revalidate silently
-        searchPosts('', false);
+        // Only background revalidate silently if data is older than 2.5 minutes
+        const { lastFetchedAt } = useSearchStore.getState();
+        if (Date.now() - lastFetchedAt > 150000) {
+          searchPosts('', false);
+        }
       } else {
         setLoading(true);
         searchPosts('', false).finally(() => {

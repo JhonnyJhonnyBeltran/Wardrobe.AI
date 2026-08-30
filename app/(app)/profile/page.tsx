@@ -12,7 +12,7 @@ import { supabase } from '@/lib/supabase/client';
 import * as followService from '@/lib/services/followService';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Menu,
   Settings,
@@ -62,11 +62,17 @@ export default function ProfilePage() {
     selectedFolder,
     activeTab,
     isLoading,
+    postsHasMore,
+    savedHasMore,
+    loadingMorePosts,
+    loadingMoreSaved,
     setActiveTab,
     setSelectedFolder,
     setFolders,
     setSavedPosts,
     fetchProfileData,
+    fetchMorePosts,
+    fetchMoreSavedPosts,
     fetchFolders
   } = useProfileStore();
 
@@ -76,6 +82,33 @@ export default function ProfilePage() {
   const [folderToDelete, setFolderToDelete] = useState<SaveFolder | null>(null);
   const [isDeletingFolder, setIsDeletingFolder] = useState(false);
   const [showAvatarModal, setShowAvatarModal] = useState(false);
+
+  const postsObserverRef = useRef<HTMLDivElement | null>(null);
+  const savedObserverRef = useRef<HTMLDivElement | null>(null);
+
+  // Infinite scroll for posts tab (loads 40 more)
+  useEffect(() => {
+    if (!postsHasMore || loadingMorePosts || activeTab !== 'posts' || !user?.id) return;
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        fetchMorePosts(user.id);
+      }
+    }, { threshold: 0.1 });
+    if (postsObserverRef.current) observer.observe(postsObserverRef.current);
+    return () => observer.disconnect();
+  }, [postsHasMore, loadingMorePosts, activeTab, user?.id, fetchMorePosts]);
+
+  // Infinite scroll for saved tab (loads 40 more)
+  useEffect(() => {
+    if (!savedHasMore || loadingMoreSaved || activeTab !== 'saved' || !user?.id) return;
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        fetchMoreSavedPosts(user.id);
+      }
+    }, { threshold: 0.1 });
+    if (savedObserverRef.current) observer.observe(savedObserverRef.current);
+    return () => observer.disconnect();
+  }, [savedHasMore, loadingMoreSaved, activeTab, user?.id, fetchMoreSavedPosts]);
 
   // Create folder
   const createFolder = async () => {
@@ -420,7 +453,7 @@ export default function ProfilePage() {
                 transition={{ duration: 0.2 }}
                 className="p-0.5"
               >
-                {isLoading ? (
+                {isLoading && posts.length === 0 ? (
                   <div className="grid grid-cols-3 gap-0.5">
                     {[...Array(9)].map((_, i) => (
                       <Skeleton key={i} className="aspect-square rounded-none animate-pulse" />
@@ -444,6 +477,11 @@ export default function ProfilePage() {
                         <img src={post.image_url} alt="Post" className="w-full h-full object-cover" />
                       </Link>
                     ))}
+                    {postsHasMore && (
+                      <div ref={postsObserverRef} className="col-span-3 py-6 flex justify-center items-center">
+                        {loadingMorePosts && <Loader2 className="w-6 h-6 animate-spin text-[var(--brand-pink)]" />}
+                      </div>
+                    )}
                   </div>
                 )}
               </motion.div>
@@ -519,7 +557,7 @@ export default function ProfilePage() {
                     )}
                   </div>
 
-                  {isLoading ? (
+                  {isLoading && savedPosts.length === 0 ? (
                     <div className="grid grid-cols-3 gap-0.5">
                       {[...Array(9)].map((_, i) => (
                         <Skeleton key={i} className="aspect-square rounded-none animate-pulse" />
@@ -546,6 +584,11 @@ export default function ProfilePage() {
                           </div>
                         </Link>
                       ))}
+                      {savedHasMore && (
+                        <div ref={savedObserverRef} className="col-span-3 py-6 flex justify-center items-center">
+                          {loadingMoreSaved && <Loader2 className="w-6 h-6 animate-spin text-[var(--brand-pink)]" />}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

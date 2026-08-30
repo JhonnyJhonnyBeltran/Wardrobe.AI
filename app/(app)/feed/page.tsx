@@ -1,13 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { SquarePlus, Plus, PlusSquare, Send, Shirt, Layers, Image as ImageIcon, Sparkles } from 'lucide-react';
-import PostCard, { type Post } from '@/components/Feed/PostCard';
+import { Plus, PlusSquare, Send } from 'lucide-react';
+import PostCard from '@/components/Feed/PostCard';
 import PremiumAdCard from '@/components/Feed/PremiumAdCard';
-import { LogoMark, EmptyState, InfiniteScrollFooter, PullToRefresh } from '@/components';
+import { EmptyState, InfiniteScrollFooter, PullToRefresh } from '@/components';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useRef, useCallback } from 'react';
 import { useUiStore } from '@/store/uiStore';
 import { supabase } from '@/lib/supabase/client';
@@ -18,7 +17,7 @@ import { useFeedStore } from '@/store/feedStore';
 import { getFollowing } from '@/lib/services/followService';
 
 export default function FeedPage() {
-  const { posts, setPosts, hasMore, setHasMore } = useFeedStore();
+  const { posts, setPosts, hasMore, setHasMore, lastFetchedAt } = useFeedStore();
   const [loading, setLoading] = useState(posts.length === 0);
   const [loadingMore, setLoadingMore] = useState(false);
   const [loadError, setLoadError] = useState(false);
@@ -27,15 +26,15 @@ export default function FeedPage() {
   const router = useRouter();
 
   const pageRef = useRef(0);
-  // More posts per page on desktop for full scroll
-  const POSTS_PER_PAGE = 12;
+  // 40 posts per chunk for instant bulk scrolling
+  const POSTS_PER_PAGE = 40;
   const observerElement = useRef<HTMLDivElement | null>(null);
 
   // Message notifications
   const messageUnreadCount = useMessageStore(selectTotalUnread);
   const messageBadgeVisible = useMessageStore(selectBadgeVisible);
 
-  const fetchPosts = useCallback(async (isLoadMore = false) => {
+  const fetchPosts = useCallback(async (isLoadMore = false, force = false) => {
     try {
       setLoadError(false);
       if (isLoadMore) {
@@ -47,8 +46,16 @@ export default function FeedPage() {
       }
 
       if (!user) {
-        setPosts([]);
-        setHasMore(false);
+        if (!isLoadMore) {
+          setPosts([]);
+          setHasMore(false);
+          setLoading(false);
+        }
+        return;
+      }
+
+      // If already have fresh posts in cache and not forced, skip network call
+      if (!isLoadMore && !force && posts.length > 0 && Date.now() - lastFetchedAt < 120000) {
         setLoading(false);
         return;
       }
@@ -97,7 +104,7 @@ export default function FeedPage() {
           query = query.not('user_id', 'in', `(${targetIds.join(',')})`);
         }
 
-        const { data: suggestions } = await query.range(currentPage * 6, (currentPage * 6) + 5);
+        const { data: suggestions } = await query.range(currentPage * 20, (currentPage * 20) + 19);
         if (suggestions && suggestions.length > 0) {
           suggestedPostsData = suggestions.map((p: any) => ({ ...p, isSuggested: true }));
         }
@@ -236,14 +243,19 @@ export default function FeedPage() {
       setLoading(false);
       setLoadingMore(false);
     }
-  }, [user?.id, user?.preferredStyles]);
+  }, [user?.id, user?.preferredStyles, lastFetchedAt]);
 
-  // Initial Fetch - fetch when user is available or changes
+  // Initial Fetch - only fetch if data is stale or empty
   useEffect(() => {
-    if (user) {
-      fetchPosts(false);
+    if (user?.id) {
+      const isFresh = posts.length > 0 && Date.now() - lastFetchedAt < 120000;
+      if (!isFresh) {
+        fetchPosts(false);
+      } else {
+        setLoading(false);
+      }
     }
-  }, [user, fetchPosts]);
+  }, [user?.id]);
 
   const loadMorePosts = useCallback(() => {
     if (loading || loadingMore || !hasMore || loadError) return;
@@ -264,7 +276,7 @@ export default function FeedPage() {
   }, [loadMorePosts, hasMore, loadingMore, loading, loadError]);
 
   return (
-    <PullToRefresh onRefresh={() => fetchPosts(false)}>
+    <PullToRefresh onRefresh={() => fetchPosts(false, true)}>
       <div className="min-h-screen bg-[var(--background)] pb-24 md:pb-8">
         {/* Top Header */}
         <header className="sticky top-0 z-30 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-color)]">
@@ -296,7 +308,7 @@ export default function FeedPage() {
         {/* Feed Content */}
         <div className="px-3 pt-4 md:px-6">
           {
-            loading ? (
+            loading && posts.length === 0 ? (
               <div className="hidden md:block">
                 <div className="masonry-grid">
                   {[...Array(8)].map((_, i) => (
@@ -359,24 +371,30 @@ export default function FeedPage() {
         <style jsx global>{`
           .masonry-grid {
             column-count: 2;
-            column-gap: 0.5rem;
+            column-gap: 10px;
           }
           @media (min-width: 768px) {
             .masonry-grid {
               column-count: 3;
-              column-gap: 1rem;
+              column-gap: 16px;
             }
           }
           @media (min-width: 1024px) {
             .masonry-grid {
               column-count: 4;
-              column-gap: 1rem;
+              column-gap: 20px;
             }
           }
-          @media (min-width: 1440px) {
+          @media (min-width: 1280px) {
             .masonry-grid {
               column-count: 5;
+              column-gap: 24px;
             }
+          }
+          .break-inside-avoid {
+            break-inside: avoid;
+            page-break-inside: avoid;
+            -webkit-column-break-inside: avoid;
           }
         `}</style>
       </div>
