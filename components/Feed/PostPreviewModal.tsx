@@ -4,7 +4,8 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Loader2, Bookmark } from 'lucide-react';
+import { Loader2, Bookmark, Heart } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase/client';
 
 interface PostPreviewModalProps {
@@ -15,6 +16,8 @@ interface PostPreviewModalProps {
   postTitle?: string;
   isSaved?: boolean;
   onToggleSave?: (e: React.MouseEvent) => void;
+  isLiked?: boolean;
+  onToggleLike?: (e: React.MouseEvent) => void;
   hideSaveButton?: boolean;
   sourceRect?: { top: number; left: number; width: number; height: number } | null;
 }
@@ -27,6 +30,8 @@ export default function PostPreviewModal({
   postTitle,
   isSaved = false,
   onToggleSave,
+  isLiked = false,
+  onToggleLike,
   hideSaveButton = false,
   sourceRect = null,
 }: PostPreviewModalProps) {
@@ -36,6 +41,7 @@ export default function PostPreviewModal({
   const [outfitImage, setOutfitImage] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [isSavedState, setIsSavedState] = useState<boolean>(isSaved);
+  const [isLikedState, setIsLikedState] = useState<boolean>(isLiked);
 
   const touchStartX = useRef<number | null>(null);
   const touchEndX = useRef<number | null>(null);
@@ -136,17 +142,15 @@ export default function PostPreviewModal({
 
     const timer = setTimeout(() => {
       setActiveSlide(1);
-    }, 3000);
+    }, 2000);
 
-    return () => {
-      clearTimeout(timer);
-    };
+    return () => clearTimeout(timer);
   }, [isOpen, outfitImage]);
 
+  // Touch Swipe Handlers for smooth back and forth image exploration
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.targetTouches[0].clientX;
     touchStartY.current = e.targetTouches[0].clientY;
-    touchEndX.current = null;
     hasSwiped.current = false;
   };
 
@@ -188,6 +192,15 @@ export default function PostPreviewModal({
     setIsSavedState(!isSavedState);
     if (onToggleSave) {
       onToggleSave(e);
+    }
+  };
+
+  const handleQuickLike = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setIsLikedState(!isLikedState);
+    if (onToggleLike) {
+      onToggleLike(e);
     }
   };
 
@@ -312,28 +325,60 @@ export default function PostPreviewModal({
             </div>
           </motion.div>
 
-          {/* Quick Save Floating Pill Button */}
-          {!hideSaveButton && (
-            <motion.div
-              initial={{ opacity: 0, y: 15, scale: 0.9 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 15, scale: 0.9 }}
-              transition={{ delay: 0.1, duration: 0.3 }}
-              className="relative z-20 mt-4"
+          {/* Floating Action Buttons: Like & Save (Icon-only) */}
+          <motion.div
+            initial={{ opacity: 0, y: 15, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 15, scale: 0.9 }}
+            transition={{ delay: 0.1, duration: 0.3 }}
+            className="relative z-20 mt-4 flex items-center justify-center gap-3"
+          >
+            {/* Like Button */}
+            <button
+              type="button"
+              onClick={handleQuickLike}
+              className={cn(
+                "w-12 h-12 rounded-full flex items-center justify-center shadow-2xl backdrop-blur-xl border active:scale-90 transition-all duration-200",
+                isLikedState
+                  ? "bg-[var(--brand-pink)] text-white border-[var(--brand-pink)]/40 shadow-[0_4px_20px_rgba(236,72,153,0.45)]"
+                  : "bg-black text-white hover:bg-neutral-900 border-black/10 dark:bg-white dark:text-black dark:hover:bg-neutral-100 dark:border-white/20"
+              )}
+              aria-label={isLikedState ? "Quitar me gusta" : "Me gusta"}
             >
+              <Heart
+                className={cn(
+                  "w-5 h-5 transition-transform duration-200",
+                  isLikedState ? "fill-white text-white scale-110" : "text-white dark:text-black"
+                )}
+                strokeWidth={2.2}
+              />
+            </button>
+
+            {/* Save Button (Icon-only) */}
+            {!hideSaveButton && (
               <button
                 type="button"
                 onClick={handleQuickSave}
-                className="bg-black hover:bg-neutral-900 text-white dark:bg-white dark:text-black dark:hover:bg-neutral-100 px-7 py-3.5 rounded-full flex items-center gap-2.5 shadow-2xl backdrop-blur-xl border border-black/10 dark:border-white/20 active:scale-95 transition-all font-semibold text-sm tracking-wide"
+                className={cn(
+                  "w-12 h-12 rounded-full flex items-center justify-center shadow-2xl backdrop-blur-xl border active:scale-90 transition-all duration-200",
+                  isSavedState
+                    ? "bg-[var(--brand-pink)] text-white border-[var(--brand-pink)]/40 shadow-[0_4px_20px_rgba(236,72,153,0.45)]"
+                    : "bg-black text-white hover:bg-neutral-900 border-black/10 dark:bg-white dark:text-black dark:hover:bg-neutral-100 dark:border-white/20"
+                )}
+                aria-label={isSavedState ? "Guardado" : "Guardar"}
               >
-                <Bookmark className={`w-5 h-5 transition-colors ${isSavedState ? 'fill-[var(--brand-pink)] text-[var(--brand-pink)]' : 'text-white dark:text-black'}`} />
-                <span>{isSavedState ? 'Guardado' : 'Guardar'}</span>
+                <Bookmark
+                  className={cn(
+                    "w-5 h-5 transition-transform duration-200",
+                    isSavedState ? "fill-white text-white scale-110" : "text-white dark:text-black"
+                  )}
+                  strokeWidth={2.2}
+                />
               </button>
-            </motion.div>
-          )}
+            )}
+          </motion.div>
         </div>
       )}
     </AnimatePresence>
   );
 }
-

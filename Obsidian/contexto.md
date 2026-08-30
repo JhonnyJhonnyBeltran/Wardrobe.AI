@@ -331,8 +331,16 @@ En cada conversación, el backend alimenta a CloSy con:
 - **Onboarding de Preferencias (`app/(public)/onboarding/preferences/page.tsx`)**:
   - `COMPREHENSIVE_STYLES` actualizado con las rutas locales `/styles/men/[slug].jpg` y `/styles/women/[slug].jpg`.
   - La visualización cambia instantáneamente en tiempo real entre las fotos de outfits masculinos o femeninos según el género elegido en el paso 1 (o combina ambos en Unisex).
-- **Script SQL Actualizado (`sql/onboarding_styles_and_age.sql`)**:
-  - Inserta los 34 estilos completos con sus rutas locales correspondientes.
+### 14. Botones Flotantes (Like y Guardar Icon-Only) en Vista Previa y Superposición Limpia de Guardar en Carpetas (Agosto 2026)
+- **Barra de Acciones Flotantes en Vista Previa Móvil (`components/Feed/PostPreviewModal.tsx`)**:
+  - Se eliminó el texto *"Guardar / Guardado"* del botón para dejar botones de icono circulares ultra limpios y simétricos (`w-12 h-12 rounded-full`).
+  - **Botón de Like Integrado**: Permite dar me gusta al post directamente desde la vista previa de mantener presionado. Si el post ya tiene like, se muestra activo en color rosa corporativo (`bg-[var(--brand-pink)] text-white shadow-[0_4px_20px_rgba(236,72,153,0.45)]`) con el corazón relleno de blanco. Si no está likeado, se adapta al tema claro (negro con icono blanco) y oscuro (blanco con icono negro).
+  - **Botón de Guardar Adaptativo**: Mismo diseño circular de alta fidelidad, indicando con brillo y fondo rosa cuando la publicación está guardada.
+  - Sincronización instantánea y optimista en Supabase con persistencia de likes, guardados y notificaciones en tiempo real.
+- **Superposición de Capas de Guardado en Carpeta (`components/SaveModal.tsx`)**:
+  - Elevación de la capa modal de guardado a `z-[100000]`.
+  - Al abrir el modal de guardar en carpeta desde la vista previa (vía *"Añadir a carpeta"* en el toast), el modal aparece inmediatamente en primer plano nítido y enfocado por encima de la vista previa, sin quedar oscurecido ni con efecto borroso.
+
 
 
 

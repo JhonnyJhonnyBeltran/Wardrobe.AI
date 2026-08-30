@@ -7,6 +7,8 @@ import { Heart, Bookmark } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Avatar from '@/components/Avatar';
 import { useUiStore } from '@/store/uiStore';
+import { useUser } from '@/store/userStore';
+import { supabase } from '@/lib/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { haptics } from '@/lib/haptic';
 import PostPreviewModal from './PostPreviewModal';
@@ -34,8 +36,11 @@ interface PostCardProps {
 }
 
 export default function PostCard({ post, onClick, hideSaveButton = false }: PostCardProps) {
+    const { user } = useUser();
     const [isHovered, setIsHovered] = useState(false);
     const [isSavedState, setIsSavedState] = useState(post.isSaved || false);
+    const [isLikedState, setIsLikedState] = useState(post.isLiked || false);
+    const [likesCountState, setLikesCountState] = useState(post.likes || 0);
     const [showPreviewModal, setShowPreviewModal] = useState(false);
     const { showSaveToast, openFolderModal, triggerRefetch } = useUiStore();
     const router = useRouter();
@@ -48,6 +53,11 @@ export default function PostCard({ post, onClick, hideSaveButton = false }: Post
     useEffect(() => {
         setIsSavedState(post.isSaved || false);
     }, [post.isSaved]);
+
+    useEffect(() => {
+        setIsLikedState(post.isLiked || false);
+        setLikesCountState(post.likes || 0);
+    }, [post.isLiked, post.likes]);
 
     const handleTouchStart = () => {
         isLongPressedRef.current = false;
@@ -106,7 +116,10 @@ export default function PostCard({ post, onClick, hideSaveButton = false }: Post
             showSaveToast({
                 message: "Guardado",
                 actionLabel: "Añadir a carpeta",
-                onAction: () => openFolderModal(post.id)
+                onAction: () => {
+                    setShowPreviewModal(false);
+                    openFolderModal(post.id);
+                }
             });
 
             try {
@@ -133,6 +146,59 @@ export default function PostCard({ post, onClick, hideSaveButton = false }: Post
         }
     };
 
+    const toggleQuickLike = async (e: React.MouseEvent | React.TouchEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (!user) {
+            router.push('/login');
+            return;
+        }
+
+        try {
+            haptics.tap();
+        } catch {}
+
+        const previousState = isLikedState;
+        const previousCount = likesCountState;
+
+        setIsLikedState(!previousState);
+        setLikesCountState(Math.max(0, previousState ? previousCount - 1 : previousCount + 1));
+
+        try {
+            if (previousState) {
+                const { error } = await (supabase.from('likes') as any)
+                    .delete()
+                    .eq('post_id', post.id)
+                    .eq('user_id', user.id);
+                if (error) throw error;
+            } else {
+                const { error } = await (supabase.from('likes') as any)
+                    .insert({ post_id: post.id, user_id: user.id });
+                if (error) throw error;
+
+                // Notify Author if not self
+                const authorId = (post as any)?.author_id || (post as any)?.user_id;
+                if (authorId && authorId !== user.id) {
+                    try {
+                        await (supabase.from('notifications') as any).insert({
+                            user_id: authorId,
+                            actor_id: user.id,
+                            type: 'like',
+                            entity_id: post.id,
+                            read: false
+                        });
+                    } catch {}
+                }
+            }
+            triggerRefetch();
+        } catch (err) {
+            console.error('Error toggling like:', err);
+            setIsLikedState(previousState);
+            setLikesCountState(previousCount);
+        }
+    };
+
     // If no image, show text card
     if (!post.imageUrl) {
         return (
@@ -146,8 +212,8 @@ export default function PostCard({ post, onClick, hideSaveButton = false }: Post
                         {post.title || post.description}
                     </p>
                     <div className="hidden md:flex items-center gap-1 text-xs mt-auto">
-                        <Heart className={cn("w-3.5 h-3.5 transition-colors", post.isLiked ? "fill-[var(--brand-pink)] text-[var(--brand-pink)]" : "text-[var(--foreground-tertiary)]")} />
-                        <span className={cn(post.isLiked ? "text-[var(--brand-pink)] font-semibold" : "text-[var(--foreground-tertiary)]")}>{post.likes}</span>
+                        <Heart className={cn("w-3.5 h-3.5 transition-colors", isLikedState ? "fill-[var(--brand-pink)] text-[var(--brand-pink)]" : "text-[var(--foreground-tertiary)]")} />
+                        <span className={cn(isLikedState ? "text-[var(--brand-pink)] font-semibold" : "text-[var(--foreground-tertiary)]")}>{likesCountState}</span>
                     </div>
                 </div>
             </div>
@@ -192,15 +258,15 @@ export default function PostCard({ post, onClick, hideSaveButton = false }: Post
 
                         <div className={cn(
                             "absolute bottom-3 left-3 right-3 hidden md:flex items-center justify-between transition-opacity duration-300",
-                            post.isLiked ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                            isLikedState ? "opacity-100" : "opacity-0 group-hover:opacity-100"
                         )}>
                             <div className="flex items-center gap-2">
                                 <Avatar src={post.author.avatar || null} alt={post.author.name} size="sm" />
                                 <span className="text-xs font-semibold text-white truncate max-w-[120px] drop-shadow-md">{post.author.name}</span>
                             </div>
                             <div className="flex items-center gap-1 text-white text-xs drop-shadow-md">
-                                <Heart className={cn("w-4 h-4 transition-colors", post.isLiked ? "fill-[var(--brand-pink)] text-[var(--brand-pink)]" : "text-white")} />
-                                <span>{post.likes}</span>
+                                <Heart className={cn("w-4 h-4 transition-colors", isLikedState ? "fill-[var(--brand-pink)] text-[var(--brand-pink)]" : "text-white")} />
+                                <span>{likesCountState}</span>
                             </div>
                         </div>
                     </div>
@@ -239,6 +305,8 @@ export default function PostCard({ post, onClick, hideSaveButton = false }: Post
                 postTitle={post.title}
                 isSaved={isSavedState}
                 onToggleSave={toggleQuickSave}
+                isLiked={isLikedState}
+                onToggleLike={toggleQuickLike}
                 hideSaveButton={hideSaveButton}
                 sourceRect={sourceRect}
             />
