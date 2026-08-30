@@ -323,12 +323,17 @@ En cada conversación, el backend alimenta a CloSy con:
   - `components/NotificationToast.tsx` y `components/RealtimeProvider.tsx`: Se agregaron filtros de frescura (< 45s) y validación de `!notification.read`, impidiendo que notificaciones de sesiones pasadas se muestren como popups emergentes al volver a abrir la app.
 - **Diseño Ultra Limpio en Móvil para Feed y Buscador (`components/Feed/PostCard.tsx`)**:
   - En las tarjetas de posts, en vista móvil se ocultan el nombre/avatar del autor, el contador de likes y el degradado inferior (`hidden md:flex`), ofreciendo una cuadrícula visual inmersiva de imágenes estilo editorial a pantalla completa.
-- **Vista Previa de Post, Look y Guardado al Mantener Presionado en Móvil (`components/Feed/PostPreviewModal.tsx`)**:
-  - Al mantener presionada una publicación en móvil (~450ms), se emite un pulso háptico y se despliega un modal con fondo difuminado completo (`backdrop-blur-2xl`) que cubre la pantalla y los navbars superior e inferior.
-  - La imagen se amplía con animación de resorte (`spring`) y esquinas redondeadas (`rounded-[36px]`).
-  - Consulta en tiempo real a Supabase el post y su outfit asociado (`outfits.image_url` o prendas). Muestra inicialmente la fotografía del post y, tras **2 segundos**, se desliza automáticamente de forma suave revelando el look/outfit del post con indicadores interactivos de paginación (`● ○` → `○ ●`).
-  - **Botón flotante "Guardar / Guardado" integrado**: Permite guardar o añadir la publicación a carpetas directamente desde el modal de vista previa.
-  - Al pulsar fuera de la imagen (en el fondo desenfocado) el modal se cierra con animación. Al pulsar sobre la imagen o tarjeta del modal, se abre directamente la página completa de la publicación (`/post/[id]`).
+### 13. Catálogo de Estilos con Fotografías Reales de Outfits (Agosto 2026)
+- **Fotografías Locales de Alta Definición (`public/styles/men/` y `public/styles/women/`)**:
+  - Se descargaron e integraron 68 fotografías reales de outfits completos correspondientes a los **34 estilos de moda** para hombre y mujer.
+  - Almacenadas en el repositorio local para garantizar carga instantánea, funcionamiento sin conexión a internet y máxima fiabilidad sin problemas de hotlinking.
+  - Catálogo de estilos completo: Casual Moderno, Streetwear, Elegante / Clásico, Old Money / Quiet Luxury, Minimalista, Deportivo / Athleisure, Boho Chic, Y2K, Business Casual, Rock / Grunge, Preppy, Vintage / Retro, Cottagecore, Gótico / Alt, Techwear / Utilitario, Dark Academia, Light Academia, Skater / Surf, Clean Look, Normcore, Chic Parisino, Coastal / Resort, Western / Cowboy, K-Fashion, Harajuku / J-Fashion, Workwear / Americana, Coquette, Baddie / Glam, Maximalista, Gorpcore / Outdoor, Noche / Fiesta, Smart Casual, Soft Girl / Soft Boy, y Cyberpunk / Y2K Tech.
+- **Onboarding de Preferencias (`app/(public)/onboarding/preferences/page.tsx`)**:
+  - `COMPREHENSIVE_STYLES` actualizado con las rutas locales `/styles/men/[slug].jpg` y `/styles/women/[slug].jpg`.
+  - La visualización cambia instantáneamente en tiempo real entre las fotos de outfits masculinos o femeninos según el género elegido en el paso 1 (o combina ambos en Unisex).
+- **Script SQL Actualizado (`sql/onboarding_styles_and_age.sql`)**:
+  - Inserta los 34 estilos completos con sus rutas locales correspondientes.
+
 
 
 
