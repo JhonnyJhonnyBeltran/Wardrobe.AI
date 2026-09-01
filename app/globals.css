@@ -1533,16 +1533,45 @@ select option:checked {
 }
 
 /* ============================================
-   PREMIUM LOADING STATES
+   INSTAGRAM-STYLE SKELETON WAVE SHIMMER
    ============================================ */
 
-.skeleton {
-  background-color: var(--background-secondary);
+@keyframes shimmer-wave {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton,
+.skeleton-wave {
+  background: linear-gradient(
+    90deg,
+    rgba(230, 235, 240, 0.8) 0%,
+    rgba(244, 246, 248, 0.95) 25%,
+    rgba(255, 255, 255, 1) 50%,
+    rgba(244, 246, 248, 0.95) 75%,
+    rgba(230, 235, 240, 0.8) 100%
+  );
+  background-size: 250% 100%;
+  animation: shimmer-wave 1.6s ease-in-out infinite;
   border-radius: var(--radius-md);
 }
 
-.dark .skeleton {
-  background-color: var(--background-secondary);
+.dark .skeleton,
+.dark .skeleton-wave {
+  background: linear-gradient(
+    90deg,
+    rgba(38, 38, 38, 0.85) 0%,
+    rgba(54, 54, 54, 0.95) 25%,
+    rgba(70, 70, 70, 1) 50%,
+    rgba(54, 54, 54, 0.95) 75%,
+    rgba(38, 38, 38, 0.85) 100%
+  );
+  background-size: 250% 100%;
+  animation: shimmer-wave 1.6s ease-in-out infinite;
 }
 
 /* ============================================

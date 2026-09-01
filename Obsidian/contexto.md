@@ -353,7 +353,20 @@ En cada conversación, el backend alimenta a CloSy con:
 - **Perfil de Usuario (`app/(app)/profile/page.tsx` y `store/profileStore.ts`)**:
   - Tanto la pestaña de Posts como la de Guardados cargan **40 publicaciones de un tirón** (`PROFILE_POSTS_PER_PAGE = 40`).
   - Infinite scroll integrado con `IntersectionObserver` que descarga 40 publicaciones adicionales al llegar al final.
-  - **Caché Persistente (`klozet_profile_cache`)**: Los datos del perfil (avatar, estadísticas, carpetas, publicaciones y guardados) se muestran de inmediato desde caché sin mostrar skeletons molestos cuando ya hay contenido cargado.
+### 16. Skeletons Wave Estilo Instagram y Alineación Superior en Feed Móvil (Septiembre 2026)
+- **Animación de Onda (Wave / Shimmer Wave Gradient)**:
+  - Definida animación continua suave `@keyframes shimmer-wave` en `app/globals.css` (`.skeleton-wave` y `.skeleton`) para modo claro y modo oscuro.
+  - Genera un barrido de luz horizontal de izquierda a derecha idéntico a la animación de carga de Instagram.
+- **Skeletons por Componentes y Vistas (`components/Skeleton.tsx`)**:
+  - **Perfil (`SkeletonProfile` y `SkeletonProfileGrid`)**: Calcado exactamente de la referencia de Instagram con barra superior, foto de perfil circular con wave, líneas de nombre/biografía, botones de acción ("Cargando" / "Mensaje"), carrusel de historias/destacados y cuadrícula de 3 columnas de posts cuadrados (`aspect-square`).
+  - **Feed (`SkeletonFeed`)**: Tarjetas de feed y placeholders con alturas realistas y efecto onda.
+  - **Búsqueda (`SkeletonSearch` y `SkeletonUserList`)**: Cuadrícula exploratoria y lista de usuarios con avatar, texto y botón de seguir en wave shimmer.
+  - **Notificaciones (`SkeletonNotifications`)**: Lista de actividad con avatar, texto y miniatura de post a la derecha en wave shimmer.
+  - **Regla de Spinner Circular**: Los spinners circulares (`Loader2` / `animate-spin`) solo se utilizan cuando se está cargando el contenido multimedia de un post específico (ej: modal de vista previa o detalle), utilizando siempre skeletons con animación de onda para las cargas asíncronas de listas y navegación.
+- **Alineación de Imágenes en Feed Móvil (`app/(app)/feed/page.tsx`)**:
+  - En vista móvil, se implementó una estructura paralela de 2 columnas (`grid grid-cols-2 gap-2.5 md:hidden items-start`) que distribuye las publicaciones de forma equilibrada.
+  - Garantiza que la primera imagen de la columna izquierda y la primera de la columna derecha se peguen exactamente a la misma altura superior (`y = 0`) sin saltos, desfases ni márgenes asimétricos.
+
 
 
 

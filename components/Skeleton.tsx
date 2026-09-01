@@ -1,42 +1,217 @@
 'use client';
 
 import React from 'react';
+import { Grid3x3, Bookmark } from 'lucide-react';
 
 interface SkeletonProps {
   className?: string;
   style?: React.CSSProperties;
 }
 
+/**
+ * Base Skeleton with smooth Instagram wave shimmer
+ */
 export function Skeleton({ className = '', style }: SkeletonProps) {
   return (
     <div
-      className={`animate-pulse bg-[var(--background-secondary)] rounded-xl ${className}`}
+      className={`skeleton-wave ${className}`}
       style={style}
     />
   );
 }
 
-export function SkeletonCard({ className = '' }: { className?: string }) {
+/**
+ * Card skeleton with wave shimmer
+ */
+export function SkeletonCard({ className = '', height = 260 }: { className?: string; height?: number | string }) {
   return (
-    <div className={`flex flex-col gap-3 ${className}`}>
-      <Skeleton className="w-full aspect-[3/4] rounded-2xl" />
+    <div className={`w-full overflow-hidden rounded-2xl ${className}`}>
+      <div 
+        className="w-full skeleton-wave rounded-2xl" 
+        style={{ height: typeof height === 'number' ? `${height}px` : height }} 
+      />
     </div>
   );
 }
 
+/**
+ * 3-Column Square Grid Skeleton (Instagram Profile style)
+ */
+export function SkeletonProfileGrid({ count = 9, className = '' }: { count?: number; className?: string }) {
+  return (
+    <div className={`grid grid-cols-3 gap-0.5 ${className}`}>
+      {[...Array(count)].map((_, i) => (
+        <div key={i} className="aspect-square skeleton-wave rounded-none" />
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Full Instagram-style Profile Skeleton (Calqued exactly from Instagram reference screenshot)
+ */
 export function SkeletonProfile({ className = '' }: { className?: string }) {
   return (
-    <div className={`flex flex-col items-center gap-4 p-4 ${className}`}>
-      <Skeleton className="w-24 h-24 rounded-full shrink-0" />
-      <div className="flex flex-col items-center gap-2 w-full">
-        <Skeleton className="h-6 w-1/3 rounded" />
-        <Skeleton className="h-4 w-1/4 rounded" />
+    <div className={`w-full min-h-screen bg-[var(--background)] ${className}`}>
+      {/* Top Header Bar */}
+      <div className="sticky top-0 z-30 flex items-center justify-between px-4 h-14 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-color)]">
+        <div className="w-6 h-6 rounded-md skeleton-wave" />
+        <div className="h-5 w-32 rounded-full skeleton-wave" />
+        <div className="w-6 h-6 rounded-md skeleton-wave" />
       </div>
-      <div className="flex justify-center gap-6 w-full mt-2">
-        <Skeleton className="h-10 w-1/4 rounded" />
-        <Skeleton className="h-10 w-1/4 rounded" />
-        <Skeleton className="h-10 w-1/4 rounded" />
+
+      <div className="px-4 pt-4 pb-2">
+        {/* Avatar + Stats / Bio Header */}
+        <div className="flex items-center gap-6 mb-4">
+          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full p-0.5 border-2 border-[var(--border-color)] shrink-0">
+            <div className="w-full h-full rounded-full skeleton-wave" />
+          </div>
+          <div className="flex-1 flex flex-col gap-2">
+            <div className="h-5 w-28 rounded-md skeleton-wave" />
+            <div className="h-3.5 w-40 rounded-md skeleton-wave opacity-70" />
+            <div className="h-3 w-20 rounded-md skeleton-wave opacity-50" />
+          </div>
+        </div>
+
+        {/* Action Buttons: e.g. [Cargando] [Mensaje] */}
+        <div className="flex gap-2 w-full mb-5">
+          <div className="flex-1 h-9 rounded-lg skeleton-wave" />
+          <div className="flex-1 h-9 rounded-lg skeleton-wave" />
+        </div>
+
+        {/* Story Highlights / Featured Collections Carousel */}
+        <div className="grid grid-cols-3 gap-2.5 mb-5 overflow-hidden">
+          {[...Array(3)].map((_, i) => (
+            <div 
+              key={i} 
+              className="flex flex-col items-center gap-2 p-3 rounded-xl bg-[var(--background-secondary)]/60 border border-[var(--border-color)]/40"
+            >
+              <div className="w-16 h-16 rounded-full skeleton-wave shrink-0" />
+              <div className="h-3 w-14 rounded skeleton-wave" />
+              <div className="h-2.5 w-10 rounded skeleton-wave opacity-60" />
+              <div className="w-full h-6 rounded-md skeleton-wave mt-1" />
+            </div>
+          ))}
+        </div>
       </div>
+
+      {/* Profile Tabs */}
+      <div className="flex border-b border-[var(--border-color)]">
+        <div className="flex-1 flex items-center justify-center py-3 border-b-2 border-[var(--brand-pink)] text-[var(--brand-pink)]">
+          <Grid3x3 className="w-6 h-6 opacity-40" />
+        </div>
+        <div className="flex-1 flex items-center justify-center py-3 border-b-2 border-transparent text-[var(--foreground-tertiary)]">
+          <Bookmark className="w-6 h-6 opacity-30" />
+        </div>
+      </div>
+
+      {/* 3-Column Square Grid Posts */}
+      <div className="p-0.5">
+        <SkeletonProfileGrid count={9} />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Feed Skeleton with Wave Animation (Mobile 2-col + Desktop Masonry)
+ */
+export function SkeletonFeed({ count = 8, className = '' }: { count?: number; className?: string }) {
+  const heights = [240, 300, 210, 280, 260, 320, 220, 290];
+  return (
+    <div className={`w-full ${className}`}>
+      {/* Mobile 2-column layout */}
+      <div className="grid grid-cols-2 gap-2.5 md:hidden">
+        <div className="flex flex-col gap-2.5">
+          {heights.filter((_, i) => i % 2 === 0).map((h, i) => (
+            <div key={`m-l-${i}`} className="w-full rounded-2xl skeleton-wave" style={{ height: `${h}px` }} />
+          ))}
+        </div>
+        <div className="flex flex-col gap-2.5">
+          {heights.filter((_, i) => i % 2 === 1).map((h, i) => (
+            <div key={`m-r-${i}`} className="w-full rounded-2xl skeleton-wave" style={{ height: `${h}px` }} />
+          ))}
+        </div>
+      </div>
+
+      {/* Desktop Masonry */}
+      <div className="hidden md:grid md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+        {heights.slice(0, count).map((h, i) => (
+          <div key={`d-${i}`} className="w-full rounded-2xl skeleton-wave" style={{ height: `${h}px` }} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Search Page Skeleton (Explore Masonry Grid + Top Header)
+ */
+export function SkeletonSearch({ count = 8, className = '' }: { count?: number; className?: string }) {
+  const heights = [220, 280, 250, 300, 210, 290, 240, 310];
+  return (
+    <div className={`w-full ${className}`}>
+      {/* Search Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5 md:gap-4">
+        {heights.slice(0, count).map((h, i) => (
+          <div key={i} className="w-full rounded-2xl skeleton-wave" style={{ height: `${h}px` }} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * User Search Results Skeleton (List of users with avatar, text, button)
+ */
+export function SkeletonUserList({ count = 5 }: { count?: number }) {
+  return (
+    <div className="space-y-3 w-full">
+      {[...Array(count)].map((_, i) => (
+        <div
+          key={i}
+          className="flex items-center gap-4 p-3 bg-[var(--background-secondary)] rounded-xl border border-[var(--border-color)]/50"
+        >
+          <div className="w-12 h-12 rounded-full skeleton-wave shrink-0" />
+          <div className="flex-1 flex flex-col gap-2 min-w-0">
+            <div className="h-4 w-32 rounded skeleton-wave" />
+            <div className="h-3 w-20 rounded skeleton-wave opacity-60" />
+          </div>
+          <div className="w-20 h-8 rounded-full skeleton-wave shrink-0" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Notifications Skeleton List (Instagram-style activity list with wave shimmer)
+ */
+export function SkeletonNotifications({ count = 6 }: { count?: number }) {
+  return (
+    <div className="space-y-2 w-full">
+      {[...Array(count)].map((_, i) => (
+        <div
+          key={i}
+          className="flex items-center gap-3.5 p-3.5 rounded-2xl bg-[var(--background-secondary)]/50 border border-[var(--border-color)]/40"
+        >
+          {/* Avatar */}
+          <div className="w-11 h-11 rounded-full skeleton-wave shrink-0" />
+          
+          {/* Text Content */}
+          <div className="flex-1 flex flex-col gap-2 min-w-0">
+            <div className="h-3.5 w-4/5 rounded skeleton-wave" />
+            <div className="h-3 w-1/4 rounded skeleton-wave opacity-60" />
+          </div>
+
+          {/* Right Post Thumbnail / Action Pill */}
+          {i % 2 === 0 ? (
+            <div className="w-10 h-10 rounded-md skeleton-wave shrink-0" />
+          ) : (
+            <div className="w-18 h-8 rounded-full skeleton-wave shrink-0" />
+          )}
+        </div>
+      ))}
     </div>
   );
 }

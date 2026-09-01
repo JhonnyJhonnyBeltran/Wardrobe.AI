@@ -9,7 +9,7 @@ import Image from 'next/image';
 import { supabase } from '@/lib/supabase/client';
 import { getRecentFollowActivity, followUser, unfollowUser, getMyFollowStatusMap, getFollowStatus, acceptFollowRequest, rejectFollowRequest } from '@/lib/services/followService';
 import { getSmartSuggestions } from '@/lib/services/suggestionService';
-import { LogoMark, Avatar, InfiniteScrollFooter } from '@/components';
+import { LogoMark, Avatar, InfiniteScrollFooter, SkeletonNotifications } from '@/components';
 import Link from 'next/link';
 import { useWardrobe } from '@/lib/hooks/useWardrobe';
 import { useRouter } from 'next/navigation';
@@ -391,8 +391,12 @@ export default function NotificationList({ compact = false, onClose }: Notificat
     const hasSystem = notifications.some(n => n.type === 'system');
     const activityNotifications = notifications.filter(n => n.type !== 'system');
 
-    if (loading) {
-        return null;
+    if (loading && notifications.length === 0) {
+        return (
+            <div className={`space-y-4 flex-1 ${compact ? 'p-2' : 'p-4'}`}>
+                <SkeletonNotifications count={compact ? 4 : 8} />
+            </div>
+        );
     }
 
     if (notifications.length === 0) {
@@ -558,6 +562,7 @@ export default function NotificationList({ compact = false, onClose }: Notificat
                     hasMore={hasMore}
                     hasItems={activityNotifications.length > 0}
                     onRetry={loadMoreNotifications}
+                    skeleton={<SkeletonNotifications count={2} />}
                     endMessage="Estás al día con tus notificaciones"
                 />
             </div>

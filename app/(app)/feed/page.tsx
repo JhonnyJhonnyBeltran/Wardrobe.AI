@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Plus, PlusSquare, Send } from 'lucide-react';
 import PostCard from '@/components/Feed/PostCard';
 import PremiumAdCard from '@/components/Feed/PremiumAdCard';
-import { EmptyState, InfiniteScrollFooter, PullToRefresh } from '@/components';
+import { EmptyState, InfiniteScrollFooter, PullToRefresh, SkeletonFeed } from '@/components';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useRef, useCallback } from 'react';
@@ -307,33 +307,47 @@ export default function FeedPage() {
 
         {/* Feed Content */}
         <div className="px-3 pt-4 md:px-6">
-          {
-            loading && posts.length === 0 ? (
-              <div className="hidden md:block">
-                <div className="masonry-grid">
-                  {[...Array(8)].map((_, i) => (
-                    <div key={i} className="break-inside-avoid mb-6">
-                      <div className="rounded-2xl overflow-hidden bg-[var(--background-secondary)]" style={{ height: [180, 220, 260, 200, 240][i % 5] }} />
+          {loading && posts.length === 0 ? (
+            <SkeletonFeed count={8} />
+          ) : posts.length === 0 ? (
+            <EmptyState
+              icon={PlusSquare}
+              title="No hay publicaciones aún."
+              description="Sé el primero en compartir tu estilo con la comunidad."
+              actionLabel="Crear publicación"
+              actionHref="/create-post"
+              fullHeight={true}
+            />
+          ) : (
+            <>
+              {/* Mobile 2-Column Parallel Layout: Guarantees column 1 & column 2 start at the exact same top height */}
+              <div className="grid grid-cols-2 gap-2.5 md:hidden items-start">
+                <div className="flex flex-col gap-2.5">
+                  {posts.filter((_, i) => i % 2 === 0).map((post, index) => (
+                    <div key={post.id} className="w-full">
+                      <PostCard post={post} />
+                      {(index * 2 + 1) % 15 === 0 && (
+                        <div className="mt-2.5">
+                          <PremiumAdCard />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <div className="flex flex-col gap-2.5">
+                  {posts.filter((_, i) => i % 2 === 1).map((post) => (
+                    <div key={post.id} className="w-full">
+                      <PostCard post={post} />
                     </div>
                   ))}
                 </div>
               </div>
-            ) : posts.length === 0 ? (
-              <EmptyState
-                icon={PlusSquare}
-                title="No hay publicaciones aún."
-                description="Sé el primero en compartir tu estilo con la comunidad."
-                actionLabel="Crear publicación"
-                actionHref="/create-post"
-                fullHeight={true}
-              />
-            ) : (
-              <div className="masonry-grid">
+
+              {/* Desktop Masonry Grid */}
+              <div className="hidden md:block masonry-grid">
                 {posts.map((post, index) => (
-                  <div key={post.id} className="contents">
-                    <div className="break-inside-avoid mb-6">
-                      <PostCard post={post} />
-                    </div>
+                  <div key={post.id} className="break-inside-avoid mb-6">
+                    <PostCard post={post} />
                     {(index + 1) % 15 === 0 && (
                       <div key={`premium-ad-${index}`} className="break-inside-avoid mb-6 col-span-full">
                         <PremiumAdCard />
@@ -341,28 +355,20 @@ export default function FeedPage() {
                     )}
                   </div>
                 ))}
-
-                {loadingMore && (
-                  [...Array(3)].map((_, i) => (
-                    <div key={`skeleton-${i}`} className="break-inside-avoid mb-6">
-                      <div className="rounded-2xl overflow-hidden bg-[var(--background-secondary)] animate-pulse" style={{ height: [180, 220, 240][i % 3] }} />
-                    </div>
-                  ))
-                )}
               </div>
-            )
-          }
+            </>
+          )}
 
           {/* Infinite Scroll Trigger only if there are posts */}
           {posts.length > 0 && hasMore && (
-            <div ref={observerElement} className="w-full flex items-center justify-center col-span-full">
+            <div ref={observerElement} className="w-full flex items-center justify-center col-span-full mt-4">
               <InfiniteScrollFooter
                 isLoading={loadingMore}
                 isError={loadError}
                 hasMore={hasMore}
                 hasItems={posts.length > 0}
                 onRetry={() => loadMorePosts()}
-                skeleton={<></>}
+                skeleton={<SkeletonFeed count={2} className="py-2" />}
               />
             </div>
           )}

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Search as SearchIcon, X, Users, Image as ImageIcon, UserPlus, Check, Clock, Trash2 } from 'lucide-react';
 import PostCard, { type Post } from '@/components/Feed/PostCard';
-import { EmptyState, InfiniteScrollFooter, PullToRefresh } from '@/components';
+import { EmptyState, InfiniteScrollFooter, PullToRefresh, SkeletonSearch, SkeletonUserList } from '@/components';
 import { supabase } from '@/lib/supabase/client';
 
 import { useUser } from '@/store/userStore';
@@ -600,9 +600,11 @@ export default function SearchPage() {
 
       <div className="w-full px-3 md:px-6 pt-24 sm:pt-28 pb-4 flex flex-col gap-6 sm:gap-8 min-w-0">
         {loading ? (
-          <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-500"></div>
-          </div>
+          query ? (
+            <SkeletonUserList count={6} />
+          ) : (
+            <SkeletonSearch count={8} />
+          )
         ) : (
           <>
             {/* NO RESULTS STATE */}
@@ -691,7 +693,7 @@ export default function SearchPage() {
                     hasMore={postsHasMore}
                     hasItems={results.length > 0}
                     onRetry={() => loadMorePosts()}
-                    skeleton={<></>}
+                    skeleton={<SkeletonSearch count={2} className="py-2" />}
                   />
                 </div>
               </div>
@@ -703,40 +705,36 @@ export default function SearchPage() {
                 
                 {/* Search History */}
                 {history.length > 0 && (
-                  <div className="px-1">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-sm font-bold text-[var(--foreground)] flex items-center gap-2">
-                        <Clock className="w-4 h-4 text-[var(--foreground-secondary)]" />
-                        Búsquedas Recientes
-                      </h3>
-                      <button 
+                  <div>
+                    <div className="flex items-center justify-between mb-3 px-1">
+                      <h3 className="text-sm font-semibold text-[var(--foreground)]">Recientes</h3>
+                      <button
                         onClick={clearHistory}
-                        className="text-xs font-medium text-[var(--foreground-tertiary)] hover:text-[var(--brand-pink)] flex items-center gap-1 transition-colors"
+                        className="text-xs text-[var(--brand-pink)] hover:text-[var(--brand-pink-dark)] font-medium transition-colors"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        Borrar
+                        Borrar todo
                       </button>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      {history.map((term, idx) => (
-                        <div key={idx} className="flex items-center bg-[var(--background-secondary)] border border-[var(--border-color)] rounded-full pl-4 pr-2 py-1.5 hover:border-[var(--brand-pink)] transition-colors group">
-                          <button 
-                            onClick={() => {
-                              setQuery(term);
-                              setDebouncedQuery(term);
-                            }}
-                            className="text-sm font-medium text-[var(--foreground-secondary)] group-hover:text-[var(--foreground)] transition-colors"
-                          >
-                            {term}
-                          </button>
-                          <button 
+                      {history.map((term, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--background-secondary)] text-sm text-[var(--foreground)] hover:bg-[var(--border-color)] transition-colors cursor-pointer group"
+                          onClick={() => {
+                            setQuery(term);
+                            setDebouncedQuery(term);
+                          }}
+                        >
+                          <Clock className="w-3.5 h-3.5 text-[var(--foreground-secondary)]" />
+                          <span>{term}</span>
+                          <button
                             onClick={(e) => {
                               e.stopPropagation();
                               removeSearch(term);
                             }}
-                            className="ml-2 p-1 text-[var(--foreground-tertiary)] hover:text-[var(--brand-pink)] rounded-full transition-colors"
+                            className="text-[var(--foreground-secondary)] hover:text-[var(--foreground)] p-0.5 rounded-full"
                           >
-                            <X className="w-3.5 h-3.5" />
+                            <X className="w-3 h-3" />
                           </button>
                         </div>
                       ))}
@@ -772,7 +770,7 @@ export default function SearchPage() {
                         hasMore={postsHasMore}
                         hasItems={results.length > 0}
                         onRetry={() => loadMorePosts()}
-                        skeleton={<></>}
+                        skeleton={<SkeletonSearch count={2} className="py-2" />}
                       />
                     </div>
                   </div>

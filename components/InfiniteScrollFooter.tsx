@@ -69,21 +69,14 @@ export default function InfiniteScrollFooter({
           </motion.div>
         )}
 
-        {(!hasMore && hasItems && !isError) && (
+        {(!hasMore && hasItems && !isError && endMessage) && (
           <motion.div
             key="end-loading"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="w-full flex flex-col items-center gap-3"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="w-full flex justify-center items-center py-4"
           >
-            {skeleton ? (
-              skeleton
-            ) : (
-              <div className="w-full max-w-sm flex flex-col gap-3 opacity-60 animate-pulse">
-                <div className="h-4 w-2/3 bg-[var(--background-secondary)] rounded-full overflow-hidden" />
-                <div className="h-4 w-1/2 bg-[var(--background-secondary)] rounded-full overflow-hidden" />
-              </div>
-            )}
+            <p className="text-xs font-medium text-[var(--foreground-tertiary)] text-center">{endMessage}</p>
           </motion.div>
         )}
       </AnimatePresence>

@@ -27,7 +27,7 @@ import {
   Loader2
 } from 'lucide-react';
 
-import { Avatar, Button as UiButton, OutfitCard, EmptyState, Skeleton, SkeletonProfile, DiscoveredStyleBanner, AvatarModal, PullToRefresh } from '@/components';
+import { Avatar, Button as UiButton, OutfitCard, EmptyState, Skeleton, SkeletonProfile, SkeletonProfileGrid, DiscoveredStyleBanner, AvatarModal, PullToRefresh } from '@/components';
 import FolderPreview from '@/components/FolderPreview';
 import { useUiStore } from '@/store/uiStore';
 
@@ -454,11 +454,7 @@ export default function ProfilePage() {
                 className="p-0.5"
               >
                 {isLoading && posts.length === 0 ? (
-                  <div className="grid grid-cols-3 gap-0.5">
-                    {[...Array(9)].map((_, i) => (
-                      <Skeleton key={i} className="aspect-square rounded-none animate-pulse" />
-                    ))}
-                  </div>
+                  <SkeletonProfileGrid count={9} />
                 ) : posts.length === 0 ? (
                   <EmptyState
                     icon={Grid3x3}
@@ -478,8 +474,8 @@ export default function ProfilePage() {
                       </Link>
                     ))}
                     {postsHasMore && (
-                      <div ref={postsObserverRef} className="col-span-3 py-6 flex justify-center items-center">
-                        {loadingMorePosts && <Loader2 className="w-6 h-6 animate-spin text-[var(--brand-pink)]" />}
+                      <div ref={postsObserverRef} className="col-span-3">
+                        {loadingMorePosts && <SkeletonProfileGrid count={3} />}
                       </div>
                     )}
                   </div>
@@ -558,11 +554,7 @@ export default function ProfilePage() {
                   </div>
 
                   {isLoading && savedPosts.length === 0 ? (
-                    <div className="grid grid-cols-3 gap-0.5">
-                      {[...Array(9)].map((_, i) => (
-                        <Skeleton key={i} className="aspect-square rounded-none animate-pulse" />
-                      ))}
-                    </div>
+                    <SkeletonProfileGrid count={9} />
                   ) : savedPosts.length === 0 ? (
                     <EmptyState
                       icon={Bookmark}
@@ -585,8 +577,8 @@ export default function ProfilePage() {
                         </Link>
                       ))}
                       {savedHasMore && (
-                        <div ref={savedObserverRef} className="col-span-3 py-6 flex justify-center items-center">
-                          {loadingMoreSaved && <Loader2 className="w-6 h-6 animate-spin text-[var(--brand-pink)]" />}
+                        <div ref={savedObserverRef} className="col-span-3">
+                          {loadingMoreSaved && <SkeletonProfileGrid count={3} />}
                         </div>
                       )}
                     </div>

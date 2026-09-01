@@ -12,6 +12,7 @@ import { supabase } from '@/lib/supabase/client';
 import * as followService from '@/lib/services/followService';
 import OutfitCard from '@/components/OutfitCard';
 import AvatarModal from '@/components/AvatarModal';
+import { SkeletonProfile } from '@/components';
 import Link from 'next/link';
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -304,11 +305,7 @@ export default function PublicProfilePage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-[var(--background)] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[var(--brand-pink)]" />
-      </div>
-    );
+    return <SkeletonProfile />;
   }
 
   if (isBlocked) {
