@@ -370,6 +370,22 @@ En cada conversación, el backend alimenta a CloSy con:
 ## Tareas Pendientes / Roadmap
 - **Usuarios Recomendados ("Personas que quizá conozcas")**: Módulo/sección para descubrir y recomendar usuarios con afinidad de estilos, gustos compartidos o amigos mutuos (pendiente de especificación y diseño por parte del usuario).
 
+### 17. Guía de Desarrollo Seguro, Privacidad y Protección de Datos
+- **Seguridad en Endpoints y Rutas de API (`app/api/*`)**:
+  - Toda ruta que acceda a datos del usuario debe autenticar la sesión (`supabase.auth.getUser()`) en el servidor antes de realizar cualquier operación.
+  - Validación estricta de esquemas y tipos de entrada en todas las peticiones `POST`, `PUT` y `DELETE` para evitar inyecciones.
+  - Comprobación explícita de propiedad: un usuario sólo puede modificar o eliminar sus propios recursos (`user_id === session.user.id`).
+- **Aislamiento de Datos y Políticas RLS (Row Level Security)**:
+  - Todas las tablas en base de datos deben tener RLS activado de forma obligatoria.
+  - Políticas de lectura/escritura seguras que impidan que un usuario acceda a armarios, prendas o chats de otros usuarios sin autorización explícita.
+- **Protección y Rate Limiting para Endpoints de IA (OpenAI, Claude, Gemini)**:
+  - Límites de frecuencia (Rate Limiting) y control de tokens por usuario e IP para evitar abuso, ataques de denegación de servicio (DoS) o costes descontrolados.
+  - Validación y saneamiento de prompts para prevenir prompt injection y filtración de claves API (las API Keys nunca se exponen al cliente).
+- **Navegación Segura y Sanitización**:
+  - Sanitización estricta de HTML / Markdown generado o introducido por usuarios para prevenir ataques XSS (Cross-Site Scripting).
+  - Headers de seguridad HTTP (CSP, X-Content-Type-Options, HSTS, Referrer-Policy) configurados en `next.config.js` / middleware.
+
+
 
 
 
