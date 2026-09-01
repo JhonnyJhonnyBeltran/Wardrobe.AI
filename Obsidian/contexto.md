@@ -358,7 +358,7 @@ En cada conversación, el backend alimenta a CloSy con:
   - Definida animación continua suave `@keyframes shimmer-wave` en `app/globals.css` (`.skeleton-wave` y `.skeleton`) para modo claro y modo oscuro.
   - Genera un barrido de luz horizontal de izquierda a derecha idéntico a la animación de carga de Instagram.
 - **Skeletons por Componentes y Vistas (`components/Skeleton.tsx`)**:
-  - **Perfil (`SkeletonProfile` y `SkeletonProfileGrid`)**: Calcado exactamente de la referencia de Instagram con barra superior, foto de perfil circular con wave, líneas de nombre/biografía, botones de acción ("Cargando" / "Mensaje"), carrusel de historias/destacados y cuadrícula de 3 columnas de posts cuadrados (`aspect-square`).
+  - **Perfil (`SkeletonProfile` y `SkeletonProfileGrid`)**: Adaptado a la estructura real de Klozet (barra superior, avatar circular con wave, 3 estadísticas [Posts, Seguidores, Seguidos], líneas de nombre/biografía, botón de acción [Editar perfil], pestañas de navegación y cuadrícula de 3 columnas de posts cuadrados `aspect-square`).
   - **Feed (`SkeletonFeed`)**: Tarjetas de feed y placeholders con alturas realistas y efecto onda.
   - **Búsqueda (`SkeletonSearch` y `SkeletonUserList`)**: Cuadrícula exploratoria y lista de usuarios con avatar, texto y botón de seguir en wave shimmer.
   - **Notificaciones (`SkeletonNotifications`)**: Lista de actividad con avatar, texto y miniatura de post a la derecha en wave shimmer.
@@ -366,6 +366,10 @@ En cada conversación, el backend alimenta a CloSy con:
 - **Alineación de Imágenes en Feed Móvil (`app/(app)/feed/page.tsx`)**:
   - En vista móvil, se implementó una estructura paralela de 2 columnas (`grid grid-cols-2 gap-2.5 md:hidden items-start`) que distribuye las publicaciones de forma equilibrada.
   - Garantiza que la primera imagen de la columna izquierda y la primera de la columna derecha se peguen exactamente a la misma altura superior (`y = 0`) sin saltos, desfases ni márgenes asimétricos.
+
+## Tareas Pendientes / Roadmap
+- **Usuarios Recomendados ("Personas que quizá conozcas")**: Módulo/sección para descubrir y recomendar usuarios con afinidad de estilos, gustos compartidos o amigos mutuos (pendiente de especificación y diseño por parte del usuario).
+
 
 
 

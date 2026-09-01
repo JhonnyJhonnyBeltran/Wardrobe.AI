@@ -48,67 +48,63 @@ export function SkeletonProfileGrid({ count = 9, className = '' }: { count?: num
 }
 
 /**
- * Full Instagram-style Profile Skeleton (Calqued exactly from Instagram reference screenshot)
+ * Profile Skeleton adapted to Klozet UI (Avatar + Stats + Bio + Action button + Tabs + 3-Col Grid)
  */
 export function SkeletonProfile({ className = '' }: { className?: string }) {
   return (
     <div className={`w-full min-h-screen bg-[var(--background)] ${className}`}>
       {/* Top Header Bar */}
-      <div className="sticky top-0 z-30 flex items-center justify-between px-4 h-14 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-color)]">
+      <div className="sticky top-0 z-30 flex items-center justify-between px-4 h-14 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-color)]/50 w-full md:max-w-[70%] mx-auto">
         <div className="w-6 h-6 rounded-md skeleton-wave" />
-        <div className="h-5 w-32 rounded-full skeleton-wave" />
+        <div className="h-5 w-28 rounded-full skeleton-wave" />
         <div className="w-6 h-6 rounded-md skeleton-wave" />
       </div>
 
-      <div className="px-4 pt-4 pb-2">
-        {/* Avatar + Stats / Bio Header */}
-        <div className="flex items-center gap-6 mb-4">
-          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full p-0.5 border-2 border-[var(--border-color)] shrink-0">
-            <div className="w-full h-full rounded-full skeleton-wave" />
-          </div>
-          <div className="flex-1 flex flex-col gap-2">
-            <div className="h-5 w-28 rounded-md skeleton-wave" />
-            <div className="h-3.5 w-40 rounded-md skeleton-wave opacity-70" />
-            <div className="h-3 w-20 rounded-md skeleton-wave opacity-50" />
-          </div>
-        </div>
-
-        {/* Action Buttons: e.g. [Cargando] [Mensaje] */}
-        <div className="flex gap-2 w-full mb-5">
-          <div className="flex-1 h-9 rounded-lg skeleton-wave" />
-          <div className="flex-1 h-9 rounded-lg skeleton-wave" />
-        </div>
-
-        {/* Story Highlights / Featured Collections Carousel */}
-        <div className="grid grid-cols-3 gap-2.5 mb-5 overflow-hidden">
-          {[...Array(3)].map((_, i) => (
-            <div 
-              key={i} 
-              className="flex flex-col items-center gap-2 p-3 rounded-xl bg-[var(--background-secondary)]/60 border border-[var(--border-color)]/40"
-            >
-              <div className="w-16 h-16 rounded-full skeleton-wave shrink-0" />
-              <div className="h-3 w-14 rounded skeleton-wave" />
-              <div className="h-2.5 w-10 rounded skeleton-wave opacity-60" />
-              <div className="w-full h-6 rounded-md skeleton-wave mt-1" />
+      <main className="w-full md:max-w-[70%] mx-auto">
+        <div className="px-5 pt-6">
+          {/* Avatar + Stats Header */}
+          <div className="flex items-center gap-8 mb-6">
+            <div className="w-24 h-24 rounded-full skeleton-wave shrink-0" />
+            <div className="flex-1 flex justify-around">
+              <div className="flex flex-col items-center gap-1.5">
+                <div className="h-5 w-8 rounded skeleton-wave" />
+                <div className="h-3 w-10 rounded skeleton-wave opacity-60" />
+              </div>
+              <div className="flex flex-col items-center gap-1.5">
+                <div className="h-5 w-8 rounded skeleton-wave" />
+                <div className="h-3 w-14 rounded skeleton-wave opacity-60" />
+              </div>
+              <div className="flex flex-col items-center gap-1.5">
+                <div className="h-5 w-8 rounded skeleton-wave" />
+                <div className="h-3 w-12 rounded skeleton-wave opacity-60" />
+              </div>
             </div>
-          ))}
-        </div>
-      </div>
+          </div>
 
-      {/* Profile Tabs */}
-      <div className="flex border-b border-[var(--border-color)]">
-        <div className="flex-1 flex items-center justify-center py-3 border-b-2 border-[var(--brand-pink)] text-[var(--brand-pink)]">
-          <Grid3x3 className="w-6 h-6 opacity-40" />
+          {/* User Name & Bio */}
+          <div className="pb-6 border-b border-[var(--border-color)]">
+            <div className="h-4 w-32 rounded skeleton-wave mb-2" />
+            <div className="h-3.5 w-48 rounded skeleton-wave opacity-70 mb-4" />
+            {/* Edit Profile / Action Button */}
+            <div className="w-full h-9 rounded-lg skeleton-wave" />
+          </div>
         </div>
-        <div className="flex-1 flex items-center justify-center py-3 border-b-2 border-transparent text-[var(--foreground-tertiary)]">
-          <Bookmark className="w-6 h-6 opacity-30" />
-        </div>
-      </div>
 
-      {/* 3-Column Square Grid Posts */}
-      <div className="p-0.5">
-        <SkeletonProfileGrid count={9} />
-      </div>
+        {/* Profile Tabs */}
+        <div className="flex border-b border-[var(--border-color)]">
+          <div className="flex-1 flex items-center justify-center py-3 border-b-2 border-[var(--brand-pink)] text-[var(--brand-pink)]">
+            <Grid3x3 className="w-6 h-6 opacity-40" />
+          </div>
+          <div className="flex-1 flex items-center justify-center py-3 border-b-2 border-transparent text-[var(--foreground-tertiary)]">
+            <Bookmark className="w-6 h-6 opacity-30" />
+          </div>
+        </div>
+
+        {/* 3-Column Square Grid Posts */}
+        <div className="p-0.5">
+          <SkeletonProfileGrid count={9} />
+        </div>
+      </main>
     </div>
   );
 }
