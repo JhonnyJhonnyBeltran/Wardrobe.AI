@@ -472,6 +472,21 @@ En cada conversación, el backend alimenta a CloSy con:
   - La barra superior fija con el botón de creación `+`, el título central *"Para ti"* y el icono de mensajes directos (`Send`) se configuró como exclusiva para dispositivos móviles (`md:hidden`).
   - En versión de escritorio, las acciones de creación, navegación y mensajes se gestionan íntegramente a través de la barra lateral (`Sidebar.tsx`), eliminando la cabecera redundante y ampliando el espacio visual para la cuadrícula de publicaciones (`masonry-grid`) con padding superior optimizado (`md:pt-6`).
 
+### 26. Optimización Integral de Kloe AI: Z-Index de Drawers en Escritorio, Memoria Conversacional Dinámica y Sustitución de Prendas (Septiembre 2026)
+- **Capa y Posicionamiento de Drawers en Escritorio (`/closet/kloe`)**:
+  - Elevado el backdrop de los paneles laterales (`showHistoryDrawer`, `showSavedDrawer`, `showWardrobeDrawer`) a `z-[99999]` y el panel a `z-[100000]`.
+  - Evita que los cajones de historial de conversaciones, prendas del armario y looks guardados se rendericen por debajo de la barra de navegación lateral (`Sidebar.tsx` en `z-[5001]`).
+- **Resolución Resiliente de Modelos Gemini AI (`/api/closy/chat`)**:
+  - Reemplazados endpoints no disponibles por la lista verificada de modelos multimodales activos: `['gemini-3-flash-preview', 'gemini-3.5-flash', 'gemini-3.7-flash']`.
+  - Saneamiento y alternancia estricta del historial de turnos (`user` $\leftrightarrow$ `model`) para cumplir con las especificaciones de Google AI Studio.
+- **Continuidad Conversacional y Sustitución Dinámica de Prendas**:
+  - El motor de Kloe escucha activamente peticiones de cambio (*"quiero otra parte de arriba"*, *"cámbiame los zapatos"*, *"otro pantalón"*, *"otra sudadera"*).
+  - Conserva las piezas compatibles del conjunto y sustituye deliberadamente la categoría solicitada por una prenda alternativa diferente del armario del usuario.
+  - Erradicación completa de plantillas repetitivas o fórmulas robóticas (*"Para responder a lo que me pides sobre..."*, *"Composición del look: ..."*, etc.) tanto en el system prompt de Gemini como en el motor de estilismo heurístico de respaldo.
+- **Armonización Visual con Apple HIG**:
+  - Rediseñado el botón *"Probar look en mi avatar virtual"* y *"Montar y editar en el lienzo"* con la paleta de tokens oficial (`bg-[var(--brand-pink)]`), tipografía seminegrita, esquinas redondeadas continuas (squircle) y microinteracción de pulsación elástica (`active:scale-[0.98]`).
+
+
 
 
 

@@ -708,7 +708,7 @@ export default function KloePage() {
                     <button
                       onClick={() => handleTryOnAvatar(msg)}
                       disabled={generatingAvatarForMsgId === msg.id}
-                      className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-[var(--brand-pink)] via-purple-600 to-indigo-600 hover:opacity-95 text-white text-xs font-bold shadow-md shadow-[var(--brand-pink)]/20 transition-all active:scale-98 disabled:opacity-50 cursor-pointer"
+                      className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[var(--brand-pink)] hover:opacity-90 text-white text-xs font-semibold shadow-sm transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer"
                     >
                       {generatingAvatarForMsgId === msg.id ? (
                         <>
@@ -718,14 +718,14 @@ export default function KloePage() {
                       ) : (
                         <>
                           <Sparkles className="w-4 h-4" />
-                          ✨ Probar look en mi avatar virtual
+                          Probar look en mi avatar virtual
                         </>
                       )}
                     </button>
 
                     <Link
                       href={`/create?itemIds=${(msg.recommended_outfit.items || []).map((i: any) => i.id).join(',')}&name=${encodeURIComponent(msg.recommended_outfit.name || 'Look Kloe')}&occasion=${encodeURIComponent(msg.recommended_outfit.occasion || '')}`}
-                      className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-xl bg-[var(--background-secondary)] hover:bg-[var(--border-color)] text-[var(--foreground)] border border-[var(--border-color)] text-xs font-semibold transition-colors"
+                      className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[var(--background-secondary)] hover:bg-[var(--card-bg)] text-[var(--foreground)] border border-[var(--border-color)] text-xs font-semibold transition-all active:scale-[0.98]"
                     >
                       <Layers className="w-4 h-4 text-[var(--brand-pink)]" />
                       Montar y editar en el lienzo
@@ -889,14 +889,14 @@ export default function KloePage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowHistoryDrawer(false)}
-              className="fixed inset-0 bg-black/50 backdrop-blur-xs z-50"
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[99999]"
             />
             <motion.div
               initial={{ x: '-100%' }}
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed inset-y-0 left-0 w-[85%] max-w-sm bg-[var(--card-bg)] border-r border-[var(--border-color)] z-50 p-5 flex flex-col justify-between shadow-2xl"
+              className="fixed inset-y-0 left-0 w-[85%] max-w-sm bg-[var(--card-bg)] border-r border-[var(--border-color)] z-[100000] p-5 flex flex-col justify-between shadow-2xl"
             >
               <div className="space-y-4 overflow-y-auto">
                 <div className="flex items-center justify-between pb-3 border-b border-[var(--border-color)]">
@@ -960,14 +960,14 @@ export default function KloePage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowSavedDrawer(false)}
-              className="fixed inset-0 bg-black/50 backdrop-blur-xs z-50"
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[99999]"
             />
             <motion.div
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed inset-y-0 right-0 w-[85%] max-w-sm bg-[var(--card-bg)] border-l border-[var(--border-color)] z-50 p-5 flex flex-col justify-between shadow-2xl"
+              className="fixed inset-y-0 right-0 w-[85%] max-w-sm bg-[var(--card-bg)] border-l border-[var(--border-color)] z-[100000] p-5 flex flex-col justify-between shadow-2xl"
             >
               <div className="space-y-4 overflow-y-auto flex-1">
                 <div className="flex items-center justify-between pb-3 border-b border-[var(--border-color)]">
@@ -1047,14 +1047,14 @@ export default function KloePage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowWardrobeDrawer(false)}
-              className="fixed inset-0 bg-black/50 backdrop-blur-xs z-50"
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[99999]"
             />
             <motion.div
               initial={{ x: '100%' }}
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed inset-y-0 right-0 w-[85%] max-w-sm bg-[var(--card-bg)] border-l border-[var(--border-color)] z-50 p-5 flex flex-col justify-between shadow-2xl"
+              className="fixed inset-y-0 right-0 w-[85%] max-w-sm bg-[var(--card-bg)] border-l border-[var(--border-color)] z-[100000] p-5 flex flex-col justify-between shadow-2xl"
             >
               <div className="space-y-4 overflow-y-auto flex-1">
                 <div className="flex items-center justify-between pb-3 border-b border-[var(--border-color)]">
