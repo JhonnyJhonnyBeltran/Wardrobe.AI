@@ -190,11 +190,46 @@ export function useAddItemForm({
             });
         });
 
+        // Downscale image to lightweight JPEG (max 800px, < 80KB) for instant Gemini Vision response
+        const optimizeImageForVision = (dataUrl: string): Promise<string> => {
+            return new Promise((resolve) => {
+                const img = document.createElement('img');
+                img.onload = () => {
+                    let w = img.width;
+                    let h = img.height;
+                    const maxDim = 800;
+                    if (w > maxDim || h > maxDim) {
+                        if (w > h) {
+                            h = Math.round((h * maxDim) / w);
+                            w = maxDim;
+                        } else {
+                            w = Math.round((w * maxDim) / h);
+                            h = maxDim;
+                        }
+                    }
+                    const canvas = document.createElement('canvas');
+                    canvas.width = Math.max(1, w);
+                    canvas.height = Math.max(1, h);
+                    const ctx = canvas.getContext('2d');
+                    if (ctx) {
+                        ctx.drawImage(img, 0, 0, w, h);
+                        resolve(canvas.toDataURL('image/jpeg', 0.85));
+                    } else {
+                        resolve(dataUrl);
+                    }
+                };
+                img.onerror = () => resolve(dataUrl);
+                img.src = dataUrl;
+            });
+        };
+
+        const visionBase64 = await optimizeImageForVision(originalDataUrl);
+
         // Start AI classification in background
         const analyzePromise = fetch('/api/analyze-clothing', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ imageBase64: originalDataUrl })
+            body: JSON.stringify({ imageBase64: visionBase64 })
         })
         .then(res => res.ok ? res.json() : null)
         .catch(err => {
@@ -243,8 +278,8 @@ export function useAddItemForm({
                     if (aiAnalysis && aiAnalysis.category) {
                         setFormData(prev => ({
                             ...prev,
-                            name: prev.name.trim() && prev.name !== DEFAULT_FORM_DATA.name ? prev.name : (aiAnalysis.name || prev.name),
-                            type: aiAnalysis.category || prev.type,
+                            name: (prev.name && prev.name.trim() !== '' && prev.name !== DEFAULT_FORM_DATA.name && prev.name !== 'Nueva prenda') ? prev.name : (aiAnalysis.name || 'Nueva prenda'),
+                            type: aiAnalysis.category,
                             color: aiAnalysis.color || prev.color,
                             colorHex: aiAnalysis.colorHex || prev.colorHex,
                             fabric: aiAnalysis.fabric || prev.fabric,

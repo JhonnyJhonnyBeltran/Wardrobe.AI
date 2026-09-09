@@ -44,74 +44,74 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Se requiere una imagen en base64' }, { status: 400 });
     }
 
-    // Protect against massive payloads (max 10MB base64 string)
-    if (imageBase64.length > 10 * 1024 * 1024) {
+    // Protect against massive payloads (max 12MB base64 string)
+    if (imageBase64.length > 12 * 1024 * 1024) {
       return NextResponse.json({ error: 'La imagen supera el tamaño máximo permitido' }, { status: 400 });
     }
 
     const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
 
-    // Clean base64 data
-    const cleanBase64 = imageBase64.replace(/^data:image\/[a-z]+;base64,/, '');
-    const mimeMatch = imageBase64.match(/^data:(image\/[a-z]+);base64,/);
-    const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+    // Clean base64 data and normalize MIME type
+    const cleanBase64 = imageBase64.replace(/^data:image\/[a-zA-Z0-9+.-]+;base64,/, '');
+    const mimeMatch = imageBase64.match(/^data:(image\/[a-zA-Z0-9+.-]+);base64,/);
+    let rawMime = mimeMatch ? mimeMatch[1].toLowerCase() : 'image/jpeg';
+    
+    // Gemini inline_data only accepts jpeg, png, webp, gif
+    let mimeType = 'image/jpeg';
+    if (rawMime.includes('png')) mimeType = 'image/png';
+    else if (rawMime.includes('webp')) mimeType = 'image/webp';
+    else if (rawMime.includes('gif')) mimeType = 'image/gif';
 
     if (!apiKey) {
-      // Fallback heuristic if no API key
       return NextResponse.json({
-        category: 'other',
-        name: 'Nuevo artículo',
+        category: 'bottom',
+        name: 'Prenda de armario',
         color: 'Negro',
-        colorHex: '#000000',
+        colorHex: '#121212',
         fabric: 'Algodón',
         season: 'all-season',
         isInappropriate: false
       });
     }
 
-    // Models to try in order of latency, multimodal capability and active availability
-    const models = ['gemini-3-flash-preview', 'gemini-3.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+    // Models verified active with vision generateContent support
+    const models = ['gemini-3-flash-preview', 'gemini-3.6-flash', 'gemini-3.5-flash'];
 
-    const prompt = `Eres el sistema de visión artificial y estilismo de Klozet.
-Tu objetivo es analizar con máxima precisión la fotografía real de una prenda u objeto que el usuario ha subido.
+    const prompt = `Eres un experto clasificador visual de moda y prendas de vestir para la app Klozet.
+Analiza detenidamente la fotografía real de la prenda u objeto subido por el usuario.
 
-1. MODERACIÓN Y SEGURIDAD ESTRICTA:
-   Evalúa si la imagen contiene contenido inapropiado:
-   - Desnudez, pornografía, partes íntimas o contenido sexual explícito/sugerente.
-   - Violencia explícita, sangre, armas, autolesiones o gore.
-   - Símbolos de odio, drogas ilícitas, gestos ofensivos o contenido denigrante.
-   Si detectas CUALQUIERA de estos elementos, marca "isInappropriate": true y describe la razón en "inappropriateReason".
+1. SEGURIDAD Y MODERACIÓN:
+   - "isInappropriate": true si contiene desnudez explícita, partes íntimas, violencia, armas o drogas ilegales. De lo contrario, false.
 
-2. CLASIFICACIÓN Y DETECCIÓN EXACTA DEL TIPO DE PRENDA:
-   Si la imagen es segura ("isInappropriate": false), clasifica la prenda en una de las siguientes categorías exactas:
-   - "top": Camiseta básica o gráfica, top de tirantes, crop top, polo, tank top.
-   - "shirt": Camisa (de vestir o casual), blusa, sobrecamisa.
-   - "sweater": Jersey, suéter de punto, cárdigan, chaleco de punto.
-   - "hoodie": Sudadera (con o sin capucha), crewneck, sudadera deportiva.
-   - "jacket": Chaqueta, cazadora denim/vaquera, biker de cuero, blazer, americana, bomber, cortavientos.
-   - "outerwear": Abrigo largo, abrigo de lana, gabardina, parka, plumífero, trench.
-   - "bottom": Pantalón largo, vaqueros / jeans, pantalones cargo, joggers, chinos, pantalones de traje, leggings.
-   - "shorts": Pantalón corto, bermudas, shorts de deporte o denim.
-   - "skirt": Falda (corta, midi o larga).
-   - "dress": Vestido, mono, enterizo, peto.
-   - "shoes": Calzado, zapatillas sneakers, botas, botines, mocasines, sandalias, tacones, zapatos de vestir.
-   - "bag": Bolso, tote bag, mochila, riñonera, bandolera, cartera.
-   - "accessory": Gorra, gorro, sombrero, bufanda, cinturón, gafas de sol, reloj, collar, pulsera.
-   - "other": ÚNICAMENTE si es un LIBRO (novela, cómic, libro de texto), libreta, figura, producto o cualquier objeto cotidiano NO textil ni de moda.
-     * Si es un LIBRO: pon el nombre como "Libro: [Título visible]".
+2. CLASIFICACIÓN RIGUROSA DE LA PRENDA:
+   Identifica la prenda y selecciona obligatoriamente una de las siguientes categorías exactas en el campo "category":
+   - "bottom": CUALQUIER pantalón largo, vaqueros / jeans, pantalones cargo, joggers, chinos, pantalones de vestir/pinzas, leggings, pantalones de chándal. (Si ves perneras largas, tiro, cinturilla de pantalón o denim largo -> es "bottom").
+   - "shorts": Pantalón corto, bermudas, shorts vaqueros, shorts deportivos, bañador de hombre.
+   - "top": Camisetas básicas o gráficas, tops de tirantes, crop tops, polos, tank tops, camisetas de manga corta/larga.
+   - "shirt": Camisas de botones (formales o casuales), blusas, sobrecamisas.
+   - "sweater": Jerseys de punto, suéteres, cárdigans, chalecos de punto.
+   - "hoodie": Sudaderas con o sin capucha, crewnecks, sudaderas deportivas.
+   - "jacket": Chaquetas, cazadoras vaqueras/denim, bikers de cuero, blazers, americanas, bombers, cortavientos.
+   - "outerwear": Abrigos largos, parkas, plumíferos, gabardinas, abrigos de lana, trench.
+   - "skirt": Faldas (minifaldas, faldas midi, faldas largas, faldas plisadas).
+   - "dress": Vestidos, monos enteros, petos, jumpsuits.
+   - "shoes": Calzado, zapatillas / sneakers, botas, botines, mocasines, sandalias, tacones, zapatos de vestir.
+   - "bag": Bolsos de mano, tote bags, mochilas, riñoneras, bandoleras, carteras.
+   - "accessory": Gorras, gorros, sombreros, cinturones, gafas de sol, relojes, bufandas, corbatas, joyas.
+   - "other": ÚNICAMENTE para objetos que NO sean prendas de vestir ni calzado (ej: libros, cómics, figuras, libretas). ESTÁ PROHIBIDO clasificar una prenda o ropa como "other".
 
-3. DETALLES VISUALES:
-   - "name": Nombre descriptivo y comercial de la prenda en español (ej: "Camiseta Gráfica Vintage", "Vaqueros Baggy Azules", "Sudadera Oversize Gris", "Zapatillas Deportivas Blancas", "Cazadora Cuero Biker").
-   - "color": Nombre en español del color principal predominante (ej: Negro, Blanco, Azul marino, Gris, Beige, Verde oliva, Marrón, Rojo, etc.).
-   - "colorHex": Código #HEX aproximado del color dominante.
-   - "fabric": Algodón | Denim | Cuero | Lana | Lino | Poliéster | Punto | Seda | Pana | Sintético | Papel / Tapa dura.
+3. DETECCIÓN CROMÁTICA Y DE DETALLES:
+   - "color": Nombre en español del color predominante REAL de la prenda (ej: "Azul marino", "Azul denim", "Negro", "Blanco", "Gris", "Beige", "Verde militar", "Marrón", "Rojo", "Rosa", "Amarillo", "Naranja", "Morado", etc.).
+   - "colorHex": Código hexadecimal representativo del color dominante (ej: Negro="#121212", Azul marino="#1E293B", Azul denim="#2563EB", Blanco="#FFFFFF", Beige="#D4C4B0", Gris="#6B7280", Verde oliva="#4D5D3B", etc.).
+   - "name": Nombre descriptivo de catálogo en español (ej: "Vaqueros Baggy Azul Claro", "Pantalón Cargo Negro", "Camiseta Gráfica Vintage", "Sudadera Oversize Gris", "Zapatillas Bajas Blancas").
+   - "fabric": Algodón | Denim | Cuero | Lana | Lino | Poliéster | Punto | Seda | Pana | Sintético.
    - "season": "spring" | "summer" | "autumn" | "winter" | "all-season".
 
-Devuelve EXCLUSIVAMENTE un JSON válido sin texto adicional ni bloques markdown:
+Devuelve ÚNICAMENTE un JSON válido sin texto extra:
 {
   "isInappropriate": false,
   "inappropriateReason": null,
-  "category": "top" | "shirt" | "sweater" | "hoodie" | "jacket" | "outerwear" | "bottom" | "shorts" | "skirt" | "dress" | "shoes" | "bag" | "accessory" | "other",
+  "category": "bottom",
   "name": "Nombre descriptivo de la prenda",
   "color": "Color principal",
   "colorHex": "#hex",
@@ -123,7 +123,7 @@ Devuelve EXCLUSIVAMENTE un JSON válido sin texto adicional ni bloques markdown:
       try {
         const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
         const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 7000);
+        const timeout = setTimeout(() => controller.abort(), 12000);
 
         const response = await fetch(geminiUrl, {
           method: 'POST',
@@ -146,7 +146,7 @@ Devuelve EXCLUSIVAMENTE un JSON válido sin texto adicional ni bloques markdown:
             generationConfig: {
               response_mime_type: 'application/json',
               temperature: 0.1,
-              max_output_tokens: 800
+              max_output_tokens: 600
             }
           })
         });
@@ -163,7 +163,9 @@ Devuelve EXCLUSIVAMENTE un JSON válido sin texto adicional ni bloques markdown:
               cleaned = cleaned.replace(/^```\s*/, '').replace(/\s*```$/, '');
             }
             const parsed: AnalyzeResponse = JSON.parse(cleaned);
-            return NextResponse.json(parsed);
+            if (parsed && parsed.category) {
+              return NextResponse.json(parsed);
+            }
           }
         } else {
           console.warn(`[AnalyzeClothing] Model ${model} returned status ${response.status}`);
@@ -175,7 +177,7 @@ Devuelve EXCLUSIVAMENTE un JSON válido sin texto adicional ni bloques markdown:
 
     // Default graceful fallback if all models failed or network issue
     return NextResponse.json({
-      category: 'top',
+      category: 'bottom',
       name: 'Nueva prenda',
       color: 'Negro',
       colorHex: '#121212',

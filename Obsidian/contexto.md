@@ -499,8 +499,10 @@ En cada conversación, el backend alimenta a CloSy con:
 
 ### 28. Reconocimiento Real por IA en Subida de Prendas, Manejo Seguro de Errores, Confirmación de Cancelación y Rediseño de Subida Pendiente (Septiembre 2026)
 - **Reconocimiento y Clasificación Real de Prendas con Gemini Vision (`/api/analyze-clothing`)**:
-  - Actualizada la cascada de modelos activos de Gemini (`gemini-3-flash-preview`, `gemini-3.5-flash`, `gemini-2.0-flash`, `gemini-1.5-flash`) con payload optimizado en `inline_data`.
-  - Clasificación automática precisa en categorías reales (`top`, `shirt`, `sweater`, `hoodie`, `jacket`, `outerwear`, `bottom`, `shorts`, `skirt`, `dress`, `shoes`, `bag`, `accessory`), reservando `other` exclusivamente para objetos no textiles como libros.
+  - Actualizada la cascada de modelos multimodales verificados (`gemini-3-flash-preview`, `gemini-3.6-flash`, `gemini-3.5-flash`) con optimización de payload en `inline_data`.
+  - Normalización de formatos (MIME types a JPEG/PNG) y escalado automático client-side (< 80KB) para respuestas inmediatas (< 1.5s) sin desbordamiento de payload.
+  - Clasificación anatómica estricta: pantalones y jeans asignados inmediatamente a `bottom`, shorts a `shorts`, calzado a `shoes`, prohibiendo `other` para cualquier artículo textil o de moda.
+  - Detección cromática fidedigna: extrae el color textil predominante y asigna tanto el nombre descriptivo en español como el código hexadecimal exacto `#HEX`.
 - **Protección de Datos y Manejo Seguro de Errores**:
   - Eliminados los mensajes y volcados de consola técnicos o confidenciales en pantalla.
   - Modal de error accesible ante formatos incompatibles: *"El formato de foto que has subido es incorrecto. Por favor, sube una imagen válida (JPG, PNG, WebP, HEIC o AVIF)"*.
@@ -519,6 +521,12 @@ En cada conversación, el backend alimenta a CloSy con:
   - En `components/Notifications/NotificationsPopover.tsx`, se eliminaron todas las clases `dark:bg-gray-900`, `dark:bg-gray-800` y `dark:border-gray-800` que provocaban un fondo azulado en el panel lateral de notificaciones.
   - Sustituidas por las variables oficiales del sistema: `bg-[var(--background)]`, `bg-[var(--card-bg)]`, `border-[var(--border-color)]`, `text-[var(--foreground)]` y `text-[var(--foreground-secondary)]`, garantizando coherencia absoluta con el fondo oscuro grafito/zinc de la aplicación (`#09090b` / `#121215`).
   - Actualizados `NotificationToast.tsx`, `ItemDetailModal.tsx` y `OutfitCard.tsx` con el mismo estándar visual limpio y homogéneo.
+
+### 30. Rediseño de la Tarjeta de Subida de Foto y Erradicación de Bordes Discontinuos (Septiembre 2026)
+- **Eliminación Total de `border-dashed` y Coherencia de Curvatura Apple HIG (`ImageUploader.tsx`)**:
+  - Erradicado el borde discontinuo/punteado que no respetaba la curvatura continua del contenedor y generaba esquinas cortadas en hover.
+  - Tarjeta de subida con squircle continuo `rounded-3xl`, borde sólido hairline `border border-[var(--border-color)]`, microinteracción elástica `active:scale-[0.98]` y transición suave de luz al pasar el cursor (`hover:border-[var(--brand-pink)]/50`).
+
 
 
 

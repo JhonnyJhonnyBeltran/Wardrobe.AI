@@ -25,9 +25,9 @@ const ProcessingOverlay = memo(function ProcessingOverlay({
     message: string;
 }) {
     return (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/30 backdrop-blur-sm z-10 transition-all duration-300 rounded-[32px]">
-            <Loader2 className="w-10 h-10 text-[var(--brand-pink)] animate-spin" />
-            <span className="text-sm text-white font-semibold animate-pulse drop-shadow-lg px-4 text-center">
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2.5 bg-black/40 backdrop-blur-md z-10 transition-all duration-300 rounded-3xl p-4">
+            <Loader2 className="w-9 h-9 text-[var(--brand-pink)] animate-spin" />
+            <span className="text-xs text-white font-bold animate-pulse drop-shadow text-center">
                 {message}
             </span>
         </div>
@@ -46,9 +46,9 @@ const EmptyState = memo(function EmptyState({
 }) {
     if (isProcessing) {
         return (
-            <div className="flex flex-col items-center justify-center gap-3">
-                <Loader2 className="w-10 h-10 text-[var(--brand-pink)] animate-spin" />
-                <span className="text-sm text-[var(--brand-pink)] font-semibold animate-pulse">
+            <div className="flex flex-col items-center justify-center gap-3 p-6">
+                <Loader2 className="w-9 h-9 text-[var(--brand-pink)] animate-spin" />
+                <span className="text-xs text-[var(--brand-pink)] font-bold animate-pulse text-center">
                     {processingMessage}
                 </span>
             </div>
@@ -56,13 +56,17 @@ const EmptyState = memo(function EmptyState({
     }
 
     return (
-        <div className="flex flex-col items-center justify-center gap-3 p-8 border-2 border-dashed border-[var(--border-color)] rounded-3xl w-full h-full bg-[var(--background-secondary)] group-hover:border-[var(--brand-pink)] transition-all duration-300">
-            <div className="w-16 h-16 rounded-full bg-[var(--background)] flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
-                <Upload className="w-8 h-8 text-[var(--foreground-tertiary)]" />
+        <div className="flex flex-col items-center justify-center gap-3.5 p-6 w-full h-full select-none">
+            <div className="w-14 h-14 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] flex items-center justify-center group-hover:scale-105 group-hover:border-[var(--brand-pink)]/40 group-hover:bg-[var(--brand-pink)]/5 transition-all duration-300 shadow-sm">
+                <Upload className="w-6 h-6 text-[var(--foreground-secondary)] group-hover:text-[var(--brand-pink)] transition-colors" />
             </div>
             <div className="text-center">
-                <span className="block text-sm font-bold text-[var(--foreground)] mb-1">Subir foto</span>
-                <span className="text-xs text-[var(--foreground-tertiary)]">Toca para seleccionar</span>
+                <span className="block text-sm font-bold text-[var(--foreground)] mb-0.5 group-hover:text-[var(--brand-pink)] transition-colors">
+                    Subir foto
+                </span>
+                <span className="text-xs text-[var(--foreground-secondary)]">
+                    Toca para seleccionar o tomar foto
+                </span>
             </div>
         </div>
     );
@@ -95,7 +99,7 @@ export const ImageUploader = memo(function ImageUploader({
 
     return (
         <div className="w-full">
-            <label className="block text-xs font-bold text-[var(--foreground)] mb-3 uppercase tracking-wider">
+            <label className="block text-xs font-bold text-[var(--foreground-secondary)] mb-2.5 uppercase tracking-wider">
                 Foto de la prenda
             </label>
             
@@ -120,25 +124,25 @@ export const ImageUploader = memo(function ImageUploader({
             
             {/* Image Upload Area */}
             <div 
-                className="w-full max-w-[240px] mx-auto aspect-square rounded-[32px] overflow-hidden bg-[var(--background-secondary)] relative flex items-center justify-center transition-all duration-300 hover:shadow-xl hover:shadow-[var(--brand-pink)]/5 cursor-pointer group"
+                className="w-full max-w-[240px] mx-auto aspect-square rounded-3xl overflow-hidden bg-[var(--card-bg)] border border-[var(--border-color)] hover:border-[var(--brand-pink)]/50 hover:bg-[var(--background-secondary)]/60 relative flex items-center justify-center transition-all duration-300 shadow-sm hover:shadow-lg active:scale-[0.98] cursor-pointer group"
                 onClick={() => setShowOptions(true)}
             >
                 {image ? (
                     <>
-                        <div className={`relative w-full h-full transition-all duration-500 ease-out p-4 bg-white ${isProcessing ? 'scale-90 opacity-50 blur-sm' : 'scale-100 opacity-100'}`}>
+                        <div className={`relative w-full h-full transition-all duration-500 ease-out p-3 bg-white dark:bg-[#151518] ${isProcessing ? 'scale-90 opacity-50 blur-sm' : 'scale-100 opacity-100'}`}>
                             <Image
                                 src={image}
                                 alt="Vista previa"
                                 fill
-                                className="object-contain p-4"
+                                className="object-contain p-3"
                                 unoptimized
                                 priority
                             />
                             
                             {/* Overlay hint to change image */}
-                            <div className="absolute inset-x-0 bottom-6 flex justify-center opacity-0 md:group-hover:opacity-100 transition-opacity">
-                                <div className="bg-black/60 backdrop-blur-md text-white text-[10px] font-bold py-1.5 px-4 rounded-full border border-white/10">
-                                    TAP PARA CAMBIAR
+                            <div className="absolute inset-x-0 bottom-3 flex justify-center opacity-0 md:group-hover:opacity-100 transition-opacity">
+                                <div className="bg-black/70 backdrop-blur-md text-white text-[10px] font-bold py-1 px-3.5 rounded-full border border-white/10 shadow-sm">
+                                    CAMBIAR FOTO
                                 </div>
                             </div>
                         </div>
