@@ -63,6 +63,7 @@ export interface ImageUploaderProps {
     isProcessing: boolean;
     processingMessage: string;
     onImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    onRemoveImage?: () => void;
 }
 
 // Image selector (for scraped images) props

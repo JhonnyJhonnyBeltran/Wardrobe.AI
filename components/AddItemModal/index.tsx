@@ -69,6 +69,7 @@ export default function AddItemModal({
         processingMessage,
         handleImageUpload,
         appendFiles,
+        removeSingleImage,
         handleColorSelect,
         handleColorPickerChange,
         buildPayload,
@@ -282,9 +283,10 @@ export default function AddItemModal({
 
     const handleHeaderCloseClick = () => {
         if (!isEditing && (isBatch || image || formData.name.trim() !== '')) {
-            saveToPending();
+            setShowCancelConfirm(true);
+        } else {
+            onClose();
         }
-        onClose();
     };
 
     const handleCancelButtonClick = () => {
@@ -427,7 +429,6 @@ export default function AddItemModal({
                                         onSelectIndex={setCurrentBatchIndex}
                                         onUpdateFormData={updateBatchItemFormData}
                                         onRemoveItem={removeBatchItem}
-                                        onOpenAddMore={() => setShowAddMore(true)}
                                         categories={categories}
                                         brands={brands}
                                         mode={mode}
@@ -435,40 +436,16 @@ export default function AddItemModal({
                                 ) : (
                                     /* ── Single Item View ── */
                                     <div className="space-y-4">
-                                        {/* Image Area with Add More (+) Button on the Right */}
+                                        {/* Image Area with corner delete button in ImageUploader */}
                                         <div className="relative w-full max-w-[240px] mx-auto min-h-[150px]">
                                             <ImageUploader
                                                 image={image}
                                                 isProcessing={isProcessing}
                                                 processingMessage={processingMessage}
                                                 onImageUpload={handleImageUpload}
+                                                onRemoveImage={image ? removeSingleImage : undefined}
                                             />
-                                            {image && !isEditing && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setShowAddMore(true)}
-                                                    className="absolute -right-3.5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-[var(--brand-pink)] hover:bg-[#ff3377] text-white shadow-xl hover:scale-110 active:scale-95 transition-all flex items-center justify-center cursor-pointer z-30 border-2 border-[var(--background)] group"
-                                                    title="Añadir más prendas"
-                                                    aria-label="Añadir más prendas"
-                                                >
-                                                    <Plus className="w-5 h-5 stroke-[2.5] group-hover:rotate-90 transition-transform duration-200" />
-                                                </button>
-                                            )}
                                         </div>
-
-                                        {/* Helper Pill to Add More Garments */}
-                                        {image && !isEditing && (
-                                            <div className="flex justify-center -mt-1">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setShowAddMore(true)}
-                                                    className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold bg-[var(--background-secondary)] hover:bg-[var(--border-color)] border border-[var(--border-color)] text-[var(--foreground)] hover:text-[var(--brand-pink)] transition-all cursor-pointer shadow-sm active:scale-95"
-                                                >
-                                                    <Plus className="w-3.5 h-3.5 text-[var(--brand-pink)] stroke-[2.5]" />
-                                                    <span>Añadir más prendas a esta subida</span>
-                                                </button>
-                                            </div>
-                                        )}
 
                                         {/* Nombre de la prenda (auto-detected, always visible) */}
                                         <div>
@@ -519,11 +496,6 @@ export default function AddItemModal({
                                                         title={colorOption.name}
                                                     />
                                                 ))}
-                                                {formData.color && (
-                                                    <span className="text-xs font-medium text-[var(--foreground-secondary)] ml-1">
-                                                        {formData.color}
-                                                    </span>
-                                                )}
                                             </div>
                                         </div>
 
@@ -636,43 +608,63 @@ export default function AddItemModal({
 
                             {/* ── Bottom Action Buttons ── */}
                             <div className="flex-shrink-0 p-4 pt-3 pb-6 md:pb-4 bg-[var(--background)] border-t border-[var(--border-color)] safe-bottom">
-                                <div className="flex items-center gap-3 w-full">
+                                <div className="flex items-center gap-2.5 w-full">
                                     <button
                                         type="button"
                                         onClick={handleCancelButtonClick}
-                                        className="px-5 py-3 rounded-2xl bg-[var(--background-secondary)] hover:bg-[var(--border-color)] text-[var(--foreground-secondary)] hover:text-[var(--foreground)] font-semibold text-xs sm:text-sm transition-all cursor-pointer"
+                                        className="px-3.5 sm:px-4 py-3 rounded-2xl bg-[var(--background-secondary)] hover:bg-[var(--border-color)] text-[var(--foreground-secondary)] hover:text-[var(--foreground)] font-semibold text-xs sm:text-sm transition-all cursor-pointer shrink-0"
                                     >
                                         Cancelar
                                     </button>
+
+                                    {!isEditing && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowAddMore(true)}
+                                            disabled={isSubmitting || (isBatch && batchItems.length >= 20)}
+                                            className="px-3.5 sm:px-4 py-3 rounded-2xl bg-[var(--background-secondary)] hover:bg-[var(--border-color)] text-[var(--foreground)] font-semibold text-xs sm:text-sm transition-all cursor-pointer flex items-center gap-1.5 shrink-0 border border-[var(--border-color)] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            title="Añadir más fotos de prendas"
+                                        >
+                                            <Plus className="w-4 h-4 text-[var(--brand-pink)] stroke-[2.5]" />
+                                            <span>Añadir prendas</span>
+                                        </button>
+                                    )}
+
                                     <Button
                                         onClick={handleSubmit}
                                         disabled={!canSubmit}
-                                        className="flex-1 py-3 rounded-2xl text-xs sm:text-sm font-semibold"
+                                        className="flex-1 py-3 rounded-2xl text-xs sm:text-sm font-semibold min-w-0"
                                         glow={canSubmit}
                                     >
                                         {isSubmitting ? (
                                             <>
-                                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                                {isBatch 
-                                                    ? (savingProgress ? `Guardando ${savingProgress.current} de ${savingProgress.total}...` : 'Guardando prendas...') 
-                                                    : (isEditing ? 'Guardando...' : 'Añadiendo...')
-                                                }
+                                                <Loader2 className="w-4 h-4 mr-1.5 sm:mr-2 animate-spin shrink-0" />
+                                                <span className="truncate">
+                                                    {isBatch 
+                                                        ? (savingProgress ? `Guardando ${savingProgress.current} de ${savingProgress.total}...` : 'Guardando...') 
+                                                        : (isEditing ? 'Guardando...' : 'Guardando...')
+                                                    }
+                                                </span>
                                             </>
                                         ) : isProcessing ? (
                                             <>
-                                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                                {isBatch
-                                                    ? `Procesando ${batchItems.filter(i => !i.isProcessing).length} de ${batchItems.length}...`
-                                                    : (processingMessage || 'Procesando...')
-                                                }
+                                                <Loader2 className="w-4 h-4 mr-1.5 sm:mr-2 animate-spin shrink-0" />
+                                                <span className="truncate">
+                                                    {isBatch
+                                                        ? `Procesando ${batchItems.filter(i => !i.isProcessing).length}/${batchItems.length}...`
+                                                        : (processingMessage || 'Procesando...')
+                                                    }
+                                                </span>
                                             </>
                                         ) : (
                                             <>
-                                                <Check className="w-4 h-4 mr-2" />
-                                                {isBatch
-                                                    ? `Añadir ${batchItems.filter(i => !i.error && (i.image || i.originalImage)).length} Prendas`
-                                                    : (isEditing ? 'Guardar Cambios' : 'Añadir Prenda')
-                                                }
+                                                <Check className="w-4 h-4 mr-1.5 sm:mr-2 shrink-0" />
+                                                <span className="truncate">
+                                                    {isBatch
+                                                        ? 'Guardar prendas'
+                                                        : (isEditing ? 'Guardar cambios' : 'Guardar prenda')
+                                                    }
+                                                </span>
                                             </>
                                         )}
                                     </Button>

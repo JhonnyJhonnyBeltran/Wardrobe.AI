@@ -27,7 +27,6 @@ interface BatchCarouselProps {
     onSelectIndex: (index: number) => void;
     onUpdateFormData: (index: number, data: Partial<ItemFormData>) => void;
     onRemoveItem: (index: number) => void;
-    onOpenAddMore?: () => void;
     categories: SelectOption[];
     brands: string[];
     mode: FormMode;
@@ -39,7 +38,6 @@ export const BatchCarousel = memo(function BatchCarousel({
     onSelectIndex,
     onUpdateFormData,
     onRemoveItem,
-    onOpenAddMore,
     categories,
     brands,
     mode,
@@ -48,16 +46,6 @@ export const BatchCarousel = memo(function BatchCarousel({
     if (!currentItem) return null;
 
     const totalCount = batchItems.length;
-    const canGoPrev = currentIndex > 0;
-    const canGoNext = currentIndex < totalCount - 1;
-
-    const handlePrev = () => {
-        if (canGoPrev) onSelectIndex(currentIndex - 1);
-    };
-
-    const handleNext = () => {
-        if (canGoNext) onSelectIndex(currentIndex + 1);
-    };
 
     const handleColorSelect = (colorOption: { name: string; hex: string }) => {
         onUpdateFormData(currentIndex, { color: colorOption.name, colorHex: colorOption.hex });
@@ -65,63 +53,20 @@ export const BatchCarousel = memo(function BatchCarousel({
 
     return (
         <div className="flex flex-col gap-4 w-full">
-            {/* ── Top Navigation & Slide Counter (Cleaned from IA icons) ── */}
+            {/* ── Top Header with Slide Counter ── */}
             <div className="flex items-center justify-between px-1">
-                <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] border border-[var(--brand-pink)]/20 shadow-sm">
-                        Prenda {currentIndex + 1} de {totalCount}
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] border border-[var(--brand-pink)]/20 shadow-sm">
+                    Prenda {currentIndex + 1} de {totalCount}
+                </span>
+                {currentItem.isProcessing && (
+                    <span className="text-[11px] font-medium text-[var(--foreground-tertiary)] flex items-center gap-1.5 animate-pulse">
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-[var(--brand-pink)]" />
+                        <span>Analizando prenda...</span>
                     </span>
-                    {currentItem.isProcessing && (
-                        <span className="text-[11px] font-medium text-[var(--foreground-tertiary)] flex items-center gap-1.5 animate-pulse">
-                            <Loader2 className="w-3.5 h-3.5 animate-spin text-[var(--brand-pink)]" />
-                            <span>Analizando prenda...</span>
-                        </span>
-                    )}
-                </div>
-
-                <div className="flex items-center gap-1.5">
-                    {onOpenAddMore && batchItems.length < 20 && (
-                        <button
-                            type="button"
-                            onClick={onOpenAddMore}
-                            className="w-8 h-8 rounded-full bg-[var(--brand-pink)]/10 hover:bg-[var(--brand-pink)]/20 text-[var(--brand-pink)] flex items-center justify-center transition-colors cursor-pointer mr-0.5"
-                            title="Añadir más prendas"
-                            aria-label="Añadir más prendas"
-                        >
-                            <Plus className="w-4 h-4 stroke-[2.5]" />
-                        </button>
-                    )}
-                    <button
-                        type="button"
-                        onClick={handlePrev}
-                        disabled={!canGoPrev}
-                        className="w-8 h-8 rounded-full bg-[var(--background-secondary)] hover:bg-[var(--border-color)] disabled:opacity-30 disabled:pointer-events-none flex items-center justify-center text-[var(--foreground)] transition-colors cursor-pointer"
-                        aria-label="Prenda anterior"
-                    >
-                        <ChevronLeft className="w-4 h-4" />
-                    </button>
-                    <button
-                        type="button"
-                        onClick={handleNext}
-                        disabled={!canGoNext}
-                        className="w-8 h-8 rounded-full bg-[var(--background-secondary)] hover:bg-[var(--border-color)] disabled:opacity-30 disabled:pointer-events-none flex items-center justify-center text-[var(--foreground)] transition-colors cursor-pointer"
-                        aria-label="Prenda siguiente"
-                    >
-                        <ChevronRight className="w-4 h-4" />
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => onRemoveItem(currentIndex)}
-                        className="w-8 h-8 rounded-full bg-red-500/10 hover:bg-red-500/20 text-red-500 flex items-center justify-center transition-colors cursor-pointer ml-1"
-                        title="Descartar esta prenda"
-                        aria-label="Descartar prenda"
-                    >
-                        <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                </div>
+                )}
             </div>
 
-            {/* ── Thumbnail Strip with Circular Previews, Inside Icons and Add More Button ── */}
+            {/* ── Thumbnail Strip with Circular Previews ── */}
             <div className="w-full px-1">
                 <div className="flex items-center gap-3 overflow-x-auto px-2 py-2.5 custom-scrollbar touch-pan-x -mx-1">
                     {batchItems.map((item, idx) => {
@@ -174,20 +119,6 @@ export const BatchCarousel = memo(function BatchCarousel({
                             </button>
                         );
                     })}
-
-                    {/* Add More Garments (+) button at the right of thumbnails */}
-                    {onOpenAddMore && batchItems.length < 20 && (
-                        <button
-                            type="button"
-                            onClick={onOpenAddMore}
-                            className="relative flex-shrink-0 w-16 h-16 rounded-full border-2 border-dashed border-[var(--border-color)] hover:border-[var(--brand-pink)] bg-[var(--background-secondary)]/50 hover:bg-[var(--brand-pink)]/5 flex flex-col items-center justify-center text-[var(--foreground-secondary)] hover:text-[var(--brand-pink)] transition-all duration-300 cursor-pointer p-0.5 shadow-sm group hover:scale-105"
-                            title="Añadir más prendas"
-                            aria-label="Añadir más prendas"
-                        >
-                            <Plus className="w-6 h-6 group-hover:scale-110 transition-transform stroke-[2.5]" />
-                            <span className="text-[9px] font-bold mt-0.5 opacity-75 group-hover:opacity-100">Más</span>
-                        </button>
-                    )}
                 </div>
             </div>
 
@@ -201,8 +132,8 @@ export const BatchCarousel = memo(function BatchCarousel({
                     transition={{ duration: 0.2 }}
                     className="space-y-4"
                 >
-                    {/* Image Preview Container */}
-                    <div className="w-full max-w-[240px] mx-auto aspect-square rounded-3xl overflow-hidden bg-white dark:bg-[#151518] border border-[var(--border-color)] relative flex items-center justify-center shadow-sm">
+                    {/* Image Preview Container with Corner Delete Button */}
+                    <div className="w-full max-w-[240px] mx-auto aspect-square rounded-3xl overflow-hidden bg-white dark:bg-[#151518] border border-[var(--border-color)] relative flex items-center justify-center shadow-sm group">
                         {currentItem.image ? (
                             <div className="relative w-full h-full p-2.5">
                                 <Image
@@ -220,6 +151,17 @@ export const BatchCarousel = memo(function BatchCarousel({
                                 <span className="text-xs text-[var(--foreground-tertiary)] font-medium">Cargando foto...</span>
                             </div>
                         )}
+
+                        {/* Corner Delete Button */}
+                        <button
+                            type="button"
+                            onClick={() => onRemoveItem(currentIndex)}
+                            className="absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-black/60 hover:bg-red-500 text-white backdrop-blur-md flex items-center justify-center transition-all cursor-pointer z-20 shadow-md hover:scale-110 active:scale-95 border border-white/10"
+                            title="Eliminar prenda"
+                            aria-label="Eliminar prenda"
+                        >
+                            <Trash2 className="w-4 h-4" />
+                        </button>
 
                         {/* Processing Badge Overlay */}
                         {currentItem.isProcessing && (
@@ -266,7 +208,7 @@ export const BatchCarousel = memo(function BatchCarousel({
                             options={categories}
                         />
 
-                        {/* Color Selector (Curated palette without custom picker) */}
+                        {/* Color Selector (Curated palette without color text label) */}
                         <div>
                             <label className="block text-xs font-bold text-[var(--foreground)] mb-1.5">
                                 Color
@@ -286,11 +228,6 @@ export const BatchCarousel = memo(function BatchCarousel({
                                         title={colorOption.name}
                                     />
                                 ))}
-                                {currentItem.formData.color && (
-                                    <span className="text-xs font-medium text-[var(--foreground-secondary)] ml-1">
-                                        {currentItem.formData.color}
-                                    </span>
-                                )}
                             </div>
                         </div>
 

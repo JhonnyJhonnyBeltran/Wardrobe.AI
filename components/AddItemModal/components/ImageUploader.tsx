@@ -12,7 +12,7 @@
 
 import React, { memo, useRef, useState } from 'react';
 import Image from 'next/image';
-import { Upload, Loader2, Camera, Image as ImageIcon, X } from 'lucide-react';
+import { Upload, Loader2, Camera, Image as ImageIcon, X, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { ImageUploaderProps } from '../types';
 
@@ -80,6 +80,7 @@ export const ImageUploader = memo(function ImageUploader({
     isProcessing,
     processingMessage,
     onImageUpload,
+    onRemoveImage,
 }: Omit<ImageUploaderProps, 'onRotate' | 'onScale'>) {
 
     const [showOptions, setShowOptions] = useState(false);
@@ -147,6 +148,22 @@ export const ImageUploader = memo(function ImageUploader({
                                 </div>
                             </div>
                         </div>
+
+                        {/* Corner Delete Button */}
+                        {onRemoveImage && (
+                            <button
+                                type="button"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onRemoveImage();
+                                }}
+                                className="absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-black/60 hover:bg-red-500 text-white backdrop-blur-md flex items-center justify-center transition-all cursor-pointer z-20 shadow-md hover:scale-110 active:scale-95 border border-white/10"
+                                title="Eliminar foto"
+                                aria-label="Eliminar foto"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                            </button>
+                        )}
                         
                         {isProcessing && (
                             <ProcessingOverlay message={processingMessage} />

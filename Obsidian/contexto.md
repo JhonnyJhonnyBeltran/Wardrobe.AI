@@ -623,29 +623,19 @@ En cada conversación, el backend alimenta a CloSy con:
 - **Función de Anexión Concurrente (`useAddItemForm.ts -> appendFiles`)**:
   - Lee y procesa las nuevas fotos añadidas en segundo plano por bloques de concurrencia (`chunkSize = 2`), asignando auto-nombre, color y tipo con IA mientras mantiene las prendas previas ya editadas o procesadas.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+### 41. Optimización de Subida Ligera en Segundo Plano, Botón de Borrar en Esquina y Rediseño de Acciones (Septiembre 2026)
+- **Optimización de Rendimiento y Subida en Segundo Plano (`useAddItemForm.ts`)**:
+  - **Pre-escalado Instantáneo (< 50KB por foto)**: Al seleccionar hasta 20 imágenes de alta resolución, la función `createOptimizedPreview` escala de inmediato las fotos en un canvas fuera de pantalla a 800px JPEG ligero antes de almacenarlas en memoria o Zustand. Esto reduce el consumo de memoria de >300MB a menos de 1MB, eliminando bloqueos y congelamientos del navegador.
+  - **Procesamiento Secuencial con Yielding al Event-Loop**: Las imágenes se procesan una por una con pequeñas pausas (`await new Promise(r => setTimeout(r, 40))`) permitiendo que el hilo principal del navegador responda suavemente.
+  - **Sincronización en Segundo Plano con `useUiStore`**: Cada paso del análisis y eliminación de fondo se sincroniza en tiempo real en `pendingUploadItem`, permitiendo al usuario cerrar el modal y navegar por la aplicación mientras las prendas continúan procesándose en segundo plano.
+- **Botón de Borrar en la Esquina de la Prenda (`ImageUploader.tsx` & `BatchCarousel.tsx`)**:
+  - En la esquina superior derecha de la imagen de la prenda (tanto en vista individual como en la vista activa del carrusel por lote), se incorpora un botón flotante circular con icono `Trash2` (`w-8 h-8 rounded-full bg-black/60 hover:bg-red-500 text-white backdrop-blur-md`) que permite descartar o eliminar la prenda con un solo toque.
+- **Botones de Acción Inferiores Rediseñados (`AddItemModal/index.tsx`)**:
+  - El botón principal de confirmación se renombra a *"Guardar prendas"* (en lote) / *"Guardar prenda"* (en individual) / *"Guardar cambios"* (al editar).
+  - Al lado del botón de confirmar se añade un botón dedicado *"Añadir prendas"* con icono `+` que despliega el selector `AddMoreModal` para tomar fotos o añadir más prendas en cualquier momento.
+- **Limpieza del Carrusel y Paleta de Colores (`BatchCarousel.tsx` & `AddItemModal/index.tsx`)**:
+  - Eliminados los controles redundantes (`<`, `>`, `+`, papelera) de la barra superior del carrusel, manteniendo exclusivamente el contador de slide (*"Prenda X de N"*) y el estado del análisis.
+  - Eliminado el thumbnail placeholder con `+` de la tira de miniaturas circulares.
+  - Eliminado el texto descriptivo del nombre del color al lado de los círculos cromáticos tanto en el carrusel como en la vista individual, dejando una cuadrícula de colores ultra limpia.
+- **Confirmación al Cerrar con "X" (`handleHeaderCloseClick`)**:
+  - Al pulsar la "X" de la cabecera cuando hay prendas o fotos pendientes, se despliega el modal de confirmación con las opciones *"Seguir editando"* y *"Eliminar"*, protegiendo al usuario de descartes accidentales.

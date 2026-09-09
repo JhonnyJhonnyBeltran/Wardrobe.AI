@@ -51,6 +51,7 @@ interface UseAddItemFormReturn {
     // Handlers
     handleImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
     appendFiles: (files: FileList | File[]) => Promise<void>;
+    removeSingleImage: () => void;
     handleManualProcess: () => Promise<void>;
     handleColorSelect: (colorOption: { name: string; hex: string }) => void;
     handleColorPickerChange: (hex: string) => void;
@@ -138,10 +139,51 @@ export function useAddItemForm({
         });
     }, [currentBatchIndex, resetForm]);
 
+    // Downscale raw file to lightweight JPEG (max 800px, ~50KB) immediately to prevent memory leaks/freezes
+    const createOptimizedPreview = useCallback((file: File, maxDim = 800): Promise<string> => {
+        return new Promise((resolve) => {
+            const objUrl = URL.createObjectURL(file);
+            const img = new window.Image();
+            img.onload = () => {
+                let w = img.naturalWidth || img.width;
+                let h = img.naturalHeight || img.height;
+                if (w > maxDim || h > maxDim) {
+                    if (w > h) {
+                        h = Math.round((h * maxDim) / w);
+                        w = maxDim;
+                    } else {
+                        w = Math.round((w * maxDim) / h);
+                        h = maxDim;
+                    }
+                }
+                const canvas = document.createElement('canvas');
+                canvas.width = Math.max(1, w);
+                canvas.height = Math.max(1, h);
+                const ctx = canvas.getContext('2d');
+                if (ctx) {
+                    ctx.drawImage(img, 0, 0, w, h);
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                    URL.revokeObjectURL(objUrl);
+                    resolve(dataUrl);
+                } else {
+                    URL.revokeObjectURL(objUrl);
+                    resolve(objUrl);
+                }
+            };
+            img.onerror = () => {
+                URL.revokeObjectURL(objUrl);
+                const reader = new FileReader();
+                reader.onloadend = () => resolve((reader.result as string) || '');
+                reader.readAsDataURL(file);
+            };
+            img.src = objUrl;
+        });
+    }, []);
+
     // Downscale image to lightweight JPEG (max 800px, < 80KB) for instant Gemini Vision response
     const optimizeImageForVision = useCallback((dataUrl: string): Promise<string> => {
         return new Promise((resolve) => {
-            const img = document.createElement('img');
+            const img = new window.Image();
             img.onload = () => {
                 let w = img.width;
                 let h = img.height;
@@ -169,6 +211,16 @@ export function useAddItemForm({
             img.onerror = () => resolve(dataUrl);
             img.src = dataUrl;
         });
+    }, []);
+
+    // Clear single active image and reset
+    const removeSingleImage = useCallback(() => {
+        setImage(null);
+        setOriginalImage(null);
+        setProcessedImage(null);
+        setSelectedFile(null);
+        setFormData(DEFAULT_FORM_DATA);
+        useUiStore.getState().clearPendingUploadItem();
     }, []);
 
     // Initialize form when modal opens
@@ -255,9 +307,9 @@ export function useAddItemForm({
                     file,
                     {
                         normalize: true,
-                        canvasWidth: 1200,
-                        canvasHeight: 1500,
-                        quality: 'quality',
+                        canvasWidth: 1000,
+                        canvasHeight: 1250,
+                        quality: 'fast',
                         transparentBackground: true,
                     }
                 );
@@ -267,7 +319,7 @@ export function useAddItemForm({
             } catch (err) {
                 console.warn(`[AddItemForm] Background removal attempt ${attempt} failed:`, err);
                 if (attempt < 2) {
-                    await new Promise(r => setTimeout(r, 300));
+                    await new Promise(r => setTimeout(r, 200));
                 }
             }
         }
@@ -372,16 +424,10 @@ export function useAddItemForm({
             setProcessingStage('compressing');
             setError(null);
 
-            // Read all images as Data URLs in parallel
+            // Create lightweight preview data URLs
             const initialItems: BatchItem[] = await Promise.all(
                 selectedBatch.map(async (file, idx) => {
-                    const dataUrl = await new Promise<string>((resolve) => {
-                        const reader = new FileReader();
-                        reader.onloadend = () => resolve((reader.result as string) || '');
-                        reader.onerror = () => resolve('');
-                        reader.readAsDataURL(file);
-                    });
-
+                    const dataUrl = await createOptimizedPreview(file);
                     return {
                         id: `batch-${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 7)}`,
                         originalImage: dataUrl,
@@ -400,52 +446,68 @@ export function useAddItemForm({
             setBatchItems(initialItems);
             setCurrentBatchIndex(0);
 
-            // Process items concurrently in chunks of 2 to balance memory and speed
-            const chunkSize = 2;
-            for (let i = 0; i < initialItems.length; i += chunkSize) {
-                const chunk = initialItems.slice(i, i + chunkSize);
-                await Promise.allSettled(
-                    chunk.map(async (batchItem, chunkIdx) => {
-                        const itemIndex = i + chunkIdx;
-                        const file = batchItem.selectedFile;
-                        if (!file) return;
+            // Sync initial state to pending store immediately so background navigation works
+            useUiStore.getState().setPendingUploadItem({
+                batchItems: initialItems,
+                formData: initialItems[0]?.formData || DEFAULT_FORM_DATA,
+                image: initialItems[0]?.image || '',
+                originalImage: initialItems[0]?.originalImage || '',
+                name: `Subida múltiple (${initialItems.length} prendas)`
+            });
 
-                        const result = await processSingleFile(file, batchItem.originalImage);
+            // Process items smoothly sequentially to prevent CPU/memory freezes
+            for (let i = 0; i < initialItems.length; i++) {
+                const batchItem = initialItems[i];
+                const file = batchItem.selectedFile;
+                if (!file) continue;
 
-                        setBatchItems(prev => {
-                            const updated = [...prev];
-                            if (updated[itemIndex]) {
-                                const currentItem = updated[itemIndex];
-                                const hasCustomName = currentItem.formData.name && 
-                                    currentItem.formData.name !== DEFAULT_FORM_DATA.name && 
-                                    !currentItem.formData.name.startsWith('Prenda ');
+                // Yield to browser event loop
+                await new Promise(r => setTimeout(r, 40));
 
-                                updated[itemIndex] = {
-                                    ...currentItem,
-                                    image: result.processedImage || currentItem.originalImage,
-                                    processedImage: result.processedImage,
-                                    isProcessing: false,
-                                    processingMessage: '',
-                                    formData: {
-                                        ...currentItem.formData,
-                                        name: hasCustomName 
-                                            ? currentItem.formData.name 
-                                            : (result.detectedName || `Prenda ${itemIndex + 1}`),
-                                        type: result.detectedType || currentItem.formData.type || 'top',
-                                        color: result.detectedColor || currentItem.formData.color || 'Negro',
-                                        colorHex: result.detectedColorHex || currentItem.formData.colorHex || '#121212',
-                                        fabric: result.aiAnalysis?.fabric || currentItem.formData.fabric || 'Algodón',
-                                        season: result.aiAnalysis?.season || currentItem.formData.season || 'all-season',
-                                    },
-                                    error: result.isInappropriate 
-                                        ? (result.inappropriateReason || 'Contenido inapropiado detectado.') 
-                                        : null,
-                                };
-                            }
-                            return updated;
-                        });
-                    })
-                );
+                const result = await processSingleFile(file, batchItem.originalImage);
+
+                setBatchItems(prev => {
+                    const updated = [...prev];
+                    if (updated[i]) {
+                        const currentItem = updated[i];
+                        const hasCustomName = currentItem.formData.name && 
+                            currentItem.formData.name !== DEFAULT_FORM_DATA.name && 
+                            !currentItem.formData.name.startsWith('Prenda ');
+
+                        updated[i] = {
+                            ...currentItem,
+                            image: result.processedImage || currentItem.originalImage,
+                            processedImage: result.processedImage,
+                            isProcessing: false,
+                            processingMessage: '',
+                            formData: {
+                                ...currentItem.formData,
+                                name: hasCustomName 
+                                ? currentItem.formData.name 
+                                : (result.detectedName || `Prenda ${i + 1}`),
+                                type: result.detectedType || currentItem.formData.type || 'top',
+                                color: result.detectedColor || currentItem.formData.color || 'Negro',
+                                colorHex: result.detectedColorHex || currentItem.formData.colorHex || '#121212',
+                                fabric: result.aiAnalysis?.fabric || currentItem.formData.fabric || 'Algodón',
+                                season: result.aiAnalysis?.season || currentItem.formData.season || 'all-season',
+                            },
+                            error: result.isInappropriate 
+                                ? (result.inappropriateReason || 'Contenido inapropiado detectado.') 
+                                : null,
+                        };
+                    }
+
+                    // Keep pending store updated in background
+                    useUiStore.getState().setPendingUploadItem({
+                        batchItems: updated,
+                        formData: updated[0]?.formData || DEFAULT_FORM_DATA,
+                        image: updated[0]?.image || '',
+                        originalImage: updated[0]?.originalImage || '',
+                        name: `Subida múltiple (${updated.length} prendas)`
+                    });
+
+                    return updated;
+                });
             }
 
             setIsProcessing(false);
@@ -462,15 +524,7 @@ export function useAddItemForm({
 
         let originalDataUrl: string;
         try {
-            originalDataUrl = await new Promise<string>((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                    if (reader.result) resolve(reader.result as string);
-                    else reject(new Error('Invalid image result'));
-                };
-                reader.onerror = () => reject(new Error('Read error'));
-                reader.readAsDataURL(file);
-            });
+            originalDataUrl = await createOptimizedPreview(file);
         } catch {
             setError('El formato de foto que has subido es incorrecto o no se pudo leer el archivo.');
             e.target.value = '';
@@ -484,14 +538,8 @@ export function useAddItemForm({
         setProcessingStage('compressing');
         setError(null);
 
-        // Delay to allow UI render
-        await new Promise<void>(resolve => {
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    setTimeout(resolve, 100);
-                });
-            });
-        });
+        // Yield to browser
+        await new Promise(r => setTimeout(r, 60));
 
         const result = await processSingleFile(file, originalDataUrl);
 
@@ -514,20 +562,31 @@ export function useAddItemForm({
             setImage(result.processedImage);
         }
 
-        setFormData(prev => ({
-            ...prev,
-            name: result.detectedName || prev.name || 'Nueva prenda',
-            type: result.detectedType || prev.type || 'top',
-            color: result.detectedColor || prev.color || 'Negro',
-            colorHex: result.detectedColorHex || prev.colorHex || '#121212',
-            fabric: result.aiAnalysis?.fabric || prev.fabric || 'Algodón',
-            season: result.aiAnalysis?.season || prev.season || 'all-season',
-        }));
+        const newFormData: ItemFormData = {
+            ...formData,
+            name: result.detectedName || formData.name || 'Nueva prenda',
+            type: result.detectedType || formData.type || 'top',
+            color: result.detectedColor || formData.color || 'Negro',
+            colorHex: result.detectedColorHex || formData.colorHex || '#121212',
+            fabric: result.aiAnalysis?.fabric || formData.fabric || 'Algodón',
+            season: result.aiAnalysis?.season || formData.season || 'all-season',
+        };
+
+        setFormData(newFormData);
+
+        // Save single item to pending store
+        useUiStore.getState().setPendingUploadItem({
+            formData: newFormData,
+            image: result.processedImage || originalDataUrl,
+            originalImage: originalDataUrl,
+            processedImage: result.processedImage,
+            name: newFormData.name || 'Nueva prenda'
+        });
 
         setProcessingStage('complete');
         setIsProcessing(false);
         e.target.value = '';
-    }, [optimizeImageForVision, processSingleFile, resetForm]);
+    }, [createOptimizedPreview, processSingleFile, formData]);
 
     // Append additional files to the upload (promotes single upload to batch if needed)
     const appendFiles = useCallback(async (newRawFiles: FileList | File[]) => {
@@ -582,16 +641,10 @@ export function useAddItemForm({
         setProcessingStage('compressing');
         setError(null);
 
-        // Read all new files as Data URLs in parallel
+        // Read all new files as optimized Data URLs in parallel
         const newBatchItems: BatchItem[] = await Promise.all(
             filesToAdd.map(async (file, idx) => {
-                const dataUrl = await new Promise<string>((resolve) => {
-                    const reader = new FileReader();
-                    reader.onloadend = () => resolve((reader.result as string) || '');
-                    reader.onerror = () => resolve('');
-                    reader.readAsDataURL(file);
-                });
-
+                const dataUrl = await createOptimizedPreview(file);
                 const itemIndex = baseItems.length + idx;
                 return {
                     id: `batch-${Date.now()}-${itemIndex}-${Math.random().toString(36).substring(2, 7)}`,
@@ -613,57 +666,72 @@ export function useAddItemForm({
         setBatchItems(combined);
         setCurrentBatchIndex(startIndex);
 
-        // Process newly added items concurrently in chunks of 2
-        const chunkSize = 2;
-        for (let i = 0; i < newBatchItems.length; i += chunkSize) {
-            const chunk = newBatchItems.slice(i, i + chunkSize);
-            await Promise.allSettled(
-                chunk.map(async (batchItem, chunkIdx) => {
-                    const itemIndex = startIndex + i + chunkIdx;
-                    const file = batchItem.selectedFile;
-                    if (!file) return;
+        // Save to pending store immediately
+        useUiStore.getState().setPendingUploadItem({
+            batchItems: combined,
+            formData: combined[0]?.formData || DEFAULT_FORM_DATA,
+            image: combined[0]?.image || '',
+            originalImage: combined[0]?.originalImage || '',
+            name: `Subida múltiple (${combined.length} prendas)`
+        });
 
-                    const result = await processSingleFile(file, batchItem.originalImage);
+        // Process newly added items sequentially
+        for (let i = 0; i < newBatchItems.length; i++) {
+            const batchItem = newBatchItems[i];
+            const itemIndex = startIndex + i;
+            const file = batchItem.selectedFile;
+            if (!file) continue;
 
-                    setBatchItems(prev => {
-                        const updated = [...prev];
-                        if (updated[itemIndex]) {
-                            const currentItem = updated[itemIndex];
-                            const hasCustomName = currentItem.formData.name && 
-                                currentItem.formData.name !== DEFAULT_FORM_DATA.name && 
-                                !currentItem.formData.name.startsWith('Prenda ');
+            await new Promise(r => setTimeout(r, 40));
 
-                            updated[itemIndex] = {
-                                ...currentItem,
-                                image: result.processedImage || currentItem.originalImage,
-                                processedImage: result.processedImage,
-                                isProcessing: false,
-                                processingMessage: '',
-                                formData: {
-                                    ...currentItem.formData,
-                                    name: hasCustomName 
-                                        ? currentItem.formData.name 
-                                        : (result.detectedName || `Prenda ${itemIndex + 1}`),
-                                    type: result.detectedType || currentItem.formData.type || 'top',
-                                    color: result.detectedColor || currentItem.formData.color || 'Negro',
-                                    colorHex: result.detectedColorHex || currentItem.formData.colorHex || '#121212',
-                                    fabric: result.aiAnalysis?.fabric || currentItem.formData.fabric || 'Algodón',
-                                    season: result.aiAnalysis?.season || currentItem.formData.season || 'all-season',
-                                },
-                                error: result.isInappropriate 
-                                    ? (result.inappropriateReason || 'Contenido inapropiado detectado.') 
-                                    : null,
-                            };
-                        }
-                        return updated;
-                    });
-                })
-            );
+            const result = await processSingleFile(file, batchItem.originalImage);
+
+            setBatchItems(prev => {
+                const updated = [...prev];
+                if (updated[itemIndex]) {
+                    const currentItem = updated[itemIndex];
+                    const hasCustomName = currentItem.formData.name && 
+                        currentItem.formData.name !== DEFAULT_FORM_DATA.name && 
+                        !currentItem.formData.name.startsWith('Prenda ');
+
+                    updated[itemIndex] = {
+                        ...currentItem,
+                        image: result.processedImage || currentItem.originalImage,
+                        processedImage: result.processedImage,
+                        isProcessing: false,
+                        processingMessage: '',
+                        formData: {
+                            ...currentItem.formData,
+                            name: hasCustomName 
+                                ? currentItem.formData.name 
+                                : (result.detectedName || `Prenda ${itemIndex + 1}`),
+                            type: result.detectedType || currentItem.formData.type || 'top',
+                            color: result.detectedColor || currentItem.formData.color || 'Negro',
+                            colorHex: result.detectedColorHex || currentItem.formData.colorHex || '#121212',
+                            fabric: result.aiAnalysis?.fabric || currentItem.formData.fabric || 'Algodón',
+                            season: result.aiAnalysis?.season || currentItem.formData.season || 'all-season',
+                        },
+                        error: result.isInappropriate 
+                            ? (result.inappropriateReason || 'Contenido inapropiado detectado.') 
+                            : null,
+                    };
+                }
+
+                useUiStore.getState().setPendingUploadItem({
+                    batchItems: updated,
+                    formData: updated[0]?.formData || DEFAULT_FORM_DATA,
+                    image: updated[0]?.image || '',
+                    originalImage: updated[0]?.originalImage || '',
+                    name: `Subida múltiple (${updated.length} prendas)`
+                });
+
+                return updated;
+            });
         }
 
         setIsProcessing(false);
         setProcessingStage('complete');
-    }, [batchItems, image, originalImage, processedImage, selectedFile, formData, processSingleFile]);
+    }, [batchItems, image, originalImage, processedImage, selectedFile, formData, createOptimizedPreview, processSingleFile]);
 
     // Handle manual AI processing toggle
     const handleManualProcess = useCallback(async () => {
@@ -818,6 +886,7 @@ export function useAddItemForm({
         // Handlers
         handleImageUpload,
         appendFiles,
+        removeSingleImage,
         handleManualProcess,
         handleColorSelect,
         handleColorPickerChange,
