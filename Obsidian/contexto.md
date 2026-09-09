@@ -630,12 +630,17 @@ En cada conversación, el backend alimenta a CloSy con:
   - **Sincronización en Segundo Plano con `useUiStore`**: Cada paso del análisis y eliminación de fondo se sincroniza en tiempo real en `pendingUploadItem`, permitiendo al usuario cerrar el modal y navegar por la aplicación mientras las prendas continúan procesándose en segundo plano.
 - **Botón de Borrar en la Esquina de la Prenda (`ImageUploader.tsx` & `BatchCarousel.tsx`)**:
   - En la esquina superior derecha de la imagen de la prenda (tanto en vista individual como en la vista activa del carrusel por lote), se incorpora un botón flotante circular con icono `Trash2` (`w-8 h-8 rounded-full bg-black/60 hover:bg-red-500 text-white backdrop-blur-md`) que permite descartar o eliminar la prenda con un solo toque.
-- **Botones de Acción Inferiores Rediseñados (`AddItemModal/index.tsx`)**:
-  - El botón principal de confirmación se renombra a *"Guardar prendas"* (en lote) / *"Guardar prenda"* (en individual) / *"Guardar cambios"* (al editar).
-  - Al lado del botón de confirmar se añade un botón dedicado *"Añadir prendas"* con icono `+` que despliega el selector `AddMoreModal` para tomar fotos o añadir más prendas en cualquier momento.
+- **Botones de Acción Inferiores en 2 Filas (`AddItemModal/index.tsx`)**:
+  - Para evitar que los textos se corten en pantallas móviles, los botones se distribuyen en **dos niveles**:
+    - **Fila Superior (50% / 50%)**: Botón *"Cancelar"* a la izquierda y botón *"Añadir prendas"* (`+`) a la derecha.
+    - **Fila Inferior (Ancho Completo 100%)**: Botón principal de guardado (*"Guardar prendas"* en lote / *"Guardar prenda"* en individual / *"Guardar cambios"* al editar).
+- **Protección contra `QuotaExceededError` en LocalStorage (`uiStore.ts`)**:
+  - Implementada la función `sanitizePendingForLocalStorage` que limpia duplicados pesados (`originalImage`, `processedImage`, archivos binarios) antes de guardar en `localStorage`.
+  - Si el payload supera el umbral seguro de `localStorage`, se reduce a los metadatos y la miniatura de la primera prenda, manteniendo siempre el estado completo e íntegro en la memoria viva de Zustand para una navegación fluida sin excepciones por cuota de almacenamiento.
 - **Limpieza del Carrusel y Paleta de Colores (`BatchCarousel.tsx` & `AddItemModal/index.tsx`)**:
   - Eliminados los controles redundantes (`<`, `>`, `+`, papelera) de la barra superior del carrusel, manteniendo exclusivamente el contador de slide (*"Prenda X de N"*) y el estado del análisis.
   - Eliminado el thumbnail placeholder con `+` de la tira de miniaturas circulares.
   - Eliminado el texto descriptivo del nombre del color al lado de los círculos cromáticos tanto en el carrusel como en la vista individual, dejando una cuadrícula de colores ultra limpia.
 - **Confirmación al Cerrar con "X" (`handleHeaderCloseClick`)**:
   - Al pulsar la "X" de la cabecera cuando hay prendas o fotos pendientes, se despliega el modal de confirmación con las opciones *"Seguir editando"* y *"Eliminar"*, protegiendo al usuario de descartes accidentales.
+

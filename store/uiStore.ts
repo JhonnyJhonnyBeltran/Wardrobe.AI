@@ -97,6 +97,36 @@ const getInitialPendingItem = (): PendingUploadItem | null => {
     return null;
 };
 
+function sanitizePendingForLocalStorage(item: PendingUploadItem): string {
+    if (item.batchItems && item.batchItems.length > 0) {
+        const lightweightBatch = item.batchItems.map((b) => ({
+            id: b.id,
+            // Keep only 1 processed/preview image string per item, drop redundant copies
+            image: b.processedImage || b.image || b.originalImage || '',
+            formData: b.formData,
+            isProcessing: b.isProcessing,
+            stage: b.stage,
+            error: b.error,
+        }));
+
+        const payload = {
+            name: item.name,
+            formData: item.formData,
+            image: item.image || lightweightBatch[0]?.image || '',
+            batchItems: lightweightBatch,
+        };
+
+        return JSON.stringify(payload);
+    }
+
+    const singlePayload = {
+        formData: item.formData,
+        image: item.processedImage || item.image || item.originalImage || '',
+        name: item.name || item.formData?.name || 'Nueva prenda',
+    };
+    return JSON.stringify(singlePayload);
+}
+
 export const useUiStore = create<UiStore>((set) => ({
     modal: null,
     showModal: (modal) => set({ modal }),
@@ -119,23 +149,63 @@ export const useUiStore = create<UiStore>((set) => ({
 
     pendingUploadItem: getInitialPendingItem(),
     setPendingUploadItem: (item) => {
+        // Zustand in-memory state always maintains the full, lossless object for runtime navigation
         set({ pendingUploadItem: item });
+
         if (typeof window !== 'undefined') {
             if (item) {
                 try {
-                    localStorage.setItem(PENDING_STORAGE_KEY, JSON.stringify(item));
-                } catch (e) {
-                    console.warn('Failed to save pending upload to localStorage:', e);
+                    const serialized = sanitizePendingForLocalStorage(item);
+                    // Standard localStorage limit is ~5MB total across domain; keep payload under 2MB
+                    if (serialized.length < 2000000) {
+                        localStorage.setItem(PENDING_STORAGE_KEY, serialized);
+                    } else {
+                        // If too large for localStorage, save metadata with first item thumbnail only
+                        const compactBatch = item.batchItems?.map((b, idx) => ({
+                            id: b.id,
+                            image: idx === 0 ? (b.processedImage || b.image || b.originalImage || '') : '',
+                            formData: b.formData,
+                            isProcessing: b.isProcessing,
+                            stage: b.stage,
+                            error: b.error,
+                        }));
+                        const compactPayload = JSON.stringify({
+                            name: item.name,
+                            formData: item.formData,
+                            image: item.image || (item.batchItems?.[0]?.image) || '',
+                            batchItems: compactBatch,
+                        });
+                        localStorage.setItem(PENDING_STORAGE_KEY, compactPayload);
+                    }
+                } catch {
+                    // If localStorage quota is completely saturated, fallback to lightweight metadata
+                    try {
+                        const emergencyPayload = JSON.stringify({
+                            name: item.name || 'Subida pendiente',
+                            formData: item.formData,
+                        });
+                        localStorage.setItem(PENDING_STORAGE_KEY, emergencyPayload);
+                    } catch {
+                        // Silently keep in memory (Zustand) without throwing errors to the console
+                    }
                 }
             } else {
-                localStorage.removeItem(PENDING_STORAGE_KEY);
+                try {
+                    localStorage.removeItem(PENDING_STORAGE_KEY);
+                } catch {
+                    // Ignore removal error
+                }
             }
         }
     },
     clearPendingUploadItem: () => {
         set({ pendingUploadItem: null });
         if (typeof window !== 'undefined') {
-            localStorage.removeItem(PENDING_STORAGE_KEY);
+            try {
+                localStorage.removeItem(PENDING_STORAGE_KEY);
+            } catch {
+                // Ignore removal error
+            }
         }
     },
 

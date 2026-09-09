@@ -607,12 +607,13 @@ export default function AddItemModal({
                             </div>
 
                             {/* ── Bottom Action Buttons ── */}
-                            <div className="flex-shrink-0 p-4 pt-3 pb-6 md:pb-4 bg-[var(--background)] border-t border-[var(--border-color)] safe-bottom">
+                            <div className="flex-shrink-0 p-4 pt-3 pb-6 md:pb-4 bg-[var(--background)] border-t border-[var(--border-color)] safe-bottom space-y-2.5">
+                                {/* Top Row: Cancelar & Añadir más prendas */}
                                 <div className="flex items-center gap-2.5 w-full">
                                     <button
                                         type="button"
                                         onClick={handleCancelButtonClick}
-                                        className="px-3.5 sm:px-4 py-3 rounded-2xl bg-[var(--background-secondary)] hover:bg-[var(--border-color)] text-[var(--foreground-secondary)] hover:text-[var(--foreground)] font-semibold text-xs sm:text-sm transition-all cursor-pointer shrink-0"
+                                        className="flex-1 py-3 rounded-2xl bg-[var(--background-secondary)] hover:bg-[var(--border-color)] text-[var(--foreground-secondary)] hover:text-[var(--foreground)] font-semibold text-xs sm:text-sm transition-all cursor-pointer text-center border border-transparent hover:border-[var(--border-color)] active:scale-[0.98]"
                                     >
                                         Cancelar
                                     </button>
@@ -622,55 +623,56 @@ export default function AddItemModal({
                                             type="button"
                                             onClick={() => setShowAddMore(true)}
                                             disabled={isSubmitting || (isBatch && batchItems.length >= 20)}
-                                            className="px-3.5 sm:px-4 py-3 rounded-2xl bg-[var(--background-secondary)] hover:bg-[var(--border-color)] text-[var(--foreground)] font-semibold text-xs sm:text-sm transition-all cursor-pointer flex items-center gap-1.5 shrink-0 border border-[var(--border-color)] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            className="flex-1 py-3 rounded-2xl bg-[var(--background-secondary)] hover:bg-[var(--border-color)] text-[var(--foreground)] font-semibold text-xs sm:text-sm transition-all cursor-pointer flex items-center justify-center gap-1.5 border border-[var(--border-color)] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
                                             title="Añadir más fotos de prendas"
                                         >
                                             <Plus className="w-4 h-4 text-[var(--brand-pink)] stroke-[2.5]" />
                                             <span>Añadir prendas</span>
                                         </button>
                                     )}
-
-                                    <Button
-                                        onClick={handleSubmit}
-                                        disabled={!canSubmit}
-                                        className="flex-1 py-3 rounded-2xl text-xs sm:text-sm font-semibold min-w-0"
-                                        glow={canSubmit}
-                                    >
-                                        {isSubmitting ? (
-                                            <>
-                                                <Loader2 className="w-4 h-4 mr-1.5 sm:mr-2 animate-spin shrink-0" />
-                                                <span className="truncate">
-                                                    {isBatch 
-                                                        ? (savingProgress ? `Guardando ${savingProgress.current} de ${savingProgress.total}...` : 'Guardando...') 
-                                                        : (isEditing ? 'Guardando...' : 'Guardando...')
-                                                    }
-                                                </span>
-                                            </>
-                                        ) : isProcessing ? (
-                                            <>
-                                                <Loader2 className="w-4 h-4 mr-1.5 sm:mr-2 animate-spin shrink-0" />
-                                                <span className="truncate">
-                                                    {isBatch
-                                                        ? `Procesando ${batchItems.filter(i => !i.isProcessing).length}/${batchItems.length}...`
-                                                        : (processingMessage || 'Procesando...')
-                                                    }
-                                                </span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Check className="w-4 h-4 mr-1.5 sm:mr-2 shrink-0" />
-                                                <span className="truncate">
-                                                    {isBatch
-                                                        ? 'Guardar prendas'
-                                                        : (isEditing ? 'Guardar cambios' : 'Guardar prenda')
-                                                    }
-                                                </span>
-                                            </>
-                                        )}
-                                    </Button>
                                 </div>
+
+                                {/* Bottom Row: Guardar (Full width) */}
+                                <Button
+                                    onClick={handleSubmit}
+                                    disabled={!canSubmit}
+                                    className="w-full py-3.5 rounded-2xl text-xs sm:text-sm font-semibold shadow-md"
+                                    glow={canSubmit}
+                                >
+                                    {isSubmitting ? (
+                                        <>
+                                            <Loader2 className="w-4 h-4 mr-2 animate-spin shrink-0" />
+                                            <span>
+                                                {isBatch 
+                                                    ? (savingProgress ? `Guardando ${savingProgress.current} de ${savingProgress.total}...` : 'Guardando...') 
+                                                    : (isEditing ? 'Guardando...' : 'Guardando...')
+                                                }
+                                            </span>
+                                        </>
+                                    ) : isProcessing ? (
+                                        <>
+                                            <Loader2 className="w-4 h-4 mr-2 animate-spin shrink-0" />
+                                            <span>
+                                                {isBatch
+                                                    ? `Procesando ${batchItems.filter(i => !i.isProcessing).length}/${batchItems.length}...`
+                                                    : (processingMessage || 'Procesando...')
+                                                }
+                                            </span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Check className="w-4 h-4 mr-2 shrink-0" />
+                                            <span>
+                                                {isBatch
+                                                    ? 'Guardar prendas'
+                                                    : (isEditing ? 'Guardar cambios' : 'Guardar prenda')
+                                                }
+                                            </span>
+                                        </>
+                                    )}
+                                </Button>
                                 {isProcessing && (
-                                    <p className="text-xs text-center text-[var(--foreground-tertiary)] mt-2">
+                                    <p className="text-xs text-center text-[var(--foreground-tertiary)] mt-1.5">
                                         {isBatch 
                                             ? 'Puedes ir revisando y personalizando cada prenda mientras se procesan las demás'
                                             : 'Puedes seguir rellenando el formulario mientras se procesa'
