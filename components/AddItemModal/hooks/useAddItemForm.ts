@@ -12,7 +12,7 @@ import { extractDominantColor, hexToRgb, rgbToColorName } from '@/lib/utils/colo
 import { DEFAULT_FORM_DATA } from '../constants';
 import { useUiStore } from '@/store/uiStore';
 import { normalizeBrand } from '@/lib/utils/string';
-import type { ItemFormData, FormMode, InputMethod } from '../types';
+import type { ItemFormData, FormMode, InputMethod, BatchItem } from '../types';
 import type { ClothingItem } from '@/types/clothing';
 
 interface UseAddItemFormProps {
@@ -33,6 +33,15 @@ interface UseAddItemFormReturn {
     originalImage: string | null;
     processedImage: string | null;
     selectedFile: File | null;
+
+    // Batch state
+    batchItems: BatchItem[];
+    setBatchItems: React.Dispatch<React.SetStateAction<BatchItem[]>>;
+    currentBatchIndex: number;
+    setCurrentBatchIndex: React.Dispatch<React.SetStateAction<number>>;
+    updateBatchItemFormData: (index: number, partialData: Partial<ItemFormData>) => void;
+    removeBatchItem: (index: number) => void;
+    buildBatchPayloads: () => Partial<ClothingItem>[];
 
     // Processing state
     isProcessing: boolean;
@@ -69,6 +78,10 @@ export function useAddItemForm({
     const [processedImage, setProcessedImage] = useState<string | null>(null);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
+    // Batch items state
+    const [batchItems, setBatchItems] = useState<BatchItem[]>([]);
+    const [currentBatchIndex, setCurrentBatchIndex] = useState(0);
+
     // Error state
     const [error, setError] = useState<string | null>(null);
 
@@ -89,6 +102,72 @@ export function useAddItemForm({
         setProcessedImage(null);
         setSelectedFile(null);
         setFormData(DEFAULT_FORM_DATA);
+        setBatchItems([]);
+        setCurrentBatchIndex(0);
+        setError(null);
+    }, []);
+
+    // Helper to update individual batch item
+    const updateBatchItemFormData = useCallback((index: number, partialData: Partial<ItemFormData>) => {
+        setBatchItems(prev => {
+            const updated = [...prev];
+            if (updated[index]) {
+                updated[index] = {
+                    ...updated[index],
+                    formData: {
+                        ...updated[index].formData,
+                        ...partialData,
+                    }
+                };
+            }
+            return updated;
+        });
+    }, []);
+
+    // Helper to remove item from batch
+    const removeBatchItem = useCallback((index: number) => {
+        setBatchItems(prev => {
+            const next = prev.filter((_, idx) => idx !== index);
+            if (next.length === 0) {
+                resetForm();
+            } else if (currentBatchIndex >= next.length) {
+                setCurrentBatchIndex(Math.max(0, next.length - 1));
+            }
+            return next;
+        });
+    }, [currentBatchIndex, resetForm]);
+
+    // Downscale image to lightweight JPEG (max 800px, < 80KB) for instant Gemini Vision response
+    const optimizeImageForVision = useCallback((dataUrl: string): Promise<string> => {
+        return new Promise((resolve) => {
+            const img = document.createElement('img');
+            img.onload = () => {
+                let w = img.width;
+                let h = img.height;
+                const maxDim = 800;
+                if (w > maxDim || h > maxDim) {
+                    if (w > h) {
+                        h = Math.round((h * maxDim) / w);
+                        w = maxDim;
+                    } else {
+                        w = Math.round((w * maxDim) / h);
+                        h = maxDim;
+                    }
+                }
+                const canvas = document.createElement('canvas');
+                canvas.width = Math.max(1, w);
+                canvas.height = Math.max(1, h);
+                const ctx = canvas.getContext('2d');
+                if (ctx) {
+                    ctx.drawImage(img, 0, 0, w, h);
+                    resolve(canvas.toDataURL('image/jpeg', 0.85));
+                } else {
+                    resolve(dataUrl);
+                }
+            };
+            img.onerror = () => resolve(dataUrl);
+            img.src = dataUrl;
+        });
     }, []);
 
     // Initialize form when modal opens
@@ -122,6 +201,8 @@ export function useAddItemForm({
                 season: (initialData.season?.[0] as any) || 'spring',
                 sourceUrl: (initialData as any).sourceUrl || '',
             });
+            setBatchItems([]);
+            setCurrentBatchIndex(0);
         } else {
             // ── Create mode: restore from pending store or start fresh ──
             const pendingItem = useUiStore.getState().pendingUploadItem;
@@ -130,6 +211,8 @@ export function useAddItemForm({
                 setImage(pendingItem.image || null);
                 setOriginalImage(pendingItem.originalImage || null);
                 setProcessedImage(pendingItem.processedImage || null);
+                setBatchItems([]);
+                setCurrentBatchIndex(0);
             } else {
                 resetForm();
             }
@@ -137,93 +220,9 @@ export function useAddItemForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isOpen, isEditing, initialData]);
 
-    // Handle image file upload - optimized for non-blocking UI
-    const handleImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        // Supported image MIME types
-        const validMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/heic', 'image/heif', 'image/avif', 'image/gif'];
-        const isImage = file.type ? validMimeTypes.includes(file.type.toLowerCase()) : file.name.match(/\.(jpe?g|png|webp|heic|heif|avif|gif)$/i);
-
-        if (!isImage) {
-            setError('El formato de foto que has subido es incorrecto. Por favor, sube una imagen en formato JPG, PNG, WEBP o HEIC.');
-            // Reset the input value so user can retry with the same or another file
-            e.target.value = '';
-            return;
-        }
-
-        setSelectedFile(file);
-
-        // Load original image first - show immediately for instant feedback
-        let originalDataUrl: string;
-        try {
-            originalDataUrl = await new Promise<string>((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                    if (reader.result) resolve(reader.result as string);
-                    else reject(new Error('Invalid image result'));
-                };
-                reader.onerror = () => reject(new Error('Read error'));
-                reader.readAsDataURL(file);
-            });
-        } catch {
-            setError('El formato de foto que has subido es incorrecto o no se pudo leer el archivo.');
-            e.target.value = '';
-            return;
-        }
-
-        setOriginalImage(originalDataUrl);
-        setImage(originalDataUrl);
-
-        // Set processing state AFTER showing the image
-        setIsProcessing(true);
-        setProcessingStage('compressing');
-        setError(null);
-
-        // Delay to allow UI render
-        await new Promise<void>(resolve => {
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    setTimeout(resolve, 100);
-                });
-            });
-        });
-
-        // Downscale image to lightweight JPEG (max 800px, < 80KB) for instant Gemini Vision response
-        const optimizeImageForVision = (dataUrl: string): Promise<string> => {
-            return new Promise((resolve) => {
-                const img = document.createElement('img');
-                img.onload = () => {
-                    let w = img.width;
-                    let h = img.height;
-                    const maxDim = 800;
-                    if (w > maxDim || h > maxDim) {
-                        if (w > h) {
-                            h = Math.round((h * maxDim) / w);
-                            w = maxDim;
-                        } else {
-                            w = Math.round((w * maxDim) / h);
-                            h = maxDim;
-                        }
-                    }
-                    const canvas = document.createElement('canvas');
-                    canvas.width = Math.max(1, w);
-                    canvas.height = Math.max(1, h);
-                    const ctx = canvas.getContext('2d');
-                    if (ctx) {
-                        ctx.drawImage(img, 0, 0, w, h);
-                        resolve(canvas.toDataURL('image/jpeg', 0.85));
-                    } else {
-                        resolve(dataUrl);
-                    }
-                };
-                img.onerror = () => resolve(dataUrl);
-                img.src = dataUrl;
-            });
-        };
-
-        const visionBase64 = await optimizeImageForVision(originalDataUrl);
+    // Process a single file with background removal + Gemini vision
+    const processSingleFile = useCallback(async (file: File, initialDataUrl: string) => {
+        const visionBase64 = await optimizeImageForVision(initialDataUrl);
 
         // Start AI classification in background
         const analyzePromise = fetch('/api/analyze-clothing', {
@@ -246,76 +245,233 @@ export function useAddItemForm({
                     canvasHeight: 1500,
                     quality: 'quality',
                     transparentBackground: true,
-                },
-                handleProgress
+                }
             );
 
-            if (processResult.success && processResult.imageUrl) {
-                await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
+            const aiAnalysis = await analyzePromise;
 
-                setProcessedImage(processResult.imageUrl);
-                setImage(processResult.imageUrl);
-                setProcessingStage('complete');
+            let detectedColor = aiAnalysis?.color;
+            let detectedColorHex = aiAnalysis?.colorHex;
 
-                // Await AI analysis and auto-fill attributes
+            if (!detectedColor || !detectedColorHex) {
                 try {
-                    const aiAnalysis = await analyzePromise;
-
-                    // ── Inappropriate Content Moderation Check ──
-                    if (aiAnalysis && aiAnalysis.isInappropriate) {
-                        setImage(null);
-                        setOriginalImage(null);
-                        setProcessedImage(null);
-                        setSelectedFile(null);
-                        setProcessingStage('error');
-                        setError(
-                            aiAnalysis.inappropriateReason || 
-                            '⚠️ Imagen no permitida: Hemos eliminado la imagen porque contiene contenido inapropiado que no cumple con las normas de la comunidad.'
-                        );
-                        return;
+                    const dom = await extractDominantColor(processResult.imageUrl || initialDataUrl);
+                    if (dom && dom.name) {
+                        detectedColor = detectedColor || dom.name;
+                        detectedColorHex = detectedColorHex || dom.hex;
                     }
-
-                    let detectedColor = aiAnalysis?.color;
-                    let detectedColorHex = aiAnalysis?.colorHex;
-
-                    if (!detectedColor || !detectedColorHex) {
-                        try {
-                            const dom = await extractDominantColor(processResult.imageUrl || originalDataUrl);
-                            if (dom && dom.name) {
-                                detectedColor = detectedColor || dom.name;
-                                detectedColorHex = detectedColorHex || dom.hex;
-                            }
-                        } catch (e) {
-                            console.warn('Dominant color fallback error:', e);
-                        }
-                    }
-
-                    setFormData(prev => ({
-                        ...prev,
-                        name: (prev.name && prev.name.trim() !== '' && prev.name !== DEFAULT_FORM_DATA.name && prev.name !== 'Nueva prenda') 
-                            ? prev.name 
-                            : (aiAnalysis?.name || prev.name || 'Nueva prenda'),
-                        type: aiAnalysis?.category || prev.type || 'top',
-                        color: detectedColor || prev.color || 'Negro',
-                        colorHex: detectedColorHex || prev.colorHex || '#121212',
-                        fabric: aiAnalysis?.fabric || prev.fabric || 'Algodón',
-                        season: aiAnalysis?.season || prev.season || 'all-season',
-                    }));
-                } catch (colorError) {
-                    console.warn('Failed to extract dominant color / AI analysis:', colorError);
+                } catch (e) {
+                    console.warn('Dominant color fallback error:', e);
                 }
-            } else {
-                setProcessingStage('error');
-                setError('El formato de foto que has subido es incorrecto o la imagen no se pudo procesar.');
             }
-        } catch {
-            setProcessingStage('error');
-            setError('El formato de foto que has subido es incorrecto o la imagen no se pudo procesar.');
-        } finally {
-            await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
-            setIsProcessing(false);
+
+            return {
+                processedImage: processResult.success && processResult.imageUrl ? processResult.imageUrl : null,
+                aiAnalysis,
+                detectedColor: detectedColor || 'Negro',
+                detectedColorHex: detectedColorHex || '#121212',
+                isInappropriate: !!aiAnalysis?.isInappropriate,
+                inappropriateReason: aiAnalysis?.inappropriateReason,
+            };
+        } catch (err) {
+            console.error('[AddItemForm] Image processing failed:', err);
+            return {
+                processedImage: null,
+                aiAnalysis: null,
+                detectedColor: 'Negro',
+                detectedColorHex: '#121212',
+                isInappropriate: false,
+            };
         }
-    }, [handleProgress]);
+    }, [optimizeImageForVision]);
+
+    // Handle image file upload (supports single or up to 20 files)
+    const handleImageUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const rawFiles = e.target.files;
+        if (!rawFiles || rawFiles.length === 0) return;
+
+        const validMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/heic', 'image/heif', 'image/avif', 'image/gif'];
+        const files: File[] = [];
+
+        for (let i = 0; i < rawFiles.length; i++) {
+            const file = rawFiles[i];
+            const isImg = file.type ? validMimeTypes.includes(file.type.toLowerCase()) : file.name.match(/\.(jpe?g|png|webp|heic|heif|avif|gif)$/i);
+            if (isImg) {
+                files.push(file);
+            }
+        }
+
+        if (files.length === 0) {
+            setError('El formato de foto que has subido es incorrecto. Por favor, sube imágenes en formato JPG, PNG, WEBP o HEIC.');
+            e.target.value = '';
+            return;
+        }
+
+        // ── Case A: Multiple Files (Batch Upload up to 20) ──
+        if (files.length > 1) {
+            const selectedBatch = files.slice(0, 20);
+            setIsProcessing(true);
+            setProcessingStage('compressing');
+            setError(null);
+
+            // Read all images as Data URLs in parallel
+            const initialItems: BatchItem[] = await Promise.all(
+                selectedBatch.map(async (file, idx) => {
+                    const dataUrl = await new Promise<string>((resolve) => {
+                        const reader = new FileReader();
+                        reader.onloadend = () => resolve((reader.result as string) || '');
+                        reader.onerror = () => resolve('');
+                        reader.readAsDataURL(file);
+                    });
+
+                    return {
+                        id: `batch-${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 7)}`,
+                        originalImage: dataUrl,
+                        image: dataUrl,
+                        selectedFile: file,
+                        isProcessing: true,
+                        processingMessage: 'Analizando con IA...',
+                        formData: {
+                            ...DEFAULT_FORM_DATA,
+                            name: `Prenda ${idx + 1}`,
+                        },
+                    };
+                })
+            );
+
+            setBatchItems(initialItems);
+            setCurrentBatchIndex(0);
+
+            // Process items concurrently in chunks of 2 to balance memory and speed
+            const chunkSize = 2;
+            for (let i = 0; i < initialItems.length; i += chunkSize) {
+                const chunk = initialItems.slice(i, i + chunkSize);
+                await Promise.allSettled(
+                    chunk.map(async (batchItem, chunkIdx) => {
+                        const itemIndex = i + chunkIdx;
+                        const file = batchItem.selectedFile;
+                        if (!file) return;
+
+                        const result = await processSingleFile(file, batchItem.originalImage);
+
+                        setBatchItems(prev => {
+                            const updated = [...prev];
+                            if (updated[itemIndex]) {
+                                const currentItem = updated[itemIndex];
+                                const hasCustomName = currentItem.formData.name && 
+                                    currentItem.formData.name !== DEFAULT_FORM_DATA.name && 
+                                    !currentItem.formData.name.startsWith('Prenda ');
+
+                                updated[itemIndex] = {
+                                    ...currentItem,
+                                    image: result.processedImage || currentItem.originalImage,
+                                    processedImage: result.processedImage,
+                                    isProcessing: false,
+                                    processingMessage: '',
+                                    formData: {
+                                        ...currentItem.formData,
+                                        name: hasCustomName 
+                                            ? currentItem.formData.name 
+                                            : (result.aiAnalysis?.name || `Prenda ${itemIndex + 1}`),
+                                        type: result.aiAnalysis?.category || currentItem.formData.type || 'top',
+                                        color: result.detectedColor || currentItem.formData.color || 'Negro',
+                                        colorHex: result.detectedColorHex || currentItem.formData.colorHex || '#121212',
+                                        fabric: result.aiAnalysis?.fabric || currentItem.formData.fabric || 'Algodón',
+                                        season: result.aiAnalysis?.season || currentItem.formData.season || 'all-season',
+                                    },
+                                    error: result.isInappropriate 
+                                        ? (result.inappropriateReason || 'Contenido inapropiado detectado.') 
+                                        : null,
+                                };
+                            }
+                            return updated;
+                        });
+                    })
+                );
+            }
+
+            setIsProcessing(false);
+            setProcessingStage('complete');
+            e.target.value = '';
+            return;
+        }
+
+        // ── Case B: Single File (Normal View) ──
+        const file = files[0];
+        setSelectedFile(file);
+        setBatchItems([]);
+        setCurrentBatchIndex(0);
+
+        let originalDataUrl: string;
+        try {
+            originalDataUrl = await new Promise<string>((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    if (reader.result) resolve(reader.result as string);
+                    else reject(new Error('Invalid image result'));
+                };
+                reader.onerror = () => reject(new Error('Read error'));
+                reader.readAsDataURL(file);
+            });
+        } catch {
+            setError('El formato de foto que has subido es incorrecto o no se pudo leer el archivo.');
+            e.target.value = '';
+            return;
+        }
+
+        setOriginalImage(originalDataUrl);
+        setImage(originalDataUrl);
+
+        setIsProcessing(true);
+        setProcessingStage('compressing');
+        setError(null);
+
+        // Delay to allow UI render
+        await new Promise<void>(resolve => {
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    setTimeout(resolve, 100);
+                });
+            });
+        });
+
+        const result = await processSingleFile(file, originalDataUrl);
+
+        if (result.isInappropriate) {
+            setImage(null);
+            setOriginalImage(null);
+            setProcessedImage(null);
+            setSelectedFile(null);
+            setProcessingStage('error');
+            setError(
+                result.inappropriateReason || 
+                '⚠️ Imagen no permitida: Hemos eliminado la imagen porque contiene contenido inapropiado que no cumple con las normas de la comunidad.'
+            );
+            setIsProcessing(false);
+            return;
+        }
+
+        if (result.processedImage) {
+            setProcessedImage(result.processedImage);
+            setImage(result.processedImage);
+        }
+
+        setFormData(prev => ({
+            ...prev,
+            name: (prev.name && prev.name.trim() !== '' && prev.name !== DEFAULT_FORM_DATA.name && prev.name !== 'Nueva prenda') 
+                ? prev.name 
+                : (result.aiAnalysis?.name || prev.name || 'Nueva prenda'),
+            type: result.aiAnalysis?.category || prev.type || 'top',
+            color: result.detectedColor || prev.color || 'Negro',
+            colorHex: result.detectedColorHex || prev.colorHex || '#121212',
+            fabric: result.aiAnalysis?.fabric || prev.fabric || 'Algodón',
+            season: result.aiAnalysis?.season || prev.season || 'all-season',
+        }));
+
+        setProcessingStage('complete');
+        setIsProcessing(false);
+        e.target.value = '';
+    }, [optimizeImageForVision, processSingleFile, resetForm]);
 
     // Handle manual AI processing toggle
     const handleManualProcess = useCallback(async () => {
@@ -385,7 +541,7 @@ export function useAddItemForm({
         }
     }, []);
 
-    // Build the payload for submission
+    // Build single payload for submission
     const buildPayload = useCallback((): Partial<ClothingItem> => {
         const shouldUpdateImage = !initialData || image !== initialData.imageUrl;
         const shouldUpdateOriginalImage = !initialData || originalImage !== initialData.originalImageUrl;
@@ -417,6 +573,29 @@ export function useAddItemForm({
         return payload;
     }, [initialData, image, originalImage, processedImage, formData]);
 
+    // Build payload list for batch items
+    const buildBatchPayloads = useCallback((): Partial<ClothingItem>[] => {
+        return batchItems
+            .filter(item => !item.error && (item.image || item.originalImage))
+            .map((item, idx) => ({
+                name: item.formData.name?.trim() || `Prenda ${idx + 1}`,
+                category: (item.formData.type as any) || 'top',
+                color: item.formData.color || 'Por definir',
+                brand: item.formData.brand ? normalizeBrand(item.formData.brand) : undefined,
+                season: item.formData.season ? [item.formData.season as any] : [],
+                isAiProcessed: !!item.processedImage && item.image === item.processedImage,
+                imageUrl: item.image || item.originalImage,
+                originalImageUrl: item.originalImage,
+                ...({
+                    colorHex: item.formData.colorHex || '#808080',
+                    size: item.formData.size,
+                    reference: item.formData.reference,
+                    fabric: item.formData.fabric,
+                    sourceUrl: item.formData.sourceUrl || undefined,
+                } as any)
+            }));
+    }, [batchItems]);
+
     return {
         // Form state
         mode,
@@ -429,6 +608,15 @@ export function useAddItemForm({
         originalImage,
         processedImage,
         selectedFile,
+
+        // Batch state
+        batchItems,
+        setBatchItems,
+        currentBatchIndex,
+        setCurrentBatchIndex,
+        updateBatchItemFormData,
+        removeBatchItem,
+        buildBatchPayloads,
 
         // Processing state
         isProcessing,

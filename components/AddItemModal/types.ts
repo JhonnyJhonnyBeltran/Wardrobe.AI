@@ -87,3 +87,16 @@ export interface ColorPickerProps {
 // Form mode
 export type FormMode = 'quick' | 'complete';
 export type InputMethod = 'upload' | 'url';
+
+// Batch upload item definition
+export interface BatchItem {
+    id: string;
+    originalImage: string;
+    processedImage?: string | null;
+    image: string;
+    selectedFile?: File | null;
+    isProcessing: boolean;
+    processingMessage?: string;
+    formData: ItemFormData;
+    error?: string | null;
+}

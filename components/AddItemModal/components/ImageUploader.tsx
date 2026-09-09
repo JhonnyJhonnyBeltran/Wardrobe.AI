@@ -62,10 +62,10 @@ const EmptyState = memo(function EmptyState({
             </div>
             <div className="text-center">
                 <span className="block text-sm font-bold text-[var(--foreground)] mb-0.5 group-hover:text-[var(--brand-pink)] transition-colors">
-                    Subir foto
+                    Subir prendas
                 </span>
                 <span className="text-xs text-[var(--foreground-secondary)]">
-                    Toca para seleccionar o tomar foto
+                    Selecciona 1 o hasta 20 fotos a la vez
                 </span>
             </div>
         </div>
@@ -107,6 +107,7 @@ export const ImageUploader = memo(function ImageUploader({
             <input
                 type="file"
                 accept="image/*"
+                multiple
                 onChange={onImageUpload}
                 ref={galleryInputRef}
                 className="hidden"

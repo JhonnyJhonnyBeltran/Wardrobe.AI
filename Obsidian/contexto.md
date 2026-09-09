@@ -582,6 +582,21 @@ En cada conversación, el backend alimenta a CloSy con:
   - El borrador en progreso se almacena permanentemente en `localStorage` (`wardrobe_pending_upload_item`).
   - Permite navegar por toda la aplicación (`/feed`, `/search`, `/profile`, `/create`, `/closet`) manteniendo visible la barra flotante *"Subida pendiente"*, pudiendo reanudar la edición en cualquier momento con un solo toque en *"Continuar"*.
 
+### 38. Subida Múltiple de Prendas (Hasta 20 Fotos) con Carrusel Interactivo y Procesamiento Asíncrono IA (Septiembre 2026)
+- **Selección Múltiple de Fotos (`ImageUploader.tsx`)**:
+  - El selector de galería (`input[type="file"]`) admite `multiple`, permitiendo seleccionar de una sola vez hasta 20 imágenes de prendas.
+- **Procesamiento Concurrente y Clasificación Visual en Lote (`useAddItemForm.ts`)**:
+  - Procesa las prendas en bloques de concurrencia optimizados (2 prendas a la vez) para no sobrecargar memoria ni canvas en navegadores móviles.
+  - Para cada prenda: ejecuta la eliminación de fondo con IA (`processClothingImage`), analiza la silueta con Gemini Vision (`/api/analyze-clothing`) y extrae la colorimetría dominante con código hexadecimal.
+- **Carrusel y Navegación Slide a Slide (`BatchCarousel.tsx`)**:
+  - **Tira de Miniaturas (Thumbnail Strip)**: Barra horizontal de navegación rápida que muestra el estado de cada prenda en tiempo real (spinner mientras procesa la IA, check verde `✓` al finalizar, alerta roja en caso de moderación).
+  - **Navegación Intuitiva**: Botones de flecha `<` / `>` e indicador visual *"Prenda X de N"*, con botón para descartar/eliminar prendas individuales del lote (`Trash2`).
+  - **Personalización Individual**: Permite ajustar uno a uno el nombre de la prenda (pre-rellenado por la IA), la categoría anatómica (`CustomSelect`) y la paleta cromática sin perder los datos de las demás.
+- **Guardado Secuencial con Indicador de Progreso (`AddItemModal/index.tsx`)**:
+  - Al pulsar *"Añadir N prendas"*, el modal guarda secuencialmente cada prenda válida en la base de datos de Supabase mostrando el contador dinámico *"Guardando X de N..."*.
+  - Notificación de éxito con el total de prendas añadidas y cierre limpio.
+
+
 
 
 

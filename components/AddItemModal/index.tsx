@@ -29,6 +29,7 @@ import {
     DropdownWithCustom,
     CustomSelect,
     ImageUploader,
+    BatchCarousel,
 } from './components';
 import {
     SIZE_OPTIONS,
@@ -57,6 +58,12 @@ export default function AddItemModal({
         image,
         originalImage,
         processedImage,
+        batchItems,
+        currentBatchIndex,
+        setCurrentBatchIndex,
+        updateBatchItemFormData,
+        removeBatchItem,
+        buildBatchPayloads,
         isProcessing,
         processingMessage,
         handleImageUpload,
@@ -73,6 +80,7 @@ export default function AddItemModal({
 
     // Prevent duplicate submissions
     const [isSubmitting, setIsSubmitting] = React.useState(false);
+    const [savingProgress, setSavingProgress] = React.useState<{ current: number; total: number } | null>(null);
 
     // Advisor modal state (kept here as it's UI-specific)
     const [showAdvisor, setShowAdvisor] = React.useState(false);
@@ -80,11 +88,76 @@ export default function AddItemModal({
     // Cancel confirmation state
     const [showCancelConfirm, setShowCancelConfirm] = React.useState(false);
 
+    const isBatch = batchItems.length > 1;
+
     // ─── Handlers ────────────────────────────────────────────────────────────
 
     const handleSubmit = async () => {
         if (isProcessing || isSubmitting) return;
 
+        // ── Batch Submission Path ──
+        if (isBatch) {
+            setIsSubmitting(true);
+            try {
+                const batchPayloads = buildBatchPayloads();
+                if (batchPayloads.length === 0) {
+                    setError('No hay prendas válidas para añadir.');
+                    setIsSubmitting(false);
+                    return;
+                }
+
+                let addedCount = 0;
+                for (let i = 0; i < batchPayloads.length; i++) {
+                    setSavingProgress({ current: i + 1, total: batchPayloads.length });
+                    const payload = batchPayloads[i];
+
+                    // Check if brand is new and needs to be added
+                    if (payload.brand) {
+                        const normalizedBrand = normalizeBrand(payload.brand);
+                        const brandExists = brands.some(b => normalizeBrand(b).toLowerCase() === normalizedBrand.toLowerCase());
+
+                        if (!brandExists) {
+                            try {
+                                const response = await fetch('/api/brands', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                        name: normalizedBrand,
+                                        slug: generateSlug(normalizedBrand),
+                                    }),
+                                });
+                                if (response.ok) refetchBrands();
+                            } catch (brandErr) {
+                                console.warn('[AddItemModal] Failed to add new brand in batch:', brandErr);
+                            }
+                        }
+                    }
+
+                    const success = await onAdd(payload);
+                    if (success !== false) {
+                        addedCount++;
+                    }
+                }
+
+                useUiStore.getState().clearPendingUploadItem();
+                useUiStore.getState().showModal({
+                    title: '¡Prendas guardadas!',
+                    message: `Se han añadido ${addedCount} ${addedCount === 1 ? 'prenda' : 'prendas'} correctamente a tu armario.`,
+                    type: 'success',
+                    confirmText: 'Genial',
+                });
+                resetForm();
+                onClose();
+            } catch (err) {
+                console.error('[AddItemModal] Error in batch handleSubmit:', err);
+            } finally {
+                setIsSubmitting(false);
+                setSavingProgress(null);
+            }
+            return;
+        }
+
+        // ── Single Item Submission Path ──
         setIsSubmitting(true);
         try {
             const payload = buildPayload();
@@ -141,8 +214,6 @@ export default function AddItemModal({
             const success = await onAdd(payload);
 
             if (success === false) {
-                // If it explicitly returned false, something went wrong
-                // The store already sets the error, but we can set a local one too if needed
                 console.warn('[AddItemModal] Submission returned false');
                 return;
             }
@@ -214,7 +285,10 @@ export default function AddItemModal({
     // ─── Derived flags ────────────────────────────────────────────────────────
 
     // In edit mode the image is always pre-filled; allow submit as long as there is one
-    const canSubmit = !!image && !isProcessing && !isSubmitting;
+    const canSubmit = isBatch
+        ? batchItems.some(item => !item.error && (item.image || item.originalImage)) && !isProcessing && !isSubmitting
+        : !!image && !isProcessing && !isSubmitting;
+
     // Show all form fields when in "complete" mode OR when editing an existing item
     const showAllFields = mode === 'complete' || isEditing;
 
@@ -242,7 +316,9 @@ export default function AddItemModal({
                             transition={{ type: 'spring', damping: 28, stiffness: 300 }}
                             onClick={(e) => e.stopPropagation()}
                             className={`w-full bg-[var(--background)] rounded-3xl overflow-hidden flex flex-col shadow-2xl border border-[var(--border-color)] transition-all duration-300 ${
-                                mode === 'quick' && !isEditing
+                                isBatch
+                                    ? 'max-w-md md:max-w-lg max-h-[90vh] h-auto'
+                                    : mode === 'quick' && !isEditing
                                     ? 'max-w-md max-h-[85vh] h-auto'
                                     : 'max-w-2xl max-h-[88vh] h-[88vh] md:h-auto md:max-h-[85vh]'
                             }`}
@@ -251,10 +327,15 @@ export default function AddItemModal({
                             <div className="sticky top-0 z-50 flex items-center justify-between px-6 pt-5 pb-2 bg-[var(--background)] border-b border-[var(--border-color)]/40">
                                 <div>
                                     <h3 className="text-base font-bold text-[var(--foreground)]">
-                                        {isEditing ? 'Editar prenda' : 'Subir nueva prenda'}
+                                        {isEditing ? 'Editar prenda' : isBatch ? 'Subir prendas' : 'Subir nueva prenda'}
                                     </h3>
                                     <p className="text-xs text-[var(--foreground-tertiary)]">
-                                        {mode === 'quick' && !isEditing ? 'Modo de creación rápida' : 'Detalles completos de la prenda'}
+                                        {isBatch 
+                                            ? `Subida múltiple (${batchItems.length} prendas seleccionadas)`
+                                            : mode === 'quick' && !isEditing 
+                                            ? 'Modo de creación rápida' 
+                                            : 'Detalles completos de la prenda'
+                                        }
                                     </p>
                                 </div>
                                 <button
@@ -270,8 +351,8 @@ export default function AddItemModal({
                             {/* ── Scrollable Content ── */}
                             <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y px-4 md:px-6 py-4 custom-scrollbar scroll-smooth space-y-4">
 
-                                {/* Mode Toggle — only relevant when CREATING a new item */}
-                                {!isEditing && (
+                                {/* Mode Toggle — only relevant when CREATING a new item and not in multi-batch */}
+                                {!isEditing && !isBatch && (
                                     <div className="flex gap-2">
                                         <button
                                             onClick={() => setMode('quick')}
@@ -321,185 +402,202 @@ export default function AddItemModal({
                                     </motion.div>
                                 )}
 
-                                {/* ── Image Area ── */}
-                                <div className="min-h-[150px]">
-                                    <ImageUploader
-                                        image={image}
-                                        isProcessing={isProcessing}
-                                        processingMessage={processingMessage}
-                                        onImageUpload={handleImageUpload}
+                                {/* ── Batch Carousel View (Multi-photo) ── */}
+                                {isBatch ? (
+                                    <BatchCarousel
+                                        batchItems={batchItems}
+                                        currentIndex={currentBatchIndex}
+                                        onSelectIndex={setCurrentBatchIndex}
+                                        onUpdateFormData={updateBatchItemFormData}
+                                        onRemoveItem={removeBatchItem}
+                                        categories={categories}
+                                        brands={brands}
+                                        mode={mode}
                                     />
-                                </div>
-
-                                {/* ── Tipo de prenda — always visible ── */}
-                                <CustomSelect
-                                    label="Tipo de prenda"
-                                    value={formData.type}
-                                    onChange={(value) =>
-                                        setFormData((prev) => ({ ...prev, type: value }))
-                                    }
-                                    options={categories}
-                                />
-
-                                {/* ── Extended fields (complete mode or edit mode) ── */}
-                                {showAllFields && (
-                                    <motion.div
-                                        initial={{ opacity: 0, height: 0 }}
-                                        animate={{ opacity: 1, height: 'auto' }}
-                                        exit={{ opacity: 0, height: 0 }}
-                                        className="space-y-4"
-                                    >
-                                        {/* Name */}
-                                        <div>
-                                            <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
-                                                Nombre
-                                            </label>
-                                            <input
-                                                type="text"
-                                                value={formData.name}
-                                                onChange={(e) =>
-                                                    setFormData((prev) => ({
-                                                        ...prev,
-                                                        name: e.target.value,
-                                                    }))
-                                                }
-                                                placeholder="ej: Blazer Oversize"
-                                                className="w-full px-4 py-2.5 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:border-[var(--foreground-tertiary)]"
+                                ) : (
+                                    /* ── Single Item View ── */
+                                    <>
+                                        {/* Image Area */}
+                                        <div className="min-h-[150px]">
+                                            <ImageUploader
+                                                image={image}
+                                                isProcessing={isProcessing}
+                                                processingMessage={processingMessage}
+                                                onImageUpload={handleImageUpload}
                                             />
                                         </div>
 
-                                        {/* Brand */}
-                                        <DropdownWithCustom
-                                            label="Marca"
-                                            value={formData.brand}
+                                        {/* Tipo de prenda — always visible */}
+                                        <CustomSelect
+                                            label="Tipo de prenda"
+                                            value={formData.type}
                                             onChange={(value) =>
-                                                setFormData((prev) => ({
-                                                    ...prev,
-                                                    brand: value,
-                                                }))
+                                                setFormData((prev) => ({ ...prev, type: value }))
                                             }
-                                            options={brands}
-                                            placeholder="Seleccionar marca..."
+                                            options={categories}
                                         />
 
-                                        {/* Size + Reference */}
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <DropdownWithCustom
-                                                label="Talla"
-                                                value={formData.size}
-                                                onChange={(value) =>
-                                                    setFormData((prev) => ({
-                                                        ...prev,
-                                                        size: value,
-                                                    }))
-                                                }
-                                                options={SIZE_OPTIONS}
-                                                placeholder="Seleccionar..."
-                                            />
+                                        {/* Extended fields (complete mode or edit mode) */}
+                                        {showAllFields && (
+                                            <motion.div
+                                                initial={{ opacity: 0, height: 0 }}
+                                                animate={{ opacity: 1, height: 'auto' }}
+                                                exit={{ opacity: 0, height: 0 }}
+                                                className="space-y-4"
+                                            >
+                                                {/* Name */}
+                                                <div>
+                                                    <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
+                                                        Nombre
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        value={formData.name}
+                                                        onChange={(e) =>
+                                                            setFormData((prev) => ({
+                                                                ...prev,
+                                                                name: e.target.value,
+                                                            }))
+                                                        }
+                                                        placeholder="ej: Blazer Oversize"
+                                                        className="w-full px-4 py-2.5 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:border-[var(--foreground-tertiary)]"
+                                                    />
+                                                </div>
 
-                                            <div>
-                                                <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
-                                                    Referencia
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    value={formData.reference}
-                                                    onChange={(e) =>
+                                                {/* Brand */}
+                                                <DropdownWithCustom
+                                                    label="Marca"
+                                                    value={formData.brand}
+                                                    onChange={(value) =>
                                                         setFormData((prev) => ({
                                                             ...prev,
-                                                            reference: e.target.value,
+                                                            brand: value,
                                                         }))
                                                     }
-                                                    placeholder="Opcional"
-                                                    className="w-full px-4 py-2.5 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:border-[var(--foreground-tertiary)]"
+                                                    options={brands}
+                                                    placeholder="Seleccionar marca..."
                                                 />
-                                            </div>
-                                        </div>
 
-                                        {/* Source URL */}
-                                        <div>
-                                            <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
-                                                Enlace a la prenda
-                                            </label>
-                                            <input
-                                                type="url"
-                                                value={formData.sourceUrl}
-                                                onChange={(e) =>
-                                                    setFormData((prev) => ({
-                                                        ...prev,
-                                                        sourceUrl: e.target.value,
-                                                    }))
-                                                }
-                                                placeholder="ej: https://zara.com/... (Opcional)"
-                                                className="w-full px-4 py-2.5 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:border-[var(--foreground-tertiary)]"
-                                            />
-                                        </div>
-
-                                        {/* Color */}
-                                        <div>
-                                            <label className="block text-xs font-bold text-[var(--foreground)] mb-2">
-                                                Color
-                                            </label>
-                                            <div className="flex flex-wrap gap-2 mb-2">
-                                                {COLOR_OPTIONS.map((colorOption) => (
-                                                    <button
-                                                        key={colorOption.name}
-                                                        type="button"
-                                                        onClick={() => handleColorSelect(colorOption)}
-                                                        className={`w-8 h-8 rounded-full border-2 transition-all ${
-                                                            formData.color === colorOption.name
-                                                                ? 'border-[var(--brand-pink)] scale-110 ring-2 ring-[var(--brand-pink)]/30'
-                                                                : 'border-[var(--border-color)] hover:scale-105'
-                                                        }`}
-                                                        style={{ backgroundColor: colorOption.hex }}
-                                                        title={colorOption.name}
+                                                {/* Size + Reference */}
+                                                <div className="grid grid-cols-2 gap-3">
+                                                    <DropdownWithCustom
+                                                        label="Talla"
+                                                        value={formData.size}
+                                                        onChange={(value) =>
+                                                            setFormData((prev) => ({
+                                                                ...prev,
+                                                                size: value,
+                                                            }))
+                                                        }
+                                                        options={SIZE_OPTIONS}
+                                                        placeholder="Seleccionar..."
                                                     />
-                                                ))}
-                                                <input
-                                                    type="color"
-                                                    value={formData.colorHex}
-                                                    onChange={(e) =>
-                                                        handleColorPickerChange(e.target.value)
+
+                                                    <div>
+                                                        <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
+                                                            Referencia
+                                                        </label>
+                                                        <input
+                                                            type="text"
+                                                            value={formData.reference}
+                                                            onChange={(e) =>
+                                                                setFormData((prev) => ({
+                                                                    ...prev,
+                                                                    reference: e.target.value,
+                                                                }))
+                                                            }
+                                                            placeholder="Opcional"
+                                                            className="w-full px-4 py-2.5 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:border-[var(--foreground-tertiary)]"
+                                                        />
+                                                    </div>
+                                                </div>
+
+                                                {/* Source URL */}
+                                                <div>
+                                                    <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
+                                                        Enlace a la prenda
+                                                    </label>
+                                                    <input
+                                                        type="url"
+                                                        value={formData.sourceUrl}
+                                                        onChange={(e) =>
+                                                            setFormData((prev) => ({
+                                                                ...prev,
+                                                                sourceUrl: e.target.value,
+                                                            }))
+                                                        }
+                                                        placeholder="ej: https://zara.com/... (Opcional)"
+                                                        className="w-full px-4 py-2.5 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:border-[var(--foreground-tertiary)]"
+                                                    />
+                                                </div>
+
+                                                {/* Color */}
+                                                <div>
+                                                    <label className="block text-xs font-bold text-[var(--foreground)] mb-2">
+                                                        Color
+                                                    </label>
+                                                    <div className="flex flex-wrap gap-2 mb-2">
+                                                        {COLOR_OPTIONS.map((colorOption) => (
+                                                            <button
+                                                                key={colorOption.name}
+                                                                type="button"
+                                                                onClick={() => handleColorSelect(colorOption)}
+                                                                className={`w-8 h-8 rounded-full border-2 transition-all ${
+                                                                    formData.color === colorOption.name
+                                                                        ? 'border-[var(--brand-pink)] scale-110 ring-2 ring-[var(--brand-pink)]/30'
+                                                                        : 'border-[var(--border-color)] hover:scale-105'
+                                                                }`}
+                                                                style={{ backgroundColor: colorOption.hex }}
+                                                                title={colorOption.name}
+                                                            />
+                                                        ))}
+                                                        <input
+                                                            type="color"
+                                                            value={formData.colorHex}
+                                                            onChange={(e) =>
+                                                                handleColorPickerChange(e.target.value)
+                                                            }
+                                                            className="w-8 h-8 rounded-full border border-[var(--border-color)] cursor-pointer"
+                                                            title="Color personalizado"
+                                                        />
+                                                    </div>
+                                                    {formData.color && (
+                                                        <p className="text-xs text-[var(--foreground-secondary)]">
+                                                            Color seleccionado:{' '}
+                                                            <strong>{formData.color}</strong>
+                                                        </p>
+                                                    )}
+                                                </div>
+
+                                                {/* Fabric */}
+                                                <DropdownWithCustom
+                                                    label="Tejido"
+                                                    value={formData.fabric}
+                                                    onChange={(value) =>
+                                                        setFormData((prev) => ({
+                                                            ...prev,
+                                                            fabric: value,
+                                                        }))
                                                     }
-                                                    className="w-8 h-8 rounded-full border border-[var(--border-color)] cursor-pointer"
-                                                    title="Color personalizado"
+                                                    options={FABRIC_OPTIONS}
+                                                    placeholder="Seleccionar tejido..."
                                                 />
-                                            </div>
-                                            {formData.color && (
-                                                <p className="text-xs text-[var(--foreground-secondary)]">
-                                                    Color seleccionado:{' '}
-                                                    <strong>{formData.color}</strong>
-                                                </p>
-                                            )}
-                                        </div>
 
-                                        {/* Fabric */}
-                                        <DropdownWithCustom
-                                            label="Tejido"
-                                            value={formData.fabric}
-                                            onChange={(value) =>
-                                                setFormData((prev) => ({
-                                                    ...prev,
-                                                    fabric: value,
-                                                }))
-                                            }
-                                            options={FABRIC_OPTIONS}
-                                            placeholder="Seleccionar tejido..."
-                                        />
-
-                                        {/* Season */}
-                                        <CustomSelect
-                                            label="Temporada"
-                                            value={formData.season}
-                                            onChange={(value) =>
-                                                setFormData((prev) => ({
-                                                    ...prev,
-                                                    season: value,
-                                                }))
-                                            }
-                                            options={SEASON_OPTIONS}
-                                        />
-                                    </motion.div>
+                                                {/* Season */}
+                                                <CustomSelect
+                                                    label="Temporada"
+                                                    value={formData.season}
+                                                    onChange={(value) =>
+                                                        setFormData((prev) => ({
+                                                            ...prev,
+                                                            season: value,
+                                                        }))
+                                                    }
+                                                    options={SEASON_OPTIONS}
+                                                />
+                                            </motion.div>
+                                        )}
+                                    </>
                                 )}
                             </div>
 
@@ -522,24 +620,36 @@ export default function AddItemModal({
                                         {isSubmitting ? (
                                             <>
                                                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                                {isEditing ? 'Guardando...' : 'Añadiendo...'}
+                                                {isBatch 
+                                                    ? (savingProgress ? `Guardando ${savingProgress.current} de ${savingProgress.total}...` : 'Guardando prendas...') 
+                                                    : (isEditing ? 'Guardando...' : 'Añadiendo...')
+                                                }
                                             </>
                                         ) : isProcessing ? (
                                             <>
                                                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                                {processingMessage || 'Procesando...'}
+                                                {isBatch
+                                                    ? `Procesando ${batchItems.filter(i => !i.isProcessing).length} de ${batchItems.length}...`
+                                                    : (processingMessage || 'Procesando...')
+                                                }
                                             </>
                                         ) : (
                                             <>
                                                 <Check className="w-4 h-4 mr-2" />
-                                                {isEditing ? 'Guardar Cambios' : 'Añadir Prenda'}
+                                                {isBatch
+                                                    ? `Añadir ${batchItems.filter(i => !i.error && (i.image || i.originalImage)).length} Prendas`
+                                                    : (isEditing ? 'Guardar Cambios' : 'Añadir Prenda')
+                                                }
                                             </>
                                         )}
                                     </Button>
                                 </div>
                                 {isProcessing && (
                                     <p className="text-xs text-center text-[var(--foreground-tertiary)] mt-2">
-                                        Puedes seguir rellenando el formulario mientras se procesa
+                                        {isBatch 
+                                            ? 'Puedes ir revisando y personalizando cada prenda mientras se procesan las demás'
+                                            : 'Puedes seguir rellenando el formulario mientras se procesa'
+                                        }
                                     </p>
                                 )}
                             </div>
