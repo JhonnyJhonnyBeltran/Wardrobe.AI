@@ -92,7 +92,7 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
                             </motion.button>
 
                             {/* Product Image */}
-                            <div className="relative aspect-[4/3] sm:aspect-square max-h-[40vh] bg-white overflow-hidden flex-shrink-0">
+                            <div className="relative aspect-[4/3] sm:aspect-square max-h-[40vh] bg-white overflow-hidden flex-shrink-0 flex items-center justify-center p-6 sm:p-8">
                                 {displayItem.imageUrl ? (
                                     <motion.img
                                         initial={{ scale: 1.1, opacity: 0 }}

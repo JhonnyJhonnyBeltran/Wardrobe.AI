@@ -120,14 +120,14 @@ export default function KloeProModal({ isOpen, onClose, redirectBackToCloset = f
 
           {/* Header */}
           <div className="flex flex-col items-center text-center mt-1 mb-5">
-            <div className="relative w-16 h-16 mb-2.5">
+            <div className="relative w-24 h-14 mb-2.5">
               <Image
-                src="/kloe-avatar.png"
+                src="/kloe-logo-large.png"
                 alt="Klozet Premium"
                 fill
                 className="object-contain drop-shadow-md animate-pulse"
               />
-              <div className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-[var(--brand-pink)] text-white flex items-center justify-center shadow-sm">
+              <div className="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-[var(--brand-pink)] text-white flex items-center justify-center shadow-sm">
                 <Crown className="w-3.5 h-3.5" />
               </div>
             </div>

@@ -673,8 +673,8 @@ export default function ClosetPage() {
                 whileTap={{ scale: 0.98 }}
                 className="w-full py-3 px-4 rounded-xl bg-[var(--background-secondary)] text-[var(--foreground)] font-semibold flex items-center justify-center gap-2 border border-[var(--border-color)] relative overflow-hidden group hover:border-[var(--brand-pink)]/50 transition-all shadow-xs"
               >
-                <div className="relative w-6 h-6 flex-shrink-0 flex items-center justify-center">
-                  <Image src="/kloe-avatar.png" alt="Kloe" fill className="object-contain group-hover:scale-110 transition-transform" />
+                <div className="relative w-8 h-5 flex-shrink-0 flex items-center justify-center">
+                  <Image src="/kloe-logo-large.png" alt="Kloe" fill className="object-contain group-hover:scale-110 transition-transform" />
                 </div>
                 <span>Crear con IA</span>
               </motion.button>
@@ -686,8 +686,8 @@ export default function ClosetPage() {
             <Link href="/closet/kloe" className="block mb-5">
               <div className="bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-pink-500/10 border border-[var(--brand-pink)]/30 rounded-2xl p-3.5 flex items-center justify-between hover:border-[var(--brand-pink)]/60 transition-all shadow-xs group">
                 <div className="flex items-center gap-3">
-                  <div className="relative w-8 h-8 flex-shrink-0 flex items-center justify-center">
-                    <Image src="/kloe-avatar.png" alt="Kloe" fill className="object-contain group-hover:scale-110 transition-transform" />
+                  <div className="relative w-12 h-8 flex-shrink-0 flex items-center justify-center">
+                    <Image src="/kloe-logo-large.png" alt="Kloe" fill className="object-contain group-hover:scale-110 transition-transform" />
                   </div>
                   <div>
                     <p className="text-xs font-bold text-[var(--foreground)] flex items-center gap-1">

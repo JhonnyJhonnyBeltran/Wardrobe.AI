@@ -548,6 +548,13 @@ En cada conversación, el backend alimenta a CloSy con:
 - **Manejo de Re-despliegue de Chunks 404 en Next.js**:
   - Tras nuevos despliegues en producción, los clientes con SPA activa que solicitan un hash de chunk antiguo son capturados por el manejador de ciclo de vida de Next.js (`[Lifecycle] Next.js chunk load error detected (404)`), recargando la página automáticamente a la versión más reciente sin romper la experiencia de usuario.
 
+### 34. Padding en Detalle de Prenda y Alternancia de Logos Kloe (Septiembre 2026)
+- **Padding Ergonómico en Modal de Detalle (`ProductModal.tsx`)**:
+  - Añadido espaciado vertical y horizontal (`p-6 sm:p-8`) al contenedor de fondo blanco de la prenda en `ProductModal.tsx`, evitando que la fotografía quede pegada a los bordes y mejorando la visualización del producto.
+- **Estrategia y Jerarquía de Logos Kloe (`/kloe-logo-large.png` vs `/kloe-avatar.png`)**:
+  - **Logo Grande (`kloe-logo-large.png`)**: Wordmark completo en tipografía bubble rosa con ojos en la "k". Se utiliza en botones de acción y llamadas a la acción principales de la app: botón *"Crear con IA"* en `/closet`, banner de recomendación *"¿Qué me pongo hoy?"* en `/closet`, banner de asistencia *"¿Quieres que Kloe te ayude?"* en `/create`, y cabecera del modal de suscripción `KloeProModal.tsx`.
+  - **Logo Pequeño (`kloe-avatar.png` / `kloe-logo-small.png`)**: Mascota "K" rosa con ojos. Se utiliza como avatar conversacional dentro del chat `/closet/kloe` (burbujas de mensajes, animación de pensamiento / razonamiento y avatar en cabecera de chat).
+
 
 
 

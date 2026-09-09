@@ -1093,9 +1093,9 @@ export default function CreateOutfitPage() {
                             <Link href="/closet/kloe" className="block group">
                                 <div className="relative overflow-hidden bg-gradient-to-r from-[var(--brand-pink)]/10 via-[var(--brand-pink)]/5 to-transparent border border-[var(--brand-pink)]/25 hover:border-[var(--brand-pink)]/50 rounded-2xl p-3.5 flex items-center justify-between transition-all duration-300 shadow-xs hover:shadow-md hover:shadow-[var(--brand-pink)]/5 active:scale-[0.99]">
                                     <div className="flex items-center gap-3 min-w-0">
-                                        <div className="relative w-9 h-9 flex-shrink-0 flex items-center justify-center">
+                                        <div className="relative w-14 h-9 flex-shrink-0 flex items-center justify-center">
                                             <Image 
-                                                src="/kloe-avatar.png" 
+                                                src="/kloe-logo-large.png" 
                                                 alt="Kloe" 
                                                 fill 
                                                 className="object-contain drop-shadow-xs group-hover:scale-105 transition-transform" 
