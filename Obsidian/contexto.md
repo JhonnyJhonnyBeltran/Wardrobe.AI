@@ -653,4 +653,14 @@ En cada conversación, el backend alimenta a CloSy con:
 - **Generación Automática de Nombres Descriptivos**:
   - Si la IA devuelve un nombre vacío o genérico (*"Nueva prenda"*), se compone dinámicamente un nombre descriptivo combinando el tipo anatómico y el color principal (ej. *"Camiseta Azul"*, *"Pantalón Negro"*, *"Chaqueta Verde"*).
 
+### 43. Corrección de Guardado de Outfits en BD y Modal Compacto de Prendas Seleccionadas en /create (Septiembre 2026)
+- **Corrección de Error Schema en Supabase (`PGRST204: Could not find 'scheduled_for' column`)**:
+  - Se eliminó el campo `scheduled_for` del payload de inserción y actualización enviado a la tabla `outfits` (la cual no posee esa columna).
+  - La programación de looks se delega y sincroniza limpiamente en la tabla relacional dedicada `calendar_outfits (user_id, outfit_id, date)`, permitiendo guardar outfits tanto programados como no programados sin errores de esquema.
+  - Al editar un outfit existente, se consulta `calendar_outfits` para pre-cargar la fecha programada si existe.
+- **Rediseño Compacto del Modal Flotante de Prendas Seleccionadas (`/create`)**:
+  - Se redujo el ancho excesivo del contenedor flotante de prendas seleccionadas de `max-w-4xl / xl:max-w-5xl` a `w-[92vw] sm:w-auto sm:max-w-lg md:max-w-xl`.
+  - Tarjetas de prenda estilizadas y proporcionadas (`max-w-[155px] sm:max-w-[175px]`, miniatura `w-8 h-8 sm:w-9 sm:h-9`, botón de borrado `w-5 h-5`), ofreciendo un dock flotante tipo *Dynamic Island* elegante y centrado en escritorio y móvil.
+
+
 

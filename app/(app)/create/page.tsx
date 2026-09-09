@@ -147,6 +147,22 @@ export default function CreateOutfitPage() {
                     if (outfit.occasion) setOutfitOccasion(outfit.occasion);
                     setIsPublic(outfit.is_public ?? true);
 
+                    // Fetch scheduled calendar date if exists
+                    try {
+                        const { data: calData } = await (supabase.from('calendar_outfits') as any)
+                            .select('date')
+                            .eq('outfit_id', outfitId)
+                            .order('date', { ascending: false })
+                            .limit(1)
+                            .maybeSingle();
+
+                        if (calData?.date && !scheduledDateParam) {
+                            setScheduledDate(calData.date);
+                        }
+                    } catch (calErr) {
+                        console.warn('Error loading calendar date for outfit:', calErr);
+                    }
+
                     // Reconstruct selections and canvas state
                     const newSelections: Record<string, ClothingItem[]> = {
                         headwear: [], top: [], layer: [], bottom: [], shoes: [], accessories: []
@@ -572,7 +588,6 @@ export default function CreateOutfitPage() {
                 const updatePayload: any = {
                     name: outfitName,
                     occasion: outfitOccasion || null,
-                    scheduled_for: scheduledDate || null,
                     description: '',
                     updated_at: new Date().toISOString()
                 };
@@ -602,7 +617,6 @@ export default function CreateOutfitPage() {
                         user_id: user.id,
                         name: outfitName,
                         occasion: outfitOccasion || null,
-                        scheduled_for: scheduledDate || null,
                         description: '',
                         season: 'all-season', // Default for now
                         is_public: isPublic,
@@ -643,6 +657,19 @@ export default function CreateOutfitPage() {
                     .insert(outfitItemsArr as any);
 
                 if (itemsError) throw itemsError;
+            }
+
+            // Sync with calendar_outfits if scheduledDate is provided
+            if (scheduledDate && savedOutfitId && user) {
+                try {
+                    await (supabase.from('calendar_outfits') as any).upsert({
+                        user_id: user.id,
+                        outfit_id: savedOutfitId,
+                        date: scheduledDate
+                    }, { onConflict: 'user_id,date,outfit_id' });
+                } catch (calErr) {
+                    console.warn('Could not sync calendar_outfits:', calErr);
+                }
             }
 
             setSuccessModalConfig({
@@ -1183,32 +1210,32 @@ export default function CreateOutfitPage() {
                         initial={{ opacity: 0, y: 50, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 50, scale: 0.95 }}
-                        className="fixed bottom-[20px] md:bottom-[32px] left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2.5 w-[92vw] max-w-4xl xl:max-w-5xl"
+                        className="fixed bottom-[20px] md:bottom-[28px] left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2 w-[92vw] sm:w-auto sm:max-w-lg md:max-w-xl"
                     >
                         {/* Selected Items Summary Container */}
-                        <div className="w-full bg-[var(--card-bg)]/95 backdrop-blur-2xl border border-[var(--border-color)] rounded-3xl p-3 sm:p-4 shadow-[0_20px_50px_rgba(0,0,0,0.18)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.6)] flex flex-col gap-2.5">
+                        <div className="w-full bg-[var(--card-bg)]/95 backdrop-blur-2xl border border-[var(--border-color)] rounded-2xl p-2.5 sm:p-3 shadow-[0_16px_40px_rgba(0,0,0,0.14)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)] flex flex-col gap-2">
                             {/* Header Info */}
-                            <div className="flex items-center justify-between px-1">
-                                <div className="flex items-center gap-2">
-                                    <span className="w-2 h-2 rounded-full bg-[var(--brand-pink)] animate-pulse" />
-                                    <span className="text-xs font-bold text-[var(--foreground)] tracking-wide">
+                            <div className="flex items-center justify-between px-1 gap-2">
+                                <div className="flex items-center gap-1.5 min-w-0">
+                                    <span className="w-2 h-2 rounded-full bg-[var(--brand-pink)] animate-pulse shrink-0" />
+                                    <span className="text-xs font-bold text-[var(--foreground)] tracking-wide truncate">
                                         Prendas en el outfit ({totalSelected})
                                     </span>
                                 </div>
-                                <span className="text-[11px] text-[var(--foreground-tertiary)] hidden sm:inline">
-                                    Toca la cruz para quitar cualquier prenda
+                                <span className="text-[10px] text-[var(--foreground-tertiary)] shrink-0 hidden sm:inline">
+                                    Toca × para quitar
                                 </span>
                             </div>
 
                             {/* Rectangular Cards Horizontal Scroll */}
-                            <div className="flex items-center gap-2.5 overflow-x-auto py-1 px-0.5 no-scrollbar scroll-smooth">
+                            <div className="flex items-center gap-2 overflow-x-auto py-0.5 px-0.5 no-scrollbar scroll-smooth">
                                 {flatItems.map((item, idx) => (
                                     <div
                                         key={`${item.id}-${idx}`}
-                                        className="flex items-center gap-2.5 pl-2 pr-3 py-1.5 bg-[var(--background-secondary)]/90 hover:bg-[var(--background-secondary)] border border-[var(--border-color)] hover:border-[var(--brand-pink)]/40 rounded-2xl shadow-xs shrink-0 transition-all group max-w-[200px] sm:max-w-[240px]"
+                                        className="flex items-center gap-2 pl-1.5 pr-2 py-1 bg-[var(--background-secondary)]/90 hover:bg-[var(--background-secondary)] border border-[var(--border-color)] hover:border-[var(--brand-pink)]/40 rounded-xl shadow-xs shrink-0 transition-all group max-w-[155px] sm:max-w-[175px]"
                                     >
                                         {/* Image Thumbnail */}
-                                        <div className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white dark:bg-[#151518] border border-[var(--border-color)] overflow-hidden shrink-0 flex items-center justify-center p-1">
+                                        <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-white dark:bg-[#151518] border border-[var(--border-color)] overflow-hidden shrink-0 flex items-center justify-center p-0.5">
                                             <img
                                                 src={item.imageUrl}
                                                 alt={item.name}
@@ -1219,10 +1246,10 @@ export default function CreateOutfitPage() {
 
                                         {/* Garment Name & Category */}
                                         <div className="min-w-0 flex-1">
-                                            <p className="text-xs font-bold text-[var(--foreground)] truncate leading-tight">
+                                            <p className="text-[11px] font-bold text-[var(--foreground)] truncate leading-tight">
                                                 {item.name || 'Prenda'}
                                             </p>
-                                            <p className="text-[10px] font-medium text-[var(--foreground-tertiary)] capitalize truncate mt-0.5">
+                                            <p className="text-[9px] font-medium text-[var(--foreground-tertiary)] capitalize truncate mt-0.5">
                                                 {item.category || item.color || 'Armario'}
                                             </p>
                                         </div>
@@ -1233,11 +1260,11 @@ export default function CreateOutfitPage() {
                                                 e.stopPropagation();
                                                 handleRemoveItem(item.id);
                                             }}
-                                            className="w-6 h-6 rounded-full bg-[var(--foreground-tertiary)]/15 hover:bg-red-500 hover:text-white text-[var(--foreground-secondary)] flex items-center justify-center transition-all cursor-pointer shrink-0 ml-0.5"
+                                            className="w-5 h-5 rounded-full bg-[var(--foreground-tertiary)]/15 hover:bg-red-500 hover:text-white text-[var(--foreground-secondary)] flex items-center justify-center transition-all cursor-pointer shrink-0 ml-0.5"
                                             title={`Quitar ${item.name}`}
                                             aria-label={`Quitar ${item.name}`}
                                         >
-                                            <X className="w-3.5 h-3.5" />
+                                            <X className="w-3 h-3" />
                                         </button>
                                     </div>
                                 ))}
