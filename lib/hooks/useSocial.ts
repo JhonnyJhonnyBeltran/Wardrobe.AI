@@ -50,22 +50,22 @@ export function useSocial() {
     }
   }, [user]);
 
-  // Check availability of a username
+  // Check availability of a username (case-insensitive)
   const checkUsernameAvailability = useCallback(async (username: string) => {
-    if (!username || username.length < 3) return false;
+    const cleanUsername = username?.trim().toLowerCase();
+    if (!cleanUsername || cleanUsername.length < 3) return false;
 
     try {
       const { data, error } = await (supabase.from('profiles') as any)
         .select('id')
-        .eq('username', username)
-        .eq('username', username)
+        .ilike('username', cleanUsername)
         .maybeSingle();
 
-      if (error) return false; // Error real
-      if (data) return false; // Encontrado = ocupado
-      return true; // No encontrado (data null) = disponible
+      if (error) return false; // Database error
+      if (data) return false; // Found = taken
+      return true; // Not found (data null) = available
     } catch (err) {
-      console.error('Error checking username:', err);
+      console.error('Error checking username availability:', err);
       return false;
     }
   }, []);

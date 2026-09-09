@@ -9,9 +9,11 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Shield, Eye, Database, Share2, Download, FileText } from 'lucide-react';
 import { Card, Button } from '@/components';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useTranslation } from '@/lib/i18n';
 import { useUser } from '@/store/userStore';
 import { supabase } from '@/lib/supabase/client';
+import { toast } from 'sonner';
 
 interface ToggleSwitchProps {
     enabled: boolean;
@@ -111,7 +113,7 @@ export default function PrivacyPage() {
     };
 
     const handleDownloadData = () => {
-        alert('Preparando descarga de tus datos...');
+        toast.info('Preparando la exportación de tus datos conforme al RGPD...');
     };
 
     return (
@@ -230,20 +232,20 @@ export default function PrivacyPage() {
                         {t.privacyPage.legal}
                     </h2>
                     <Card className="overflow-hidden">
-                        <a
-                            href="/privacy-policy"
+                        <Link
+                            href="/privacy"
                             className="flex items-center gap-3 p-4 border-b border-[var(--border-color)] hover:bg-[var(--card-hover)] transition-colors"
                         >
                             <FileText className="w-5 h-5 text-[var(--brand-pink)]" />
                             <span className="font-medium text-[var(--foreground)]">{t.privacyPage.privacyPolicy}</span>
-                        </a>
-                        <a
+                        </Link>
+                        <Link
                             href="/terms"
                             className="flex items-center gap-3 p-4 hover:bg-[var(--card-hover)] transition-colors"
                         >
                             <FileText className="w-5 h-5 text-[var(--brand-pink)]" />
                             <span className="font-medium text-[var(--foreground)]">{t.privacyPage.termsConditions}</span>
-                        </a>
+                        </Link>
                     </Card>
                 </motion.div>
 

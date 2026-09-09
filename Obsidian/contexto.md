@@ -450,6 +450,23 @@ En cada conversación, el backend alimenta a CloSy con:
     - `app/api/analyze-clothing/route.ts`: Límite máximo de payload (10MB), autenticación de sesión y rate limiting por IP para salvaguardar cuotas de IA.
     - `app/api/webhooks/stripe/route.ts`: Verificación obligatoria de firma criptográfica (`stripe-signature` y `webhookSecret`) en entorno de producción.
 
+### 24. Sincronización de Consentimiento de Cookies en BD, Límite de Bio, Unicidad de Usuario y Cero Alerts Nativos (Septiembre 2026)
+- **Persistencia y Sincronización de Cookies en Base de Datos (`CookiesBanner.tsx` & `store/userStore.tsx`)**:
+  - Al aceptar, rechazar o configurar las cookies, la decisión se guarda en `localStorage` (`klozet_cookie_consent_v1`) y se sincroniza automáticamente en la base de datos dentro de `profiles.notification_settings.cookie_consent` para usuarios autenticados.
+  - Al hidratar el perfil de usuario en `userStore`, si existe consentimiento registrado en la base de datos, se sincroniza con el almacenamiento local, garantizando que el banner **solo aparezca una única vez durante el registro/inicio de sesión** y no vuelva a interrumpir la navegación.
+- **Límite de Longitud y Contador en Biografía (`/profile/settings/personal`)**:
+  - Establecido un límite estricto de **300 caracteres** para la biografía (`MAX_BIO_LENGTH = 300`).
+  - Añadido un contador dinámico en tiempo real (`{bio.length}/300`) que alerta visualmente en rojo al alcanzar el límite y previene desbordamientos antes de guardar.
+- **Unicidad e Inspección Case-Insensitive de Nombres de Usuario (`lib/hooks/useSocial.ts`)**:
+  - Refactorizada la función `checkUsernameAvailability` para utilizar `.ilike('username', cleanUsername)` en Supabase, previniendo duplicados independientemente de mayúsculas o minúsculas.
+  - Verificación debounced en tiempo real integrada en el flujo de registro (`/auth`), onboarding (`/onboarding/username`) y edición de perfil (`/profile/settings/personal`).
+- **Erradicación Total de `alert()` Nativos en Toda la Aplicación**:
+  - Reemplazadas todas las llamadas a `alert()` por notificaciones toast fluidas con `sonner` (`toast.error`, `toast.success`, `toast.info`) en `/auth`, `/auth/update-password`, `/profile/settings/personal` y `/profile/settings/privacy`, en estricto cumplimiento de la regla de diseño de interfaces.
+- **Auditoría de Perfil Privado, Notificaciones y Temas**:
+  - Verificado el funcionamiento de la privacidad (`profiles.is_private`): oculta cuadrículas de publicaciones y outfits a no seguidores con estado `pending` en solicitudes.
+  - Sistema de notificaciones de sistema (escritorio y móvil) probado y operativo en `/profile/settings/notifications`.
+  - Tema oscuro (`.dark`) con escala de grises de alto contraste e iconos adaptativos verificado en todos los componentes de ajustes.
+
 
 
 

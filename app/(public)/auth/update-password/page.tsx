@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { Lock, Eye, EyeOff, CheckCircle, Loader2 } from 'lucide-react';
 import { Button, LogoExtended } from '@/components';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { toast } from 'sonner';
 
 export default function UpdatePasswordPage() {
     const router = useRouter();
@@ -21,12 +22,12 @@ export default function UpdatePasswordPage() {
         e.preventDefault();
         
         if (password !== confirmPassword) {
-            alert('Las contraseñas no coinciden');
+            toast.error('Las contraseñas no coinciden');
             return;
         }
 
         if (password.length < 6) {
-            alert('La contraseña debe tener al menos 6 caracteres');
+            toast.error('La contraseña debe tener al menos 6 caracteres');
             return;
         }
 
@@ -36,11 +37,12 @@ export default function UpdatePasswordPage() {
             const res = await updatePassword(password);
             if (res.success) {
                 setSuccess(true);
+                toast.success('Contraseña actualizada correctamente');
             } else {
-                alert(res.error || 'Error al actualizar la contraseña');
+                toast.error(res.error || 'Error al actualizar la contraseña');
             }
         } catch (err: any) {
-            alert(err?.message || 'Error inesperado');
+            toast.error(err?.message || 'Error inesperado');
         } finally {
             setLoading(false);
         }

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Cookie, Settings2, ShieldCheck, Check, X } from 'lucide-react';
 import Link from 'next/link';
+import { supabase } from '@/lib/supabase/client';
 
 interface CookiePreferences {
     technical: boolean; // Always true
@@ -41,17 +42,44 @@ export default function CookiesBanner() {
         }
     }, []);
 
-    const saveConsent = (prefs: { technical: boolean; preferences: boolean; analytics: boolean }) => {
+    const saveConsent = async (prefs: { technical: boolean; preferences: boolean; analytics: boolean }) => {
+        const payload: CookiePreferences = {
+            ...prefs,
+            technical: true, // Always required
+            timestamp: new Date().toISOString(),
+        };
+
         try {
-            const payload: CookiePreferences = {
-                ...prefs,
-                technical: true, // Always required
-                timestamp: new Date().toISOString(),
-            };
             localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
         } catch (e) {
-            console.error('Error saving cookie consent:', e);
+            console.error('Error saving cookie consent locally:', e);
         }
+
+        // Also persist to Supabase profiles if user is authenticated
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session?.user?.id) {
+                const { data: currentProfile } = await supabase
+                    .from('profiles')
+                    .select('notification_settings')
+                    .eq('id', session.user.id)
+                    .maybeSingle();
+
+                const existingSettings = (currentProfile as any)?.notification_settings || {};
+                await supabase
+                    .from('profiles')
+                    .update({
+                        notification_settings: {
+                            ...existingSettings,
+                            cookie_consent: payload,
+                        }
+                    } as any)
+                    .eq('id', session.user.id);
+            }
+        } catch (e) {
+            console.warn('[CookiesBanner] Non-critical error saving consent to DB:', e);
+        }
+
         setShowBanner(false);
         setShowModal(false);
     };

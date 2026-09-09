@@ -13,6 +13,9 @@ import { Card, Button } from '@/components';
 import { useUser } from '@/store/userStore';
 import { supabase } from '@/lib/supabase/client';
 import { useSocial } from '@/lib/hooks/useSocial';
+import { toast } from 'sonner';
+
+const MAX_BIO_LENGTH = 300;
 
 export default function PersonalSettingsPage() {
   const router = useRouter();
@@ -115,7 +118,12 @@ export default function PersonalSettingsPage() {
     if (!user) return;
 
     if (username !== user.username && isUsernameAvailable === false) {
-      alert('El nombre de usuario no está disponible');
+      toast.error('El nombre de usuario no está disponible');
+      return;
+    }
+
+    if (bio.length > MAX_BIO_LENGTH) {
+      toast.error(`La biografía no puede superar los ${MAX_BIO_LENGTH} caracteres`);
       return;
     }
 
@@ -133,7 +141,7 @@ export default function PersonalSettingsPage() {
         .update({
           full_name: fullName || null,
           username: username || null,
-          bio: bio || null,
+          bio: bio.trim().slice(0, MAX_BIO_LENGTH) || null,
           avatar_url: avatarUrl || null,
           updated_at: new Date().toISOString(),
         })
@@ -141,10 +149,11 @@ export default function PersonalSettingsPage() {
 
       if (error) throw error;
       await refreshProfile();
+      toast.success('Perfil actualizado correctamente');
       router.push('/profile/settings');
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      alert('No se pudo guardar. Inténtalo de nuevo.');
+      toast.error(e?.message || 'No se pudo guardar. Inténtalo de nuevo.');
     } finally {
       setSaving(false);
     }
@@ -256,10 +265,16 @@ export default function PersonalSettingsPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-[var(--foreground)] mb-2">Bio</label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-sm font-medium text-[var(--foreground)]">Bio</label>
+              <span className={`text-xs ${bio.length >= MAX_BIO_LENGTH ? 'text-red-500 font-bold' : 'text-[var(--foreground-tertiary)]'}`}>
+                {bio.length}/{MAX_BIO_LENGTH}
+              </span>
+            </div>
             <textarea
               value={bio}
-              onChange={(e) => setBio(e.target.value)}
+              onChange={(e) => setBio(e.target.value.slice(0, MAX_BIO_LENGTH))}
+              maxLength={MAX_BIO_LENGTH}
               placeholder="Cuéntanos sobre tu estilo..."
               rows={3}
               className="w-full px-4 py-3 bg-[var(--background-secondary)] rounded-xl border border-[var(--border-color)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] outline-none focus:border-[var(--foreground-tertiary)] resize-none"

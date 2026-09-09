@@ -11,6 +11,7 @@ import { useAuth } from '@/lib/hooks/useAuth';
 import { useSocial } from '@/lib/hooks/useSocial';
 import { supabase } from '@/lib/supabase/client';
 import { useUser } from '@/store/userStore';
+import { toast } from 'sonner';
 
 export default function AuthPage() {
     const router = useRouter();
@@ -35,7 +36,7 @@ export default function AuthPage() {
     // Show auth errors from callback
     useEffect(() => {
         if (urlError) {
-            alert(`Error de autenticación: ${urlError}`);
+            toast.error(`Error de autenticación: ${urlError}`);
         }
     }, [urlError]);
 
@@ -112,11 +113,12 @@ export default function AuthPage() {
             const res = await resetPasswordForEmail(resetEmail);
             if (res.success) {
                 setResetSent(true);
+                toast.success('Enlace de recuperación enviado. Revisa tu correo.');
             } else {
-                alert(res.error || 'Error al enviar enlace de recuperación');
+                toast.error(res.error || 'Error al enviar enlace de recuperación');
             }
         } catch (err: any) {
-            alert(err?.message || 'Error inesperado');
+            toast.error(err?.message || 'Error inesperado');
         } finally {
             setLoading(false);
         }
@@ -136,7 +138,7 @@ export default function AuthPage() {
                 } else {
                     const resolved = await resolveEmail(input);
                     if (!resolved) {
-                        alert('Usuario no encontrado. Intenta con tu email directamente.');
+                        toast.error('Usuario no encontrado. Intenta con tu email directamente.');
                         return;
                     }
                     emailToUse = resolved;
@@ -148,18 +150,18 @@ export default function AuthPage() {
                 } else {
                     const msg = res.error || 'Error al iniciar sesión';
                     if (msg.toLowerCase().includes('email not confirmed') || msg.toLowerCase().includes('not confirmed')) {
-                        alert('Debes confirmar tu email antes de iniciar sesión. Revisa tu bandeja de entrada.');
+                        toast.error('Debes confirmar tu email antes de iniciar sesión. Revisa tu bandeja de entrada.');
                     } else if (msg.toLowerCase().includes('invalid login') || msg.toLowerCase().includes('invalid credentials') || msg.toLowerCase().includes('invalid email')) {
-                        alert('Email o contraseña incorrectos');
+                        toast.error('Email o contraseña incorrectos');
                     } else {
-                        alert(msg);
+                        toast.error(msg);
                     }
                 }
             } else {
-                if (isEmailAvailable === false) { alert('El email ya está en uso'); return; }
-                if (isUsernameAvailable === false) { alert('El nombre de usuario ya está en uso'); return; }
-                if (!fullName.trim()) { alert('Introduce tu nombre completo'); return; }
-                if (!username.trim() || username.length < 3) { alert('El nombre de usuario debe tener al menos 3 caracteres'); return; }
+                if (isEmailAvailable === false) { toast.error('El email ya está en uso'); return; }
+                if (isUsernameAvailable === false) { toast.error('El nombre de usuario ya está en uso'); return; }
+                if (!fullName.trim()) { toast.error('Introduce tu nombre completo'); return; }
+                if (!username.trim() || username.length < 3) { toast.error('El nombre de usuario debe tener al menos 3 caracteres'); return; }
 
                 const cleanUsername = username.toLowerCase().replace(/[^a-z0-9_]/g, '');
                 const res = await signUp(email, password, fullName.trim(), cleanUsername);
@@ -173,12 +175,12 @@ export default function AuthPage() {
                     setEmailConfirmPending(true);
                 }
             } else {
-                alert(res.error || 'Error al crear cuenta');
+                toast.error(res.error || 'Error al crear cuenta');
             }
         }
         } catch (err: any) {
             console.error('Auth error:', err);
-            alert(err?.message || 'Ha ocurrido un error inesperado');
+            toast.error(err?.message || 'Ha ocurrido un error inesperado');
         } finally {
             setLoading(false);
         }
@@ -196,7 +198,7 @@ export default function AuthPage() {
             if (error) throw error;
         } catch (err: any) {
             console.error('Google auth error:', err);
-            alert('Error al iniciar sesión con Google');
+            toast.error('Error al iniciar sesión con Google');
             setLoading(false);
         }
     };
@@ -213,7 +215,7 @@ export default function AuthPage() {
             if (error) throw error;
         } catch (err: any) {
             console.error('Apple auth error:', err);
-            alert('Error al iniciar sesión con Apple');
+            toast.error('Error al iniciar sesión con Apple');
             setLoading(false);
         }
     };
