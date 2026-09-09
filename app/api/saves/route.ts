@@ -2,7 +2,7 @@
 
 /**
  * API Route for Saves management
- * Handles saving posts and organizing them into folders
+ * Handles saving posts and organizing them into folders securely
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -26,6 +26,18 @@ export async function GET(request: NextRequest) {
     const folderId = searchParams.get('folder_id');
 
     if (folderId) {
+      // Validate that folder belongs to user
+      const { data: folder } = await supabase
+        .from('save_folders')
+        .select('id')
+        .eq('id', folderId)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (!folder) {
+        return NextResponse.json({ saves: [] });
+      }
+
       // Get saves in a specific folder
       const { data: folderItems } = await supabase
         .from('save_folder_items')
@@ -42,6 +54,7 @@ export async function GET(request: NextRequest) {
         .from('saves')
         .select('*, posts(*)')
         .in('id', saveIds)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       const saves = (savesData || []).map((save: any) => ({
@@ -51,7 +64,7 @@ export async function GET(request: NextRequest) {
 
       return NextResponse.json({ saves });
     } else {
-      // Get all saves
+      // Get all saves for this user
       const { data: savesData } = await supabase
         .from('saves')
         .select('*, posts(*)')
@@ -89,6 +102,20 @@ export async function POST(request: NextRequest) {
 
     if (!post_id) {
       return NextResponse.json({ error: 'Post ID is required' }, { status: 400 });
+    }
+
+    // If folder_id is passed, verify user owns the folder
+    if (folder_id) {
+      const { data: folderDoc } = await supabase
+        .from('save_folders')
+        .select('id')
+        .eq('id', folder_id)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (!folderDoc) {
+        return NextResponse.json({ error: 'Folder not found or unauthorized' }, { status: 403 });
+      }
     }
 
     // Check if already saved
@@ -222,6 +249,32 @@ export async function PUT(request: NextRequest) {
 
     if (!save_id) {
       return NextResponse.json({ error: 'Save ID is required' }, { status: 400 });
+    }
+
+    // Verify ownership of the save item
+    const { data: saveDoc } = await supabase
+      .from('saves')
+      .select('id, user_id')
+      .eq('id', save_id)
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (!saveDoc) {
+      return NextResponse.json({ error: 'Save item not found or forbidden' }, { status: 403 });
+    }
+
+    // If moving to a new folder, verify ownership of the target folder
+    if (folder_id) {
+      const { data: folderDoc } = await supabase
+        .from('save_folders')
+        .select('id')
+        .eq('id', folder_id)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (!folderDoc) {
+        return NextResponse.json({ error: 'Target folder not found or forbidden' }, { status: 403 });
+      }
     }
 
     // Remove from any existing folder

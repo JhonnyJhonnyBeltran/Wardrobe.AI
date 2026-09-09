@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+import { checkIpRateLimit } from '@/lib/closy/rateLimiter';
 
 export interface AnalyzeResponse {
   category: 'top' | 'shirt' | 'sweater' | 'hoodie' | 'jacket' | 'outerwear' | 'bottom' | 'shorts' | 'skirt' | 'dress' | 'shoes' | 'bag' | 'accessory' | 'other';
@@ -13,11 +15,38 @@ export interface AnalyzeResponse {
 
 export async function POST(request: NextRequest) {
   try {
+    // 1. IP Rate Limiting protection
+    const forwarded = request.headers.get('x-forwarded-for');
+    const clientIp = forwarded ? forwarded.split(',')[0].trim() : '127.0.0.1';
+    
+    if (!checkIpRateLimit(clientIp)) {
+      return NextResponse.json(
+        { error: 'Demasiadas peticiones. Por favor espera un momento.' },
+        { status: 429 }
+      );
+    }
+
+    // 2. Authenticate user session
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Debes iniciar sesión para analizar prendas con IA' },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json().catch(() => ({}));
     const { imageBase64 } = body;
 
     if (!imageBase64 || typeof imageBase64 !== 'string') {
       return NextResponse.json({ error: 'Se requiere una imagen en base64' }, { status: 400 });
+    }
+
+    // Protect against massive payloads (max 10MB base64 string)
+    if (imageBase64.length > 10 * 1024 * 1024) {
+      return NextResponse.json({ error: 'La imagen supera el tamaño máximo permitido' }, { status: 400 });
     }
 
     const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
@@ -82,8 +111,12 @@ Devuelve EXCLUSIVAMENTE un JSON válido sin bloques markdown ni texto extra con 
   "season": "all-season" | "spring" | "summer" | "autumn" | "winter"
 }`;
 
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+
     const response = await fetch(geminiUrl, {
       method: 'POST',
+      signal: controller.signal,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [
@@ -105,6 +138,7 @@ Devuelve EXCLUSIVAMENTE un JSON válido sin bloques markdown ni texto extra con 
         }
       })
     });
+    clearTimeout(timeout);
 
     if (!response.ok) {
       console.warn('[AnalyzeClothing] Gemini API error status:', response.status);

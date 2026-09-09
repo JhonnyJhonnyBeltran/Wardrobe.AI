@@ -2,7 +2,7 @@
 
 /**
  * API Route for Save Folders management
- * Handles CRUD operations for save folders
+ * Handles CRUD operations for save folders with strict user authorization
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
       .from('save_folders')
       .insert({
         user_id: user.id,
-        name: name.trim(),
+        name: name.trim().slice(0, 50), // Cap length
         icon: icon || null,
         color: color || null,
       })
@@ -101,28 +101,34 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Folder ID is required' }, { status: 400 });
     }
 
+    // Explicit IDOR check
     const { data: existing } = await supabase
       .from('save_folders')
       .select('user_id')
       .eq('id', id)
-      .single();
+      .maybeSingle();
 
     if (!existing || existing.user_id !== user.id) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const updateData: Record<string, any> = {};
-    if (name !== undefined) updateData.name = name;
+    if (name !== undefined && typeof name === 'string') updateData.name = name.trim().slice(0, 50);
     if (icon !== undefined) updateData.icon = icon;
     if (color !== undefined) updateData.color = color;
     updateData.updated_at = new Date().toISOString();
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('save_folders')
       .update(updateData)
       .eq('id', id)
+      .eq('user_id', user.id)
       .select()
       .single();
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
 
     return NextResponse.json({ folder: data });
   } catch (error: any) {
@@ -146,11 +152,16 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Folder ID is required' }, { status: 400 });
     }
 
+    // Explicit IDOR check: Verify folder belongs to authenticated caller
     const { data: existing } = await supabase
       .from('save_folders')
       .select('user_id')
       .eq('id', id)
-      .single();
+      .maybeSingle();
+
+    if (!existing || existing.user_id !== user.id) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
 
     // 1. Find all save IDs in this folder
     const { data: folderItems } = await supabase
@@ -168,8 +179,8 @@ export async function DELETE(request: NextRequest) {
       await supabase.from('saves').delete().in('id', saveIds).eq('user_id', user.id);
     }
 
-    // 4. Delete the folder
-    await supabase.from('save_folders').delete().eq('id', id);
+    // 4. Delete the folder ensuring user_id match
+    await supabase.from('save_folders').delete().eq('id', id).eq('user_id', user.id);
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

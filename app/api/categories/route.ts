@@ -42,11 +42,17 @@ export async function GET(request: NextRequest) {
 
 /**
  * POST /api/categories
- * Create a new category (admin only - currently allows all)
+ * Create a new category (Requires authenticated session)
  */
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
     const { name, slug, icon, color, is_active = true, display_order = 0 } = body;
 
@@ -90,11 +96,17 @@ export async function POST(request: NextRequest) {
 
 /**
  * PUT /api/categories
- * Update an existing category
+ * Update an existing category (Requires authenticated session)
  */
 export async function PUT(request: NextRequest) {
   try {
     const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
     const { id, name, slug, icon, color, is_active, display_order } = body;
 
@@ -143,11 +155,17 @@ export async function PUT(request: NextRequest) {
 
 /**
  * DELETE /api/categories
- * Delete a category
+ * Delete a category (Requires authenticated session)
  */
 export async function DELETE(request: NextRequest) {
   try {
     const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 

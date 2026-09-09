@@ -422,10 +422,33 @@ En cada conversación, el backend alimenta a CloSy con:
   - En su lugar, aparece únicamente el botón limpio e intuitivo `+ Crear carpeta` para permitirle añadir su primera carpeta.
   - Cuando el usuario crea al menos una carpeta (`folders.length > 0`), se despliega la cabecera completa con el título "Carpetas", el botón `+ Añadir carpeta` y las pastillas interactivas de cada carpeta con opción de filtrado y eliminación.
 
-
-
-
-
+### 23. Auditoría de Seguridad Integral de Endpoints, Cumplimiento Normativo Español y Accesibilidad WCAG 2.1 AA (Septiembre 2026)
+- **Marco Jurídico Español y Europeo (`Obsidian/spanish_legal_compliance.md`)**:
+  - **RGPD (Reglamento UE 2016/679) & LOPDGDD (Ley Orgánica 3/2018)**: Principio de minimización de datos (Art. 5.1.c), información por capas en registro, consentimiento informado, derecho al olvido irreversible (`/api/user/delete`) y ejercicio de derechos ARCO-POL ante la AEPD (`privacidad@klozet.app`).
+  - **LSSI-CE (Ley 34/2002)**: Datos identificativos del prestador en `/terms` (Art. 10), contratación electrónica (Arts. 23-29) y régimen de cookies informado (Art. 22.2).
+  - **TRLGDCU (RDL 1/2007)**: Precios transparentes con 21% IVA desglosado (Klozet Pro 3,99 €/mes y 29,99 €/año), derecho de desistimiento de 14 días con régimen de consentimiento de ejecución digital inmediata (Art. 103.m).
+  - **EU AI Act (Reglamento UE 2024/1689)**: Transparencia obligatoria sobre el uso de sistemas de IA generativa (Kloe AI / Gemini) y prohibición expresa de afirmaciones engañosas o de infalibilidad en estilismo.
+- **Banner de Cookies Accesible de Doble Capa (`components/CookiesBanner.tsx` & `/cookies`)**:
+  - Implementado banner de consentimiento conforme a la última guía de la AEPD con botones de igual jerarquía y prominencia: *"Aceptar todas"*, *"Rechazar"* y *"Configurar"*.
+  - Modal de configuración granular para cookies técnicas obligatorias (Supabase, sesión, Stripe) y cookies de personalización de tema (claro/oscuro). Persistencia local con clave `klozet_cookie_consent_v1`.
+  - Nueva página `/cookies` con desglose pormenorizado en tabla técnica (nombre, tipo, finalidad, duración y emisor).
+- **Accesibilidad Web (WCAG 2.1 AA) y Formularios**:
+  - Contraste de colores verificado (ratios $\ge 4.5:1$ en texto normal y $\ge 3:1$ en UI elements).
+  - Atributos `alt` contextuales y descriptivos en todas las imágenes de posts y prendas.
+  - Atributos `aria-label` descriptivos en todos los botones interactivos e icon-only (`PostCard`, `ClothingItem`, `CookiesBanner`, `/auth`).
+  - Atributos `autoComplete` estándar (`name`, `username`, `email`, `current-password`, `new-password`) y gestión de foco accesible `focus-visible:ring-2`.
+- **Auditoría y Blindaje de Seguridad en Endpoints (`app/api/*`)**:
+  - **Protección Anti-SSRF (`app/api/proxy-image` y `app/api/scrape-product`)**: Validación estricta `isSafeUrl` que restringe el protocolo a `http/https` y bloquea rangos de IP privados, loopback (`127.0.0.1`, `localhost`), metadatos de proveedores cloud (`169.254.169.254`) y limita el tamaño de respuesta para evitar desbordamiento de memoria.
+  - **Remediación de IDOR / BOLA**:
+    - `app/api/save-folders/route.ts`: Validación obligatoria de propiedad de carpeta (`existing.user_id === user.id`) antes de permitir eliminar o modificar carpetas o enlaces de guardados.
+    - `app/api/saves/route.ts`: Comprobación de que tanto el guardado como la carpeta de destino pertenecen al usuario autenticado antes de mover elementos.
+    - `app/api/closy/generate-avatar/route.ts`: Autenticación forzosa por token JWT de Supabase eliminando cualquier suplantación de `userId`.
+    - `app/api/outfits/actions/route.ts`: Verificación de sesión y titularidad del look antes de permitir acciones destructivas (`deleteOutfit`).
+  - **Protección contra Mutaciones No Autorizadas**:
+    - `app/api/categories/route.ts` & `app/api/brands/route.ts`: Autenticación obligatoria con `supabase.auth.getUser()` para crear (`POST`), modificar (`PUT`) o eliminar (`DELETE`) categorías y marcas.
+    - `app/api/fashion/route.ts`: Protección de refresco de datos mediante token de cron o sesión de usuario autorizada.
+    - `app/api/analyze-clothing/route.ts`: Límite máximo de payload (10MB), autenticación de sesión y rate limiting por IP para salvaguardar cuotas de IA.
+    - `app/api/webhooks/stripe/route.ts`: Verificación obligatoria de firma criptográfica (`stripe-signature` y `webhookSecret`) en entorno de producción.
 
 
 

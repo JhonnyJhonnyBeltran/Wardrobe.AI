@@ -1,6 +1,42 @@
 import { NextResponse } from 'next/server';
 import { fetchHTML } from '@/lib/fashion/webScraper';
 
+/**
+ * Validates whether a given URL is safe to scrape (Prevents SSRF attacks)
+ */
+function isSafeUrl(urlStr: string): boolean {
+    try {
+        const parsed = new URL(urlStr);
+        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+            return false;
+        }
+        const hostname = parsed.hostname.toLowerCase();
+        if (
+            hostname === 'localhost' ||
+            hostname === '127.0.0.1' ||
+            hostname === '::1' ||
+            hostname === '0.0.0.0' ||
+            hostname === '169.254.169.254' ||
+            hostname.endsWith('.localhost') ||
+            hostname.endsWith('.local') ||
+            hostname.endsWith('.internal')
+        ) {
+            return false;
+        }
+        const ipParts = hostname.split('.');
+        if (ipParts.length === 4 && ipParts.every(p => /^\d+$/.test(p))) {
+            const first = parseInt(ipParts[0], 10);
+            const second = parseInt(ipParts[1], 10);
+            if (first === 10 || first === 127 || first === 0 || (first === 169 && second === 254) || (first === 172 && second >= 16 && second <= 31) || (first === 192 && second === 168)) {
+                return false;
+            }
+        }
+        return true;
+    } catch {
+        return false;
+    }
+}
+
 // Helper function to wait
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -329,8 +365,12 @@ export async function POST(request: Request) {
         const body = await request.json();
         url = body.url;
 
-        if (!url) {
+        if (!url || typeof url !== 'string') {
             return NextResponse.json({ error: 'URL is required' }, { status: 400 });
+        }
+
+        if (!isSafeUrl(url)) {
+            return NextResponse.json({ error: 'Invalid or restricted URL' }, { status: 400 });
         }
 
         const hostname = new URL(url).hostname.toLowerCase();

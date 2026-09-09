@@ -241,7 +241,7 @@ export default function PostCard({ post, onClick, hideSaveButton = false }: Post
                     <div className="relative w-full h-full flex flex-col pointer-events-none">
                         <Image
                             src={post.imageUrl}
-                            alt={post.title}
+                            alt={post.title || (post.author?.name ? `Publicación de @${post.author.name}` : "Publicación de look")}
                             width={500}
                             height={600}
                             className="w-full h-full object-cover"
@@ -261,7 +261,7 @@ export default function PostCard({ post, onClick, hideSaveButton = false }: Post
                             isLikedState ? "opacity-100" : "opacity-0 group-hover:opacity-100"
                         )}>
                             <div className="flex items-center gap-2">
-                                <Avatar src={post.author.avatar || null} alt={post.author.name} size="sm" />
+                                <Avatar src={post.author.avatar || null} alt={post.author.name || "Foto de perfil"} size="sm" />
                                 <span className="text-xs font-semibold text-white truncate max-w-[120px] drop-shadow-md">{post.author.name}</span>
                             </div>
                             <div className="flex items-center gap-1 text-white text-xs drop-shadow-md">
@@ -283,8 +283,8 @@ export default function PostCard({ post, onClick, hideSaveButton = false }: Post
                                 >
                                     <button
                                         onClick={toggleQuickSave}
-                                        aria-label="Guardar publicación"
-                                        className="touch-target-44 bg-[var(--card-bg)]/90 backdrop-blur-md border border-[var(--border-color)]/60 rounded-full hover:scale-105 active:scale-95 transition-all shadow-sm"
+                                        aria-label={isSavedState ? "Eliminar publicación de guardados" : "Guardar publicación"}
+                                        className="touch-target-44 bg-[var(--card-bg)]/90 backdrop-blur-md border border-[var(--border-color)]/60 rounded-full hover:scale-105 active:scale-95 transition-all shadow-sm focus-visible:ring-2 focus-visible:ring-[var(--brand-pink)]"
                                     >
                                         <Bookmark className={cn("w-4.5 h-4.5", isSavedState ? "fill-[var(--brand-pink)] text-[var(--brand-pink)]" : "text-[var(--foreground)]")} />
                                     </button>

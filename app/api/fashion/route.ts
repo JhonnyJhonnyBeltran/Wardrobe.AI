@@ -1,11 +1,13 @@
 /**
  * Fashion Data API Route
  * GET: Returns current fashion trends and items
- * POST: Triggers a data refresh (for cron jobs)
+ * POST: Triggers a data refresh (protected for cron/authorized users)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { fetchFashionData, FashionDataStore } from '@/lib/fashion';
+import { validateCronRequest } from '@/lib/fashion/scheduler';
+import { createClient } from '@/lib/supabase/server';
 
 // Cache the data in memory (for serverless, use Redis/KV in production)
 let cachedData: FashionDataStore | null = null;
@@ -72,6 +74,17 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
     try {
+        // Authorize via Cron token or authenticated user
+        const isCronValid = validateCronRequest(request);
+        
+        if (!isCronValid) {
+            const supabase = await createClient();
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+            }
+        }
+
         const body = await request.json().catch(() => ({}));
         const useAI = body.useAI === true;
 

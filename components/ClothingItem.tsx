@@ -98,8 +98,9 @@ export const ClothingItem: React.FC<ClothingItemProps> = ({
         <motion.button
           whileTap={{ scale: 0.9 }}
           onClick={handleFavoriteClick}
+          aria-label={isFavorite ? `Eliminar ${name || 'prenda'} de favoritos` : `Añadir ${name || 'prenda'} a favoritos`}
           style={{ WebkitTapHighlightColor: 'transparent' }}
-          className={`absolute top-3 right-4 z-20 p-2 rounded-full bg-black/20 dark:bg-white/20 backdrop-blur-sm transition-all duration-300 focus:outline-none focus:ring-0
+          className={`absolute top-3 right-4 z-20 p-2 rounded-full bg-black/20 dark:bg-white/20 backdrop-blur-sm transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-pink)]
                      ${isFavorite ? 'opacity-100' : 'opacity-60 hover:opacity-100'}`}
         >
           <motion.div
@@ -125,11 +126,12 @@ export const ClothingItem: React.FC<ClothingItemProps> = ({
         {onDelete && (
           <motion.button
             onClick={handleDeleteClick}
+            aria-label={`Eliminar ${name || 'prenda'}`}
             initial="idle"
             whileHover="hover"
             whileTap="active"
             style={{ WebkitTapHighlightColor: 'transparent' }}
-            className="absolute top-3 left-3 z-20 w-10 h-10 flex items-center justify-center rounded-full bg-white/80 dark:bg-black/50 backdrop-blur-md shadow-sm opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-300 hover:bg-white dark:hover:bg-black/70 hover:shadow-md border border-white/20"
+            className="absolute top-3 left-3 z-20 w-10 h-10 flex items-center justify-center rounded-full bg-white/80 dark:bg-black/50 backdrop-blur-md shadow-sm opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-300 hover:bg-white dark:hover:bg-black/70 hover:shadow-md border border-white/20 focus-visible:ring-2 focus-visible:ring-red-500"
           >
             <motion.svg
               viewBox="0 -10 64 74"

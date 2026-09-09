@@ -418,8 +418,10 @@ export default function AuthPage() {
                                                     value={fullName}
                                                     onChange={(e) => setFullName(e.target.value)}
                                                     placeholder="Nombre completo"
+                                                    aria-label="Nombre completo"
+                                                    autoComplete="name"
                                                     required
-                                                    className="w-full pl-12 pr-4 h-12 rounded-xl bg-gray-50 dark:bg-[#16161c] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-gray-400 dark:focus:border-white/30 transition-all"
+                                                    className="w-full pl-12 pr-4 h-12 rounded-xl bg-gray-50 dark:bg-[#16161c] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-pink)] focus:border-gray-400 dark:focus:border-white/30 transition-all"
                                                 />
                                             </div>
 
@@ -431,9 +433,11 @@ export default function AuthPage() {
                                                     value={username}
                                                     onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
                                                     placeholder="Nombre de usuario"
+                                                    aria-label="Nombre de usuario"
+                                                    autoComplete="username"
                                                     required
                                                     minLength={3}
-                                                    className="w-full pl-12 pr-10 h-12 rounded-xl bg-gray-50 dark:bg-[#16161c] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-gray-400 dark:focus:border-white/30 transition-all"
+                                                    className="w-full pl-12 pr-10 h-12 rounded-xl bg-gray-50 dark:bg-[#16161c] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-pink)] focus:border-gray-400 dark:focus:border-white/30 transition-all"
                                                 />
                                                 <div className="absolute right-4 top-1/2 -translate-y-1/2">
                                                     {isCheckingUsername && <Loader2 className="w-4 h-4 animate-spin text-gray-400" />}
@@ -455,8 +459,10 @@ export default function AuthPage() {
                                             value={isLogin ? emailOrUser : email}
                                             onChange={(e) => isLogin ? setEmailOrUser(e.target.value) : setEmail(e.target.value)}
                                             placeholder={isLogin ? 'Email o @usuario' : 'Correo electrónico'}
+                                            aria-label={isLogin ? 'Email o nombre de usuario' : 'Correo electrónico'}
+                                            autoComplete={isLogin ? 'username' : 'email'}
                                             required
-                                            className="w-full pl-12 pr-10 h-12 rounded-xl bg-gray-50 dark:bg-[#16161c] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-gray-400 dark:focus:border-white/30 transition-all"
+                                            className="w-full pl-12 pr-10 h-12 rounded-xl bg-gray-50 dark:bg-[#16161c] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-pink)] focus:border-gray-400 dark:focus:border-white/30 transition-all"
                                         />
                                         {!isLogin && (
                                             <div className="absolute right-4 top-1/2 -translate-y-1/2">
@@ -475,13 +481,16 @@ export default function AuthPage() {
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
                                             placeholder="Contraseña"
+                                            aria-label="Contraseña"
+                                            autoComplete={isLogin ? 'current-password' : 'new-password'}
                                             required
-                                            className="w-full pl-12 pr-12 h-12 rounded-xl bg-gray-50 dark:bg-[#16161c] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-gray-400 dark:focus:border-white/30 transition-all"
+                                            className="w-full pl-12 pr-12 h-12 rounded-xl bg-gray-50 dark:bg-[#16161c] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-pink)] focus:border-gray-400 dark:focus:border-white/30 transition-all"
                                         />
                                         <button
                                             type="button"
                                             onClick={() => setShowPassword(!showPassword)}
-                                            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+                                            aria-label={showPassword ? 'Ocultar contraseña' : 'Ver contraseña'}
+                                            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors p-1 rounded-lg focus-visible:ring-2 focus-visible:ring-[var(--brand-pink)]"
                                         >
                                             {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                                         </button>
@@ -492,7 +501,7 @@ export default function AuthPage() {
                                             <button
                                                 type="button"
                                                 onClick={() => setIsResetPassword(true)}
-                                                className="text-xs font-semibold text-gray-500 dark:text-gray-400 hover:text-[var(--brand-pink)] transition-colors"
+                                                className="text-xs font-semibold text-gray-500 dark:text-gray-400 hover:text-[var(--brand-pink)] transition-colors focus-visible:ring-2 focus-visible:ring-[var(--brand-pink)] rounded"
                                             >
                                                 ¿Olvidaste tu contraseña?
                                             </button>
@@ -520,9 +529,10 @@ export default function AuthPage() {
                                         type="button"
                                         onClick={handleGoogleLogin}
                                         disabled={loading}
-                                        className="w-full flex items-center justify-center gap-3 h-12 rounded-xl bg-gray-50 hover:bg-gray-100 dark:bg-[#16161c] dark:hover:bg-[#1f1f26] text-gray-800 dark:text-gray-100 font-semibold transition-colors disabled:opacity-60 border border-gray-200 dark:border-white/10 shadow-sm"
+                                        aria-label="Continuar con Google"
+                                        className="w-full flex items-center justify-center gap-3 h-12 rounded-xl bg-gray-50 hover:bg-gray-100 dark:bg-[#16161c] dark:hover:bg-[#1f1f26] text-gray-800 dark:text-gray-100 font-semibold transition-colors disabled:opacity-60 border border-gray-200 dark:border-white/10 shadow-sm focus-visible:ring-2 focus-visible:ring-[var(--brand-pink)]"
                                     >
-                                        <svg viewBox="0 0 24 24" className="w-5 h-5">
+                                        <svg viewBox="0 0 24 24" className="w-5 h-5" aria-hidden="true">
                                             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
                                             <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
                                             <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
@@ -538,14 +548,14 @@ export default function AuthPage() {
                                         <button
                                             type="button"
                                             onClick={() => setIsLogin(!isLogin)}
-                                            className="font-bold text-gray-900 dark:text-white hover:text-[var(--brand-pink)] transition-colors ml-1"
+                                            className="font-bold text-gray-900 dark:text-white hover:text-[var(--brand-pink)] transition-colors ml-1 focus-visible:ring-2 focus-visible:ring-[var(--brand-pink)] rounded"
                                         >
                                             {isLogin ? 'Regístrate' : 'Inicia Sesión'}
                                         </button>
                                     </p>
-                                    <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-4 max-w-xs mx-auto leading-relaxed">
+                                    <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-4 max-w-xs mx-auto leading-relaxed">
                                         Al continuar, aceptas nuestros <br className="sm:hidden" />
-                                        <Link href="/terms" className="underline hover:text-gray-700 dark:hover:text-gray-300 transition-colors">Términos de Servicio</Link> y <Link href="/privacy" className="underline hover:text-gray-700 dark:hover:text-gray-300 transition-colors">Política de Privacidad</Link>.
+                                        <Link href="/terms" className="underline hover:text-gray-800 dark:hover:text-gray-200 transition-colors">Términos</Link>, <Link href="/privacy" className="underline hover:text-gray-800 dark:hover:text-gray-200 transition-colors">Privacidad</Link> y <Link href="/cookies" className="underline hover:text-gray-800 dark:hover:text-gray-200 transition-colors">Cookies</Link>.
                                     </p>
                                 </div>
                             </motion.div>

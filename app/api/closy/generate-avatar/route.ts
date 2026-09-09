@@ -6,6 +6,10 @@ export async function POST(request: NextRequest) {
     const authHeader = request.headers.get('Authorization') || request.headers.get('authorization');
     const token = authHeader?.replace(/^Bearer\s+/i, '');
 
+    if (!token) {
+      return NextResponse.json({ error: 'Usuario no autenticado' }, { status: 401 });
+    }
+
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 
@@ -20,18 +24,15 @@ export async function POST(request: NextRequest) {
       auth: { persistSession: false, autoRefreshToken: false }
     });
 
-    let userId: string | null = null;
-    if (token) {
-      const { data: userData } = await supabase.auth.getUser(token);
-      userId = userData?.user?.id || null;
+    const { data: userData, error: authError } = await supabase.auth.getUser(token);
+    const userId = userData?.user?.id;
+
+    if (authError || !userId) {
+      return NextResponse.json({ error: 'Sesión inválida o expirada' }, { status: 401 });
     }
 
-    const body = await request.json();
-    const targetUserId = userId || body.userId;
-
-    if (!targetUserId) {
-      return NextResponse.json({ error: 'Usuario no autenticado' }, { status: 401 });
-    }
+    const body = await request.json().catch(() => ({}));
+    const targetUserId = userId; // Strictly enforce caller's authenticated user ID
 
     // 1. Fetch User Profile Calibration Photos
     const { data: profile, error: profileError } = await supabase
@@ -64,7 +65,8 @@ export async function POST(request: NextRequest) {
       const { data: clothes } = await supabase
         .from('clothing_items')
         .select('id, name, category, color, brand, fabric, image_url, original_image_url')
-        .in('id', itemIds);
+        .in('id', itemIds)
+        .eq('user_id', targetUserId);
       garments = clothes || [];
     } else if (body.outfitId) {
       const { data: outfitItems } = await supabase
@@ -74,18 +76,12 @@ export async function POST(request: NextRequest) {
       garments = (outfitItems || []).map((oi: any) => oi.clothing_items).filter(Boolean);
     }
 
-    const geminiApiKey = process.env.GEMINI_API_KEY || 
-                         process.env.GOOGLE_API_KEY || 
-                         process.env.NEXT_PUBLIC_GEMINI_API_KEY;
-
-    // Build realistic fashion model try-on render URL
-    // Generates a virtual model portrait combining the face and body reference with the outfit
     const primaryFace = facePhotos[0];
     const outfitSummary = garments.map(g => `${g.name} (${g.color || ''} ${g.category})`).join(', ');
 
     return NextResponse.json({
       success: true,
-      avatar_image_url: primaryFace, // High-res calibrated reference
+      avatar_image_url: primaryFace,
       outfit_summary: outfitSummary,
       face_photos_used: facePhotos.length,
       body_photos_used: bodyPhotos.length,

@@ -19,6 +19,11 @@ export async function POST(request: NextRequest) {
     if (webhookSecret && signature) {
       event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
     } else {
+      // In production, reject unsigned webhook calls
+      if (process.env.NODE_ENV === 'production') {
+        console.error('[StripeWebhook] Missing webhook secret or signature in production');
+        return NextResponse.json({ error: 'Missing webhook signature' }, { status: 400 });
+      }
       event = JSON.parse(body);
     }
   } catch (err: any) {

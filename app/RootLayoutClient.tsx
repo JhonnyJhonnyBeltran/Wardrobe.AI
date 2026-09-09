@@ -34,6 +34,11 @@ const NotificationToastContainer = dynamic(
   }
 );
 
+const CookiesBanner = dynamic(() => import("@/components/CookiesBanner"), {
+  ssr: false,
+  loading: () => null,
+});
+
 interface RootLayoutClientProps {
   children: React.ReactNode;
 }
@@ -57,6 +62,7 @@ export default function RootLayoutClient({ children }: RootLayoutClientProps) {
               
               {/* UI overlays - loaded on-demand */}
               <NotificationToastContainer position="top-right" />
+              <CookiesBanner />
               <Toaster 
                 position="top-center" 
                 theme="system" 
