@@ -685,6 +685,16 @@ En cada conversación, el backend alimenta a CloSy con:
   - Kloe procesa en paralelo las fotografías en alta resolución (`base64`) de todas las prendas adjuntas y del look de referencia junto con sus metadatos (tejido, corte, color, marca).
   - Gemini Vision analiza visualmente el conjunto para generar respuestas enriquecidas, recomendaciones de compra o sugerir el outfit ideal para montar directamente en el lienzo.
 
+### 47. Sincronización Global de Notificaciones y Activación por Defecto (`/profile/settings`) (Septiembre 2026)
+- **Unificación Centralizada con `useNotificationSettingsStore`**:
+  - En `/profile/settings` se eliminó el estado local desvinculado y se conectó directamente con el store centralizado `useNotificationSettingsStore` y la columna `profiles.notification_preferences` en Supabase.
+  - La sección *"Notificaciones - Gestiona tus alertas"* ahora refleja en tiempo real el valor guardado y permite modificar los switches de *"Nuevos seguidores"* (`follows`), *"Me gusta en publicaciones"* (`likes`) y *"Comentarios"* (`comments`) sincronizándose instantáneamente con `/profile/settings/notifications`, `NotificationToast` y `RealtimeProvider`.
+- **Valores Activos por Defecto (Default ON)**:
+  - Todas las opciones de notificaciones sociales y del sistema (`follows: true`, `likes: true`, `comments: true`, `messages: true`, `reminders: true`, `popupToasts: true`) están configuradas como **activas por defecto** tanto para nuevos usuarios como para perfiles con preferencias previas parciales o vacías.
+  - Se garantiza compatibilidad bidireccional entre la clave `follows` y la clave legacy `followers` sin pérdida de datos.
+- **Acceso Directo a Configuración Extendida**:
+  - Añadido el enlace directo *"Ver todas"* a `/profile/settings/notifications` desde la tarjeta de notificaciones en la página principal de ajustes.
+
 
 
 

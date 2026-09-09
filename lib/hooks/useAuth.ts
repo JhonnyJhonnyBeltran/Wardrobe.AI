@@ -106,7 +106,18 @@ export function useAuth(): UseAuthReturn {
       visualStylePreferences: styleSource.visual_style_preferences,
       styleCompleted: styleSource.style_completed || false,
       isPrivate: styleSource.is_private || false,
-      notificationSettings: styleSource.notification_preferences || styleSource.notification_settings || { push: true, email: true },
+      notificationSettings: {
+        popupToasts: true,
+        push: true,
+        follows: true,
+        followers: true,
+        likes: true,
+        comments: true,
+        messages: true,
+        reminders: true,
+        email: false,
+        ...(styleSource.notification_preferences || styleSource.notification_settings || {})
+      },
     });
   };
 

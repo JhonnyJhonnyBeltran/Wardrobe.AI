@@ -33,6 +33,7 @@ import {
     Sparkles
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useNotificationSettingsStore } from '@/store/notificationSettingsStore';
 
 export default function SettingsPage() {
     const { user, isPremium, togglePremium } = useUser();
@@ -49,7 +50,7 @@ export default function SettingsPage() {
     
     // Privacy and notification states
     const [isPrivate, setIsPrivate] = useState(user?.isPrivate || false);
-    const [notifications, setNotifications] = useState(user?.notificationSettings || { push: true, email: true, comments: true, followers: true, likes: true });
+    const { settings: notifSettings, updateSetting: updateNotifSetting, loadFromDatabase: loadNotifFromDb } = useNotificationSettingsStore();
     
     // Password state
     const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -95,9 +96,11 @@ export default function SettingsPage() {
         if (user) {
             fetchStyles();
             setIsPrivate(user.isPrivate || false);
-            setNotifications(user.notificationSettings || { push: true, email: true, comments: true, followers: true, likes: true });
+            if (user.id) {
+                loadNotifFromDb(user.id);
+            }
         }
-    }, [user]);
+    }, [user, loadNotifFromDb]);
 
     const handleLogout = async () => {
         await signOut();
@@ -199,25 +202,6 @@ export default function SettingsPage() {
         } catch (err) {
             console.error(err);
             setIsPrivate(!newVal);
-        }
-    };
-
-    const toggleNotification = async (key: string) => {
-        const newVal = { ...notifications, [key]: !notifications[key] };
-        setNotifications(newVal);
-        try {
-            const { data: currentProfile } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', user?.id)
-                .maybeSingle();
-
-            if (currentProfile && 'notification_preferences' in currentProfile) {
-                await supabase.from('profiles').update({ notification_preferences: newVal } as any).eq('id', user?.id);
-            }
-        } catch (err) {
-            console.error(err);
-            setNotifications(notifications);
         }
     };
 
@@ -357,34 +341,51 @@ export default function SettingsPage() {
 
                     {/* Notificaciones */}
                     <Card className="p-5 mb-4">
-                        <div className="flex items-center gap-3 mb-4">
-                            <div className="w-10 h-10 rounded-xl bg-[var(--brand-pink)]/10 flex items-center justify-center">
-                                <Bell className="w-5 h-5 text-[var(--brand-pink)]" />
-                            </div>
-                            <div>
-                                <div className="font-medium text-[var(--foreground)]">{t.profile.notifications}</div>
-                                <div className="text-xs text-[var(--foreground-tertiary)]">
-                                    {t.profile.notificationsDesc}
+                        <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-xl bg-[var(--brand-pink)]/10 flex items-center justify-center">
+                                    <Bell className="w-5 h-5 text-[var(--brand-pink)]" />
+                                </div>
+                                <div>
+                                    <div className="font-medium text-[var(--foreground)]">{t.profile.notifications}</div>
+                                    <div className="text-xs text-[var(--foreground-tertiary)]">
+                                        {t.profile.notificationsDesc}
+                                    </div>
                                 </div>
                             </div>
+                            <Link href="/profile/settings/notifications">
+                                <button className="text-xs font-semibold text-[var(--brand-pink)] hover:underline flex items-center gap-1 cursor-pointer">
+                                    Ver todas
+                                    <ChevronLeft className="w-4 h-4 rotate-180" />
+                                </button>
+                            </Link>
                         </div>
                         <div className="space-y-3">
                             <label className="flex items-center justify-between p-3 rounded-xl bg-[var(--background-secondary)] cursor-pointer">
                                 <span className="text-sm text-[var(--foreground)]">{t.profile.newFollowers}</span>
-                                <div className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors ${notifications.followers ? 'bg-[var(--brand-pink)]' : 'bg-gray-300 dark:bg-gray-700'}`} onClick={() => toggleNotification('followers')}>
-                                    <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${notifications.followers ? 'translate-x-6' : 'translate-x-0'}`} />
+                                <div
+                                    className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors ${notifSettings.follows ? 'bg-[var(--brand-pink)]' : 'bg-gray-300 dark:bg-gray-700'}`}
+                                    onClick={() => updateNotifSetting('follows', !notifSettings.follows, user?.id)}
+                                >
+                                    <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${notifSettings.follows ? 'translate-x-6' : 'translate-x-0'}`} />
                                 </div>
                             </label>
                             <label className="flex items-center justify-between p-3 rounded-xl bg-[var(--background-secondary)] cursor-pointer">
                                 <span className="text-sm text-[var(--foreground)]">{t.profile.likesOnPosts}</span>
-                                <div className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors ${notifications.likes ? 'bg-[var(--brand-pink)]' : 'bg-gray-300 dark:bg-gray-700'}`} onClick={() => toggleNotification('likes')}>
-                                    <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${notifications.likes ? 'translate-x-6' : 'translate-x-0'}`} />
+                                <div
+                                    className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors ${notifSettings.likes ? 'bg-[var(--brand-pink)]' : 'bg-gray-300 dark:bg-gray-700'}`}
+                                    onClick={() => updateNotifSetting('likes', !notifSettings.likes, user?.id)}
+                                >
+                                    <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${notifSettings.likes ? 'translate-x-6' : 'translate-x-0'}`} />
                                 </div>
                             </label>
                             <label className="flex items-center justify-between p-3 rounded-xl bg-[var(--background-secondary)] cursor-pointer">
                                 <span className="text-sm text-[var(--foreground)]">{t.profile.comments}</span>
-                                <div className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors ${notifications.comments ? 'bg-[var(--brand-pink)]' : 'bg-gray-300 dark:bg-gray-700'}`} onClick={() => toggleNotification('comments')}>
-                                    <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${notifications.comments ? 'translate-x-6' : 'translate-x-0'}`} />
+                                <div
+                                    className={`w-12 h-6 flex items-center rounded-full p-1 transition-colors ${notifSettings.comments ? 'bg-[var(--brand-pink)]' : 'bg-gray-300 dark:bg-gray-700'}`}
+                                    onClick={() => updateNotifSetting('comments', !notifSettings.comments, user?.id)}
+                                >
+                                    <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${notifSettings.comments ? 'translate-x-6' : 'translate-x-0'}`} />
                                 </div>
                             </label>
                         </div>

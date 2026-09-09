@@ -58,10 +58,15 @@ export const useNotificationSettingsStore = create<NotificationSettingsState>()(
               .maybeSingle();
 
             if (currentProfile && 'notification_preferences' in currentProfile) {
+              const currentPrefs = (currentProfile as any)?.notification_preferences || {};
               await supabase
                 .from('profiles')
                 .update({
-                  notification_preferences: updated,
+                  notification_preferences: {
+                    ...currentPrefs,
+                    ...updated,
+                    followers: updated.follows, // backward compatibility
+                  },
                 } as any)
                 .eq('id', userId);
             }
@@ -84,10 +89,25 @@ export const useNotificationSettingsStore = create<NotificationSettingsState>()(
 
           if (data && (data as any).notification_preferences) {
             const prefs = (data as any).notification_preferences;
+            const followsVal = prefs.follows !== undefined ? Boolean(prefs.follows) : (prefs.followers !== undefined ? Boolean(prefs.followers) : defaultSettings.follows);
+            const likesVal = prefs.likes !== undefined ? Boolean(prefs.likes) : defaultSettings.likes;
+            const commentsVal = prefs.comments !== undefined ? Boolean(prefs.comments) : defaultSettings.comments;
+            const messagesVal = prefs.messages !== undefined ? Boolean(prefs.messages) : defaultSettings.messages;
+            const remindersVal = prefs.reminders !== undefined ? Boolean(prefs.reminders) : defaultSettings.reminders;
+            const popupToastsVal = prefs.popupToasts !== undefined ? Boolean(prefs.popupToasts) : (prefs.push !== undefined ? Boolean(prefs.push) : defaultSettings.popupToasts);
+            const emailVal = prefs.email !== undefined ? Boolean(prefs.email) : defaultSettings.email;
+
             set({
               settings: {
                 ...defaultSettings,
                 ...prefs,
+                follows: followsVal,
+                likes: likesVal,
+                comments: commentsVal,
+                messages: messagesVal,
+                reminders: remindersVal,
+                popupToasts: popupToastsVal,
+                email: emailVal,
               }
             });
           }
