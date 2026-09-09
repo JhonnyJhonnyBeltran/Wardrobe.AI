@@ -670,18 +670,20 @@ En cada conversación, el backend alimenta a CloSy con:
   - Se corrigió la consulta en paralelo en `suggestionService.ts` para obtener `avatar_url` y `full_name` desde la tabla oficial `profiles` con `maybeSingle()` en lugar de la tabla legacy inexistente `users`.
   - Se protegieron las sincronizaciones de fallback en `profile/edit/page.tsx` para evitar excepciones no controladas.
 
-### 46. Indexación y Adjuntos de Prendas / Looks Guardados en Chat de Kloe AI (Septiembre 2026)
-- **Selección y Adjunto Visual en el Input (`/closet/kloe`)**:
-  - Al pulsar sobre una prenda del armario o un look guardado en los drawers correspondientes, la aplicación ya no envía un mensaje instantáneo inmediato.
-  - La prenda o look seleccionado se adjunta visualmente como una tarjeta/píldora flotante interactiva sobre la barra de entrada de texto (`attachedItem` / `attachedPost`), mostrando la miniatura en alta resolución, nombre o pie de foto, badges descriptivos y un botón `×` para desadjuntarla en cualquier momento.
-  - Los botones de acceso directo a Armario (`Shirt`) y Guardados (`Bookmark`) se encuentran integrados directamente dentro de la barra de entrada inferior para adjuntar piezas con un solo toque sin desplazarse a la cabecera.
-  - El usuario puede escribir cualquier pregunta personalizada sobre esa prenda o look (ej. *"¿Qué me debería comprar para combinar esta prenda?"*, *"¿Qué calzado combina mejor con este look?"*, *"¿Cómo elevo esta pieza con accesorios?"*) y enviarla cuando lo desee. Si envía el mensaje sin escribir texto adicional, se envía automáticamente una consulta estilística natural por defecto.
+### 46. Indexación y Adjuntos Múltiples de Prendas / Looks Guardados y Placeholder "Prenda Borrada" en Kloe AI (Septiembre 2026)
+- **Selección Combinada y Múltiple en el Input (`/closet/kloe`)**:
+  - Permite adjuntar simultáneamente **un look guardado de referencia** y **múltiples prendas del armario** (`attachedItems` + `attachedPost`) sin sustituirse entre sí.
+  - Sobre la barra de entrada de texto se despliega una tira horizontal de tarjetas flotantes con miniatura, categoría, color, nombre y botón `×` para desadjuntar piezas individualmente.
+  - El usuario puede escribir cualquier pregunta personalizada combinando las prendas y el look guardado (ej. *"¿Cómo puedo recrear este look guardado usando mi camiseta blanca y mis zapatillas?"* o *"¿Qué me debería comprar para complementar estas prendas?"*) o enviarlo directamente con el prompt por defecto generado dinámicamente.
 - **Visualización en Mensaje Enviado (`role: 'user'`)**:
-  - En la burbuja del mensaje del usuario se renderiza una tarjeta estética de la prenda adjunta (con foto, nombre, categoría y color, con apertura de detalle `ProductModal` al tocarla) o del look guardado de referencia (con foto, título y total de prendas asociadas).
-- **Análisis Profundo Multimodal y Resolución de Outfits (`app/api/closy/chat/route.ts`)**:
-  - Si se adjunta un post guardado con `outfit_id`, el sistema consulta y resuelve todas las prendas que componen el outfit (`outfit_items` $\rightarrow$ `clothing_items`) y las envía al motor de IA.
-  - Kloe recibe las fotografías en alta resolución (`base64`) de la prenda o look guardado junto con sus metadatos (tejido, corte, color, marca).
-  - Gemini Vision analiza visualmente el eje central de la consulta para responder a dudas de compras, recomendaciones de calzado o estilismo personalizado con las prendas del usuario.
+  - En la burbuja del mensaje del usuario se renderiza la cuadrícula/tira de tarjetas de todas las prendas adjuntas y del look guardado con apertura de detalle interactivo.
+- **Componente Resiliente `GarmentThumbnail` y Placeholder "Prenda borrada"**:
+  - Implementado `GarmentThumbnail` para resolver de forma segura cualquier fallo de carga de imagen (`onError`), URL expirada o prenda eliminada con anterioridad de la base de datos.
+  - Erradica cualquier icono de imagen rota nativo del navegador o texto plano, mostrando un contenedor estilizado con borde punteado suave, fondo atenuado, icono de prenda y la etiqueta explícita *"Prenda borrada"*.
+- **Análisis Profundo Multimodal en Paralelo (`app/api/closy/chat/route.ts`)**:
+  - Si se adjunta un post guardado con `outfit_id`, el sistema consulta y resuelve todas las prendas que componen el outfit (`outfit_items` $\rightarrow$ `clothing_items`).
+  - Kloe procesa en paralelo las fotografías en alta resolución (`base64`) de todas las prendas adjuntas y del look de referencia junto con sus metadatos (tejido, corte, color, marca).
+  - Gemini Vision analiza visualmente el conjunto para generar respuestas enriquecidas, recomendaciones de compra o sugerir el outfit ideal para montar directamente en el lienzo.
 
 
 

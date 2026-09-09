@@ -32,7 +32,7 @@ import KloeProModal from '@/components/KloeProModal';
 import AvatarCalibrationModal from '@/components/AvatarCalibrationModal';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { resolveImageUrl } from '@/lib/imageUtils';
-import { Camera } from 'lucide-react';
+import { Camera, AlertCircle } from 'lucide-react';
 
 interface ChatMessage {
   id: string;
@@ -45,6 +45,7 @@ interface ChatMessage {
   } | null;
   highlighted_items?: Array<any>;
   follow_up_suggestions?: string[];
+  attached_items?: Array<any>;
   attached_item?: any;
   attached_post?: any;
   timestamp: Date | string;
@@ -60,6 +61,68 @@ interface Conversation {
 
 const STORAGE_KEY = 'kloe_conversations_v1';
 const MAX_CONVERSATIONS = 5;
+
+/**
+ * Robust thumbnail component that gracefully displays "Prenda borrada"
+ * if the image fails loading or the garment was deleted.
+ */
+function GarmentThumbnail({
+  item,
+  className = '',
+  imgClassName = '',
+  showLabel = true,
+  onClick
+}: {
+  item: any;
+  className?: string;
+  imgClassName?: string;
+  showLabel?: boolean;
+  onClick?: () => void;
+}) {
+  const [imageError, setImageError] = useState(false);
+  const rawUrl = item?.image_url || item?.imageUrl || item?.original_image_url || item?.original_image;
+  const imgSrc = resolveImageUrl(rawUrl);
+  const isDeleted = !rawUrl || imageError || item?.is_deleted;
+  const name = item?.name || (isDeleted ? 'Prenda borrada' : 'Prenda');
+
+  if (isDeleted) {
+    return (
+      <div
+        onClick={onClick}
+        className={`relative flex flex-col items-center justify-center p-2 text-center bg-[var(--background-secondary)] dark:bg-[#18181f] border border-dashed border-[var(--border-color)] select-none overflow-hidden ${className}`}
+      >
+        <div className="w-6 h-6 rounded-full bg-[var(--foreground-tertiary)]/10 flex items-center justify-center mb-1">
+          <Shirt className="w-3.5 h-3.5 text-[var(--foreground-tertiary)] opacity-50" />
+        </div>
+        <span className="text-[9px] font-semibold text-[var(--foreground-tertiary)] leading-tight line-clamp-1">
+          Prenda borrada
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      onClick={onClick}
+      className={`relative flex items-center justify-center overflow-hidden ${className}`}
+    >
+      <img
+        src={imgSrc}
+        alt={name}
+        className={imgClassName || 'w-full h-full object-contain p-1.5 group-hover:scale-105 transition-transform'}
+        loading="lazy"
+        onError={() => setImageError(true)}
+      />
+      {showLabel && (
+        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent p-1">
+          <p className="text-[9px] font-medium text-white truncate text-center">
+            {name}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
 
 const INITIAL_MESSAGE: ChatMessage = {
   id: 'welcome',
@@ -159,8 +222,8 @@ export default function KloePage() {
   const [savedPosts, setSavedPosts] = useState<any[]>([]);
   const [loadingSaved, setLoadingSaved] = useState(false);
 
-  // Attached context for user input (Garment or Saved Post Inspiration)
-  const [attachedItem, setAttachedItem] = useState<any | null>(null);
+  // Attached context for user input (Multiple Garments + Saved Post Inspiration)
+  const [attachedItems, setAttachedItems] = useState<any[]>([]);
   const [attachedPost, setAttachedPost] = useState<any | null>(null);
 
   // Conversations State (Max 5)
@@ -348,28 +411,37 @@ export default function KloePage() {
     fetchSavedPosts();
   };
 
-  // Select garment to attach to input
-  const handleSelectWardrobeItem = (item: any) => {
+  // Toggle garment selection to attach multiple items to input
+  const handleToggleWardrobeItem = (item: any) => {
     haptics.selection();
-    setShowWardrobeDrawer(false);
-    setAttachedItem({
-      id: item.id,
-      name: item.name || 'Prenda',
-      category: item.category,
-      color: item.color,
-      brand: item.brand,
-      fabric: item.fabric,
-      imageUrl: item.image_url || item.original_image || item.imageUrl,
-      image_url: item.image_url || item.original_image || item.imageUrl
+    setAttachedItems(prev => {
+      const exists = prev.some(i => i.id === item.id);
+      if (exists) {
+        return prev.filter(i => i.id !== item.id);
+      } else {
+        const newItem = {
+          id: item.id,
+          name: item.name || 'Prenda',
+          category: item.category,
+          color: item.color,
+          brand: item.brand,
+          fabric: item.fabric,
+          imageUrl: item.image_url || item.original_image || item.imageUrl,
+          image_url: item.image_url || item.original_image || item.imageUrl
+        };
+        return [...prev, newItem];
+      }
     });
-    setAttachedPost(null);
-    setTimeout(() => inputRef.current?.focus(), 150);
   };
 
   // Select saved post to attach to input with deep outfit resolution
   const handleSelectSavedPost = async (post: any) => {
     haptics.selection();
-    setShowSavedDrawer(false);
+    if (attachedPost?.id === post.id) {
+      setAttachedPost(null);
+      setShowSavedDrawer(false);
+      return;
+    }
 
     let items: any[] = [];
     if (post.outfit_id) {
@@ -404,7 +476,7 @@ export default function KloePage() {
       outfit_id: post.outfit_id,
       items: items
     });
-    setAttachedItem(null);
+    setShowSavedDrawer(false);
     setTimeout(() => inputRef.current?.focus(), 150);
   };
 
@@ -461,18 +533,35 @@ export default function KloePage() {
     }
 
     const text = (customMessage || inputMessage).trim();
-    if (!text || isTyping) return;
+    if (!text && attachedItems.length === 0 && !attachedPost) return;
+    if (isTyping) return;
 
     haptics.tap();
 
-    const currentAttachedItem = attachedItem;
+    const currentAttachedItems = [...attachedItems];
     const currentAttachedPost = attachedPost;
+
+    let defaultPrompt = '';
+    if (!text) {
+      if (currentAttachedItems.length > 0 && currentAttachedPost) {
+        defaultPrompt = `¿Cómo puedo recrear o adaptar este look guardado usando ${currentAttachedItems.map(i => i.name).join(', ')}?`;
+      } else if (currentAttachedItems.length === 1) {
+        defaultPrompt = `¿Cómo puedo combinar mi ${currentAttachedItems[0].name}?`;
+      } else if (currentAttachedItems.length > 1) {
+        defaultPrompt = `¿Cómo puedo combinar estas ${currentAttachedItems.length} prendas (${currentAttachedItems.map(i => i.name).join(', ')}) juntas en un outfit?`;
+      } else if (currentAttachedPost) {
+        defaultPrompt = `¿Cómo puedo recrear o inspirarme en este look guardado?`;
+      }
+    }
+
+    const messageToSend = text || defaultPrompt;
 
     const userMsg: ChatMessage = {
       id: `user_${Date.now()}`,
       role: 'user',
-      content: text,
-      attached_item: currentAttachedItem || undefined,
+      content: messageToSend,
+      attached_items: currentAttachedItems.length > 0 ? currentAttachedItems : undefined,
+      attached_item: currentAttachedItems.length === 1 ? currentAttachedItems[0] : undefined,
       attached_post: currentAttachedPost || undefined,
       timestamp: new Date()
     };
@@ -480,7 +569,7 @@ export default function KloePage() {
     const updatedMessages = [...messages, userMsg];
     setMessages(updatedMessages);
     setInputMessage('');
-    setAttachedItem(null);
+    setAttachedItems([]);
     setAttachedPost(null);
     setIsTyping(true);
 
@@ -493,9 +582,9 @@ export default function KloePage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          message: text,
+          message: messageToSend,
           history: historyPayload,
-          attached_item: currentAttachedItem || undefined,
+          attached_items: currentAttachedItems.length > 0 ? currentAttachedItems : undefined,
           attached_post: currentAttachedPost || undefined
         })
       });
@@ -698,62 +787,58 @@ export default function KloePage() {
             <div className={`max-w-[85%] sm:max-w-[78%] flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
               
               {/* Attached Item/Post Preview inside User Message */}
-              {msg.role === 'user' && msg.attached_item && (
-                <div 
-                  onClick={() => setSelectedProduct(msg.attached_item)}
-                  className="mb-2 flex items-center gap-2.5 bg-black/25 hover:bg-black/35 backdrop-blur-md rounded-2xl p-2.5 border border-white/20 transition-all cursor-pointer group max-w-full"
-                >
-                  <div className="relative w-11 h-11 rounded-xl bg-white/10 overflow-hidden shrink-0 flex items-center justify-center p-1 border border-white/15">
-                    <img
-                      src={resolveImageUrl(msg.attached_item.imageUrl || msg.attached_item.image_url || msg.attached_item.original_image)}
-                      alt={msg.attached_item.name}
-                      className="w-full h-full object-contain group-hover:scale-105 transition-transform"
-                    />
-                  </div>
-                  <div className="min-w-0 flex flex-col text-left pr-1">
-                    <span className="text-[9px] font-bold text-white/80 uppercase tracking-wider">
-                      Prenda seleccionada
-                    </span>
-                    <p className="text-xs font-bold text-white truncate">
-                      {msg.attached_item.name}
-                    </p>
-                    {(msg.attached_item.category || msg.attached_item.color) && (
-                      <p className="text-[10px] text-white/70 capitalize truncate">
-                        {msg.attached_item.category}{msg.attached_item.color ? ` · ${msg.attached_item.color}` : ''}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {msg.role === 'user' && msg.attached_post && (
-                <div className="mb-2 flex items-center gap-2.5 bg-black/25 backdrop-blur-md rounded-2xl p-2.5 border border-white/20 max-w-full">
-                  <div className="relative w-11 h-11 rounded-xl bg-white/10 overflow-hidden shrink-0 border border-white/15">
-                    {msg.attached_post.imageUrl || msg.attached_post.image_url ? (
-                      <img
-                        src={resolveImageUrl(msg.attached_post.imageUrl || msg.attached_post.image_url)}
-                        alt={msg.attached_post.caption || 'Look guardado'}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-white">
-                        <Bookmark className="w-4 h-4" />
+              {msg.role === 'user' && ((msg.attached_items && msg.attached_items.length > 0) || msg.attached_item || msg.attached_post) && (
+                <div className="mb-2.5 flex flex-wrap gap-2 max-w-full justify-end">
+                  {msg.attached_post && (
+                    <div className="flex items-center gap-2 bg-black/30 backdrop-blur-md rounded-2xl p-2 border border-white/20 max-w-xs shadow-xs">
+                      <div className="relative w-10 h-10 rounded-xl bg-white/10 overflow-hidden shrink-0 border border-white/15">
+                        {msg.attached_post.imageUrl || msg.attached_post.image_url ? (
+                          <img
+                            src={resolveImageUrl(msg.attached_post.imageUrl || msg.attached_post.image_url)}
+                            alt={msg.attached_post.caption || 'Look guardado'}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-white">
+                            <Bookmark className="w-4 h-4" />
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                  <div className="min-w-0 flex flex-col text-left pr-1">
-                    <span className="text-[9px] font-bold text-white/80 uppercase tracking-wider">
-                      Look Guardado (Referencia)
-                    </span>
-                    <p className="text-xs font-bold text-white truncate">
-                      {msg.attached_post.caption || 'Look de referencia'}
-                    </p>
-                    {msg.attached_post.items && msg.attached_post.items.length > 0 && (
-                      <p className="text-[10px] text-white/70">
-                        {msg.attached_post.items.length} prendas asociadas
-                      </p>
-                    )}
-                  </div>
+                      <div className="min-w-0 flex flex-col text-left pr-1">
+                        <span className="text-[9px] font-bold text-white/80 uppercase tracking-wider">
+                          Look Guardado
+                        </span>
+                        <p className="text-xs font-bold text-white truncate max-w-[150px]">
+                          {msg.attached_post.caption || 'Look de referencia'}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {(msg.attached_items || (msg.attached_item ? [msg.attached_item] : [])).map((it: any, itIdx: number) => (
+                    <div
+                      key={it.id || itIdx}
+                      onClick={() => setSelectedProduct(it)}
+                      className="flex items-center gap-2 bg-black/30 hover:bg-black/40 backdrop-blur-md rounded-2xl p-2 border border-white/20 transition-all cursor-pointer group max-w-xs shadow-xs"
+                    >
+                      <div className="relative w-10 h-10 rounded-xl bg-white/10 overflow-hidden shrink-0 flex items-center justify-center p-0.5 border border-white/15">
+                        <GarmentThumbnail
+                          item={it}
+                          showLabel={false}
+                          className="w-full h-full rounded-lg"
+                          imgClassName="w-full h-full object-contain group-hover:scale-105 transition-transform"
+                        />
+                      </div>
+                      <div className="min-w-0 flex flex-col text-left pr-1">
+                        <span className="text-[9px] font-bold text-white/80 uppercase tracking-wider">
+                          Prenda
+                        </span>
+                        <p className="text-xs font-bold text-white truncate max-w-[130px]">
+                          {it.name}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
 
@@ -793,33 +878,22 @@ export default function KloePage() {
                     </span>
                   </div>
 
-                  {/* Garments Preview Grid */}
+                  {/* Garments Preview Grid with robust GarmentThumbnail fallback */}
                   <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                    {msg.recommended_outfit.items.map((item: any) => {
-                      const imgSrc = resolveImageUrl(item.image_url || item.imageUrl || item.original_image_url || item.original_image);
-                      return (
-                        <div
-                          key={item.id}
-                          onClick={() => setSelectedProduct(item)}
-                          className="group relative aspect-square bg-[var(--background-secondary)] rounded-xl overflow-hidden border border-[var(--border-color)] hover:border-[var(--brand-pink)] cursor-pointer transition-all flex items-center justify-center"
-                        >
-                          <img
-                            src={imgSrc}
-                            alt={item.name}
-                            className="w-full h-full object-contain p-1.5 group-hover:scale-105 transition-transform"
-                            loading="lazy"
-                            onError={(e) => {
-                              (e.target as HTMLElement).style.opacity = '0.5';
-                            }}
-                          />
-                          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-1">
-                            <p className="text-[9px] font-medium text-white truncate text-center">
-                              {item.name}
-                            </p>
-                          </div>
-                        </div>
-                      );
-                    })}
+                    {msg.recommended_outfit.items.map((item: any) => (
+                      <div
+                        key={item.id}
+                        onClick={() => setSelectedProduct(item)}
+                        className="group relative aspect-square bg-[var(--background-secondary)] rounded-xl overflow-hidden border border-[var(--border-color)] hover:border-[var(--brand-pink)] cursor-pointer transition-all flex items-center justify-center"
+                      >
+                        <GarmentThumbnail
+                          item={item}
+                          showLabel={true}
+                          className="w-full h-full rounded-xl"
+                          imgClassName="w-full h-full object-contain p-1.5 group-hover:scale-105 transition-transform"
+                        />
+                      </div>
+                    ))}
                   </div>
 
                   {/* Direct Canvas & Virtual Try-On Action Buttons */}
@@ -856,24 +930,21 @@ export default function KloePage() {
               {/* Highlighted Garments Row */}
               {msg.highlighted_items && msg.highlighted_items.length > 0 && !msg.recommended_outfit && (
                 <div className="flex items-center gap-2 overflow-x-auto py-2.5 max-w-full no-scrollbar">
-                  {msg.highlighted_items.map((item: any) => {
-                    const imgSrc = resolveImageUrl(item.image_url || item.imageUrl || item.original_image_url || item.original_image);
-                    return (
-                      <div
-                        key={item.id}
-                        onClick={() => setSelectedProduct(item)}
-                        className="group relative w-16 h-16 shrink-0 bg-[var(--background-secondary)] rounded-2xl overflow-hidden border border-[var(--border-color)] hover:border-[var(--brand-pink)] cursor-pointer transition-all flex items-center justify-center shadow-xs"
-                        title={item.name}
-                      >
-                        <img
-                          src={imgSrc}
-                          alt={item.name}
-                          className="w-full h-full object-contain p-1.5 group-hover:scale-105 transition-transform"
-                          loading="lazy"
-                        />
-                      </div>
-                    );
-                  })}
+                  {msg.highlighted_items.map((item: any) => (
+                    <div
+                      key={item.id}
+                      onClick={() => setSelectedProduct(item)}
+                      className="group relative w-16 h-16 shrink-0 bg-[var(--background-secondary)] rounded-2xl overflow-hidden border border-[var(--border-color)] hover:border-[var(--brand-pink)] cursor-pointer transition-all flex items-center justify-center shadow-xs"
+                      title={item.name}
+                    >
+                      <GarmentThumbnail
+                        item={item}
+                        showLabel={false}
+                        className="w-full h-full rounded-2xl"
+                        imgClassName="w-full h-full object-contain p-1.5 group-hover:scale-105 transition-transform"
+                      />
+                    </div>
+                  ))}
                 </div>
               )}
 
@@ -950,101 +1021,97 @@ export default function KloePage() {
       {/* Floating Bottom Input Bar or Locked Premium Bar */}
       <div className="sticky bottom-4 md:bottom-6 pointer-events-none w-full max-w-3xl md:max-w-4xl mx-auto px-4 z-20 flex flex-col items-center">
         
-        {/* Floating Attachment Pill */}
+        {/* Floating Attachment Cards Strip */}
         <AnimatePresence>
-          {attachedItem && (
+          {(attachedItems.length > 0 || attachedPost) && (
             <motion.div
-              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+              initial={{ opacity: 0, y: 10, scale: 0.96 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 10, scale: 0.95 }}
-              className="mb-2.5 flex items-center justify-between gap-3 bg-[var(--card-bg)]/95 dark:bg-[#18181f]/95 backdrop-blur-2xl border border-[var(--brand-pink)]/40 rounded-2xl px-3.5 py-2 shadow-xl w-full max-w-lg pointer-events-auto"
+              exit={{ opacity: 0, y: 10, scale: 0.96 }}
+              className="mb-2.5 w-full max-w-2xl pointer-events-auto"
             >
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div className="relative w-10 h-10 rounded-xl bg-[var(--background-secondary)] overflow-hidden shrink-0 border border-[var(--border-color)] flex items-center justify-center p-1">
-                  <img
-                    src={resolveImageUrl(attachedItem.imageUrl || attachedItem.image_url)}
-                    alt={attachedItem.name}
-                    className="w-full h-full object-contain"
-                  />
-                </div>
-                <div className="min-w-0 flex flex-col">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-[var(--brand-pink)]/15 text-[var(--brand-pink)] uppercase tracking-wider">
-                      Prenda adjunta
-                    </span>
-                    {attachedItem.color && (
-                      <span className="text-[10px] text-[var(--foreground-tertiary)] truncate">
-                        {attachedItem.color}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs font-semibold text-[var(--foreground)] truncate">
-                    {attachedItem.name}
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  haptics.tap();
-                  setAttachedItem(null);
-                }}
-                className="p-1.5 rounded-full hover:bg-[var(--background-secondary)] text-[var(--foreground-tertiary)] hover:text-red-500 transition-colors cursor-pointer"
-                title="Desadjuntar prenda"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </motion.div>
-          )}
-
-          {attachedPost && (
-            <motion.div
-              initial={{ opacity: 0, y: 10, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 10, scale: 0.95 }}
-              className="mb-2.5 flex items-center justify-between gap-3 bg-[var(--card-bg)]/95 dark:bg-[#18181f]/95 backdrop-blur-2xl border border-[var(--brand-pink)]/40 rounded-2xl px-3.5 py-2 shadow-xl w-full max-w-lg pointer-events-auto"
-            >
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div className="relative w-10 h-10 rounded-xl bg-[var(--background-secondary)] overflow-hidden shrink-0 border border-[var(--border-color)]">
-                  {attachedPost.imageUrl || attachedPost.image_url ? (
-                    <img
-                      src={resolveImageUrl(attachedPost.imageUrl || attachedPost.image_url)}
-                      alt={attachedPost.caption || 'Look guardado'}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-[var(--brand-pink)]">
-                      <Bookmark className="w-4 h-4" />
+              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 px-1">
+                {/* Attached Saved Post Card */}
+                {attachedPost && (
+                  <div className="flex items-center gap-2.5 bg-[var(--card-bg)]/95 dark:bg-[#18181f]/95 backdrop-blur-2xl border border-[var(--brand-pink)]/50 rounded-2xl p-2 shadow-lg shrink-0 max-w-[240px]">
+                    <div className="relative w-10 h-10 rounded-xl bg-[var(--background-secondary)] overflow-hidden shrink-0 border border-[var(--border-color)]">
+                      {attachedPost.imageUrl || attachedPost.image_url ? (
+                        <img
+                          src={resolveImageUrl(attachedPost.imageUrl || attachedPost.image_url)}
+                          alt={attachedPost.caption || 'Look guardado'}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-[var(--brand-pink)]">
+                          <Bookmark className="w-4 h-4" />
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-                <div className="min-w-0 flex flex-col">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-[var(--brand-pink)]/15 text-[var(--brand-pink)] uppercase tracking-wider">
-                      Look Guardado
-                    </span>
-                    {attachedPost.items && attachedPost.items.length > 0 && (
-                      <span className="text-[10px] text-[var(--foreground-tertiary)]">
-                        {attachedPost.items.length} prendas
+                    <div className="min-w-0 flex-1 flex flex-col">
+                      <span className="text-[9px] font-bold text-[var(--brand-pink)] uppercase tracking-wider">
+                        Look Guardado
                       </span>
-                    )}
+                      <p className="text-xs font-semibold text-[var(--foreground)] truncate">
+                        {attachedPost.caption || 'Inspiración'}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        haptics.tap();
+                        setAttachedPost(null);
+                      }}
+                      className="p-1 rounded-full hover:bg-[var(--background-secondary)] text-[var(--foreground-tertiary)] hover:text-red-500 transition-colors cursor-pointer"
+                      title="Desadjuntar look"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
                   </div>
-                  <p className="text-xs font-semibold text-[var(--foreground)] truncate">
-                    {attachedPost.caption || 'Inspiración de referencia'}
-                  </p>
-                </div>
+                )}
+
+                {/* Attached Garments Cards */}
+                {attachedItems.map((it) => (
+                  <div
+                    key={it.id}
+                    className="flex items-center gap-2.5 bg-[var(--card-bg)]/95 dark:bg-[#18181f]/95 backdrop-blur-2xl border border-[var(--brand-pink)]/40 rounded-2xl p-2 shadow-lg shrink-0 max-w-[210px]"
+                  >
+                    <div className="relative w-10 h-10 rounded-xl bg-[var(--background-secondary)] overflow-hidden shrink-0 border border-[var(--border-color)] flex items-center justify-center p-0.5">
+                      <GarmentThumbnail
+                        item={it}
+                        showLabel={false}
+                        className="w-full h-full rounded-lg"
+                        imgClassName="w-full h-full object-contain"
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1 flex flex-col">
+                      <div className="flex items-center gap-1">
+                        <span className="text-[9px] font-bold text-[var(--brand-pink)] uppercase tracking-wider">
+                          Prenda
+                        </span>
+                        {it.color && (
+                          <span className="text-[9px] text-[var(--foreground-tertiary)] truncate">
+                            · {it.color}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs font-semibold text-[var(--foreground)] truncate">
+                        {it.name}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        haptics.tap();
+                        setAttachedItems(prev => prev.filter(item => item.id !== it.id));
+                      }}
+                      className="p-1 rounded-full hover:bg-[var(--background-secondary)] text-[var(--foreground-tertiary)] hover:text-red-500 transition-colors cursor-pointer"
+                      title="Desadjuntar prenda"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  haptics.tap();
-                  setAttachedPost(null);
-                }}
-                className="p-1.5 rounded-full hover:bg-[var(--background-secondary)] text-[var(--foreground-tertiary)] hover:text-red-500 transition-colors cursor-pointer"
-                title="Desadjuntar look"
-              >
-                <X className="w-4 h-4" />
-              </button>
             </motion.div>
           )}
         </AnimatePresence>
@@ -1053,10 +1120,7 @@ export default function KloePage() {
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              const defaultMsg = attachedItem 
-                ? `¿Cómo puedo combinar mi ${attachedItem.name || 'prenda'}?`
-                : (attachedPost ? `¿Cómo puedo recrear o inspirarme en este look guardado?` : '');
-              handleSend(inputMessage.trim() || defaultMsg);
+              handleSend();
             }}
             className="pointer-events-auto flex items-center gap-2 bg-[var(--card-bg)]/95 dark:bg-[#131317]/95 backdrop-blur-2xl rounded-full px-3.5 py-2.5 border border-[var(--border-color)] shadow-[0_12px_35px_rgba(0,0,0,0.15)] dark:shadow-[0_16px_45px_rgba(0,0,0,0.5)] focus-within:border-[var(--brand-pink)]/60 focus-within:ring-2 focus-within:ring-[var(--brand-pink)]/20 transition-all w-full"
           >
@@ -1065,20 +1129,28 @@ export default function KloePage() {
               <button
                 type="button"
                 onClick={openWardrobe}
-                className="p-2 rounded-full text-[var(--foreground-secondary)] hover:text-[var(--brand-pink)] hover:bg-[var(--background-secondary)] transition-colors cursor-pointer"
-                title="Adjuntar prenda de tu armario"
-                aria-label="Adjuntar prenda"
+                className="relative p-2 rounded-full text-[var(--foreground-secondary)] hover:text-[var(--brand-pink)] hover:bg-[var(--background-secondary)] transition-colors cursor-pointer"
+                title="Adjuntar prendas de tu armario"
+                aria-label="Adjuntar prendas"
               >
                 <Shirt className="w-4 h-4" />
+                {attachedItems.length > 0 && (
+                  <span className="absolute top-0 right-0 w-4 h-4 rounded-full bg-[var(--brand-pink)] text-white text-[9px] font-bold flex items-center justify-center">
+                    {attachedItems.length}
+                  </span>
+                )}
               </button>
               <button
                 type="button"
                 onClick={openSaved}
-                className="p-2 rounded-full text-[var(--foreground-secondary)] hover:text-[var(--brand-pink)] hover:bg-[var(--background-secondary)] transition-colors cursor-pointer"
+                className="relative p-2 rounded-full text-[var(--foreground-secondary)] hover:text-[var(--brand-pink)] hover:bg-[var(--background-secondary)] transition-colors cursor-pointer"
                 title="Adjuntar look guardado"
                 aria-label="Adjuntar look guardado"
               >
                 <Bookmark className="w-4 h-4" />
+                {attachedPost && (
+                  <span className="absolute top-0 right-0 w-2 h-2 rounded-full bg-[var(--brand-pink)]" />
+                )}
               </button>
             </div>
 
@@ -1088,18 +1160,22 @@ export default function KloePage() {
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               placeholder={
-                attachedItem
-                  ? `Pregúntale a Kloe sobre "${attachedItem.name}"...`
-                  : (attachedPost ? `Pregúntale sobre este look guardado...` : `Pregúntale a Kloe sobre tus prendas u outfits...`)
+                attachedItems.length > 0 && attachedPost
+                  ? `Pregúntale a Kloe sobre este look y tus ${attachedItems.length} prenda${attachedItems.length === 1 ? '' : 's'}...`
+                  : (attachedItems.length === 1
+                    ? `Pregúntale a Kloe sobre "${attachedItems[0].name}"...`
+                    : (attachedItems.length > 1
+                      ? `Pregúntale a Kloe sobre estas ${attachedItems.length} prendas...`
+                      : (attachedPost ? `Pregúntale a Kloe sobre este look guardado...` : `Pregúntale a Kloe sobre tus prendas u outfits...`)))
               }
               disabled={isTyping}
               className="flex-1 bg-transparent text-sm text-[var(--foreground)] outline-none placeholder:text-[var(--foreground-tertiary)] px-1"
             />
             <button
               type="submit"
-              disabled={(!inputMessage.trim() && !attachedItem && !attachedPost) || isTyping}
+              disabled={(!inputMessage.trim() && attachedItems.length === 0 && !attachedPost) || isTyping}
               className={`p-2.5 rounded-full transition-all shrink-0 ${
-                (inputMessage.trim() || attachedItem || attachedPost) && !isTyping
+                (inputMessage.trim() || attachedItems.length > 0 || attachedPost) && !isTyping
                   ? 'bg-[var(--brand-pink)] text-white hover:scale-105 shadow-md shadow-[var(--brand-pink)]/25 cursor-pointer'
                   : 'text-[var(--foreground-tertiary)] opacity-40 cursor-not-allowed'
               }`}
@@ -1248,12 +1324,22 @@ export default function KloePage() {
                     {savedPosts.map(post => {
                       const img = post.image_url;
                       const postLabel = post.caption || 'Look Guardado';
+                      const isSelected = attachedPost?.id === post.id;
                       return (
                         <div
                           key={post.id}
                           onClick={() => handleSelectSavedPost(post)}
-                          className="group relative aspect-[3/4] bg-[var(--background-secondary)] rounded-2xl overflow-hidden border border-[var(--border-color)] hover:border-[var(--brand-pink)] cursor-pointer transition-all p-1 flex flex-col justify-between"
+                          className={`group relative aspect-[3/4] bg-[var(--background-secondary)] rounded-2xl overflow-hidden border cursor-pointer transition-all p-1 flex flex-col justify-between ${
+                            isSelected
+                              ? 'border-[var(--brand-pink)] ring-2 ring-[var(--brand-pink)]/40 shadow-md'
+                              : 'border-[var(--border-color)] hover:border-[var(--brand-pink)]/60'
+                          }`}
                         >
+                          {isSelected && (
+                            <div className="absolute top-2 right-2 z-10 w-5 h-5 rounded-full bg-[var(--brand-pink)] text-white text-xs font-bold flex items-center justify-center shadow-md">
+                              ✓
+                            </div>
+                          )}
                           {img ? (
                             <div className="relative w-full h-full">
                               <Image
@@ -1327,6 +1413,10 @@ export default function KloePage() {
                   />
                 </div>
 
+                <p className="text-xs text-[var(--foreground-secondary)]">
+                  Selecciona una o varias prendas para combinarlas o pedirle asesoría a Kloe.
+                </p>
+
                 {loadingWardrobe ? (
                   <div className="flex justify-center py-10">
                     <Loader2 className="w-6 h-6 animate-spin text-[var(--brand-pink)]" />
@@ -1337,27 +1427,55 @@ export default function KloePage() {
                   </p>
                 ) : (
                   <div className="grid grid-cols-2 gap-2.5">
-                    {filteredWardrobe.map(item => (
-                      <div
-                        key={item.id}
-                        onClick={() => handleSelectWardrobeItem(item)}
-                        className="group relative aspect-square bg-[var(--background-secondary)] rounded-2xl overflow-hidden border border-[var(--border-color)] hover:border-[var(--brand-pink)] cursor-pointer transition-all p-2 flex flex-col justify-between"
-                      >
-                        <div className="relative w-full h-full">
-                          <Image
-                            src={item.image_url || item.original_image}
-                            alt={item.name || 'Prenda'}
-                            fill
-                            className="object-contain group-hover:scale-105 transition-transform"
-                          />
+                    {filteredWardrobe.map(item => {
+                      const isSelected = attachedItems.some(i => i.id === item.id);
+                      return (
+                        <div
+                          key={item.id}
+                          onClick={() => handleToggleWardrobeItem(item)}
+                          className={`group relative aspect-square bg-[var(--background-secondary)] rounded-2xl overflow-hidden border cursor-pointer transition-all p-2 flex flex-col justify-between ${
+                            isSelected
+                              ? 'border-[var(--brand-pink)] ring-2 ring-[var(--brand-pink)]/40 shadow-md'
+                              : 'border-[var(--border-color)] hover:border-[var(--brand-pink)]/60'
+                          }`}
+                        >
+                          {isSelected && (
+                            <div className="absolute top-2 right-2 z-10 w-5 h-5 rounded-full bg-[var(--brand-pink)] text-white text-xs font-bold flex items-center justify-center shadow-md">
+                              ✓
+                            </div>
+                          )}
+                          <div className="relative w-full h-full flex items-center justify-center">
+                            <GarmentThumbnail
+                              item={item}
+                              showLabel={false}
+                              className="w-full h-full"
+                              imgClassName="w-full h-full object-contain group-hover:scale-105 transition-transform"
+                            />
+                          </div>
+                          <p className="text-[10px] font-semibold text-[var(--foreground)] truncate mt-1">
+                            {item.name || item.category}
+                          </p>
                         </div>
-                        <p className="text-[10px] font-semibold text-[var(--foreground)] truncate mt-1">
-                          {item.name || item.category}
-                        </p>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
+              </div>
+
+              {/* Bottom confirmation footer */}
+              <div className="pt-3 border-t border-[var(--border-color)] mt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowWardrobeDrawer(false);
+                    setTimeout(() => inputRef.current?.focus(), 150);
+                  }}
+                  className="w-full py-2.5 rounded-xl bg-[var(--brand-pink)] text-white font-bold text-xs shadow-md shadow-[var(--brand-pink)]/20 hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer"
+                >
+                  {attachedItems.length > 0 
+                    ? `Listo (${attachedItems.length} seleccionada${attachedItems.length === 1 ? '' : 's'})`
+                    : 'Cerrar'}
+                </button>
               </div>
             </motion.div>
           </>

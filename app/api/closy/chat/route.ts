@@ -21,6 +21,19 @@ interface ChatRequestPayload {
     image_url?: string;
     original_image?: string;
   };
+  attached_items?: Array<{
+    id: string;
+    name: string;
+    category?: string;
+    color?: string;
+    brand?: string;
+    fabric?: string;
+    season?: string;
+    imageUrl?: string;
+    image_url?: string;
+    original_image?: string;
+    original_image_url?: string;
+  }>;
   attached_post?: {
     id: string;
     caption?: string;
@@ -142,17 +155,20 @@ export async function POST(request: NextRequest) {
     const context = await buildUserStylingContext(supabase, user.id);
 
     // 6. Call True AI Engine (Google Gemini 3.6 Flash / 3 Flash Preview with Direct Multimodal Vision Analysis)
+    // Normalize attached items (can be array or single item)
+    const attachedItems: any[] = Array.isArray(body.attached_items) && body.attached_items.length > 0
+      ? body.attached_items
+      : (body.attached_item ? [body.attached_item] : []);
+
     const geminiApiKey = getGeminiApiKey();
-
     let aiResult: any = null;
-
     if (geminiApiKey) {
       aiResult = await callGeminiAssistant(
         geminiApiKey,
         userPrompt,
         context,
         body.history || [],
-        body.attached_item,
+        attachedItems,
         body.attached_post
       );
     }
@@ -163,7 +179,7 @@ export async function POST(request: NextRequest) {
         userPrompt,
         context,
         body.history || [],
-        body.attached_item,
+        attachedItems,
         body.attached_post
       );
     }
@@ -249,7 +265,7 @@ async function callGeminiAssistant(
   userPrompt: string,
   context: any,
   history: Array<{ role: string; content: string }>,
-  attachedItem?: any,
+  attachedItems: any[] = [],
   attachedPost?: any
 ) {
   try {
@@ -446,36 +462,47 @@ ${JSON.stringify(context.savedInspirations || [])}
       }
     });
 
-    // Append specific attached garment if user provided one
-    if (attachedItem) {
+    // Append specific attached garments if user provided any
+    if (attachedItems.length > 0) {
+      const itemsList = attachedItems.map((item, idx) => `Prenda #${idx + 1}:
+- ID: "${item.id}"
+- Nombre: "${item.name}"
+- Categoría: "${item.category || 'Prenda'}"
+- Color: "${item.color || 'No especificado'}"
+- Tejido / Material: "${item.fabric || 'No especificado'}"
+- Marca: "${item.brand || 'No especificado'}"`).join('\n\n');
+
       userParts.push({
         text: `
-*** PRENDA ESPECÍFICA ADJUNTA POR EL USUARIO (EJE CENTRAL DE LA CONSULTA) ***
-- ID: "${attachedItem.id}"
-- Nombre: "${attachedItem.name}"
-- Categoría: "${attachedItem.category || 'Prenda'}"
-- Color: "${attachedItem.color || 'No especificado'}"
-- Tejido / Material: "${attachedItem.fabric || 'No especificado'}"
-- Marca: "${attachedItem.brand || 'No especificado'}"
-(El usuario ha seleccionado expresamente esta prenda de su armario. Céntrate en responder a su pregunta sobre esta prenda, ya sea recomendándole compras estratégicas que la complementen, creando un outfit con el resto de su armario o dándole consejos de estilo específicos).
+*** PRENDAS ESPECÍFICAS ADJUNTAS POR EL USUARIO (${attachedItems.length} prenda${attachedItems.length > 1 ? 's' : ''}) ***
+${itemsList}
+(El usuario ha seleccionado expresamente estas prendas de su armario como eje de su consulta. Céntrate en responder a su pregunta teniendo en cuenta todas estas piezas).
 `
       });
 
-      const itemImgUrl = attachedItem.imageUrl || attachedItem.image_url || attachedItem.original_image;
-      if (itemImgUrl) {
-        const itemImgData = await fetchImageAsBase64(itemImgUrl);
-        if (itemImgData) {
+      const attachedFetches = await Promise.allSettled(
+        attachedItems.slice(0, 8).map(async (item: any, idx: number) => {
+          const itemImgUrl = item.imageUrl || item.image_url || item.original_image || item.original_image_url;
+          if (!itemImgUrl) return null;
+          const itemImgData = await fetchImageAsBase64(itemImgUrl);
+          if (!itemImgData) return null;
+          return { item, idx, itemImgData };
+        })
+      );
+
+      attachedFetches.forEach(res => {
+        if (res.status === 'fulfilled' && res.value) {
           userParts.push({
-            text: `FOTO EN ALTA RESOLUCIÓN DE LA PRENDA ADJUNTA ("${attachedItem.name}"):`
+            text: `FOTO EN ALTA RESOLUCIÓN DE LA PRENDA ADJUNTA #${res.value.idx + 1} ("${res.value.item.name}"):`
           });
           userParts.push({
             inline_data: {
-              mime_type: itemImgData.mimeType,
-              data: itemImgData.data
+              mime_type: res.value.itemImgData.mimeType,
+              data: res.value.itemImgData.data
             }
           });
         }
-      }
+      });
     }
 
     // Append specific attached saved post if user provided one
@@ -608,7 +635,7 @@ ${JSON.stringify(context.wardrobe.items.map((i: any) => ({
 
 LOOKS Y PUBLICACIONES GUARDADAS POR EL USUARIO (INSPIRACIÓN):
 ${JSON.stringify(context.savedInspirations || [])}
-${attachedItem ? `\nPRENDA ESPECÍFICA ADJUNTA POR EL USUARIO (ANCLA):\n${JSON.stringify(attachedItem)}\n` : ''}${attachedPost ? `\nPOST GUARDADO ADJUNTO POR EL USUARIO:\n${JSON.stringify(attachedPost)}\n` : ''}
+${attachedItems.length > 0 ? `\nPRENDAS ESPECÍFICAS ADJUNTAS POR EL USUARIO (${attachedItems.length} prendas):\n${JSON.stringify(attachedItems)}\n` : ''}${attachedPost ? `\nPOST GUARDADO ADJUNTO POR EL USUARIO:\n${JSON.stringify(attachedPost)}\n` : ''}
 PETICIÓN DEL USUARIO:
 "${userPrompt}"
 `
@@ -797,53 +824,55 @@ function generateHeuristicStylingResponse(
   userPrompt: string, 
   context: any, 
   history: Array<{ role: string; content: string }> = [],
-  attachedItem?: any,
+  attachedItems: any[] = [],
   attachedPost?: any
 ) {
   const items = context.wardrobe.items || [];
   const lower = userPrompt.toLowerCase();
+  const primaryItem = attachedItems.length > 0 ? attachedItems[0] : null;
 
-  // If user attached a specific garment, prioritize it as the target garment
-  if (attachedItem) {
+  // If user attached specific garments, prioritize them as target garments
+  if (primaryItem) {
     const isShoppingQuery = lower.includes('comprar') || lower.includes('compras') || lower.includes('shopping') || lower.includes('que me falta') || lower.includes('qué me falta') || lower.includes('básicos que comprar') || lower.includes('adquirir') || lower.includes('combinar con qué') || lower.includes('que le pega') || lower.includes('qué le pega');
     
     if (isShoppingQuery) {
+      const namesList = attachedItems.map(i => `**${i.name}**`).join(' y ');
       return {
-        message: `Para complementar y sacarle el máximo partido a tu **${attachedItem.name}** (${attachedItem.category || 'prenda'}, ${attachedItem.color || 'color versátil'}), aquí tienes mis recomendaciones de compras estratégicas:
+        message: `Para complementar y sacarle el máximo partido a tu selección (${namesList}), aquí tienes mis recomendaciones de compras estratégicas:
 
-• **Prenda de contraste**: Si tu ${attachedItem.name} es lisa, añade una sobrecamisa o blazer con textura noble (pana, lana fría o ante).
-• **Calzado coordinado**: Unos mocasines de piel o zapatillas retro de perfil bajo estilizan la silueta y equilibran el look.
-• **Capa base o accesorio**: Una camiseta básica de algodón peinado de 240g o un cinturón de piel que aporte coherencia cromática.
+• **Prenda de contraste o capas**: Añade una sobrecamisa estructurada o blazer ligero en tonos neutros (arena, gris marengo o azul marino).
+• **Calzado coordinado**: Unos mocasines de piel o zapatillas minimalistas de perfil bajo para elevar la armonía visual.
+• **Accesorios clave**: Un cinturón de piel o bolso bandolera que conecte las tonalidades del conjunto.
 
-Estas piezas te permitirán armar múltiples conjuntos elegantes utilizando tu **${attachedItem.name}** como prenda estrella.`,
+Estas piezas te permitirán multiplicar tus opciones de look aprovechando tus prendas favoritas.`,
         recommended_outfit: null,
-        highlighted_item_ids: [attachedItem.id],
+        highlighted_item_ids: attachedItems.map(i => i.id),
         follow_up_suggestions: [
-          `Arma un outfit con mi ${attachedItem.name} y mi ropa`,
-          '¿Qué colores combinan mejor con esta prenda?',
-          '¿Para qué ocasión es ideal llevarla?'
+          `Arma un outfit con mis prendas seleccionadas`,
+          '¿Qué calzado de mi armario combina mejor?',
+          '¿Para qué ocasión es ideal llevarlas?'
         ]
       };
     }
 
-    const layeredOutfit = buildLayeredOutfit(items, attachedItem);
+    const layeredOutfit = buildLayeredOutfit(items, primaryItem);
     return {
-      message: `He creado una combinación en torno a tu **${attachedItem.name}** utilizando las prendas de tu armario:
+      message: `He creado una combinación en torno a tu selección (${attachedItems.map(i => `**${i.name}**`).join(', ')}) utilizando las prendas de tu armario:
 
 - **Estructura del conjunto**: ${layeredOutfit.map((i: any) => `**${i.name}**`).join(' + ')}.
-- **Criterio de estilo**: Equilibramos los volúmenes y la paleta cromática para que tu **${attachedItem.name}** sea la protagonista indiscutible del look.
+- **Criterio de estilo**: Equilibramos los volúmenes y la paleta cromática para lograr un look balanceado y favorecedor.
 
 ¿Te gusta esta combinación o te apetece probar con un calzado o una capa diferente?`,
       recommended_outfit: {
-        name: `Look con ${attachedItem.name}`,
+        name: `Look con ${primaryItem.name}`,
         occasion: 'casual',
         item_ids: layeredOutfit.map((i: any) => i.id)
       },
-      highlighted_item_ids: [attachedItem.id],
+      highlighted_item_ids: attachedItems.map(i => i.id),
       follow_up_suggestions: [
         '¿Qué otro calzado de mi armario combina?',
         '¿Cómo lo adapto para una ocasión formal?',
-        '¿Qué compras me aconsejas para esta prenda?'
+        '¿Qué compras me aconsejas para estas prendas?'
       ]
     };
   }
