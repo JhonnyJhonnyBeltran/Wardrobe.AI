@@ -490,51 +490,62 @@ export default function ProfilePage() {
                 transition={{ duration: 0.2 }}
               >
                 {/* Folders Section */}
-                <div className="p-4 border-b border-[var(--border-color)]">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-semibold text-sm text-[var(--foreground)]">Carpetas</h3>
-                    {/* Botón texto */}
+                {folders.length > 0 ? (
+                  <div className="p-4 border-b border-[var(--border-color)]">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="font-semibold text-sm text-[var(--foreground)]">Carpetas</h3>
+                      <button
+                        onClick={() => setShowCreateFolder(true)}
+                        className="text-[var(--brand-pink)] hover:text-[var(--brand-pink)]/80 transition-colors text-xs font-semibold flex items-center gap-1"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Añadir carpeta</span>
+                      </button>
+                    </div>
+
+                    {/* Folders Pills */}
+                    <div className="flex flex-wrap gap-2">
+                      {folders.map((folder) => (
+                        <div key={folder.id} className="relative group">
+                          <button
+                            onClick={() => setSelectedFolder(selectedFolder?.id === folder.id ? null : folder)}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200 text-sm font-medium ${
+                              selectedFolder?.id === folder.id 
+                                ? 'bg-[var(--brand-pink)] text-white shadow-md' 
+                                : 'bg-[var(--background-secondary)] text-[var(--foreground)] hover:bg-[var(--background-secondary)]/80'
+                            }`}
+                          >
+                            <Folder className="w-4 h-4" />
+                            <span className="truncate max-w-[150px]">{folder.name}</span>
+                          </button>
+                          
+                          {/* Botón X para eliminar con confirmación */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setFolderToDelete(folder);
+                            }}
+                            className="absolute -top-1.5 -right-1.5 p-1 bg-red-500 hover:bg-red-600 rounded-full shadow-md opacity-80 md:opacity-0 md:group-hover:opacity-100 transition-all z-10 text-white hover:scale-110 active:scale-95"
+                            title={`Eliminar carpeta ${folder.name}`}
+                            aria-label={`Eliminar carpeta ${folder.name}`}
+                          >
+                            <X className="w-3 h-3 text-white" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="px-4 py-3 border-b border-[var(--border-color)] flex items-center justify-between">
                     <button
                       onClick={() => setShowCreateFolder(true)}
-                      className="text-[var(--brand-pink)] hover:text-[var(--brand-pink)]/80 transition-colors text-sm font-semibold"
+                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[var(--background-secondary)] hover:bg-[var(--border-color)] text-[var(--foreground)] text-xs font-semibold transition-all active:scale-95 border border-[var(--border-color)]"
                     >
-                      {folders.length === 0 ? 'Crear carpeta' : 'Añadir carpeta'}
+                      <Plus className="w-3.5 h-3.5 text-[var(--brand-pink)]" />
+                      <span>Crear carpeta</span>
                     </button>
                   </div>
-
-                  {/* Folders Pills */}
-                  <div className="flex flex-wrap gap-2">
-                    {/* Existing Folders */}
-                    {folders.map((folder) => (
-                      <div key={folder.id} className="relative group">
-                        <button
-                          onClick={() => setSelectedFolder(selectedFolder?.id === folder.id ? null : folder)}
-                          className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200 text-sm font-medium ${
-                            selectedFolder?.id === folder.id 
-                              ? 'bg-[var(--brand-pink)] text-white shadow-md' 
-                              : 'bg-[var(--background-secondary)] text-[var(--foreground)] hover:bg-[var(--background-secondary)]/80'
-                          }`}
-                        >
-                          <Folder className="w-4 h-4" />
-                          <span className="truncate max-w-[150px]">{folder.name}</span>
-                        </button>
-                        
-                        {/* Botón X para eliminar con confirmación */}
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setFolderToDelete(folder);
-                          }}
-                          className="absolute -top-1.5 -right-1.5 p-1 bg-red-500 hover:bg-red-600 rounded-full shadow-md opacity-80 md:opacity-0 md:group-hover:opacity-100 transition-all z-10 text-white hover:scale-110 active:scale-95"
-                          title={`Eliminar carpeta ${folder.name}`}
-                          aria-label={`Eliminar carpeta ${folder.name}`}
-                        >
-                          <X className="w-3 h-3 text-white" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                )}
 
                 {/* Saved Posts Section */}
                 <div className="p-4">

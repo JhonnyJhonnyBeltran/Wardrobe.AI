@@ -416,6 +416,13 @@ En cada conversación, el backend alimenta a CloSy con:
   - En `InfiniteScrollFooter.tsx`, cuando `!hasMore && !isLoading && !isError && !endMessage`, el componente retorna `null` y no ocupa espacio en el layout.
   - Se corrigió la condición de skeletons fantasma en `search/page.tsx` para que solo se rendericen placeholders cuando `postsLoadingMore === true`, evitando cajas pulsantes vacías al final de los resultados.
 
+### 22. Visualización Condicional de Carpetas en Perfil (`/profile`) (Septiembre 2026)
+- **Ocultación de Encabezado "Carpetas" si no existen carpetas**:
+  - En la pestaña de Guardados (`saved`) de `/profile`, si el usuario no tiene carpetas (`folders.length === 0`), no se muestra el título "Carpetas" ni el divisor de lista vacía.
+  - En su lugar, aparece únicamente el botón limpio e intuitivo `+ Crear carpeta` para permitirle añadir su primera carpeta.
+  - Cuando el usuario crea al menos una carpeta (`folders.length > 0`), se despliega la cabecera completa con el título "Carpetas", el botón `+ Añadir carpeta` y las pastillas interactivas de cada carpeta con opción de filtrado y eliminación.
+
+
 
 
 
