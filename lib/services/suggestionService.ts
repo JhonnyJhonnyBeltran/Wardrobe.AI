@@ -64,7 +64,7 @@ export async function getSmartSuggestions(userId: string): Promise<Notification[
             supabase.from('clothing_items').select('*', { count: 'exact', head: true }).eq('user_id', userId),
             supabase.from('outfits').select('*', { count: 'exact', head: true }).eq('user_id', userId),
             supabase.from('calendar_outfits').select('*', { count: 'exact', head: true }).eq('user_id', userId).eq('date', formatDateToSQL(now)),
-            supabase.from('users').select('avatar_url, full_name').eq('id', userId).single()
+            supabase.from('profiles').select('avatar_url, full_name').eq('id', userId).maybeSingle()
         ]);
 
         const items = itemsCount || 0;

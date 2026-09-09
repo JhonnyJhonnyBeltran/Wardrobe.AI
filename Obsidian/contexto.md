@@ -665,8 +665,11 @@ En cada conversación, el backend alimenta a CloSy con:
   - Kloe ya no devuelve obligatoriamente un conjunto de outfit en cada mensaje. La IA evalúa la intención del usuario:
     - **Petición de Outfit / Combinación**: Genera `recommended_outfit` con las prendas reales de su armario y la explicación del look.
     - **Tendencias, Estilos o Preguntas Generales**: Ofrece análisis de tendencias, cortes, paletas y siluetas en prosa Markdown enriquecida con `recommended_outfit: null`.
-    - **Recomendaciones de Compras / Shopping**: Sugiere de 2 a 4 adquisiciones estratégicas con materiales nobles y cortes clave para elevar su armario con `recommended_outfit: null`.
-    - **Análisis de Posts Guardados (Inspiración)**: Analiza el look guardado, desglosa su estética y propone compras o ideas de estilo, creando un outfit solo si el usuario pide explícitamente recrearlo o ponérselo con su ropa.
+### 45. Corrección de Consulta de Perfil en Motor de Sugerencias (`lib/services/suggestionService.ts`)
+- **Corrección de Error 400 (`GET /rest/v1/users?select=avatar_url,full_name`)**:
+  - Se corrigió la consulta en paralelo en `suggestionService.ts` para obtener `avatar_url` y `full_name` desde la tabla oficial `profiles` con `maybeSingle()` en lugar de la tabla legacy inexistente `users`.
+  - Se protegieron las sincronizaciones de fallback en `profile/edit/page.tsx` para evitar excepciones no controladas.
+
 
 
 

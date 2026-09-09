@@ -180,10 +180,12 @@ export default function EditProfilePage() {
       }
 
       // 2.5 Sync with Legacy 'users' table just in case (optional but safe)
-      await (supabase.from('users') as any).update({
-        name: name,
-        avatar: avatarUrl
-      }).eq('id', authUser.id);
+      try {
+        await (supabase.from('users') as any).update({
+          name: name,
+          avatar: avatarUrl
+        }).eq('id', authUser.id);
+      } catch {}
 
       // 3. Update local store
       if (user) {
