@@ -569,7 +569,7 @@ export default function OutfitCalendar() {
                     placeholder="Buscar outfit..."
                     value={outfitSearchQuery}
                     onChange={(e) => setOutfitSearchQuery(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3 bg-[var(--background-secondary)] rounded-2xl text-[var(--foreground)] outline-none border border-transparent focus:border-[var(--brand-pink)]/30 transition-all placeholder-[var(--foreground-tertiary)] font-medium"
+                    className="w-full pl-12 pr-4 py-3 bg-[var(--background-secondary)] rounded-2xl text-[var(--foreground)] outline-none border border-transparent focus:border-[var(--border-color)] transition-all placeholder-[var(--foreground-tertiary)] font-medium"
                   />
                 </div>
                 <button 

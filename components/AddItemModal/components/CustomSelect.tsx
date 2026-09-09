@@ -179,7 +179,7 @@ export function CustomSelect({ label, value, onChange, options }: CustomSelectPr
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     placeholder="Buscar..."
-                                    className="w-full pl-9 pr-4 py-2 rounded-xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)]/30"
+                                    className="w-full pl-9 pr-4 py-2 rounded-xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-sm focus:outline-none focus:border-[var(--foreground-tertiary)]"
                                     onClick={(e) => e.stopPropagation()}
                                 />
                             </div>

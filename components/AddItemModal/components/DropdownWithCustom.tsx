@@ -201,7 +201,7 @@ export function DropdownWithCustom({
                         value={customValue}
                         onChange={(e) => handleCustomChange(e.target.value)}
                         placeholder={`Escribe ${label.toLowerCase()}...`}
-                        className="flex-1 px-4 py-2.5 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)] text-sm transition-shadow"
+                        className="flex-1 px-4 py-2.5 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:border-[var(--foreground-tertiary)] text-sm transition-shadow"
                     />
                     <button
                         type="button"
@@ -221,7 +221,7 @@ export function DropdownWithCustom({
                     ref={buttonRef}
                     type="button"
                     onClick={handleToggle}
-                    className="w-full px-4 py-2.5 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-left flex items-center justify-between text-sm hover:border-[var(--brand-pink)] transition-colors"
+                    className="w-full px-4 py-2.5 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-left flex items-center justify-between text-sm hover:border-[var(--foreground-tertiary)] transition-colors"
                 >
                     <span className={hasValue ? 'text-[var(--foreground)]' : 'text-[var(--foreground-tertiary)]'}>
                         {displayValue}
@@ -261,7 +261,7 @@ export function DropdownWithCustom({
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     placeholder="Buscar..."
-                                    className="w-full pl-9 pr-4 py-2 rounded-xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)]/30"
+                                    className="w-full pl-9 pr-4 py-2 rounded-xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-sm focus:outline-none focus:border-[var(--foreground-tertiary)]"
                                     onClick={(e) => e.stopPropagation()}
                                 />
                             </div>

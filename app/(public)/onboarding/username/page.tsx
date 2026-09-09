@@ -122,7 +122,7 @@ export default function UsernameOnboardingPage() {
                                     value={username}
                                     onChange={handleUsernameChange}
                                     placeholder="tu_usuario"
-                                    className="w-full bg-[var(--background-secondary)] text-[var(--foreground)] pl-12 pr-12 py-4 rounded-xl border border-[var(--border-color)] focus:border-[var(--brand-pink)] focus:ring-1 focus:ring-[var(--brand-pink)] transition-all outline-none"
+                                    className="w-full bg-[var(--background-secondary)] text-[var(--foreground)] pl-12 pr-12 py-4 rounded-xl border border-[var(--border-color)] focus:border-[var(--foreground-tertiary)] transition-all outline-none"
                                 />
                                 {isChecking && (
                                     <div className="absolute right-4 top-1/2 -translate-y-1/2">

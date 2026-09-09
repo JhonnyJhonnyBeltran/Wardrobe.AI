@@ -854,7 +854,7 @@ export default function CreateOutfitPage() {
                                         type="date"
                                         value={scheduledDate}
                                         onChange={(e) => setScheduledDate(e.target.value)}
-                                        className="w-full px-3.5 py-2.5 bg-[var(--background-secondary)] rounded-xl text-xs text-[var(--foreground)] border border-[var(--border-color)] focus:outline-none focus:ring-1 focus:ring-[var(--brand-pink)] font-medium"
+                                        className="w-full px-3.5 py-2.5 bg-[var(--background-secondary)] rounded-xl text-xs text-[var(--foreground)] border border-[var(--border-color)] focus:outline-none focus:border-[var(--foreground-tertiary)] font-medium"
                                     />
                                 </div>
 
@@ -1007,7 +1007,7 @@ export default function CreateOutfitPage() {
                                 placeholder="Ej: Look casual de verano"
                                 value={outfitName}
                                 onChange={(e) => setOutfitName(e.target.value)}
-                                className="w-full px-4 py-3 bg-[var(--background-secondary)] rounded-xl text-sm text-[var(--foreground)] outline-none focus:ring-2 focus:ring-[var(--brand-pink)] transition-all mb-4"
+                                className="w-full px-4 py-3 bg-[var(--background-secondary)] rounded-xl text-sm text-[var(--foreground)] outline-none focus:border-[var(--foreground-tertiary)] border border-transparent transition-all mb-4"
                             />
 
                             <div className="flex items-center justify-between mb-2">
@@ -1068,7 +1068,7 @@ export default function CreateOutfitPage() {
                                 type="date"
                                 value={scheduledDate}
                                 onChange={(e) => setScheduledDate(e.target.value)}
-                                className="w-full px-3.5 py-2.5 bg-[var(--background-secondary)] rounded-xl text-xs text-[var(--foreground)] border border-[var(--border-color)] focus:outline-none focus:ring-1 focus:ring-[var(--brand-pink)] font-medium"
+                                className="w-full px-3.5 py-2.5 bg-[var(--background-secondary)] rounded-xl text-xs text-[var(--foreground)] border border-[var(--border-color)] focus:outline-none focus:border-[var(--foreground-tertiary)] font-medium"
                             />
                         </div>
 

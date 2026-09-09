@@ -236,7 +236,7 @@ export default function WardrobeSelectionModal({
                                 placeholder="Buscar prendas..."
                                 value={searchQuery}
                                 onChange={handleSearchChange}
-                                className="w-full pl-9 pr-4 py-2 rounded-xl bg-[var(--background-secondary)] border-none text-[var(--foreground)] placeholder-[var(--foreground-tertiary)] focus:ring-2 focus:ring-[var(--brand-pink)]/50 transition-all"
+                                className="w-full pl-9 pr-4 py-2 rounded-xl bg-[var(--background-secondary)] border border-transparent focus:border-[var(--foreground-tertiary)] text-[var(--foreground)] placeholder-[var(--foreground-tertiary)] outline-none transition-all"
                             />
                         </div>
                     </div>

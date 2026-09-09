@@ -293,7 +293,7 @@ export default function EditProfilePage() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Tu nombre completo"
-                    className="w-full pl-11 pr-4 py-3 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)]"
+                    className="w-full pl-11 pr-4 py-3 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:border-[var(--foreground-tertiary)]"
                   />
                 </div>
               </div>
@@ -310,11 +310,11 @@ export default function EditProfilePage() {
                     value={username}
                     onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_.]/g, ''))} // Restrict chars
                     placeholder="usuario_ejemplo"
-                    className={`w-full pl-11 pr-10 py-3 rounded-2xl bg-[var(--background-secondary)] border text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:ring-2 ${isUsernameAvailable === false
-                      ? 'border-red-500 focus:ring-red-500'
+                    className={`w-full pl-11 pr-10 py-3 rounded-2xl bg-[var(--background-secondary)] border text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none ${isUsernameAvailable === false
+                      ? 'border-red-500 focus:border-red-500'
                       : isUsernameAvailable === true
-                        ? 'border-green-500 focus:ring-green-500'
-                        : 'border-[var(--border-color)] focus:ring-[var(--brand-pink)]'
+                        ? 'border-green-500 focus:border-green-500'
+                        : 'border-[var(--border-color)] focus:border-[var(--foreground-tertiary)]'
                       }`}
                   />
                   {/* Status Icon */}
@@ -345,7 +345,7 @@ export default function EditProfilePage() {
                     onChange={(e) => setBio(e.target.value)}
                     placeholder="Cuéntanos sobre ti..."
                     rows={3}
-                    className="w-full pl-11 pr-4 py-3 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)] resize-none"
+                    className="w-full pl-11 pr-4 py-3 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:border-[var(--foreground-tertiary)] resize-none"
                   />
                 </div>
               </div>

@@ -1072,7 +1072,7 @@ export default function ClosetPage() {
                   placeholder={`Buscar ${activeTab === 'items' ? 'prendas' : 'outfits'}...`}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-[var(--background-secondary)] border-none rounded-xl py-2.5 pl-9 pr-10 text-sm focus:ring-1 focus:ring-[var(--brand-pink)]"
+                  className="w-full bg-[var(--background-secondary)] border border-transparent focus:border-[var(--foreground-tertiary)] rounded-xl py-2.5 pl-9 pr-10 text-sm outline-none"
                 />
                 {searchQuery && (
                   <button

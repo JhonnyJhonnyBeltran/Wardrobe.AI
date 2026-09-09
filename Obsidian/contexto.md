@@ -402,6 +402,15 @@ En cada conversación, el backend alimenta a CloSy con:
 - **Skeleton de Detalle de Post (`SkeletonPostDetail`)**:
   - Se implementó un skeleton completo con animación de onda horizontal (`shimmer-wave`), cabecera con avatar/usuario, área de visualización multimedia amplia y columna derecha con barra de acciones, textos y comentarios simulados.
 
+### 20. Estandarización de Inputs y Eliminación Total de Rebordes Rosas (Septiembre 2026)
+- **Eliminación de Rebordes y Anillos Rosas en Inputs**:
+  - Se erradicaron todos los estilos `focus:ring-[var(--brand-pink)]`, `focus:border-[var(--brand-pink)]` y `focus:ring-pink-*` en todos los inputs, textareas, selects y barras de búsqueda de la aplicación (`/auth`, `/auth/update-password`, `/onboarding/username`, `/create-post`, `/create`, `/closet`, `/profile`, `/profile/edit`, `/profile/settings`, `/profile/settings/personal`, `/profile/settings/security`, `AddItemModal`, `DropdownWithCustom`, `CustomSelect`, `SaveModal`, `OutfitCalendar`, `WardrobeSelectionModal`, etc.).
+- **Reset Global de Focus en CSS (`app/globals.css`)**:
+  - Configurado reset global para `input:focus, textarea:focus, select:focus` con `outline: none !important; box-shadow: none !important; --tw-ring-shadow: 0 0 #0000 !important;` que previene cualquier halo de enfoque nativo o brillo no deseado.
+- **Nuevo Estándar Visual Minimalista Apple**:
+  - Enfoque limpio con bordes neutros sutiles (`focus:border-[var(--foreground-tertiary)]` o `focus:border-gray-400 dark:focus:border-white/30`) sin halos ni dobles bordes.
+
+
 
 
 

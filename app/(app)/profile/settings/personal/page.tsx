@@ -215,7 +215,7 @@ export default function PersonalSettingsPage() {
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               placeholder="Tu nombre"
-              className="w-full px-4 py-3 bg-[var(--background-secondary)] rounded-xl border border-[var(--border-color)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] outline-none focus:border-[var(--brand-pink)]"
+              className="w-full px-4 py-3 bg-[var(--background-secondary)] rounded-xl border border-[var(--border-color)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] outline-none focus:border-[var(--foreground-tertiary)]"
             />
           </div>
 
@@ -232,7 +232,7 @@ export default function PersonalSettingsPage() {
                     ? 'border-red-500 focus:border-red-500'
                     : usernameOk
                     ? 'border-green-500 focus:border-green-500'
-                    : 'border-[var(--border-color)] focus:border-[var(--brand-pink)]'
+                    : 'border-[var(--border-color)] focus:border-[var(--foreground-tertiary)]'
                 }`}
               />
               <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -262,7 +262,7 @@ export default function PersonalSettingsPage() {
               onChange={(e) => setBio(e.target.value)}
               placeholder="Cuéntanos sobre tu estilo..."
               rows={3}
-              className="w-full px-4 py-3 bg-[var(--background-secondary)] rounded-xl border border-[var(--border-color)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] outline-none focus:border-[var(--brand-pink)] resize-none"
+              className="w-full px-4 py-3 bg-[var(--background-secondary)] rounded-xl border border-[var(--border-color)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] outline-none focus:border-[var(--foreground-tertiary)] resize-none"
             />
           </div>
 

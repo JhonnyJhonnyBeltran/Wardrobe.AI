@@ -635,14 +635,14 @@ export default function SettingsPage() {
                                             value={oldPassword}
                                             onChange={(e) => setOldPassword(e.target.value)}
                                             placeholder="Contraseña actual" 
-                                            className="w-full bg-[var(--background-secondary)] text-[var(--foreground)] px-4 py-3 rounded-xl border border-[var(--border-color)] focus:border-[var(--brand-pink)] outline-none"
+                                            className="w-full bg-[var(--background-secondary)] text-[var(--foreground)] px-4 py-3 rounded-xl border border-[var(--border-color)] focus:border-[var(--foreground-tertiary)] outline-none"
                                         />
                                         <input 
                                             type="password" 
                                             value={newPassword}
                                             onChange={(e) => setNewPassword(e.target.value)}
                                             placeholder="Nueva contraseña" 
-                                            className="w-full bg-[var(--background-secondary)] text-[var(--foreground)] px-4 py-3 rounded-xl border border-[var(--border-color)] focus:border-[var(--brand-pink)] outline-none"
+                                            className="w-full bg-[var(--background-secondary)] text-[var(--foreground)] px-4 py-3 rounded-xl border border-[var(--border-color)] focus:border-[var(--foreground-tertiary)] outline-none"
                                         />
                                     </div>
 

@@ -132,7 +132,7 @@ export default function CreatePostPage() {
                                         value={caption}
                                         onChange={(e) => setCaption(e.target.value)}
                                         placeholder="Escribe un pie de foto..."
-                                        className="w-full h-full p-3 rounded-xl bg-[var(--background-secondary)] border-none resize-none focus:ring-1 focus:ring-[var(--brand-pink)] placeholder:text-[var(--foreground-tertiary)]"
+                                        className="w-full h-full p-3 rounded-xl bg-[var(--background-secondary)] border border-transparent focus:border-[var(--foreground-tertiary)] resize-none outline-none placeholder:text-[var(--foreground-tertiary)]"
                                     />
                                 </div>
                             </div>

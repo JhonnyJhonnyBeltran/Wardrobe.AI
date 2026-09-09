@@ -507,7 +507,7 @@ export default function CreatePostPage() {
                             <div className="space-y-2">
                                 <label className="text-xs font-bold tracking-wider text-[var(--foreground-tertiary)] uppercase ml-1">Descripción</label>
                                 <textarea
-                                    className="w-full p-4 rounded-2xl bg-[var(--card-bg)] border border-[var(--border-color)] outline-none focus:ring-2 focus:ring-[var(--brand-pink)]/40 resize-none h-28 transition-all placeholder:text-[var(--foreground-tertiary)] text-sm shadow-sm"
+                                    className="w-full p-4 rounded-2xl bg-[var(--card-bg)] border border-[var(--border-color)] outline-none focus:border-[var(--foreground-tertiary)] resize-none h-28 transition-all placeholder:text-[var(--foreground-tertiary)] text-sm shadow-sm"
                                     placeholder="¿Qué estás vistiendo hoy?..."
                                     value={caption}
                                     onChange={(e) => setCaption(e.target.value)}
@@ -543,7 +543,7 @@ export default function CreatePostPage() {
                                     placeholder="Buscar outfit..."
                                     value={outfitSearchQuery}
                                     onChange={(e) => setOutfitSearchQuery(e.target.value)}
-                                    className="w-full pl-12 pr-4 py-3 bg-[var(--background-secondary)] rounded-2xl text-[var(--foreground)] outline-none border border-transparent focus:border-[var(--brand-pink)]/30 transition-all placeholder-[var(--foreground-tertiary)] font-medium"
+                                    className="w-full pl-12 pr-4 py-3 bg-[var(--background-secondary)] rounded-2xl text-[var(--foreground)] outline-none border border-transparent focus:border-[var(--border-color)] transition-all placeholder-[var(--foreground-tertiary)] font-medium"
                                 />
                             </div>
                             <button 

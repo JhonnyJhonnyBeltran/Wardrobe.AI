@@ -20,7 +20,7 @@ export const ThemeToggle: React.FC = () => {
             className="relative flex items-center justify-between w-16 h-8 rounded-full
                  bg-[var(--background-tertiary)] border border-[var(--border-color)]
                  transition-colors duration-300 hover:border-[var(--border-hover)]
-                 focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)] focus:ring-offset-2"
+                 focus:outline-none focus:ring-0"
             aria-label={isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
         >
             {/* Icons */}

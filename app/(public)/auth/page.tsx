@@ -363,14 +363,14 @@ export default function AuthPage() {
                                             Introduce tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.
                                         </p>
                                         <div className="relative group">
-                                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--foreground-tertiary)] group-focus-within:text-[var(--brand-pink)] transition-colors" />
+                                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--foreground-tertiary)] group-focus-within:text-[var(--foreground)] transition-colors" />
                                             <input
                                                 type="email"
                                                 value={resetEmail}
                                                 onChange={(e) => setResetEmail(e.target.value)}
                                                 placeholder="Correo electrónico"
                                                 required
-                                                className="w-full pl-12 pr-4 h-12 rounded-xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)] transition-all"
+                                                className="w-full pl-12 pr-4 h-12 rounded-xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:border-[var(--foreground-tertiary)] transition-all"
                                             />
                                         </div>
                                         
@@ -412,20 +412,20 @@ export default function AuthPage() {
                                         <>
                                             {/* Nombre completo */}
                                             <div className="relative group">
-                                                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500 group-focus-within:text-[var(--brand-pink)] transition-colors" />
+                                                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500 group-focus-within:text-gray-900 dark:group-focus-within:text-white transition-colors" />
                                                 <input
                                                     type="text"
                                                     value={fullName}
                                                     onChange={(e) => setFullName(e.target.value)}
                                                     placeholder="Nombre completo"
                                                     required
-                                                    className="w-full pl-12 pr-4 h-12 rounded-xl bg-gray-50 dark:bg-[#16161c] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)] focus:border-transparent transition-all"
+                                                    className="w-full pl-12 pr-4 h-12 rounded-xl bg-gray-50 dark:bg-[#16161c] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-gray-400 dark:focus:border-white/30 transition-all"
                                                 />
                                             </div>
 
                                             {/* Nombre de usuario */}
                                             <div className="relative group">
-                                                <AtSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500 group-focus-within:text-[var(--brand-pink)] transition-colors" />
+                                                <AtSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500 group-focus-within:text-gray-900 dark:group-focus-within:text-white transition-colors" />
                                                 <input
                                                     type="text"
                                                     value={username}
@@ -433,7 +433,7 @@ export default function AuthPage() {
                                                     placeholder="Nombre de usuario"
                                                     required
                                                     minLength={3}
-                                                    className="w-full pl-12 pr-10 h-12 rounded-xl bg-gray-50 dark:bg-[#16161c] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)] focus:border-transparent transition-all"
+                                                    className="w-full pl-12 pr-10 h-12 rounded-xl bg-gray-50 dark:bg-[#16161c] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-gray-400 dark:focus:border-white/30 transition-all"
                                                 />
                                                 <div className="absolute right-4 top-1/2 -translate-y-1/2">
                                                     {isCheckingUsername && <Loader2 className="w-4 h-4 animate-spin text-gray-400" />}
@@ -447,8 +447,8 @@ export default function AuthPage() {
                                     {/* Email / usuario */}
                                     <div className="relative group">
                                         {isLogin
-                                            ? <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500 group-focus-within:text-[var(--brand-pink)] transition-colors" />
-                                            : <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500 group-focus-within:text-[var(--brand-pink)] transition-colors" />
+                                            ? <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500 group-focus-within:text-gray-900 dark:group-focus-within:text-white transition-colors" />
+                                            : <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500 group-focus-within:text-gray-900 dark:group-focus-within:text-white transition-colors" />
                                         }
                                         <input
                                             type={isLogin ? 'text' : 'email'}
@@ -456,7 +456,7 @@ export default function AuthPage() {
                                             onChange={(e) => isLogin ? setEmailOrUser(e.target.value) : setEmail(e.target.value)}
                                             placeholder={isLogin ? 'Email o @usuario' : 'Correo electrónico'}
                                             required
-                                            className="w-full pl-12 pr-10 h-12 rounded-xl bg-gray-50 dark:bg-[#16161c] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)] focus:border-transparent transition-all"
+                                            className="w-full pl-12 pr-10 h-12 rounded-xl bg-gray-50 dark:bg-[#16161c] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-gray-400 dark:focus:border-white/30 transition-all"
                                         />
                                         {!isLogin && (
                                             <div className="absolute right-4 top-1/2 -translate-y-1/2">
@@ -469,14 +469,14 @@ export default function AuthPage() {
 
                                     {/* Contraseña */}
                                     <div className="relative group">
-                                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500 group-focus-within:text-[var(--brand-pink)] transition-colors" />
+                                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500 group-focus-within:text-gray-900 dark:group-focus-within:text-white transition-colors" />
                                         <input
                                             type={showPassword ? 'text' : 'password'}
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
                                             placeholder="Contraseña"
                                             required
-                                            className="w-full pl-12 pr-12 h-12 rounded-xl bg-gray-50 dark:bg-[#16161c] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)] focus:border-transparent transition-all"
+                                            className="w-full pl-12 pr-12 h-12 rounded-xl bg-gray-50 dark:bg-[#16161c] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-gray-400 dark:focus:border-white/30 transition-all"
                                         />
                                         <button
                                             type="button"

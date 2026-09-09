@@ -2146,3 +2146,21 @@ select option:checked {
   }
 }
 
+/* ============================================
+   GLOBAL INPUT / TEXTAREA / SELECT FOCUS RESET
+   Eliminate pink glow/rings and enforce clean Apple-style focus
+   ============================================ */
+input, textarea, select {
+  outline: none;
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none !important;
+  --tw-ring-offset-shadow: 0 0 #0000 !important;
+  --tw-ring-shadow: 0 0 #0000 !important;
+  --tw-shadow: 0 0 #0000 !important;
+  --tw-shadow-colored: 0 0 #0000 !important;
+  box-shadow: none !important;
+}
+
+

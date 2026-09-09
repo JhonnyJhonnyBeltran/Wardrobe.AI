@@ -71,7 +71,7 @@ export default function AdvisorModal({ isOpen, onClose, onConfirm }: AdvisorModa
                                 id="dontShow"
                                 checked={dontShowAgain}
                                 onChange={(e) => setDontShowAgain(e.target.checked)}
-                                className="w-4 h-4 rounded border-[var(--border-color)] text-[var(--brand-pink)] focus:ring-[var(--brand-pink)]"
+                                className="w-4 h-4 rounded border-[var(--border-color)] text-[var(--brand-pink)] focus:ring-0 focus:outline-none"
                             />
                             <label htmlFor="dontShow" className="text-xs text-[var(--foreground-tertiary)] select-none cursor-pointer">
                                 No volver a mostrar este mensaje

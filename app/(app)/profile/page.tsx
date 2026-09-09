@@ -250,7 +250,7 @@ export default function ProfilePage() {
                   value={newFolderName}
                   onChange={(e) => setNewFolderName(e.target.value)}
                   placeholder="Nombre de la carpeta"
-                  className="w-full px-4 py-3 bg-[var(--background-secondary)] border border-[var(--border-color)] rounded-xl text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)]/50 transition-all font-medium"
+                  className="w-full px-4 py-3 bg-[var(--background-secondary)] border border-[var(--border-color)] rounded-xl text-[var(--foreground)] focus:outline-none focus:border-[var(--foreground-tertiary)] transition-all font-medium"
                   autoFocus
                   onKeyDown={(e) => e.key === 'Enter' && createFolder()}
                 />
