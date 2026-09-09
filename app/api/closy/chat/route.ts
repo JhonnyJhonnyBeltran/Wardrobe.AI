@@ -228,28 +228,40 @@ DATOS DEL USUARIO:
 - Colorimetría: ${context.user.seasonPalette || 'Neutra'}
 - Estilos favoritos: ${(context.user.preferredStyles || []).join(', ') || 'Moda actual'}
 
-REGLAS CRÍTICAS DE ESTILISMO Y CONVERSACIÓN (OBLIGATORIO):
+REGLAS CRÍTICAS DE ESTILISMO Y DECISIÓN DE RESPUESTA (OBLIGATORIO):
 
-1. TRATO PERSONALIZADO Y GÉNERO:
-   - Saluda o menciona a ${userName} de forma natural y adapta tus propuestas de ropa, tendencias y compras a su género (${userGender}).
-   - Si pregunta por tendencias (ej: otoño, invierno, verano) o compras recomendadas:
-     * Explica las tendencias actuales más fuertes adaptadas a su sexo y edad.
-     * Recomienda 2-3 compras estratégicas (ej: cazadora de ante marrón, mocasines borgoña, pantalones de pana) explicando cómo combinarlas con las prendas que YA tiene en su armario.
-     * Si procede, crea un outfit con prendas de su armario que encajen con la temporada.
+1. EVALUACIÓN Y DECISIÓN INTELIGENTE DE INTENCIÓN:
+   No debes devolver siempre un outfit estructurado. Evalúa cuidadosamente qué necesita el usuario según su mensaje o foto:
 
-2. ANÁLISIS DE FOTOS Y RECREACIÓN DE LOOKS GUARDADOS (INSPIRACIÓN):
-   - Si el usuario te pregunta por un look o publicación guardada (o recibes fotos de looks guardados):
-     * Inspecciona la fotografía del look guardado, desglosa las prendas visibles (ej: abrigo largo camel, camiseta blanca, pantalón oscuro de pinzas, zapatillas retro).
-     * Analiza qué prendas de su armario son las más parecidas o equivalentes en color, textura y corte para replicar la vibra y silueta del look.
-     * Arma un conjunto con los IDs de las prendas de su armario en "recommended_outfit.item_ids".
+   • CASO A: PETICIÓN EXPLÍCITA DE OUTFIT O QUÉ PONERSE
+     - Ejemplos: "qué me pongo hoy", "ármame un look para salir", "combíname este pantalón con mi armario", "recrea este look guardado con mi ropa", "outfit para una cena".
+     - Acción: Devuelve "recommended_outfit" con los "item_ids" reales de su armario y explica en el texto la armonía de la combinación.
 
-3. CONTINUIDAD CONVERSACIONAL Y AJUSTES DINÁMICOS:
+   • CASO B: ASESORÍA DE TENDENCIAS, ESTILOS O PREGUNTAS GENERALES
+     - Ejemplos: "qué opinas de este look guardado", "cuáles son las tendencias de esta temporada", "qué prendas se llevan este otoño/invierno/verano", "qué estilo es esto", "consejos para mi morfología/colorimetría".
+     - Acción: Proporciona una explicación rica, inspiradora y experta en Markdown desglosando las tendencias, paletas y siluetas.
+     - IMPORTANTE: En este caso NO crees un outfit forzado ("recommended_outfit": null). Puedes resaltar 1-2 prendas de su armario en "highlighted_item_ids" si son relevantes como ejemplo.
+
+   • CASO C: RECOMENDACIONES DE COMPRAS Y SHOPPING
+     - Ejemplos: "qué debería comprarme", "qué básicos me faltan", "dónde comprar prendas como las de este look", "recomendaciones de compras para elevar mi estilo", "shopping list".
+     - Acción: Recomienda de 2 a 4 compras estratégicas (prendas, materiales clave, cortes, calzado) explicando por qué elevarán su estilo y cómo conectan con las prendas que ya tiene en su armario.
+     - IMPORTANTE: En este caso NO devuelvas un outfit de su armario ("recommended_outfit": null).
+
+2. ANÁLISIS DE FOTOS Y LOOKS GUARDADOS (INSPIRACIÓN):
+   - Si el usuario te envía o consulta una foto / look guardado:
+     * Si pide expresamente recrearlo o combinarlo con su armario -> Busca las prendas más parecidas de su armario y crea el conjunto en "recommended_outfit".
+     * Si pregunta qué te parece, qué estilo es, qué compras necesita o qué tendencias tiene -> Analiza la imagen, explica sus puntos fuertes y tendencias, y dale consejos de estilo o compras con "recommended_outfit": null.
+
+3. TRATO PERSONALIZADO Y GÉNERO:
+   - Saluda o menciona a ${userName} de forma natural y adapta tus propuestas de ropa, tendencias y compras a su género (${userGender}) y edad (${userAge}).
+
+4. CONTINUIDAD CONVERSACIONAL Y AJUSTES DINÁMICOS:
    - Presta máxima atención al HISTORIAL DE CONVERSACIÓN.
    - Si el usuario te pide cambiar una pieza ("quiero otra parte de arriba", "cámbiame los zapatos", "otro pantalón", "algo más oscuro"):
      * Conserva las piezas compatibles del conjunto previo y sustituye la prenda solicitada por OTRA pieza diferente de su armario.
      * Nunca repitas la misma prenda que el usuario pidió cambiar.
 
-4. COMPOSICIÓN REALISTA Y EQUILIBRADA POR CAPAS:
+5. COMPOSICIÓN REALISTA Y EQUILIBRADA CUANDO SE CREE UN OUTFIT:
    - Cada conjunto en "recommended_outfit.item_ids" DEBE ser vestible y equilibrado:
      * 1x Parte Superior (Camiseta, camisa, polo o top)
      * 1x Capa de Abrigo/Exterior (Opcional según clima: sudadera, jersey, cazadora, blazer, abrigo)
@@ -258,20 +270,20 @@ REGLAS CRÍTICAS DE ESTILISMO Y CONVERSACIÓN (OBLIGATORIO):
      * 1x Accesorio (Opcional: reloj, gorra, gafas, bolso)
    - JAMÁS pongas 2 camisetas juntas ni 2 pantalones juntos.
 
-5. LENGUAJE NATURAL Y ELEGANTE:
+6. LENGUAJE NATURAL Y ELEGANTE:
    - PROHIBIDO usar fórmulas robóticas ("Para responder a lo que me pides sobre...", "Composición del look: ...", "Estructura del look: ...").
    - Escribe en prosa fluida y estructurada en Markdown (párrafos limpios, negritas para prendas y viñetas para desglosar consejos).
    - NO incluyas emojis en el texto.
 
-6. FORMATO DE SALIDA (JSON ESTRICTO):
+7. FORMATO DE SALIDA (JSON ESTRICTO):
 Devuelve SIEMPRE tu respuesta en formato JSON estrictamente válido:
 {
   "message": "Tu explicación experta, enriquecida y estructurada en Markdown.",
   "recommended_outfit": {
-    "name": "Nombre creativo y elegante del look (o null si es solo consejo/duda general)",
+    "name": "Nombre creativo y elegante del look",
     "occasion": "casual | formal | fiesta | trabajo | cita | noche | verano | invierno",
     "item_ids": ["id_1", "id_2", "id_3"]
-  },
+  } | null,
   "highlighted_item_ids": ["id_prenda_principal"],
   "follow_up_suggestions": ["Sugerencia 1", "Sugerencia 2", "Sugerencia 3"]
 }
@@ -858,7 +870,97 @@ ${leatherItem ? `\n- **En tu armario**: Tienes **${leatherItem.name}**, que comb
     };
   }
 
-  // Scenario 6: Target item combination - with semantic slang matching (e.g. "sudaca", "scoopers", "tejanos")
+  // Scenario 6: Shopping & Wishlist recommendations (User asking for shopping guidance or missing wardrobe pieces)
+  const isShoppingQuery = lower.includes('comprar') || lower.includes('compras') || lower.includes('shopping') || lower.includes('que me falta') || lower.includes('qué me falta') || lower.includes('básicos que comprar') || lower.includes('adquirir') || lower.includes('shopping list');
+  if (isShoppingQuery) {
+    const isMen = context.user.gender === 'men';
+    const suggestions = isMen
+      ? [
+          '**Cazadora de ante o sobrecamisa estructurada**: En tonos arena, tabaco o marrón chocolate, ideal para elevar capas en entretiempo.',
+          '**Mocasines o botas Chelsea de piel**: Aportan sofisticación instantánea tanto con vaqueros rectos como con pantalones de pinzas.',
+          '**Pantalón de corte recto en tejido texturizado** (pana fina o lana fría): Una alternativa versátil a los jeans tradicionales.',
+          '**Camiseta de algodón grueso de 240g** en blanco roto o crudo: El lienzo básico perfecto para cualquier conjunto.'
+        ]
+      : [
+          '**Blazer oversized estructurado**: En tonos neutros o espiga, perfecto para combinar tanto con vestidos como con jeans y zapatillas.',
+          '**Botines de tacón sensato o mocasines track**: Cómodos y elegantes para el día a día.',
+          '**Pantalón sastre fluido de pernera ancha**: Estiliza la figura y funciona de la mañana a la noche.',
+          '**Jersey de punto fino de cachemira o lana merino**: Pieza atemporal que resiste temporadas.'
+        ];
+
+    return {
+      message: `Para complementar y maximizar el potencial de las prendas que ya tienes registradas en tu armario, aquí tienes mis recomendaciones de compras estratégicas:
+
+${suggestions.map(s => `• ${s}`).join('\n\n')}
+
+Estas piezas te permitirán multiplicar tus combinaciones sin saturar tu armario, aportando textura y versatilidad a tus looks.`,
+      recommended_outfit: null,
+      highlighted_item_ids: items.slice(0, 2).map((i: any) => i.id),
+      follow_up_suggestions: [
+        '¿Cómo combino estas compras con mi ropa?',
+        '¿Qué colores favorecen más mi paleta?',
+        'Armar un look con mis prendas actuales'
+      ]
+    };
+  }
+
+  // Scenario 7: Trends & Seasonal Fashion consultation
+  const isTrendsQuery = lower.includes('tendencia') || lower.includes('tendencias') || lower.includes('que se lleva') || lower.includes('qué se lleva') || lower.includes('moda actual') || lower.includes('estilos de temporada');
+  if (isTrendsQuery && !lower.includes('arma un look') && !lower.includes('ponerme') && !lower.includes('outfit')) {
+    const isMen = context.user.gender === 'men';
+    const trendList = isMen
+      ? [
+          '**Sastrería relajada**: Pantalones con pinzas y perneras amplias combinados con zapatillas retro o mocasines.',
+          '**Paleta tierra y texturas nobles**: Tonos topo, verde salvia, terracota y tejidos con tacto (ante, pana, punto grueso).',
+          '**Superposición inteligente de capas**: Camisetas básicas con sobrecamisas abiertas o chalecos acolchados ligeros.',
+          '**Prendas de inspiración retro/vintage**: Siluetas de los años 90 con cortes limpios y detalles minimalistas.'
+        ]
+      : [
+          '**Estética minimalista sofisticada**: Líneas puras, tonos neutros cálidos y siluetas fluidas pero con estructura.',
+          '**Contrastes de textura**: Mezcla de tejidos vaporosos con prendas de piel, punto grueso o denim estructurado.',
+          '**Calzado protagonista**: Zapatos planos elegantes (mocasines clásicos, bailarinas o botas de caña media).',
+          '**Prendas joya funcionales**: Una pieza llamativa (como una chaqueta con carácter) como eje central del look.'
+        ];
+
+    return {
+      message: `Las tendencias más destacadas y favorecedoras del momento se centran en el equilibrio entre comodidad y elegancia natural:
+
+${trendList.map(t => `• ${t}`).join('\n\n')}
+
+El secreto está en incorporar estas tendencias a través de pequeños detalles o cortes que complementen tu estilo personal.`,
+      recommended_outfit: null,
+      highlighted_item_ids: items.slice(0, 2).map((i: any) => i.id),
+      follow_up_suggestions: [
+        '¿Qué prendas de mi armario encajan con esto?',
+        'Recomiéndame compras para esta temporada',
+        'Armar un look con estas tendencias'
+      ]
+    };
+  }
+
+  // Scenario 8: Saved posts & Inspiration advice (when not explicitly asking for full outfit build)
+  const isSavedAdvice = (lower.includes('look guardado') || lower.includes('inspiración') || lower.includes('inspirarme') || lower.includes('post guardado')) && 
+                        (lower.includes('opinas') || lower.includes('analiza') || lower.includes('estilo') || lower.includes('consejo') || lower.includes('inspirarme'));
+  if (isSavedAdvice && !lower.includes('recrea') && !lower.includes('arma') && !lower.includes('qué me pongo') && !lower.includes('que me pongo')) {
+    return {
+      message: `He analizado la referencia de tu look guardado:
+
+• **Puntos clave de la silueta**: Destaca por un juego de proporciones muy acertado, donde la prenda exterior marca la estructura y la base inferior equilibra el movimiento.
+• **Paleta de color y armonía**: La combinación de tonos neutros crea un impacto visual sofisticado y muy versátil.
+• **Cómo adaptarlo a tu estilo**: Puedes tomar la misma estructura cromática utilizando prendas que compartan esa vibra en tu día a día.
+
+¿Quieres que te prepare una combinación con las piezas de tu armario para recrear esta estética o prefieres consejos sobre qué compras añadir para lograrlo?`,
+      recommended_outfit: null,
+      highlighted_item_ids: items.slice(0, 3).map((i: any) => i.id),
+      follow_up_suggestions: [
+        'Recrea este look con las prendas de mi armario',
+        '¿Qué prendas me faltan para este look?',
+        '¿Para qué ocasión es ideal este estilo?'
+      ]
+    };
+  }
+
+  // Scenario 9: Target item combination - with semantic slang matching (e.g. "sudaca", "scoopers", "tejanos")
   let targetGarment = items.find((i: any) => {
     const name = (i.name || '').toLowerCase();
     const brand = (i.brand || '').toLowerCase();

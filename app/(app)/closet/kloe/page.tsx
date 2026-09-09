@@ -309,11 +309,9 @@ export default function KloePage() {
           posts (
             id,
             caption,
-            description,
-            title,
             image_url,
-            media_url,
-            media_urls
+            style_ids,
+            created_at
           )
         `)
         .eq('user_id', user.id)
@@ -983,21 +981,22 @@ export default function KloePage() {
                 ) : (
                   <div className="grid grid-cols-2 gap-2.5">
                     {savedPosts.map(post => {
-                      const img = post.image_url || post.media_url || (Array.isArray(post.media_urls) ? post.media_urls[0] : null);
+                      const img = post.image_url;
+                      const postLabel = post.caption || 'Look Guardado';
                       return (
                         <div
                           key={post.id}
                           onClick={() => {
                             setShowSavedDrawer(false);
-                            handleSend(`¿Cómo puedo recrear este look guardado (${post.title || post.caption || 'inspiración'}) usando las prendas de mi armario?`);
+                            handleSend(`¿Cómo me recomendarías inspirarme o recrear este look guardado (${postLabel})?`);
                           }}
-                          className="group relative aspect-[3/4] bg-[var(--background-secondary)] rounded-2xl overflow-hidden border border-[var(--border-color)] hover:border-purple-400 cursor-pointer transition-all p-1 flex flex-col justify-between"
+                          className="group relative aspect-[3/4] bg-[var(--background-secondary)] rounded-2xl overflow-hidden border border-[var(--border-color)] hover:border-[var(--brand-pink)] cursor-pointer transition-all p-1 flex flex-col justify-between"
                         >
                           {img ? (
                             <div className="relative w-full h-full">
                               <Image
                                 src={img}
-                                alt={post.title || 'Look guardado'}
+                                alt={postLabel}
                                 fill
                                 className="object-cover rounded-xl group-hover:scale-105 transition-transform"
                               />
@@ -1009,7 +1008,7 @@ export default function KloePage() {
                           )}
                           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-1.5">
                             <p className="text-[10px] font-semibold text-white truncate text-center">
-                              {post.title || post.caption || 'Look Guardado'}
+                              {postLabel}
                             </p>
                           </div>
                         </div>

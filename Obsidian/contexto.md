@@ -658,9 +658,16 @@ En cada conversación, el backend alimenta a CloSy con:
   - Se eliminó el campo `scheduled_for` del payload de inserción y actualización enviado a la tabla `outfits` (la cual no posee esa columna).
   - La programación de looks se delega y sincroniza limpiamente en la tabla relacional dedicada `calendar_outfits (user_id, outfit_id, date)`, permitiendo guardar outfits tanto programados como no programados sin errores de esquema.
   - Al editar un outfit existente, se consulta `calendar_outfits` para pre-cargar la fecha programada si existe.
-- **Rediseño Compacto del Modal Flotante de Prendas Seleccionadas (`/create`)**:
-  - Se redujo el ancho excesivo del contenedor flotante de prendas seleccionadas de `max-w-4xl / xl:max-w-5xl` a `w-[92vw] sm:w-auto sm:max-w-lg md:max-w-xl`.
-  - Tarjetas de prenda estilizadas y proporcionadas (`max-w-[155px] sm:max-w-[175px]`, miniatura `w-8 h-8 sm:w-9 sm:h-9`, botón de borrado `w-5 h-5`), ofreciendo un dock flotante tipo *Dynamic Island* elegante y centrado en escritorio y móvil.
+### 44. Corrección de Consulta de Guardados y Decisión Inteligente de Intención en Kloe AI (Septiembre 2026)
+- **Corrección de Error 400 en Consulta de Guardados (`/saves?select=...`)**:
+  - Se corrigió la consulta de posts guardados en `app/(app)/closet/kloe/page.tsx` y en `lib/closy/contextIndexer.ts`, eliminando columnas no existentes en la tabla `posts` (`description`, `title`, `media_url`, `media_urls`) y seleccionando exclusivamente los campos reales de la base de datos (`id, caption, image_url, style_ids, created_at`).
+- **Decisión Inteligente de Intención Editorial en Kloe AI (`app/api/closy/chat/route.ts`)**:
+  - Kloe ya no devuelve obligatoriamente un conjunto de outfit en cada mensaje. La IA evalúa la intención del usuario:
+    - **Petición de Outfit / Combinación**: Genera `recommended_outfit` con las prendas reales de su armario y la explicación del look.
+    - **Tendencias, Estilos o Preguntas Generales**: Ofrece análisis de tendencias, cortes, paletas y siluetas en prosa Markdown enriquecida con `recommended_outfit: null`.
+    - **Recomendaciones de Compras / Shopping**: Sugiere de 2 a 4 adquisiciones estratégicas con materiales nobles y cortes clave para elevar su armario con `recommended_outfit: null`.
+    - **Análisis de Posts Guardados (Inspiración)**: Analiza el look guardado, desglosa su estética y propone compras o ideas de estilo, creando un outfit solo si el usuario pide explícitamente recrearlo o ponérselo con su ropa.
+
 
 
 

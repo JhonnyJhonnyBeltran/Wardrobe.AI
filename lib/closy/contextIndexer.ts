@@ -156,12 +156,8 @@ export async function buildUserStylingContext(
           posts (
             id,
             caption,
-            description,
-            title,
             style_ids,
-            image_url,
-            media_url,
-            media_urls
+            image_url
           )
         `)
         .eq('user_id', userId)
@@ -173,9 +169,9 @@ export async function buildUserStylingContext(
         .filter(Boolean)
         .map((p: any) => ({
           id: p.id,
-          title: p.title || p.caption || p.description || 'Look Guardado',
-          description: p.description || p.caption,
-          imageUrl: p.image_url || p.media_url || (Array.isArray(p.media_urls) ? p.media_urls[0] : undefined),
+          title: p.caption || 'Look Guardado',
+          description: p.caption,
+          imageUrl: p.image_url,
           styleIds: p.style_ids || []
         }));
     } catch (saveErr) {
