@@ -9,7 +9,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { processClothingImage, type ProcessingStage, STAGE_MESSAGES } from '@/lib/imageProcessing';
 import { extractDominantColor, hexToRgb, rgbToColorName } from '@/lib/utils/colorUtils';
-import { DEFAULT_FORM_DATA } from '../constants';
+import { DEFAULT_FORM_DATA, COLOR_OPTIONS, matchColorToOption } from '../constants';
 import { useUiStore } from '@/store/uiStore';
 import { normalizeBrand } from '@/lib/utils/string';
 import type { ItemFormData, FormMode, InputMethod, BatchItem } from '../types';
@@ -342,9 +342,10 @@ export function useAddItemForm({
                 }
             }
 
+            const matchedColor = matchColorToOption(detectedColor, detectedColorHex);
             const detectedType = aiAnalysis?.category || 'top';
             let detectedName = aiAnalysis?.name;
-            if (!detectedName || detectedName.trim() === '') {
+            if (!detectedName || detectedName.trim() === '' || detectedName === 'Nueva prenda') {
                 const categoryLabels: Record<string, string> = {
                     top: 'Camiseta',
                     shirt: 'Camisa',
@@ -362,7 +363,7 @@ export function useAddItemForm({
                     other: 'Prenda',
                 };
                 const catName = categoryLabels[detectedType] || 'Prenda';
-                detectedName = detectedColor ? `${catName} ${detectedColor}` : catName;
+                detectedName = `${catName} ${matchedColor.name}`;
             }
 
             return {
@@ -371,25 +372,26 @@ export function useAddItemForm({
                     ...aiAnalysis,
                     name: detectedName,
                     category: detectedType,
-                    color: detectedColor,
-                    colorHex: detectedColorHex,
+                    color: matchedColor.name,
+                    colorHex: matchedColor.hex,
                 },
                 detectedName,
                 detectedType,
-                detectedColor: detectedColor || 'Negro',
-                detectedColorHex: detectedColorHex || '#121212',
+                detectedColor: matchedColor.name,
+                detectedColorHex: matchedColor.hex,
                 isInappropriate: !!aiAnalysis?.isInappropriate,
                 inappropriateReason: aiAnalysis?.inappropriateReason,
             };
         } catch (err) {
             console.error('[AddItemForm] AI / Image analysis failed:', err);
+            const fallbackColor = matchColorToOption('Negro', '#121212');
             return {
                 processedImage: processResult && processResult.success && processResult.imageUrl ? processResult.imageUrl : null,
                 aiAnalysis: null,
                 detectedName: 'Nueva prenda',
                 detectedType: 'top',
-                detectedColor: 'Negro',
-                detectedColorHex: '#121212',
+                detectedColor: fallbackColor.name,
+                detectedColorHex: fallbackColor.hex,
                 isInappropriate: false,
             };
         }
@@ -538,55 +540,201 @@ export function useAddItemForm({
         setProcessingStage('compressing');
         setError(null);
 
-        // Yield to browser
-        await new Promise(r => setTimeout(r, 60));
+        // 1. Kick off AI Classification immediately
+        const analyzePromise = (async () => {
+            try {
+                const res = await fetch('/api/analyze-clothing', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ imageBase64: originalDataUrl })
+                });
+                if (res.ok) {
+                    return await res.json();
+                }
+            } catch (err) {
+                console.warn('[AddItemForm] AI classification error:', err);
+            }
+            return null;
+        })();
 
-        const result = await processSingleFile(file, originalDataUrl);
+        // 2. Real-time form update: As soon as AI responds (~1s), populate name, type, and color immediately in UI!
+        analyzePromise.then(async (aiAnalysis) => {
+            let detectedColor = aiAnalysis?.color;
+            let detectedColorHex = aiAnalysis?.colorHex;
 
-        if (result.isInappropriate) {
+            if (!detectedColor || !detectedColorHex) {
+                try {
+                    const dom = await extractDominantColor(originalDataUrl);
+                    if (dom && dom.name) {
+                        detectedColor = detectedColor || dom.name;
+                        detectedColorHex = detectedColorHex || dom.hex;
+                    }
+                } catch (e) {
+                    console.warn('Dominant color fallback error:', e);
+                }
+            }
+
+            const matchedColor = matchColorToOption(detectedColor, detectedColorHex);
+            const detectedType = aiAnalysis?.category || 'top';
+            let detectedName = aiAnalysis?.name;
+            if (!detectedName || detectedName.trim() === '' || detectedName === 'Nueva prenda') {
+                const categoryLabels: Record<string, string> = {
+                    top: 'Camiseta',
+                    shirt: 'Camisa',
+                    sweater: 'Jersey',
+                    hoodie: 'Sudadera',
+                    jacket: 'Chaqueta',
+                    outerwear: 'Abrigo',
+                    bottom: 'Pantalón',
+                    shorts: 'Shorts',
+                    skirt: 'Falda',
+                    dress: 'Vestido',
+                    shoes: 'Calzado',
+                    bag: 'Bolso',
+                    accessory: 'Accesorio',
+                    other: 'Prenda',
+                };
+                const catName = categoryLabels[detectedType] || 'Prenda';
+                detectedName = `${catName} ${matchedColor.name}`;
+            }
+
+            setFormData(prev => ({
+                ...prev,
+                name: detectedName,
+                type: detectedType,
+                color: matchedColor.name,
+                colorHex: matchedColor.hex,
+                fabric: aiAnalysis?.fabric || prev.fabric || 'Algodón',
+                season: aiAnalysis?.season || prev.season || 'all-season',
+            }));
+
+            // Sync with pending upload store in real-time
+            useUiStore.getState().setPendingUploadItem({
+                formData: {
+                    ...DEFAULT_FORM_DATA,
+                    name: detectedName,
+                    type: detectedType,
+                    color: matchedColor.name,
+                    colorHex: matchedColor.hex,
+                },
+                image: originalDataUrl,
+                originalImage: originalDataUrl,
+                name: detectedName,
+            });
+        });
+
+        // 3. In parallel, run background removal with retry mechanism
+        let processResult: any = null;
+        for (let attempt = 1; attempt <= 2; attempt++) {
+            try {
+                processResult = await processClothingImage(
+                    file,
+                    {
+                        normalize: true,
+                        canvasWidth: 1000,
+                        canvasHeight: 1250,
+                        quality: 'fast',
+                        transparentBackground: true,
+                    }
+                );
+                if (processResult && processResult.success && processResult.imageUrl) {
+                    break;
+                }
+            } catch (err) {
+                console.warn(`[AddItemForm] Background removal attempt ${attempt} failed:`, err);
+                if (attempt < 2) {
+                    await new Promise(r => setTimeout(r, 200));
+                }
+            }
+        }
+
+        // 4. Await AI analysis completion to finalize
+        const aiAnalysis = await analyzePromise;
+
+        if (aiAnalysis?.isInappropriate) {
             setImage(null);
             setOriginalImage(null);
             setProcessedImage(null);
             setSelectedFile(null);
             setProcessingStage('error');
             setError(
-                result.inappropriateReason || 
+                aiAnalysis.inappropriateReason || 
                 '⚠️ Imagen no permitida: Hemos eliminado la imagen porque contiene contenido inapropiado que no cumple con las normas de la comunidad.'
             );
             setIsProcessing(false);
             return;
         }
 
-        if (result.processedImage) {
-            setProcessedImage(result.processedImage);
-            setImage(result.processedImage);
+        const finalProcessedImage = processResult && processResult.success && processResult.imageUrl ? processResult.imageUrl : null;
+        if (finalProcessedImage) {
+            setProcessedImage(finalProcessedImage);
+            setImage(finalProcessedImage);
         }
 
-        const newFormData: ItemFormData = {
-            ...formData,
-            name: result.detectedName || formData.name || 'Nueva prenda',
-            type: result.detectedType || formData.type || 'top',
-            color: result.detectedColor || formData.color || 'Negro',
-            colorHex: result.detectedColorHex || formData.colorHex || '#121212',
-            fabric: result.aiAnalysis?.fabric || formData.fabric || 'Algodón',
-            season: result.aiAnalysis?.season || formData.season || 'all-season',
-        };
+        let detectedColor = aiAnalysis?.color;
+        let detectedColorHex = aiAnalysis?.colorHex;
+        if (!detectedColor || !detectedColorHex) {
+            try {
+                const dom = await extractDominantColor(finalProcessedImage || originalDataUrl);
+                if (dom && dom.name) {
+                    detectedColor = detectedColor || dom.name;
+                    detectedColorHex = detectedColorHex || dom.hex;
+                }
+            } catch (e) {
+                console.warn('Dominant color fallback error:', e);
+            }
+        }
 
-        setFormData(newFormData);
+        const matchedColor = matchColorToOption(detectedColor, detectedColorHex);
+        const detectedType = aiAnalysis?.category || 'top';
+        let detectedName = aiAnalysis?.name;
+        if (!detectedName || detectedName.trim() === '' || detectedName === 'Nueva prenda') {
+            const categoryLabels: Record<string, string> = {
+                top: 'Camiseta',
+                shirt: 'Camisa',
+                sweater: 'Jersey',
+                hoodie: 'Sudadera',
+                jacket: 'Chaqueta',
+                outerwear: 'Abrigo',
+                bottom: 'Pantalón',
+                shorts: 'Shorts',
+                skirt: 'Falda',
+                dress: 'Vestido',
+                shoes: 'Calzado',
+                bag: 'Bolso',
+                accessory: 'Accesorio',
+                other: 'Prenda',
+            };
+            const catName = categoryLabels[detectedType] || 'Prenda';
+            detectedName = `${catName} ${matchedColor.name}`;
+        }
 
-        // Save single item to pending store
-        useUiStore.getState().setPendingUploadItem({
-            formData: newFormData,
-            image: result.processedImage || originalDataUrl,
-            originalImage: originalDataUrl,
-            processedImage: result.processedImage,
-            name: newFormData.name || 'Nueva prenda'
+        setFormData(prev => {
+            const finalFormData: ItemFormData = {
+                ...prev,
+                name: prev.name && prev.name !== 'Nueva prenda' && !prev.name.startsWith('Prenda ') ? prev.name : detectedName,
+                type: detectedType || prev.type || 'top',
+                color: matchedColor.name,
+                colorHex: matchedColor.hex,
+                fabric: aiAnalysis?.fabric || prev.fabric || 'Algodón',
+                season: aiAnalysis?.season || prev.season || 'all-season',
+            };
+
+            useUiStore.getState().setPendingUploadItem({
+                formData: finalFormData,
+                image: finalProcessedImage || originalDataUrl,
+                originalImage: originalDataUrl,
+                processedImage: finalProcessedImage,
+                name: finalFormData.name || 'Nueva prenda'
+            });
+
+            return finalFormData;
         });
 
         setProcessingStage('complete');
         setIsProcessing(false);
         e.target.value = '';
-    }, [createOptimizedPreview, processSingleFile, formData]);
+    }, [createOptimizedPreview]);
 
     // Append additional files to the upload (promotes single upload to batch if needed)
     const appendFiles = useCallback(async (newRawFiles: FileList | File[]) => {

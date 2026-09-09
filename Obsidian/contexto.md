@@ -644,3 +644,13 @@ En cada conversación, el backend alimenta a CloSy con:
 - **Confirmación al Cerrar con "X" (`handleHeaderCloseClick`)**:
   - Al pulsar la "X" de la cabecera cuando hay prendas o fotos pendientes, se despliega el modal de confirmación con las opciones *"Seguir editando"* y *"Eliminar"*, protegiendo al usuario de descartes accidentales.
 
+### 42. Auto-detección Instantánea de Nombre, Tipo y Color en Subida Individual (Septiembre 2026)
+- **Actualización Visual en Tiempo Real (< 1s)**:
+  - En la subida de una sola prenda (`useAddItemForm.ts`), la petición de clasificación de IA con Gemini Vision (`/api/analyze-clothing`) y extracción de colorimetría se ejecuta de forma concurrente con el proceso de eliminación de fondo.
+  - En cuanto la IA responde (aprox. 800ms-1s), se actualiza inmediatamente el estado del formulario (`setFormData`) y la persistencia en `useUiStore` con el nombre, tipo de prenda y color detectados, mostrando los valores y marcando el círculo cromático correspondiente en la interfaz en tiempo real sin tener que esperar a que finalice el recorte de fondo (que puede demorar de 3 a 5s).
+- **Mapeo Inteligente a la Paleta Curada (`matchColorToOption` en `constants.ts`)**:
+  - Función de correspondencia cromática que mapea cualquier descriptor retornado por la IA (ej. *"Azul denim"*, *"Verde militar"*, *"Blanco roto"*) o distancia euclidiana RGB sobre el color hexadecimal contra las 16 opciones oficiales de `COLOR_OPTIONS` (`name` y `hex`), garantizando que siempre se active visualmente el color correcto en los selectores.
+- **Generación Automática de Nombres Descriptivos**:
+  - Si la IA devuelve un nombre vacío o genérico (*"Nueva prenda"*), se compone dinámicamente un nombre descriptivo combinando el tipo anatómico y el color principal (ej. *"Camiseta Azul"*, *"Pantalón Negro"*, *"Chaqueta Verde"*).
+
+
