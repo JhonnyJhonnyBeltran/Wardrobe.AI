@@ -81,11 +81,11 @@ export const useRealtimeStore = create<RealtimeStore>((set, get) => ({
       try {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('notification_settings')
+          .select('notification_preferences')
           .eq('id', userId)
           .maybeSingle();
 
-        const dbLastViewed = (profile?.notification_settings as any)?.last_viewed_activity;
+        const dbLastViewed = (profile?.notification_preferences as any)?.last_viewed_activity;
         if (dbLastViewed) {
           lastViewed = dbLastViewed;
           if (typeof window !== 'undefined') {
@@ -172,18 +172,18 @@ export const useRealtimeStore = create<RealtimeStore>((set, get) => ({
             .eq('user_id', user.id)
             .eq('read', false);
 
-          // 2. Update profile timestamp
+          // 2. Update profile timestamp in notification_preferences
           const { data: currentProfile } = await supabase
             .from('profiles')
-            .select('notification_settings')
+            .select('notification_preferences')
             .eq('id', user.id)
             .maybeSingle();
 
-          const currentSettings = (currentProfile?.notification_settings as Record<string, any>) || {};
+          const currentSettings = (currentProfile?.notification_preferences as Record<string, any>) || {};
           await supabase
             .from('profiles')
             .update({
-              notification_settings: {
+              notification_preferences: {
                 ...currentSettings,
                 last_viewed_activity: now,
               }

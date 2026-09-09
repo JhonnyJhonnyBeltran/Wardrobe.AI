@@ -61,16 +61,16 @@ export default function CookiesBanner() {
             if (session?.user?.id) {
                 const { data: currentProfile } = await supabase
                     .from('profiles')
-                    .select('notification_settings')
+                    .select('notification_preferences')
                     .eq('id', session.user.id)
                     .maybeSingle();
 
-                const existingSettings = (currentProfile as any)?.notification_settings || {};
+                const existingPrefs = (currentProfile as any)?.notification_preferences || {};
                 await supabase
                     .from('profiles')
                     .update({
-                        notification_settings: {
-                            ...existingSettings,
+                        notification_preferences: {
+                            ...existingPrefs,
                             cookie_consent: payload,
                         }
                     } as any)

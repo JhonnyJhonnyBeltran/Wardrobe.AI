@@ -152,13 +152,13 @@ export function UserProvider({ children }: { children: ReactNode }) {
         visualStylePreferences: styleSource.visual_style_preferences,
         styleCompleted: styleSource.style_completed || false,
         isPrivate: styleSource.is_private || false,
-        notificationSettings: styleSource.notification_settings || { push: true, email: true },
+        notificationSettings: styleSource.notification_preferences || styleSource.notification_settings || { push: true, email: true },
       }));
 
       // Synchronize Cookie Consent to guarantee single-prompt experience
       if (typeof window !== 'undefined') {
         try {
-          const dbConsent = styleSource.notification_settings?.cookie_consent;
+          const dbConsent = styleSource.notification_preferences?.cookie_consent || styleSource.notification_settings?.cookie_consent;
           const localConsent = localStorage.getItem('klozet_cookie_consent_v1');
 
           if (dbConsent) {
@@ -167,12 +167,12 @@ export function UserProvider({ children }: { children: ReactNode }) {
           } else if (localConsent) {
             // Local consent exists but DB doesn't have it -> backfill to DB
             const parsedLocal = JSON.parse(localConsent);
-            const currentSettings = styleSource.notification_settings || {};
+            const currentPrefs = styleSource.notification_preferences || {};
             supabase
               .from('profiles')
               .update({
-                notification_settings: {
-                  ...currentSettings,
+                notification_preferences: {
+                  ...currentPrefs,
                   cookie_consent: parsedLocal,
                 }
               } as any)

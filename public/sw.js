@@ -1,15 +1,17 @@
-/// <reference lib="webworker" />
-
-declare const self: ServiceWorkerGlobalScope;
-
-export {};
+// Service Worker for Klozet Web Push & Notifications
+// Pure vanilla JavaScript
 
 self.addEventListener('push', (event) => {
   if (!event.data) return;
 
-  const data = event.data.json();
+  let data = {};
+  try {
+    data = event.data.json();
+  } catch (e) {
+    data = { body: event.data.text() };
+  }
 
-  const options: NotificationOptions = {
+  const options = {
     body: data.body || '',
     icon: data.icon || '/icon-192x192.png',
     badge: data.badge || '/badge-72x72.png',
@@ -64,12 +66,11 @@ self.addEventListener('message', (event) => {
 
 // Listen for install event
 self.addEventListener('install', (event) => {
-  console.log('Service Worker installing...');
   self.skipWaiting();
 });
 
 // Listen for activate event
 self.addEventListener('activate', (event) => {
-  console.log('Service Worker activated...');
   event.waitUntil(self.clients.claim());
 });
+

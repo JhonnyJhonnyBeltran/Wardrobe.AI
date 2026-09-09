@@ -527,6 +527,14 @@ En cada conversación, el backend alimenta a CloSy con:
   - Erradicado el borde discontinuo/punteado que no respetaba la curvatura continua del contenedor y generaba esquinas cortadas en hover.
   - Tarjeta de subida con squircle continuo `rounded-3xl`, borde sólido hairline `border border-[var(--border-color)]`, microinteracción elástica `active:scale-[0.98]` y transición suave de luz al pasar el cursor (`hover:border-[var(--brand-pink)]/50`).
 
+### 31. Corrección de Service Worker y Esquema de Notificaciones en Supabase (Septiembre 2026)
+- **Service Worker en JavaScript Puro (`public/sw.js`)**:
+  - Se eliminaron las directivas y sintaxis de TypeScript (`declare const self`, `export {}`, tipados `NotificationOptions`) en `public/sw.js` que provocaban el error `Uncaught SyntaxError: Unexpected token 'const'` al evaluarse en el navegador.
+  - Ahora es un script vanilla ES6 nativo 100% compatible con todos los navegadores móviles y de escritorio.
+- **Corrección de Columna `notification_preferences` en Supabase**:
+  - En `store/realtimeStore.ts`, `store/userStore.tsx`, `components/CookiesBanner.tsx`, `lib/hooks/useAuth.ts` y `/profile/settings/page.tsx`, se unificaron las consultas y mutaciones para utilizar la columna real `notification_preferences` (JSONB) en la tabla `profiles`, erradicando los errores `400 (Bad Request)` en el endpoint REST de Supabase.
+
+
 
 
 
