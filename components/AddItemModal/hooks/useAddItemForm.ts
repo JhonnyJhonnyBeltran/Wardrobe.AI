@@ -207,12 +207,22 @@ export function useAddItemForm({
             // ── Create mode: restore from pending store or start fresh ──
             const pendingItem = useUiStore.getState().pendingUploadItem;
             if (pendingItem) {
-                setFormData(pendingItem.formData || DEFAULT_FORM_DATA);
-                setImage(pendingItem.image || null);
-                setOriginalImage(pendingItem.originalImage || null);
-                setProcessedImage(pendingItem.processedImage || null);
-                setBatchItems([]);
-                setCurrentBatchIndex(0);
+                if (pendingItem.batchItems && pendingItem.batchItems.length > 0) {
+                    setBatchItems(pendingItem.batchItems);
+                    setCurrentBatchIndex(0);
+                    const first = pendingItem.batchItems[0];
+                    setFormData(first?.formData || DEFAULT_FORM_DATA);
+                    setImage(first?.image || first?.originalImage || null);
+                    setOriginalImage(first?.originalImage || null);
+                    setProcessedImage(first?.processedImage || null);
+                } else {
+                    setFormData(pendingItem.formData || DEFAULT_FORM_DATA);
+                    setImage(pendingItem.image || null);
+                    setOriginalImage(pendingItem.originalImage || null);
+                    setProcessedImage(pendingItem.processedImage || null);
+                    setBatchItems([]);
+                    setCurrentBatchIndex(0);
+                }
             } else {
                 resetForm();
             }
@@ -220,7 +230,7 @@ export function useAddItemForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isOpen, isEditing, initialData]);
 
-    // Process a single file with background removal + Gemini vision
+    // Process a single file with background removal + Gemini vision with automatic retry
     const processSingleFile = useCallback(async (file: File, initialDataUrl: string) => {
         const visionBase64 = await optimizeImageForVision(initialDataUrl);
 
@@ -236,18 +246,32 @@ export function useAddItemForm({
             return null;
         });
 
-        try {
-            const processResult = await processClothingImage(
-                file,
-                {
-                    normalize: true,
-                    canvasWidth: 1200,
-                    canvasHeight: 1500,
-                    quality: 'quality',
-                    transparentBackground: true,
+        // Background removal with retry mechanism (up to 2 attempts)
+        let processResult: any = null;
+        for (let attempt = 1; attempt <= 2; attempt++) {
+            try {
+                processResult = await processClothingImage(
+                    file,
+                    {
+                        normalize: true,
+                        canvasWidth: 1200,
+                        canvasHeight: 1500,
+                        quality: 'quality',
+                        transparentBackground: true,
+                    }
+                );
+                if (processResult && processResult.success && processResult.imageUrl) {
+                    break;
                 }
-            );
+            } catch (err) {
+                console.warn(`[AddItemForm] Background removal attempt ${attempt} failed:`, err);
+                if (attempt < 2) {
+                    await new Promise(r => setTimeout(r, 300));
+                }
+            }
+        }
 
+        try {
             const aiAnalysis = await analyzePromise;
 
             let detectedColor = aiAnalysis?.color;
@@ -255,7 +279,7 @@ export function useAddItemForm({
 
             if (!detectedColor || !detectedColorHex) {
                 try {
-                    const dom = await extractDominantColor(processResult.imageUrl || initialDataUrl);
+                    const dom = await extractDominantColor(processResult?.imageUrl || initialDataUrl);
                     if (dom && dom.name) {
                         detectedColor = detectedColor || dom.name;
                         detectedColorHex = detectedColorHex || dom.hex;
@@ -265,19 +289,52 @@ export function useAddItemForm({
                 }
             }
 
+            const detectedType = aiAnalysis?.category || 'top';
+            let detectedName = aiAnalysis?.name;
+            if (!detectedName || detectedName.trim() === '') {
+                const categoryLabels: Record<string, string> = {
+                    top: 'Camiseta',
+                    shirt: 'Camisa',
+                    sweater: 'Jersey',
+                    hoodie: 'Sudadera',
+                    jacket: 'Chaqueta',
+                    outerwear: 'Abrigo',
+                    bottom: 'Pantalón',
+                    shorts: 'Shorts',
+                    skirt: 'Falda',
+                    dress: 'Vestido',
+                    shoes: 'Calzado',
+                    bag: 'Bolso',
+                    accessory: 'Accesorio',
+                    other: 'Prenda',
+                };
+                const catName = categoryLabels[detectedType] || 'Prenda';
+                detectedName = detectedColor ? `${catName} ${detectedColor}` : catName;
+            }
+
             return {
-                processedImage: processResult.success && processResult.imageUrl ? processResult.imageUrl : null,
-                aiAnalysis,
+                processedImage: processResult && processResult.success && processResult.imageUrl ? processResult.imageUrl : null,
+                aiAnalysis: {
+                    ...aiAnalysis,
+                    name: detectedName,
+                    category: detectedType,
+                    color: detectedColor,
+                    colorHex: detectedColorHex,
+                },
+                detectedName,
+                detectedType,
                 detectedColor: detectedColor || 'Negro',
                 detectedColorHex: detectedColorHex || '#121212',
                 isInappropriate: !!aiAnalysis?.isInappropriate,
                 inappropriateReason: aiAnalysis?.inappropriateReason,
             };
         } catch (err) {
-            console.error('[AddItemForm] Image processing failed:', err);
+            console.error('[AddItemForm] AI / Image analysis failed:', err);
             return {
-                processedImage: null,
+                processedImage: processResult && processResult.success && processResult.imageUrl ? processResult.imageUrl : null,
                 aiAnalysis: null,
+                detectedName: 'Nueva prenda',
+                detectedType: 'top',
                 detectedColor: 'Negro',
                 detectedColorHex: '#121212',
                 isInappropriate: false,
@@ -372,8 +429,8 @@ export function useAddItemForm({
                                         ...currentItem.formData,
                                         name: hasCustomName 
                                             ? currentItem.formData.name 
-                                            : (result.aiAnalysis?.name || `Prenda ${itemIndex + 1}`),
-                                        type: result.aiAnalysis?.category || currentItem.formData.type || 'top',
+                                            : (result.detectedName || `Prenda ${itemIndex + 1}`),
+                                        type: result.detectedType || currentItem.formData.type || 'top',
                                         color: result.detectedColor || currentItem.formData.color || 'Negro',
                                         colorHex: result.detectedColorHex || currentItem.formData.colorHex || '#121212',
                                         fabric: result.aiAnalysis?.fabric || currentItem.formData.fabric || 'Algodón',
@@ -458,10 +515,8 @@ export function useAddItemForm({
 
         setFormData(prev => ({
             ...prev,
-            name: (prev.name && prev.name.trim() !== '' && prev.name !== DEFAULT_FORM_DATA.name && prev.name !== 'Nueva prenda') 
-                ? prev.name 
-                : (result.aiAnalysis?.name || prev.name || 'Nueva prenda'),
-            type: result.aiAnalysis?.category || prev.type || 'top',
+            name: result.detectedName || prev.name || 'Nueva prenda',
+            type: result.detectedType || prev.type || 'top',
             color: result.detectedColor || prev.color || 'Negro',
             colorHex: result.detectedColorHex || prev.colorHex || '#121212',
             fabric: result.aiAnalysis?.fabric || prev.fabric || 'Algodón',

@@ -245,33 +245,44 @@ export default function AddItemModal({
     };
 
     const saveToPending = () => {
-        if (!isEditing && (image || formData.name.trim() !== '')) {
-            useUiStore.getState().setPendingUploadItem({
-                formData,
-                image,
-                originalImage,
-                processedImage,
-                name: formData.name || 'Nueva prenda'
-            });
+        if (!isEditing) {
+            if (batchItems && batchItems.length > 0) {
+                useUiStore.getState().setPendingUploadItem({
+                    batchItems,
+                    formData: batchItems[currentBatchIndex]?.formData || formData,
+                    image: batchItems[currentBatchIndex]?.image || image,
+                    originalImage: batchItems[currentBatchIndex]?.originalImage || originalImage,
+                    processedImage: batchItems[currentBatchIndex]?.processedImage || processedImage,
+                    name: `Subida múltiple (${batchItems.length} prendas)`
+                });
+            } else if (image || (formData.name && formData.name.trim() !== '' && formData.name !== 'Nueva prenda')) {
+                useUiStore.getState().setPendingUploadItem({
+                    formData,
+                    image,
+                    originalImage,
+                    processedImage,
+                    name: formData.name || 'Nueva prenda'
+                });
+            }
         }
     };
 
     const handleBackdropClick = () => {
-        if (!isEditing && (image || formData.name.trim() !== '')) {
+        if (!isEditing && (isBatch || image || formData.name.trim() !== '')) {
             saveToPending();
         }
         onClose();
     };
 
     const handleHeaderCloseClick = () => {
-        if (!isEditing && (image || formData.name.trim() !== '')) {
+        if (!isEditing && (isBatch || image || formData.name.trim() !== '')) {
             saveToPending();
         }
         onClose();
     };
 
     const handleCancelButtonClick = () => {
-        if (!isEditing && (image || formData.name.trim() !== '')) {
+        if (!isEditing && (isBatch || image || formData.name.trim() !== '')) {
             setShowCancelConfirm(true);
         } else {
             onClose();
@@ -416,7 +427,7 @@ export default function AddItemModal({
                                     />
                                 ) : (
                                     /* ── Single Item View ── */
-                                    <>
+                                    <div className="space-y-4">
                                         {/* Image Area */}
                                         <div className="min-h-[150px]">
                                             <ImageUploader
@@ -424,6 +435,25 @@ export default function AddItemModal({
                                                 isProcessing={isProcessing}
                                                 processingMessage={processingMessage}
                                                 onImageUpload={handleImageUpload}
+                                            />
+                                        </div>
+
+                                        {/* Nombre de la prenda (auto-detected, always visible) */}
+                                        <div>
+                                            <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
+                                                Nombre de la prenda
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={formData.name}
+                                                onChange={(e) =>
+                                                    setFormData((prev) => ({
+                                                        ...prev,
+                                                        name: e.target.value,
+                                                    }))
+                                                }
+                                                placeholder="ej: Camiseta Polo Ralph Lauren"
+                                                className="w-full px-4 py-2.5 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:border-[var(--foreground-tertiary)] text-sm font-medium"
                                             />
                                         </div>
 
@@ -437,33 +467,42 @@ export default function AddItemModal({
                                             options={categories}
                                         />
 
+                                        {/* Color — always visible */}
+                                        <div>
+                                            <label className="block text-xs font-bold text-[var(--foreground)] mb-1.5">
+                                                Color
+                                            </label>
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                {COLOR_OPTIONS.map((colorOption) => (
+                                                    <button
+                                                        key={colorOption.name}
+                                                        type="button"
+                                                        onClick={() => handleColorSelect(colorOption)}
+                                                        className={`w-7 h-7 rounded-full border transition-all cursor-pointer ${
+                                                            formData.color === colorOption.name
+                                                                ? 'border-[var(--brand-pink)] scale-110 ring-2 ring-[var(--brand-pink)]/30'
+                                                                : 'border-[var(--border-color)] hover:scale-105'
+                                                        }`}
+                                                        style={{ backgroundColor: colorOption.hex }}
+                                                        title={colorOption.name}
+                                                    />
+                                                ))}
+                                                {formData.color && (
+                                                    <span className="text-xs font-medium text-[var(--foreground-secondary)] ml-1">
+                                                        {formData.color}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+
                                         {/* Extended fields (complete mode or edit mode) */}
                                         {showAllFields && (
                                             <motion.div
                                                 initial={{ opacity: 0, height: 0 }}
                                                 animate={{ opacity: 1, height: 'auto' }}
                                                 exit={{ opacity: 0, height: 0 }}
-                                                className="space-y-4"
+                                                className="space-y-4 pt-2"
                                             >
-                                                {/* Name */}
-                                                <div>
-                                                    <label className="block text-xs font-bold text-[var(--foreground)] mb-1">
-                                                        Nombre
-                                                    </label>
-                                                    <input
-                                                        type="text"
-                                                        value={formData.name}
-                                                        onChange={(e) =>
-                                                            setFormData((prev) => ({
-                                                                ...prev,
-                                                                name: e.target.value,
-                                                            }))
-                                                        }
-                                                        placeholder="ej: Blazer Oversize"
-                                                        className="w-full px-4 py-2.5 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:border-[var(--foreground-tertiary)]"
-                                                    />
-                                                </div>
-
                                                 {/* Brand */}
                                                 <DropdownWithCustom
                                                     label="Marca"
@@ -531,44 +570,6 @@ export default function AddItemModal({
                                                     />
                                                 </div>
 
-                                                {/* Color */}
-                                                <div>
-                                                    <label className="block text-xs font-bold text-[var(--foreground)] mb-2">
-                                                        Color
-                                                    </label>
-                                                    <div className="flex flex-wrap gap-2 mb-2">
-                                                        {COLOR_OPTIONS.map((colorOption) => (
-                                                            <button
-                                                                key={colorOption.name}
-                                                                type="button"
-                                                                onClick={() => handleColorSelect(colorOption)}
-                                                                className={`w-8 h-8 rounded-full border-2 transition-all ${
-                                                                    formData.color === colorOption.name
-                                                                        ? 'border-[var(--brand-pink)] scale-110 ring-2 ring-[var(--brand-pink)]/30'
-                                                                        : 'border-[var(--border-color)] hover:scale-105'
-                                                                }`}
-                                                                style={{ backgroundColor: colorOption.hex }}
-                                                                title={colorOption.name}
-                                                            />
-                                                        ))}
-                                                        <input
-                                                            type="color"
-                                                            value={formData.colorHex}
-                                                            onChange={(e) =>
-                                                                handleColorPickerChange(e.target.value)
-                                                            }
-                                                            className="w-8 h-8 rounded-full border border-[var(--border-color)] cursor-pointer"
-                                                            title="Color personalizado"
-                                                        />
-                                                    </div>
-                                                    {formData.color && (
-                                                        <p className="text-xs text-[var(--foreground-secondary)]">
-                                                            Color seleccionado:{' '}
-                                                            <strong>{formData.color}</strong>
-                                                        </p>
-                                                    )}
-                                                </div>
-
                                                 {/* Fabric */}
                                                 <DropdownWithCustom
                                                     label="Tejido"
@@ -597,7 +598,7 @@ export default function AddItemModal({
                                                 />
                                             </motion.div>
                                         )}
-                                    </>
+                                    </div>
                                 )}
                             </div>
 

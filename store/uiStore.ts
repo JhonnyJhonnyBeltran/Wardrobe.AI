@@ -18,6 +18,7 @@ export interface PendingUploadItem {
     originalImage?: string | null;
     processedImage?: string | null;
     name?: string;
+    batchItems?: any[];
 }
 
 export interface SaveToast {

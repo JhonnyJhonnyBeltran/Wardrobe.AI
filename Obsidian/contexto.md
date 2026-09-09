@@ -596,6 +596,22 @@ En cada conversación, el backend alimenta a CloSy con:
   - Al pulsar *"Añadir N prendas"*, el modal guarda secuencialmente cada prenda válida en la base de datos de Supabase mostrando el contador dinámico *"Guardando X de N..."*.
   - Notificación de éxito con el total de prendas añadidas y cierre limpio.
 
+### 39. Pulido de Subida de Prendas: Auto-detección en Modo Rápido, Restauración Batch y Miniaturas Circulares (Septiembre 2026)
+- **Auto-detección Visible en Subida Individual (`AddItemModal/index.tsx`)**:
+  - Los campos de *"Nombre de la prenda"*, *"Tipo de prenda"* y *"Color"* ahora se muestran y se rellenan automáticamente por IA en el modo rápido de subida individual (sin necesidad de desplegar el formulario completo), permitiendo al usuario ver y ajustar la clasificación generada inmediatamente.
+  - Eliminado el selector de color personalizado `<input type="color">`, manteniendo la paleta curada de colores de alta fidelidad.
+- **Persistencia y Restauración Completa de Subidas en Lote (`store/uiStore.ts`, `components/AppLayout.tsx`, `useAddItemForm.ts`)**:
+  - `pendingUploadItem` ahora almacena la colección completa de `batchItems` junto con sus estados individuales de procesamiento, miniaturas y metadatos editados.
+  - Si el usuario sale del modal y navega por la app, el banner flotante muestra *"Subida múltiple (N prendas)"* y la miniatura de la primera prenda.
+  - Al pulsar sobre el banner o reabrir el modal, se restaura exactamente el carrusel con todas las prendas en el estado en que se encontraban (sin colapsar a modo individual ni reiniciar bucles de subida).
+- **Estilo de Miniaturas Circulares y Limpieza Visual (`BatchCarousel.tsx`)**:
+  - Las miniaturas de la tira horizontal son completamente circulares (`rounded-full`), con las imágenes de las prendas ampliadas y padding lateral en el contenedor (`px-2 py-2.5`) para evitar cortes en los extremos.
+  - Los iconos de estado (spinner de carga `Loader2`, check de éxito `Check`, alerta de error) se sitúan dentro del círculo sin fondos de píldora opacos y con un tamaño más visible (`w-6 h-6`).
+  - Cabecera limpia: eliminados iconos redundantes de IA sobre el badge *"Prenda X de N"*, manteniendo el texto de estado activo y la animación fluida.
+- **Resiliencia en Eliminación de Fondo con Reintento Automático (`useAddItemForm.ts`)**:
+  - Se incorporó un mecanismo de reintento automático (hasta 2 intentos) en caso de fallo transitorio del modelo/canvas de eliminación de fondo antes de recurrir a la imagen original.
+
+
 
 
 

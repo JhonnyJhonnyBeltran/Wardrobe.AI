@@ -4,13 +4,13 @@
  * BatchCarousel Component
  * Displays an interactive carousel/slider for multi-item garment uploads (up to 20 photos).
  * Allows the user to slide through garments one by one, edit names, categories, and colors,
- * and view thumbnails with real-time AI processing status.
+ * with enlarged circular thumbnails and real-time status icons inside.
  */
 
 import React, { memo } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Trash2, Loader2, Check, Sparkles, AlertCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Trash2, Loader2, Check, AlertCircle } from 'lucide-react';
 import { CustomSelect } from './CustomSelect';
 import { DropdownWithCustom } from './DropdownWithCustom';
 import {
@@ -61,23 +61,18 @@ export const BatchCarousel = memo(function BatchCarousel({
         onUpdateFormData(currentIndex, { color: colorOption.name, colorHex: colorOption.hex });
     };
 
-    const handleColorPickerChange = (hex: string) => {
-        onUpdateFormData(currentIndex, { colorHex: hex });
-    };
-
     return (
         <div className="flex flex-col gap-4 w-full">
-            {/* ── Top Navigation & Slide Counter ── */}
+            {/* ── Top Navigation & Slide Counter (Cleaned from IA icons) ── */}
             <div className="flex items-center justify-between px-1">
                 <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] border border-[var(--brand-pink)]/20">
-                        <Sparkles className="w-3 h-3 mr-1 inline-block" />
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] border border-[var(--brand-pink)]/20 shadow-sm">
                         Prenda {currentIndex + 1} de {totalCount}
                     </span>
                     {currentItem.isProcessing && (
-                        <span className="text-[11px] font-medium text-[var(--foreground-tertiary)] flex items-center gap-1 animate-pulse">
-                            <Loader2 className="w-3 h-3 animate-spin text-[var(--brand-pink)]" />
-                            Analizando...
+                        <span className="text-[11px] font-medium text-[var(--foreground-tertiary)] flex items-center gap-1.5 animate-pulse">
+                            <Loader2 className="w-3.5 h-3.5 animate-spin text-[var(--brand-pink)]" />
+                            <span>Analizando prenda...</span>
                         </span>
                     )}
                 </div>
@@ -113,58 +108,60 @@ export const BatchCarousel = memo(function BatchCarousel({
                 </div>
             </div>
 
-            {/* ── Thumbnail Strip ── */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-1.5 pt-0.5 custom-scrollbar touch-pan-x">
-                {batchItems.map((item, idx) => {
-                    const isSelected = idx === currentIndex;
-                    const previewImg = item.image || item.originalImage;
+            {/* ── Thumbnail Strip with Circular Previews and Inside Icons ── */}
+            <div className="w-full px-1">
+                <div className="flex items-center gap-3 overflow-x-auto px-2 py-2.5 custom-scrollbar touch-pan-x -mx-1">
+                    {batchItems.map((item, idx) => {
+                        const isSelected = idx === currentIndex;
+                        const previewImg = item.image || item.originalImage;
 
-                    return (
-                        <button
-                            key={item.id}
-                            type="button"
-                            onClick={() => onSelectIndex(idx)}
-                            className={`relative flex-shrink-0 w-14 h-14 rounded-2xl overflow-hidden border transition-all duration-200 cursor-pointer ${
-                                isSelected
-                                    ? 'ring-2 ring-[var(--brand-pink)] scale-105 border-transparent shadow-md'
-                                    : 'border-[var(--border-color)] opacity-70 hover:opacity-100 hover:border-[var(--brand-pink)]/40'
-                            }`}
-                        >
-                            {previewImg ? (
-                                <div className="relative w-full h-full bg-white dark:bg-[#151518] p-1">
-                                    <Image
-                                        src={previewImg}
-                                        alt={`Miniatura ${idx + 1}`}
-                                        fill
-                                        className="object-contain p-1"
-                                        unoptimized
-                                    />
-                                </div>
-                            ) : (
-                                <div className="w-full h-full bg-[var(--background-secondary)] flex items-center justify-center">
-                                    <span className="text-xs font-bold text-[var(--foreground-tertiary)]">{idx + 1}</span>
-                                </div>
-                            )}
-
-                            {/* Status Overlay Badge */}
-                            <div className="absolute top-1 right-1">
-                                {item.isProcessing ? (
-                                    <div className="w-4 h-4 rounded-full bg-black/60 flex items-center justify-center">
-                                        <Loader2 className="w-2.5 h-2.5 text-[var(--brand-pink)] animate-spin" />
-                                    </div>
-                                ) : item.error ? (
-                                    <div className="w-4 h-4 rounded-full bg-red-500 text-white flex items-center justify-center">
-                                        <AlertCircle className="w-2.5 h-2.5" />
+                        return (
+                            <button
+                                key={item.id}
+                                type="button"
+                                onClick={() => onSelectIndex(idx)}
+                                className={`relative flex-shrink-0 w-16 h-16 rounded-full overflow-hidden border transition-all duration-300 cursor-pointer p-0.5 bg-white dark:bg-[#151518] shadow-sm ${
+                                    isSelected
+                                        ? 'ring-2 ring-[var(--brand-pink)] ring-offset-2 ring-offset-[var(--background)] scale-105 border-transparent'
+                                        : 'border-[var(--border-color)] opacity-75 hover:opacity-100 hover:scale-100'
+                                }`}
+                            >
+                                {previewImg ? (
+                                    <div className="relative w-full h-full rounded-full overflow-hidden">
+                                        <Image
+                                            src={previewImg}
+                                            alt={`Miniatura ${idx + 1}`}
+                                            fill
+                                            className="object-contain p-0.5"
+                                            unoptimized
+                                        />
                                     </div>
                                 ) : (
-                                    <div className="w-4 h-4 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-sm">
-                                        <Check className="w-2.5 h-2.5" />
+                                    <div className="w-full h-full rounded-full bg-[var(--background-secondary)] flex items-center justify-center">
+                                        <span className="text-xs font-bold text-[var(--foreground-tertiary)]">{idx + 1}</span>
                                     </div>
                                 )}
-                            </div>
-                        </button>
-                    );
-                })}
+
+                                {/* Status Icon Inside Circle without background */}
+                                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                    {item.isProcessing ? (
+                                        <div className="w-full h-full bg-black/25 backdrop-blur-[1px] flex items-center justify-center">
+                                            <Loader2 className="w-6 h-6 text-[var(--brand-pink)] animate-spin drop-shadow-md" />
+                                        </div>
+                                    ) : item.error ? (
+                                        <div className="w-full h-full bg-red-950/30 flex items-center justify-center">
+                                            <AlertCircle className="w-5 h-5 text-red-500 drop-shadow-md" />
+                                        </div>
+                                    ) : isSelected ? (
+                                        <div className="absolute bottom-1 right-1">
+                                            <Check className="w-4 h-4 text-emerald-500 drop-shadow-[0_1px_3px_rgba(0,0,0,0.8)] stroke-[3]" />
+                                        </div>
+                                    ) : null}
+                                </div>
+                            </button>
+                        );
+                    })}
+                </div>
             </div>
 
             {/* ── Active Item Presentation ── */}
@@ -178,14 +175,14 @@ export const BatchCarousel = memo(function BatchCarousel({
                     className="space-y-4"
                 >
                     {/* Image Preview Container */}
-                    <div className="w-full max-w-[220px] mx-auto aspect-square rounded-3xl overflow-hidden bg-white dark:bg-[#151518] border border-[var(--border-color)] relative flex items-center justify-center shadow-sm">
+                    <div className="w-full max-w-[240px] mx-auto aspect-square rounded-3xl overflow-hidden bg-white dark:bg-[#151518] border border-[var(--border-color)] relative flex items-center justify-center shadow-sm">
                         {currentItem.image ? (
-                            <div className="relative w-full h-full p-3">
+                            <div className="relative w-full h-full p-2.5">
                                 <Image
                                     src={currentItem.image}
                                     alt={currentItem.formData.name || 'Prenda'}
                                     fill
-                                    className="object-contain p-2"
+                                    className="object-contain p-1.5"
                                     unoptimized
                                     priority
                                 />
@@ -199,8 +196,8 @@ export const BatchCarousel = memo(function BatchCarousel({
 
                         {/* Processing Badge Overlay */}
                         {currentItem.isProcessing && (
-                            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex flex-col items-center justify-center gap-2 p-3 text-center">
-                                <Loader2 className="w-8 h-8 text-[var(--brand-pink)] animate-spin" />
+                            <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex flex-col items-center justify-center gap-2.5 p-3 text-center">
+                                <Loader2 className="w-9 h-9 text-[var(--brand-pink)] animate-spin" />
                                 <span className="text-xs font-bold text-white animate-pulse">
                                     Eliminando fondo con IA...
                                 </span>
@@ -242,18 +239,18 @@ export const BatchCarousel = memo(function BatchCarousel({
                             options={categories}
                         />
 
-                        {/* Color Selector */}
+                        {/* Color Selector (Curated palette without custom picker) */}
                         <div>
                             <label className="block text-xs font-bold text-[var(--foreground)] mb-1.5">
                                 Color
                             </label>
                             <div className="flex flex-wrap items-center gap-2">
-                                {COLOR_OPTIONS.slice(0, 10).map((colorOption) => (
+                                {COLOR_OPTIONS.map((colorOption) => (
                                     <button
                                         key={colorOption.name}
                                         type="button"
                                         onClick={() => handleColorSelect(colorOption)}
-                                        className={`w-7 h-7 rounded-full border transition-all ${
+                                        className={`w-7 h-7 rounded-full border transition-all cursor-pointer ${
                                             currentItem.formData.color === colorOption.name
                                                 ? 'border-[var(--brand-pink)] scale-110 ring-2 ring-[var(--brand-pink)]/30'
                                                 : 'border-[var(--border-color)] hover:scale-105'
@@ -262,13 +259,6 @@ export const BatchCarousel = memo(function BatchCarousel({
                                         title={colorOption.name}
                                     />
                                 ))}
-                                <input
-                                    type="color"
-                                    value={currentItem.formData.colorHex || '#000000'}
-                                    onChange={(e) => handleColorPickerChange(e.target.value)}
-                                    className="w-7 h-7 rounded-full border border-[var(--border-color)] cursor-pointer"
-                                    title="Color personalizado"
-                                />
                                 {currentItem.formData.color && (
                                     <span className="text-xs font-medium text-[var(--foreground-secondary)] ml-1">
                                         {currentItem.formData.color}
@@ -323,3 +313,4 @@ export const BatchCarousel = memo(function BatchCarousel({
         </div>
     );
 });
+

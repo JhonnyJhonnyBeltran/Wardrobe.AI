@@ -82,28 +82,40 @@ export default function AppLayout({ children }: AppLayoutProps) {
               href="/closet?action=new-item"
               className="flex items-center gap-3 min-w-0 flex-1 hover:opacity-85 transition-opacity"
             >
-              {pendingUploadItem.processedImage || pendingUploadItem.image || pendingUploadItem.originalImage ? (
-                <div className="w-12 h-12 rounded-xl bg-[var(--background-secondary)] border border-[var(--border-color)] overflow-hidden flex-shrink-0 flex items-center justify-center p-0.5">
-                  <img
-                    src={pendingUploadItem.processedImage || pendingUploadItem.image || pendingUploadItem.originalImage || ''}
-                    alt={pendingUploadItem.formData?.name || pendingUploadItem.name || 'Prenda'}
-                    className="w-full h-full object-contain"
-                  />
-                </div>
-              ) : (
-                <div className="w-12 h-12 rounded-xl bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] flex items-center justify-center flex-shrink-0">
-                  <UploadCloud className="w-6 h-6 animate-pulse" />
-                </div>
-              )}
+              {(() => {
+                const displayImg = pendingUploadItem.processedImage || 
+                  pendingUploadItem.image || 
+                  pendingUploadItem.originalImage || 
+                  (pendingUploadItem.batchItems?.[0]?.image || pendingUploadItem.batchItems?.[0]?.originalImage);
+
+                if (displayImg) {
+                  return (
+                    <div className="w-12 h-12 rounded-xl bg-[var(--background-secondary)] border border-[var(--border-color)] overflow-hidden flex-shrink-0 flex items-center justify-center p-0.5">
+                      <img
+                        src={displayImg}
+                        alt={pendingUploadItem.formData?.name || pendingUploadItem.name || 'Prenda'}
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                  );
+                }
+                return (
+                  <div className="w-12 h-12 rounded-xl bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] flex items-center justify-center flex-shrink-0">
+                    <UploadCloud className="w-6 h-6 animate-pulse" />
+                  </div>
+                );
+              })()}
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-[var(--brand-pink)] animate-ping" />
                   <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--brand-pink)]">
-                    Subida pendiente
+                    {pendingUploadItem.batchItems && pendingUploadItem.batchItems.length > 1
+                      ? `Subida múltiple (${pendingUploadItem.batchItems.length})`
+                      : 'Subida pendiente'}
                   </span>
                 </div>
                 <p className="text-sm font-semibold text-[var(--foreground)] truncate mt-0.5">
-                  {pendingUploadItem.formData?.name || pendingUploadItem.name || 'Prenda en progreso'}
+                  {pendingUploadItem.name || pendingUploadItem.formData?.name || (pendingUploadItem.batchItems?.length ? `${pendingUploadItem.batchItems.length} prendas en lote` : 'Prenda en progreso')}
                 </p>
               </div>
             </Link>
