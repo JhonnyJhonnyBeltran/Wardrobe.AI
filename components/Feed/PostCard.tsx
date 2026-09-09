@@ -229,12 +229,12 @@ export default function PostCard({ post, onClick, hideSaveButton = false }: Post
                 onTouchEnd={handleTouchEnd}
                 onTouchMove={handleTouchMove}
                 onTouchCancel={handleTouchEnd}
-                whileTap={{ scale: 0.98 }}
-                transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                className="w-full h-full relative z-10"
+                whileTap={{ scale: 0.97 }}
+                transition={{ type: "spring", stiffness: 420, damping: 28 }}
+                className="w-full h-full relative z-10 apple-tap-feedback"
             >
                 <div
-                    className="group relative rounded-2xl overflow-hidden bg-[var(--card-bg)] shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer h-full w-full"
+                    className="group relative rounded-[22px] overflow-hidden bg-[var(--card-bg)] shadow-[0_4px_20px_-2px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_32px_-4px_rgba(0,0,0,0.08)] border border-black/[0.04] dark:border-white/[0.06] transition-all duration-300 cursor-pointer h-full w-full"
                     onMouseEnter={() => setIsHovered(true)}
                     onMouseLeave={() => setIsHovered(false)}
                 >
@@ -251,7 +251,7 @@ export default function PostCard({ post, onClick, hideSaveButton = false }: Post
                         <div className="hidden md:block absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-60" />
 
                         {post.isSuggested && (
-                            <div className="absolute top-3 left-3 bg-white/20 backdrop-blur-md px-2 py-1 rounded-full border border-white/30 flex items-center gap-1 shadow-sm">
+                            <div className="absolute top-3 left-3 bg-white/20 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/30 flex items-center gap-1 shadow-sm">
                                 <span className="text-[10px] font-semibold text-white tracking-wide uppercase">Para ti</span>
                             </div>
                         )}
@@ -275,16 +275,18 @@ export default function PostCard({ post, onClick, hideSaveButton = false }: Post
                         <AnimatePresence>
                             {isHovered && (
                                 <motion.div
-                                    initial={{ opacity: 0, y: -10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: -10 }}
+                                    initial={{ opacity: 0, scale: 0.85 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.85 }}
+                                    transition={{ duration: 0.15 }}
                                     className="absolute top-3 right-3 hidden md:block z-[40]"
                                 >
                                     <button
                                         onClick={toggleQuickSave}
-                                        className="bg-[var(--card-bg)]/90 backdrop-blur-sm border border-[var(--border-color)] p-2.5 rounded-full hover:scale-105 hover:shadow-lg transition-all"
+                                        aria-label="Guardar publicación"
+                                        className="touch-target-44 bg-[var(--card-bg)]/90 backdrop-blur-md border border-[var(--border-color)]/60 rounded-full hover:scale-105 active:scale-95 transition-all shadow-sm"
                                     >
-                                        <Bookmark className={cn("w-5 h-5", isSavedState ? "fill-[var(--brand-pink)] text-[var(--brand-pink)]" : "text-[var(--foreground)]")} />
+                                        <Bookmark className={cn("w-4.5 h-4.5", isSavedState ? "fill-[var(--brand-pink)] text-[var(--brand-pink)]" : "text-[var(--foreground)]")} />
                                     </button>
                                 </motion.div>
                             )}

@@ -25,8 +25,8 @@ export default function NotificationsPage() {
       {...swipeHandlers}
       className="min-h-screen bg-[var(--background)] pb-24 flex flex-col w-full"
     >
-      <header className="sticky top-0 z-30 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-color)] px-4 h-14 flex items-center justify-center">
-        <h1 className="text-lg font-bold text-[var(--foreground)]">Actividad</h1>
+      <header className="sticky top-0 z-30 apple-glass-bar pt-safe px-4 h-14 flex items-center justify-center">
+        <h1 className="text-lg font-bold text-[var(--foreground)] select-none">Actividad</h1>
       </header>
 
       {/* Full width container for the list */}

@@ -279,23 +279,26 @@ export default function FeedPage() {
     <PullToRefresh onRefresh={() => fetchPosts(false, true)}>
       <div className="min-h-screen bg-[var(--background)] pb-24 md:pb-8">
         {/* Top Header */}
-        <header className="sticky top-0 z-30 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-color)]">
-          <div className="px-5 h-16 flex items-center justify-between">
+        <header className="sticky top-0 z-30 apple-glass-bar pt-safe">
+          <div className="px-4 h-14 md:h-16 flex items-center justify-between">
             <button
               onClick={toggleCreateMenu}
-              className="p-2.5 -ml-2 text-[var(--brand-pink)] hover:bg-[var(--background-secondary)] rounded-full transition-all duration-200 transform hover:scale-110"
+              aria-label="Crear publicación"
+              className="touch-target-44 text-[var(--brand-pink)] hover:bg-[var(--background-secondary)]/80 rounded-full transition-all duration-150 active:scale-90"
             >
               <Plus className="w-6 h-6" />
             </button>
 
-            <h1 className="text-xl font-bold tracking-tight text-[var(--foreground)] absolute left-1/2 -translate-x-1/2">Para ti</h1>
+            <h1 className="text-lg md:text-xl font-bold tracking-tight text-[var(--foreground)] absolute left-1/2 -translate-x-1/2 select-none">
+              Para ti
+            </h1>
 
             <div className="flex items-center gap-1">
-              <Link href="/messages">
-                <button className="p-2.5 -mr-1 text-[var(--brand-pink)] hover:bg-[var(--background-secondary)] rounded-full transition-all duration-200 transform hover:scale-110 relative">
-                  <Send className="w-6 h-6" />
+              <Link href="/messages" aria-label="Mensajes directos">
+                <button className="touch-target-44 text-[var(--brand-pink)] hover:bg-[var(--background-secondary)]/80 rounded-full transition-all duration-150 active:scale-90 relative">
+                  <Send className="w-5.5 h-5.5" />
                   {messageBadgeVisible && messageUnreadCount > 0 && (
-                    <span className="absolute top-1 right-0.5 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-[var(--brand-pink)] text-white text-[10px] font-bold rounded-full border-2 border-[var(--background)] shadow-sm">
+                    <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-[var(--brand-pink)] text-white text-[10px] font-bold rounded-full border-2 border-[var(--background)] shadow-sm">
                       {messageUnreadCount > 99 ? '+99' : messageUnreadCount}
                     </span>
                   )}

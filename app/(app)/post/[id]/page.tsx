@@ -15,6 +15,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import InteractiveOutfitViewer from '@/components/InteractiveOutfitViewer';
 import ProductModal from '@/components/ProductModal';
 import { ClothingItem } from '@/components/ClothingItem';
+import { SkeletonPostDetail } from '@/components';
 import { haptics } from '@/lib/haptic';
 
 interface Comment {
@@ -39,6 +40,7 @@ export default function PostDetailPage() {
     const [newComment, setNewComment] = useState('');
     const [loading, setLoading] = useState(true);
     const [activeSlide, setActiveSlide] = useState(0);
+    const [isMobile, setIsMobile] = useState(false);
 
     // Interaction States
     const [isLiked, setIsLiked] = useState(false);
@@ -60,10 +62,11 @@ export default function PostDetailPage() {
     // Sync mobile comments and item drawer visibility with global TabBar state
     useEffect(() => {
         const handleResize = () => {
-            const isMobile = window.innerWidth < 768;
+            const mobile = window.innerWidth < 768;
+            setIsMobile(mobile);
             const hasOverlayOpen = showMobileComments || !!selectedItem;
             
-            if (isMobile) {
+            if (mobile) {
                 setTabBarHidden(hasOverlayOpen);
             } else {
                 setTabBarHidden(false);
@@ -528,33 +531,23 @@ export default function PostDetailPage() {
     };
 
     // Loading state
-    if (loading) return (
-        <div className="min-h-screen bg-white dark:bg-black flex flex-col">
-            {/* Header Skeleton */}
-            <div className="h-16 border-b border-gray-100 dark:border-gray-800 flex items-center px-4 gap-3 animate-pulse">
-                <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700"></div>
-                <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
-            </div>
-            {/* Image Skeleton */}
-            <div className="flex-1 bg-gray-100 dark:bg-gray-800 animate-pulse"></div>
-        </div>
-    );
+    if (loading) return <SkeletonPostDetail />;
 
-    if (!post) return <div className="min-h-screen flex items-center justify-center bg-white dark:bg-black text-gray-900 dark:text-white">Publicación no encontrada</div>;
+    if (!post) return <div className="min-h-screen flex items-center justify-center bg-[var(--background)] text-[var(--foreground)]">Publicación no encontrada</div>;
 
     return (
-        <div className="min-h-screen w-full bg-white dark:bg-black flex flex-col">
-            {/* HEADER - White background like /profile */}
-            <header className="sticky top-0 z-50 w-full max-w-[1400px] mx-auto bg-white dark:bg-black border-b border-gray-100 dark:border-gray-800 h-16 flex items-center justify-between px-4">
+        <div className="min-h-screen w-full bg-[var(--background)] flex flex-col">
+            {/* HEADER - Apple Glass Bar with 15% increased width */}
+            <header className="sticky top-0 z-50 w-full max-w-[1600px] mx-auto apple-glass-bar pt-safe h-16 flex items-center justify-between px-4">
                 {/* Left: Back Button */}
-                <button onClick={handleBack} className="p-2 -ml-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
-                    <ArrowLeft className="w-6 h-6 text-gray-900 dark:text-white" />
+                <button onClick={handleBack} className="touch-target-44 text-[var(--foreground)] hover:bg-[var(--background-secondary)]/80 rounded-full transition-all active:scale-90">
+                    <ArrowLeft className="w-6 h-6" />
                 </button>
 
                 {/* Center: Username - smaller and profile photo */}
-                <Link href={`/profile/${author.id}`} className="flex items-center gap-2 flex-1 ml-2">
+                <Link href={`/profile/${author.id}`} className="flex items-center gap-2 flex-1 ml-2 select-none">
                     <Avatar src={author.avatar_url || null} alt={author.username || 'Usuario'} size="sm" />
-                    <span className="font-semibold text-[15px] text-gray-900 dark:text-white truncate">{author.username}</span>
+                    <span className="font-semibold text-[15px] text-[var(--foreground)] truncate">{author.username}</span>
                 </Link>
 
                 {/* Right: Actions */}
@@ -562,16 +555,17 @@ export default function PostDetailPage() {
                     {/* Follow button (if not own post) */}
                     {/* @ts-ignore */}
                     {user?.id !== post.user_id ? (
-                        <button onClick={toggleFollow} className={`px-4 py-1.5 rounded-full font-bold text-xs transition-all ${isFollowing ? 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white' : 'bg-[var(--brand-pink)] text-white hover:bg-[var(--brand-pink-dark)]'}`}>
+                        <button onClick={toggleFollow} className={`px-4 py-1.5 rounded-full font-bold text-xs transition-all active:scale-95 ${isFollowing ? 'bg-[var(--background-secondary)] text-[var(--foreground)]' : 'bg-[var(--brand-pink)] text-white hover:bg-[var(--brand-pink-dark)]'}`}>
                             {isFollowing ? 'Siguiendo' : 'Seguir'}
                         </button>
                     ) : (
                         <div className="relative">
                             <button 
                                 onClick={() => setShowOptions(!showOptions)}
-                                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors"
+                                className="touch-target-44 text-[var(--foreground)] hover:bg-[var(--background-secondary)]/80 rounded-full transition-all active:scale-90"
+                                aria-label="Opciones de publicación"
                             >
-                                <MoreVertical className="w-6 h-6 text-gray-900 dark:text-white" />
+                                <MoreVertical className="w-6 h-6" />
                             </button>
                             
                             <AnimatePresence>
@@ -586,11 +580,11 @@ export default function PostDetailPage() {
                                             initial={{ opacity: 0, scale: 0.95, y: -10 }}
                                             animate={{ opacity: 1, scale: 1, y: 0 }}
                                             exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                                            className="absolute right-0 mt-2 w-48 bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-xl border border-gray-100 dark:border-gray-800 py-2 z-50 overflow-hidden"
+                                            className="absolute right-0 mt-2 w-48 bg-[var(--card-bg)] rounded-2xl shadow-xl border border-[var(--border-color)] py-2 z-50 overflow-hidden"
                                         >
                                             <button
                                                 onClick={handleEditPost}
-                                                className="w-full px-4 py-3 flex items-center gap-3 text-sm font-semibold text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                                                className="w-full px-4 py-3 flex items-center gap-3 text-sm font-semibold text-[var(--foreground)] hover:bg-[var(--background-secondary)] transition-colors"
                                             >
                                                 <Edit2 className="w-4 h-4" />
                                                 Editar publicación
@@ -612,11 +606,11 @@ export default function PostDetailPage() {
                 </div>
             </header>
 
-            {/* Desktop Container */}
-            <div className="flex flex-col md:flex-row w-full max-w-[1400px] mx-auto flex-1 md:h-[calc(100vh-64px)] md:justify-center">
+            {/* Desktop Container (Expanded 15% width) */}
+            <div className="flex flex-col md:flex-row w-full max-w-[1600px] mx-auto flex-1 md:h-[calc(100vh-64px)] md:justify-center">
 
-            {/* IMAGE CAROUSEL - Swipeable with Framer Motion */}
-            <div className="relative w-full h-auto min-h-[50vh] md:w-auto md:max-w-[calc(100%-400px)] md:h-[calc(100vh-64px)] bg-white md:bg-gray-50 dark:bg-black dark:md:bg-[#0a0a0a] flex-shrink-0 overflow-hidden flex items-center justify-center">
+            {/* IMAGE CAROUSEL - Swipeable ONLY on mobile; Button/Dots controlled on desktop */}
+            <div className="relative w-full h-auto min-h-[50vh] md:flex-1 md:max-w-[calc(100%-460px)] lg:max-w-[calc(100%-520px)] md:h-[calc(100vh-64px)] bg-[var(--background)] md:bg-[var(--background-secondary)]/30 flex-shrink-0 overflow-hidden flex items-center justify-center">
                 <AnimatePresence initial={false} mode="wait">
                     <motion.div
                         key={activeSlide}
@@ -624,10 +618,10 @@ export default function PostDetailPage() {
                         animate={{ x: 0, opacity: 1 }}
                         exit={{ x: -300, opacity: 0 }}
                         transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                        drag="x"
+                        drag={isMobile ? "x" : false}
                         dragConstraints={{ left: 0, right: 0 }}
                         dragElastic={0.7}
-                        onDragEnd={(e, { offset, velocity }) => {
+                        onDragEnd={isMobile ? (e, { offset }) => {
                             const swipe = offset.x;
                             if (swipe < -50 && activeSlide < slides.length - 1) {
                                 setActiveSlide(activeSlide + 1);
@@ -636,8 +630,8 @@ export default function PostDetailPage() {
                                 setActiveSlide(activeSlide - 1);
                                 setShowSwipeHint(false);
                             }
-                        }}
-                        className="w-full h-full md:w-auto md:h-full relative cursor-grab active:cursor-grabbing flex items-center justify-center"
+                        } : undefined}
+                        className={`w-full h-full md:w-auto md:h-full relative ${isMobile ? 'cursor-grab active:cursor-grabbing' : 'cursor-default select-none'} flex items-center justify-center`}
                         onDoubleClick={() => {
                             if (!isLiked) toggleLike();
                             setShowHeartAnim(true);
@@ -682,8 +676,8 @@ export default function PostDetailPage() {
                     </motion.div>
                 </AnimatePresence>
 
-                {/* Swipe Hint Indicator (Overlay) */}
-                {showSwipeHint && slides.length > 1 && activeSlide === 0 && (
+                {/* Swipe Hint Indicator (Overlay on Mobile Only) */}
+                {showSwipeHint && isMobile && slides.length > 1 && activeSlide === 0 && (
                     <motion.div
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: [0, 1, 1, 0], x: [20, -20, -20, 20] }}
@@ -736,8 +730,8 @@ export default function PostDetailPage() {
                 )}
             </div>
 
-            {/* RIGHT COLUMN: Actions, Details, Comments */}
-            <div className="flex flex-col w-full min-w-0 md:w-[400px] lg:w-[450px] md:h-[calc(100vh-64px)] bg-white dark:bg-black overflow-x-hidden pb-[72px] md:pb-0 border-l border-gray-100 dark:border-gray-800 flex-shrink-0">
+            {/* RIGHT COLUMN: Actions, Details, Comments (Expanded +15% width: 460px -> 520px) */}
+            <div className="flex flex-col w-full min-w-0 md:w-[460px] lg:w-[520px] md:h-[calc(100vh-64px)] bg-[var(--background)] overflow-x-hidden pb-[72px] md:pb-0 border-l border-[var(--border-color)]/50 flex-shrink-0">
                 {/* ACTION BAR - Below image */}
                 <div className="border-b border-gray-100 dark:border-gray-800 px-4 py-3 flex items-center justify-between flex-shrink-0">
                     <div className="flex items-center gap-5">

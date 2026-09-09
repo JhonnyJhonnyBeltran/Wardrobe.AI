@@ -211,3 +211,65 @@ export function SkeletonNotifications({ count = 6 }: { count?: number }) {
     </div>
   );
 }
+
+/**
+ * Post Detail Page Skeleton with Wave Shimmer
+ */
+export function SkeletonPostDetail() {
+  return (
+    <div className="min-h-screen w-full bg-[var(--background)] flex flex-col">
+      {/* Header Skeleton */}
+      <div className="sticky top-0 z-50 w-full max-w-[1600px] mx-auto apple-glass-bar h-16 flex items-center justify-between px-4">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full skeleton-wave" />
+          <div className="w-9 h-9 rounded-full skeleton-wave" />
+          <div className="h-4 w-28 rounded-md skeleton-wave" />
+        </div>
+        <div className="w-20 h-8 rounded-full skeleton-wave" />
+      </div>
+
+      {/* Main 2-Column Desktop / Mobile Stacked Layout (Expanded +15% width) */}
+      <div className="flex flex-col md:flex-row w-full max-w-[1600px] mx-auto flex-1 md:h-[calc(100vh-64px)] md:justify-center">
+        {/* Left: Media Area */}
+        <div className="w-full md:flex-1 md:h-[calc(100vh-64px)] min-h-[50vh] p-4 flex items-center justify-center">
+          <div className="w-full h-full max-w-[700px] aspect-[3/4] md:aspect-auto md:h-[85%] rounded-3xl skeleton-wave" />
+        </div>
+
+        {/* Right: Actions, Caption & Comments Column */}
+        <div className="w-full md:w-[460px] lg:w-[520px] md:h-[calc(100vh-64px)] border-l border-[var(--border-color)]/50 p-5 flex flex-col gap-5 flex-shrink-0">
+          {/* Action Bar */}
+          <div className="flex items-center justify-between pb-3 border-b border-[var(--border-color)]/40">
+            <div className="flex items-center gap-4">
+              <div className="w-6 h-6 rounded-md skeleton-wave" />
+              <div className="w-6 h-6 rounded-md skeleton-wave" />
+              <div className="w-6 h-6 rounded-md skeleton-wave" />
+            </div>
+            <div className="w-6 h-6 rounded-md skeleton-wave" />
+          </div>
+
+          {/* Caption & Post Info */}
+          <div className="space-y-2">
+            <div className="h-4 w-3/4 rounded skeleton-wave" />
+            <div className="h-3.5 w-1/2 rounded skeleton-wave opacity-70" />
+          </div>
+
+          {/* Comments List Placeholder */}
+          <div className="flex-1 space-y-4 pt-2">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-full skeleton-wave shrink-0" />
+                <div className="flex-1 space-y-1.5">
+                  <div className="h-3.5 w-24 rounded skeleton-wave" />
+                  <div className="h-3 w-4/5 rounded skeleton-wave opacity-70" />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Bottom Composer Bar */}
+          <div className="h-11 w-full rounded-2xl skeleton-wave mt-auto" />
+        </div>
+      </div>
+    </div>
+  );
+}

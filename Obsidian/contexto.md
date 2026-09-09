@@ -383,7 +383,26 @@ En cada conversación, el backend alimenta a CloSy con:
   - Validación y saneamiento de prompts para prevenir prompt injection y filtración de claves API (las API Keys nunca se exponen al cliente).
 - **Navegación Segura y Sanitización**:
   - Sanitización estricta de HTML / Markdown generado o introducido por usuarios para prevenir ataques XSS (Cross-Site Scripting).
-  - Headers de seguridad HTTP (CSP, X-Content-Type-Options, HSTS, Referrer-Policy) configurados en `next.config.js` / middleware.
+### 18. Metodología Apple HIG Integral y Reglas de Verificación de Pantallas (Septiembre 2026)
+- **Fuente de Referencia**: Documento dedicado en [apple_design_system.md](./apple_design_system.md), derivado de las Apple Human Interface Guidelines y la habilidad `apple-design-skill`.
+- **Reglas Obligatorias en Todas las Pantallas**:
+  1. **Zonas Táctiles Ergonómicas (≥44px)**: Todo elemento interactivo en móvil (botones, iconos en cabeceras, enlaces, selectores) debe tener un área táctil mínima de 44×44px (`touch-target-44`) para evitar toques erróneos.
+  2. **Safe Area Insets**: Las cabeceras fijas y barras de navegación deben respetar siempre los insets seguros de los dispositivos (`pt-safe`, `pb-safe`, `env(safe-area-inset-top)`, `env(safe-area-inset-bottom)`).
+  3. **Materiales & Liquid Glass**: Cabeceras, barras de pestañas y modales utilizan `apple-glass-bar` / `backdrop-blur-2xl` con micro-bordes suaves (hairline borders) de 1px con opacidad reducida.
+  4. **Física Spring y Microinteracciones Táctiles**: Efecto de presión elástica `active:scale-[0.97]` (`apple-tap-feedback`) en tarjetas de ropa, posts y botones primarios, complementado con vibraciones hápticas en acciones clave.
+  5. **Listas Agrupadas Tipo iOS (Grouped Inset Lists)**: En ajustes, perfil y formularios, las opciones se agrupan en contenedores squircle (`rounded-2xl` / `rounded-3xl`) con divisores sutiles y pastillas de iconos coloridos.
+  6. **Skeletons Wave**: Carga asíncrona fluida con efecto onda horizontal en lugar de spinners de carga en listas.
+
+### 19. Mejoras en Detalle de Post (Septiembre 2026)
+- **Desactivación de Deslizamiento (Swipe/Drag) en Ordenador**:
+  - En versión de escritorio, se deshabilitó el gesto de arrastre/deslizar (`drag={isMobile ? "x" : false}`) entre la foto y el look, quedando la navegación controlada exclusivamente mediante los botones circulares de flechas izquierda/derecha y los puntos indicadores.
+  - El gesto táctil de deslizar se mantiene activo de forma fluida y natural en dispositivos móviles.
+- **Aumento del 15% en el Ancho de Pantalla**:
+  - Se incrementó un 15% el ancho máximo del contenedor principal (`max-w-[1600px]`), expandiendo la columna lateral de detalles/comentarios (`md:w-[460px] lg:w-[520px]`) y proporcionando mayor holgura y visibilidad al visor de imagen.
+- **Skeleton de Detalle de Post (`SkeletonPostDetail`)**:
+  - Se implementó un skeleton completo con animación de onda horizontal (`shimmer-wave`), cabecera con avatar/usuario, área de visualización multimedia amplia y columna derecha con barra de acciones, textos y comentarios simulados.
+
+
 
 
 

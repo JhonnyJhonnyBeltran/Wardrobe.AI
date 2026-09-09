@@ -350,21 +350,26 @@ export default function PublicProfilePage() {
   return (
     <div className="min-h-screen bg-[var(--background)] pb-24">
       {/* Header */}
-      <header className="sticky top-0 z-30 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-color)]/50">
+      <header className="sticky top-0 z-30 apple-glass-bar pt-safe">
         <div className="flex items-center justify-between px-4 h-14 w-full md:max-w-[70%] mx-auto">
-          <div className="flex items-center gap-3">
-            <button onClick={() => window.history.length > 2 ? router.back() : router.push('/feed')} className="p-1 -ml-1 hover:bg-[var(--background-secondary)] rounded-full transition-colors">
-              <ArrowLeft className="w-6 h-6 text-[var(--foreground)]" />
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => window.history.length > 2 ? router.back() : router.push('/feed')} 
+              className="touch-target-44 -ml-2 text-[var(--foreground)] hover:bg-[var(--background-secondary)]/80 rounded-full transition-all active:scale-90"
+              aria-label="Volver"
+            >
+              <ArrowLeft className="w-6 h-6" />
             </button>
-            <span className="font-bold text-[var(--foreground)] truncate max-w-[200px] sm:max-w-[280px]">
+            <span className="font-bold text-[var(--foreground)] truncate max-w-[200px] sm:max-w-[280px] select-none">
               {profile.username ? `@${profile.username}` : (profile.full_name || 'Perfil')}
             </span>
           </div>
           <button 
             onClick={() => setShowOptions(!showOptions)}
-            className="p-2 -mr-2 hover:bg-[var(--background-secondary)] rounded-full transition-colors relative"
+            className="touch-target-44 -mr-2 text-[var(--foreground)] hover:bg-[var(--background-secondary)]/80 rounded-full transition-all active:scale-90 relative"
+            aria-label="Opciones de perfil"
           >
-            <MoreHorizontal className="w-6 h-6 text-[var(--foreground)]" />
+            <MoreHorizontal className="w-6 h-6" />
             
             {showOptions && (
               <div className="absolute right-0 top-full mt-2 w-48 bg-[var(--background)] border border-[var(--border-color)] rounded-xl shadow-xl overflow-hidden">

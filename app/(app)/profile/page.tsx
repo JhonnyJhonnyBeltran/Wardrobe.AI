@@ -340,22 +340,22 @@ export default function ProfilePage() {
       </AnimatePresence>
 
       {/* Header */}
-      <header className="sticky top-0 z-30 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-color)]/50">
+      <header className="sticky top-0 z-30 apple-glass-bar pt-safe">
         <div className="flex items-center justify-between px-4 h-14 w-full md:max-w-[70%] mx-auto">
           {/* Left: Create Button */}
           <button
             onClick={() => setCreateMenuOpen(true)}
-            className="md:hidden p-2 -ml-2 hover:bg-[var(--background-secondary)] rounded-full transition-colors flex-shrink-0"
+            className="md:hidden touch-target-44 text-[var(--brand-pink)] hover:bg-[var(--background-secondary)]/80 rounded-full transition-all active:scale-90 flex-shrink-0"
             aria-label="Crear publicación"
           >
-            <Plus className="w-6 h-6 text-[var(--brand-pink)]" />
+            <Plus className="w-6 h-6" />
           </button>
           {/* Spacer for desktop to keep the title centered */}
           <div className="hidden md:block w-10 flex-shrink-0 -ml-2"></div>
 
           {/* Center: Username */}
           <div className="flex-1 flex justify-center items-center px-2">
-            <span className="font-bold text-[var(--foreground)] truncate max-w-[180px] sm:max-w-[240px] text-center">
+            <span className="font-bold text-[var(--foreground)] truncate max-w-[180px] sm:max-w-[240px] text-center select-none">
               {user.username || user.name || user.email?.split('@')[0] || 'Perfil'}
             </span>
           </div>
@@ -363,10 +363,10 @@ export default function ProfilePage() {
           {/* Right: Settings/Options Button */}
           <Link
             href="/profile/settings"
-            className="group p-2 -mr-2 rounded-full transition-colors flex-shrink-0 text-[var(--foreground)] hover:bg-[var(--background-secondary)] md:hover:bg-transparent"
+            className="touch-target-44 rounded-full transition-all flex-shrink-0 text-[var(--foreground)] hover:bg-[var(--background-secondary)]/80 active:scale-90"
             aria-label="Configuración"
           >
-            <Settings className="w-6 h-6 transition-all duration-300 group-hover:text-[var(--brand-pink)] group-hover:fill-[var(--brand-pink)]" />
+            <Settings className="w-5.5 h-5.5 transition-all duration-300 group-hover:text-[var(--brand-pink)]" />
           </Link>
         </div>
       </header>
