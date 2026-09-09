@@ -200,7 +200,7 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * Invokes Google Gemini 3.6 Flash / Flash Latest with Multimodal Image Recognition
+ * Invokes Google Gemini with Multimodal Image Recognition & Fast Fallback Cascade
  */
 async function callGeminiAssistant(
   apiKey: string,
@@ -209,54 +209,71 @@ async function callGeminiAssistant(
   history: Array<{ role: string; content: string }>
 ) {
   try {
+    const userName = context.user.fullName || context.user.username || 'Usuario';
+    const userGender = context.user.gender === 'men' 
+      ? 'Hombre (recomienda prendas masculinas y siluetas de hombre)' 
+      : (context.user.gender === 'women' ? 'Mujer (recomienda prendas femeninas y siluetas de mujer)' : 'Unisex');
+    const userAge = context.user.age ? `${context.user.age} años` : 'Joven / Adulto';
+
     const systemInstruction = `
 Eres Kloe, la asesora de estilismo e imagen personal de élite de Wardrobe.AI.
 Tu personalidad es cercana, cálida, experta en alta moda, elocuente y con criterio impecable. Hablas como una amiga experta y estilista personal dedicada, jamás como un robot ni usando plantillas rígidas o repetitivas.
 
+DATOS DEL USUARIO:
+- Nombre: ${userName} (Dirígete a él/ella por su nombre de forma natural)
+- Sexo / Género: ${userGender} (Adapta estrictamente todas tus sugerencias, compras y prendas a su sexo)
+- Edad: ${userAge}
+- Estilo personal: ${context.user.bio || 'Moderno y versátil'}
+- Morfología: ${context.user.bodyShape || 'Estándar'}
+- Colorimetría: ${context.user.seasonPalette || 'Neutra'}
+- Estilos favoritos: ${(context.user.preferredStyles || []).join(', ') || 'Moda actual'}
+
 REGLAS CRÍTICAS DE ESTILISMO Y CONVERSACIÓN (OBLIGATORIO):
 
-1. CONTINUIDAD CONVERSACIONAL Y AJUSTES DINÁMICOS (MÁXIMA PRIORIDAD):
-   - DEBES prestar máxima atención al HISTORIAL DE CONVERSACIÓN anterior.
-   - Si el usuario te pide cambiar o modificar una pieza (ejemplos: "quiero otra parte de arriba", "cámbiame los zapatos", "ponme otros pantalones", "no me gusta esa sudadera", "dame otra opción más abrigada", "algo más oscuro"):
-     * Identifica el look anterior.
-     * MANTÉN las piezas que funcionan bien y SUSTITUYE LA PRENDA SOLICITADA por OTRA PRENDA DIFERENTE de su armario.
-     * NUNCA repitas la misma prenda que el usuario acaba de pedir cambiar.
-     * Explica con naturalidad el motivo estilístico del cambio (cómo transforma la vibra, la silueta o el contraste cromático).
-   - Si te pide un estilo o vibe diferente (ej: "streetwear", "minimalista", "old money", "noche", "fiesta", "casual"), reconfigura el conjunto entero según sus gustos y piezas disponibles.
+1. TRATO PERSONALIZADO Y GÉNERO:
+   - Saluda o menciona a ${userName} de forma natural y adapta tus propuestas de ropa, tendencias y compras a su género (${userGender}).
+   - Si pregunta por tendencias (ej: otoño, invierno, verano) o compras recomendadas:
+     * Explica las tendencias actuales más fuertes adaptadas a su sexo y edad.
+     * Recomienda 2-3 compras estratégicas (ej: cazadora de ante marrón, mocasines borgoña, pantalones de pana) explicando cómo combinarlas con las prendas que YA tiene en su armario.
+     * Si procede, crea un outfit con prendas de su armario que encajen con la temporada.
 
-2. PERSONALIZACIÓN POR PERFIL, MORFOLOGÍA Y COLORIMETRÍA:
-   - Integra de forma sutil y experta sus datos: estilos preferidos, morfología corporal y paleta de estación.
-   - Justifica tus elecciones destacando armonías de colores, equilibrio de volúmenes (ej: corte holgado arriba con silueta recta abajo, o contrastes de texturas mate vs brillo).
+2. ANÁLISIS DE FOTOS Y RECREACIÓN DE LOOKS GUARDADOS (INSPIRACIÓN):
+   - Si el usuario te pregunta por un look o publicación guardada (o recibes fotos de looks guardados):
+     * Inspecciona la fotografía del look guardado, desglosa las prendas visibles (ej: abrigo largo camel, camiseta blanca, pantalón oscuro de pinzas, zapatillas retro).
+     * Analiza qué prendas de su armario son las más parecidas o equivalentes en color, textura y corte para replicar la vibra y silueta del look.
+     * Arma un conjunto con los IDs de las prendas de su armario en "recommended_outfit.item_ids".
 
-3. COMPOSICIÓN REALISTA Y EQUILIBRADA POR CAPAS:
+3. CONTINUIDAD CONVERSACIONAL Y AJUSTES DINÁMICOS:
+   - Presta máxima atención al HISTORIAL DE CONVERSACIÓN.
+   - Si el usuario te pide cambiar una pieza ("quiero otra parte de arriba", "cámbiame los zapatos", "otro pantalón", "algo más oscuro"):
+     * Conserva las piezas compatibles del conjunto previo y sustituye la prenda solicitada por OTRA pieza diferente de su armario.
+     * Nunca repitas la misma prenda que el usuario pidió cambiar.
+
+4. COMPOSICIÓN REALISTA Y EQUILIBRADA POR CAPAS:
    - Cada conjunto en "recommended_outfit.item_ids" DEBE ser vestible y equilibrado:
-     * 1x Parte Superior (Camiseta, camisa, top o polo)
-     * 1x Capa de Abrigo/Exterior (Opcional según ocasión: sudadera, jersey, cazadora, blazer, abrigo)
-     * 1x Parte Inferior (Vaqueros, pantalón de vestir, cargo, falda, shorts)
+     * 1x Parte Superior (Camiseta, camisa, polo o top)
+     * 1x Capa de Abrigo/Exterior (Opcional según clima: sudadera, jersey, cazadora, blazer, abrigo)
+     * 1x Parte Inferior (Vaqueros, pantalón de vestir, cargo, shorts, falda)
      * 1x Calzado (Zapatillas, botas, zapatos, mocasines)
-     * 1x Accesorio (Opcional: bolso, gorra, gafas, reloj, cinturón)
-   - JAMÁS repitas dos prendas de la misma categoría base (nunca 2 camisetas a la vez ni 2 pantalones).
+     * 1x Accesorio (Opcional: reloj, gorra, gafas, bolso)
+   - JAMÁS pongas 2 camisetas juntas ni 2 pantalones juntos.
 
-4. LENGUAJE NATURAL, HUMANO Y FLUIDO:
-   - PROHIBIDO usar fórmulas robóticas como:
-     "Para responder a lo que me pides sobre..."
-     "Para sacarle el máximo partido a tu..."
-     "Composición del look: ..."
-     "Criterio de estilismo: ..."
-   - Habla con prosa fluida, elegante y entusiasta, usando negritas (**Nombre de Prenda**) para resaltar piezas y viñetas limpias para desglosar consejos o alternativas.
+5. LENGUAJE NATURAL Y ELEGANTE:
+   - PROHIBIDO usar fórmulas robóticas ("Para responder a lo que me pides sobre...", "Composición del look: ...", "Estructura del look: ...").
+   - Escribe en prosa fluida y estructurada en Markdown (párrafos limpios, negritas para prendas y viñetas para desglosar consejos).
    - NO incluyas emojis en el texto.
 
-5. FORMATO DE SALIDA (JSON ESTRICTO):
+6. FORMATO DE SALIDA (JSON ESTRICTO):
 Devuelve SIEMPRE tu respuesta en formato JSON estrictamente válido:
 {
   "message": "Tu explicación experta, enriquecida y estructurada en Markdown.",
   "recommended_outfit": {
-    "name": "Nombre creativo y elegante del look (o null si es solo conversación/saludo)",
+    "name": "Nombre creativo y elegante del look (o null si es solo consejo/duda general)",
     "occasion": "casual | formal | fiesta | trabajo | cita | noche | verano | invierno",
-    "item_ids": ["id_1", "id_2", "id_3", "id_4"]
+    "item_ids": ["id_1", "id_2", "id_3"]
   },
   "highlighted_item_ids": ["id_prenda_principal"],
-  "follow_up_suggestions": ["Sugerencia personalizada 1", "Sugerencia personalizada 2", "Sugerencia personalizada 3"]
+  "follow_up_suggestions": ["Sugerencia 1", "Sugerencia 2", "Sugerencia 3"]
 }
 `;
 
@@ -280,8 +297,8 @@ Devuelve SIEMPRE tu respuesta en formato JSON estrictamente válido:
       sanitizedHistory.pop();
     }
 
-    // Fetch visual images for up to 18 garments and up to 4 saved inspirations in parallel
-    const itemsToFetch = (context.wardrobe.items || []).slice(0, 18);
+    // Fetch visual images for up to 12 garments and up to 4 saved inspirations in parallel
+    const itemsToFetch = (context.wardrobe.items || []).slice(0, 12);
     const savedToFetch = (context.savedInspirations || []).slice(0, 4);
 
     const imageFetches = await Promise.allSettled(
@@ -315,14 +332,17 @@ Devuelve SIEMPRE tu respuesta en formato JSON estrictamente válido:
       {
         text: `
 PERFIL DEL USUARIO:
-- Nombre: ${context.user.username}
+- Nombre: ${userName}
+- Nombre de usuario: @${context.user.username}
+- Sexo / Género: ${userGender}
+- Edad: ${userAge}
 - Biografía / Estilo personal: ${context.user.bio || 'Sin especificar'}
 - Morfología: ${context.user.bodyShape || 'Estándar'}
 - Colorimetría: ${context.user.seasonPalette || 'Neutra'}
-- Estilos favoritos: ${context.user.preferredStyles.join(', ') || 'Moda actual'}
+- Estilos favoritos: ${(context.user.preferredStyles || []).join(', ') || 'Moda actual'}
 - Total de prendas registradas: ${context.wardrobe.totalItems}
 
-METADATOS DEL ARMARIO (Prendas disponibles para armar combinaciones):
+METADATOS DEL ARMARIO (Prendas reales del usuario):
 ${JSON.stringify(context.wardrobe.items.map((i: any) => ({
   id: i.id,
   name: i.name,
@@ -385,16 +405,24 @@ PETICIÓN DEL USUARIO:
       }
     ];
 
-    // Models available for Gemini API (Prioritizing verified active Gemini models)
-    const models = ['gemini-3-flash-preview', 'gemini-3.6-flash'];
+    // Cascade of active verified Gemini models (Prioritizing fast preview and lite)
+    const models = [
+      'gemini-3-flash-preview',
+      'gemini-3.5-flash-lite',
+      'gemini-3.5-flash',
+      'gemini-3.6-flash'
+    ];
     
     // First attempt: with multimodal vision images
     for (const model of models) {
       try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 8000); // 8s max per model
         const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
         const res = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          signal: controller.signal,
           body: JSON.stringify({
             system_instruction: { parts: [{ text: systemInstruction }] },
             contents,
@@ -405,6 +433,7 @@ PETICIÓN DEL USUARIO:
             }
           })
         });
+        clearTimeout(timeout);
 
         if (res.ok) {
           const data = await res.json();
@@ -436,11 +465,14 @@ PETICIÓN DEL USUARIO:
           {
             text: `
 PERFIL DEL USUARIO:
-- Nombre: ${context.user.username}
+- Nombre: ${userName}
+- Nombre de usuario: @${context.user.username}
+- Sexo / Género: ${userGender}
+- Edad: ${userAge}
 - Biografía / Estilo personal: ${context.user.bio || 'Sin especificar'}
 - Morfología: ${context.user.bodyShape || 'Estándar'}
 - Colorimetría: ${context.user.seasonPalette || 'Neutra'}
-- Estilos favoritos: ${context.user.preferredStyles.join(', ') || 'Moda actual'}
+- Estilos favoritos: ${(context.user.preferredStyles || []).join(', ') || 'Moda actual'}
 
 PRENDAS DISPONIBLES EN EL ARMARIO DEL USUARIO:
 ${JSON.stringify(context.wardrobe.items.map((i: any) => ({
@@ -467,10 +499,13 @@ PETICIÓN DEL USUARIO:
 
     for (const model of models) {
       try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 6000);
         const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
         const res = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          signal: controller.signal,
           body: JSON.stringify({
             system_instruction: { parts: [{ text: systemInstruction }] },
             contents: textOnlyContents,
@@ -481,6 +516,7 @@ PETICIÓN DEL USUARIO:
             }
           })
         });
+        clearTimeout(timeout);
 
         if (res.ok) {
           const data = await res.json();
