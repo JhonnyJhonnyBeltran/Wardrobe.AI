@@ -81,11 +81,11 @@ export const useRealtimeStore = create<RealtimeStore>((set, get) => ({
       try {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('notification_preferences')
+          .select('*')
           .eq('id', userId)
           .maybeSingle();
 
-        const dbLastViewed = (profile?.notification_preferences as any)?.last_viewed_activity;
+        const dbLastViewed = (profile as any)?.notification_preferences?.last_viewed_activity;
         if (dbLastViewed) {
           lastViewed = dbLastViewed;
           if (typeof window !== 'undefined') {
@@ -172,23 +172,25 @@ export const useRealtimeStore = create<RealtimeStore>((set, get) => ({
             .eq('user_id', user.id)
             .eq('read', false);
 
-          // 2. Update profile timestamp in notification_preferences
+          // 2. Update profile timestamp in notification_preferences if supported
           const { data: currentProfile } = await supabase
             .from('profiles')
-            .select('notification_preferences')
+            .select('*')
             .eq('id', user.id)
             .maybeSingle();
 
-          const currentSettings = (currentProfile?.notification_preferences as Record<string, any>) || {};
-          await supabase
-            .from('profiles')
-            .update({
-              notification_preferences: {
-                ...currentSettings,
-                last_viewed_activity: now,
-              }
-            } as any)
-            .eq('id', user.id);
+          if (currentProfile && 'notification_preferences' in currentProfile) {
+            const currentSettings = ((currentProfile as any)?.notification_preferences as Record<string, any>) || {};
+            await supabase
+              .from('profiles')
+              .update({
+                notification_preferences: {
+                  ...currentSettings,
+                  last_viewed_activity: now,
+                }
+              } as any)
+              .eq('id', user.id);
+          }
         }
       } catch (err) {
         console.warn('[RealtimeStore] Could not sync last_viewed / mark notifications read:', err);

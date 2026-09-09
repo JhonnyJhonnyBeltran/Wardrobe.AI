@@ -540,6 +540,14 @@ En cada conversación, el backend alimenta a CloSy con:
   - Se implementó verificación previa en memoria local del día seleccionado antes de realizar mutaciones de red.
   - Se actualizó la persistencia a `.upsert()` con directiva `ignoreDuplicates: true` y clave de conflicto `onConflict: 'user_id,date,outfit_id'`, garantizando inserciones idempotentes y eliminación limpia en intercambios sin generar excepciones de red 409.
 
+### 33. Resiliencia de Esquema Supabase y Auto-Recarga de Chunks Next.js (Septiembre 2026)
+- **Protección contra 400 Bad Request en `profiles` (`userStore.tsx`, `CookiesBanner.tsx`, `realtimeStore.ts`, `notificationSettingsStore.ts`, `profile/settings/page.tsx`)**:
+  - En entornos donde la columna opcional `notification_preferences` aún no ha sido migrada en Supabase remoto, cualquier petición `PATCH` a dicha columna devolvía un error HTTP 400.
+  - Se implementó verificación dinámica (`'notification_preferences' in profile`) y consultas con `select('*')` previas a cualquier mutación de preferencias o cookies.
+  - Esto garantiza que la hidratación de sesión de usuario y la persistencia de cookies funcionen fluidamente tanto con esquemas actualizados como heredados, erradicando los errores 400 en consola.
+- **Manejo de Re-despliegue de Chunks 404 en Next.js**:
+  - Tras nuevos despliegues en producción, los clientes con SPA activa que solicitan un hash de chunk antiguo son capturados por el manejador de ciclo de vida de Next.js (`[Lifecycle] Next.js chunk load error detected (404)`), recargando la página automáticamente a la versión más reciente sin romper la experiencia de usuario.
+
 
 
 

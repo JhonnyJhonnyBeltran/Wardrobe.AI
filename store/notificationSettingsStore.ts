@@ -51,12 +51,20 @@ export const useNotificationSettingsStore = create<NotificationSettingsState>()(
         if (userId) {
           try {
             set({ isSaving: true });
-            await supabase
+            const { data: currentProfile } = await supabase
               .from('profiles')
-              .update({
-                notification_preferences: updated,
-              } as any)
-              .eq('id', userId);
+              .select('*')
+              .eq('id', userId)
+              .maybeSingle();
+
+            if (currentProfile && 'notification_preferences' in currentProfile) {
+              await supabase
+                .from('profiles')
+                .update({
+                  notification_preferences: updated,
+                } as any)
+                .eq('id', userId);
+            }
           } catch (err) {
             console.warn('[NotificationSettingsStore] Failed to sync to Supabase:', err);
           } finally {
@@ -70,7 +78,7 @@ export const useNotificationSettingsStore = create<NotificationSettingsState>()(
         try {
           const { data } = await supabase
             .from('profiles')
-            .select('notification_preferences')
+            .select('*')
             .eq('id', userId)
             .maybeSingle();
 

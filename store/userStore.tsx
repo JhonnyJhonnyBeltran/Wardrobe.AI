@@ -164,8 +164,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
           if (dbConsent) {
             // DB already has consent -> persist locally so banner never shows
             localStorage.setItem('klozet_cookie_consent_v1', JSON.stringify(dbConsent));
-          } else if (localConsent) {
-            // Local consent exists but DB doesn't have it -> backfill to DB
+          } else if (localConsent && profile && 'notification_preferences' in profile) {
+            // Local consent exists and DB column exists -> backfill to DB safely
             const parsedLocal = JSON.parse(localConsent);
             const currentPrefs = styleSource.notification_preferences || {};
             supabase

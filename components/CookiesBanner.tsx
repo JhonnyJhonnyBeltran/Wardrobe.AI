@@ -55,26 +55,28 @@ export default function CookiesBanner() {
             console.error('Error saving cookie consent locally:', e);
         }
 
-        // Also persist to Supabase profiles if user is authenticated
+        // Also persist to Supabase profiles if user is authenticated and column exists
         try {
             const { data: { session } } = await supabase.auth.getSession();
             if (session?.user?.id) {
                 const { data: currentProfile } = await supabase
                     .from('profiles')
-                    .select('notification_preferences')
+                    .select('*')
                     .eq('id', session.user.id)
                     .maybeSingle();
 
-                const existingPrefs = (currentProfile as any)?.notification_preferences || {};
-                await supabase
-                    .from('profiles')
-                    .update({
-                        notification_preferences: {
-                            ...existingPrefs,
-                            cookie_consent: payload,
-                        }
-                    } as any)
-                    .eq('id', session.user.id);
+                if (currentProfile && 'notification_preferences' in currentProfile) {
+                    const existingPrefs = (currentProfile as any)?.notification_preferences || {};
+                    await supabase
+                        .from('profiles')
+                        .update({
+                            notification_preferences: {
+                                ...existingPrefs,
+                                cookie_consent: payload,
+                            }
+                        } as any)
+                        .eq('id', session.user.id);
+                }
             }
         } catch (e) {
             console.warn('[CookiesBanner] Non-critical error saving consent to DB:', e);

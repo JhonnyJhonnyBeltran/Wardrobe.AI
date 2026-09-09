@@ -206,7 +206,15 @@ export default function SettingsPage() {
         const newVal = { ...notifications, [key]: !notifications[key] };
         setNotifications(newVal);
         try {
-            await supabase.from('profiles').update({ notification_preferences: newVal } as any).eq('id', user?.id);
+            const { data: currentProfile } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', user?.id)
+                .maybeSingle();
+
+            if (currentProfile && 'notification_preferences' in currentProfile) {
+                await supabase.from('profiles').update({ notification_preferences: newVal } as any).eq('id', user?.id);
+            }
         } catch (err) {
             console.error(err);
             setNotifications(notifications);
