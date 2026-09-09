@@ -16,7 +16,7 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Loader2, Check } from 'lucide-react';
+import { X, Loader2, Check, Plus } from 'lucide-react';
 import { Button, AdvisorModal } from '@/components';
 import { useBodyScrollLock } from '@/lib/hooks';
 import { useUiStore } from '@/store/uiStore';
@@ -30,6 +30,7 @@ import {
     CustomSelect,
     ImageUploader,
     BatchCarousel,
+    AddMoreModal,
 } from './components';
 import {
     SIZE_OPTIONS,
@@ -67,6 +68,7 @@ export default function AddItemModal({
         isProcessing,
         processingMessage,
         handleImageUpload,
+        appendFiles,
         handleColorSelect,
         handleColorPickerChange,
         buildPayload,
@@ -88,7 +90,11 @@ export default function AddItemModal({
     // Cancel confirmation state
     const [showCancelConfirm, setShowCancelConfirm] = React.useState(false);
 
-    const isBatch = batchItems.length > 1;
+    // Add more photos modal state
+    const [showAddMore, setShowAddMore] = React.useState(false);
+
+    const isBatch = batchItems.length > 0;
+
 
     // ─── Handlers ────────────────────────────────────────────────────────────
 
@@ -421,6 +427,7 @@ export default function AddItemModal({
                                         onSelectIndex={setCurrentBatchIndex}
                                         onUpdateFormData={updateBatchItemFormData}
                                         onRemoveItem={removeBatchItem}
+                                        onOpenAddMore={() => setShowAddMore(true)}
                                         categories={categories}
                                         brands={brands}
                                         mode={mode}
@@ -428,15 +435,40 @@ export default function AddItemModal({
                                 ) : (
                                     /* ── Single Item View ── */
                                     <div className="space-y-4">
-                                        {/* Image Area */}
-                                        <div className="min-h-[150px]">
+                                        {/* Image Area with Add More (+) Button on the Right */}
+                                        <div className="relative w-full max-w-[240px] mx-auto min-h-[150px]">
                                             <ImageUploader
                                                 image={image}
                                                 isProcessing={isProcessing}
                                                 processingMessage={processingMessage}
                                                 onImageUpload={handleImageUpload}
                                             />
+                                            {image && !isEditing && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowAddMore(true)}
+                                                    className="absolute -right-3.5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-[var(--brand-pink)] hover:bg-[#ff3377] text-white shadow-xl hover:scale-110 active:scale-95 transition-all flex items-center justify-center cursor-pointer z-30 border-2 border-[var(--background)] group"
+                                                    title="Añadir más prendas"
+                                                    aria-label="Añadir más prendas"
+                                                >
+                                                    <Plus className="w-5 h-5 stroke-[2.5] group-hover:rotate-90 transition-transform duration-200" />
+                                                </button>
+                                            )}
                                         </div>
+
+                                        {/* Helper Pill to Add More Garments */}
+                                        {image && !isEditing && (
+                                            <div className="flex justify-center -mt-1">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowAddMore(true)}
+                                                    className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold bg-[var(--background-secondary)] hover:bg-[var(--border-color)] border border-[var(--border-color)] text-[var(--foreground)] hover:text-[var(--brand-pink)] transition-all cursor-pointer shadow-sm active:scale-95"
+                                                >
+                                                    <Plus className="w-3.5 h-3.5 text-[var(--brand-pink)] stroke-[2.5]" />
+                                                    <span>Añadir más prendas a esta subida</span>
+                                                </button>
+                                            </div>
+                                        )}
 
                                         {/* Nombre de la prenda (auto-detected, always visible) */}
                                         <div>
@@ -754,6 +786,13 @@ export default function AddItemModal({
                 isOpen={showAdvisor}
                 onClose={() => setShowAdvisor(false)}
                 onConfirm={handleAdvisorConfirm}
+            />
+
+            <AddMoreModal
+                isOpen={showAddMore}
+                onClose={() => setShowAddMore(false)}
+                onFilesSelected={(files) => appendFiles(files)}
+                maxAllowed={20 - batchItems.length}
             />
         </>
     );

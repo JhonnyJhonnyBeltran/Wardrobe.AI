@@ -50,6 +50,7 @@ interface UseAddItemFormReturn {
 
     // Handlers
     handleImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => Promise<void>;
+    appendFiles: (files: FileList | File[]) => Promise<void>;
     handleManualProcess: () => Promise<void>;
     handleColorSelect: (colorOption: { name: string; hex: string }) => void;
     handleColorPickerChange: (hex: string) => void;
@@ -528,6 +529,142 @@ export function useAddItemForm({
         e.target.value = '';
     }, [optimizeImageForVision, processSingleFile, resetForm]);
 
+    // Append additional files to the upload (promotes single upload to batch if needed)
+    const appendFiles = useCallback(async (newRawFiles: FileList | File[]) => {
+        if (!newRawFiles || newRawFiles.length === 0) return;
+
+        const validMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/heic', 'image/heif', 'image/avif', 'image/gif'];
+        const validFiles: File[] = [];
+
+        for (let i = 0; i < newRawFiles.length; i++) {
+            const file = newRawFiles[i];
+            const isImg = file.type ? validMimeTypes.includes(file.type.toLowerCase()) : file.name.match(/\.(jpe?g|png|webp|heic|heif|avif|gif)$/i);
+            if (isImg) {
+                validFiles.push(file);
+            }
+        }
+
+        if (validFiles.length === 0) {
+            setError('El formato de foto que has subido es incorrecto. Por favor, sube imágenes en formato JPG, PNG, WEBP o HEIC.');
+            return;
+        }
+
+        // 1. Determine existing items
+        let baseItems: BatchItem[] = [];
+
+        if (batchItems.length > 0) {
+            baseItems = [...batchItems];
+        } else if (image || originalImage) {
+            // Convert single active item into first batch item
+            baseItems = [{
+                id: `batch-${Date.now()}-0-${Math.random().toString(36).substring(2, 7)}`,
+                originalImage: originalImage || image || '',
+                image: image || originalImage || '',
+                processedImage: processedImage,
+                selectedFile: selectedFile,
+                isProcessing: false,
+                processingMessage: '',
+                formData: { ...formData },
+            }];
+        }
+
+        const maxAllowed = 20;
+        const remainingSlots = maxAllowed - baseItems.length;
+
+        if (remainingSlots <= 0) {
+            setError('Has alcanzado el límite máximo de 20 prendas por subida.');
+            return;
+        }
+
+        const filesToAdd = validFiles.slice(0, remainingSlots);
+
+        setIsProcessing(true);
+        setProcessingStage('compressing');
+        setError(null);
+
+        // Read all new files as Data URLs in parallel
+        const newBatchItems: BatchItem[] = await Promise.all(
+            filesToAdd.map(async (file, idx) => {
+                const dataUrl = await new Promise<string>((resolve) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve((reader.result as string) || '');
+                    reader.onerror = () => resolve('');
+                    reader.readAsDataURL(file);
+                });
+
+                const itemIndex = baseItems.length + idx;
+                return {
+                    id: `batch-${Date.now()}-${itemIndex}-${Math.random().toString(36).substring(2, 7)}`,
+                    originalImage: dataUrl,
+                    image: dataUrl,
+                    selectedFile: file,
+                    isProcessing: true,
+                    processingMessage: 'Analizando con IA...',
+                    formData: {
+                        ...DEFAULT_FORM_DATA,
+                        name: `Prenda ${itemIndex + 1}`,
+                    },
+                };
+            })
+        );
+
+        const startIndex = baseItems.length;
+        const combined = [...baseItems, ...newBatchItems];
+        setBatchItems(combined);
+        setCurrentBatchIndex(startIndex);
+
+        // Process newly added items concurrently in chunks of 2
+        const chunkSize = 2;
+        for (let i = 0; i < newBatchItems.length; i += chunkSize) {
+            const chunk = newBatchItems.slice(i, i + chunkSize);
+            await Promise.allSettled(
+                chunk.map(async (batchItem, chunkIdx) => {
+                    const itemIndex = startIndex + i + chunkIdx;
+                    const file = batchItem.selectedFile;
+                    if (!file) return;
+
+                    const result = await processSingleFile(file, batchItem.originalImage);
+
+                    setBatchItems(prev => {
+                        const updated = [...prev];
+                        if (updated[itemIndex]) {
+                            const currentItem = updated[itemIndex];
+                            const hasCustomName = currentItem.formData.name && 
+                                currentItem.formData.name !== DEFAULT_FORM_DATA.name && 
+                                !currentItem.formData.name.startsWith('Prenda ');
+
+                            updated[itemIndex] = {
+                                ...currentItem,
+                                image: result.processedImage || currentItem.originalImage,
+                                processedImage: result.processedImage,
+                                isProcessing: false,
+                                processingMessage: '',
+                                formData: {
+                                    ...currentItem.formData,
+                                    name: hasCustomName 
+                                        ? currentItem.formData.name 
+                                        : (result.detectedName || `Prenda ${itemIndex + 1}`),
+                                    type: result.detectedType || currentItem.formData.type || 'top',
+                                    color: result.detectedColor || currentItem.formData.color || 'Negro',
+                                    colorHex: result.detectedColorHex || currentItem.formData.colorHex || '#121212',
+                                    fabric: result.aiAnalysis?.fabric || currentItem.formData.fabric || 'Algodón',
+                                    season: result.aiAnalysis?.season || currentItem.formData.season || 'all-season',
+                                },
+                                error: result.isInappropriate 
+                                    ? (result.inappropriateReason || 'Contenido inapropiado detectado.') 
+                                    : null,
+                            };
+                        }
+                        return updated;
+                    });
+                })
+            );
+        }
+
+        setIsProcessing(false);
+        setProcessingStage('complete');
+    }, [batchItems, image, originalImage, processedImage, selectedFile, formData, processSingleFile]);
+
     // Handle manual AI processing toggle
     const handleManualProcess = useCallback(async () => {
         if (processedImage && image === processedImage) {
@@ -680,6 +817,7 @@ export function useAddItemForm({
 
         // Handlers
         handleImageUpload,
+        appendFiles,
         handleManualProcess,
         handleColorSelect,
         handleColorPickerChange,
@@ -691,3 +829,4 @@ export function useAddItemForm({
         setError,
     };
 }
+

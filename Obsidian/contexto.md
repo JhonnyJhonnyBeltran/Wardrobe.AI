@@ -611,6 +611,19 @@ En cada conversación, el backend alimenta a CloSy con:
 - **Resiliencia en Eliminación de Fondo con Reintento Automático (`useAddItemForm.ts`)**:
   - Se incorporó un mecanismo de reintento automático (hasta 2 intentos) en caso de fallo transitorio del modelo/canvas de eliminación de fondo antes de recurrir a la imagen original.
 
+### 40. Botón Dinámico de Añadir Más Prendas (+) en Subida Individual y por Lote (Septiembre 2026)
+- **Botón (+) en Subida Individual (`AddItemModal/index.tsx`)**:
+  - Al subir una primera prenda, aparece un botón circular flotante con el icono `+` en el lateral derecho de la foto (`absolute -right-3.5 top-1/2`) y un botón pill inferior *"Añadir más prendas a esta subida"*.
+  - Al pulsar el botón `+`, se abre el modal selector (`AddMoreModal`) para tomar foto o seleccionar imágenes de la galería (con selección múltiple).
+  - La prenda actual se preserva íntegra con sus datos y se añaden las nuevas fotos, transformando la vista automáticamente al carrusel múltiple (`BatchCarousel`) sin reiniciar ni perder información.
+- **Botón (+) en Carrusel de Lote (`BatchCarousel.tsx`)**:
+  - En la tira horizontal de miniaturas circulares, al final (a la derecha de la última prenda) se renderiza un botón circular discontinuo con el icono `+` y la etiqueta *"Más"*.
+  - También disponible en la barra superior junto a los controles de navegación.
+  - Permite añadir más fotos en cualquier momento hasta alcanzar el límite de 20 prendas por lote.
+- **Función de Anexión Concurrente (`useAddItemForm.ts -> appendFiles`)**:
+  - Lee y procesa las nuevas fotos añadidas en segundo plano por bloques de concurrencia (`chunkSize = 2`), asignando auto-nombre, color y tipo con IA mientras mantiene las prendas previas ya editadas o procesadas.
+
+
 
 
 

@@ -8,4 +8,6 @@ export { ImageUploader } from './ImageUploader';
 export { ImageSelector } from './ImageSelector';
 export { ColorPicker } from './ColorPicker';
 export { BatchCarousel } from './BatchCarousel';
+export { AddMoreModal } from './AddMoreModal';
+
 

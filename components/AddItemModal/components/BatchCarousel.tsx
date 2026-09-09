@@ -10,7 +10,7 @@
 import React, { memo } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Trash2, Loader2, Check, AlertCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Trash2, Loader2, Check, AlertCircle, Plus } from 'lucide-react';
 import { CustomSelect } from './CustomSelect';
 import { DropdownWithCustom } from './DropdownWithCustom';
 import {
@@ -27,6 +27,7 @@ interface BatchCarouselProps {
     onSelectIndex: (index: number) => void;
     onUpdateFormData: (index: number, data: Partial<ItemFormData>) => void;
     onRemoveItem: (index: number) => void;
+    onOpenAddMore?: () => void;
     categories: SelectOption[];
     brands: string[];
     mode: FormMode;
@@ -38,6 +39,7 @@ export const BatchCarousel = memo(function BatchCarousel({
     onSelectIndex,
     onUpdateFormData,
     onRemoveItem,
+    onOpenAddMore,
     categories,
     brands,
     mode,
@@ -78,6 +80,17 @@ export const BatchCarousel = memo(function BatchCarousel({
                 </div>
 
                 <div className="flex items-center gap-1.5">
+                    {onOpenAddMore && batchItems.length < 20 && (
+                        <button
+                            type="button"
+                            onClick={onOpenAddMore}
+                            className="w-8 h-8 rounded-full bg-[var(--brand-pink)]/10 hover:bg-[var(--brand-pink)]/20 text-[var(--brand-pink)] flex items-center justify-center transition-colors cursor-pointer mr-0.5"
+                            title="Añadir más prendas"
+                            aria-label="Añadir más prendas"
+                        >
+                            <Plus className="w-4 h-4 stroke-[2.5]" />
+                        </button>
+                    )}
                     <button
                         type="button"
                         onClick={handlePrev}
@@ -108,7 +121,7 @@ export const BatchCarousel = memo(function BatchCarousel({
                 </div>
             </div>
 
-            {/* ── Thumbnail Strip with Circular Previews and Inside Icons ── */}
+            {/* ── Thumbnail Strip with Circular Previews, Inside Icons and Add More Button ── */}
             <div className="w-full px-1">
                 <div className="flex items-center gap-3 overflow-x-auto px-2 py-2.5 custom-scrollbar touch-pan-x -mx-1">
                     {batchItems.map((item, idx) => {
@@ -161,6 +174,20 @@ export const BatchCarousel = memo(function BatchCarousel({
                             </button>
                         );
                     })}
+
+                    {/* Add More Garments (+) button at the right of thumbnails */}
+                    {onOpenAddMore && batchItems.length < 20 && (
+                        <button
+                            type="button"
+                            onClick={onOpenAddMore}
+                            className="relative flex-shrink-0 w-16 h-16 rounded-full border-2 border-dashed border-[var(--border-color)] hover:border-[var(--brand-pink)] bg-[var(--background-secondary)]/50 hover:bg-[var(--brand-pink)]/5 flex flex-col items-center justify-center text-[var(--foreground-secondary)] hover:text-[var(--brand-pink)] transition-all duration-300 cursor-pointer p-0.5 shadow-sm group hover:scale-105"
+                            title="Añadir más prendas"
+                            aria-label="Añadir más prendas"
+                        >
+                            <Plus className="w-6 h-6 group-hover:scale-110 transition-transform stroke-[2.5]" />
+                            <span className="text-[9px] font-bold mt-0.5 opacity-75 group-hover:opacity-100">Más</span>
+                        </button>
+                    )}
                 </div>
             </div>
 
