@@ -4,6 +4,7 @@ import { checkRateLimit, checkIpRateLimit } from '@/lib/closy/rateLimiter';
 import { buildUserStylingContext } from '@/lib/closy/contextIndexer';
 import { getFastCourtesyResponse } from '@/lib/closy/fastResponses';
 import { resolveImageUrl } from '@/lib/imageUtils';
+import { getGeminiApiKey } from '@/lib/ai/geminiClient';
 
 interface ChatRequestPayload {
   message: string;
@@ -111,10 +112,8 @@ export async function POST(request: NextRequest) {
     // 5. Index User Context (Clothes with Photos, Outfits, Profile Preferences, Liked Styles)
     const context = await buildUserStylingContext(supabase, user.id);
 
-    // 6. Call True AI Engine (Google Gemini 3.6 Flash with Direct Multimodal Vision Analysis)
-    const geminiApiKey = process.env.GEMINI_API_KEY || 
-                         process.env.GOOGLE_API_KEY || 
-                         process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+    // 6. Call True AI Engine (Google Gemini 3.6 Flash / 3 Flash Preview with Direct Multimodal Vision Analysis)
+    const geminiApiKey = getGeminiApiKey();
 
     let aiResult: any = null;
 

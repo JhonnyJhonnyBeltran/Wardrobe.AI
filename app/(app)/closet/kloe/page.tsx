@@ -613,7 +613,7 @@ export default function KloePage() {
             {msg.role === 'assistant' && (
               <div className="relative w-9 h-9 flex-shrink-0 flex items-center justify-center mt-1">
                 <Image
-                  src="/kloe-avatar.png"
+                  src="/kloe-avatar-v2.png"
                   alt="Kloe"
                   fill
                   className="object-contain"
@@ -778,7 +778,7 @@ export default function KloePage() {
                 className="relative w-9 h-9 flex-shrink-0 flex items-center justify-center"
               >
                 <Image
-                  src="/kloe-avatar.png"
+                  src="/kloe-avatar-v2.png"
                   alt="Kloe"
                   fill
                   className="object-contain drop-shadow-sm"

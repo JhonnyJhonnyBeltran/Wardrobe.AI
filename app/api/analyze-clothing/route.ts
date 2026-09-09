@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { checkIpRateLimit } from '@/lib/closy/rateLimiter';
+import { getGeminiApiKey } from '@/lib/ai/geminiClient';
 
 export interface AnalyzeResponse {
   category: 'top' | 'shirt' | 'sweater' | 'hoodie' | 'jacket' | 'outerwear' | 'bottom' | 'shorts' | 'skirt' | 'dress' | 'shoes' | 'bag' | 'accessory' | 'other';
