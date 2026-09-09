@@ -187,13 +187,19 @@ export default function AddItemModal({
 
     const handleBackdropClick = () => {
         if (!isEditing && (image || formData.name.trim() !== '')) {
-            setShowCancelConfirm(true);
-        } else {
-            onClose();
+            saveToPending();
         }
+        onClose();
     };
 
-    const handleCloseClick = () => {
+    const handleHeaderCloseClick = () => {
+        if (!isEditing && (image || formData.name.trim() !== '')) {
+            saveToPending();
+        }
+        onClose();
+    };
+
+    const handleCancelButtonClick = () => {
         if (!isEditing && (image || formData.name.trim() !== '')) {
             setShowCancelConfirm(true);
         } else {
@@ -253,7 +259,7 @@ export default function AddItemModal({
                                 </div>
                                 <button
                                     type="button"
-                                    onClick={handleCloseClick}
+                                    onClick={handleHeaderCloseClick}
                                     className="w-9 h-9 rounded-full bg-[var(--background-secondary)] hover:bg-[var(--border-color)] border border-[var(--border-color)] flex items-center justify-center text-[var(--foreground-secondary)] hover:text-[var(--foreground)] transition-colors cursor-pointer"
                                     aria-label="Cerrar"
                                 >
@@ -502,7 +508,7 @@ export default function AddItemModal({
                                 <div className="flex items-center gap-3 w-full">
                                     <button
                                         type="button"
-                                        onClick={handleCloseClick}
+                                        onClick={handleCancelButtonClick}
                                         className="px-5 py-3 rounded-2xl bg-[var(--background-secondary)] hover:bg-[var(--border-color)] text-[var(--foreground-secondary)] hover:text-[var(--foreground)] font-semibold text-xs sm:text-sm transition-all cursor-pointer"
                                     >
                                         Cancelar
@@ -565,10 +571,17 @@ export default function AddItemModal({
                             <div>
                                 <h4 className="text-base font-bold text-[var(--foreground)]">¿Cancelar subida de prenda?</h4>
                                 <p className="text-xs text-[var(--foreground-secondary)] mt-1.5 leading-relaxed">
-                                    Si cancelas la subida, se descartarán la fotografía y los datos que hayas introducido.
+                                    Si eliminas la subida, se descartarán la fotografía y los datos que hayas introducido.
                                 </p>
                             </div>
                             <div className="flex flex-col gap-2 pt-2">
+                                <button
+                                    type="button"
+                                    onClick={() => setShowCancelConfirm(false)}
+                                    className="w-full py-3 rounded-xl bg-[var(--background-secondary)] hover:bg-[var(--border-color)] text-[var(--foreground)] font-semibold text-xs transition-colors cursor-pointer shadow-sm"
+                                >
+                                    Seguir editando
+                                </button>
                                 <button
                                     type="button"
                                     onClick={() => {
@@ -577,27 +590,9 @@ export default function AddItemModal({
                                         resetForm();
                                         onClose();
                                     }}
-                                    className="w-full py-3 rounded-xl bg-red-500 hover:bg-red-600 text-white font-semibold text-xs transition-colors cursor-pointer shadow-sm"
+                                    className="w-full py-2.5 rounded-xl text-red-500 hover:bg-red-500/10 font-semibold text-xs transition-colors cursor-pointer"
                                 >
-                                    Sí, cancelar subida
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setShowCancelConfirm(false);
-                                        saveToPending();
-                                        onClose();
-                                    }}
-                                    className="w-full py-2.5 rounded-xl bg-[var(--background-secondary)] hover:bg-[var(--border-color)] text-[var(--foreground)] font-semibold text-xs transition-colors cursor-pointer"
-                                >
-                                    Guardar como subida pendiente
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setShowCancelConfirm(false)}
-                                    className="w-full py-2 rounded-xl text-[var(--foreground-tertiary)] hover:text-[var(--foreground)] font-medium text-xs transition-colors cursor-pointer"
-                                >
-                                    Continuar editando
+                                    Eliminar
                                 </button>
                             </div>
                         </motion.div>

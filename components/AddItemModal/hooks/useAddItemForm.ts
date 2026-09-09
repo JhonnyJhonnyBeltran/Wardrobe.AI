@@ -275,25 +275,32 @@ export function useAddItemForm({
                         return;
                     }
 
-                    if (aiAnalysis && aiAnalysis.category) {
-                        setFormData(prev => ({
-                            ...prev,
-                            name: (prev.name && prev.name.trim() !== '' && prev.name !== DEFAULT_FORM_DATA.name && prev.name !== 'Nueva prenda') ? prev.name : (aiAnalysis.name || 'Nueva prenda'),
-                            type: aiAnalysis.category,
-                            color: aiAnalysis.color || prev.color,
-                            colorHex: aiAnalysis.colorHex || prev.colorHex,
-                            fabric: aiAnalysis.fabric || prev.fabric,
-                            season: aiAnalysis.season || prev.season,
-                        }));
-                    } else {
-                        // Fallback dominant color extraction
-                        const dominantColor = await extractDominantColor(processResult.imageUrl!);
-                        setFormData(prev => ({
-                            ...prev,
-                            color: dominantColor.name,
-                            colorHex: dominantColor.hex
-                        }));
+                    let detectedColor = aiAnalysis?.color;
+                    let detectedColorHex = aiAnalysis?.colorHex;
+
+                    if (!detectedColor || !detectedColorHex) {
+                        try {
+                            const dom = await extractDominantColor(processResult.imageUrl || originalDataUrl);
+                            if (dom && dom.name) {
+                                detectedColor = detectedColor || dom.name;
+                                detectedColorHex = detectedColorHex || dom.hex;
+                            }
+                        } catch (e) {
+                            console.warn('Dominant color fallback error:', e);
+                        }
                     }
+
+                    setFormData(prev => ({
+                        ...prev,
+                        name: (prev.name && prev.name.trim() !== '' && prev.name !== DEFAULT_FORM_DATA.name && prev.name !== 'Nueva prenda') 
+                            ? prev.name 
+                            : (aiAnalysis?.name || prev.name || 'Nueva prenda'),
+                        type: aiAnalysis?.category || prev.type || 'top',
+                        color: detectedColor || prev.color || 'Negro',
+                        colorHex: detectedColorHex || prev.colorHex || '#121212',
+                        fabric: aiAnalysis?.fabric || prev.fabric || 'Algodón',
+                        season: aiAnalysis?.season || prev.season || 'all-season',
+                    }));
                 } catch (colorError) {
                     console.warn('Failed to extract dominant color / AI analysis:', colorError);
                 }

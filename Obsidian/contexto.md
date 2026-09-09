@@ -565,9 +565,23 @@ En cada conversación, el backend alimenta a CloSy con:
 - **Cascada Resiliente de Modelos Flash Ultra-Rápidos**:
   - Cascada optimizada con control de tiempo (`AbortController` 8s): `['gemini-3-flash-preview', 'gemini-3.5-flash-lite', 'gemini-3.5-flash', 'gemini-3.6-flash']`.
   - Garantiza respuestas ricas en < 1.3s con fallback instantáneo (< 0.5s) ante cualquier congestión de red o servidor.
-- **Estructura Económica y Costes de IA**:
-  - Nivel Gratuito de Google AI Studio: **1.500 peticiones al día gratuitas** (0,00 €).
-  - Coste Pay-as-you-go en Gemini Flash: ~0,00015 € por consulta (15 céntimos cada 1.000 consultas).
+### 37. Detección Automática de Color y Categoría, Minimizado a Subida Pendiente y Persistencia en LocalStorage (Septiembre 2026)
+- **Detección Automática de Color y Tipo de Prenda (`/api/analyze-clothing` & `useAddItemForm.ts`)**:
+  - Al subir una foto en el modal de nueva prenda, Gemini Vision junto con el extractor cromático determinan automáticamente:
+    - **Tipo de prenda exacto**: Asigna automáticamente a `type` (`bottom`, `top`, `shirt`, `sweater`, `hoodie`, `jacket`, `outerwear`, `shorts`, `skirt`, `dress`, `shoes`, `bag`, `accessory`).
+    - **Color y Código Hexadecimal**: Detecta el color dominante de la prenda (`color` y `colorHex`), seleccionándolo automáticamente en el formulario.
+  - Integrado `getGeminiApiKey()` con cascada ultra-rápida de modelos para garantizar que el análisis visual se ejecute siempre en tiempo real.
+- **Minimizado Automático a Subida Pendiente al Pulsar Fuera (Backdrop Click)**:
+  - Al hacer clic en el backdrop o pulsar la "X" del modal con una prenda o foto en progreso, el modal se minimiza de forma inmediata y silenciosa guardando el borrador en `pendingUploadItem`, sin mostrar el modal de confirmación.
+- **Opciones Limpias en el Botón de Cancelar (`AddItemModal.tsx`)**:
+  - Al pulsar explícitamente el botón *"Cancelar"*, se despliega el modal de confirmación con únicamente **dos opciones**:
+    1. *"Seguir editando"*: Cierra la alerta y vuelve al formulario.
+    2. *"Eliminar"*: Descarta definitivamente la subida, limpia el borrador y cierra el modal.
+  - Se eliminó el botón redundante *"Guardar como subida pendiente"* del diálogo de cancelación.
+- **Persistencia en LocalStorage de Prenda Pendiente (`store/uiStore.ts`)**:
+  - El borrador en progreso se almacena permanentemente en `localStorage` (`wardrobe_pending_upload_item`).
+  - Permite navegar por toda la aplicación (`/feed`, `/search`, `/profile`, `/create`, `/closet`) manteniendo visible la barra flotante *"Subida pendiente"*, pudiendo reanudar la edición en cualquier momento con un solo toque en *"Continuar"*.
+
 
 
 

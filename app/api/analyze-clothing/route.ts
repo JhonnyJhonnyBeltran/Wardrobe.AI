@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'La imagen supera el tamaño máximo permitido' }, { status: 400 });
     }
 
-    const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+    const apiKey = getGeminiApiKey();
 
     // Clean base64 data and normalize MIME type
     const cleanBase64 = imageBase64.replace(/^data:image\/[a-zA-Z0-9+.-]+;base64,/, '');
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Models verified active with vision generateContent support
-    const models = ['gemini-3-flash-preview', 'gemini-3.6-flash', 'gemini-3.5-flash'];
+    const models = ['gemini-3-flash-preview', 'gemini-3.5-flash-lite', 'gemini-3.5-flash', 'gemini-3.6-flash'];
 
     const prompt = `Eres un experto clasificador visual de moda y prendas de vestir para la app Klozet.
 Analiza detenidamente la fotografía real de la prenda u objeto subido por el usuario.

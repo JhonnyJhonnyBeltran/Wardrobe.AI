@@ -81,6 +81,21 @@ interface UiStore {
     setLastFocusTimestamp: (ts: number) => void;
 }
 
+const PENDING_STORAGE_KEY = 'wardrobe_pending_upload_item';
+
+const getInitialPendingItem = (): PendingUploadItem | null => {
+    if (typeof window === 'undefined') return null;
+    try {
+        const stored = localStorage.getItem(PENDING_STORAGE_KEY);
+        if (stored) {
+            return JSON.parse(stored);
+        }
+    } catch (e) {
+        console.warn('Failed to parse stored pending upload item:', e);
+    }
+    return null;
+};
+
 export const useUiStore = create<UiStore>((set) => ({
     modal: null,
     showModal: (modal) => set({ modal }),
@@ -101,9 +116,27 @@ export const useUiStore = create<UiStore>((set) => ({
     searchQuery: '',
     setSearchQuery: (query) => set({ searchQuery: query }),
 
-    pendingUploadItem: null,
-    setPendingUploadItem: (item) => set({ pendingUploadItem: item }),
-    clearPendingUploadItem: () => set({ pendingUploadItem: null }),
+    pendingUploadItem: getInitialPendingItem(),
+    setPendingUploadItem: (item) => {
+        set({ pendingUploadItem: item });
+        if (typeof window !== 'undefined') {
+            if (item) {
+                try {
+                    localStorage.setItem(PENDING_STORAGE_KEY, JSON.stringify(item));
+                } catch (e) {
+                    console.warn('Failed to save pending upload to localStorage:', e);
+                }
+            } else {
+                localStorage.removeItem(PENDING_STORAGE_KEY);
+            }
+        }
+    },
+    clearPendingUploadItem: () => {
+        set({ pendingUploadItem: null });
+        if (typeof window !== 'undefined') {
+            localStorage.removeItem(PENDING_STORAGE_KEY);
+        }
+    },
 
     saveToast: null,
     showSaveToast: (toast) => set({ saveToast: toast }),
