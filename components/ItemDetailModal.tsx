@@ -50,36 +50,36 @@ export default function ItemDetailModal({ outfit, isOpen, onClose }: ItemDetailM
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: '100%' }}
                         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                        className="fixed inset-x-0 bottom-0 z-[60] max-h-[90vh] overflow-hidden rounded-t-3xl bg-white dark:bg-gray-900 mb-16 md:mb-0 md:inset-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:max-w-lg md:rounded-3xl md:max-h-[85vh]"
+                        className="fixed inset-x-0 bottom-0 z-[60] max-h-[90vh] overflow-hidden rounded-t-3xl bg-[var(--card-bg)] mb-16 md:mb-0 md:inset-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:max-w-lg md:rounded-3xl md:max-h-[85vh] border border-[var(--border-color)]"
                     >
                         {/* Header */}
-                        <div className="sticky top-0 z-10 flex items-center justify-between p-4 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800">
+                        <div className="sticky top-0 z-10 flex items-center justify-between p-4 bg-[var(--card-bg)] border-b border-[var(--border-color)]">
                             <div>
-                                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{outfit.style}</h2>
-                                <p className="text-xs text-gray-500 dark:text-gray-400">{outfit.date}</p>
+                                <h2 className="text-lg font-semibold text-[var(--foreground)]">{outfit.style}</h2>
+                                <p className="text-xs text-[var(--foreground-secondary)]">{outfit.date}</p>
                             </div>
                             <div className="flex items-center gap-1">
                                 <motion.button
-                                    whileHover={{ scale: 1.1, backgroundColor: 'rgba(252, 231, 243, 1)' }}
+                                    whileHover={{ scale: 1.1 }}
                                     whileTap={{ scale: 0.9 }}
-                                    className="p-2 rounded-full transition-colors"
+                                    className="p-2 rounded-full hover:bg-[var(--background-secondary)] transition-colors"
                                 >
-                                    <Heart className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                                    <Heart className="w-5 h-5 text-[var(--foreground-secondary)]" />
                                 </motion.button>
                                 <motion.button
-                                    whileHover={{ scale: 1.1, backgroundColor: 'rgba(243, 232, 255, 1)' }}
+                                    whileHover={{ scale: 1.1 }}
                                     whileTap={{ scale: 0.9 }}
-                                    className="p-2 rounded-full transition-colors"
+                                    className="p-2 rounded-full hover:bg-[var(--background-secondary)] transition-colors"
                                 >
-                                    <Share2 className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                                    <Share2 className="w-5 h-5 text-[var(--foreground-secondary)]" />
                                 </motion.button>
                                 <motion.button
-                                    whileHover={{ scale: 1.1, backgroundColor: 'rgba(243, 244, 246, 1)' }}
+                                    whileHover={{ scale: 1.1 }}
                                     whileTap={{ scale: 0.9 }}
                                     onClick={onClose}
-                                    className="p-2 rounded-full transition-colors"
+                                    className="p-2 rounded-full hover:bg-[var(--background-secondary)] transition-colors"
                                 >
-                                    <X className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+                                    <X className="w-5 h-5 text-[var(--foreground-secondary)]" />
                                 </motion.button>
                             </div>
                         </div>
@@ -87,16 +87,16 @@ export default function ItemDetailModal({ outfit, isOpen, onClose }: ItemDetailM
                         {/* Content */}
                         <div className="overflow-y-auto p-4 space-y-4 max-h-[calc(85vh-120px)] hide-scrollbar">
                             {/* AI Description */}
-                            <div className="bg-pink-50 dark:bg-[var(--brand-pink)]/10 rounded-2xl p-4">
-                                <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                            <div className="bg-[var(--brand-pink)]/10 rounded-2xl p-4">
+                                <p className="text-sm text-[var(--foreground)] leading-relaxed">
                                     {outfit.description}
                                 </p>
                             </div>
 
                             {/* Items List with Images */}
                             <div className="space-y-3">
-                                <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                                    <ShoppingBag className="w-4 h-4 text-pink-500" />
+                                <h3 className="text-sm font-semibold text-[var(--foreground)] flex items-center gap-2">
+                                    <ShoppingBag className="w-4 h-4 text-[var(--brand-pink)]" />
                                     Prendas del Look
                                 </h3>
                                 {outfit.items.map((item, index) => (
@@ -105,7 +105,7 @@ export default function ItemDetailModal({ outfit, isOpen, onClose }: ItemDetailM
                                         initial={{ opacity: 0, x: -20 }}
                                         animate={{ opacity: 1, x: 0 }}
                                         transition={{ delay: index * 0.08 }}
-                                        className="flex items-center gap-3 p-3 rounded-2xl bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all group"
+                                        className="flex items-center gap-3 p-3 rounded-2xl bg-[var(--background-secondary)] hover:bg-[var(--background-tertiary)] transition-all group border border-[var(--border-color)]"
                                     >
                                         {/* Item Image or Color Swatch */}
                                         <div className="relative w-16 h-16 rounded-xl overflow-hidden bg-white shadow-sm flex-shrink-0">
@@ -131,14 +131,14 @@ export default function ItemDetailModal({ outfit, isOpen, onClose }: ItemDetailM
 
                                         {/* Item Info */}
                                         <div className="flex-1 min-w-0">
-                                            <p className="font-medium text-gray-900 dark:text-white text-sm truncate">{item.name}</p>
-                                            <p className="text-xs text-gray-500 dark:text-gray-400">{item.brand}</p>
+                                            <p className="font-medium text-[var(--foreground)] text-sm truncate">{item.name}</p>
+                                            <p className="text-xs text-[var(--foreground-secondary)]">{item.brand}</p>
                                             <div className="flex items-center gap-2 mt-1">
-                                                <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-gray-200 dark:bg-gray-600 text-xs text-gray-600 dark:text-gray-300">
+                                                <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[var(--background-tertiary)] text-xs text-[var(--foreground-secondary)] border border-[var(--border-color)]">
                                                     {typeLabels[item.type] || item.type}
                                                 </span>
                                                 {(item as any).price && (
-                                                    <span className="text-xs font-semibold text-pink-600">
+                                                    <span className="text-xs font-semibold text-[var(--brand-pink)]">
                                                         {(item as any).price}
                                                     </span>
                                                 )}
@@ -166,10 +166,10 @@ export default function ItemDetailModal({ outfit, isOpen, onClose }: ItemDetailM
                                                 rel="noopener noreferrer"
                                                 whileHover={{ scale: 1.1 }}
                                                 whileTap={{ scale: 0.9 }}
-                                                className="p-2 rounded-full bg-white dark:bg-gray-700 shadow-sm opacity-0 group-hover:opacity-100 transition-all hover:shadow-md"
+                                                className="p-2 rounded-full bg-[var(--card-bg)] text-[var(--foreground-secondary)] shadow-sm opacity-0 group-hover:opacity-100 transition-all hover:shadow-md border border-[var(--border-color)]"
                                                 onClick={(e) => e.stopPropagation()}
                                             >
-                                                <ExternalLink className="w-4 h-4 text-pink-500" />
+                                                <ExternalLink className="w-4 h-4 text-[var(--brand-pink)]" />
                                             </motion.a>
                                         )}
                                     </motion.div>

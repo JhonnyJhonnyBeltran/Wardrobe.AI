@@ -497,6 +497,30 @@ En cada conversación, el backend alimenta a CloSy con:
 - **Mejora del Selector de Fecha y Calendario**:
   - Nuevo diseño de tarjeta con icono `<Calendar />` en contenedor redondeado, etiqueta de programación clara, botón para desmarcar fecha con microinteracción y campo de selección con borde enfocado en rosa satinado.
 
+### 28. Reconocimiento Real por IA en Subida de Prendas, Manejo Seguro de Errores, Confirmación de Cancelación y Rediseño de Subida Pendiente (Septiembre 2026)
+- **Reconocimiento y Clasificación Real de Prendas con Gemini Vision (`/api/analyze-clothing`)**:
+  - Actualizada la cascada de modelos activos de Gemini (`gemini-3-flash-preview`, `gemini-3.5-flash`, `gemini-2.0-flash`, `gemini-1.5-flash`) con payload optimizado en `inline_data`.
+  - Clasificación automática precisa en categorías reales (`top`, `shirt`, `sweater`, `hoodie`, `jacket`, `outerwear`, `bottom`, `shorts`, `skirt`, `dress`, `shoes`, `bag`, `accessory`), reservando `other` exclusivamente para objetos no textiles como libros.
+- **Protección de Datos y Manejo Seguro de Errores**:
+  - Eliminados los mensajes y volcados de consola técnicos o confidenciales en pantalla.
+  - Modal de error accesible ante formatos incompatibles: *"El formato de foto que has subido es incorrecto. Por favor, sube una imagen válida (JPG, PNG, WebP, HEIC o AVIF)"*.
+- **Dimensionamiento Dinámico y Espaciado de Botones en `AddItemModal`**:
+  - Modal compacto y centrado en creación rápida (`mode === 'quick'`) y extendido en creación completa (`mode === 'complete'`).
+  - Botón "Cancelar" separado y con espaciado ergonómico respecto al botón de confirmación.
+- **Modal de Confirmación de Cancelación**:
+  - Al pulsar cancelar, cerrar o hacer clic en el backdrop con datos o fotos en proceso, se despliega un modal interactivo que permite *"Guardar como subida pendiente"*, *"Sí, cancelar subida"* o *"Continuar editando"*, protegiendo al usuario de pérdidas accidentales.
+- **Rediseño de Subida Pendiente (`AppLayout.tsx`)**:
+  - Eliminado el reborde rosa de 2px.
+  - Contenedor centrado en pantalla, más ancho y con estética de cristal ahumado Apple HIG (`bg-[var(--card-bg)]/95 backdrop-blur-2xl border border-[var(--border-color)]`).
+  - Título oficial *"Subida pendiente"*, indicador pulsante, miniatura de la prenda en proceso, nombre destacado y botón píldora *"Continuar"*.
+
+### 29. Unificación Cromática del Panel de Notificaciones y Modales en Tema Oscuro (Septiembre 2026)
+- **Erradicación de Tonos Azulados (`gray-900`) en Notificaciones y Modales**:
+  - En `components/Notifications/NotificationsPopover.tsx`, se eliminaron todas las clases `dark:bg-gray-900`, `dark:bg-gray-800` y `dark:border-gray-800` que provocaban un fondo azulado en el panel lateral de notificaciones.
+  - Sustituidas por las variables oficiales del sistema: `bg-[var(--background)]`, `bg-[var(--card-bg)]`, `border-[var(--border-color)]`, `text-[var(--foreground)]` y `text-[var(--foreground-secondary)]`, garantizando coherencia absoluta con el fondo oscuro grafito/zinc de la aplicación (`#09090b` / `#121215`).
+  - Actualizados `NotificationToast.tsx`, `ItemDetailModal.tsx` y `OutfitCard.tsx` con el mismo estándar visual limpio y homogéneo.
+
+
 
 
 

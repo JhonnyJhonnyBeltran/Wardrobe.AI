@@ -69,28 +69,61 @@ export default function AppLayout({ children }: AppLayoutProps) {
       <AnimatePresence>
         {pendingUploadItem && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            initial={{ opacity: 0, y: 24, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 24, scale: 0.96 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
             style={{
-              bottom: isSelectionMode ? 'calc(var(--tabbar-height) + 112px)' : 'calc(var(--tabbar-height) + 24px)'
+              bottom: isSelectionMode ? 'calc(var(--tabbar-height) + 112px)' : 'calc(var(--tabbar-height) + 20px)'
             }}
-            className="fixed left-0 right-0 mx-auto md:left-auto md:right-24 md:mx-0 w-max bg-[var(--background)] border-2 border-[var(--brand-pink)] rounded-full shadow-xl flex items-center overflow-hidden z-[4990] transition-[bottom] duration-300"
+            className="fixed left-1/2 -translate-x-1/2 w-[92vw] max-w-md sm:max-w-lg bg-[var(--card-bg)]/95 backdrop-blur-2xl border border-[var(--border-color)] rounded-2xl shadow-[0_12px_36px_rgba(0,0,0,0.18)] dark:shadow-[0_12px_36px_rgba(0,0,0,0.5)] p-2.5 sm:p-3 flex items-center justify-between gap-3 z-[4990] transition-[bottom] duration-300"
           >
             <Link
               href="/closet?action=new-item"
-              className="flex items-center gap-2 px-4 py-2.5 text-[var(--foreground)] hover:bg-[var(--background-secondary)] transition-colors"
+              className="flex items-center gap-3 min-w-0 flex-1 hover:opacity-85 transition-opacity"
             >
-              <UploadCloud className="w-5 h-5 text-[var(--brand-pink)] animate-pulse" />
-              <span className="font-semibold text-sm">Prenda Pendiente</span>
+              {pendingUploadItem.processedImage || pendingUploadItem.image || pendingUploadItem.originalImage ? (
+                <div className="w-12 h-12 rounded-xl bg-[var(--background-secondary)] border border-[var(--border-color)] overflow-hidden flex-shrink-0 flex items-center justify-center p-0.5">
+                  <img
+                    src={pendingUploadItem.processedImage || pendingUploadItem.image || pendingUploadItem.originalImage || ''}
+                    alt={pendingUploadItem.formData?.name || pendingUploadItem.name || 'Prenda'}
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+              ) : (
+                <div className="w-12 h-12 rounded-xl bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] flex items-center justify-center flex-shrink-0">
+                  <UploadCloud className="w-6 h-6 animate-pulse" />
+                </div>
+              )}
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-[var(--brand-pink)] animate-ping" />
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--brand-pink)]">
+                    Subida pendiente
+                  </span>
+                </div>
+                <p className="text-sm font-semibold text-[var(--foreground)] truncate mt-0.5">
+                  {pendingUploadItem.formData?.name || pendingUploadItem.name || 'Prenda en progreso'}
+                </p>
+              </div>
             </Link>
-            <button
-              onClick={handleCancelPending}
-              className="p-3 border-l text-[var(--foreground-secondary)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 border-[var(--border-color)] transition-colors"
-              title="Cancelar subida"
-            >
-              <X className="w-4 h-4" />
-            </button>
+
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <Link
+                href="/closet?action=new-item"
+                className="px-3.5 py-2 bg-[var(--brand-pink)] hover:bg-[var(--brand-pink)]/90 active:scale-95 text-white text-xs font-bold rounded-xl transition-all shadow-sm flex items-center gap-1.5"
+              >
+                <span>Continuar</span>
+              </Link>
+              <button
+                onClick={handleCancelPending}
+                className="p-2 rounded-xl text-[var(--foreground-secondary)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 active:scale-90 transition-all"
+                title="Descartar subida pendiente"
+                aria-label="Descartar subida pendiente"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

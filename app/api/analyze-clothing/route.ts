@@ -69,107 +69,116 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Call Gemini Flash Vision model
-    const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    // Models to try in order of latency, multimodal capability and active availability
+    const models = ['gemini-3-flash-preview', 'gemini-3.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
 
-    const prompt = `Eres el sistema de visión e inteligencia artificial de Klozet.
-Tu tarea es:
+    const prompt = `Eres el sistema de visión artificial y estilismo de Klozet.
+Tu objetivo es analizar con máxima precisión la fotografía real de una prenda u objeto que el usuario ha subido.
+
 1. MODERACIÓN Y SEGURIDAD ESTRICTA:
    Evalúa si la imagen contiene contenido inapropiado:
    - Desnudez, pornografía, partes íntimas o contenido sexual explícito/sugerente.
    - Violencia explícita, sangre, armas, autolesiones o gore.
    - Símbolos de odio, drogas ilícitas, gestos ofensivos o contenido denigrante.
-   Si detectas CUALQUIERA de estos elementos, debes marcar "isInappropriate": true y describir la razón en "inappropriateReason".
+   Si detectas CUALQUIERA de estos elementos, marca "isInappropriate": true y describe la razón en "inappropriateReason".
 
-2. CLASIFICACIÓN DEL ARTÍCULO:
-   Si la imagen es segura ("isInappropriate": false), clasifica el objeto con máxima precisión:
-   - "other": LIBROS (novelas, ensayos, cómics, libros de texto), cuadernos, agendas, figuras, tecnología, coleccionables, tazas o cualquier objeto cotidiano NO textil.
-     * Si es un LIBRO: detecta el título o temática visible en la portada y pon el nombre como "Libro: [Título]" o "Libro [Temática]".
-   - "top": Camiseta, top, tirantes, crop top, polo.
-   - "shirt": Camisa formal o casual, blusa con botones.
-   - "sweater": Jersey, suéter de punto, cárdigan.
-   - "hoodie": Sudadera con capucha o sudadera deportiva sin capucha.
-   - "jacket": Chaqueta, cazadora vaquera, blazer, bomber, biker de cuero.
-   - "outerwear": Abrigo largo, gabardina, parka, plumífero, abrigo de lana.
-   - "bottom": Pantalón largo, jeans, vaqueros, joggers, chinos, leggings.
-   - "shorts": Pantalón corto, bermudas, shorts.
+2. CLASIFICACIÓN Y DETECCIÓN EXACTA DEL TIPO DE PRENDA:
+   Si la imagen es segura ("isInappropriate": false), clasifica la prenda en una de las siguientes categorías exactas:
+   - "top": Camiseta básica o gráfica, top de tirantes, crop top, polo, tank top.
+   - "shirt": Camisa (de vestir o casual), blusa, sobrecamisa.
+   - "sweater": Jersey, suéter de punto, cárdigan, chaleco de punto.
+   - "hoodie": Sudadera (con o sin capucha), crewneck, sudadera deportiva.
+   - "jacket": Chaqueta, cazadora denim/vaquera, biker de cuero, blazer, americana, bomber, cortavientos.
+   - "outerwear": Abrigo largo, abrigo de lana, gabardina, parka, plumífero, trench.
+   - "bottom": Pantalón largo, vaqueros / jeans, pantalones cargo, joggers, chinos, pantalones de traje, leggings.
+   - "shorts": Pantalón corto, bermudas, shorts de deporte o denim.
    - "skirt": Falda (corta, midi o larga).
-   - "dress": Vestido, mono, enterizo.
-   - "shoes": Zapatos, zapatillas sneakers, botas, botines, sandalias, tacones.
-   - "bag": Bolso, mochila, riñonera, cartera, maletín.
-   - "accessory": Gorra, sombrero, bufanda, cinturón, gafas de sol, reloj, joyería, corbata.
+   - "dress": Vestido, mono, enterizo, peto.
+   - "shoes": Calzado, zapatillas sneakers, botas, botines, mocasines, sandalias, tacones, zapatos de vestir.
+   - "bag": Bolso, tote bag, mochila, riñonera, bandolera, cartera.
+   - "accessory": Gorra, gorro, sombrero, bufanda, cinturón, gafas de sol, reloj, collar, pulsera.
+   - "other": ÚNICAMENTE si es un LIBRO (novela, cómic, libro de texto), libreta, figura, producto o cualquier objeto cotidiano NO textil ni de moda.
+     * Si es un LIBRO: pon el nombre como "Libro: [Título visible]".
 
-Devuelve EXCLUSIVAMENTE un JSON válido sin bloques markdown ni texto extra con esta estructura:
+3. DETALLES VISUALES:
+   - "name": Nombre descriptivo y comercial de la prenda en español (ej: "Camiseta Gráfica Vintage", "Vaqueros Baggy Azules", "Sudadera Oversize Gris", "Zapatillas Deportivas Blancas", "Cazadora Cuero Biker").
+   - "color": Nombre en español del color principal predominante (ej: Negro, Blanco, Azul marino, Gris, Beige, Verde oliva, Marrón, Rojo, etc.).
+   - "colorHex": Código #HEX aproximado del color dominante.
+   - "fabric": Algodón | Denim | Cuero | Lana | Lino | Poliéster | Punto | Seda | Pana | Sintético | Papel / Tapa dura.
+   - "season": "spring" | "summer" | "autumn" | "winter" | "all-season".
+
+Devuelve EXCLUSIVAMENTE un JSON válido sin texto adicional ni bloques markdown:
 {
   "isInappropriate": false,
   "inappropriateReason": null,
   "category": "top" | "shirt" | "sweater" | "hoodie" | "jacket" | "outerwear" | "bottom" | "shorts" | "skirt" | "dress" | "shoes" | "bag" | "accessory" | "other",
-  "name": "Nombre descriptivo y natural en español (ej: Libro: El Principito, Sudadera Oversize Negra, Cazadora Denim, etc.)",
-  "color": "Nombre en español del color principal (ej: Negro, Blanco, Azul, Beige, Rojo, etc.)",
-  "colorHex": "#hex aproximado del color principal",
-  "fabric": "Papel / Tapa dura | Tapa blanda | Algodón | Poliéster | Cuero | Denim | Lana | Seda | Lino | Punto | Sintético | Otro",
-  "season": "all-season" | "spring" | "summer" | "autumn" | "winter"
+  "name": "Nombre descriptivo de la prenda",
+  "color": "Color principal",
+  "colorHex": "#hex",
+  "fabric": "Tejido",
+  "season": "all-season"
 }`;
 
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 10000);
-
-    const response = await fetch(geminiUrl, {
-      method: 'POST',
-      signal: controller.signal,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [
-              {
-                inlineData: {
-                  mimeType: mimeType,
-                  data: cleanBase64
-                }
-              },
-              { text: prompt }
-            ]
-          }
-        ],
-        generationConfig: {
-          responseMimeType: 'application/json',
-          temperature: 0.1
-        }
-      })
-    });
-    clearTimeout(timeout);
-
-    if (!response.ok) {
-      console.warn('[AnalyzeClothing] Gemini API error status:', response.status);
-      return NextResponse.json({
-        category: 'other',
-        name: 'Artículo',
-        color: 'Negro',
-        colorHex: '#000000',
-        fabric: 'Algodón',
-        season: 'all-season',
-        isInappropriate: false
-      });
-    }
-
-    const data = await response.json();
-    const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-
-    if (rawText) {
+    for (const model of models) {
       try {
-        const parsed: AnalyzeResponse = JSON.parse(rawText.trim());
-        return NextResponse.json(parsed);
-      } catch (err) {
-        console.error('[AnalyzeClothing] Failed to parse JSON from Gemini:', rawText);
+        const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 7000);
+
+        const response = await fetch(geminiUrl, {
+          method: 'POST',
+          signal: controller.signal,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [
+              {
+                parts: [
+                  {
+                    inline_data: {
+                      mime_type: mimeType,
+                      data: cleanBase64
+                    }
+                  },
+                  { text: prompt }
+                ]
+              }
+            ],
+            generationConfig: {
+              response_mime_type: 'application/json',
+              temperature: 0.1,
+              max_output_tokens: 800
+            }
+          })
+        });
+        clearTimeout(timeout);
+
+        if (response.ok) {
+          const data = await response.json();
+          const candidateText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (candidateText) {
+            let cleaned = candidateText.trim();
+            if (cleaned.startsWith('```json')) {
+              cleaned = cleaned.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+            } else if (cleaned.startsWith('```')) {
+              cleaned = cleaned.replace(/^```\s*/, '').replace(/\s*```$/, '');
+            }
+            const parsed: AnalyzeResponse = JSON.parse(cleaned);
+            return NextResponse.json(parsed);
+          }
+        } else {
+          console.warn(`[AnalyzeClothing] Model ${model} returned status ${response.status}`);
+        }
+      } catch (innerErr) {
+        console.warn(`[AnalyzeClothing] Model ${model} failed, trying next:`, innerErr);
       }
     }
 
+    // Default graceful fallback if all models failed or network issue
     return NextResponse.json({
       category: 'top',
-      name: 'Prenda',
+      name: 'Nueva prenda',
       color: 'Negro',
-      colorHex: '#000000',
+      colorHex: '#121212',
       fabric: 'Algodón',
       season: 'all-season',
       isInappropriate: false
@@ -178,7 +187,7 @@ Devuelve EXCLUSIVAMENTE un JSON válido sin bloques markdown ni texto extra con 
   } catch (error: any) {
     console.error('[AnalyzeClothing] Error processing request:', error);
     return NextResponse.json(
-      { error: error?.message || 'Error al analizar la imagen' },
+      { error: 'Error al analizar la imagen' },
       { status: 500 }
     );
   }

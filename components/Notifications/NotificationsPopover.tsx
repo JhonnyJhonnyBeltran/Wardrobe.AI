@@ -42,16 +42,16 @@ export default function NotificationsPopover({ isOpen, onClose }: NotificationsP
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -20 }}
                     transition={{ duration: 0.2 }}
-                    className="fixed top-0 left-[72px] h-screen w-[400px] bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 shadow-2xl z-[60] flex flex-col"
+                    className="fixed top-0 left-[72px] h-screen w-[400px] bg-[var(--background)] border-r border-[var(--border-color)] shadow-2xl z-[60] flex flex-col"
                 >
-                    <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-white/95 dark:bg-gray-900/95 backdrop-blur-md z-10 shrink-0">
-                        <h2 className="text-xl font-bold text-gray-900 dark:text-white">Notificaciones</h2>
-                        <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x text-gray-500"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+                    <div className="p-4 border-b border-[var(--border-color)] flex justify-between items-center bg-[var(--background)]/95 backdrop-blur-md z-10 shrink-0">
+                        <h2 className="text-xl font-bold text-[var(--foreground)]">Notificaciones</h2>
+                        <button onClick={onClose} className="p-2 hover:bg-[var(--background-secondary)] rounded-full transition-colors" aria-label="Cerrar notificaciones">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x text-[var(--foreground-secondary)]"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
                         </button>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto min-h-0">
+                    <div className="flex-1 overflow-y-auto min-h-0 bg-[var(--background)]">
                         <NotificationList compact onClose={onClose} />
                     </div>
                 </motion.div>

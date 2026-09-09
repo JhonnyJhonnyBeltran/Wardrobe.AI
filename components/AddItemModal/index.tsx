@@ -65,6 +65,7 @@ export default function AddItemModal({
         buildPayload,
         resetForm,
         error,
+        setError,
     } = useAddItemForm({ isOpen, initialData, isEditing });
 
     // Fetch categories and brands from database
@@ -75,6 +76,9 @@ export default function AddItemModal({
 
     // Advisor modal state (kept here as it's UI-specific)
     const [showAdvisor, setShowAdvisor] = React.useState(false);
+
+    // Cancel confirmation state
+    const [showCancelConfirm, setShowCancelConfirm] = React.useState(false);
 
     // ─── Handlers ────────────────────────────────────────────────────────────
 
@@ -126,7 +130,6 @@ export default function AddItemModal({
                         });
                         
                         if (response.ok) {
-                            // Silently refetch brands so they are updated for the next item
                             refetchBrands();
                         }
                     } catch (brandErr) {
@@ -171,28 +174,29 @@ export default function AddItemModal({
     };
 
     const saveToPending = () => {
-        if (!isEditing && (image || formData.name !== '')) {
+        if (!isEditing && (image || formData.name.trim() !== '')) {
             useUiStore.getState().setPendingUploadItem({
                 formData,
                 image,
                 originalImage,
                 processedImage,
+                name: formData.name || 'Nueva prenda'
             });
         }
     };
 
     const handleBackdropClick = () => {
-        saveToPending();
-        onClose();
+        if (!isEditing && (image || formData.name.trim() !== '')) {
+            setShowCancelConfirm(true);
+        } else {
+            onClose();
+        }
     };
 
     const handleCloseClick = () => {
-        if (!isEditing && image) {
-            useUiStore.getState().clearPendingUploadItem();
-            resetForm();
-            onClose();
+        if (!isEditing && (image || formData.name.trim() !== '')) {
+            setShowCancelConfirm(true);
         } else {
-            saveToPending();
             onClose();
         }
     };
@@ -220,47 +224,45 @@ export default function AddItemModal({
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.25 }}
-                        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
+                        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-3 sm:p-4"
                         onClick={handleBackdropClick}
                     >
                         <motion.div
                             key="add-item-content"
-                            initial={{ y: '100%', opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            exit={{ y: '100%', opacity: 0 }}
+                            layout
+                            initial={{ y: 20, opacity: 0, scale: 0.95 }}
+                            animate={{ y: 0, opacity: 1, scale: 1 }}
+                            exit={{ y: 20, opacity: 0, scale: 0.95 }}
                             transition={{ type: 'spring', damping: 28, stiffness: 300 }}
                             onClick={(e) => e.stopPropagation()}
-                            className="w-full max-w-2xl bg-[var(--background)] rounded-3xl overflow-hidden h-[85vh] flex flex-col shadow-2xl border border-[var(--border-color)]"
+                            className={`w-full bg-[var(--background)] rounded-3xl overflow-hidden flex flex-col shadow-2xl border border-[var(--border-color)] transition-all duration-300 ${
+                                mode === 'quick' && !isEditing
+                                    ? 'max-w-md max-h-[85vh] h-auto'
+                                    : 'max-w-2xl max-h-[88vh] h-[88vh] md:h-auto md:max-h-[85vh]'
+                            }`}
                         >
-                            {/* ── Floating Close Button ── */}
-                            <div className="sticky top-0 z-50 flex justify-end px-4 pt-4">
-                                <motion.button
+                            {/* ── Header with Title and Close Button ── */}
+                            <div className="sticky top-0 z-50 flex items-center justify-between px-6 pt-5 pb-2 bg-[var(--background)] border-b border-[var(--border-color)]/40">
+                                <div>
+                                    <h3 className="text-base font-bold text-[var(--foreground)]">
+                                        {isEditing ? 'Editar prenda' : 'Subir nueva prenda'}
+                                    </h3>
+                                    <p className="text-xs text-[var(--foreground-tertiary)]">
+                                        {mode === 'quick' && !isEditing ? 'Modo de creación rápida' : 'Detalles completos de la prenda'}
+                                    </p>
+                                </div>
+                                <button
+                                    type="button"
                                     onClick={handleCloseClick}
-                                    initial={{ opacity: 0, scale: 0 }}
-                                    animate={{
-                                        opacity: 1,
-                                        scale: 1,
-                                        transition: {
-                                            delay: 0.4,
-                                            type: 'spring',
-                                            stiffness: 300,
-                                            damping: 25,
-                                        },
-                                    }}
-                                    whileHover={{
-                                        scale: 1.1,
-                                        rotate: 90,
-                                        transition: { duration: 0.15, ease: 'easeOut' },
-                                    }}
-                                    whileTap={{ scale: 0.9 }}
-                                    className="w-10 h-10 rounded-full bg-[var(--background)]/80 backdrop-blur-md border border-[var(--border-color)] shadow-sm flex items-center justify-center text-[var(--foreground)] hover:bg-[var(--foreground)] hover:text-[var(--background)] transition-colors duration-75 ease-out"
+                                    className="w-9 h-9 rounded-full bg-[var(--background-secondary)] hover:bg-[var(--border-color)] border border-[var(--border-color)] flex items-center justify-center text-[var(--foreground-secondary)] hover:text-[var(--foreground)] transition-colors cursor-pointer"
+                                    aria-label="Cerrar"
                                 >
-                                    <X className="w-5 h-5" />
-                                </motion.button>
+                                    <X className="w-4 h-4" />
+                                </button>
                             </div>
 
                             {/* ── Scrollable Content ── */}
-                            <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y px-4 md:px-6 pb-8 custom-scrollbar scroll-smooth space-y-4">
+                            <div className="flex-1 overflow-y-auto overscroll-contain touch-pan-y px-4 md:px-6 py-4 custom-scrollbar scroll-smooth space-y-4">
 
                                 {/* Mode Toggle — only relevant when CREATING a new item */}
                                 {!isEditing && (
@@ -495,31 +497,40 @@ export default function AddItemModal({
                                 )}
                             </div>
 
-                            {/* ── Submit Button — fixed at bottom ── */}
-                            <div className="flex-shrink-0 p-4 pt-2 pb-8 md:pb-3 bg-[var(--background)] border-t border-[var(--border-color)] safe-bottom">
-                                <Button
-                                    onClick={handleSubmit}
-                                    disabled={!canSubmit}
-                                    className="w-full"
-                                    glow={canSubmit}
-                                >
-                                    {isSubmitting ? (
-                                        <>
-                                            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                                            {isEditing ? 'Guardando...' : 'Añadiendo...'}
-                                        </>
-                                    ) : isProcessing ? (
-                                        <>
-                                            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                                            {processingMessage || 'Procesando...'}
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Check className="w-5 h-5 mr-2" />
-                                            {isEditing ? 'Guardar Cambios' : 'Añadir Prenda'}
-                                        </>
-                                    )}
-                                </Button>
+                            {/* ── Bottom Action Buttons ── */}
+                            <div className="flex-shrink-0 p-4 pt-3 pb-6 md:pb-4 bg-[var(--background)] border-t border-[var(--border-color)] safe-bottom">
+                                <div className="flex items-center gap-3 w-full">
+                                    <button
+                                        type="button"
+                                        onClick={handleCloseClick}
+                                        className="px-5 py-3 rounded-2xl bg-[var(--background-secondary)] hover:bg-[var(--border-color)] text-[var(--foreground-secondary)] hover:text-[var(--foreground)] font-semibold text-xs sm:text-sm transition-all cursor-pointer"
+                                    >
+                                        Cancelar
+                                    </button>
+                                    <Button
+                                        onClick={handleSubmit}
+                                        disabled={!canSubmit}
+                                        className="flex-1 py-3 rounded-2xl text-xs sm:text-sm font-semibold"
+                                        glow={canSubmit}
+                                    >
+                                        {isSubmitting ? (
+                                            <>
+                                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                                {isEditing ? 'Guardando...' : 'Añadiendo...'}
+                                            </>
+                                        ) : isProcessing ? (
+                                            <>
+                                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                                {processingMessage || 'Procesando...'}
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Check className="w-4 h-4 mr-2" />
+                                                {isEditing ? 'Guardar Cambios' : 'Añadir Prenda'}
+                                            </>
+                                        )}
+                                    </Button>
+                                </div>
                                 {isProcessing && (
                                     <p className="text-xs text-center text-[var(--foreground-tertiary)] mt-2">
                                         Puedes seguir rellenando el formulario mientras se procesa
@@ -528,6 +539,107 @@ export default function AddItemModal({
                             </div>
                         </motion.div>
                     </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Cancel Confirmation Modal */}
+            <AnimatePresence>
+                {showCancelConfirm && (
+                    <div className="fixed inset-0 z-[10005] flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                            onClick={() => setShowCancelConfirm(false)}
+                        />
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0, y: 10 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.95, opacity: 0, y: 10 }}
+                            className="relative w-full max-w-sm bg-[var(--card-bg)] rounded-3xl p-6 border border-[var(--border-color)] shadow-2xl z-10 text-center space-y-4"
+                        >
+                            <div className="w-12 h-12 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center mx-auto">
+                                <X className="w-6 h-6" />
+                            </div>
+                            <div>
+                                <h4 className="text-base font-bold text-[var(--foreground)]">¿Cancelar subida de prenda?</h4>
+                                <p className="text-xs text-[var(--foreground-secondary)] mt-1.5 leading-relaxed">
+                                    Si cancelas la subida, se descartarán la fotografía y los datos que hayas introducido.
+                                </p>
+                            </div>
+                            <div className="flex flex-col gap-2 pt-2">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setShowCancelConfirm(false);
+                                        useUiStore.getState().clearPendingUploadItem();
+                                        resetForm();
+                                        onClose();
+                                    }}
+                                    className="w-full py-3 rounded-xl bg-red-500 hover:bg-red-600 text-white font-semibold text-xs transition-colors cursor-pointer shadow-sm"
+                                >
+                                    Sí, cancelar subida
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setShowCancelConfirm(false);
+                                        saveToPending();
+                                        onClose();
+                                    }}
+                                    className="w-full py-2.5 rounded-xl bg-[var(--background-secondary)] hover:bg-[var(--border-color)] text-[var(--foreground)] font-semibold text-xs transition-colors cursor-pointer"
+                                >
+                                    Guardar como subida pendiente
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowCancelConfirm(false)}
+                                    className="w-full py-2 rounded-xl text-[var(--foreground-tertiary)] hover:text-[var(--foreground)] font-medium text-xs transition-colors cursor-pointer"
+                                >
+                                    Continuar editando
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Photo Format / AI Error Modal */}
+            <AnimatePresence>
+                {error && (
+                    <div className="fixed inset-0 z-[10006] flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                            onClick={() => setError(null)}
+                        />
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0, y: 10 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.95, opacity: 0, y: 10 }}
+                            className="relative w-full max-w-sm bg-[var(--card-bg)] rounded-3xl p-6 border border-[var(--border-color)] shadow-2xl z-10 text-center space-y-4"
+                        >
+                            <div className="w-12 h-12 rounded-full bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto">
+                                <X className="w-6 h-6" />
+                            </div>
+                            <div>
+                                <h4 className="text-base font-bold text-[var(--foreground)]">Formato de foto no válido</h4>
+                                <p className="text-xs text-[var(--foreground-secondary)] mt-1.5 leading-relaxed">
+                                    {error}
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setError(null)}
+                                className="w-full py-3 rounded-xl bg-[var(--brand-pink)] hover:bg-[#ff3377] text-white font-semibold text-xs transition-all cursor-pointer shadow-sm"
+                            >
+                                Entendido
+                            </button>
+                        </motion.div>
+                    </div>
                 )}
             </AnimatePresence>
 

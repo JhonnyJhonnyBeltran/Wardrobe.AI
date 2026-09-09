@@ -5,9 +5,9 @@
  * Updated to use real Outfit type from DB
  */
 
-import React from 'react';
+import React, { memo } from 'react';
 import { motion } from 'framer-motion';
-import { Lock, Sparkles, Briefcase, Heart, Zap, Flower2, PartyPopper, Circle, Snowflake, ShoppingBag, Layers, Globe } from 'lucide-react';
+import { Lock, Sparkles, Briefcase, Heart, Zap, Flower2, PartyPopper, Circle, Snowflake, ShoppingBag, Layers, Globe, Edit2, Trash2, Send } from 'lucide-react';
 import type { Outfit } from '@/types/outfit';
 
 interface OutfitCardProps {
@@ -43,9 +43,6 @@ const styleConfig: Record<string, { icon: React.ReactNode; gradient: string }> =
     'Party Ready': { icon: <PartyPopper className="w-3 h-3" />, gradient: 'from-violet-400 to-purple-500' },
 };
 
-import { memo } from 'react';
-import { Edit2, Trash2, Share2, Send } from 'lucide-react';
-
 const OutfitCard = ({ outfit, isLocked = false, onClick, onEdit, onDelete, onShare, onToggleFavorite, onToggleVisibility, index = 0 }: OutfitCardProps) => {
     const styleKey = outfit.occasion || outfit.style || 'everyday';
     const config = styleConfig[styleKey] || { icon: <Layers className="w-3 h-3" />, gradient: 'from-pink-400 to-rose-500' };
@@ -73,14 +70,14 @@ const OutfitCard = ({ outfit, isLocked = false, onClick, onEdit, onDelete, onSha
                 scale: 1.03,
                 transition: { duration: 0.2 }
             } : {}}
-            className={`relative overflow-hidden rounded-[20px] bg-white dark:bg-gray-900 shadow-sm border border-[var(--border-color)] ${isLocked ? 'cursor-not-allowed' : 'cursor-pointer'
+            className={`relative overflow-hidden rounded-[20px] bg-[var(--card-bg)] shadow-sm border border-[var(--border-color)] ${isLocked ? 'cursor-not-allowed' : 'cursor-pointer'
                 }`}
         >
             {/* Clickable Area */}
             <div onClick={!isLocked && onClick ? () => onClick(outfit) : undefined} className="cursor-pointer">
                 {/* Outfit Preview */}
                 <div
-                    className={`relative w-full aspect-[4/5] bg-[#f8f9fa] dark:bg-[#111] overflow-hidden ${isLocked ? 'blur-sm' : ''
+                    className={`relative w-full aspect-[4/5] bg-[var(--background-secondary)] overflow-hidden ${isLocked ? 'blur-sm' : ''
                         }`}
                 >
                     {outfitPreviewImage ? (
@@ -92,11 +89,11 @@ const OutfitCard = ({ outfit, isLocked = false, onClick, onEdit, onDelete, onSha
                         />
                     ) : (
                         /* Items Grid - With Images (Fallback) */
-                        <div className="grid grid-cols-2 gap-[1px] flex-1 bg-gray-200 dark:bg-gray-700">
+                        <div className="grid grid-cols-2 gap-[1px] flex-1 bg-[var(--border-color)]">
                             {(outfit.items || []).slice(0, 4).map((item: any, i: number) => (
                                 <motion.div
                                     key={item.id || i}
-                                    className="relative bg-white dark:bg-[#222] aspect-square overflow-hidden"
+                                    className="relative bg-[var(--card-bg)] aspect-square overflow-hidden"
                                 >
                                     {getItemImage(item) ? (
                                         <img
@@ -123,13 +120,11 @@ const OutfitCard = ({ outfit, isLocked = false, onClick, onEdit, onDelete, onSha
                             ))}
                             {/* Placeholder if less than 4 items */}
                             {Array.from({ length: Math.max(0, 4 - (outfit.items?.length || 0)) }).map((_, i) => (
-                                <div key={`placeholder-${i}`} className="bg-gray-100 dark:bg-gray-800 rounded-xl opacity-50 aspect-square" />
+                                <div key={`placeholder-${i}`} className="bg-[var(--background-secondary)] rounded-xl opacity-50 aspect-square" />
                             ))}
                         </div>
                     )}
                 </div>
-
-
             </div>
 
             {/* Right Overlay Actions - Always visible */}
@@ -152,7 +147,6 @@ const OutfitCard = ({ outfit, isLocked = false, onClick, onEdit, onDelete, onSha
                 )}
             </div>
 
-
             {/* Actions Overlay (Visible on Hover/Focus) */}
             {
                 !isLocked && (
@@ -163,13 +157,13 @@ const OutfitCard = ({ outfit, isLocked = false, onClick, onEdit, onDelete, onSha
                                     e.stopPropagation();
                                     onToggleVisibility(outfit);
                                 }}
-                                className="p-2 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-full shadow-sm hover:bg-white dark:hover:bg-gray-700 transition-colors"
+                                className="p-2 bg-[var(--card-bg)]/90 backdrop-blur-sm border border-[var(--border-color)] rounded-full shadow-sm hover:bg-[var(--background-secondary)] text-[var(--foreground-secondary)] transition-colors"
                                 title={outfit.is_public ? "Hacer privado" : "Hacer público"}
                             >
                                 {outfit.is_public ? (
-                                    <Globe className="w-4 h-4 text-blue-500" />
+                                    <Globe className="w-4 h-4 text-[var(--brand-pink)]" />
                                 ) : (
-                                    <Lock className="w-4 h-4 text-gray-500" />
+                                    <Lock className="w-4 h-4 text-[var(--foreground-secondary)]" />
                                 )}
                             </button>
                         )}
@@ -179,7 +173,7 @@ const OutfitCard = ({ outfit, isLocked = false, onClick, onEdit, onDelete, onSha
                                     e.stopPropagation();
                                     onEdit(outfit);
                                 }}
-                                className="p-2 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-full shadow-sm hover:bg-white dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 transition-colors"
+                                className="p-2 bg-[var(--card-bg)]/90 backdrop-blur-sm border border-[var(--border-color)] rounded-full shadow-sm hover:bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:text-[var(--foreground)] transition-colors"
                                 title="Editar"
                             >
                                 <Edit2 className="w-4 h-4" />
@@ -191,7 +185,7 @@ const OutfitCard = ({ outfit, isLocked = false, onClick, onEdit, onDelete, onSha
                                     e.stopPropagation();
                                     onShare(outfit);
                                 }}
-                                className="p-2 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-full shadow-sm hover:bg-blue-50 dark:hover:bg-blue-900/30 text-blue-500 dark:text-blue-400 transition-colors"
+                                className="p-2 bg-[var(--card-bg)]/90 backdrop-blur-sm border border-[var(--border-color)] rounded-full shadow-sm hover:bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] transition-colors"
                                 title="Crear Publicación"
                             >
                                 <Send className="w-4 h-4" />
@@ -203,7 +197,7 @@ const OutfitCard = ({ outfit, isLocked = false, onClick, onEdit, onDelete, onSha
                                     e.stopPropagation();
                                     onDelete(outfit.id);
                                 }}
-                                className="p-2 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-full shadow-sm hover:bg-red-50 dark:hover:bg-red-900/30 text-red-500 dark:text-red-400 transition-colors"
+                                className="p-2 bg-[var(--card-bg)]/90 backdrop-blur-sm border border-[var(--border-color)] rounded-full shadow-sm hover:bg-red-500/10 text-red-500 transition-colors"
                                 title="Eliminar"
                             >
                                 <Trash2 className="w-4 h-4" />
@@ -216,8 +210,8 @@ const OutfitCard = ({ outfit, isLocked = false, onClick, onEdit, onDelete, onSha
             {/* Shop indicator */}
             {
                 hasShopLinks && !isLocked && (
-                    <div className="absolute top-2 right-2 bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm rounded-full p-1.5 shadow-sm">
-                        <ShoppingBag className="w-3.5 h-3.5 text-pink-500" />
+                    <div className="absolute top-2 right-2 bg-[var(--card-bg)]/90 backdrop-blur-sm border border-[var(--border-color)] rounded-full p-1.5 shadow-sm">
+                        <ShoppingBag className="w-3.5 h-3.5 text-[var(--brand-pink)]" />
                     </div>
                 )
             }
@@ -244,7 +238,7 @@ const OutfitCard = ({ outfit, isLocked = false, onClick, onEdit, onDelete, onSha
                     </motion.div>
                 )
             }
-        </motion.div >
+        </motion.div>
     );
 };
 

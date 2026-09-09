@@ -17,6 +17,7 @@ export interface PendingUploadItem {
     image?: string | null;
     originalImage?: string | null;
     processedImage?: string | null;
+    name?: string;
 }
 
 export interface SaveToast {

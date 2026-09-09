@@ -142,15 +142,36 @@ export function useAddItemForm({
         const file = e.target.files?.[0];
         if (!file) return;
 
+        // Supported image MIME types
+        const validMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/heic', 'image/heif', 'image/avif', 'image/gif'];
+        const isImage = file.type ? validMimeTypes.includes(file.type.toLowerCase()) : file.name.match(/\.(jpe?g|png|webp|heic|heif|avif|gif)$/i);
+
+        if (!isImage) {
+            setError('El formato de foto que has subido es incorrecto. Por favor, sube una imagen en formato JPG, PNG, WEBP o HEIC.');
+            // Reset the input value so user can retry with the same or another file
+            e.target.value = '';
+            return;
+        }
+
         setSelectedFile(file);
 
         // Load original image first - show immediately for instant feedback
-        const originalDataUrl = await new Promise<string>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result as string);
-            reader.onerror = reject;
-            reader.readAsDataURL(file);
-        });
+        let originalDataUrl: string;
+        try {
+            originalDataUrl = await new Promise<string>((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    if (reader.result) resolve(reader.result as string);
+                    else reject(new Error('Invalid image result'));
+                };
+                reader.onerror = () => reject(new Error('Read error'));
+                reader.readAsDataURL(file);
+            });
+        } catch {
+            setError('El formato de foto que has subido es incorrecto o no se pudo leer el archivo.');
+            e.target.value = '';
+            return;
+        }
 
         setOriginalImage(originalDataUrl);
         setImage(originalDataUrl);
@@ -222,7 +243,7 @@ export function useAddItemForm({
                     if (aiAnalysis && aiAnalysis.category) {
                         setFormData(prev => ({
                             ...prev,
-                            name: prev.name.trim() ? prev.name : (aiAnalysis.name || prev.name),
+                            name: prev.name.trim() && prev.name !== DEFAULT_FORM_DATA.name ? prev.name : (aiAnalysis.name || prev.name),
                             type: aiAnalysis.category || prev.type,
                             color: aiAnalysis.color || prev.color,
                             colorHex: aiAnalysis.colorHex || prev.colorHex,
@@ -243,14 +264,11 @@ export function useAddItemForm({
                 }
             } else {
                 setProcessingStage('error');
-                if (processResult.error) {
-                    setError(processResult.error);
-                }
+                setError('El formato de foto que has subido es incorrecto o la imagen no se pudo procesar.');
             }
-        } catch (error) {
-            console.error('Image processing failed:', error);
+        } catch {
             setProcessingStage('error');
-            setError(error instanceof Error ? error.message : 'Error al procesar la imagen');
+            setError('El formato de foto que has subido es incorrecto o la imagen no se pudo procesar.');
         } finally {
             await new Promise<void>(resolve => requestAnimationFrame(() => resolve()));
             setIsProcessing(false);

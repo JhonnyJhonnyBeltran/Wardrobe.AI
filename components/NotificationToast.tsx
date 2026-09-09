@@ -129,7 +129,7 @@ const Toast = memo(function Toast({
 
       {/* Content */}
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-gray-900 dark:text-white">
+        <p className="text-sm font-medium text-[var(--foreground)]">
           {notification.title || (
             notification.type === 'like' ? 'Nuevo me gusta' :
             notification.type === 'comment' ? 'Nuevo comentario' :
@@ -138,7 +138,7 @@ const Toast = memo(function Toast({
             'Nueva notificación'
           )}
         </p>
-        <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+        <p className="text-sm text-[var(--foreground-secondary)] truncate">
           {notification.message || (
             notification.type === 'like' ? 'A alguien le ha gustado tu publicación' :
             notification.type === 'comment' ? 'Alguien ha comentado en tu publicación' :
@@ -156,9 +156,9 @@ const Toast = memo(function Toast({
           e.stopPropagation();
           onDismiss(notification.id);
         }}
-        className="flex-shrink-0 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+        className="flex-shrink-0 p-1 rounded-full hover:bg-[var(--background-secondary)] transition-colors"
       >
-        <X className="w-4 h-4 text-gray-400" />
+        <X className="w-4 h-4 text-[var(--foreground-secondary)]" />
       </button>
     </div>
   );
