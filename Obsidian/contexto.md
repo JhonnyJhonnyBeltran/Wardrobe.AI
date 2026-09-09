@@ -534,6 +534,12 @@ En cada conversación, el backend alimenta a CloSy con:
 - **Corrección de Columna `notification_preferences` en Supabase**:
   - En `store/realtimeStore.ts`, `store/userStore.tsx`, `components/CookiesBanner.tsx`, `lib/hooks/useAuth.ts` y `/profile/settings/page.tsx`, se unificaron las consultas y mutaciones para utilizar la columna real `notification_preferences` (JSONB) en la tabla `profiles`, erradicando los errores `400 (Bad Request)` en el endpoint REST de Supabase.
 
+### 32. Manejo de Conflictos y Asignación de Outfits en Calendario (Septiembre 2026)
+- **Resolución de Error HTTP 409 (Conflict) en `calendar_outfits` (`OutfitCalendar.tsx`)**:
+  - Previamente, si se seleccionaba un outfit que ya estaba asignado a esa fecha o al cambiar un outfit existente por otro ya planeado para ese día, la petición `.insert()` fallaba con HTTP 409 (Conflict) por colisión con la restricción `UNIQUE(user_id, date, outfit_id)`.
+  - Se implementó verificación previa en memoria local del día seleccionado antes de realizar mutaciones de red.
+  - Se actualizó la persistencia a `.upsert()` con directiva `ignoreDuplicates: true` y clave de conflicto `onConflict: 'user_id,date,outfit_id'`, garantizando inserciones idempotentes y eliminación limpia en intercambios sin generar excepciones de red 409.
+
 
 
 

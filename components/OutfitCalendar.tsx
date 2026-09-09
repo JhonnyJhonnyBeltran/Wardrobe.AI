@@ -182,31 +182,50 @@ export default function OutfitCalendar() {
     const dateStr = formatDateToSQL(selectedDate);
     
     try {
+      // Check if already assigned on this date
+      const alreadyAssigned = (calendarData[dateStr] || []).some(
+        (item: any) => item.id === outfitId || item.calendar_id === outfitId
+      );
+
       if (outfitToSwap) {
         // Swap flow
-        const { error } = await (supabase as any)
-          .from('calendar_outfits')
-          .update({ outfit_id: outfitId })
-          .eq('id', outfitToSwap);
-        
-        if (error) throw error;
+        if (alreadyAssigned) {
+          // If the target outfit is already in this date, simply remove the old one being swapped
+          await (supabase as any)
+            .from('calendar_outfits')
+            .delete()
+            .eq('id', outfitToSwap);
+        } else {
+          const { error } = await (supabase as any)
+            .from('calendar_outfits')
+            .update({ outfit_id: outfitId })
+            .eq('id', outfitToSwap);
+          
+          if (error && error.code !== '23505') throw error;
+        }
         setOutfitToSwap(null);
       } else {
-        // Insert flow
+        if (alreadyAssigned) {
+          setShowPicker(false);
+          return;
+        }
+
+        // Upsert flow with ignoreDuplicates to avoid HTTP 409 Conflict
         const { error } = await (supabase as any)
           .from('calendar_outfits')
-          .insert({
-            user_id: user.id,
-            outfit_id: outfitId,
-            date: dateStr
-          });
+          .upsert(
+            {
+              user_id: user.id,
+              outfit_id: outfitId,
+              date: dateStr
+            },
+            {
+              onConflict: 'user_id,date,outfit_id',
+              ignoreDuplicates: true
+            }
+          );
           
-        if (error) {
-          if (error.code === '23505') {
-              // Already assigned exactly this outfit
-              setShowPicker(false);
-              return;
-          }
+        if (error && error.code !== '23505') {
           throw error;
         }
       }
