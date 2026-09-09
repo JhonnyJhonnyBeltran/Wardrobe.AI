@@ -228,6 +228,8 @@ export default function CreateOutfitPage() {
     const itemIdsParam = searchParams.get('itemIds') || searchParams.get('items');
     const outfitNameParam = searchParams.get('name') || searchParams.get('outfitName');
     const occasionParam = searchParams.get('occasion');
+    const fromKloeParam = searchParams.get('fromKloe') || searchParams.get('from') || searchParams.get('source');
+    const isFromKloe = Boolean(itemIdsParam || fromKloeParam === 'true' || fromKloeParam === 'kloe');
 
     useEffect(() => {
         if (outfitId || !itemIdsParam) return;
@@ -834,28 +836,35 @@ export default function CreateOutfitPage() {
                                 </div>
 
                                 {/* Mobile Calendar Scheduling */}
-                                <div className="bg-[var(--card-bg)] px-5 py-4 border-b border-[var(--border-color)] space-y-2">
+                                <div className="bg-[var(--card-bg)] rounded-2xl p-4 border border-[var(--border-color)] shadow-xs space-y-3">
                                     <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                            <Calendar className="w-4 h-4 text-[var(--brand-pink)]" />
-                                            <p className="text-sm font-bold text-[var(--foreground)]">Día en el Calendario</p>
+                                        <div className="flex items-center gap-2.5">
+                                            <div className="w-8 h-8 rounded-xl bg-[var(--brand-pink)]/10 flex items-center justify-center text-[var(--brand-pink)]">
+                                                <Calendar className="w-4 h-4" />
+                                            </div>
+                                            <div>
+                                                <p className="text-xs font-bold text-[var(--foreground)]">Programar en Calendario</p>
+                                                <p className="text-[10px] text-[var(--foreground-tertiary)]">Asigna el día para lucir este outfit</p>
+                                            </div>
                                         </div>
                                         {scheduledDate && (
                                             <button
                                                 type="button"
                                                 onClick={() => setScheduledDate('')}
-                                                className="text-[11px] text-[var(--brand-pink)] hover:underline font-medium"
+                                                className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] hover:bg-[var(--brand-pink)]/20 transition-all cursor-pointer"
                                             >
-                                                Quitar fecha
+                                                Quitar
                                             </button>
                                         )}
                                     </div>
-                                    <input
-                                        type="date"
-                                        value={scheduledDate}
-                                        onChange={(e) => setScheduledDate(e.target.value)}
-                                        className="w-full px-3.5 py-2.5 bg-[var(--background-secondary)] rounded-xl text-xs text-[var(--foreground)] border border-[var(--border-color)] focus:outline-none focus:border-[var(--foreground-tertiary)] font-medium"
-                                    />
+                                    <div className="relative flex items-center bg-[var(--background-secondary)] rounded-2xl border border-[var(--border-color)] hover:border-[var(--brand-pink)]/40 focus-within:border-[var(--brand-pink)] focus-within:ring-2 focus-within:ring-[var(--brand-pink)]/15 transition-all px-3.5 py-2.5">
+                                        <input
+                                            type="date"
+                                            value={scheduledDate}
+                                            onChange={(e) => setScheduledDate(e.target.value)}
+                                            className="w-full bg-transparent text-xs text-[var(--foreground)] font-medium outline-none cursor-pointer scheme-light dark:scheme-dark"
+                                        />
+                                    </div>
                                 </div>
 
                                 {/* Mobile Public Toggle */}
@@ -1048,51 +1057,66 @@ export default function CreateOutfitPage() {
                         </div>
 
                         {/* Desktop Calendar Scheduling */}
-                        <div className="bg-[var(--card-bg)] rounded-2xl p-4 border border-[var(--border-color)] shadow-sm space-y-2">
+                        <div className="bg-[var(--card-bg)] rounded-2xl p-4 border border-[var(--border-color)] shadow-xs space-y-3">
                             <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <Calendar className="w-4 h-4 text-[var(--brand-pink)]" />
-                                    <p className="text-sm font-bold text-[var(--foreground)]">Día en el Calendario</p>
+                                <div className="flex items-center gap-2.5">
+                                    <div className="w-8 h-8 rounded-xl bg-[var(--brand-pink)]/10 flex items-center justify-center text-[var(--brand-pink)]">
+                                        <Calendar className="w-4 h-4" />
+                                    </div>
+                                    <div>
+                                        <p className="text-xs font-bold text-[var(--foreground)]">Programar en Calendario</p>
+                                        <p className="text-[10px] text-[var(--foreground-tertiary)]">Asigna el día para lucir este outfit</p>
+                                    </div>
                                 </div>
                                 {scheduledDate && (
                                     <button
                                         type="button"
                                         onClick={() => setScheduledDate('')}
-                                        className="text-[11px] text-[var(--brand-pink)] hover:underline"
+                                        className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] hover:bg-[var(--brand-pink)]/20 transition-all cursor-pointer"
                                     >
-                                        Quitar fecha
+                                        Quitar
                                     </button>
                                 )}
                             </div>
-                            <input
-                                type="date"
-                                value={scheduledDate}
-                                onChange={(e) => setScheduledDate(e.target.value)}
-                                className="w-full px-3.5 py-2.5 bg-[var(--background-secondary)] rounded-xl text-xs text-[var(--foreground)] border border-[var(--border-color)] focus:outline-none focus:border-[var(--foreground-tertiary)] font-medium"
-                            />
+                            <div className="relative flex items-center bg-[var(--background-secondary)] rounded-2xl border border-[var(--border-color)] hover:border-[var(--brand-pink)]/40 focus-within:border-[var(--brand-pink)] focus-within:ring-2 focus-within:ring-[var(--brand-pink)]/15 transition-all px-3.5 py-2.5">
+                                <input
+                                    type="date"
+                                    value={scheduledDate}
+                                    onChange={(e) => setScheduledDate(e.target.value)}
+                                    className="w-full bg-transparent text-xs text-[var(--foreground)] font-medium outline-none cursor-pointer scheme-light dark:scheme-dark"
+                                />
+                            </div>
                         </div>
 
-                        {/* Duolingo-style Organic Kloe Banner */}
-                        <Link href="/closet/kloe" className="block">
-                            <div className="bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-pink-500/10 border border-[var(--brand-pink)]/30 rounded-2xl p-3.5 flex items-center justify-between hover:border-[var(--brand-pink)]/60 transition-all shadow-sm group">
-                                <div className="flex items-center gap-3">
-                                    <div className="relative w-8 h-8 flex-shrink-0 flex items-center justify-center">
-                                        <Image src="/kloe-avatar.png" alt="Kloe" fill className="object-contain group-hover:scale-110 transition-transform" />
+                        {/* Kloe AI Assistant Banner (Omitted if coming from Kloe recommendation) */}
+                        {!isFromKloe && (
+                            <Link href="/closet/kloe" className="block group">
+                                <div className="relative overflow-hidden bg-gradient-to-r from-[var(--brand-pink)]/10 via-[var(--brand-pink)]/5 to-transparent border border-[var(--brand-pink)]/25 hover:border-[var(--brand-pink)]/50 rounded-2xl p-3.5 flex items-center justify-between transition-all duration-300 shadow-xs hover:shadow-md hover:shadow-[var(--brand-pink)]/5 active:scale-[0.99]">
+                                    <div className="flex items-center gap-3 min-w-0">
+                                        <div className="relative w-9 h-9 flex-shrink-0 flex items-center justify-center">
+                                            <Image 
+                                                src="/kloe-avatar.png" 
+                                                alt="Kloe" 
+                                                fill 
+                                                className="object-contain drop-shadow-xs group-hover:scale-105 transition-transform" 
+                                            />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="text-xs font-bold text-[var(--foreground)] flex items-center gap-1 truncate">
+                                                ¿Quieres que Kloe te ayude?
+                                                <Sparkles className="w-3 h-3 text-[var(--brand-pink)] shrink-0" />
+                                            </p>
+                                            <p className="text-[11px] text-[var(--foreground-secondary)] truncate">
+                                                Combina tus prendas con IA en segundos
+                                            </p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p className="text-xs font-bold text-[var(--foreground)] flex items-center gap-1">
-                                            ¿Quieres que Kloe te ayude?
-                                        </p>
-                                        <p className="text-[11px] text-[var(--foreground-tertiary)]">
-                                            Combina tus prendas con IA en segundos
-                                        </p>
-                                    </div>
+                                    <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-[var(--brand-pink)] text-white flex items-center gap-1 shadow-xs group-hover:opacity-95 shrink-0 ml-2 transition-all">
+                                        Abrir
+                                    </span>
                                 </div>
-                                <span className="text-xs font-bold text-[var(--brand-pink)] flex items-center gap-1">
-                                    Abrir <Sparkles className="w-3 h-3" />
-                                </span>
-                            </div>
-                        </Link>
+                            </Link>
+                        )}
 
                         {/* Desktop Public Toggle */}
                         <div className="bg-[var(--card-bg)] rounded-2xl p-4 border border-[var(--border-color)] shadow-sm flex items-center justify-between">
@@ -1152,31 +1176,72 @@ export default function CreateOutfitPage() {
 
             </main>
 
-            {/* Global Floating Actions (Mobile & Desktop) */}
+            {/* Global Floating Selected Garments Bar (Mobile & Desktop) */}
             <AnimatePresence>
                 {totalSelected > 0 && (
                     <motion.div
                         initial={{ opacity: 0, y: 50, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 50, scale: 0.95 }}
-                        className="fixed bottom-[24px] md:bottom-[40px] left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-3 w-auto max-w-[90vw]"
+                        className="fixed bottom-[20px] md:bottom-[32px] left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2.5 w-[92vw] max-w-4xl xl:max-w-5xl"
                     >
-                        {/* Selected Items Summary Pill */}
-                        <div className="flex gap-2 overflow-x-auto scrollbar-hide items-center px-4 py-3 bg-[var(--background)]/80 backdrop-blur-xl border border-[var(--border-color)] rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:shadow-[0_8px_30px_rgba(255,255,255,0.05)] w-full justify-center">
-                            {flatItems.map((item, idx) => (
-                                <div key={`${item.id}-${idx}`} className="relative w-10 h-10 rounded-full bg-[var(--background-secondary)] border border-[var(--border-color)] flex-shrink-0 overflow-hidden group hover:scale-110 transition-transform">
-                                    <img src={item.imageUrl} alt={item.name} className="w-full h-full object-contain p-1" />
-                                    <button 
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleRemoveItem(item.id);
-                                        }}
-                                        className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                                    >
-                                        <X className="w-4 h-4 text-white" />
-                                    </button>
+                        {/* Selected Items Summary Container */}
+                        <div className="w-full bg-[var(--card-bg)]/95 backdrop-blur-2xl border border-[var(--border-color)] rounded-3xl p-3 sm:p-4 shadow-[0_20px_50px_rgba(0,0,0,0.18)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.6)] flex flex-col gap-2.5">
+                            {/* Header Info */}
+                            <div className="flex items-center justify-between px-1">
+                                <div className="flex items-center gap-2">
+                                    <span className="w-2 h-2 rounded-full bg-[var(--brand-pink)] animate-pulse" />
+                                    <span className="text-xs font-bold text-[var(--foreground)] tracking-wide">
+                                        Prendas en el outfit ({totalSelected})
+                                    </span>
                                 </div>
-                            ))}
+                                <span className="text-[11px] text-[var(--foreground-tertiary)] hidden sm:inline">
+                                    Toca la cruz para quitar cualquier prenda
+                                </span>
+                            </div>
+
+                            {/* Rectangular Cards Horizontal Scroll */}
+                            <div className="flex items-center gap-2.5 overflow-x-auto py-1 px-0.5 no-scrollbar scroll-smooth">
+                                {flatItems.map((item, idx) => (
+                                    <div
+                                        key={`${item.id}-${idx}`}
+                                        className="flex items-center gap-2.5 pl-2 pr-3 py-1.5 bg-[var(--background-secondary)]/90 hover:bg-[var(--background-secondary)] border border-[var(--border-color)] hover:border-[var(--brand-pink)]/40 rounded-2xl shadow-xs shrink-0 transition-all group max-w-[200px] sm:max-w-[240px]"
+                                    >
+                                        {/* Image Thumbnail */}
+                                        <div className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white dark:bg-[#151518] border border-[var(--border-color)] overflow-hidden shrink-0 flex items-center justify-center p-1">
+                                            <img
+                                                src={item.imageUrl}
+                                                alt={item.name}
+                                                className="w-full h-full object-contain group-hover:scale-105 transition-transform"
+                                                loading="lazy"
+                                            />
+                                        </div>
+
+                                        {/* Garment Name & Category */}
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-xs font-bold text-[var(--foreground)] truncate leading-tight">
+                                                {item.name || 'Prenda'}
+                                            </p>
+                                            <p className="text-[10px] font-medium text-[var(--foreground-tertiary)] capitalize truncate mt-0.5">
+                                                {item.category || item.color || 'Armario'}
+                                            </p>
+                                        </div>
+
+                                        {/* Remove Button */}
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleRemoveItem(item.id);
+                                            }}
+                                            className="w-6 h-6 rounded-full bg-[var(--foreground-tertiary)]/15 hover:bg-red-500 hover:text-white text-[var(--foreground-secondary)] flex items-center justify-center transition-all cursor-pointer shrink-0 ml-0.5"
+                                            title={`Quitar ${item.name}`}
+                                            aria-label={`Quitar ${item.name}`}
+                                        >
+                                            <X className="w-3.5 h-3.5" />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
 
                         {/* Next Button Pill (Mobile Only) */}
@@ -1185,17 +1250,17 @@ export default function CreateOutfitPage() {
                                 <Button
                                     onClick={() => setMobileStep('preview')}
                                     glow={true}
-                                    className="w-full rounded-full py-3.5 px-8 text-base font-semibold overflow-hidden shadow-2xl"
+                                    className="w-full rounded-2xl py-3.5 text-sm font-semibold overflow-hidden shadow-xl"
                                 >
                                     <motion.span
                                         key={totalSelected}
-                                        initial={{ y: -20, opacity: 0 }}
+                                        initial={{ y: -15, opacity: 0 }}
                                         animate={{ y: 0, opacity: 1 }}
                                         className="inline-block"
                                     >
-                                        Siguiente ({totalSelected})
+                                        Continuar con el look ({totalSelected})
                                     </motion.span>
-                                    <ArrowRight className="w-5 h-5 ml-2" />
+                                    <ArrowRight className="w-4 h-4 ml-2" />
                                 </Button>
                             </div>
                         )}

@@ -724,7 +724,7 @@ export default function KloePage() {
                     </button>
 
                     <Link
-                      href={`/create?itemIds=${(msg.recommended_outfit.items || []).map((i: any) => i.id).join(',')}&name=${encodeURIComponent(msg.recommended_outfit.name || 'Look Kloe')}&occasion=${encodeURIComponent(msg.recommended_outfit.occasion || '')}`}
+                      href={`/create?itemIds=${(msg.recommended_outfit.items || []).map((i: any) => i.id).join(',')}&name=${encodeURIComponent(msg.recommended_outfit.name || 'Look Kloe')}&occasion=${encodeURIComponent(msg.recommended_outfit.occasion || '')}&fromKloe=true`}
                       className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[var(--background-secondary)] hover:bg-[var(--card-bg)] text-[var(--foreground)] border border-[var(--border-color)] text-xs font-semibold transition-all active:scale-[0.98]"
                     >
                       <Layers className="w-4 h-4 text-[var(--brand-pink)]" />

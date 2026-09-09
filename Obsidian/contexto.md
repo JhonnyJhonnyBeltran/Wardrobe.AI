@@ -486,6 +486,18 @@ En cada conversación, el backend alimenta a CloSy con:
 - **Armonización Visual con Apple HIG**:
   - Rediseñado el botón *"Probar look en mi avatar virtual"* y *"Montar y editar en el lienzo"* con la paleta de tokens oficial (`bg-[var(--brand-pink)]`), tipografía seminegrita, esquinas redondeadas continuas (squircle) y microinteracción de pulsación elástica (`active:scale-[0.98]`).
 
+### 27. Rediseño de Selección de Prendas, Asistente Kloe y Calendario en `/create` (Septiembre 2026)
+- **Modal y Barra Flotante de Prendas Seleccionadas en Escritorio (`app/(app)/create/page.tsx`)**:
+  - El contenedor flotante inferior se amplió a un ancho generoso de hasta `max-w-4xl` / `xl:max-w-5xl` con fondo `backdrop-blur-2xl` y cristal ahumado.
+  - Las prendas seleccionadas se muestran como **tarjetas rectangulares con bordes redondeados (`rounded-2xl`)**: miniatura de la prenda a la izquierda, nombre destacado y categoría/color al lado en tipografía nítida, y botón circular de eliminar (`X`) a la derecha con microinteracción táctil.
+- **Ocultación Condicional del Botón Asistente Kloe**:
+  - Cuando el usuario accede a `/create` a través de una recomendación de Kloe (`itemIds`, `fromKloe=true` o `source=kloe`), el banner *"¿Quieres que Kloe te ayude?"* se **elimina por completo** de la interfaz para evitar redundancia y mantener el foco exclusivo en la edición del look.
+- **Rediseño Estético del Botón "¿Quieres que Kloe te ayude?"**:
+  - Adaptado a los principios de Apple HIG: tarjeta con degradado sutil de cristal ahumado (`from-[var(--brand-pink)]/10 via-[var(--brand-pink)]/5 to-transparent`), avatar oficial de Kloe, tipografía clara con icono `Sparkles` y botón píldora *"Abrir"*.
+- **Mejora del Selector de Fecha y Calendario**:
+  - Nuevo diseño de tarjeta con icono `<Calendar />` en contenedor redondeado, etiqueta de programación clara, botón para desmarcar fecha con microinteracción y campo de selección con borde enfocado en rosa satinado.
+
+
 
 
 
