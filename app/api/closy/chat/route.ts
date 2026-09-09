@@ -386,9 +386,10 @@ PETICIÓN DEL USUARIO:
       }
     ];
 
-    // Models available for Gemini API (Prioritizing active, low-latency, multimodal models)
-    const models = ['gemini-3-flash-preview', 'gemini-3.5-flash', 'gemini-3.7-flash'];
+    // Models available for Gemini API (Prioritizing verified active Gemini models)
+    const models = ['gemini-3-flash-preview', 'gemini-3.6-flash'];
     
+    // First attempt: with multimodal vision images
     for (const model of models) {
       try {
         const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
@@ -424,6 +425,79 @@ PETICIÓN DEL USUARIO:
         }
       } catch (innerErr) {
         console.warn(`[GeminiAPI] Model ${model} failed, trying next:`, innerErr);
+      }
+    }
+
+    // Second attempt: Text-only payload (guaranteed instant success if multimodal had network/size issues)
+    const textOnlyContents = [
+      ...sanitizedHistory,
+      {
+        role: 'user',
+        parts: [
+          {
+            text: `
+PERFIL DEL USUARIO:
+- Nombre: ${context.user.username}
+- Biografía / Estilo personal: ${context.user.bio || 'Sin especificar'}
+- Morfología: ${context.user.bodyShape || 'Estándar'}
+- Colorimetría: ${context.user.seasonPalette || 'Neutra'}
+- Estilos favoritos: ${context.user.preferredStyles.join(', ') || 'Moda actual'}
+
+PRENDAS DISPONIBLES EN EL ARMARIO DEL USUARIO:
+${JSON.stringify(context.wardrobe.items.map((i: any) => ({
+  id: i.id,
+  name: i.name,
+  category: i.category,
+  color: i.color,
+  brand: i.brand,
+  fabric: i.fabric,
+  season: i.season,
+  tags: i.tags
+})))}
+
+LOOKS Y PUBLICACIONES GUARDADAS POR EL USUARIO (INSPIRACIÓN):
+${JSON.stringify(context.savedInspirations || [])}
+
+PETICIÓN DEL USUARIO:
+"${userPrompt}"
+`
+          }
+        ]
+      }
+    ];
+
+    for (const model of models) {
+      try {
+        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            system_instruction: { parts: [{ text: systemInstruction }] },
+            contents: textOnlyContents,
+            generationConfig: {
+              response_mime_type: "application/json",
+              temperature: 0.7,
+              max_output_tokens: 1600
+            }
+          })
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          const candidateText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (candidateText) {
+            let cleaned = candidateText.trim();
+            if (cleaned.startsWith('```json')) {
+              cleaned = cleaned.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+            } else if (cleaned.startsWith('```')) {
+              cleaned = cleaned.replace(/^```\s*/, '').replace(/\s*```$/, '');
+            }
+            return JSON.parse(cleaned);
+          }
+        }
+      } catch (innerErr) {
+        console.warn(`[GeminiAPI Text-Only] Model ${model} failed:`, innerErr);
       }
     }
 

@@ -502,10 +502,10 @@ export default function KloePage() {
   });
 
   return (
-    <div className="min-h-screen bg-[var(--background)] flex flex-col justify-between max-w-3xl mx-auto pb-20 md:pb-6">
+    <div className="min-h-screen bg-[var(--background)] flex flex-col justify-between max-w-5xl mx-auto pb-24 md:pb-8">
       
       {/* Header */}
-      <header className="sticky top-0 z-30 bg-[var(--background)]/85 backdrop-blur-xl px-4 h-16 flex items-center justify-between">
+      <header className="sticky top-0 z-30 bg-[var(--background)]/85 backdrop-blur-xl px-4 md:px-6 h-16 flex items-center justify-between border-b border-[var(--border-color)]/50">
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.push('/closet')}
@@ -515,31 +515,16 @@ export default function KloePage() {
             <ArrowLeft className="w-5 h-5" />
           </button>
           
-          <div className="flex items-center gap-2.5">
-            <div className="relative w-11 h-11 flex-shrink-0 flex items-center justify-center">
+          <div className="flex items-center">
+            <div className="relative w-24 h-9 flex-shrink-0 flex items-center justify-start">
               <Image
-                src="/kloe-avatar.png"
+                src="/kloe-logo-large.png"
                 alt="Kloe"
                 fill
-                className="object-contain drop-shadow-sm hover:scale-105 transition-transform"
+                className="object-contain object-left drop-shadow-xs hover:scale-105 transition-transform"
                 priority
               />
             </div>
-            <h1 className="text-lg font-bold text-[var(--foreground)] leading-none">
-              Kloe
-            </h1>
-            {isPremium() ? (
-              <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-[var(--brand-pink)] text-white shadow-xs tracking-wider">
-                PRO
-              </span>
-            ) : (
-              <button
-                onClick={() => setShowProModal(true)}
-                className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[var(--background-secondary)] text-[var(--foreground-tertiary)] hover:text-[var(--brand-pink)] transition-colors border border-[var(--border-color)] cursor-pointer"
-              >
-                FREE · Pro
-              </button>
-            )}
           </div>
         </div>
 
@@ -829,14 +814,14 @@ export default function KloePage() {
       </div>
 
       {/* Floating Bottom Input Bar or Locked Premium Bar */}
-      <div className="sticky bottom-0 bg-[var(--background)]/90 backdrop-blur-xl px-4 py-3 border-t border-[var(--border-color)]">
+      <div className="sticky bottom-4 md:bottom-6 pointer-events-none w-full max-w-3xl md:max-w-4xl mx-auto px-4 z-20">
         {isPremium() ? (
           <form
             onSubmit={(e) => {
               e.preventDefault();
               handleSend();
             }}
-            className="flex items-center gap-2 bg-[var(--background-secondary)] rounded-full px-4 py-2 border border-[var(--border-color)] focus-within:border-[var(--brand-pink)] transition-all shadow-xs"
+            className="pointer-events-auto flex items-center gap-3 bg-[var(--card-bg)]/95 dark:bg-[#131317]/95 backdrop-blur-2xl rounded-full px-5 py-3 border border-[var(--border-color)] shadow-[0_12px_35px_rgba(0,0,0,0.15)] dark:shadow-[0_16px_45px_rgba(0,0,0,0.5)] focus-within:border-[var(--brand-pink)]/60 focus-within:ring-2 focus-within:ring-[var(--brand-pink)]/20 transition-all"
           >
             <input
               ref={inputRef}
@@ -850,10 +835,10 @@ export default function KloePage() {
             <button
               type="submit"
               disabled={!inputMessage.trim() || isTyping}
-              className={`p-2 rounded-full transition-all ${
+              className={`p-2.5 rounded-full transition-all ${
                 inputMessage.trim() && !isTyping
-                  ? 'bg-[var(--brand-pink)] text-white hover:scale-105 shadow-sm'
-                  : 'text-[var(--foreground-tertiary)] opacity-50 cursor-not-allowed'
+                  ? 'bg-[var(--brand-pink)] text-white hover:scale-105 shadow-md shadow-[var(--brand-pink)]/25'
+                  : 'text-[var(--foreground-tertiary)] opacity-40 cursor-not-allowed'
               }`}
               aria-label="Enviar mensaje"
             >
@@ -861,7 +846,7 @@ export default function KloePage() {
             </button>
           </form>
         ) : (
-          <div className="flex items-center justify-between gap-3 bg-gradient-to-r from-pink-500/15 via-purple-500/10 to-pink-500/15 border border-[var(--brand-pink)]/40 rounded-2xl p-3 shadow-md">
+          <div className="pointer-events-auto flex items-center justify-between gap-3 bg-[var(--card-bg)]/95 dark:bg-[#131317]/95 backdrop-blur-2xl border border-[var(--brand-pink)]/40 rounded-3xl p-3.5 shadow-xl">
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="w-8 h-8 rounded-full bg-[var(--brand-pink)] text-white flex items-center justify-center flex-shrink-0 shadow-xs">
                 <Crown className="w-4 h-4" />
@@ -872,7 +857,7 @@ export default function KloePage() {
             </div>
             <button
               onClick={() => setShowProModal(true)}
-              className="px-4 py-2 bg-[var(--brand-pink)] hover:bg-[#ff3377] text-white font-bold text-xs rounded-xl shadow-sm transition-all flex-shrink-0 cursor-pointer"
+              className="px-4 py-2 bg-[var(--brand-pink)] hover:bg-[#ff3377] text-white font-bold text-xs rounded-2xl shadow-sm transition-all flex-shrink-0 cursor-pointer"
             >
               Desbloquear
             </button>
@@ -880,7 +865,7 @@ export default function KloePage() {
         )}
       </div>
 
-      {/* History Drawer */}
+      {/* History Drawer - Aligned with Navbar */}
       <AnimatePresence>
         {showHistoryDrawer && (
           <>
@@ -889,14 +874,14 @@ export default function KloePage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowHistoryDrawer(false)}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[99999]"
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[55] md:left-[72px]"
             />
             <motion.div
               initial={{ x: '-100%' }}
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed inset-y-0 left-0 w-[85%] max-w-sm bg-[var(--card-bg)] border-r border-[var(--border-color)] z-[100000] p-5 flex flex-col justify-between shadow-2xl"
+              className="fixed inset-y-0 left-0 md:left-[72px] w-full max-w-xs sm:max-w-sm bg-[var(--card-bg)] border-r border-[var(--border-color)] z-[60] p-5 flex flex-col justify-between shadow-2xl"
             >
               <div className="space-y-4 overflow-y-auto">
                 <div className="flex items-center justify-between pb-3 border-b border-[var(--border-color)]">
@@ -914,7 +899,7 @@ export default function KloePage() {
 
                 <button
                   onClick={handleNewConversation}
-                  className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-[var(--brand-pink)] text-white font-bold text-sm shadow-sm hover:opacity-90 transition-opacity"
+                  className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl bg-[var(--brand-pink)] text-white font-bold text-sm shadow-md shadow-[var(--brand-pink)]/20 hover:opacity-90 active:scale-[0.98] transition-all"
                 >
                   <Plus className="w-4 h-4" />
                   Nueva conversación
@@ -925,7 +910,7 @@ export default function KloePage() {
                     <div
                       key={conv.id}
                       onClick={() => handleSelectConversation(conv)}
-                      className={`group flex items-center justify-between p-3 rounded-xl cursor-pointer border transition-all ${
+                      className={`group flex items-center justify-between p-3.5 rounded-2xl cursor-pointer border transition-all ${
                         activeConversationId === conv.id
                           ? 'bg-[var(--brand-pink)]/10 border-[var(--brand-pink)]/40 text-[var(--foreground)]'
                           : 'bg-[var(--background-secondary)] border-transparent text-[var(--foreground-secondary)] hover:border-[var(--border-color)]'

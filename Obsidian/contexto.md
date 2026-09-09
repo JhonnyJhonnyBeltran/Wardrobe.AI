@@ -555,6 +555,17 @@ En cada conversación, el backend alimenta a CloSy con:
   - **Logo Grande (`kloe-logo-large.png`)**: Wordmark completo en tipografía bubble rosa con ojos en la "k". Se utiliza en botones de acción y llamadas a la acción principales de la app: botón *"Crear con IA"* en `/closet`, banner de recomendación *"¿Qué me pongo hoy?"* en `/closet`, banner de asistencia *"¿Quieres que Kloe te ayude?"* en `/create`, y cabecera del modal de suscripción `KloeProModal.tsx`.
   - **Logo Pequeño (`kloe-avatar.png` / `kloe-logo-small.png`)**: Mascota "K" rosa con ojos. Se utiliza como avatar conversacional dentro del chat `/closet/kloe` (burbujas de mensajes, animación de pensamiento / razonamiento y avatar en cabecera de chat).
 
+### 35. Conexión Real con Gemini AI y Rediseño Espacial de Kloe (Septiembre 2026)
+- **Conexión Real y Robusta con Gemini AI (`/api/closy/chat`)**:
+  - Configurada la cascada de modelos activos de Google AI Studio (`gemini-3-flash-preview`, `gemini-3.6-flash`).
+  - Implementado mecanismo de doble intento (multimodal con imágenes de prendas y reintento instantáneo de texto completo con metadatos JSON del armario) para garantizar que las respuestas provengan siempre de la inteligencia artificial en tiempo real y nunca de plantillas estáticas.
+  - Respuestas directas, elocuentes y personalizadas tanto para preguntas abiertas de moda (tendencias de otoño, colorimetría) como para recomendaciones de outfits con las prendas reales del usuario (como polos Ralph Lauren, etc.).
+- **Rediseño Espacial de la Pantalla de Kloe (`/closet/kloe`)**:
+  - **Ampliación en Escritorio**: Ancho expandido a `max-w-5xl` para mayor confort visual.
+  - **Cabecera Limpia**: Integrado el logo grande de Kloe (`/kloe-logo-large.png`) en la parte superior y eliminado el badge de PRO.
+  - **Barra de Input Flotante**: Erradicado el fondo rectangular oscuro continuo; ahora el input flota como una píldora con cristal ahumado (`backdrop-blur-2xl rounded-full border border-[var(--border-color)] shadow-2xl`).
+  - **Cajón de Conversaciones Guardadas**: Alineado con la barra de navegación lateral (`left-0 md:left-[72px]`), garantizando que el navbar se mantenga visible y accesible en todo momento idéntico al panel de notificaciones.
+
 
 
 
