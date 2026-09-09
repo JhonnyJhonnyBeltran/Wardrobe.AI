@@ -278,9 +278,9 @@ export default function FeedPage() {
   return (
     <PullToRefresh onRefresh={() => fetchPosts(false, true)}>
       <div className="min-h-screen bg-[var(--background)] pb-24 md:pb-8">
-        {/* Top Header */}
-        <header className="sticky top-0 z-30 apple-glass-bar pt-safe">
-          <div className="px-4 h-14 md:h-16 flex items-center justify-between">
+        {/* Top Header (Mobile Only) */}
+        <header className="sticky top-0 z-30 apple-glass-bar pt-safe md:hidden">
+          <div className="px-4 h-14 flex items-center justify-between">
             <button
               onClick={toggleCreateMenu}
               aria-label="Crear publicación"
@@ -289,7 +289,7 @@ export default function FeedPage() {
               <Plus className="w-6 h-6" />
             </button>
 
-            <h1 className="text-lg md:text-xl font-bold tracking-tight text-[var(--foreground)] absolute left-1/2 -translate-x-1/2 select-none">
+            <h1 className="text-lg font-bold tracking-tight text-[var(--foreground)] absolute left-1/2 -translate-x-1/2 select-none">
               Para ti
             </h1>
 
@@ -309,7 +309,7 @@ export default function FeedPage() {
         </header>
 
         {/* Feed Content */}
-        <div className="px-3 pt-4 md:px-6">
+        <div className="px-3 pt-4 md:px-6 md:pt-6">
           {loading && posts.length === 0 ? (
             <SkeletonFeed count={8} />
           ) : posts.length === 0 ? (

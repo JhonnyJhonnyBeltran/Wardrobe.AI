@@ -467,6 +467,11 @@ En cada conversación, el backend alimenta a CloSy con:
   - Sistema de notificaciones de sistema (escritorio y móvil) probado y operativo en `/profile/settings/notifications`.
   - Tema oscuro (`.dark`) con escala de grises de alto contraste e iconos adaptativos verificado en todos los componentes de ajustes.
 
+### 25. Ocultación del Header de Feed en Versión de Escritorio (Septiembre 2026)
+- **Cabecera "Para ti" Móvil Exclusiva (`app/(app)/feed/page.tsx`)**:
+  - La barra superior fija con el botón de creación `+`, el título central *"Para ti"* y el icono de mensajes directos (`Send`) se configuró como exclusiva para dispositivos móviles (`md:hidden`).
+  - En versión de escritorio, las acciones de creación, navegación y mensajes se gestionan íntegramente a través de la barra lateral (`Sidebar.tsx`), eliminando la cabecera redundante y ampliando el espacio visual para la cuadrícula de publicaciones (`masonry-grid`) con padding superior optimizado (`md:pt-6`).
+
 
 
 
