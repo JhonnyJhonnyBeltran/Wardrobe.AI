@@ -660,7 +660,7 @@ export default function SearchPage() {
                     hasMore={usersHasMore}
                     hasItems={userResults.length > 0}
                     onRetry={() => loadMoreUsers()}
-                    endMessage="No hay más usuarios."
+                    endMessage=""
                   />
                 </div>
               </div>
@@ -675,8 +675,8 @@ export default function SearchPage() {
                       <PostCard post={post} />
                     </div>
                   ))}
-                  {/* Skeleton Cards for infinite loading illusion or actual loading */}
-                  {(postsLoadingMore || (!postsHasMore && results.length >= 8)) && (
+                  {/* Skeleton Cards for infinite loading */}
+                  {postsLoadingMore && (
                     [...Array(3)].map((_, i) => (
                       <div key={`skeleton-${i}`} className="break-inside-avoid mb-6">
                         <div className="rounded-2xl overflow-hidden bg-[var(--background-secondary)] animate-pulse" style={{ height: [180, 220, 240][i % 3] }} />
@@ -694,6 +694,7 @@ export default function SearchPage() {
                     hasItems={results.length > 0}
                     onRetry={() => loadMorePosts()}
                     skeleton={<SkeletonSearch count={2} className="py-2" />}
+                    endMessage=""
                   />
                 </div>
               </div>
@@ -752,8 +753,8 @@ export default function SearchPage() {
                         </div>
                       ))}
                       
-                      {/* Skeleton Cards for infinite loading illusion or actual loading */}
-                      {(postsLoadingMore || (!postsHasMore && results.length >= 8)) && (
+                      {/* Skeleton Cards for infinite loading */}
+                      {postsLoadingMore && (
                         [...Array(3)].map((_, i) => (
                           <div key={`skeleton-explore-${i}`} className="break-inside-avoid mb-6">
                             <div className="rounded-2xl overflow-hidden bg-[var(--background-secondary)] animate-pulse" style={{ height: [180, 220, 240][i % 3] }} />
@@ -771,6 +772,7 @@ export default function SearchPage() {
                         hasItems={results.length > 0}
                         onRetry={() => loadMorePosts()}
                         skeleton={<SkeletonSearch count={2} className="py-2" />}
+                        endMessage=""
                       />
                     </div>
                   </div>

@@ -26,6 +26,7 @@ export default function InfiniteScrollFooter({
 }: InfiniteScrollFooterProps) {
   // If we don't have items yet and aren't loading, we usually show an EmptyState, not this footer.
   if (!hasItems && !isLoading && !isError) return null;
+  if (!hasMore && !isLoading && !isError && !endMessage) return null;
 
   return (
     <div className="w-full py-8 flex flex-col items-center justify-center min-h-[100px]">

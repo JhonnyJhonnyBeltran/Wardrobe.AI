@@ -410,6 +410,13 @@ En cada conversación, el backend alimenta a CloSy con:
 - **Nuevo Estándar Visual Minimalista Apple**:
   - Enfoque limpio con bordes neutros sutiles (`focus:border-[var(--foreground-tertiary)]` o `focus:border-gray-400 dark:focus:border-white/30`) sin halos ni dobles bordes.
 
+### 21. Eliminación de Mensaje de Fin de Resultados en Search (Septiembre 2026)
+- **Eliminación de "¡Estás al día! No hay más resultados." en Búsqueda y Explorar (`/search`)**:
+  - Se configuró `endMessage=""` en todas las instancias de `InfiniteScrollFooter` en la página de Búsqueda (resultados de búsqueda, explorar/tendencias y lista de usuarios).
+  - En `InfiniteScrollFooter.tsx`, cuando `!hasMore && !isLoading && !isError && !endMessage`, el componente retorna `null` y no ocupa espacio en el layout.
+  - Se corrigió la condición de skeletons fantasma en `search/page.tsx` para que solo se rendericen placeholders cuando `postsLoadingMore === true`, evitando cajas pulsantes vacías al final de los resultados.
+
+
 
 
 
