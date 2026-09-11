@@ -234,6 +234,13 @@ export default function KloePage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Non-premium users must be redirected back to /closet with upgrade modal
+  useEffect(() => {
+    if (user && !isPremium()) {
+      router.replace('/closet?upgrade=true');
+    }
+  }, [user, isPremium, router]);
+
   const handleTryOnAvatar = async (msg: ChatMessage) => {
     if (!user?.id) {
       toast.error('Inicia sesión para probar looks en tu avatar virtual');
@@ -665,14 +672,14 @@ export default function KloePage() {
   });
 
   return (
-    <div className="min-h-screen bg-[var(--background)] flex flex-col justify-between max-w-5xl mx-auto pb-24 md:pb-8">
+    <div className="min-h-screen bg-[var(--background)] flex flex-col justify-between max-w-5xl mx-auto">
       
-      {/* Header */}
-      <header className="sticky top-0 z-30 bg-[var(--background)]/85 backdrop-blur-xl px-4 md:px-6 h-16 flex items-center justify-between border-b border-[var(--border-color)]/50">
+      {/* Header - Fixed top Apple HIG style */}
+      <header className="fixed top-0 left-0 right-0 z-30 bg-[var(--background)]/85 backdrop-blur-xl px-4 md:px-6 pt-safe h-16 flex items-center justify-between border-b border-[var(--border-color)]/50 max-w-5xl mx-auto">
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.push('/closet')}
-            className="p-2 -ml-2 rounded-full hover:bg-[var(--background-secondary)] text-[var(--foreground)] transition-colors cursor-pointer"
+            className="p-2 -ml-2 rounded-full text-gray-900 dark:text-white hover:text-[var(--brand-pink)] dark:hover:text-[var(--brand-pink)] transition-colors cursor-pointer"
             aria-label="Volver al armario"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -698,7 +705,7 @@ export default function KloePage() {
               haptics.selection();
               setShowHistoryDrawer(true);
             }}
-            className="p-2.5 text-[var(--foreground-secondary)] hover:text-[var(--foreground)] rounded-full hover:bg-[var(--background-secondary)] transition-colors relative cursor-pointer"
+            className="p-2.5 text-gray-900 dark:text-white hover:text-[var(--brand-pink)] dark:hover:text-[var(--brand-pink)] rounded-full transition-colors relative cursor-pointer"
             title="Conversaciones guardadas"
             aria-label="Historial de conversaciones"
           >
@@ -711,37 +718,37 @@ export default function KloePage() {
           {/* Avatar Calibration Button */}
           <button
             onClick={() => setShowCalibrationModal(true)}
-            className="p-2.5 text-[var(--foreground-secondary)] hover:text-[var(--brand-pink)] rounded-full hover:bg-[var(--background-secondary)] transition-colors cursor-pointer"
+            className="p-2.5 text-gray-900 dark:text-white hover:text-[var(--brand-pink)] dark:hover:text-[var(--brand-pink)] rounded-full transition-colors cursor-pointer"
             title="Calibrar mi avatar virtual (6 fotos)"
             aria-label="Calibrar mi avatar"
           >
-            <Camera className="w-5 h-5 text-[var(--brand-pink)]" />
+            <Camera className="w-5 h-5" />
           </button>
 
           {/* Saved Inspirations Drawer */}
           <button
             onClick={openSaved}
-            className="p-2.5 text-[var(--foreground)] hover:text-[var(--brand-pink)] rounded-full hover:bg-[var(--background-secondary)] transition-colors cursor-pointer"
+            className="p-2.5 text-gray-900 dark:text-white hover:text-[var(--brand-pink)] dark:hover:text-[var(--brand-pink)] rounded-full transition-colors cursor-pointer"
             title="Ver looks guardados"
             aria-label="Ver looks guardados"
           >
-            <Bookmark className="w-5 h-5 text-[var(--brand-pink)]" />
+            <Bookmark className="w-5 h-5" />
           </button>
 
           {/* Wardrobe Drawer */}
           <button
             onClick={openWardrobe}
-            className="p-2.5 text-[var(--foreground)] hover:text-[var(--brand-pink)] rounded-full hover:bg-[var(--background-secondary)] transition-colors cursor-pointer"
+            className="p-2.5 text-gray-900 dark:text-white hover:text-[var(--brand-pink)] dark:hover:text-[var(--brand-pink)] rounded-full transition-colors cursor-pointer"
             title="Ver mis prendas"
             aria-label="Ver mis prendas"
           >
-            <Shirt className="w-5 h-5 text-[var(--brand-pink)]" />
+            <Shirt className="w-5 h-5" />
           </button>
         </div>
       </header>
 
       {/* Messages Container */}
-      <div className="flex-1 overflow-y-auto px-4 md:px-6 py-4 space-y-6">
+      <div className="flex-1 overflow-y-auto px-4 md:px-6 pt-20 pb-40 md:pb-32 space-y-6">
         
         {/* Free Tier Upgrade Banner */}
         {!isPremium() && (
@@ -863,8 +870,7 @@ export default function KloePage() {
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="text-sm font-bold text-[var(--foreground)] flex items-center gap-1.5">
-                        <Sparkles className="w-4 h-4 text-[var(--brand-pink)]" />
+                      <h4 className="text-sm font-bold text-[var(--foreground)]">
                         {msg.recommended_outfit.name || 'Outfit Recomendado'}
                       </h4>
                       {msg.recommended_outfit.occasion && (
@@ -1018,8 +1024,8 @@ export default function KloePage() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Floating Bottom Input Bar or Locked Premium Bar */}
-      <div className="sticky bottom-4 md:bottom-6 pointer-events-none w-full max-w-3xl md:max-w-4xl mx-auto px-4 z-20 flex flex-col items-center">
+      {/* Floating Bottom Input Bar or Locked Premium Bar - Fixed Apple HIG style */}
+      <div className="fixed bottom-0 left-0 right-0 pointer-events-none w-full max-w-3xl md:max-w-4xl mx-auto px-4 pb-safe pb-3 md:pb-6 z-20 flex flex-col items-center">
         
         {/* Floating Attachment Cards Strip */}
         <AnimatePresence>
@@ -1129,7 +1135,7 @@ export default function KloePage() {
               <button
                 type="button"
                 onClick={openWardrobe}
-                className="relative p-2 rounded-full text-[var(--foreground-secondary)] hover:text-[var(--brand-pink)] hover:bg-[var(--background-secondary)] transition-colors cursor-pointer"
+                className="relative p-2 rounded-full text-gray-900 dark:text-white hover:text-[var(--brand-pink)] dark:hover:text-[var(--brand-pink)] transition-colors cursor-pointer"
                 title="Adjuntar prendas de tu armario"
                 aria-label="Adjuntar prendas"
               >
@@ -1143,7 +1149,7 @@ export default function KloePage() {
               <button
                 type="button"
                 onClick={openSaved}
-                className="relative p-2 rounded-full text-[var(--foreground-secondary)] hover:text-[var(--brand-pink)] hover:bg-[var(--background-secondary)] transition-colors cursor-pointer"
+                className="relative p-2 rounded-full text-gray-900 dark:text-white hover:text-[var(--brand-pink)] dark:hover:text-[var(--brand-pink)] transition-colors cursor-pointer"
                 title="Adjuntar look guardado"
                 aria-label="Adjuntar look guardado"
               >

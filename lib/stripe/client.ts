@@ -5,7 +5,7 @@ const DEFAULT_ENCODED_KEY = 'c2tfbGl2ZV81MVU3RFN6Q3Q2TEpiczYyMEZFbnZGYWRMcGxQVjM
 
 export function sanitizeStripeKey(rawKey?: string | null): string {
   if (!rawKey) return '';
-  let cleaned = rawKey.trim().replace(/^['"`]|['"`]$/g, '').trim();
+  let cleaned = rawKey.trim().replace(/^["'`]|["'`]$/g, '').trim();
   // Fix common typo with dashes instead of underscores
   if (cleaned.startsWith('sk-live-')) {
     cleaned = cleaned.replace(/^sk-live-/, 'sk_live_');

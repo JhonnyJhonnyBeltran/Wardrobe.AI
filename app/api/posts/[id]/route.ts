@@ -74,7 +74,7 @@ export async function GET(
                 if (clothingIds.length > 0) {
                     const { data: clothes } = await supabaseAdmin
                         .from('clothing_items')
-                        .select('id, name, category, color, color_hex, image_url, original_image_url, brand, size, fabric, season, reference, source_url')
+                        .select('*')
                         .in('id', clothingIds);
 
                     if (clothes) {

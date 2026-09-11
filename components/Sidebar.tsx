@@ -68,7 +68,7 @@ export default function Sidebar() {
 
   return (
     <>
-      <aside className={`hidden md:flex flex-col w-[72px] h-screen sticky top-0 bg-[var(--background)]/90 backdrop-blur-md border-r border-[var(--border-color)] z-[5001] items-center py-6 will-change-transform isolate transition-all duration-300 ${storeTabBarHidden ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+      <aside className={`hidden md:flex flex-col w-[72px] min-w-[72px] max-w-[72px] shrink-0 h-screen sticky top-0 bg-[var(--background)]/90 backdrop-blur-md border-r border-[var(--border-color)] z-[5001] items-center py-6 will-change-transform isolate transition-all duration-300 ${storeTabBarHidden ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
         {/* Nav Items */}
         <nav className="flex-1 flex flex-col gap-6 w-full items-center">
           {navItems.map((item, index) => {

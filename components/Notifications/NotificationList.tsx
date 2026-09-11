@@ -52,12 +52,23 @@ export default function NotificationList({ compact = false, onClose }: Notificat
     // Use a ref to ensure we only capture/mark once on mount, regardless of re-renders
     const hasMarkedViewedRef = useRef(false);
 
-    // Merge fetched and realtime notifications
-    const notifications = Array.from(new Map(
-        [...realtimeNotifications, ...fetchedNotifications].map((item: any) => [item.id, item])
-    ).values()).sort((a: any, b: any) => {
-        const timeA = a.timestamp || new Date(a.created_at).getTime() || 0;
-        const timeB = b.timestamp || new Date(b.created_at).getTime() || 0;
+    // Merge fetched and realtime notifications with strict deduplication
+    const rawList = [...realtimeNotifications, ...fetchedNotifications];
+    const deduplicatedMap = new Map();
+    for (const item of rawList) {
+        const actorKey = (item as any)?.actor?.id || (item as any)?.actor_id || (item as any)?.sender_id || 'unknown';
+        const typeKey = (item as any)?.type || 'notification';
+        const entityKey = (item as any)?.postId || (item as any)?.entity_id || (item as any)?.resource_id || (item as any)?.data?.post_id || '';
+        const dedupeKey = item.id ? item.id : `${actorKey}_${typeKey}_${entityKey}`;
+        
+        if (!deduplicatedMap.has(dedupeKey)) {
+            deduplicatedMap.set(dedupeKey, item);
+        }
+    }
+
+    const notifications = Array.from(deduplicatedMap.values()).sort((a: any, b: any) => {
+        const timeA = a.timestamp || new Date(a.created_at || a.time || 0).getTime() || 0;
+        const timeB = b.timestamp || new Date(b.created_at || b.time || 0).getTime() || 0;
         return timeB - timeA;
     });
 

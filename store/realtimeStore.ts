@@ -200,15 +200,27 @@ export const useRealtimeStore = create<RealtimeStore>((set, get) => ({
 
   incrementUnreadCount: () => set(state => ({ unreadCount: state.unreadCount + 1 })),
 
-  // Stub methods for compatibility
+  // Add notification with deduplication
   addNotification: (notification) => set(state => {
-    // Only add if not already read and recent (< 60s)
     if (notification.read) return state;
     if (notification.created_at) {
       const diff = Date.now() - new Date(notification.created_at).getTime();
-      if (diff > 60 * 1000) return state;
+      if (diff > 120 * 1000) return state;
     }
-    if (state.notifications.some(n => n.id === notification.id)) return state;
+    const isDuplicate = state.notifications.some(n => {
+      if (n.id === notification.id) return true;
+      const sameActor = (n.actor_id || n.sender_id) && (n.actor_id || n.sender_id) === (notification.actor_id || notification.sender_id);
+      const sameType = n.type === notification.type;
+      const sameEntity = (n.entity_id || n.resource_id || (n.data as any)?.post_id) === (notification.entity_id || notification.resource_id || (notification.data as any)?.post_id);
+      if (sameActor && sameType && sameEntity) {
+        const timeDiff = Math.abs(new Date(n.created_at || Date.now()).getTime() - new Date(notification.created_at || Date.now()).getTime());
+        if (timeDiff < 60 * 1000) return true;
+      }
+      return false;
+    });
+
+    if (isDuplicate) return state;
+
     return {
       notifications: [notification, ...state.notifications].slice(0, 10),
     };

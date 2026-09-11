@@ -40,6 +40,7 @@ interface SearchState {
   setPostsPage: (page: number) => void;
   setUsersPage: (page: number) => void;
   setHasInitialLoaded: (loaded: boolean) => void;
+  updatePostLike: (postId: string, isLiked: boolean, likesCount?: number) => void;
   resetSearch: () => void;
 }
 
@@ -86,6 +87,28 @@ export const useSearchStore = create<SearchState>()(
       setPostsPage: (postsPage) => set({ postsPage }),
       setUsersPage: (usersPage) => set({ usersPage }),
       setHasInitialLoaded: (hasInitialLoaded) => set({ hasInitialLoaded }),
+
+      updatePostLike: (postId, isLiked, likesCount) => {
+        const updateArray = (posts: Post[]) =>
+          posts.map((p) => {
+            if (p.id === postId) {
+              const newLikes = typeof likesCount === 'number'
+                ? likesCount
+                : (isLiked ? (p.likes || 0) + 1 : Math.max(0, (p.likes || 1) - 1));
+              return {
+                ...p,
+                isLiked,
+                likes: newLikes,
+              };
+            }
+            return p;
+          });
+
+        set((state) => ({
+          results: updateArray(state.results),
+          explorePosts: updateArray(state.explorePosts),
+        }));
+      },
 
       resetSearch: () => set({
         query: '',

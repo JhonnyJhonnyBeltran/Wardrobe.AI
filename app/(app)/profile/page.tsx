@@ -345,7 +345,7 @@ export default function ProfilePage() {
           {/* Left: Create Button */}
           <button
             onClick={() => setCreateMenuOpen(true)}
-            className="md:hidden touch-target-44 text-[var(--brand-pink)] hover:bg-[var(--background-secondary)]/80 rounded-full transition-all active:scale-90 flex-shrink-0"
+            className="md:hidden touch-target-44 text-[var(--foreground)] hover:text-[var(--brand-pink)] rounded-full transition-colors active:scale-90 flex-shrink-0"
             aria-label="Crear publicación"
           >
             <Plus className="w-6 h-6" />
@@ -363,10 +363,10 @@ export default function ProfilePage() {
           {/* Right: Settings/Options Button */}
           <Link
             href="/profile/settings"
-            className="touch-target-44 rounded-full transition-all flex-shrink-0 text-[var(--foreground)] hover:bg-[var(--background-secondary)]/80 active:scale-90"
+            className="touch-target-44 rounded-full transition-colors flex-shrink-0 text-[var(--foreground)] hover:text-[var(--brand-pink)] active:scale-90"
             aria-label="Configuración"
           >
-            <Settings className="w-5.5 h-5.5 transition-all duration-300 group-hover:text-[var(--brand-pink)]" />
+            <Settings className="w-5.5 h-5.5" />
           </Link>
         </div>
       </header>

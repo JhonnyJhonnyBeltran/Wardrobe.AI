@@ -17,6 +17,7 @@ interface FeedState {
   setPage: (page: number) => void;
   setScrollPosition: (scrollPosition: number) => void;
   setHasInitialLoaded: (loaded: boolean) => void;
+  updatePostLike: (postId: string, isLiked: boolean, likesCount?: number) => void;
   invalidate: () => void;
 }
 
@@ -47,6 +48,17 @@ export const useFeedStore = create<FeedState>()(
       setPage: (page) => set({ page }),
       setScrollPosition: (scrollPosition) => set({ scrollPosition }),
       setHasInitialLoaded: (hasInitialLoaded) => set({ hasInitialLoaded }),
+      updatePostLike: (postId, isLiked, likesCount) => {
+        const current = get().posts;
+        const updated = current.map(p => {
+          if (p.id === postId) {
+            const newCount = likesCount !== undefined ? likesCount : (isLiked ? (p.likes_count || 0) + 1 : Math.max(0, (p.likes_count || 1) - 1));
+            return { ...p, is_liked: isLiked, isLiked: isLiked, likes_count: newCount, likesCount: newCount };
+          }
+          return p;
+        });
+        set({ posts: updated });
+      },
       invalidate: () => set({ lastFetchedAt: 0, page: 0 }),
     }),
     {

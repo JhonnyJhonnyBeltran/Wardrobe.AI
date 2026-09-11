@@ -3,8 +3,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  ArrowLeft, 
-  Crown, 
   Sparkles, 
   Check, 
   Zap, 
@@ -99,22 +97,14 @@ export default function KloeProModal({ isOpen, onClose, redirectBackToCloset = f
           <div className="absolute -top-24 -right-24 w-48 h-48 bg-[var(--brand-pink)]/20 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-purple-500/15 rounded-full blur-3xl pointer-events-none" />
 
-          {/* Top Actions: Back Button & Close */}
-          <div className="flex items-center justify-between mb-2">
-            <button
-              onClick={handleDismiss}
-              className="flex items-center gap-1 text-xs font-semibold text-[var(--foreground-secondary)] hover:text-[var(--foreground)] transition-colors p-1"
-              aria-label="Volver al armario"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span>Volver a Klozet</span>
-            </button>
+          {/* Top Actions: Close button */}
+          <div className="flex items-center justify-end mb-2">
             <button
               onClick={handleDismiss}
               className="p-1.5 rounded-full hover:bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:text-[var(--foreground)] transition-colors"
               aria-label="Cerrar"
             >
-              <X className="w-4 h-4" />
+              <X className="w-5 h-5" />
             </button>
           </div>
 
@@ -125,11 +115,8 @@ export default function KloeProModal({ isOpen, onClose, redirectBackToCloset = f
                 src="/kloe-logo-large.png"
                 alt="Klozet Premium"
                 fill
-                className="object-contain drop-shadow-md animate-pulse"
+                className="object-contain drop-shadow-md"
               />
-              <div className="absolute -top-1.5 -right-1.5 w-6 h-6 rounded-full bg-[var(--brand-pink)] text-white flex items-center justify-center shadow-sm">
-                <Crown className="w-3.5 h-3.5" />
-              </div>
             </div>
             
             <h3 className="text-lg font-extrabold text-[var(--foreground)] leading-snug">

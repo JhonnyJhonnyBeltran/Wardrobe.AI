@@ -17,6 +17,8 @@ import ProductModal from '@/components/ProductModal';
 import { ClothingItem } from '@/components/ClothingItem';
 import { SkeletonPostDetail } from '@/components';
 import { haptics } from '@/lib/haptic';
+import { useFeedStore } from '@/store/feedStore';
+import { useSearchStore } from '@/store/searchStore';
 
 interface Comment {
     id: string;
@@ -296,8 +298,16 @@ export default function PostDetailPage() {
         const previousCount = likesCount;
 
         // Optimistic Update
-        setIsLiked(!previousState);
-        setLikesCount(Math.max(0, previousState ? previousCount - 1 : previousCount + 1));
+        const nextState = !previousState;
+        const nextCount = Math.max(0, previousState ? previousCount - 1 : previousCount + 1);
+        setIsLiked(nextState);
+        setLikesCount(nextCount);
+
+        // Sync with Feed and Search stores
+        try {
+            useFeedStore.getState().updatePostLike(postId, nextState, nextCount);
+            useSearchStore.getState().updatePostLike(postId, nextState, nextCount);
+        } catch {}
 
         try {
             let error = null;
@@ -311,35 +321,20 @@ export default function PostDetailPage() {
                 const { error: insertError } = await (supabase.from('likes') as any)
                     .insert({ post_id: postId, user_id: user.id });
                 error = insertError;
-
-                // Notify Author (if not self and insert succeeded)
-                if (!insertError && (post as any)?.user_id !== user.id) {
-                    try {
-                        await (supabase.from('notifications') as any).insert({
-                            user_id: (post as any).user_id,
-                            actor_id: user.id,
-                            type: 'like',
-                            entity_id: postId
-                        });
-                    } catch (notificationError) {
-                        console.error('Notification error:', notificationError);
-                    }
-                }
             }
 
             if (error) {
                 console.error('Like error:', error);
                 throw error;
             }
-
-            // The 'posts.likes_count' is now updated atomically via a PostgreSQL trigger on the 'likes' table
-            // See setup_likes_trigger.sql
-
-            router.refresh();
         } catch (error) {
             console.error('toggleLike error:', error);
             setIsLiked(previousState);
             setLikesCount(previousCount);
+            try {
+                useFeedStore.getState().updatePostLike(postId, previousState, previousCount);
+                useSearchStore.getState().updatePostLike(postId, previousState, previousCount);
+            } catch {}
         }
     };
 
@@ -416,16 +411,10 @@ export default function PostDetailPage() {
         try {
             if (previousState) {
                 // @ts-ignore
-                await followService.unfollowUser(post.user_id);
+                await followService.unfollowUser(user.id, post.user_id);
             } else {
                 // @ts-ignore
-                await followService.followUser(post.user_id);
-                await (supabase.from('notifications') as any).insert({
-                    // @ts-ignore
-                    user_id: post.user_id,
-                    actor_id: user.id,
-                    type: 'follow'
-                });
+                await followService.followUser(user.id, post.user_id);
             }
         } catch (error) {
             console.error(error);
@@ -439,17 +428,14 @@ export default function PostDetailPage() {
         if (!newComment.trim() || !user || submittingComment) return;
 
         setSubmittingComment(true);
-        const commentText = newComment.trim();
-
         try {
-            // @ts-ignore
             const { data, error } = await (supabase.from('comments') as any)
                 .insert({
                     post_id: postId,
                     user_id: user.id,
-                    content: commentText
+                    content: newComment.trim()
                 })
-                .select('id, content, created_at')
+                .select()
                 .single();
 
             if (error) throw error;
@@ -465,17 +451,6 @@ export default function PostDetailPage() {
                 }
             }]);
             setNewComment('');
-
-            // @ts-ignore
-            if (post.user_id !== user.id) {
-                await (supabase.from('notifications') as any).insert({
-                    // @ts-ignore
-                    user_id: post.user_id,
-                    actor_id: user.id,
-                    type: 'comment',
-                    entity_id: postId
-                });
-            }
 
             // Sync total comments count in the 'posts' table
             const newCommentCount = (post?.comments_count || 0) + 1;
@@ -536,7 +511,7 @@ export default function PostDetailPage() {
     if (!post) return <div className="min-h-screen flex items-center justify-center bg-[var(--background)] text-[var(--foreground)]">Publicación no encontrada</div>;
 
     return (
-        <div className="min-h-screen w-full bg-[var(--background)] flex flex-col">
+        <div className="min-h-screen w-full overflow-x-hidden bg-[var(--background)] flex flex-col">
             {/* HEADER - Apple Glass Bar with 15% increased width */}
             <header className="sticky top-0 z-50 w-full max-w-[1600px] mx-auto apple-glass-bar pt-safe h-16 flex items-center justify-between px-4">
                 {/* Left: Back Button */}
@@ -795,14 +770,6 @@ export default function PostDetailPage() {
                         <div className="px-4 py-4 border-t border-gray-100 dark:border-gray-800">
                             <div className="flex items-center justify-between mb-3">
                                 <h3 className="font-bold text-[15px] text-gray-900 dark:text-white">Prendas del look ({postGarments.length})</h3>
-                                {outfitObject?.id && (
-                                    <Link 
-                                        href={`/outfit/${outfitObject.id}`}
-                                        className="text-xs font-semibold text-[var(--brand-pink)] hover:underline"
-                                    >
-                                        Ver outfit →
-                                    </Link>
-                                )}
                             </div>
                             <div className="grid grid-cols-2 gap-3">
                                 {postGarments.map((clothing: any, idx: number) => (

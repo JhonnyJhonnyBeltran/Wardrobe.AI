@@ -33,9 +33,9 @@ export default function FloatingCreateButton() {
     };
 
     const actions = [
-        { id: 'post', label: 'Nuevo Post', icon: ImageIcon, path: '/create-post', color: 'bg-blue-500' },
-        { id: 'outfit', label: 'Nuevo Outfit', icon: Layers, path: '/create', color: 'bg-purple-500' },
-        { id: 'item', label: 'Nueva Prenda', icon: Shirt, path: '/closet?action=new-item', color: 'bg-pink-400' },
+        { id: 'post', label: 'Nuevo Post', icon: ImageIcon, path: '/create-post', color: 'bg-[var(--brand-pink)] text-white' },
+        { id: 'outfit', label: 'Nuevo Outfit', icon: Layers, path: '/create', color: 'bg-black text-white dark:bg-white dark:text-black border border-white/10 dark:border-black/10' },
+        { id: 'item', label: 'Nueva Prenda', icon: Shirt, path: '/closet?action=new-item', color: 'bg-[var(--background-secondary)] text-[var(--foreground)] border border-[var(--border-color)]' },
     ];
 
     // Animation variants for desktop speed dial

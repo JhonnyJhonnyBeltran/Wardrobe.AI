@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import { Button, Card, FloatingCreateButton, OutfitCard, ClothingItem, NotificationToastContainer, WardrobeSelectionModal, OutfitDetailModal, EmptyState, SkeletonCard, PullToRefresh } from '@/components';
 import AddItemModal from '@/components/AddItemModal';
 import ProductModal from '@/components/ProductModal';
+import KloeProModal from '@/components/KloeProModal';
 import BubbleToggle from '@/components/BubbleToggle';
 import OutfitCalendar from '@/components/OutfitCalendar';
 import type { Outfit } from '@/types/outfit';
@@ -40,6 +41,7 @@ export default function ClosetPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState<ClothingItemType | null>(null);
   const [selectedOutfit, setSelectedOutfit] = useState<Outfit | null>(null);
+  const [showKloeProModal, setShowKloeProModal] = useState(false);
 
   // Auto-hide Header State
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
@@ -67,18 +69,20 @@ export default function ClosetPage() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Auto-open Add Item Modal or switch Tab based on query param
+  // Auto-open Add Item Modal, switch Tab or open Upgrade modal based on query param
   useEffect(() => {
     const action = searchParams.get('action');
     const tab = searchParams.get('tab');
+    const upgrade = searchParams.get('upgrade');
 
-    if (action === 'new-item') {
+    if (upgrade === 'true') {
+      setShowKloeProModal(true);
+      router.replace('/closet', { scroll: false });
+    } else if (action === 'new-item') {
       setShowAddModal(true);
-      // Clean up the URL
       router.replace('/closet', { scroll: false });
     } else if (tab === 'outfits') {
       setActiveTab('outfits');
-      // Clean up the URL
       router.replace('/closet', { scroll: false });
     }
   }, [searchParams, router]);
@@ -667,23 +671,38 @@ export default function ClosetPage() {
                 Crear Outfit
               </motion.button>
             </Link>
-            <Link href="/closet/kloe" className="flex-1">
-              <motion.button 
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full py-3 px-4 rounded-xl bg-[var(--background-secondary)] text-[var(--foreground)] font-semibold flex items-center justify-center gap-2 border border-[var(--border-color)] relative overflow-hidden group hover:border-[var(--brand-pink)]/50 transition-all shadow-xs"
-              >
-                <div className="relative w-8 h-5 flex-shrink-0 flex items-center justify-center">
-                  <Image src="/kloe-logo-large.png" alt="Kloe" fill className="object-contain group-hover:scale-110 transition-transform" />
-                </div>
-                <span>Crear con IA</span>
-              </motion.button>
-            </Link>
+            {isPremium() ? (
+              <Link href="/closet/kloe" className="flex-1">
+                <motion.button 
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full py-3 px-4 rounded-xl bg-[var(--background-secondary)] text-[var(--foreground)] font-semibold flex items-center justify-center gap-2 border border-[var(--border-color)] relative overflow-hidden group hover:border-[var(--brand-pink)]/50 transition-all shadow-xs cursor-pointer"
+                >
+                  <div className="relative w-8 h-5 flex-shrink-0 flex items-center justify-center">
+                    <Image src="/kloe-logo-large.png" alt="Kloe" fill className="object-contain group-hover:scale-110 transition-transform" />
+                  </div>
+                  <span>Crear con IA</span>
+                </motion.button>
+              </Link>
+            ) : (
+              <div onClick={() => setShowKloeProModal(true)} className="flex-1">
+                <motion.button 
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full py-3 px-4 rounded-xl bg-[var(--background-secondary)] text-[var(--foreground)] font-semibold flex items-center justify-center gap-2 border border-[var(--border-color)] relative overflow-hidden group hover:border-[var(--brand-pink)]/50 transition-all shadow-xs cursor-pointer"
+                >
+                  <div className="relative w-8 h-5 flex-shrink-0 flex items-center justify-center">
+                    <Image src="/kloe-logo-large.png" alt="Kloe" fill className="object-contain group-hover:scale-110 transition-transform" />
+                  </div>
+                  <span>Crear con IA</span>
+                </motion.button>
+              </div>
+            )}
           </div>
 
           {/* Organic Duolingo-Style Prompt Banner */}
           {!isPremium() && (
-            <Link href="/closet/kloe" className="block mb-5">
+            <div onClick={() => setShowKloeProModal(true)} className="block mb-5 cursor-pointer">
               <div className="bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-pink-500/10 border border-[var(--brand-pink)]/30 rounded-2xl p-3.5 flex items-center justify-between hover:border-[var(--brand-pink)]/60 transition-all shadow-xs group">
                 <div className="flex items-center gap-3">
                   <div className="relative w-12 h-8 flex-shrink-0 flex items-center justify-center">
@@ -702,7 +721,7 @@ export default function ClosetPage() {
                   Consultar <Sparkles className="w-3 h-3" />
                 </span>
               </div>
-            </Link>
+            </div>
           )}
 
           {/* Profile-Style Tabs */}
@@ -1355,6 +1374,11 @@ export default function ClosetPage() {
           setOutfits(prev => prev.filter(o => o.id !== id));
           setSelectedOutfit(null);
         }}
+      />
+
+      <KloeProModal
+        isOpen={showKloeProModal}
+        onClose={() => setShowKloeProModal(false)}
       />
     </>
   );

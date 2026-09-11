@@ -695,6 +695,14 @@ En cada conversación, el backend alimenta a CloSy con:
 - **Acceso Directo a Configuración Extendida**:
   - Añadido el enlace directo *"Ver todas"* a `/profile/settings/notifications` desde la tarjeta de notificaciones en la página principal de ajustes.
 
+### 48. Regla Suprema de Esquema SQL Unificado (00 y 01) (Septiembre 2026)
+- **Consolidación de Archivos SQL**:
+  - Toda la arquitectura de base de datos de Supabase/PostgreSQL (tablas, relaciones, columnas de perfiles, suscripciones Stripe, notificaciones, triggers, funciones RPC, RLS y storage buckets) queda exclusivamente unificada en dos archivos canónicos numerados:
+    1. `sql/00_schema_unified.sql`: Estructura completa de tablas, columnas, índices, vistas, storage y políticas RLS.
+    2. `sql/01_functions_triggers.sql`: Triggers de base de datos (likes atómicos, notificaciones en tiempo real, cascade deletes y funciones RPC `SECURITY DEFINER`).
+  - **Prohibición de Fragmentación**: Se eliminan todos los archivos `.sql` sueltos o dispersos por el repositorio (`setup_*.sql`, migraciones aisladas, scripts auxiliares), manteniendo exclusivamente `00` y `01` como fuentes únicas de verdad SQL.
+
+
 
 
 

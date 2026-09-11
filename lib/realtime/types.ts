@@ -59,6 +59,9 @@ export interface Notification {
   message: string;
   data?: Record<string, unknown>;
   sender_id?: string;
+  actor_id?: string;
+  entity_id?: string;
+  resource_id?: string;
   sender?: {
     username: string;
     avatar_url: string | null;

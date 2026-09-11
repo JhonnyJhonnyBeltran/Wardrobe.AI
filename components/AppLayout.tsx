@@ -53,7 +53,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
       <Sidebar />
 
       {/* Main Content */}
-      <main className={`flex-1 relative ${hideTabBar ? 'pb-0' : 'pb-28 md:pb-0'}`}>
+      <main className={`flex-1 min-w-0 relative ${hideTabBar ? 'pb-0' : 'pb-28 md:pb-0'}`}>
         <AuthGuard>
           {children}
         </AuthGuard>

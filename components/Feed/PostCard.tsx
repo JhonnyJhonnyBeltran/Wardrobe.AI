@@ -12,6 +12,8 @@ import { supabase } from '@/lib/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { haptics } from '@/lib/haptic';
 import PostPreviewModal from './PostPreviewModal';
+import { useFeedStore } from '@/store/feedStore';
+import { useSearchStore } from '@/store/searchStore';
 
 export interface Post {
     id: string;
@@ -162,8 +164,16 @@ export default function PostCard({ post, onClick, hideSaveButton = false }: Post
         const previousState = isLikedState;
         const previousCount = likesCountState;
 
-        setIsLikedState(!previousState);
-        setLikesCountState(Math.max(0, previousState ? previousCount - 1 : previousCount + 1));
+        const nextState = !previousState;
+        const nextCount = Math.max(0, previousState ? previousCount - 1 : previousCount + 1);
+
+        setIsLikedState(nextState);
+        setLikesCountState(nextCount);
+
+        try {
+            useFeedStore.getState().updatePostLike(post.id, nextState, nextCount);
+            useSearchStore.getState().updatePostLike(post.id, nextState, nextCount);
+        } catch {}
 
         try {
             if (previousState) {
@@ -176,26 +186,16 @@ export default function PostCard({ post, onClick, hideSaveButton = false }: Post
                 const { error } = await (supabase.from('likes') as any)
                     .insert({ post_id: post.id, user_id: user.id });
                 if (error) throw error;
-
-                // Notify Author if not self
-                const authorId = (post as any)?.author_id || (post as any)?.user_id;
-                if (authorId && authorId !== user.id) {
-                    try {
-                        await (supabase.from('notifications') as any).insert({
-                            user_id: authorId,
-                            actor_id: user.id,
-                            type: 'like',
-                            entity_id: post.id,
-                            read: false
-                        });
-                    } catch {}
-                }
             }
             triggerRefetch();
         } catch (err) {
             console.error('Error toggling like:', err);
             setIsLikedState(previousState);
             setLikesCountState(previousCount);
+            try {
+                useFeedStore.getState().updatePostLike(post.id, previousState, previousCount);
+                useSearchStore.getState().updatePostLike(post.id, previousState, previousCount);
+            } catch {}
         }
     };
 

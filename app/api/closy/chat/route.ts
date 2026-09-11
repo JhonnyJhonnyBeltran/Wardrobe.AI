@@ -302,9 +302,10 @@ REGLAS CRÍTICAS DE ESTILISMO Y DECISIÓN DE RESPUESTA (OBLIGATORIO):
      - Acción: Proporciona una explicación rica, inspiradora y experta en Markdown desglosando las tendencias, paletas y siluetas.
      - IMPORTANTE: En este caso NO crees un outfit forzado ("recommended_outfit": null). Puedes resaltar 1-2 prendas de su armario en "highlighted_item_ids" si son relevantes como ejemplo.
 
-   • CASO C: RECOMENDACIONES DE COMPRAS Y SHOPPING
-     - Ejemplos: "qué debería comprarme", "qué básicos me faltan", "dónde comprar prendas como las de este look", "recomendaciones de compras para elevar mi estilo", "shopping list".
-     - Acción: Recomienda de 2 a 4 compras estratégicas (prendas, materiales clave, cortes, calzado) explicando por qué elevarán su estilo y cómo conectan con las prendas que ya tiene en su armario.
+   • CASO C: RECOMENDACIONES DE COMPRAS, BÁSICOS Y SHOPPING
+     - Ejemplos: "¿qué camiseta básica me recomiendas comprar para combinar con mis prendas?", "¿qué básicos me faltan?", "recomendaciones de compras", "dónde comprar prendas como las de este look", "shopping list".
+     - Acción: Recomienda de 2 a 4 compras estratégicas mencionando explícitamente MARCAS REALES de moda (Uniqlo, Zara, COS, Massimo Dutti, Mango, Nike, New Balance, etc.), cortes exactos (regular fit, boxy fit, relaxed, wide leg, sastre), tejidos (algodón pima 240g, lana fría, lino, denim 100% algodón) y colores específicos.
+     - Explica cómo cada compra propuesta amplía y multiplica las combinaciones con las prendas reales que ya tiene registradas en su armario.
      - IMPORTANTE: En este caso NO devuelvas un outfit de su armario ("recommended_outfit": null).
 
 2. ANÁLISIS DE FOTOS Y LOOKS GUARDADOS (INSPIRACIÓN):
@@ -1101,29 +1102,29 @@ ${leatherItem ? `\n- **En tu armario**: Tienes **${leatherItem.name}**, que comb
   }
 
   // Scenario 6: Shopping & Wishlist recommendations (User asking for shopping guidance or missing wardrobe pieces)
-  const isShoppingQuery = lower.includes('comprar') || lower.includes('compras') || lower.includes('shopping') || lower.includes('que me falta') || lower.includes('qué me falta') || lower.includes('básicos que comprar') || lower.includes('adquirir') || lower.includes('shopping list');
+  const isShoppingQuery = lower.includes('comprar') || lower.includes('compras') || lower.includes('shopping') || lower.includes('que me falta') || lower.includes('qué me falta') || lower.includes('básicos que comprar') || lower.includes('adquirir') || lower.includes('shopping list') || lower.includes('que me deberia de comprar') || lower.includes('qué me debería comprar');
   if (isShoppingQuery) {
     const isMen = context.user.gender === 'men';
     const suggestions = isMen
       ? [
-          '**Cazadora de ante o sobrecamisa estructurada**: En tonos arena, tabaco o marrón chocolate, ideal para elevar capas en entretiempo.',
-          '**Mocasines o botas Chelsea de piel**: Aportan sofisticación instantánea tanto con vaqueros rectos como con pantalones de pinzas.',
-          '**Pantalón de corte recto en tejido texturizado** (pana fina o lana fría): Una alternativa versátil a los jeans tradicionales.',
-          '**Camiseta de algodón grueso de 240g** en blanco roto o crudo: El lienzo básico perfecto para cualquier conjunto.'
+          '**Camisetas básicas de algodón pesado (Uniqlo U / Arket)**: En blanco crudo y negro washed con corte *boxy fit* (240g+), el pilar versátil para llevar tanto solas como bajo sobrecamisas.',
+          '**Pantalón de pinzas relaxed / sastre (COS / Zara Man)**: En tono gris carbón o arena, aporta fluidez y eleva tus zapatillas o mocasines al instante.',
+          '**Sobrecamisa de ante o pana fina (Massimo Dutti / Mango Man)**: En marrón tabaco o verde bosque, perfecta para crear capas en entretiempo con la ropa de tu armario.',
+          '**Zapatillas de silueta retro limpia (New Balance 550 / Nike Killshot / Adidas Samba)**: Calzado todoterreno que equilibra estilismos casuales y formales.'
         ]
       : [
-          '**Blazer oversized estructurado**: En tonos neutros o espiga, perfecto para combinar tanto con vestidos como con jeans y zapatillas.',
-          '**Botines de tacón sensato o mocasines track**: Cómodos y elegantes para el día a día.',
-          '**Pantalón sastre fluido de pernera ancha**: Estiliza la figura y funciona de la mañana a la noche.',
-          '**Jersey de punto fino de cachemira o lana merino**: Pieza atemporal que resiste temporadas.'
+          '**Camisetas de algodón pima prémium (Uniqlo / COS)**: En blanco óptico y topo suave con escote limpio, imprescindibles para combinar con toda tu ropa.',
+          '**Blazer oversized estructurado (Massimo Dutti / Zara)**: En tonos neutros o espiga, ideal sobre vaqueros, faldas y vestidos.',
+          '**Pantalón sastre wide leg fluido (Mango / COS)**: Estiliza la silueta y funciona tanto de día con zapatillas como de noche con tacón o botines.',
+          '**Mocasines de piel o botines de caña media (Massimo Dutti / Vagabond)**: El toque sofisticado que moderniza cualquier conjunto de tu armario.'
         ];
 
     return {
-      message: `Para complementar y maximizar el potencial de las prendas que ya tienes registradas en tu armario, aquí tienes mis recomendaciones de compras estratégicas:
+      message: `He analizado tu armario completo y tu estilo personal para seleccionarte estas compras y marcas recomendadas:
 
 ${suggestions.map(s => `• ${s}`).join('\n\n')}
 
-Estas piezas te permitirán multiplicar tus combinaciones sin saturar tu armario, aportando textura y versatilidad a tus looks.`,
+Estas prendas clave te permitirán multiplicar las combinaciones posibles con tu ropa actual, aportando variedad de texturas y siluetas modernas sin sobrecargar tu armario.`,
       recommended_outfit: null,
       highlighted_item_ids: items.slice(0, 2).map((i: any) => i.id),
       follow_up_suggestions: [
