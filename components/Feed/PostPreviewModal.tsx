@@ -81,6 +81,10 @@ export default function PostPreviewModal({
     setIsSavedState(isSaved);
   }, [isSaved]);
 
+  useEffect(() => {
+    setIsLikedState(isLiked);
+  }, [isLiked]);
+
   // Fetch complete post & linked outfit from database on open
   useEffect(() => {
     if (!isOpen || !postId) return;

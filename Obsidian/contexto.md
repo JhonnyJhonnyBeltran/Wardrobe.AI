@@ -722,7 +722,14 @@ En cada conversación, el backend alimenta a CloSy con:
   - La página `/post/[id]` consume prioritariamente la respuesta del endpoint `/api/posts/[id]`.
   - La sección *"Prendas del look"* se nutre de `post.clothing_items || post.garments || post.outfits?.outfit_items`.
   - Cada prenda es interactiva y abre instantáneamente el modal `ProductModal` con foto, marca, color, tejido, temporada y detalles completos de la prenda.
-  - En `InteractiveOutfitViewer`, los stickers de las prendas del look se renderizan de forma interactiva sobre el lienzo del post permitiendo hacer clic para inspeccionar cada pieza.
-
-
-
+  - En `InteractiveOutfitViewer`, los stickers de las prendas del look se renderizan de forma interactiva sobre el lienzo del post permitiendo hacer clic para inspeccionar cada pieza.### 51. Flujo Atómico de Quitar y Añadir Likes con Recálculo Exacto (`/api/likes`) (Septiembre 2026)
+- **Persistencia y Desvinculación de Likes (POST & DELETE)**:
+  - Al quitar un like (`DELETE /api/likes?post_id=...` o con body JSON), el endpoint del backend:
+    1. Autentica al usuario mediante sesión de cookies o token Bearer.
+    2. Elimina el registro correspondiente en la tabla `public.likes` (`post_id`, `user_id`).
+    3. Elimina de forma segura cualquier notificación previa de tipo `'like'` generada por este usuario sobre ese post.
+    4. Realiza un recálculo exacto del número total real de filas en `public.likes` para ese post (`select count: exact`) y actualiza `posts.likes_count` atómicamente con `supabaseAdmin`.
+    5. Devuelve `{ success: true, isLiked: false, likes_count: N }`.
+  - Mismo comportamiento simétrico en `POST /api/likes`, garantizando que el contador en base de datos nunca quede desfasado ni dependa de triggers no ejecutados.
+- **Sincronización en Cliente**:
+  - `PostCard.tsx`, `app/(app)/post/[id]/page.tsx` y `PostPreviewModal.tsx` sincronizan el estado visual optimista y los stores globales (`useFeedStore`, `useSearchStore`) reflejando el estado real en tiempo real.
