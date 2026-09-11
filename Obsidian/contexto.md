@@ -705,9 +705,10 @@ En cada conversación, el backend alimenta a CloSy con:
   - Opciones desplegadas (*Nuevo Post*, *Nuevo Outfit*, *Nueva Prenda*):
     - En modo claro: Fondo negro sólido (`bg-black`), iconos en blanco y textos en blanco.
     - En modo oscuro: Fondo blanco sólido (`dark:bg-white`), iconos en negro y textos en negro.
-- **Resolución de Error 400 en Guardados (`saves`) & Estabilidad de Likes**:
-  - En `store/profileStore.ts` se corrigió la consulta de `saves` para no solicitar la columna `folder_id` directamente sobre la tabla `saves` (la cual provocaba un error `400 Bad Request` en PostgREST).
-  - En `sql/01_functions_triggers.sql`, los triggers de notificaciones de base de datos (`handle_new_like`, `handle_new_comment`, `handle_new_follow`) fueron protegidos con bloques de captura de excepción `BEGIN ... EXCEPTION WHEN OTHERS THEN NULL; END;` para garantizar que ninguna inserción de likes o comentarios se revierta o falle.
+- **Ruta API Dedicada `/api/likes` para Persistencia Atómica**:
+  - Implementado `app/api/likes/route.ts` (`POST` y `DELETE`) con autenticación por sesión de servidor y `supabaseAdmin`.
+  - Garantiza que quitar y volver a dar like funcione de forma 100% instantánea y persistente, desvinculando la operación de posibles restricciones RLS de cliente o fallos de creación de notificaciones.
+
 
 
 
