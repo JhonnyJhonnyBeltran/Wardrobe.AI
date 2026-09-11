@@ -52,8 +52,9 @@ export const useFeedStore = create<FeedState>()(
         const current = get().posts;
         const updated = current.map(p => {
           if (p.id === postId) {
-            const newCount = likesCount !== undefined ? likesCount : (isLiked ? (p.likes_count || 0) + 1 : Math.max(0, (p.likes_count || 1) - 1));
-            return { ...p, is_liked: isLiked, isLiked: isLiked, likes_count: newCount, likesCount: newCount };
+            const prevCount = typeof p.likes === 'number' ? p.likes : (p.likes_count || 0);
+            const newCount = likesCount !== undefined ? likesCount : (isLiked ? prevCount + 1 : Math.max(0, prevCount - 1));
+            return { ...p, is_liked: isLiked, isLiked: isLiked, likes: newCount, likes_count: newCount, likesCount: newCount };
           }
           return p;
         });

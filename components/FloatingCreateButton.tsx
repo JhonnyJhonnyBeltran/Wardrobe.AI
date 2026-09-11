@@ -33,9 +33,9 @@ export default function FloatingCreateButton() {
     };
 
     const actions = [
-        { id: 'post', label: 'Nuevo Post', icon: ImageIcon, path: '/create-post', color: 'bg-[var(--brand-pink)] text-white' },
-        { id: 'outfit', label: 'Nuevo Outfit', icon: Layers, path: '/create', color: 'bg-black text-white dark:bg-white dark:text-black border border-white/10 dark:border-black/10' },
-        { id: 'item', label: 'Nueva Prenda', icon: Shirt, path: '/closet?action=new-item', color: 'bg-[var(--background-secondary)] text-[var(--foreground)] border border-[var(--border-color)]' },
+        { id: 'post', label: 'Nuevo Post', icon: ImageIcon, path: '/create-post' },
+        { id: 'outfit', label: 'Nuevo Outfit', icon: Layers, path: '/create' },
+        { id: 'item', label: 'Nueva Prenda', icon: Shirt, path: '/closet?action=new-item' },
     ];
 
     // Animation variants for desktop speed dial
@@ -72,10 +72,10 @@ export default function FloatingCreateButton() {
                                         onClick={() => handleActionClick(action.path)}
                                         className="group flex items-center gap-3"
                                     >
-                                        <span className="px-3 py-1.5 bg-[var(--card-bg)] text-[var(--foreground)] text-sm font-semibold rounded-lg shadow-md border border-[var(--border-color)] opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <span className="px-3 py-1.5 bg-black text-white dark:bg-white dark:text-black text-sm font-semibold rounded-xl shadow-lg border border-white/10 dark:border-black/10 opacity-0 group-hover:opacity-100 transition-opacity">
                                             {action.label}
                                         </span>
-                                        <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white shadow-lg transition-transform hover:scale-110 ${action.color}`}>
+                                        <div className="w-12 h-12 rounded-full flex items-center justify-center bg-black text-white dark:bg-white dark:text-black shadow-xl border border-white/10 dark:border-black/10 transition-transform hover:scale-110 active:scale-95">
                                             <Icon className="w-5 h-5" />
                                         </div>
                                     </motion.button>
@@ -85,11 +85,12 @@ export default function FloatingCreateButton() {
                     )}
                 </AnimatePresence>
 
-                {/* Main FAB Trigger - Visible only on Desktop for Feed/Profile, or Mobile globally (controlled by parent) */}
+                {/* Main FAB Trigger - Pink background */}
                 <motion.button
                     whileTap={{ scale: 0.9 }}
                     onClick={handleToggle}
-                    className="w-14 h-14 rounded-full bg-[var(--brand-pink)] flex items-center justify-center text-white shadow-xl shadow-[var(--brand-pink)]/30 cursor-pointer overflow-hidden z-20 transition-all hover:bg-[var(--brand-pink-dark)]"
+                    className="w-14 h-14 rounded-full bg-[var(--brand-pink)] flex items-center justify-center text-white shadow-xl shadow-[var(--brand-pink)]/30 cursor-pointer overflow-hidden z-20 transition-all hover:opacity-90"
+                    aria-label="Crear nuevo"
                 >
                     <motion.div
                         animate={{ rotate: isCreateMenuOpen ? 45 : 0 }}
@@ -111,7 +112,7 @@ export default function FloatingCreateButton() {
                     >
                         {/* Backdrop */}
                         <div
-                            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+                            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
                             onClick={() => setCreateMenuOpen(false)}
                         />
 
@@ -134,12 +135,12 @@ export default function FloatingCreateButton() {
                                             <button
                                                 key={action.id}
                                                 onClick={() => handleActionClick(action.path)}
-                                                className="w-full bg-[var(--background-secondary)] hover:bg-[var(--border-color)] transition-colors p-4 rounded-2xl flex items-center gap-4"
+                                                className="w-full bg-black text-white dark:bg-white dark:text-black hover:opacity-90 transition-opacity p-4 rounded-2xl flex items-center gap-4 shadow-md border border-white/10 dark:border-black/10 active:scale-[0.98]"
                                             >
-                                                <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white ${action.color}`}>
-                                                    <Icon className="w-6 h-6" />
+                                                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white/10 text-white dark:bg-black/10 dark:text-black">
+                                                    <Icon className="w-5 h-5" />
                                                 </div>
-                                                <span className="text-[var(--foreground)] font-semibold text-lg">
+                                                <span className="font-semibold text-base text-white dark:text-black">
                                                     {action.label}
                                                 </span>
                                             </button>

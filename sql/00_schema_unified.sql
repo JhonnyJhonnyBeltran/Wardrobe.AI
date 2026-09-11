@@ -1,4 +1,4 @@
-﻿-- ==============================================================================
+-- ==============================================================================
 -- KLOZET / WARDROBE.AI - 00_SCHEMA_UNIFIED.SQL
 -- Fuente única de verdad para el esquema de Base de Datos y Políticas RLS
 -- ==============================================================================
@@ -197,6 +197,14 @@ CREATE TABLE IF NOT EXISTS public.saves (
   CONSTRAINT unique_user_post_save UNIQUE(user_id, post_id)
 );
 
+CREATE TABLE IF NOT EXISTS public.save_folder_items (
+  id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+  folder_id UUID REFERENCES public.save_folders(id) ON DELETE CASCADE NOT NULL,
+  save_id UUID REFERENCES public.saves(id) ON DELETE CASCADE NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL,
+  CONSTRAINT unique_folder_save UNIQUE(folder_id, save_id)
+);
+
 -- 13. MENSAJERÍA (conversations & messages)
 CREATE TABLE IF NOT EXISTS public.conversations (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
@@ -259,6 +267,7 @@ ALTER TABLE public.comments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.follows ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.saves ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.save_folders ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.save_folder_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.conversations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.conversation_participants ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY;
@@ -317,6 +326,9 @@ CREATE POLICY "Users can manage own follows" ON public.follows FOR ALL USING (au
 
 CREATE POLICY "Users can manage own saves" ON public.saves FOR ALL USING (auth.uid() = user_id);
 CREATE POLICY "Users can manage own folders" ON public.save_folders FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "Users can manage own folder items" ON public.save_folder_items FOR ALL USING (
+  EXISTS (SELECT 1 FROM public.save_folders sf WHERE sf.id = save_folder_items.folder_id AND sf.user_id = auth.uid())
+);
 
 CREATE POLICY "Participants can view conversations" ON public.conversations FOR SELECT USING (
   EXISTS (SELECT 1 FROM public.conversation_participants cp WHERE cp.conversation_id = conversations.id AND cp.user_id = auth.uid())

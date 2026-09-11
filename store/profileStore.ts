@@ -162,7 +162,8 @@ export const useProfileStore = create<ProfileState>()(
               .from('saves')
               .select(`
                 id,
-                folder_id,
+                post_id,
+                created_at,
                 posts (
                   id,
                   image_url,
@@ -189,11 +190,10 @@ export const useProfileStore = create<ProfileState>()(
               .map((s: any) => ({
                 ...s.posts,
                 save_id: s.id,
-                folder_id: s.folder_id
               }));
 
             fetchedSavedPosts = validSaves;
-            withoutFolder = validSaves.filter((p: any) => !p.folder_id);
+            withoutFolder = validSaves;
           }
 
           set({
@@ -261,24 +261,36 @@ export const useProfileStore = create<ProfileState>()(
         const to = from + PROFILE_POSTS_PER_PAGE - 1;
 
         try {
-          let query = supabase
+          if (selectedFolder) {
+            const res = await fetch(`/api/saves?folder_id=${selectedFolder.id}&t=${Date.now()}`);
+            const data = await res.json();
+            const rawSaves = data.saves || [];
+            const validSaves = rawSaves.map((s: any) => ({
+              ...s.posts,
+              save_id: s.id,
+            }));
+            set({
+              savedPosts: validSaves,
+              savedPage: nextPage,
+              savedHasMore: false,
+              loadingMoreSaved: false,
+            });
+            return;
+          }
+
+          const { data } = await supabase
             .from('saves')
             .select(`
               id,
-              folder_id,
+              post_id,
+              created_at,
               posts (
                 id,
                 image_url,
                 created_at
               )
             `)
-            .eq('user_id', userId);
-
-          if (selectedFolder) {
-            query = query.eq('folder_id', selectedFolder.id);
-          }
-
-          const { data } = await query
+            .eq('user_id', userId)
             .order('created_at', { ascending: false })
             .range(from, to);
 
@@ -288,7 +300,6 @@ export const useProfileStore = create<ProfileState>()(
             .map((s: any) => ({
               ...s.posts,
               save_id: s.id,
-              folder_id: s.folder_id
             }));
 
           set({

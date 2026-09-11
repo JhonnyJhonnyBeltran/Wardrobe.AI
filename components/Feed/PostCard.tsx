@@ -187,7 +187,6 @@ export default function PostCard({ post, onClick, hideSaveButton = false }: Post
                     .insert({ post_id: post.id, user_id: user.id });
                 if (error) throw error;
             }
-            triggerRefetch();
         } catch (err) {
             console.error('Error toggling like:', err);
             setIsLikedState(previousState);

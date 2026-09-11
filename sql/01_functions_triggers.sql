@@ -1,4 +1,4 @@
-﻿-- ==============================================================================
+-- ==============================================================================
 -- KLOZET / WARDROBE.AI - 01_FUNCTIONS_TRIGGERS.SQL
 -- Triggers de Base de Datos, Funciones RPC y Triggers de Notificaciones
 -- ==============================================================================
@@ -54,20 +54,24 @@ BEGIN
 
   -- No notificar si el usuario se dio like a sí mismo
   IF post_author_id IS NOT NULL AND post_author_id <> NEW.user_id THEN
-    SELECT COALESCE(full_name, username, 'Alguien') INTO sender_name
-    FROM public.profiles WHERE id = NEW.user_id;
+    BEGIN
+      SELECT COALESCE(full_name, username, 'Alguien') INTO sender_name
+      FROM public.profiles WHERE id = NEW.user_id;
 
-    INSERT INTO public.notifications (user_id, sender_id, actor_id, type, title, message, entity_id, data)
-    VALUES (
-      post_author_id,
-      NEW.user_id,
-      NEW.user_id,
-      'like',
-      'Nuevo me gusta',
-      sender_name || ' le gustó tu publicación',
-      NEW.post_id,
-      jsonb_build_object('post_id', NEW.post_id, 'image_url', post_img, 'actor_id', NEW.user_id)
-    );
+      INSERT INTO public.notifications (user_id, sender_id, type, title, message, entity_id, data)
+      VALUES (
+        post_author_id,
+        NEW.user_id,
+        'like',
+        'Nuevo me gusta',
+        sender_name || ' le gustó tu publicación',
+        NEW.post_id,
+        jsonb_build_object('post_id', NEW.post_id, 'image_url', post_img, 'actor_id', NEW.user_id)
+      );
+    EXCEPTION WHEN OTHERS THEN
+      -- Evitar que un error en notifications cancele el like
+      NULL;
+    END;
   END IF;
 
   RETURN NEW;
@@ -116,20 +120,23 @@ BEGIN
   RETURNING user_id, image_url INTO post_author_id, post_img;
 
   IF post_author_id IS NOT NULL AND post_author_id <> NEW.user_id THEN
-    SELECT COALESCE(full_name, username, 'Alguien') INTO sender_name
-    FROM public.profiles WHERE id = NEW.user_id;
+    BEGIN
+      SELECT COALESCE(full_name, username, 'Alguien') INTO sender_name
+      FROM public.profiles WHERE id = NEW.user_id;
 
-    INSERT INTO public.notifications (user_id, sender_id, actor_id, type, title, message, entity_id, data)
-    VALUES (
-      post_author_id,
-      NEW.user_id,
-      NEW.user_id,
-      'comment',
-      'Nuevo comentario',
-      sender_name || ' comentó: "' || LEFT(NEW.content, 40) || '"',
-      NEW.post_id,
-      jsonb_build_object('post_id', NEW.post_id, 'comment_id', NEW.id, 'image_url', post_img, 'content', NEW.content)
-    );
+      INSERT INTO public.notifications (user_id, sender_id, type, title, message, entity_id, data)
+      VALUES (
+        post_author_id,
+        NEW.user_id,
+        'comment',
+        'Nuevo comentario',
+        sender_name || ' comentó: "' || LEFT(NEW.content, 40) || '"',
+        NEW.post_id,
+        jsonb_build_object('post_id', NEW.post_id, 'comment_id', NEW.id, 'image_url', post_img, 'content', NEW.content)
+      );
+    EXCEPTION WHEN OTHERS THEN
+      NULL;
+    END;
   END IF;
 
   RETURN NEW;
@@ -170,21 +177,24 @@ DECLARE
   sender_name TEXT;
   sender_avatar TEXT;
 BEGIN
-  SELECT COALESCE(full_name, username, 'Alguien'), avatar_url
-  INTO sender_name, sender_avatar
-  FROM public.profiles WHERE id = NEW.follower_id;
+  BEGIN
+    SELECT COALESCE(full_name, username, 'Alguien'), avatar_url
+    INTO sender_name, sender_avatar
+    FROM public.profiles WHERE id = NEW.follower_id;
 
-  INSERT INTO public.notifications (user_id, sender_id, actor_id, type, title, message, entity_id, data)
-  VALUES (
-    NEW.following_id,
-    NEW.follower_id,
-    NEW.follower_id,
-    'follow',
-    'Nuevo seguidor',
-    sender_name || ' ha comenzado a seguirte',
-    NEW.follower_id,
-    jsonb_build_object('follower_id', NEW.follower_id, 'avatar_url', sender_avatar, 'status', NEW.status)
-  );
+    INSERT INTO public.notifications (user_id, sender_id, type, title, message, entity_id, data)
+    VALUES (
+      NEW.following_id,
+      NEW.follower_id,
+      'follow',
+      'Nuevo seguidor',
+      sender_name || ' ha comenzado a seguirte',
+      NEW.follower_id,
+      jsonb_build_object('follower_id', NEW.follower_id, 'avatar_url', sender_avatar, 'status', NEW.status)
+    );
+  EXCEPTION WHEN OTHERS THEN
+    NULL;
+  END;
 
   RETURN NEW;
 END;

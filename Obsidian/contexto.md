@@ -695,12 +695,20 @@ En cada conversación, el backend alimenta a CloSy con:
 - **Acceso Directo a Configuración Extendida**:
   - Añadido el enlace directo *"Ver todas"* a `/profile/settings/notifications` desde la tarjeta de notificaciones en la página principal de ajustes.
 
-### 48. Regla Suprema de Esquema SQL Unificado (00 y 01) (Septiembre 2026)
-- **Consolidación de Archivos SQL**:
-  - Toda la arquitectura de base de datos de Supabase/PostgreSQL (tablas, relaciones, columnas de perfiles, suscripciones Stripe, notificaciones, triggers, funciones RPC, RLS y storage buckets) queda exclusivamente unificada en dos archivos canónicos numerados:
-    1. `sql/00_schema_unified.sql`: Estructura completa de tablas, columnas, índices, vistas, storage y políticas RLS.
-    2. `sql/01_functions_triggers.sql`: Triggers de base de datos (likes atómicos, notificaciones en tiempo real, cascade deletes y funciones RPC `SECURITY DEFINER`).
-  - **Prohibición de Fragmentación**: Se eliminan todos los archivos `.sql` sueltos o dispersos por el repositorio (`setup_*.sql`, migraciones aisladas, scripts auxiliares), manteniendo exclusivamente `00` y `01` como fuentes únicas de verdad SQL.
+### 49. Remodelación de `/profile`, Paleta del Menú Flotante `+` y Estabilidad de Likes y Guardados (Septiembre 2026)
+- **Remodelación de `/profile`**:
+  - **Header Solo en Móvil (`md:hidden`)**: En escritorio (PC) se eliminó el header redundante para una vista más limpia y directa del perfil, adaptando la posición sticky de las pestañas a `top-0` en PC y `top-14` en móvil.
+  - **Usuario Destacado**: Debajo del nombre completo se muestra el identificador de usuario con arroba en rosa (`@username`) con tipografía destacada (`text-[var(--brand-pink)] font-semibold`).
+  - **Botón de Configuración al Lado de Editar Perfil**: En la fila principal de acciones, se ubicó el botón de acceso directo a Configuración (icono de engranaje) inmediatamente a la derecha del botón *"Editar perfil"*.
+- **Paleta Oficial del Menú Flotante `+` (`FloatingCreateButton.tsx`)**:
+  - Botón principal flotante (`+`) en rosa distintivo (`bg-[var(--brand-pink)] text-white`).
+  - Opciones desplegadas (*Nuevo Post*, *Nuevo Outfit*, *Nueva Prenda*):
+    - En modo claro: Fondo negro sólido (`bg-black`), iconos en blanco y textos en blanco.
+    - En modo oscuro: Fondo blanco sólido (`dark:bg-white`), iconos en negro y textos en negro.
+- **Resolución de Error 400 en Guardados (`saves`) & Estabilidad de Likes**:
+  - En `store/profileStore.ts` se corrigió la consulta de `saves` para no solicitar la columna `folder_id` directamente sobre la tabla `saves` (la cual provocaba un error `400 Bad Request` en PostgREST).
+  - En `sql/01_functions_triggers.sql`, los triggers de notificaciones de base de datos (`handle_new_like`, `handle_new_comment`, `handle_new_follow`) fueron protegidos con bloques de captura de excepción `BEGIN ... EXCEPTION WHEN OTHERS THEN NULL; END;` para garantizar que ninguna inserción de likes o comentarios se revierta o falle.
+
 
 
 
