@@ -310,22 +310,16 @@ export default function PostDetailPage() {
         } catch {}
 
         try {
-            let error = null;
             if (previousState) {
-                const { error: deleteError } = await (supabase.from('likes') as any)
-                    .delete()
-                    .eq('post_id', postId)
-                    .eq('user_id', user.id);
-                error = deleteError;
+                const res = await fetch(`/api/likes?post_id=${postId}`, { method: 'DELETE' });
+                if (!res.ok) throw new Error('Failed to unlike');
             } else {
-                const { error: insertError } = await (supabase.from('likes') as any)
-                    .insert({ post_id: postId, user_id: user.id });
-                error = insertError;
-            }
-
-            if (error) {
-                console.error('Like error:', error);
-                throw error;
+                const res = await fetch('/api/likes', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ post_id: postId })
+                });
+                if (!res.ok) throw new Error('Failed to like');
             }
         } catch (error) {
             console.error('toggleLike error:', error);

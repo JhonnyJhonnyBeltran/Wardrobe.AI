@@ -177,15 +177,15 @@ export default function PostCard({ post, onClick, hideSaveButton = false }: Post
 
         try {
             if (previousState) {
-                const { error } = await (supabase.from('likes') as any)
-                    .delete()
-                    .eq('post_id', post.id)
-                    .eq('user_id', user.id);
-                if (error) throw error;
+                const res = await fetch(`/api/likes?post_id=${post.id}`, { method: 'DELETE' });
+                if (!res.ok) throw new Error('Failed to unlike');
             } else {
-                const { error } = await (supabase.from('likes') as any)
-                    .insert({ post_id: post.id, user_id: user.id });
-                if (error) throw error;
+                const res = await fetch('/api/likes', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ post_id: post.id })
+                });
+                if (!res.ok) throw new Error('Failed to like');
             }
         } catch (err) {
             console.error('Error toggling like:', err);
