@@ -1,0 +1,17 @@
+﻿# Exclude documentation and Obsidian vault
+Obsidian/
+*.md
+LICENSE
+
+# Exclude local scratch scripts & tests
+scratch/
+test/
+*.test.ts
+*.test.tsx
+
+# Exclude SQL files
+sql/
+*.sql
+
+# Logs
+*.log
