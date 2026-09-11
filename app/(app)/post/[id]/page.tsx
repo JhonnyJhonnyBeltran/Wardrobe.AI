@@ -98,9 +98,9 @@ export default function PostDetailPage() {
 
                 let postData: any = null;
 
-                // Strategy 1: Server API with Admin Service Role (Bypasses RLS on public garments)
+                // Strategy 1: Server API with Admin Service Role (Bypasses RLS, eager loads outfit and garments all at once)
                 try {
-                    const apiRes = await fetch(`/api/posts/${postId}`);
+                    const apiRes = await fetch(`/api/posts/${postId}`, { cache: 'no-store' });
                     if (apiRes.ok) {
                         const resJson = await apiRes.json();
                         if (resJson?.post) {
@@ -111,7 +111,7 @@ export default function PostDetailPage() {
                     console.warn('[PostDetail] Server API fetch fallback to Supabase:', apiErr);
                 }
 
-                // Strategy 2: Direct Supabase Client
+                // Strategy 2: Direct Supabase Client (Fallback)
                 if (!postData) {
                     const { data: directPost, error: postError } = await supabase
                         .from('posts')
@@ -166,7 +166,7 @@ export default function PostDetailPage() {
                 // Ensure outfit items and garments are fully resolved even if join had missing clothing_items
                 if (postData?.outfits || postData?.outfit) {
                     const outfitObj = Array.isArray(postData.outfits) ? postData.outfits[0] : (postData.outfits || postData.outfit);
-                    let oiList = outfitObj?.outfit_items || [];
+                    let oiList = outfitObj?.outfit_items || outfitObj?.items || [];
 
                     // If outfit_items was empty, fetch them directly
                     if (oiList.length === 0 && outfitObj?.id) {
@@ -200,6 +200,16 @@ export default function PostDetailPage() {
                             outfitObj.outfit_items = oiList;
                         }
                     }
+
+                    // Also extract garments list if not present
+                    if (!postData.clothing_items || postData.clothing_items.length === 0) {
+                        const garments = oiList
+                            .map((oi: any) => oi.clothing_items || oi.clothing_item)
+                            .filter(Boolean);
+                        postData.clothing_items = garments;
+                        postData.garments = garments;
+                    }
+
                     postData.outfits = outfitObj;
                     postData.outfit = outfitObj;
                 }
@@ -750,13 +760,21 @@ export default function PostDetailPage() {
                 {(() => {
                     const outfitObject = post?.outfits || post?.outfit;
                     const rawOutfitItems = outfitObject?.outfit_items || outfitObject?.items || [];
-                    const postGarments = rawOutfitItems
-                        .map((item: any) => {
-                            const clothingRaw = item.clothing_items || item.clothing_item || item.clothing || item;
-                            const clothing = Array.isArray(clothingRaw) ? clothingRaw[0] : clothingRaw;
-                            return clothing;
-                        })
-                        .filter((c: any) => c && (c.image_url || c.imageUrl));
+                    
+                    let postGarments: any[] = (post?.clothing_items && Array.isArray(post.clothing_items) && post.clothing_items.length > 0)
+                        ? post.clothing_items
+                        : (post?.garments && Array.isArray(post.garments) && post.garments.length > 0)
+                        ? post.garments
+                        : [];
+
+                    if (postGarments.length === 0 && rawOutfitItems.length > 0) {
+                        postGarments = rawOutfitItems
+                            .map((item: any) => {
+                                const clothingRaw = item.clothing_items || item.clothing_item || item.clothing || item;
+                                return Array.isArray(clothingRaw) ? clothingRaw[0] : clothingRaw;
+                            })
+                            .filter((c: any) => c && (c.image_url || c.imageUrl));
+                    }
 
                     if (postGarments.length === 0) return null;
 

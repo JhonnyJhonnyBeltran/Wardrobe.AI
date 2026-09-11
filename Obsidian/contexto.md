@@ -709,10 +709,20 @@ En cada conversación, el backend alimenta a CloSy con:
   - Implementado `app/api/likes/route.ts` (`POST` y `DELETE`) con autenticación por sesión de servidor y `supabaseAdmin`.
   - Garantiza que quitar y volver a dar like funcione de forma 100% instantánea y persistente, desvinculando la operación de posibles restricciones RLS de cliente o fallos de creación de notificaciones.
 
-
-
-
-
+### 50. Resolución Integral de Outfits y Prendas en Publicaciones (`/api/posts/[id]` y `/post/[id]`) (Septiembre 2026)
+- **Eager Loading Completo de Outfit y Prendas en Backend (`app/api/posts/[id]/route.ts`)**:
+  - Al solicitar una publicación por ID, el endpoint del servidor ejecuta una resolución en cascada con `supabaseAdmin`:
+    1. Recupera el post con los datos del creador (`profiles`).
+    2. Identifica y resuelve el outfit asociado (mediante `post.outfit_id`, relación o coincidencia de imagen).
+    3. Consulta todos los registros de `outfit_items` correspondientes al look.
+    4. Consulta y mapea en una sola pasada todas las prendas (`clothing_items`) vinculadas a través de sus IDs.
+    5. Normaliza y entrega en una sola respuesta JSON el post, el outfit estructurado y la lista de prendas (`post.clothing_items`, `post.garments`, `post.outfits.outfit_items`).
+  - **Superación de Restricciones RLS**: Al usar la API del servidor, cualquier usuario puede ver la ficha de prendas y stickers de looks publicados por otros usuarios sin que las consultas de cliente retornen datos vacíos o nulos.
+- **Visualización y Detalle Interactivo en `/post/[id]`**:
+  - La página `/post/[id]` consume prioritariamente la respuesta del endpoint `/api/posts/[id]`.
+  - La sección *"Prendas del look"* se nutre de `post.clothing_items || post.garments || post.outfits?.outfit_items`.
+  - Cada prenda es interactiva y abre instantáneamente el modal `ProductModal` con foto, marca, color, tejido, temporada y detalles completos de la prenda.
+  - En `InteractiveOutfitViewer`, los stickers de las prendas del look se renderizan de forma interactiva sobre el lienzo del post permitiendo hacer clic para inspeccionar cada pieza.
 
 
 

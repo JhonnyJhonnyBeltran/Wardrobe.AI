@@ -281,29 +281,25 @@ CREATE POLICY "Users can update their own profile" ON public.profiles FOR UPDATE
 CREATE POLICY "Categories viewable by everyone" ON public.categories FOR SELECT USING (true);
 CREATE POLICY "Brands viewable by everyone" ON public.brands FOR SELECT USING (true);
 
-CREATE POLICY "Users can manage own clothing items" ON public.clothing_items FOR ALL USING (auth.uid() = user_id);
-CREATE POLICY "Clothing items viewable in public outfits" ON public.clothing_items FOR SELECT USING (
-  EXISTS (
-    SELECT 1 FROM public.outfit_items oi
-    JOIN public.posts p ON p.outfit_id = oi.outfit_id
-    WHERE oi.clothing_item_id = clothing_items.id
-  ) OR auth.uid() = user_id
-);
+CREATE POLICY "Clothing items viewable by everyone" ON public.clothing_items FOR SELECT USING (true);
+CREATE POLICY "Users can insert own clothing items" ON public.clothing_items FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update own clothing items" ON public.clothing_items FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users can delete own clothing items" ON public.clothing_items FOR DELETE USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can manage own outfits" ON public.outfits FOR ALL USING (auth.uid() = user_id);
-CREATE POLICY "Public outfits viewable by everyone" ON public.outfits FOR SELECT USING (
-  EXISTS (SELECT 1 FROM public.posts WHERE posts.outfit_id = outfits.id) OR auth.uid() = user_id
-);
+CREATE POLICY "Outfits viewable by everyone" ON public.outfits FOR SELECT USING (true);
+CREATE POLICY "Users can insert own outfits" ON public.outfits FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update own outfits" ON public.outfits FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users can delete own outfits" ON public.outfits FOR DELETE USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can manage own outfit items" ON public.outfit_items FOR ALL USING (
+CREATE POLICY "Outfit items viewable by everyone" ON public.outfit_items FOR SELECT USING (true);
+CREATE POLICY "Users can insert own outfit items" ON public.outfit_items FOR INSERT WITH CHECK (
   EXISTS (SELECT 1 FROM public.outfits WHERE outfits.id = outfit_items.outfit_id AND outfits.user_id = auth.uid())
 );
-CREATE POLICY "Outfit items viewable in public outfits" ON public.outfit_items FOR SELECT USING (
-  EXISTS (
-    SELECT 1 FROM public.outfits o
-    LEFT JOIN public.posts p ON p.outfit_id = o.id
-    WHERE o.id = outfit_items.outfit_id AND (o.user_id = auth.uid() OR p.id IS NOT NULL)
-  )
+CREATE POLICY "Users can update own outfit items" ON public.outfit_items FOR UPDATE USING (
+  EXISTS (SELECT 1 FROM public.outfits WHERE outfits.id = outfit_items.outfit_id AND outfits.user_id = auth.uid())
+);
+CREATE POLICY "Users can delete own outfit items" ON public.outfit_items FOR DELETE USING (
+  EXISTS (SELECT 1 FROM public.outfits WHERE outfits.id = outfit_items.outfit_id AND outfits.user_id = auth.uid())
 );
 
 CREATE POLICY "Users can manage own calendar" ON public.calendar_outfits FOR ALL USING (auth.uid() = user_id);
