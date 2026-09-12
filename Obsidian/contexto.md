@@ -743,3 +743,18 @@ En cada conversación, el backend alimenta a CloSy con:
     5. Consulta por lote (`.in('id', clothingIds)`) de las prendas reales en `clothing_items`.
     6. Mapeo y ensamblado del payload completo en memoria (`outfit`, `clothing_items`, `garments`).
   - Imposibilidad de error de esquema de PostgREST, garantizando siempre respuesta `200 OK` con todos los datos y prendas del look disponibles para cualquier usuario.
+
+### 53. Estilizado de Botones de Navegación y Cabecera en `/post/[id]` (Septiembre 2026)
+- **Botón de Volver en Cabecera**:
+  - Se eliminó el fondo circular en hover (`hover:bg-[var(--background-secondary)]`).
+  - Ahora el icono de la flecha cambia sutilmente a rosa corporativo en hover (`hover:text-[var(--brand-pink)]`) con transición suave.
+- **Botones de Navegación del Carrusel (Adelante / Atrás)**:
+  - Se eliminó el fondo blanco sólido (`bg-white/90`).
+  - Se implementó un estilo glassmorphic translúcido oscuro (`bg-black/40 hover:bg-black/60 backdrop-blur-md border border-white/10 text-white hover:text-[var(--brand-pink)]`) que flota limpiamente sobre la imagen sin bloquear la vista de la prenda ni desentonar.
+
+### 54. Ajuste de Posicionamiento y Elevación de la Barra de Input en `/closet/kloe` (Septiembre 2026)
+- **Elevación Flotante y Espaciado Inferior**:
+  - Se sincronizó el comportamiento de la barra de input flotante de `/closet/kloe` con el estilo de `/messages`.
+  - El contenedor inferior se mantiene `fixed` en la parte inferior pero despegado del borde de la pantalla (`pb-[calc(env(safe-area-inset-bottom,0px)+16px)] md:pb-6 pt-2 px-4 md:px-6`).
+  - Esto proporciona holgura y separación ergonómica respecto a la barra de inicio en teléfonos móviles (iOS / Android) y una vista flotante limpia.
+  - Se incrementó el padding inferior del scroll de mensajes (`pb-44 md:pb-36`) para asegurar que el último mensaje y el estado de escritura nunca queden solapados por la barra flotante.

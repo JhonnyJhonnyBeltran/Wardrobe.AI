@@ -519,8 +519,12 @@ export default function PostDetailPage() {
             {/* HEADER - Apple Glass Bar with 15% increased width */}
             <header className="sticky top-0 z-50 w-full max-w-[1600px] mx-auto apple-glass-bar pt-safe h-16 flex items-center justify-between px-4">
                 {/* Left: Back Button */}
-                <button onClick={handleBack} className="touch-target-44 text-[var(--foreground)] hover:bg-[var(--background-secondary)]/80 rounded-full transition-all active:scale-90">
-                    <ArrowLeft className="w-6 h-6" />
+                <button 
+                    onClick={handleBack} 
+                    className="touch-target-44 text-[var(--foreground)] hover:text-[var(--brand-pink)] transition-colors active:scale-90 flex items-center justify-center"
+                    aria-label="Volver"
+                >
+                    <ArrowLeft className="w-6 h-6 transition-colors" />
                 </button>
 
                 {/* Center: Username - smaller and profile photo */}
@@ -541,7 +545,7 @@ export default function PostDetailPage() {
                         <div className="relative">
                             <button 
                                 onClick={() => setShowOptions(!showOptions)}
-                                className="touch-target-44 text-[var(--foreground)] hover:bg-[var(--background-secondary)]/80 rounded-full transition-all active:scale-90"
+                                className="touch-target-44 text-[var(--foreground)] hover:text-[var(--brand-pink)] transition-colors active:scale-90 flex items-center justify-center"
                                 aria-label="Opciones de publicación"
                             >
                                 <MoreVertical className="w-6 h-6" />
@@ -675,18 +679,18 @@ export default function PostDetailPage() {
                     <>
                         <button
                             onClick={(e) => { e.stopPropagation(); setActiveSlide(prev => prev === 0 ? slides.length - 1 : prev - 1); setShowSwipeHint(false); }}
-                            className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/90 hover:bg-white dark:bg-black/70 dark:hover:bg-black items-center justify-center shadow-[0_4px_20px_rgba(0,0,0,0.15)] z-30 transition-all duration-300 hover:scale-110 active:scale-95 group/btn"
+                            className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md items-center justify-center border border-white/10 text-white hover:text-[var(--brand-pink)] shadow-lg z-30 transition-all duration-300 hover:scale-110 active:scale-95 group/btn"
                             aria-label="Anterior"
                         >
-                            <ChevronLeft className="w-6 h-6 text-gray-900 dark:text-white group-hover/btn:-translate-x-0.5 transition-transform" />
+                            <ChevronLeft className="w-6 h-6 group-hover/btn:-translate-x-0.5 transition-all" />
                         </button>
 
                         <button
                             onClick={(e) => { e.stopPropagation(); setActiveSlide(prev => prev === slides.length - 1 ? 0 : prev + 1); setShowSwipeHint(false); }}
-                            className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/90 hover:bg-white dark:bg-black/70 dark:hover:bg-black items-center justify-center shadow-[0_4px_20px_rgba(0,0,0,0.15)] z-30 transition-all duration-300 hover:scale-110 active:scale-95 group/btn"
+                            className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md items-center justify-center border border-white/10 text-white hover:text-[var(--brand-pink)] shadow-lg z-30 transition-all duration-300 hover:scale-110 active:scale-95 group/btn"
                             aria-label="Siguiente"
                         >
-                            <ChevronRight className="w-6 h-6 text-gray-900 dark:text-white group-hover/btn:translate-x-0.5 transition-transform" />
+                            <ChevronRight className="w-6 h-6 group-hover/btn:translate-x-0.5 transition-all" />
                         </button>
 
                         {/* Dots indicator - refined with morphing effect */}

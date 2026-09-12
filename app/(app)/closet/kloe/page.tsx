@@ -748,7 +748,7 @@ export default function KloePage() {
       </header>
 
       {/* Messages Container */}
-      <div className="flex-1 overflow-y-auto px-4 md:px-6 pt-20 pb-40 md:pb-32 space-y-6">
+      <div className="flex-1 overflow-y-auto px-4 md:px-6 pt-20 pb-44 md:pb-36 space-y-6">
         
         {/* Free Tier Upgrade Banner */}
         {!isPremium() && (
@@ -1025,7 +1025,7 @@ export default function KloePage() {
       </div>
 
       {/* Floating Bottom Input Bar or Locked Premium Bar - Fixed Apple HIG style */}
-      <div className="fixed bottom-0 left-0 right-0 pointer-events-none w-full max-w-3xl md:max-w-4xl mx-auto px-4 pb-safe pb-3 md:pb-6 z-20 flex flex-col items-center">
+      <div className="fixed bottom-0 left-0 right-0 pointer-events-none w-full max-w-3xl md:max-w-4xl mx-auto px-4 md:px-6 pb-[calc(env(safe-area-inset-bottom,0px)+16px)] md:pb-6 pt-2 z-20 flex flex-col items-center">
         
         {/* Floating Attachment Cards Strip */}
         <AnimatePresence>
