@@ -5,10 +5,13 @@ export interface UserStylingContext {
     id: string;
     username?: string;
     fullName?: string;
+    firstName?: string;
     bio?: string;
     preferredStyles: string[];
     bodyShape?: string;
     seasonPalette?: string;
+    morphology?: string;
+    colorimetry?: string;
     gender?: string;
     age?: number;
   };
@@ -53,12 +56,51 @@ export async function buildUserStylingContext(
   userId: string
 ): Promise<UserStylingContext> {
   try {
-    // 1. Fetch Profile Preferences
+    // 1. Fetch Profile Preferences from profiles
     const { data: profile } = await supabase
       .from('profiles')
-      .select('id, username, full_name, bio, preferred_styles, body_shape, season_palette, gender, age')
+      .select('id, username, full_name, bio, preferred_styles, body_shape, season_palette, gender, age, age_range, morphology, colorimetry')
       .eq('id', userId)
       .maybeSingle();
+
+    // Fallback to legacy 'users' table if profile fields are missing
+    let fallbackName: string | null = null;
+    let fallbackAge: number | null = null;
+    let fallbackGender: string | null = null;
+    let fallbackUsername: string | null = null;
+
+    if (!profile?.full_name || !profile?.age || !profile?.gender) {
+      try {
+        const { data: legacyUser } = await supabase
+          .from('users')
+          .select('name, username, age, gender, preferred_styles, morphology, colorimetry')
+          .eq('id', userId)
+          .maybeSingle();
+
+        if (legacyUser) {
+          fallbackName = legacyUser.name || null;
+          fallbackUsername = legacyUser.username || null;
+          fallbackAge = legacyUser.age || null;
+          fallbackGender = legacyUser.gender || null;
+        }
+      } catch (legacyErr) {
+        console.warn('[ContextIndexer] Could not check legacy users table:', legacyErr);
+      }
+    }
+
+    // Determine final clean name and first name for Kloe
+    const rawFullName = profile?.full_name || fallbackName;
+    const rawUsername = profile?.username || fallbackUsername;
+    const primaryName = rawFullName || rawUsername || '';
+    const cleanFirstName = primaryName
+      ? primaryName.split(' ')[0].replace(/^@/, '').trim()
+      : '';
+    const formattedFirstName = cleanFirstName
+      ? cleanFirstName.charAt(0).toUpperCase() + cleanFirstName.slice(1)
+      : '';
+
+    const finalAge = profile?.age || fallbackAge;
+    const finalGender = profile?.gender || fallbackGender;
 
     // 2. Fetch User's Clothing Items with extended attributes
     const { data: clothes } = await supabase
@@ -181,14 +223,17 @@ export async function buildUserStylingContext(
     return {
       user: {
         id: userId,
-        username: profile?.username || 'Usuario',
-        fullName: profile?.full_name,
+        username: rawUsername || 'Usuario',
+        fullName: rawFullName || undefined,
+        firstName: formattedFirstName || undefined,
         bio: profile?.bio,
         preferredStyles: profile?.preferred_styles || [],
-        bodyShape: profile?.body_shape,
-        seasonPalette: profile?.season_palette,
-        gender: profile?.gender,
-        age: profile?.age
+        bodyShape: profile?.body_shape || (profile as any)?.morphology,
+        seasonPalette: profile?.season_palette || (profile as any)?.colorimetry,
+        morphology: (profile as any)?.morphology || profile?.body_shape,
+        colorimetry: (profile as any)?.colorimetry || profile?.season_palette,
+        gender: finalGender,
+        age: typeof finalAge === 'number' ? finalAge : undefined
       },
       wardrobe: {
         totalItems: clothingList.length,

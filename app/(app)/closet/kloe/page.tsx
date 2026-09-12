@@ -138,7 +138,9 @@ const INITIAL_MESSAGE: ChatMessage = {
 };
 
 function FormattedMessageText({ content, isUser }: { content: string; isUser?: boolean }) {
+  // 1. Normalizar viñetas huérfanas y espaciados
   const cleaned = (content || '')
+    .replace(/(?:^|\n)\s*[•\-\*]\s*\n\s*/g, '\n• ')
     .replace(/\s+,\s+\*\*/g, ', **')
     .replace(/\s+,\s+/g, ', ')
     .trim();
@@ -146,14 +148,33 @@ function FormattedMessageText({ content, isUser }: { content: string; isUser?: b
   const paragraphs = cleaned.split(/\n\n+/);
 
   return (
-    <div className="space-y-2.5 text-sm leading-relaxed">
+    <div className="space-y-3 text-[14px] leading-relaxed">
       {paragraphs.map((para, pIdx) => {
         const lines = para.split(/\n/);
         return (
-          <div key={pIdx} className="space-y-1">
+          <div key={pIdx} className="space-y-1.5">
             {lines.map((line, lIdx) => {
-              const isBullet = line.trim().startsWith('- ') || line.trim().startsWith('* ');
-              const textContent = isBullet ? line.trim().substring(2) : line;
+              const trimmed = line.trim();
+              if (!trimmed) return null;
+
+              // Comprobar encabezados Markdown (#, ##, ###, ####)
+              const headerMatch = trimmed.match(/^#{1,4}\s+(.+)$/);
+              const isHeader = !!headerMatch;
+
+              // Comprobar viñetas (-, *, •, +)
+              const isBullet = !isHeader && (
+                trimmed.startsWith('- ') || 
+                trimmed.startsWith('* ') || 
+                trimmed.startsWith('• ') || 
+                trimmed.startsWith('+ ')
+              );
+
+              let textContent = trimmed;
+              if (isHeader && headerMatch) {
+                textContent = headerMatch[1];
+              } else if (isBullet) {
+                textContent = trimmed.replace(/^[\-\*\•\+]\s+/, '');
+              }
 
               const parts = textContent.split(/(\*\*[^*]+\*\*)/g);
 
@@ -172,16 +193,27 @@ function FormattedMessageText({ content, isUser }: { content: string; isUser?: b
                 return <span key={partIdx}>{part}</span>;
               });
 
-              if (isBullet) {
+              if (isHeader) {
                 return (
-                  <div key={lIdx} className="flex items-start gap-2 pl-1">
-                    <span className="text-[var(--brand-pink)] text-xs mt-1">•</span>
-                    <span className="flex-1">{formattedParts}</span>
+                  <div 
+                    key={lIdx} 
+                    className={`font-bold text-[14.5px] tracking-tight pt-1.5 pb-0.5 ${isUser ? 'text-white' : 'text-[var(--foreground)]'}`}
+                  >
+                    {formattedParts}
                   </div>
                 );
               }
 
-              return <p key={lIdx}>{formattedParts}</p>;
+              if (isBullet) {
+                return (
+                  <div key={lIdx} className="flex items-start gap-2 pl-1 py-0.5">
+                    <span className="text-[var(--brand-pink)] text-xs mt-1 shrink-0 font-bold">•</span>
+                    <span className="flex-1 text-[13.5px] leading-relaxed">{formattedParts}</span>
+                  </div>
+                );
+              }
+
+              return <p key={lIdx} className="text-[13.5px] leading-relaxed">{formattedParts}</p>;
             })}
           </div>
         );

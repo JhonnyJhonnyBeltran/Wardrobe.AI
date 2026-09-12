@@ -758,3 +758,15 @@ En cada conversación, el backend alimenta a CloSy con:
   - El contenedor inferior se mantiene `fixed` en la parte inferior pero despegado del borde de la pantalla (`pb-[calc(env(safe-area-inset-bottom,0px)+16px)] md:pb-6 pt-2 px-4 md:px-6`).
   - Esto proporciona holgura y separación ergonómica respecto a la barra de inicio en teléfonos móviles (iOS / Android) y una vista flotante limpia.
   - Se incrementó el padding inferior del scroll de mensajes (`pb-44 md:pb-36`) para asegurar que el último mensaje y el estado de escritura nunca queden solapados por la barra flotante.
+
+### 55. Personalización por Nombre Real, Edad y Formato Limpio en Kloe AI (`/closet/kloe` & `/api/closy/chat`) (Septiembre 2026)
+- **Acceso y Extracción del Nombre Real y Edad**:
+  - En `lib/closy/contextIndexer.ts` se implementó la resolución en cascada de identidad del usuario (`profiles` $\rightarrow$ `users` $\rightarrow$ `username`), extrayendo el nombre de pila (`firstName`), nombre completo (`fullName`), edad (`age` / `age_range`) y morfología/colorimetría.
+  - En `app/api/closy/chat/route.ts` se configuró el system prompt de Kloe para dirigirse siempre al usuario por su nombre de pila real de forma natural y cercana, prohibiendo estrictamente términos genéricos como *"Usuario"*.
+  - Kloe adapta el estilo, cortes, siluetas y marcas que recomienda según la edad real del usuario.
+- **Formateo Limpio de Texto y Renderizado Markdown**:
+  - En `FormattedMessageText` (`app/(app)/closet/kloe/page.tsx`):
+    - Se solucionó el problema de las almohadillas (`###`, `##`, `#`): ahora se detectan y formatean como títulos de sección estilizados en negrita sin mostrar caracteres `#` crudos.
+    - Se corrigió el salto de viñetas huérfanas (`•\nTexto`), unificando el punto con el texto de la recomendación.
+    - Se instruyó a Kloe en su prompt del sistema para redactar en prosa fluida, utilizando negritas y listas de viñetas limpias (`- Prenda: descripción`) sin encabezados de almohadilla ni emojis.
+  - Se eliminaron los emojis de las respuestas rápidas de cortesía (`lib/closy/fastResponses.ts`).

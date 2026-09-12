@@ -65,9 +65,9 @@ export function getFastCourtesyResponse(rawPrompt: string, username?: string): F
 
   if (greetingKeywords.some(k => normalized === k || normalized.startsWith(k + ' ') || normalized.endsWith(' ' + k))) {
     const responses = [
-      `¡Hola${name}! ✨ Estoy lista para ayudarte. Cuéntame qué tienes pensado: ¿un look para una ocasión especial o cómo combinar alguna prenda de tu armario?`,
+      `¡Hola${name}! Estoy lista para ayudarte. Cuéntame qué tienes pensado: ¿un look para una ocasión especial o cómo combinar alguna prenda de tu armario?`,
       `¡Buenas${name}! ¿Qué estilo te apetece llevar hoy? Dime y montamos un outfit perfecto en segundos.`,
-      `¡Hola! 👋 Aquí estoy a tu servicio. ¿Buscamos un look casual, algo más formal o tienes una prenda específica que quieras lucir hoy?`,
+      `¡Hola${name}! Aquí estoy a tu servicio. ¿Buscamos un look casual, algo más formal o tienes una prenda específica que quieras lucir hoy?`,
       `¡Ey${name}! Qué bueno verte. Dime la ocasión o la prenda que tienes en mente y nos ponemos a combinar.`
     ];
     return {
@@ -90,9 +90,9 @@ export function getFastCourtesyResponse(rawPrompt: string, username?: string): F
 
   if (thanksKeywords.some(k => normalized.includes(k))) {
     const responses = [
-      `¡A ti! 💖 Que tengas un día estupendo y disfrutes mucho luciendo tu outfit. Aquí estaré siempre que quieras armar otra combinación.`,
+      `¡A ti! Que tengas un día estupendo y disfrutes mucho luciendo tu outfit. Aquí estaré siempre que quieras armar otra combinación.`,
       `¡De nada${name}! Es un placer ayudarte con tu estilo. Si te surge cualquier otra duda con tu armario, ¡avísame!`,
-      `¡Para eso estamos! Disfruta mucho de tu look hoy. Vuelve cuando quieras crear un nuevo conjunto. ✨`,
+      `¡Para eso estamos! Disfruta mucho de tu look hoy. Vuelve cuando quieras crear un nuevo conjunto.`,
       `¡Un placer! Seguro que te queda impecable. ¡Que tengas un día increíble!`
     ];
     return {
@@ -115,9 +115,9 @@ export function getFastCourtesyResponse(rawPrompt: string, username?: string): F
 
   if (farewellKeywords.some(k => normalized.includes(k))) {
     const responses = [
-      `¡Hasta pronto${name}! Que tengas un gran día luciendo tu mejor estilo. ✨`,
-      `¡Chao! Aquí estaré esperándote para la próxima vez que necesites inspiración para vestir. 👋`,
-      `¡Nos vemos! Que disfrutes mucho de tu jornada. ¡A brillar con tu look!`,
+      `¡Hasta pronto${name}! Que tengas un gran día luciendo tu mejor estilo.`,
+      `¡Chao${name}! Aquí estaré esperándote para la próxima vez que necesites inspiración para vestir.`,
+      `¡Nos vemos! Que disfrutes mucho de tu jornada.`,
       `¡Adiós${name}! Cuídate mucho y nos vemos pronto en tu armario.`
     ];
     return {

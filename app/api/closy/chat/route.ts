@@ -269,7 +269,7 @@ async function callGeminiAssistant(
   attachedPost?: any
 ) {
   try {
-    const userName = context.user.fullName || context.user.username || 'Usuario';
+    const userName = context.user.firstName || (context.user.fullName ? context.user.fullName.split(' ')[0] : '') || (context.user.username ? context.user.username.replace(/^@/, '') : 'tu');
     const userGender = context.user.gender === 'men' 
       ? 'Hombre (recomienda prendas masculinas y siluetas de hombre)' 
       : (context.user.gender === 'women' ? 'Mujer (recomienda prendas femeninas y siluetas de mujer)' : 'Unisex');
@@ -280,12 +280,12 @@ Eres Kloe, la asesora de estilismo e imagen personal de élite de Wardrobe.AI.
 Tu personalidad es cercana, cálida, experta en alta moda, elocuente y con criterio impecable. Hablas como una amiga experta y estilista personal dedicada, jamás como un robot ni usando plantillas rígidas o repetitivas.
 
 DATOS DEL USUARIO:
-- Nombre: ${userName} (Dirígete a él/ella por su nombre de forma natural)
+- Nombre: ${userName} (Dirígete a él/ella SIEMPRE por su nombre "${userName}" de forma natural y cercana. NUNCA digas "Usuario" ni uses nombres genéricos).
+- Edad: ${userAge} (Adapta tus recomendaciones, referencias de estilo, marcas y siluetas a su edad).
 - Sexo / Género: ${userGender} (Adapta estrictamente todas tus sugerencias, compras y prendas a su sexo)
-- Edad: ${userAge}
 - Estilo personal: ${context.user.bio || 'Moderno y versátil'}
-- Morfología: ${context.user.bodyShape || 'Estándar'}
-- Colorimetría: ${context.user.seasonPalette || 'Neutra'}
+- Morfología: ${context.user.bodyShape || context.user.morphology || 'Estándar'}
+- Colorimetría: ${context.user.seasonPalette || context.user.colorimetry || 'Neutra'}
 - Estilos favoritos: ${(context.user.preferredStyles || []).join(', ') || 'Moda actual'}
 
 REGLAS CRÍTICAS DE ESTILISMO Y DECISIÓN DE RESPUESTA (OBLIGATORIO):
@@ -331,9 +331,12 @@ REGLAS CRÍTICAS DE ESTILISMO Y DECISIÓN DE RESPUESTA (OBLIGATORIO):
      * 1x Accesorio (Opcional: reloj, gorra, gafas, bolso)
    - JAMÁS pongas 2 camisetas juntas ni 2 pantalones juntos.
 
-6. LENGUAJE NATURAL Y ELEGANTE:
-   - PROHIBIDO usar fórmulas robóticas ("Para responder a lo que me pides sobre...", "Composición del look: ...", "Estructura del look: ...").
-   - Escribe en prosa fluida y estructurada en Markdown (párrafos limpios, negritas para prendas y viñetas para desglosar consejos).
+6. LENGUAJE NATURAL, PROSA FLUIDA Y FORMATO LIMPIO:
+   - Saluda y dirígete al usuario por su nombre real (${userName}).
+   - PROHIBIDO usar fórmulas robóticas ("Para responder a lo que me pides sobre...", "Composición del look: ...", "Estructura del look: ...", "Hola Usuario").
+   - Escribe en prosa fluida, elocuente y bien estructurada.
+   - Si desglosas prendas o compras, utiliza viñetas limpias ("- Prenda: descripción detallada...").
+   - NO utilices encabezados con almohadillas ("###", "##", "#") dentro del texto del chat; utiliza negritas (ej: "**1. Camiseta Básica Esencial**") para titular o separar secciones.
    - NO incluyas emojis en el texto.
 
 7. FORMATO DE SALIDA (JSON ESTRICTO):
@@ -924,10 +927,12 @@ Estas piezas te permitirán multiplicar tus opciones de look aprovechando tus pr
     };
   }
 
+  const userName = context.user?.firstName || (context.user?.fullName ? context.user.fullName.split(' ')[0] : '') || (context.user?.username ? context.user.username.replace(/^@/, '') : '');
+
   // Scenario 1: Empty wardrobe
   if (items.length === 0) {
     return {
-      message: `¡Hola ${context.user.username || ''}! Para poder armarte combinaciones con tus prendas reales y darte asesoría personalizada, añade algunas fotos de tu ropa a tu armario.
+      message: `¡Hola${userName ? ` ${userName}` : ''}! Para poder armarte combinaciones con tus prendas reales y darte asesoría personalizada, añade algunas fotos de tu ropa a tu armario.
 
 Mientras tanto, puedes preguntarme sobre cualquier tendencia, combinaciones de colores o qué tipo de prendas elegir para cada ocasión.`,
       recommended_outfit: null,
@@ -945,7 +950,7 @@ Mientras tanto, puedes preguntarme sobre cualquier tendencia, combinaciones de c
   if (isGreeting && items.length > 0) {
     const sampleItems = items.slice(0, 2).map((i: any) => `**${i.name}**`).join(' y ');
     return {
-      message: `¡Hola ${context.user.username || ''}! Qué gusto saludarte.
+      message: `¡Hola${userName ? ` ${userName}` : ''}! Qué gusto saludarte.
 
 Estaba revisando las prendas de tu armario y veo que tenemos piezas estupendas con las que podemos jugar hoy, como tu ${sampleItems}.
 
