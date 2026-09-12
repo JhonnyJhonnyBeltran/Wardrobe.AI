@@ -497,6 +497,9 @@ export default function PostDetailPage() {
     };
 
     const handleBack = () => {
+        try {
+            likeManager.flushAll();
+        } catch {}
         if (window.history.length > 2) {
             router.back();
         } else {

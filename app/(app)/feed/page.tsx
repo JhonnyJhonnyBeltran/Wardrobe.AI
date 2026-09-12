@@ -16,6 +16,7 @@ import { useMessageStore, selectTotalUnread, selectBadgeVisible } from '@/store/
 import { useUser } from '@/store/userStore';
 import { useFeedStore } from '@/store/feedStore';
 import { getFollowing } from '@/lib/services/followService';
+import { likeManager } from '@/lib/services/likeManager';
 
 export default function FeedPage() {
   const { posts, setPosts, hasMore, setHasMore, lastFetchedAt } = useFeedStore();
@@ -213,7 +214,7 @@ export default function FeedPage() {
             },
             likes: post.likes_count || 0,
             comments: post.comments_count || 0,
-            isLiked: likedPostIds.has(post.id),
+            isLiked: likeManager.getPendingState(post.id) !== undefined ? likeManager.getPendingState(post.id) : likedPostIds.has(post.id),
             isSaved: savedPostIds.has(post.id),
             isSuggested: post.isSuggested
           };

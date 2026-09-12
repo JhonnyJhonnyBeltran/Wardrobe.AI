@@ -42,7 +42,7 @@ class LikeManager {
       console.warn('[LikeManager] Error updating stores:', e);
     }
 
-    // 2. Debounce management
+    // 2. Debounce management (300ms for spam protection without delaying navigation sync)
     const existing = this.pending.get(postId);
 
     if (existing) {
@@ -55,14 +55,14 @@ class LikeManager {
         return { isLiked: nextLiked, likesCount: nextCount };
       }
 
-      // Re-arm timer with 5000ms delay
+      // Re-arm timer with 300ms delay
       existing.timeoutId = setTimeout(() => {
         this.commit(postId);
-      }, 5000);
+      }, 300);
     } else {
       const timeoutId = setTimeout(() => {
         this.commit(postId);
-      }, 5000);
+      }, 300);
 
       this.pending.set(postId, {
         postId,

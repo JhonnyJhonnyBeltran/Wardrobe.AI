@@ -11,6 +11,7 @@ import { useUser } from '@/store/userStore';
 import { useUiStore } from '@/store/uiStore';
 import { useSearchStore, SearchUserProfile } from '@/store/searchStore';
 import { useSearchHistory } from '@/lib/hooks';
+import { likeManager } from '@/lib/services/likeManager';
 import Link from 'next/link';
 import { useRef, useCallback } from 'react';
 
@@ -533,7 +534,7 @@ export default function SearchPage() {
             },
             likes: likesCount,
             comments: 0,
-            isLiked: likedPostIds.has(item.id),
+            isLiked: likeManager.getPendingState(item.id) !== undefined ? likeManager.getPendingState(item.id) : likedPostIds.has(item.id),
             isSaved: savedPostIds.has(item.id),
             user_id: item.user_id,
             description: item.caption

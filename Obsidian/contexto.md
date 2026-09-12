@@ -828,6 +828,7 @@ En cada conversación, el backend alimenta a CloSy con:
 - **Interactividad Directa en el Lienzo (`InteractiveOutfitViewer.tsx` y `post/[id]/page.tsx`)**:
   - Se corrigió la generación de diapositivas en posts (`getSlides`): cuando un post incluye un outfit, la vista principal carga directamente el lienzo interactivo (`InteractiveOutfitViewer`) en lugar de duplicar una diapositiva estática no interactiva.
   - `InteractiveOutfitViewer` ahora normaliza prendas y posiciones desde cualquier estructura (`items`, `outfit_items`, `clothing_items`, `garments`), permitiendo hacer clic/tocar cualquier prenda tanto en publicaciones propias como de otros usuarios para abrir de inmediato su ficha técnica (`ProductModal`).
+
 ### 62. Resolución y Formateo Inteligente del Tipo de Prenda en Modales (`ProductModal.tsx`) (Septiembre 2026)
 - **Causa Raíz**:
   - En la base de datos de Supabase, la tipología de las prendas se almacena en el campo `category` (ej: `top`, `bottom`, `shoes`, `jacket`, `dress`, `accessory`).
@@ -835,6 +836,16 @@ En cada conversación, el backend alimenta a CloSy con:
 - **Solución y Normalización**:
   - Se implementó la función universal `formatGarmentType` en `ProductModal.tsx` con diccionario en español (`Camiseta / Top`, `Camisa`, `Pantalón`, `Vaqueros`, `Chaqueta / Cazadora`, `Calzado / Zapatillas`, `Vestido`, `Sudadera`, etc.).
   - Se resolvió la extracción en cascada `displayItem.type || displayItem.category || displayItem.clothing_type`, garantizando que siempre se muestre el tipo de prenda claro y bien formateado tanto en publicaciones propias como de otros usuarios.
+
+### 63. Sincronización Inmediata de Likes y Persistencia Estable en Feed y Búsqueda (Septiembre 2026)
+- **Causa Raíz Identificada**:
+  - Al dar o quitar un like dentro de un post (`/post/[id]`), `likeManager` utilizaba un temporizador de retardo de 5.000 ms antes de escribir en Supabase.
+  - Si el usuario regresaba al Feed o al Buscador antes de cumplirse esos 5 segundos, la base de datos aún no tenía registrada la interacción, y las llamadas en segundo plano sobrescribían el estado optimista o reordenaban dinámicamente las publicaciones según la afinidad por likes.
+- **Solución y Arquitectura de Sincronización Inmediata**:
+  - Se redujo el debounce de `likeManager.ts` a **300 ms** (protección de spam) y se implementó `flushAll()` inmediato tanto al pulsar atrás (`handleBack`) como al desmontar la vista de post.
+  - En `useFeedStore.ts` y `useSearchStore.ts`, se blindó la retención en memoria (SWR): al navegar hacia atrás, la posición de scroll y el orden exacto de los posts se mantienen estables en 0 ms.
+  - `FeedPage` y `SearchPage` sincronizan el estado atómico de `likeManager.getPendingState` para que los likes nunca parpadeen ni se reviertan.
+
 
 
 
