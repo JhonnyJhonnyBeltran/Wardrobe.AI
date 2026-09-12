@@ -177,30 +177,14 @@ export default function ChatPage() {
             .order('created_at', { ascending: true });
 
         if (data) {
-            // Get conversation to check server-side deletion
-            const { data: convData } = await supabase
-                .from('conversations')
-                .select('participant1_id, participant2_id, user1_deleted_at, user2_deleted_at')
-                .in('participant1_id', [user.id, targetUserId])
-                .in('participant2_id', [user.id, targetUserId])
-                .single();
-            
-            let servDeletedAt = 0;
-            if (convData) {
-                const conv = convData as any;
-                const deletedAtStr = conv.participant1_id === user.id ? conv.user1_deleted_at : conv.user2_deleted_at;
-                if (deletedAtStr) {
-                    servDeletedAt = new Date(deletedAtStr).getTime();
-                }
-            }
+            let deletedChats: Record<string, number> = {};
+            try {
+                const deletedChatsStr = localStorage.getItem('deleted_chats');
+                if (deletedChatsStr) deletedChats = JSON.parse(deletedChatsStr);
+            } catch {}
 
-            const deletedChatsStr = localStorage.getItem('deleted_chats');
-            const deletedChats = deletedChatsStr ? JSON.parse(deletedChatsStr) : {};
             const localDeletedAt = deletedChats[targetUserId] ? Number(deletedChats[targetUserId]) : 0;
-            
-            // Validate NaN
-            let deletedAt = Math.max(isNaN(localDeletedAt) ? 0 : localDeletedAt, isNaN(servDeletedAt) ? 0 : servDeletedAt);
-            if (isNaN(deletedAt)) deletedAt = 0;
+            let deletedAt = isNaN(localDeletedAt) ? 0 : localDeletedAt;
             
             const filteredMessages = data.filter((msg: any) => {
                 const msgTime = new Date(msg.created_at).getTime();

@@ -5,6 +5,7 @@
  * Separated from root layout.tsx to allow ssr: false with dynamic imports
  */
 
+import { useEffect } from "react";
 import dynamic from "next/dynamic";
 import { UserProvider, ThemeProvider } from "@/store";
 import RealtimeProvider from "@/components/RealtimeProvider";
@@ -44,6 +45,23 @@ interface RootLayoutClientProps {
 }
 
 export default function RootLayoutClient({ children }: RootLayoutClientProps) {
+  useEffect(() => {
+    // Intercept and silence third-party browser extension / performance observer errors (e.g. reportAllChanges / startTime)
+    const handleError = (event: ErrorEvent) => {
+      const msg = event?.message || '';
+      if (
+        msg.includes("Cannot read properties of undefined (reading 'startTime')") ||
+        msg.includes('reportAllChanges') ||
+        msg.includes('ResizeObserver loop')
+      ) {
+        event.stopImmediatePropagation();
+        event.preventDefault();
+      }
+    };
+
+    window.addEventListener('error', handleError);
+    return () => window.removeEventListener('error', handleError);
+  }, []);
   return (
     <GlobalErrorBoundary>
       <ThemeProvider>

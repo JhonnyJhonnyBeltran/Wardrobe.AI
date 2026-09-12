@@ -371,7 +371,7 @@ export default function ProfilePage() {
 
       <main className="w-full md:max-w-[70%] mx-auto">
         {/* Profile Info */}
-        <div className="px-5 pt-6">
+        <div className="px-5 pt-6 md:pt-14 lg:pt-16">
           <div className="flex items-center gap-8 mb-6">
             <button 
               onClick={() => setShowAvatarModal(true)}

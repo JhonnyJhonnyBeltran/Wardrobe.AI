@@ -53,9 +53,13 @@ export default function ChatPage() {
   const { user } = useUser();
   const params = useParams();
   const router = useRouter();
-  const searchParams = useSearchParams();
   const targetUserId = params.id as string;
-  const isRequest = searchParams.get('request') === 'true';
+
+  useEffect(() => {
+    if (targetUserId) {
+      router.replace(`/messages/${targetUserId}`);
+    }
+  }, [targetUserId, router]);
 
   // Unread messages hook for marking as read
   const { onOpenConversation } = useUnreadMessages({ autoFetch: false, enableRealtime: false });

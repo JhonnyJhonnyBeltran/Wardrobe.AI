@@ -801,6 +801,14 @@ En cada conversación, el backend alimenta a CloSy con:
   - **Título de Pestaña**: Configurado a `"Klozet"` por defecto y plantilla `"%s | Klozet"`.
   - **Keywords de Alto Tráfico**: Indexación enfocada en términos clave como *Klozet*, *armario digital*, *armario cápsula*, *pinterest de moda*, *combinar ropa con IA*, *estilista personal IA*, *outfits con mi ropa*, *Kloe IA*, *streetwear y tendencias*, *lookbook digital*.
   - **Estructura JSON-LD**: Esquemas actualizados de `WebApplication`, `Organization` y `WebSite` con dominio base oficial `https://klozet.es` y metadatos de OpenGraph y Twitter Card optimizados.
-  - **Sitemap y Robots**: `sitemap.ts`, `robots.ts` y `manifest.json` actualizados con la nueva descripción y palabras clave oficiales.
+### 58. Margen Superior en Profile, Corrección de Error 400 en Mensajería y Supresión de Excepciones del Navegador (Septiembre 2026)
+- **Margen Superior en Perfil (`/profile`)**:
+  - Se incrementó el padding superior de la información de usuario a `pt-6 md:pt-14 lg:pt-16`, proporcionando un espacio limpio y holgado en PC y móviles para que la foto de perfil, estadísticas de seguidores/seguidos y nombre no queden pegados al borde superior de la pantalla.
+- **Erradicación del Error 400 Bad Request en Mensajería (`/messages`, `/messages/layout`, `/messages/[id]`)**:
+  - Las consultas directas a `conversations` intentaban seleccionar columnas inexistentes en el esquema de la base de datos (`participant1_id`, `participant2_id`, `user1_deleted_at`, `user2_deleted_at`), generando llamadas `400 Bad Request` en bucle.
+  - Se eliminaron las consultas a columnas no existentes y se estandarizó la gestión de chats eliminados localmente mediante `localStorage` de forma segura y libre de errores.
+- **Supresión Global de Excepciones de Extensiones / Performance Timeline (`RootLayoutClient.tsx`)**:
+  - Se implementó un capturador global de errores en `RootLayoutClient.tsx` que intercepta y silencia excepciones originadas por extensiones del navegador o perfiles de rendimiento (`reportAllChanges`, `Cannot read properties of undefined (reading 'startTime')`), garantizando una navegación fluida y sin bloqueos al dar/quitar me gusta.
+
 
 

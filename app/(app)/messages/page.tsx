@@ -146,26 +146,15 @@ export default function MessagesPage() {
                     return;
                 }
 
-                // Fetch conversations to get server-side deleted_at timestamps
-                const { data: activeConversations } = await supabase
-                    .from('conversations')
-                    .select('participant1_id, participant2_id, user1_deleted_at, user2_deleted_at')
-                    .or(`participant1_id.eq.${user.id},participant2_id.eq.${user.id}`);
-                
-                const serverDeletedAt = new Map<string, number>();
-                if (activeConversations) {
-                    activeConversations.forEach((conv: any) => {
-                        const otherId = conv.participant1_id === user.id ? conv.participant2_id : conv.participant1_id;
-                        const deletedAt = conv.participant1_id === user.id ? conv.user1_deleted_at : conv.user2_deleted_at;
-                        if (deletedAt) {
-                            serverDeletedAt.set(otherId, new Date(deletedAt).getTime());
-                        }
-                    });
-                }
-
                 // 2. Group by the OTHER user ID
                 const convMap = new Map<string, any>();
                 const unreadCounts = new Map<string, number>();
+
+                let deletedChats: Record<string, number> = {};
+                try {
+                    const deletedChatsStr = localStorage.getItem('deleted_chats');
+                    if (deletedChatsStr) deletedChats = JSON.parse(deletedChatsStr);
+                } catch {}
 
                 myMessages.forEach((msg: any) => {
                     const otherId = msg.sender_id === user.id ? msg.receiver_id : msg.sender_id;
@@ -173,13 +162,8 @@ export default function MessagesPage() {
                     // Filter out self-chats to avoid confusing the user
                     if (otherId === user.id) return;
 
-                    const deletedChatsStr = localStorage.getItem('deleted_chats');
-                    const deletedChats = deletedChatsStr ? JSON.parse(deletedChatsStr) : {};
                     const localDeletedAt = deletedChats[otherId] ? Number(deletedChats[otherId]) : 0;
-                    const servDeletedAt = serverDeletedAt.get(otherId) || 0;
-                    
-                    let deletedAt = Math.max(isNaN(localDeletedAt) ? 0 : localDeletedAt, isNaN(servDeletedAt) ? 0 : servDeletedAt);
-                    if (isNaN(deletedAt)) deletedAt = 0;
+                    let deletedAt = isNaN(localDeletedAt) ? 0 : localDeletedAt;
                     
                     const msgTime = new Date(msg.created_at).getTime();
 
