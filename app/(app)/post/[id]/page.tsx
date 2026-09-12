@@ -271,17 +271,39 @@ export default function PostDetailPage() {
     const getSlides = useCallback(() => {
         const slides: { type: 'photo' | 'outfit'; url?: string; outfit?: any }[] = [];
         
-        // 1. Photo Slide
-        if (post?.image_url) {
+        const outfitData = post?.outfits ? (Array.isArray(post.outfits) ? post.outfits[0] : post.outfits) : (post?.outfit || null);
+        
+        // Check if there is a distinct photo uploaded by the user (not just the canvas export)
+        const hasDistinctPhoto = post?.image_url && (!outfitData || (post.image_url !== outfitData.image_url && post.image_url !== outfitData.imageUrl));
+        
+        if (hasDistinctPhoto) {
             slides.push({ type: 'photo', url: post.image_url });
         }
         
-        // 2. Outfit Slide
-        if (post?.outfits) {
-            const outfitData = Array.isArray(post.outfits) ? post.outfits[0] : post.outfits;
-            if (outfitData) {
-                slides.push({ type: 'outfit', outfit: outfitData });
+        // 2. Outfit Slide (Interactive Canvas)
+        if (outfitData) {
+            // Ensure outfit has clothing items attached
+            const rawOutfitItems = outfitData.outfit_items || outfitData.items || [];
+            const garments = (post?.clothing_items && post.clothing_items.length > 0)
+                ? post.clothing_items
+                : (post?.garments && post.garments.length > 0)
+                ? post.garments
+                : [];
+                
+            if (rawOutfitItems.length === 0 && garments.length > 0) {
+                outfitData.outfit_items = garments.map((g: any) => ({
+                    clothing_items: g,
+                    clothing_item: g,
+                    clothing: g,
+                    position_x: 50,
+                    position_y: 50,
+                    scale: 1,
+                    rotation: 0
+                }));
             }
+            slides.push({ type: 'outfit', outfit: outfitData });
+        } else if (!hasDistinctPhoto && post?.image_url) {
+            slides.push({ type: 'photo', url: post.image_url });
         }
         
         // Fallback

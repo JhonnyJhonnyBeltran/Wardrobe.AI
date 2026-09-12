@@ -27,12 +27,21 @@ const InteractiveOutfitViewer = ({ outfit, onItemClick, className = '', isMobile
     // Fallback if no outfit or items
     if (!outfit) return null;
 
-    const items = outfit.items || outfit.outfit_items || [];
+    const items = (outfit.items && outfit.items.length > 0)
+        ? outfit.items
+        : (outfit.outfit_items && outfit.outfit_items.length > 0)
+        ? outfit.outfit_items
+        : (outfit.clothing_items && outfit.clothing_items.length > 0)
+        ? outfit.clothing_items
+        : (outfit.garments && outfit.garments.length > 0)
+        ? outfit.garments
+        : [];
     
     // Check if we have valid layout data for at least one item
     // Some legacy outfits might not have position_x, position_y
     const hasLayoutData = items.some((item: any) => 
-        item.position_x !== undefined && item.position_x !== null
+        (item.position_x !== undefined && item.position_x !== null) ||
+        (item.positionX !== undefined && item.positionX !== null)
     );
 
     // If we don't have layout data, use the static image fallback
@@ -43,12 +52,12 @@ const InteractiveOutfitViewer = ({ outfit, onItemClick, className = '', isMobile
     
     // Generate programmatic positions for items that lack them
     const itemsWithPositions = items.map((item: any, i: number) => {
-        const clothingRaw = item.clothing_items || item.clothing_item || item;
+        const clothingRaw = item.clothing_items || item.clothing_item || item.clothing || item;
         const clothing = Array.isArray(clothingRaw) ? clothingRaw[0] : clothingRaw;
-        const img = clothing?.imageUrl || clothing?.image_url;
+        const img = clothing?.imageUrl || clothing?.image_url || clothing?.original_image_url || clothing?.originalImageUrl || item.image_url || item.imageUrl;
         
-        let x = item.position_x;
-        let y = item.position_y;
+        let x = item.position_x ?? item.positionX;
+        let y = item.position_y ?? item.positionY;
         
         // If they don't have layout data, spread them nicely
         if (x === undefined || x === null) {
@@ -69,13 +78,21 @@ const InteractiveOutfitViewer = ({ outfit, onItemClick, className = '', isMobile
             computedY: y,
             computedScale: item.scale ?? 1,
             computedRotation: item.rotation ?? 0,
-            computedZIndex: item.layer_order ?? item.z_index ?? i
+            computedZIndex: item.layer_order ?? item.zIndex ?? item.z_index ?? i
         };
     }).filter((item: any) => item.img);
 
     if (itemsWithPositions.length === 0 && staticImage) {
         return (
-            <div className={`relative w-full h-full bg-[#f8f9fa] dark:bg-[#111] overflow-hidden ${className}`}>
+            <div 
+                className={`relative w-full h-full bg-[#f8f9fa] dark:bg-[#111] overflow-hidden ${className} ${!disableInteraction && items.length > 0 ? 'cursor-pointer' : ''}`}
+                onClick={() => {
+                    if (!disableInteraction && items.length > 0) {
+                        const firstGarment = items[0].clothing_items || items[0].clothing_item || items[0].clothing || items[0];
+                        onItemClick?.(firstGarment);
+                    }
+                }}
+            >
                 <Image
                     src={staticImage}
                     alt={outfit.name || 'Outfit'}

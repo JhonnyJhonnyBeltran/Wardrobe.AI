@@ -94,33 +94,35 @@ export const ClothingItem: React.FC<ClothingItemProps> = ({
           )}
         </div>
 
-        {/* Favorite button - Always visible */}
-        <motion.button
-          whileTap={{ scale: 0.9 }}
-          onClick={handleFavoriteClick}
-          aria-label={isFavorite ? `Eliminar ${name || 'prenda'} de favoritos` : `Añadir ${name || 'prenda'} a favoritos`}
-          style={{ WebkitTapHighlightColor: 'transparent' }}
-          className={`absolute top-3 right-4 z-20 p-2 rounded-full bg-black/20 dark:bg-white/20 backdrop-blur-sm transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-pink)]
-                     ${isFavorite ? 'opacity-100' : 'opacity-60 hover:opacity-100'}`}
-        >
-          <motion.div
-            animate={isAnimating ? {
-              scale: [1, 1.4, 0.9, 1.2, 1],
-            } : { scale: 1 }}
-            transition={{
-              duration: 0.4,
-              ease: [0.25, 0.1, 0.25, 1],
-              times: [0, 0.2, 0.4, 0.7, 1]
-            }}
+        {/* Favorite button - Only shown when onFavoriteToggle is provided (e.g. inside personal wardrobe) */}
+        {onFavoriteToggle && (
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            onClick={handleFavoriteClick}
+            aria-label={isFavorite ? `Eliminar ${name || 'prenda'} de favoritos` : `Añadir ${name || 'prenda'} a favoritos`}
+            style={{ WebkitTapHighlightColor: 'transparent' }}
+            className={`absolute top-3 right-4 z-20 p-2 rounded-full bg-black/20 dark:bg-white/20 backdrop-blur-sm transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-pink)]
+                       ${isFavorite ? 'opacity-100' : 'opacity-60 hover:opacity-100'}`}
           >
-            <Heart
-              className={`w-5 h-5 transition-colors ${isFavorite
-                ? 'fill-[var(--brand-pink)] stroke-[var(--brand-pink)]'
-                : 'stroke-white hover:stroke-[var(--brand-pink)]'
-                }`}
-            />
-          </motion.div>
-        </motion.button>
+            <motion.div
+              animate={isAnimating ? {
+                scale: [1, 1.4, 0.9, 1.2, 1],
+              } : { scale: 1 }}
+              transition={{
+                duration: 0.4,
+                ease: [0.25, 0.1, 0.25, 1],
+                times: [0, 0.2, 0.4, 0.7, 1]
+              }}
+            >
+              <Heart
+                className={`w-5 h-5 transition-colors ${isFavorite
+                  ? 'fill-[var(--brand-pink)] stroke-[var(--brand-pink)]'
+                  : 'stroke-white hover:stroke-[var(--brand-pink)]'
+                  }`}
+              />
+            </motion.div>
+          </motion.button>
+        )}
 
         {/* Delete button (Custom Animated) */}
         {onDelete && (

@@ -824,7 +824,14 @@ En cada conversación, el backend alimenta a CloSy con:
   - Al recibir 0 prendas, el componente de detalle de post ocultaba la sección *"Prendas del look"* y el visor interactivo de outfits recurría a la imagen estática sin stickers interactivos.
 - **Solución y Script SQL (`sql/fix_clothing_items_rls.sql`)**:
   - Se configuró la política de lectura global `FOR SELECT USING (true)` en `clothing_items`, `outfits`, `outfit_items` y `posts`, permitiendo que todos los usuarios de la comunidad puedan explorar, interactuar y ver los detalles de las prendas públicas de cualquier look.
-  - Las políticas de inserción, edición y eliminación (`INSERT`, `UPDATE`, `DELETE`) permanecen 100% blindadas y exclusivas para el creador propietario (`auth.uid() = user_id`).
+### 61. Interactividad Total en Lienzo de Posts y Eliminación de Likes en Prendas (Septiembre 2026)
+- **Interactividad Directa en el Lienzo (`InteractiveOutfitViewer.tsx` y `post/[id]/page.tsx`)**:
+  - Se corrigió la generación de diapositivas en posts (`getSlides`): cuando un post incluye un outfit, la vista principal carga directamente el lienzo interactivo (`InteractiveOutfitViewer`) en lugar de duplicar una diapositiva estática no interactiva.
+  - `InteractiveOutfitViewer` ahora normaliza prendas y posiciones desde cualquier estructura (`items`, `outfit_items`, `clothing_items`, `garments`), permitiendo hacer clic/tocar cualquier prenda tanto en publicaciones propias como de otros usuarios para abrir de inmediato su ficha técnica (`ProductModal`).
+- **Eliminación del Botón de Favorito / Like en Prendas de Posts (`ClothingItem.tsx`)**:
+  - Se restringió el botón de corazón flotante para que únicamente se muestre en vistas privadas de gestión (como el propio armario en `/closet` cuando se pasa `onFavoriteToggle`).
+  - En las publicaciones (`/post/[id]`), vistas de outfits (`/outfit/[id]`, `/profile/[id]/outfit/[outfitId]`) y explorador, las prendas se muestran limpias sin el botón de like superpuesto.
+
 
 
 
