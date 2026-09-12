@@ -1,11 +1,10 @@
 'use client';
 
 import { Plus, X, Image as ImageIcon, Shirt, Layers } from 'lucide-react';
-import Link from 'next/link';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { usePathname, useRouter } from 'next/navigation';
 import { triggerHaptic } from '@/lib/haptic';
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useUiStore } from '@/store/uiStore';
 
 export default function FloatingCreateButton() {
@@ -32,32 +31,76 @@ export default function FloatingCreateButton() {
         router.push(path);
     };
 
+    // Actions arranged for bottom-to-top progressive cascade
     const actions = [
         { id: 'post', label: 'Nuevo Post', icon: ImageIcon, path: '/create-post' },
         { id: 'outfit', label: 'Nuevo Outfit', icon: Layers, path: '/create' },
         { id: 'item', label: 'Nueva Prenda', icon: Shirt, path: '/closet?action=new-item' },
     ];
 
-    // Animation variants for desktop speed dial
-    const containerVariants = {
-        hidden: { opacity: 0, transition: { staggerChildren: 0.05, staggerDirection: -1 } },
-        visible: { opacity: 1, transition: { staggerChildren: 0.05, delayChildren: 0.1 } }
+    // Slow, luxurious ~1s total cascade variants
+    const containerVariants: Variants = {
+        hidden: { 
+            opacity: 0, 
+            transition: { 
+                staggerChildren: 0.08, 
+                staggerDirection: -1 
+            } 
+        },
+        visible: { 
+            opacity: 1, 
+            transition: { 
+                delayChildren: 0.12,
+                staggerChildren: 0.22 // Cascada lenta de ~1s total
+            } 
+        }
     };
 
-    const itemVariants = {
-        hidden: { opacity: 0, y: 10, scale: 0.8 },
-        visible: { opacity: 1, y: 0, scale: 1 }
+    const itemVariants: Variants = {
+        hidden: { 
+            opacity: 0, 
+            y: 35, 
+            x: 10,
+            scale: 0.6 
+        },
+        visible: { 
+            opacity: 1, 
+            y: 0, 
+            x: 0,
+            scale: 1,
+            transition: { 
+                type: "spring" as const, 
+                stiffness: 170, 
+                damping: 18, 
+                mass: 0.85 
+            } 
+        }
     };
 
     return (
         <>
-            {/* Desktop Speed Dial + Mobile FAB Wrapper - HIDDEN ON MOBILE AS REQUESTED */}
-            <div className="hidden md:flex fixed bottom-24 md:bottom-8 right-6 md:right-8 z-50 flex-col items-end">
-                {/* Desktop Bubbles */}
+            {/* Click-outside backdrop when menu is open */}
+            <AnimatePresence>
+                {isCreateMenuOpen && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                        onClick={() => setCreateMenuOpen(false)}
+                        className="fixed inset-0 z-40 bg-black/35 backdrop-blur-[2px]"
+                    />
+                )}
+            </AnimatePresence>
+
+            {/* Desktop Speed Dial - Shifted slightly more to the left (right-10 md:right-14) */}
+            <div className="hidden md:flex fixed bottom-24 md:bottom-10 right-10 md:right-14 z-50 flex-col items-end pointer-events-none">
+                
+                {/* Cascade Options (Desktop) */}
                 <AnimatePresence>
                     {isCreateMenuOpen && (
                         <motion.div
-                            className="hidden md:flex flex-col items-end gap-3 mb-4 origin-bottom"
+                            className="flex flex-col items-end gap-3.5 mb-4 origin-bottom pointer-events-auto"
                             variants={containerVariants}
                             initial="hidden"
                             animate="visible"
@@ -70,13 +113,15 @@ export default function FloatingCreateButton() {
                                         key={action.id}
                                         variants={itemVariants}
                                         onClick={() => handleActionClick(action.path)}
-                                        className="group flex items-center gap-3"
+                                        className="group flex items-center gap-3.5 cursor-pointer focus:outline-none"
                                     >
-                                        <span className="px-3 py-1.5 bg-black text-white dark:bg-white dark:text-black text-sm font-semibold rounded-xl shadow-lg border border-white/10 dark:border-black/10 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        {/* Label Tag */}
+                                        <span className="px-4 py-2 bg-[var(--card-bg)]/95 dark:bg-[#18181f]/95 text-[var(--foreground)] text-sm font-bold rounded-2xl shadow-xl border border-[var(--border-color)] group-hover:border-[var(--brand-pink)] group-hover:text-[var(--brand-pink)] transition-all">
                                             {action.label}
                                         </span>
-                                        <div className="w-12 h-12 rounded-full flex items-center justify-center bg-black text-white dark:bg-white dark:text-black shadow-xl border border-white/10 dark:border-black/10 transition-transform hover:scale-110 active:scale-95">
-                                            <Icon className="w-5 h-5" />
+                                        {/* Option Bubble - Exactly 56px (w-14 h-14) with 28px (w-7 h-7) Icon */}
+                                        <div className="w-14 h-14 rounded-full flex items-center justify-center bg-black text-white dark:bg-white dark:text-black shadow-2xl border border-white/15 dark:border-black/15 transition-all group-hover:scale-110 group-active:scale-95 group-hover:shadow-[0_10px_25px_rgba(255,45,120,0.35)]">
+                                            <Icon className="w-7 h-7" strokeWidth={2.2} />
                                         </div>
                                     </motion.button>
                                 );
@@ -85,16 +130,16 @@ export default function FloatingCreateButton() {
                     )}
                 </AnimatePresence>
 
-                {/* Main FAB Trigger - Pink background */}
+                {/* Main Trigger Button (+ / X) */}
                 <motion.button
                     whileTap={{ scale: 0.9 }}
                     onClick={handleToggle}
-                    className="w-14 h-14 rounded-full bg-[var(--brand-pink)] flex items-center justify-center text-white shadow-xl shadow-[var(--brand-pink)]/30 cursor-pointer overflow-hidden z-20 transition-all hover:opacity-90"
-                    aria-label="Crear nuevo"
+                    className="w-14 h-14 rounded-full bg-[var(--brand-pink)] flex items-center justify-center text-white shadow-2xl shadow-[var(--brand-pink)]/35 cursor-pointer overflow-hidden z-20 transition-all hover:scale-105 pointer-events-auto"
+                    aria-label={isCreateMenuOpen ? "Cerrar menú de creación" : "Crear nuevo"}
                 >
                     <motion.div
-                        animate={{ rotate: isCreateMenuOpen ? 45 : 0 }}
-                        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                        animate={{ rotate: isCreateMenuOpen ? 135 : 0 }}
+                        transition={{ type: "spring", stiffness: 280, damping: 20 }}
                     >
                         <Plus className="w-7 h-7" strokeWidth={2.5} />
                     </motion.div>
@@ -137,8 +182,8 @@ export default function FloatingCreateButton() {
                                                 onClick={() => handleActionClick(action.path)}
                                                 className="w-full bg-black text-white dark:bg-white dark:text-black hover:opacity-90 transition-opacity p-4 rounded-2xl flex items-center gap-4 shadow-md border border-white/10 dark:border-black/10 active:scale-[0.98]"
                                             >
-                                                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-white/10 text-white dark:bg-black/10 dark:text-black">
-                                                    <Icon className="w-5 h-5" />
+                                                <div className="w-12 h-12 rounded-full flex items-center justify-center bg-white/10 text-white dark:bg-black/10 dark:text-black">
+                                                    <Icon className="w-6 h-6" strokeWidth={2.2} />
                                                 </div>
                                                 <span className="font-semibold text-base text-white dark:text-black">
                                                     {action.label}
@@ -155,3 +200,4 @@ export default function FloatingCreateButton() {
         </>
     );
 }
+

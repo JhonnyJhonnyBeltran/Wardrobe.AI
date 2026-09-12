@@ -890,6 +890,15 @@ En cada conversación, el backend alimenta a CloSy con:
     - **Botón de Atrás Ergonómico**: Icono `ArrowLeft` con navegación fluida (`router.back()` o fallback al perfil del autor).
     - **Identidad del Creador**: Foto de perfil (`Avatar`) y `@username` clicable que enlaza directamente a su perfil de usuario.
 
+### 69. Menú Flotante de Creación con Cascada Cinemática (~1s) y Burbujas Ampliadas (`FloatingCreateButton.tsx`) (Septiembre 2026)
+- **Desplazamiento Ergonómico a la Izquierda**:
+  - Se ajustó el anclaje del botón flotante y sus opciones a `right-10 md:right-14` (y `bottom-24 md:bottom-10`), proporcionando mayor holgura y separación del borde de la pantalla.
+- **Tamaño Homogéneo de Opciones (`w-14 h-14` / 56px)**:
+  - Las opciones de *Nuevo Post*, *Nuevo Outfit* y *Nueva Prenda* ahora tienen exactamente el mismo diámetro (56px) y tamaño de icono (`w-7 h-7` / 28px) que el botón de activación principal `+`, acompañadas de etiquetas de cristal (`backdrop-blur-xl`) legibles y estilizadas.
+- **Animación en Cascada Progresiva (~1s Total) y Transformación de Botón**:
+  - Se implementó una coreografía de animación con `staggerChildren: 0.22` y `spring` de física elástica suave, desplegando las 3 opciones de forma secuencial y fluida a lo largo de ~1 segundo.
+  - El botón principal `+` rota 135° suavemente convirtiéndose en un botón de cierre `X`, y se añadió un telón de fondo semitransparente con `backdrop-blur` que permite cerrar el menú al hacer clic en cualquier lugar.
+
 
 
 
