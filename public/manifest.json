@@ -1,7 +1,7 @@
 {
-  "name": "Klozet - Red Social de Moda y Armario Virtual IA",
+  "name": "Klozet - Armario Digital, Outfits con IA & Red Social de Moda",
   "short_name": "Klozet",
-  "description": "Digitaliza tu armario, genera outfits perfectos con inteligencia artificial y comparte tu estilo en la red social de moda.",
+  "description": "Digitaliza tus prendas, organiza tu armario cápsula, descubre inspiración estilo Pinterest y genera combinaciones con IA.",
   "start_url": "/feed",
   "display": "standalone",
   "background_color": "#09090b",

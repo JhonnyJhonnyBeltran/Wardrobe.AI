@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Plus, PlusSquare, Send } from 'lucide-react';
 import PostCard from '@/components/Feed/PostCard';
 import PremiumAdCard from '@/components/Feed/PremiumAdCard';
+import SponsoredAdCard from '@/components/Feed/SponsoredAdCard';
 import { EmptyState, InfiniteScrollFooter, PullToRefresh, SkeletonFeed } from '@/components';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -329,18 +330,23 @@ export default function FeedPage() {
                   {posts.filter((_, i) => i % 2 === 0).map((post, index) => (
                     <div key={post.id} className="w-full">
                       <PostCard post={post} />
-                      {(index * 2 + 1) % 15 === 0 && (
+                      {(index + 1) % 5 === 0 && (
                         <div className="mt-2.5">
-                          <PremiumAdCard />
+                          <SponsoredAdCard index={index} />
                         </div>
                       )}
                     </div>
                   ))}
                 </div>
                 <div className="flex flex-col gap-2.5">
-                  {posts.filter((_, i) => i % 2 === 1).map((post) => (
+                  {posts.filter((_, i) => i % 2 === 1).map((post, index) => (
                     <div key={post.id} className="w-full">
                       <PostCard post={post} />
+                      {(index + 1) % 6 === 0 && (
+                        <div className="mt-2.5">
+                          <SponsoredAdCard index={index + 2} />
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -351,9 +357,9 @@ export default function FeedPage() {
                 {posts.map((post, index) => (
                   <div key={post.id} className="break-inside-avoid mb-6">
                     <PostCard post={post} />
-                    {(index + 1) % 15 === 0 && (
-                      <div key={`premium-ad-${index}`} className="break-inside-avoid mb-6 col-span-full">
-                        <PremiumAdCard />
+                    {(index + 1) % 8 === 0 && (
+                      <div key={`sponsored-ad-${index}`} className="break-inside-avoid mb-6">
+                        <SponsoredAdCard index={index} />
                       </div>
                     )}
                   </div>

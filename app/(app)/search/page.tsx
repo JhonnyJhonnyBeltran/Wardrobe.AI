@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Search as SearchIcon, X, Users, Image as ImageIcon, UserPlus, Check, Clock, Trash2 } from 'lucide-react';
 import PostCard, { type Post } from '@/components/Feed/PostCard';
+import SponsoredAdCard from '@/components/Feed/SponsoredAdCard';
 import { EmptyState, InfiniteScrollFooter, PullToRefresh, SkeletonSearch, SkeletonUserList } from '@/components';
 import { supabase } from '@/lib/supabase/client';
 
@@ -776,9 +777,14 @@ export default function SearchPage() {
                 {results.length > 0 && (
                   <div className="mt-2">
                     <div className="masonry-grid">
-                      {results.map(post => (
+                      {results.map((post, index) => (
                         <div key={post.id} className="break-inside-avoid mb-6">
                           <PostCard post={post} />
+                          {(index + 1) % 10 === 0 && (
+                            <div key={`search-sponsored-ad-${index}`} className="mt-6">
+                              <SponsoredAdCard index={index} />
+                            </div>
+                          )}
                         </div>
                       ))}
                       

@@ -6,38 +6,45 @@ import RootLayoutClient from "./RootLayoutClient";
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
 
-const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://klozet.ai";
-const SITE_TITLE = "Closet & Klozet | Genera Outfits con Inteligencia Artificial & Red Social de Moda";
-const SITE_DESCRIPTION = "Klozet es la red social de moda y armario virtual inteligente número 1. Digitaliza tu ropa, genera outfits perfectos con inteligencia artificial, comparte tu estilo con la comunidad y recibe estilismo 24/7 con tu asesora IA Kloe.";
+const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://klozet.es";
+const SITE_TITLE = "Klozet | Tu Armario Digital, Outfits con IA & Pinterest de Moda";
+const SITE_DESCRIPTION = "Klozet es la plataforma de moda, armario digital inteligente y red social de outfits número 1. Digitaliza tus prendas, organiza tu armario cápsula, descubre inspiración de looks estilo Pinterest, crea combinaciones automáticas con IA y recibe estilismo 24/7 con Kloe.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: SITE_TITLE,
-    template: "%s | Klozet - Armario Virtual & Red Social de Moda"
+    default: "Klozet",
+    template: "%s | Klozet"
   },
   description: SITE_DESCRIPTION,
   applicationName: "Klozet",
   authors: [{ name: "Klozet Team", url: SITE_URL }],
   generator: "Next.js",
   keywords: [
-    "Closet",
     "Klozet",
-    "genera outfits perfectos con inteligencia artificial",
-    "red social de moda",
+    "klozet app",
+    "klozet moda",
+    "armario digital",
     "armario virtual",
-    "estilista personal inteligencia artificial",
-    "outfits con mi ropa",
+    "organizador de armario",
+    "armario capsula",
+    "pinterest de moda",
+    "pinterest looks",
+    "combinar ropa",
     "combinar ropa con IA",
-    "fashion app",
-    "crear looks",
+    "generador de outfits con inteligencia artificial",
+    "outfits con mi ropa",
+    "estilista personal IA",
     "Kloe IA",
-    "outfit generator AI",
+    "red social de moda",
+    "crear looks",
+    "inspo outfits",
+    "streetwear y tendencias",
+    "lookbook digital",
     "digital wardrobe",
-    "moda y tendencias",
-    "comunidad de moda",
-    "streetwear",
-    "outfit inspo"
+    "fashion AI app",
+    "outfit planner",
+    "colorimetria y morfologia"
   ],
   referrer: "origin-when-cross-origin",
   creator: "Klozet",
@@ -60,7 +67,7 @@ export const metadata: Metadata = {
         url: "/klozet-logo-dark.png",
         width: 1200,
         height: 630,
-        alt: "Klozet - Red Social de Moda y Generador de Outfits con Inteligencia Artificial"
+        alt: "Klozet - Tu Armario Digital, Outfits con Inteligencia Artificial y Red Social de Moda"
       }
     ],
     locale: "es_ES",
@@ -124,7 +131,7 @@ export default function RootLayout({
         "@type": "WebApplication",
         "@id": `${SITE_URL}/#app`,
         "name": "Klozet",
-        "alternateName": ["Closet AI", "Klozet Moda", "Wardrobe AI"],
+        "alternateName": ["Klozet App", "Klozet Moda", "Klozet Armario Digital", "Klozet AI"],
         "url": SITE_URL,
         "applicationCategory": "LifestyleApplication",
         "operatingSystem": "All",

@@ -790,3 +790,17 @@ En cada conversación, el backend alimenta a CloSy con:
 - **Corrección de Mensajes de Comentario Vacíos (`NotificationList.tsx`)**:
   - Se blindó la extracción del texto de comentarios en las notificaciones para soportar múltiples estructuras (`content`, `text`, `comment`, `data.content`) y fallback limpio a *"comentó en tu publicación."*, evitando mostrar comillas vacías (`comentó: ""`).
 
+### 57. Tarjetas Nativas de Anuncios Patrocinados (Google Ad Manager / Afiliación) y Rebranding SEO Klozet (Septiembre 2026)
+- **Componente Nativo de Publicidad In-Feed (`SponsoredAdCard.tsx`)**:
+  - Diseñado con la misma estética premium (`rounded-[22px]`, `aspect-[3/4]`, border sutil y badge glassmorphic *"Patrocinado"* / *"Promocionado"* con icono de destello).
+  - **Soporte Google Ad Manager / Google AdSense**: Compatible con `NEXT_PUBLIC_GOOGLE_ADS_CLIENT_ID` y slots responsivos en bloque (`ins.adsbygoogle`).
+  - **Fallback Curado de Moda y Afiliación de Alto Rendimiento**: Si no hay bloqueador o aún no está aprobada la cuenta de Google, rota automáticamente tarjetas editoriales de moda (Zalando, ASOS, Farfetch, COS) con llamada a la acción ("Ver colección", "Explorar looks") y apertura externa en nueva pestaña, evitando espacios en blanco.
+  - **Inserción Equilibrada**: Integrado automáticamente en el Feed (`/feed`) cada 5-8 publicaciones y en Búsqueda/Explorar (`/search`) cada 10 publicaciones.
+- **Rebranding y Optimización SEO Integral (`Klozet`)**:
+  - **Nombre Único Oficial**: Se unificó toda la identidad en **Klozet**, eliminando las referencias anteriores a "Closet & Klozet".
+  - **Título de Pestaña**: Configurado a `"Klozet"` por defecto y plantilla `"%s | Klozet"`.
+  - **Keywords de Alto Tráfico**: Indexación enfocada en términos clave como *Klozet*, *armario digital*, *armario cápsula*, *pinterest de moda*, *combinar ropa con IA*, *estilista personal IA*, *outfits con mi ropa*, *Kloe IA*, *streetwear y tendencias*, *lookbook digital*.
+  - **Estructura JSON-LD**: Esquemas actualizados de `WebApplication`, `Organization` y `WebSite` con dominio base oficial `https://klozet.es` y metadatos de OpenGraph y Twitter Card optimizados.
+  - **Sitemap y Robots**: `sitemap.ts`, `robots.ts` y `manifest.json` actualizados con la nueva descripción y palabras clave oficiales.
+
+
