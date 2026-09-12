@@ -7,13 +7,13 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
 
 const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://klozet.es";
-const SITE_TITLE = "Klozet | Tu Armario Digital, Outfits con IA & Pinterest de Moda";
-const SITE_DESCRIPTION = "Klozet es la plataforma de moda, armario digital inteligente y red social de outfits número 1. Digitaliza tus prendas, organiza tu armario cápsula, descubre inspiración de looks estilo Pinterest, crea combinaciones automáticas con IA y recibe estilismo 24/7 con Kloe.";
+const SITE_TITLE = "Klozet — La Red Social de Moda, Inspo Outfits & Armario Virtual con IA";
+const SITE_DESCRIPTION = "Únete a Klozet, la red social de moda donde compartir tus outfits diarios, descubrir inspiración estilo Pinterest, digitalizar tu ropa y crear looks con estilismo IA.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Klozet",
+    default: "Klozet | Red Social de Moda, Outfits & Inspo",
     template: "%s | Klozet"
   },
   description: SITE_DESCRIPTION,
@@ -21,30 +21,30 @@ export const metadata: Metadata = {
   authors: [{ name: "Klozet Team", url: SITE_URL }],
   generator: "Next.js",
   keywords: [
+    "red social de moda",
+    "red social de outfits",
+    "red social de ropa",
+    "comunidad de moda",
+    "compartir outfits",
+    "inspo outfits",
+    "pinterest de moda",
+    "pinterest de outfits",
+    "ootd espana",
+    "outfit of the day app",
     "Klozet",
     "klozet app",
-    "klozet moda",
-    "armario digital",
+    "klozet red social",
+    "streetwear espana",
+    "lookbook digital",
+    "tendencias de moda",
     "armario virtual",
-    "organizador de armario",
-    "armario capsula",
-    "pinterest de moda",
-    "pinterest looks",
-    "combinar ropa",
+    "armario digital",
     "combinar ropa con IA",
-    "generador de outfits con inteligencia artificial",
-    "outfits con mi ropa",
     "estilista personal IA",
     "Kloe IA",
-    "red social de moda",
-    "crear looks",
-    "inspo outfits",
-    "streetwear y tendencias",
-    "lookbook digital",
-    "digital wardrobe",
-    "fashion AI app",
-    "outfit planner",
-    "colorimetria y morfologia"
+    "fashion social network",
+    "fashion community",
+    "digital closet"
   ],
   referrer: "origin-when-cross-origin",
   creator: "Klozet",
@@ -61,13 +61,13 @@ export const metadata: Metadata = {
     title: SITE_TITLE,
     description: SITE_DESCRIPTION,
     url: SITE_URL,
-    siteName: "Klozet",
+    siteName: "Klozet — Red Social de Moda",
     images: [
       {
         url: "/klozet-logo-dark.png",
         width: 1200,
         height: 630,
-        alt: "Klozet - Tu Armario Digital, Outfits con Inteligencia Artificial y Red Social de Moda"
+        alt: "Klozet - La Red Social de Moda, Inspo Outfits y Armario Virtual con IA"
       }
     ],
     locale: "es_ES",
@@ -130,10 +130,10 @@ export default function RootLayout({
       {
         "@type": "WebApplication",
         "@id": `${SITE_URL}/#app`,
-        "name": "Klozet",
-        "alternateName": ["Klozet App", "Klozet Moda", "Klozet Armario Digital", "Klozet AI"],
+        "name": "Klozet — Red Social de Moda",
+        "alternateName": ["Klozet", "Klozet App", "Klozet Fashion Community", "Klozet Red Social", "Klozet AI"],
         "url": SITE_URL,
-        "applicationCategory": "LifestyleApplication",
+        "applicationCategory": "SocialNetworkingApplication",
         "operatingSystem": "All",
         "browserRequirements": "Requires JavaScript. Requires HTML5.",
         "description": SITE_DESCRIPTION,
@@ -154,12 +154,12 @@ export default function RootLayout({
           "worstRating": "1"
         },
         "featureList": [
-          "Generador de outfits inteligentes con IA",
-          "Red social para compartir y descubrir looks",
-          "Armario virtual con eliminación automática de fondos",
-          "Asistente y estilista de moda Kloe disponible 24/7",
-          "Calendario inteligente de outfits",
-          "Lienzo interactivo para diseñar y personalizar looks"
+          "Red social para compartir outfits y descubrir inspiración de moda",
+          "Feed y buscador estilo Pinterest con filtros por estilo y género",
+          "Armario virtual inteligente con eliminación automática de fondos",
+          "Generador interactivo de looks con asesoría IA Kloe 24/7",
+          "Perfiles de moda, seguidores y guardado de looks en carpetas",
+          "Interacción social con likes, comentarios y etiquetas de prendas"
         ]
       },
       {
@@ -181,8 +181,8 @@ export default function RootLayout({
         "@type": "WebSite",
         "@id": `${SITE_URL}/#website`,
         "url": SITE_URL,
-        "name": "Klozet",
-        "description": "La red social de moda y armario virtual con inteligencia artificial",
+        "name": "Klozet — Red Social de Moda",
+        "description": "La comunidad y red social de moda para compartir outfits, inspirarse y organizar tu armario con inteligencia artificial.",
         "publisher": {
           "@id": `${SITE_URL}/#organization`
         },
