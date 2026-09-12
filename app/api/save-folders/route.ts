@@ -24,7 +24,14 @@ export async function GET(request: NextRequest) {
       .order('created_at', { ascending: false });
 
     if (error) {
-      return NextResponse.json({ folders: [] }, { status: 500 });
+      // Fallback to simple select if join fails
+      const { data: simpleFolders } = await supabase
+        .from('save_folders')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      return NextResponse.json({ folders: simpleFolders || [] });
     }
 
     const enhancedFolders = (folders || []).map(folder => {

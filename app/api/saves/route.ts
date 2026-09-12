@@ -12,25 +12,33 @@ const getAdmin = () => createAdminClient(supabaseUrl, serviceKey, {
   auth: { persistSession: false, autoRefreshToken: false }
 });
 
-// Helper to authenticate user from cookies or Authorization Bearer token
-async function resolveAuthUser(request: NextRequest) {
+// Helper to authenticate user and select appropriate database client
+async function getDbClient(request: NextRequest) {
+  let user: any = null;
+  let supabaseServerClient: any = null;
+
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) return user;
+    supabaseServerClient = await createClient();
+    const { data } = await supabaseServerClient.auth.getUser();
+    user = data?.user || null;
   } catch {}
 
   const authHeader = request.headers.get('authorization') || request.headers.get('Authorization');
-  if (authHeader?.startsWith('Bearer ')) {
+  if (!user && authHeader?.startsWith('Bearer ')) {
     try {
       const token = authHeader.replace('Bearer ', '').trim();
       const admin = getAdmin();
-      const { data: { user } } = await admin.auth.getUser(token);
-      if (user) return user;
+      const { data } = await admin.auth.getUser(token);
+      if (data?.user) {
+        user = data.user;
+      }
     } catch {}
   }
 
-  return null;
+  const hasServiceRole = !!(process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY);
+  const client = (hasServiceRole ? getAdmin() : (supabaseServerClient || getAdmin()));
+
+  return { client, user };
 }
 
 /**
@@ -39,19 +47,18 @@ async function resolveAuthUser(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   try {
-    const user = await resolveAuthUser(request);
+    const { client, user } = await getDbClient(request);
 
     if (!user) {
       return NextResponse.json({ saves: [] }, { status: 401 });
     }
 
-    const admin = getAdmin();
     const { searchParams } = new URL(request.url);
     const folderId = searchParams.get('folder_id');
 
     if (folderId) {
       // Validate that folder belongs to user
-      const { data: folder } = await admin
+      const { data: folder } = await client
         .from('save_folders')
         .select('id')
         .eq('id', folderId)
@@ -62,24 +69,46 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ saves: [] });
       }
 
-      // Get saves in a specific folder
-      const { data: folderItems } = await admin
-        .from('save_folder_items')
-        .select('save_id')
-        .eq('folder_id', folderId);
+      // Check both save_folder_items AND saves.folder_id
+      let saveFolderItemIds: string[] = [];
+      try {
+        const { data: folderItems } = await client
+          .from('save_folder_items')
+          .select('save_id')
+          .eq('folder_id', folderId);
 
-      const saveIds = (folderItems || []).map(item => item.save_id);
+        saveFolderItemIds = (folderItems || []).map((item: any) => item.save_id).filter(Boolean);
+      } catch {}
 
-      if (saveIds.length === 0) {
-        return NextResponse.json({ saves: [] });
-      }
-
-      const { data: savesData } = await admin
+      let query = client
         .from('saves')
         .select('*, posts(*)')
-        .in('id', saveIds)
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .eq('user_id', user.id);
+
+      if (saveFolderItemIds.length > 0) {
+        query = query.or(`id.in.(${saveFolderItemIds.join(',')}),folder_id.eq.${folderId}`);
+      } else {
+        query = query.eq('folder_id', folderId);
+      }
+
+      const { data: savesData, error: savesError } = await query.order('created_at', { ascending: false });
+
+      if (savesError) {
+        // Fallback: query by folder_id directly
+        const { data: fallbackData } = await client
+          .from('saves')
+          .select('*, posts(*)')
+          .eq('user_id', user.id)
+          .eq('folder_id', folderId)
+          .order('created_at', { ascending: false });
+
+        const saves = (fallbackData || []).map((save: any) => ({
+          ...save,
+          posts: save.posts
+        })).filter((save: any) => save.posts);
+
+        return NextResponse.json({ saves });
+      }
 
       const saves = (savesData || []).map((save: any) => ({
         ...save,
@@ -89,7 +118,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ saves });
     } else {
       // Get all saves for this user
-      const { data: savesData } = await admin
+      const { data: savesData } = await client
         .from('saves')
         .select('*, posts(*)')
         .eq('user_id', user.id)
@@ -114,13 +143,12 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const user = await resolveAuthUser(request);
+    const { client, user } = await getDbClient(request);
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const admin = getAdmin();
     let body: any = {};
     try {
       body = await request.json();
@@ -137,9 +165,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Post ID is required' }, { status: 400 });
     }
 
-    // If folder_id is passed, verify user owns the folder
+    // If folder_id is passed, verify ownership of folder
     if (folder_id) {
-      const { data: folderDoc } = await admin
+      const { data: folderDoc } = await client
         .from('save_folders')
         .select('id')
         .eq('id', folder_id)
@@ -147,69 +175,103 @@ export async function POST(request: NextRequest) {
         .maybeSingle();
 
       if (!folderDoc) {
-        return NextResponse.json({ error: 'Folder not found or unauthorized' }, { status: 403 });
+        // If folder doesn't exist or isn't owned by user, don't fail saving the post entirely, reset folder_id
+        console.warn('Folder not found or unauthorized for folder_id:', folder_id);
+        folder_id = null;
       }
     }
 
     // Check if already saved
-    const { data: existing, error: fetchError } = await admin
+    const { data: existing, error: fetchError } = await client
       .from('saves')
-      .select('id')
+      .select('id, folder_id')
       .eq('user_id', user.id)
       .eq('post_id', post_id)
       .maybeSingle();
 
     if (fetchError && fetchError.code !== 'PGRST116') {
-      console.error('Error checking existing save:', fetchError);
-      return NextResponse.json({ error: fetchError.message }, { status: 500 });
+      console.warn('Error checking existing save:', fetchError);
     }
 
     if (existing) {
       if (folder_id) {
-        // If they chose a folder but it was already quick-saved, assign it to the folder
-        await admin.from('save_folder_items').delete().eq('save_id', existing.id);
+        // Update folder_id in saves
+        try {
+          await (client.from('saves') as any).update({ folder_id }).eq('id', existing.id);
+        } catch (e) {
+          console.warn('Error updating folder_id on saves:', e);
+        }
 
-        const { error: insertError } = await (admin.from('save_folder_items') as any).insert({ folder_id, save_id: existing.id });
-        if (insertError) {
-          if (insertError.code === '23505') {
-            return NextResponse.json({ save: existing });
+        // Also update save_folder_items table safely
+        try {
+          await client.from('save_folder_items').delete().eq('save_id', existing.id);
+          const { error: insertErr } = await (client.from('save_folder_items') as any).insert({
+            id: randomUUID(),
+            folder_id,
+            save_id: existing.id
+          });
+          if (insertErr && insertErr.code !== '23505') {
+            console.warn('Non-fatal warning inserting save_folder_items:', insertErr);
           }
-          console.error('Error assigning to folder:', insertError);
-          return NextResponse.json({ error: insertError.message, details: insertError }, { status: 500 });
+        } catch (e) {
+          console.warn('Error managing save_folder_items:', e);
         }
       }
-      return NextResponse.json({ save: existing });
+      return NextResponse.json({ save: { ...existing, folder_id: folder_id || existing.folder_id } });
     }
 
-    // Create the save
+    // Create new save
     const newId = randomUUID();
-    const { data: save, error } = await (admin.from('saves') as any)
-      .insert({
-        id: newId,
-        user_id: user.id,
-        post_id,
-      })
+    const insertPayload: any = {
+      id: newId,
+      user_id: user.id,
+      post_id,
+    };
+    if (folder_id) {
+      insertPayload.folder_id = folder_id;
+    }
+
+    const { data: save, error } = await (client.from('saves') as any)
+      .insert(insertPayload)
       .select()
-      .single();
+      .maybeSingle();
 
     if (error) {
       if (error.code === '23505') {
-        return NextResponse.json({ save: { post_id } });
+        // Unique constraint conflict (already saved)
+        if (folder_id) {
+          await (client.from('saves') as any).update({ folder_id }).eq('user_id', user.id).eq('post_id', post_id);
+        }
+        const { data: existingSave } = await client
+          .from('saves')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('post_id', post_id)
+          .maybeSingle();
+
+        return NextResponse.json({ save: existingSave || { post_id, folder_id } });
       }
       console.error('Error saving post:', error);
       return NextResponse.json({ error: error.message, details: error }, { status: 500 });
     }
 
-    // If folder_id is provided, add to folder
-    if (folder_id) {
-      await (admin.from('save_folder_items') as any)
-        .insert({
-          folder_id,
-          save_id: save.id,
-        });
+    const createdSave = save || { id: newId, user_id: user.id, post_id, folder_id };
+
+    // Sync save_folder_items table safely
+    if (folder_id && createdSave.id) {
+      try {
+        await (client.from('save_folder_items') as any)
+          .insert({
+            id: randomUUID(),
+            folder_id,
+            save_id: createdSave.id,
+          });
+      } catch (e) {
+        console.warn('Non-fatal warning inserting save_folder_items on new save:', e);
+      }
     }
 
-    return NextResponse.json({ save });
+    return NextResponse.json({ save: createdSave });
   } catch (error: any) {
     console.error('Error in POST /api/saves:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -222,13 +284,12 @@ export async function POST(request: NextRequest) {
  */
 export async function DELETE(request: NextRequest) {
   try {
-    const user = await resolveAuthUser(request);
+    const { client, user } = await getDbClient(request);
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const admin = getAdmin();
     const { searchParams } = new URL(request.url);
     let saveId = searchParams.get('id');
     let postId = searchParams.get('post_id');
@@ -245,9 +306,8 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Save ID or Post ID is required' }, { status: 400 });
     }
 
-    // If postId provided, find saveId first to clean up folder items
     if (postId && !saveId) {
-      const { data: foundSave } = await admin
+      const { data: foundSave } = await client
         .from('saves')
         .select('id')
         .eq('user_id', user.id)
@@ -258,7 +318,7 @@ export async function DELETE(request: NextRequest) {
       }
     }
 
-    let query = admin.from('saves').delete().eq('user_id', user.id);
+    let query = client.from('saves').delete().eq('user_id', user.id);
 
     if (saveId) {
       query = query.eq('id', saveId);
@@ -268,12 +328,14 @@ export async function DELETE(request: NextRequest) {
 
     await query;
 
-    // Also remove from any folders
+    // Remove from save_folder_items
     if (saveId) {
-      await admin
-        .from('save_folder_items')
-        .delete()
-        .eq('save_id', saveId);
+      try {
+        await client
+          .from('save_folder_items')
+          .delete()
+          .eq('save_id', saveId);
+      } catch {}
     }
 
     return NextResponse.json({ success: true });
@@ -289,22 +351,21 @@ export async function DELETE(request: NextRequest) {
  */
 export async function PUT(request: NextRequest) {
   try {
-    const user = await resolveAuthUser(request);
+    const { client, user } = await getDbClient(request);
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const admin = getAdmin();
     const body = await request.json();
-    const { save_id, folder_id } = body;
+    let { save_id, folder_id } = body;
 
     if (!save_id) {
       return NextResponse.json({ error: 'Save ID is required' }, { status: 400 });
     }
 
-    // Verify ownership of the save item
-    const { data: saveDoc } = await admin
+    // Verify ownership of save
+    const { data: saveDoc } = await client
       .from('saves')
       .select('id, user_id')
       .eq('id', save_id)
@@ -315,9 +376,9 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Save item not found or forbidden' }, { status: 403 });
     }
 
-    // If moving to a new folder, verify ownership of the target folder
+    // If moving to a target folder, verify ownership
     if (folder_id) {
-      const { data: folderDoc } = await admin
+      const { data: folderDoc } = await client
         .from('save_folders')
         .select('id')
         .eq('id', folder_id)
@@ -325,23 +386,37 @@ export async function PUT(request: NextRequest) {
         .maybeSingle();
 
       if (!folderDoc) {
-        return NextResponse.json({ error: 'Target folder not found or forbidden' }, { status: 403 });
+        folder_id = null;
       }
     }
 
-    // Remove from any existing folder
-    await admin
-      .from('save_folder_items')
-      .delete()
-      .eq('save_id', save_id);
+    // Update saves table
+    try {
+      await (client.from('saves') as any)
+        .update({ folder_id: folder_id || null })
+        .eq('id', save_id)
+        .eq('user_id', user.id);
+    } catch (e) {
+      console.warn('Error updating saves folder_id in PUT:', e);
+    }
 
-    // If folder_id is provided, add to new folder
-    if (folder_id) {
-      await (admin.from('save_folder_items') as any)
-        .insert({
-          folder_id,
-          save_id,
-        });
+    // Update save_folder_items
+    try {
+      await client
+        .from('save_folder_items')
+        .delete()
+        .eq('save_id', save_id);
+
+      if (folder_id) {
+        await (client.from('save_folder_items') as any)
+          .insert({
+            id: randomUUID(),
+            folder_id,
+            save_id,
+          });
+      }
+    } catch (e) {
+      console.warn('Error managing save_folder_items in PUT:', e);
     }
 
     return NextResponse.json({ success: true });

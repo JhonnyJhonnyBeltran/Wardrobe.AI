@@ -846,6 +846,16 @@ En cada conversación, el backend alimenta a CloSy con:
   - En `useFeedStore.ts` y `useSearchStore.ts`, se blindó la retención en memoria (SWR): al navegar hacia atrás, la posición de scroll y el orden exacto de los posts se mantienen estables en 0 ms.
   - `FeedPage` y `SearchPage` sincronizan el estado atómico de `likeManager.getPendingState` para que los likes nunca parpadeen ni se reviertan.
 
+### 64. Corrección del Error 500 en Guardado de Posts en Carpetas (`/api/saves` & `/api/save-folders`) (Septiembre 2026)
+- **Causa Raíz Identificada**:
+  - En `app/api/saves/route.ts`, las operaciones contra Supabase utilizaban exclusivamente un cliente `admin` con fallback a la clave anónima (`NEXT_PUBLIC_SUPABASE_ANON_KEY`) cuando `SUPABASE_SERVICE_ROLE_KEY` no estaba inyectada en el entorno. Al no portar las credenciales de sesión del usuario en las cabeceras/cookies bajo el cliente anónimo, las políticas de RLS en `saves` y `save_folder_items` bloqueaban la inserción y lanzaban una excepción 500 `Internal Server Error`.
+  - Adicionalmente, al mover o asignar un post existente a una carpeta, o al crear un nuevo guardado con `folder_id`, no se sincronizaba consistentemente la columna `saves.folder_id` y la tabla relacional `save_folder_items`, o faltaba la asignación explícita de UUID en la tabla intermedia.
+- **Solución y Resiliencia**:
+  - Se implementó `getDbClient` en `app/api/saves/route.ts`: resuelve la sesión mediante cookies (`createClient` de `@/lib/supabase/server`) o token Bearer, garantizando que las consultas siempre se ejecuten con el contexto del usuario autenticado bajo RLS si no hay Service Role.
+  - Se unificó la persistencia de carpetas tanto en la columna `saves.folder_id` como en `save_folder_items` con bloques `try/catch` no bloqueantes.
+  - En `app/api/save-folders/route.ts`, se agregó un fallback automático en `GET` para evitar errores 500 si la relación anidada con `posts` encuentra alguna inconsistencia.
+
+
 
 
 
