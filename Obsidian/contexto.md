@@ -810,5 +810,11 @@ En cada conversación, el backend alimenta a CloSy con:
 - **Supresión Global de Excepciones de Extensiones / Performance Timeline (`RootLayoutClient.tsx`)**:
   - Se implementó un capturador global de errores en `RootLayoutClient.tsx` que intercepta y silencia excepciones originadas por extensiones del navegador o perfiles de rendimiento (`reportAllChanges`, `Cannot read properties of undefined (reading 'startTime')`), garantizando una navegación fluida y sin bloqueos al dar/quitar me gusta.
 
+### 59. Inserción Oficial del Script de Google AdSense (`ca-pub-4628313000953034`) (Septiembre 2026)
+- **Etiqueta Oficial de Google AdSense en `<head>` (`app/layout.tsx`)**:
+  - Se integró el script asíncrono oficial de AdSense con el identificador de cliente del usuario (`ca-pub-4628313000953034`) y atributo `crossOrigin="anonymous"`.
+  - Se configuró como valor por defecto en `SponsoredAdCard.tsx` para vincular de forma automática los bloques de anuncios nativos en el Feed y en la Búsqueda.
+
+
 
 

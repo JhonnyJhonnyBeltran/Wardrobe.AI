@@ -67,7 +67,7 @@ export default function SponsoredAdCard({
 }: SponsoredAdCardProps) {
   const [sponsorIndex, setSponsorIndex] = useState(0);
   const [googleAdLoaded, setGoogleAdLoaded] = useState(false);
-  const googleAdsClient = process.env.NEXT_PUBLIC_GOOGLE_ADS_CLIENT_ID;
+  const googleAdsClient = process.env.NEXT_PUBLIC_GOOGLE_ADS_CLIENT_ID || 'ca-pub-4628313000953034';
 
   useEffect(() => {
     // Select deterministic sponsor based on index to prevent layout shift
