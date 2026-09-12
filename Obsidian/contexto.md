@@ -855,6 +855,18 @@ En cada conversación, el backend alimenta a CloSy con:
   - Se unificó la persistencia de carpetas tanto en la columna `saves.folder_id` como en `save_folder_items` con bloques `try/catch` no bloqueantes.
   - En `app/api/save-folders/route.ts`, se agregó un fallback automático en `GET` para evitar errores 500 si la relación anidada con `posts` encuentra alguna inconsistencia.
 
+### 65. Integración Móvil de Kloe sobre TabBar y Motor de Avatar Virtual con Fondo Blanco (Septiembre 2026)
+- **Ergonomía y Espaciado de Kloe en Móvil (`/closet/kloe`)**:
+  - Se corrigió el posicionamiento de la barra de chat flotante en dispositivos móviles: ahora se eleva exactamente sobre la barra de navegación inferior (`bottom-[calc(72px+env(safe-area-inset-bottom,0px))] md:bottom-0` con `z-30`), evitando cualquier solapamiento con el TabBar de 72px.
+  - Se incrementó el padding inferior del scroll de mensajes a `pb-56 md:pb-36`, permitiendo deslizar y visualizar la totalidad de las respuestas, tarjetas de prendas y botones de acción sin bloqueos visuales.
+- **Calibración y Edición del Avatar Virtual (`AvatarCalibrationModal.tsx` & `/api/closy/generate-avatar`)**:
+  - **Inspección y Reemplazo**: El modal de calibración permite ver las miniaturas de las 6 fotos de referencia (3 de rostro y 3 de cuerpo entero) directamente en cada slot. El usuario puede pulsar cualquier slot existente para sustituir la imagen o borrarla con el icono de papelera y subir una nueva en cualquier momento.
+  - **Autenticación Resiliente**: El endpoint `/api/closy/generate-avatar` resuelve la identidad del usuario tanto por cookies de servidor como por cabeceras `Authorization: Bearer`, garantizando ejecución instantánea sin errores 401.
+- **Fondo Blanco de Estudio Fotográfico por Defecto**:
+  - Se instruyó formalmente tanto a Kloe en su System Prompt (`/api/closy/chat`) como en las directivas de generación del avatar (`/api/closy/generate-avatar`) para que todos los modelados de outfits virtuales se conciban, procesen y muestren SIEMPRE sobre fondo blanco puro de estudio fotográfico profesional (`#FFFFFF`), con iluminación de catálogo de alta definición y sin fondos distractores.
+
+
+
 
 
 

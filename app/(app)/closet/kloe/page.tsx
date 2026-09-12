@@ -780,7 +780,7 @@ export default function KloePage() {
       </header>
 
       {/* Messages Container */}
-      <div className="flex-1 overflow-y-auto px-4 md:px-6 pt-20 pb-44 md:pb-36 space-y-6">
+      <div className="flex-1 overflow-y-auto px-4 md:px-6 pt-20 pb-56 md:pb-36 space-y-6">
         
         {/* Free Tier Upgrade Banner */}
         {!isPremium() && (
@@ -1057,7 +1057,7 @@ export default function KloePage() {
       </div>
 
       {/* Floating Bottom Input Bar or Locked Premium Bar - Fixed Apple HIG style */}
-      <div className="fixed bottom-0 left-0 right-0 pointer-events-none w-full max-w-3xl md:max-w-4xl mx-auto px-4 md:px-6 pb-[calc(env(safe-area-inset-bottom,0px)+16px)] md:pb-6 pt-2 z-20 flex flex-col items-center">
+      <div className="fixed bottom-[calc(72px+env(safe-area-inset-bottom,0px))] md:bottom-0 left-0 right-0 pointer-events-none w-full max-w-3xl md:max-w-4xl mx-auto px-4 md:px-6 pb-2 md:pb-6 pt-2 z-30 flex flex-col items-center">
         
         {/* Floating Attachment Cards Strip */}
         <AnimatePresence>
@@ -1584,13 +1584,16 @@ export default function KloePage() {
                 </p>
               )}
 
-              {/* Avatar Render */}
-              <div className="relative aspect-[3/4] w-full rounded-2xl overflow-hidden shadow-inner bg-[var(--background-secondary)] mb-4 border border-[var(--border-color)]">
+              {/* Avatar Render (Fondo Blanco de Estudio Fotográfico) */}
+              <div className="relative aspect-[3/4] w-full rounded-2xl overflow-hidden shadow-sm bg-white mb-4 border border-[var(--border-color)] flex items-center justify-center">
                 <img
                   src={tryOnResult.avatarUrl}
-                  alt="Avatar Virtual"
-                  className="w-full h-full object-cover"
+                  alt="Avatar Virtual con Fondo Blanco"
+                  className="w-full h-full object-contain bg-white"
                 />
+                <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded-md bg-black/60 backdrop-blur-xs text-white text-[9px] font-medium">
+                  Fondo Blanco de Estudio
+                </div>
               </div>
 
               <button
