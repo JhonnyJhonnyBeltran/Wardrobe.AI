@@ -26,6 +26,46 @@ interface ProductModalProps {
     onDelete?: (id: string) => void;
 }
 
+const CATEGORY_NAMES: Record<string, string> = {
+    top: 'Camiseta / Top',
+    shirt: 'Camisa',
+    tshirt: 'Camiseta',
+    't-shirt': 'Camiseta',
+    sweater: 'Jersey',
+    jersey: 'Jersey',
+    hoodie: 'Sudadera',
+    sweatshirt: 'Sudadera',
+    bottom: 'Pantalón',
+    pants: 'Pantalón',
+    jeans: 'Vaqueros',
+    shorts: 'Shorts',
+    skirt: 'Falda',
+    dress: 'Vestido',
+    jacket: 'Chaqueta / Cazadora',
+    outerwear: 'Abrigo / Chaqueta',
+    coat: 'Abrigo',
+    shoes: 'Calzado / Zapatillas',
+    sneakers: 'Zapatillas',
+    boots: 'Botas',
+    sandals: 'Sandalias',
+    accessory: 'Accesorio',
+    accessories: 'Accesorios',
+    headwear: 'Gorra / Sombrero',
+    hat: 'Sombrero',
+    cap: 'Gorra',
+    bag: 'Bolso / Mochila',
+    backpack: 'Mochila',
+    jewelry: 'Joyería',
+    sunglasses: 'Gafas de sol',
+    other: 'Otro'
+};
+
+export const formatGarmentType = (val?: string): string => {
+    if (!val) return 'Prenda';
+    const key = val.trim().toLowerCase();
+    return CATEGORY_NAMES[key] || val.charAt(0).toUpperCase() + val.slice(1);
+};
+
 export default function ProductModal({ item, isOpen, onClose, isFavorite = false, onFavoriteToggle, onEdit, onDelete }: ProductModalProps) {
     // Cache last valid item so content persists during exit animation
     const lastItemRef = useRef(item);
@@ -40,6 +80,8 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
 
     // Get the store link from either buyLink or sourceUrl
     const storeLink = displayItem.buyLink || displayItem.sourceUrl;
+    const rawType = displayItem.type || (displayItem as any).category || (displayItem as any).clothing_type || '';
+    const displayType = formatGarmentType(rawType);
 
     const handleViewInStore = () => {
         if (storeLink) {
@@ -102,8 +144,8 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
                                         alt={displayItem.name}
                                         className="w-full h-full object-contain"
                                         onError={(e) => {
-                                            const target = e.target as HTMLImageElement;
-                                            target.style.display = 'none';
+                                             const target = e.target as HTMLImageElement;
+                                             target.style.display = 'none';
                                         }}
                                     />
                                 ) : (
@@ -161,7 +203,7 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
                                         <Shirt className="w-4 h-4 text-[var(--brand-pink)]" />
                                         <div>
                                             <p className="text-xs text-[var(--foreground-tertiary)]">Tipo</p>
-                                            <p className="text-sm font-medium text-[var(--foreground)] capitalize">{displayItem.type}</p>
+                                            <p className="text-sm font-medium text-[var(--foreground)] capitalize">{displayType}</p>
                                         </div>
                                     </div>
 

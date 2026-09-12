@@ -828,9 +828,14 @@ En cada conversación, el backend alimenta a CloSy con:
 - **Interactividad Directa en el Lienzo (`InteractiveOutfitViewer.tsx` y `post/[id]/page.tsx`)**:
   - Se corrigió la generación de diapositivas en posts (`getSlides`): cuando un post incluye un outfit, la vista principal carga directamente el lienzo interactivo (`InteractiveOutfitViewer`) en lugar de duplicar una diapositiva estática no interactiva.
   - `InteractiveOutfitViewer` ahora normaliza prendas y posiciones desde cualquier estructura (`items`, `outfit_items`, `clothing_items`, `garments`), permitiendo hacer clic/tocar cualquier prenda tanto en publicaciones propias como de otros usuarios para abrir de inmediato su ficha técnica (`ProductModal`).
-- **Eliminación del Botón de Favorito / Like en Prendas de Posts (`ClothingItem.tsx`)**:
-  - Se restringió el botón de corazón flotante para que únicamente se muestre en vistas privadas de gestión (como el propio armario en `/closet` cuando se pasa `onFavoriteToggle`).
-  - En las publicaciones (`/post/[id]`), vistas de outfits (`/outfit/[id]`, `/profile/[id]/outfit/[outfitId]`) y explorador, las prendas se muestran limpias sin el botón de like superpuesto.
+### 62. Resolución y Formateo Inteligente del Tipo de Prenda en Modales (`ProductModal.tsx`) (Septiembre 2026)
+- **Causa Raíz**:
+  - En la base de datos de Supabase, la tipología de las prendas se almacena en el campo `category` (ej: `top`, `bottom`, `shoes`, `jacket`, `dress`, `accessory`).
+  - El componente `ProductModal` esperaba la propiedad `displayItem.type`. Al abrir una prenda desde el visor de posts o outfits, `type` llegaba como `undefined` o sin traducir.
+- **Solución y Normalización**:
+  - Se implementó la función universal `formatGarmentType` en `ProductModal.tsx` con diccionario en español (`Camiseta / Top`, `Camisa`, `Pantalón`, `Vaqueros`, `Chaqueta / Cazadora`, `Calzado / Zapatillas`, `Vestido`, `Sudadera`, etc.).
+  - Se resolvió la extracción en cascada `displayItem.type || displayItem.category || displayItem.clothing_type`, garantizando que siempre se muestre el tipo de prenda claro y bien formateado tanto en publicaciones propias como de otros usuarios.
+
 
 
 
