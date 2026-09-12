@@ -731,5 +731,15 @@ En cada conversación, el backend alimenta a CloSy con:
     4. Realiza un recálculo exacto del número total real de filas en `public.likes` para ese post (`select count: exact`) y actualiza `posts.likes_count` atómicamente con `supabaseAdmin`.
     5. Devuelve `{ success: true, isLiked: false, likes_count: N }`.
   - Mismo comportamiento simétrico en `POST /api/likes`, garantizando que el contador en base de datos nunca quede desfasado ni dependa de triggers no ejecutados.
-- **Sincronización en Cliente**:
-  - `PostCard.tsx`, `app/(app)/post/[id]/page.tsx` y `PostPreviewModal.tsx` sincronizan el estado visual optimista y los stores globales (`useFeedStore`, `useSearchStore`) reflejando el estado real en tiempo real.
+### 52. Erradicación del Error 500 en `/api/posts/[id]` y Consultas Directas Resilientes (Septiembre 2026)
+- **Causa Raíz del Error 500**:
+  - Las consultas PostgREST con uniones anidadas de 3 niveles (`posts` $\rightarrow$ `outfits` $\rightarrow$ `outfit_items` $\rightarrow$ `clothing_items`) fallaban en producción con `500 Internal Server Error` debido a problemas de caché de esquema o ambigüedades en nombres de claves foráneas entre `outfit_items` y `clothing_items`.
+- **Arquitectura de Consultas Directas por Fases**:
+  - Se reestructuró `app/api/posts/[id]/route.ts` eliminando las uniones anidadas frágiles y sustituyéndolas por consultas independientes y directas con `supabaseAdmin`:
+    1. Lectura simple y directa del post en `posts` por `id`.
+    2. Consulta del perfil del autor en `profiles` por `user_id`.
+    3. Consulta directa del outfit en `outfits` por `outfit_id` o `image_url`.
+    4. Consulta directa de los elementos en `outfit_items` por `outfit_id`.
+    5. Consulta por lote (`.in('id', clothingIds)`) de las prendas reales en `clothing_items`.
+    6. Mapeo y ensamblado del payload completo en memoria (`outfit`, `clothing_items`, `garments`).
+  - Imposibilidad de error de esquema de PostgREST, garantizando siempre respuesta `200 OK` con todos los datos y prendas del look disponibles para cualquier usuario.
