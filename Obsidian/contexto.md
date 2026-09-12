@@ -882,6 +882,14 @@ En cada conversación, el backend alimenta a CloSy con:
   - **Hidratación y Caché Inmediata (`localStorage`)**: `AvatarCalibrationModal.tsx` carga de inmediato las miniaturas desde el almacenamiento local sin parpadeos ni esperas y las sincroniza en segundo plano con el servidor.
   - **Generación de Look en Avatar Virtual (`/api/closy/generate-avatar`)**: Lee las fotos de calibración tanto de las columnas directas como del respaldo JSONB o del payload enviado por el cliente, permitiendo probar cualquier look con IA sobre fondo blanco de estudio.
 
+### 68. Rediseño de Encabezado y Navegación en Vista de Outfits (`/profile/[id]/outfit/[outfitId]` y `/outfit/[id]`) (Septiembre 2026)
+- **Eliminación del Bloque "Creador del look"**:
+  - Se eliminó el texto redundante y antiestético *"Creador del look"*, limpiando la columna de detalles para que el foco visual recaiga directamente en el título del outfit, ocasión y prendas.
+- **Nuevo Encabezado Sticky con Botón de Atrás y Perfil Integrado**:
+  - Se integró un encabezado superior estilo Apple Glass (`backdrop-blur-xl`, `h-16`) coherente con el visor de posts de Klozet:
+    - **Botón de Atrás Ergonómico**: Icono `ArrowLeft` con navegación fluida (`router.back()` o fallback al perfil del autor).
+    - **Identidad del Creador**: Foto de perfil (`Avatar`) y `@username` clicable que enlaza directamente a su perfil de usuario.
+
 
 
 

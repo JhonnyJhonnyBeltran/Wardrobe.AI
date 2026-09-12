@@ -231,19 +231,40 @@ export default function OutfitDetailPage() {
 
   const occInfo = getOccasionInfo(outfit.occasion);
   const OccIcon = occInfo ? occInfo.icon : null;
+  const backUrl = '/feed';
 
   return (
-    <div className="min-h-screen bg-[var(--background)]">
-      {/* Floating Back Button */}
-      <button
-        onClick={() => window.history.length > 2 ? router.back() : router.push('/feed')}
-        className="fixed top-4 left-4 z-40 w-10 h-10 bg-[var(--brand-pink)] rounded-full flex items-center justify-center shadow-lg hover:scale-105 active:scale-95 transition-transform"
-        aria-label="Volver"
-      >
-        <ArrowLeft className="w-5 h-5 text-white" />
-      </button>
+    <div className="min-h-screen bg-[var(--background)] flex flex-col">
+      {/* STICKY HEADER with Back Button & Creator Profile */}
+      <header className="sticky top-0 z-50 w-full bg-[var(--background)]/85 backdrop-blur-xl border-b border-[var(--border-color)]/50 pt-safe h-16 flex items-center justify-between px-4 max-w-7xl mx-auto">
+        <div className="flex items-center gap-3 min-w-0">
+          <button
+            onClick={() => window.history.length > 2 ? router.back() : router.push(backUrl)}
+            className="p-2 -ml-2 rounded-full text-[var(--foreground)] hover:text-[var(--brand-pink)] transition-colors active:scale-90 flex items-center justify-center cursor-pointer"
+            aria-label="Volver"
+          >
+            <ArrowLeft className="w-6 h-6" />
+          </button>
 
-      <main className="w-full flex flex-col md:flex-row pb-24 md:pb-0 md:h-[calc(100vh-56px)] md:justify-center overflow-x-hidden md:overflow-hidden bg-[var(--background)]">
+          {author?.username && (
+            <Link 
+              href={user?.id === author.id ? '/profile' : `/profile/${author.username}`}
+              className="flex items-center gap-2.5 select-none group min-w-0"
+            >
+              <Avatar 
+                src={author.avatar_url || null} 
+                alt={author.username} 
+                size="sm" 
+              />
+              <span className="font-semibold text-[15px] text-[var(--foreground)] group-hover:text-[var(--brand-pink)] transition-colors truncate">
+                @{author.username}
+              </span>
+            </Link>
+          )}
+        </div>
+      </header>
+
+      <main className="w-full flex flex-col md:flex-row pb-24 md:pb-0 md:h-[calc(100vh-64px)] md:justify-center overflow-x-hidden md:overflow-hidden bg-[var(--background)]">
         
         {/* Left Column (Desktop) / Top Half (Mobile) - The Interactive Canvas Image */}
         <div className="relative w-full aspect-[3/4] md:w-auto md:h-full md:aspect-[3/4] md:max-w-[calc(100%-400px)] shrink-0 bg-[#f8f9fa] dark:bg-[#111] z-0 flex items-center justify-center border-b md:border-b-0 md:border-r border-[var(--border-color)]">
@@ -258,26 +279,6 @@ export default function OutfitDetailPage() {
         {/* Right Column (Desktop) / Bottom Half (Mobile) - The Details */}
         <div className="relative w-full md:w-[400px] lg:w-[450px] flex-shrink-0 flex flex-col overflow-y-auto custom-scrollbar bg-[var(--background)]">
           <div className="w-full flex flex-col p-4 md:p-6 space-y-6">
-            
-            {/* Creator Profile Header */}
-            {author?.username && (
-              <Link 
-                href={user?.id === author.id ? '/profile' : `/profile/${author.username}`}
-                className="flex items-center gap-3 p-3 bg-[var(--background-secondary)]/50 hover:bg-[var(--background-secondary)] rounded-2xl border border-[var(--border-color)]/50 transition-colors"
-              >
-                <Avatar 
-                  src={author.avatar_url || null} 
-                  alt={author.username} 
-                  size="sm" 
-                />
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs text-[var(--foreground-tertiary)] uppercase font-bold tracking-wider">Creador del look</p>
-                  <p className="text-sm font-bold text-[var(--foreground)] truncate">
-                    @{author.username}
-                  </p>
-                </div>
-              </Link>
-            )}
 
             {/* Outfit Info */}
             <section className="space-y-3">
