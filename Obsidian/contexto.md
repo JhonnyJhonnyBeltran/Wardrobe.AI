@@ -814,6 +814,18 @@ En cada conversación, el backend alimenta a CloSy con:
 - **Etiqueta Oficial de Google AdSense en `<head>` (`app/layout.tsx`)**:
   - Se integró el script asíncrono oficial de AdSense con el identificador de cliente del usuario (`ca-pub-4628313000953034`) y atributo `crossOrigin="anonymous"`.
   - Se configuró como valor por defecto en `SponsoredAdCard.tsx` para vincular de forma automática los bloques de anuncios nativos en el Feed y en la Búsqueda.
+- **Archivo `ads.txt` Público (`public/ads.txt`)**:
+  - Creado y desplegado con el publisher ID `google.com, pub-4628313000953034, DIRECT, f08c47fec0942fa0`.
+
+### 60. Diagnóstico y Corrección de Visualización de Prendas en Posts de Otros Usuarios (Septiembre 2026)
+- **Causa Raíz Identificada**:
+  - En la base de datos de Supabase, la tabla `clothing_items` (y en algunos casos `outfits` / `outfit_items`) tenía activa una política RLS restrictiva `FOR SELECT USING (auth.uid() = user_id)`.
+  - Esto permitía que cada usuario pudiera ver las prendas de sus propios posts (porque su `auth.uid()` coincidía con el `user_id` de la prenda), pero cuando un usuario visualizaba el post de otra persona (`@laurfdez`), Supabase bloqueaba la lectura y retornaba `0` prendas.
+  - Al recibir 0 prendas, el componente de detalle de post ocultaba la sección *"Prendas del look"* y el visor interactivo de outfits recurría a la imagen estática sin stickers interactivos.
+- **Solución y Script SQL (`sql/fix_clothing_items_rls.sql`)**:
+  - Se configuró la política de lectura global `FOR SELECT USING (true)` en `clothing_items`, `outfits`, `outfit_items` y `posts`, permitiendo que todos los usuarios de la comunidad puedan explorar, interactuar y ver los detalles de las prendas públicas de cualquier look.
+  - Las políticas de inserción, edición y eliminación (`INSERT`, `UPDATE`, `DELETE`) permanecen 100% blindadas y exclusivas para el creador propietario (`auth.uid() = user_id`).
+
 
 
 
