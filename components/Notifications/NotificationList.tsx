@@ -254,6 +254,7 @@ export default function NotificationList({ compact = false, onClose }: Notificat
 
                 if (comments) {
                     comments.forEach((c: any) => {
+                        const commentContent = c.content || c.text || c.comment || (c.data as any)?.content || '';
                         realNotifications.push({
                             id: `comment_${c.id}`,
                             type: 'comment',
@@ -263,7 +264,7 @@ export default function NotificationList({ compact = false, onClose }: Notificat
                                 name: c.user?.full_name || c.user?.username || 'Usuario',
                                 avatar: c.user?.avatar_url || null
                             },
-                            content: c.content,
+                            content: commentContent,
                             time: getTimeAgo(c.created_at),
                             timestamp: new Date(c.created_at).getTime(),
                             image: c.post?.image_url,
@@ -548,7 +549,11 @@ export default function NotificationList({ compact = false, onClose }: Notificat
                                             <Link href={`/profile/${notif.actor!.username || notif.actor!.id}`} onClick={onClose} className="font-semibold text-[var(--foreground)] hover:underline truncate">
                                                 {notif.actor!.name}
                                             </Link>
-                                            <span className="text-[var(--foreground-secondary)] text-wrap break-words"> comentó: "{notif.content}"</span>
+                                            <span className="text-[var(--foreground-secondary)] text-wrap break-words">
+                                                {notif.content && notif.content.trim() 
+                                                    ? ` comentó: "${notif.content.trim()}"` 
+                                                    : ' comentó en tu publicación.'}
+                                            </span>
                                             <span className="text-[var(--foreground-tertiary)] text-xs ml-2 block sm:inline">{notif.time}</span>
                                         </div>
                                         {notif.image && (

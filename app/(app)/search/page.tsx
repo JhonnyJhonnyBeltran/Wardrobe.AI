@@ -284,7 +284,8 @@ export default function SearchPage() {
                             morphology,
                             colorimetry,
                             age,
-                            age_range
+                            age_range,
+                            gender
                         ),
                         outfits (
                             name,
@@ -381,6 +382,34 @@ export default function SearchPage() {
                   scoreB += Math.min(recentLikedStylesMap[s] * 2.5, 8);
                 }
               });
+            }
+
+            // 4.2 Gender Affinity: Same gender (+7), Unisex / Neutral (+3.5)
+            if (user?.gender) {
+              const normalizeGender = (g?: string) => {
+                if (!g) return '';
+                const s = g.toLowerCase();
+                if (s.includes('man') || s.includes('men') || s.includes('hombre') || s.includes('masculin') || s === 'male') return 'male';
+                if (s.includes('woman') || s.includes('women') || s.includes('mujer') || s.includes('femenin') || s === 'female') return 'female';
+                if (s.includes('unisex') || s.includes('mixto') || s.includes('neutral') || s.includes('all')) return 'unisex';
+                return s;
+              };
+
+              const viewerGender = normalizeGender(user.gender);
+              const genderA = normalizeGender(a.profiles?.gender);
+              const genderB = normalizeGender(b.profiles?.gender);
+
+              if (genderA === viewerGender) {
+                scoreA += 7;
+              } else if (genderA === 'unisex' || viewerGender === 'unisex') {
+                scoreA += 3.5;
+              }
+
+              if (genderB === viewerGender) {
+                scoreB += 7;
+              } else if (genderB === 'unisex' || viewerGender === 'unisex') {
+                scoreB += 3.5;
+              }
             }
 
             // 5. Age match / affinity (similar age groups get higher recommendation scores)

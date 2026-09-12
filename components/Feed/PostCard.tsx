@@ -14,6 +14,7 @@ import { haptics } from '@/lib/haptic';
 import PostPreviewModal from './PostPreviewModal';
 import { useFeedStore } from '@/store/feedStore';
 import { useSearchStore } from '@/store/searchStore';
+import { likeManager } from '@/lib/services/likeManager';
 
 export interface Post {
     id: string;
@@ -161,41 +162,9 @@ export default function PostCard({ post, onClick, hideSaveButton = false }: Post
             haptics.tap();
         } catch {}
 
-        const previousState = isLikedState;
-        const previousCount = likesCountState;
-
-        const nextState = !previousState;
-        const nextCount = Math.max(0, previousState ? previousCount - 1 : previousCount + 1);
-
-        setIsLikedState(nextState);
-        setLikesCountState(nextCount);
-
-        try {
-            useFeedStore.getState().updatePostLike(post.id, nextState, nextCount);
-            useSearchStore.getState().updatePostLike(post.id, nextState, nextCount);
-        } catch {}
-
-        try {
-            if (previousState) {
-                const res = await fetch(`/api/likes?post_id=${post.id}`, { method: 'DELETE' });
-                if (!res.ok) throw new Error('Failed to unlike');
-            } else {
-                const res = await fetch('/api/likes', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ post_id: post.id })
-                });
-                if (!res.ok) throw new Error('Failed to like');
-            }
-        } catch (err) {
-            console.error('Error toggling like:', err);
-            setIsLikedState(previousState);
-            setLikesCountState(previousCount);
-            try {
-                useFeedStore.getState().updatePostLike(post.id, previousState, previousCount);
-                useSearchStore.getState().updatePostLike(post.id, previousState, previousCount);
-            } catch {}
-        }
+        const res = likeManager.toggleLike(post.id, isLikedState, likesCountState);
+        setIsLikedState(res.isLiked);
+        setLikesCountState(res.likesCount);
     };
 
     // If no image, show text card
@@ -211,8 +180,7 @@ export default function PostCard({ post, onClick, hideSaveButton = false }: Post
                         {post.title || post.description}
                     </p>
                     <div className="hidden md:flex items-center gap-1 text-xs mt-auto">
-                        <Heart className={cn("w-3.5 h-3.5 transition-colors", isLikedState ? "fill-[var(--brand-pink)] text-[var(--brand-pink)]" : "text-[var(--foreground-tertiary)]")} />
-                        <span className={cn(isLikedState ? "text-[var(--brand-pink)] font-semibold" : "text-[var(--foreground-tertiary)]")}>{likesCountState}</span>
+                        <Heart className={cn("w-4 h-4 transition-colors", isLikedState ? "fill-[var(--brand-pink)] text-[var(--brand-pink)]" : "text-[var(--foreground-tertiary)]")} />
                     </div>
                 </div>
             </div>
@@ -265,7 +233,6 @@ export default function PostCard({ post, onClick, hideSaveButton = false }: Post
                             </div>
                             <div className="flex items-center gap-1 text-white text-xs drop-shadow-md">
                                 <Heart className={cn("w-4 h-4 transition-colors", isLikedState ? "fill-[var(--brand-pink)] text-[var(--brand-pink)]" : "text-white")} />
-                                <span>{likesCountState}</span>
                             </div>
                         </div>
                     </div>

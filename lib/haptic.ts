@@ -41,6 +41,7 @@ export const haptics = {
   warning: () => triggerHaptic('warning'),
   error: () => triggerHaptic('error'),
   heavy: () => triggerHaptic('heavy'),
+  notification: () => triggerHaptic('success'),
 };
 
 /**

@@ -1,50 +1,51 @@
 'use client';
 
 /**
- * NotificationToast
- * Componente para mostrar notificaciones toast en tiempo real
+ * NotificationToast (Instagram / Pinterest style navbar popup)
+ * Componente para mostrar popups flotantes sobre el icono de notificaciones del navbar
  */
 
 import { memo, useEffect, useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, MessageCircle, UserPlus, Heart, Bell } from 'lucide-react';
+import { MessageCircle, UserPlus, Heart, Bell } from 'lucide-react';
 import { useRealtimeStore } from '@/store/realtimeStore';
 import { useNotificationSettingsStore } from '@/store/notificationSettingsStore';
 import type { Notification, NotificationType } from '@/lib/realtime';
 import Link from 'next/link';
 import Avatar from '@/components/Avatar';
+import { haptics } from '@/lib/haptic';
 
-// ============================================
-// ICON MAPPING
-// ============================================
-
-const notificationIcons: Record<NotificationType, React.ReactNode> = {
-  new_message: <MessageCircle className="w-5 h-5" />,
-  new_follower: <UserPlus className="w-5 h-5" />,
-  follow_request: <UserPlus className="w-5 h-5" />,
-  follow_accepted: <UserPlus className="w-5 h-5" />,
-  like: <Heart className="w-5 h-5" />,
-  comment: <MessageCircle className="w-5 h-5" />,
-  mention: <Bell className="w-5 h-5" />,
-  outfit_shared: <Bell className="w-5 h-5" />,
-  system: <Bell className="w-5 h-5" />,
+// Filled white icons for Instagram/Pinterest style
+const getNotificationFilledIcon = (type: NotificationType) => {
+  switch (type) {
+    case 'like':
+      return (
+        <div className="w-6 h-6 rounded-full bg-[var(--brand-pink)] flex items-center justify-center shrink-0 shadow-xs">
+          <Heart className="w-3.5 h-3.5 fill-white text-white" />
+        </div>
+      );
+    case 'comment':
+      return (
+        <div className="w-6 h-6 rounded-full bg-purple-600 flex items-center justify-center shrink-0 shadow-xs">
+          <MessageCircle className="w-3.5 h-3.5 fill-white text-white" />
+        </div>
+      );
+    case 'new_follower':
+    case 'follow_request':
+    case 'follow_accepted':
+      return (
+        <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center shrink-0 shadow-xs">
+          <UserPlus className="w-3.5 h-3.5 fill-white text-white" />
+        </div>
+      );
+    default:
+      return (
+        <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center shrink-0 shadow-xs">
+          <Bell className="w-3.5 h-3.5 fill-white text-white" />
+        </div>
+      );
+  }
 };
-
-const notificationColors: Record<NotificationType, string> = {
-  new_message: 'bg-blue-500',
-  new_follower: 'bg-green-500',
-  follow_request: 'bg-yellow-500',
-  follow_accepted: 'bg-green-500',
-  like: 'bg-pink-500',
-  comment: 'bg-purple-500',
-  mention: 'bg-indigo-500',
-  outfit_shared: 'bg-pink-500',
-  system: 'bg-gray-500',
-};
-
-// ============================================
-// SINGLE TOAST COMPONENT
-// ============================================
 
 interface ToastProps {
   notification: Notification;
@@ -52,14 +53,18 @@ interface ToastProps {
   duration?: number;
 }
 
-const Toast = memo(function Toast({
+const NavbarNotificationPopup = memo(function NavbarNotificationPopup({
   notification,
   onDismiss,
-  duration = 5000
+  duration = 4200
 }: ToastProps) {
   const markAsRead = useRealtimeStore(state => state.markAsRead);
 
   useEffect(() => {
+    try {
+      haptics.notification();
+    } catch {}
+
     const timer = setTimeout(() => {
       onDismiss(notification.id);
     }, duration);
@@ -72,208 +77,164 @@ const Toast = memo(function Toast({
     onDismiss(notification.id);
   };
 
-  const getLink = (): string | null => {
+  const getLink = (): string => {
     switch (notification.type) {
       case 'new_message':
         return notification.data?.sender_id
           ? `/messages/${notification.data.sender_id}`
           : '/messages';
       case 'follow_request':
-        return '/profile?tab=requests';
+        return '/notifications';
       case 'new_follower':
       case 'follow_accepted':
         return notification.sender_id
           ? `/profile/${notification.sender?.username || notification.sender_id}`
-          : '/profile';
+          : '/notifications';
       case 'like':
       case 'comment':
-        const postId = notification.data?.post_id || notification.data?.postId;
-        return postId ? `/post/${postId}` : '/profile';
-      case 'system':
-      case 'outfit_shared':
-        if (notification.data?.targetUrl && typeof notification.data.targetUrl === 'string') {
-          return notification.data.targetUrl;
-        }
-        if (notification.message?.toLowerCase().includes('kloe') || notification.title?.toLowerCase().includes('kloe') || notification.message?.toLowerCase().includes('inteligencia')) {
-          return '/closet/kloe';
-        }
-        if (notification.message?.toLowerCase().includes('outfit') || notification.message?.toLowerCase().includes('calendario')) {
-          return '/create';
-        }
-        return '/closet';
+        const postId = notification.data?.post_id || notification.data?.postId || (notification as any).postId;
+        return postId ? `/post/${postId}` : '/notifications';
       default:
-        return '/closet';
+        return '/notifications';
     }
   };
 
   const link = getLink();
-  const content = (
-    <div className="flex items-start gap-3">
-      {/* Icon */}
-      <div className={`
-        flex-shrink-0 w-10 h-10 rounded-full 
-        flex items-center justify-center text-white relative
-        ${!notification.sender?.avatar_url || notification.sender?.avatar_url?.includes('default user.png') ? notificationColors[notification.type] : ''}
-      `}>
-        {notification.sender?.avatar_url && !notification.sender?.avatar_url?.includes('default user.png') ? (
-          <Avatar 
-            src={notification.sender.avatar_url} 
-            alt={notification.sender.username || 'Usuario'} 
-            size="md" 
-            className="w-full h-full"
-          />
-        ) : (
-          notificationIcons[notification.type]
-        )}
-      </div>
+  const actorName = notification.sender?.username || (notification as any).actor?.username || (notification as any).actor?.name || 'Alguien';
+  const avatarUrl = notification.sender?.avatar_url || (notification as any).actor?.avatar || null;
 
-      {/* Content */}
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-[var(--foreground)]">
-          {notification.title || (
-            notification.type === 'like' ? 'Nuevo me gusta' :
-            notification.type === 'comment' ? 'Nuevo comentario' :
-            notification.type === 'follow_accepted' ? 'Solicitud aceptada' :
-            notification.type === 'follow_request' ? 'Nueva solicitud de seguimiento' :
-            'Nueva notificación'
-          )}
-        </p>
-        <p className="text-sm text-[var(--foreground-secondary)] truncate">
-          {notification.message || (
-            notification.type === 'like' ? 'A alguien le ha gustado tu publicación' :
-            notification.type === 'comment' ? 'Alguien ha comentado en tu publicación' :
-            notification.type === 'follow_accepted' ? 'Han aceptado tu solicitud de seguimiento' :
-            notification.type === 'follow_request' ? 'Alguien quiere seguirte' :
-            'Tienes nueva actividad'
-          )}
-        </p>
-      </div>
-
-      {/* Dismiss button */}
-      <button
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          onDismiss(notification.id);
-        }}
-        className="flex-shrink-0 p-1 rounded-full hover:bg-[var(--background-secondary)] transition-colors"
-      >
-        <X className="w-4 h-4 text-[var(--foreground-secondary)]" />
-      </button>
-    </div>
-  );
+  const actionText = useMemo(() => {
+    if (notification.type === 'like') return 'le gustó tu foto';
+    if (notification.type === 'comment') {
+      const c = notification.data?.content || (notification as any).content || '';
+      return c ? `"${c.slice(0, 24)}"` : 'comentó tu foto';
+    }
+    if (notification.type === 'new_follower') return 'empezó a seguirte';
+    if (notification.type === 'follow_request') return 'quiere seguirte';
+    if (notification.type === 'follow_accepted') return 'aceptó tu solicitud';
+    return notification.title || 'nueva actividad';
+  }, [notification]);
 
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, y: -20, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: -20, scale: 0.95 }}
-      transition={{ duration: 0.2 }}
-      className="pointer-events-auto"
-    >
-      {link ? (
-        <Link href={link} onClick={handleClick}>
-          <div className="
-            bg-[var(--card-bg)]
-            rounded-full shadow-lg 
-            border border-[var(--border-color)]
-            px-5 py-3 max-w-sm w-full
-            cursor-pointer hover:bg-[var(--background-secondary)]
-            transition-colors
-          ">
-            {content}
-          </div>
-        </Link>
-      ) : (
-        <div
+    <>
+      {/* Mobile Anchor (Directly above Heart icon in bottom TabBar) */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8, y: 16 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.8, y: 16 }}
+        transition={{ type: 'spring', stiffness: 480, damping: 26 }}
+        className="fixed bottom-[80px] right-[16%] md:hidden z-[9999] pointer-events-auto"
+      >
+        <Link
+          href={link}
           onClick={handleClick}
-          className="
-            bg-[var(--card-bg)]
-            rounded-full shadow-lg 
-            border border-[var(--border-color)]
-            px-5 py-3 max-w-sm w-full
-            cursor-pointer hover:bg-[var(--background-secondary)]
-            transition-colors
-          "
+          className="relative flex items-center gap-2.5 bg-black/90 dark:bg-[#121218]/95 backdrop-blur-2xl border border-white/15 px-3 py-2 rounded-2xl shadow-[0_12px_32px_rgba(0,0,0,0.5)] text-white select-none hover:scale-[1.02] active:scale-[0.98] transition-transform"
         >
-          {content}
-        </div>
-      )}
-    </motion.div>
+          {avatarUrl ? (
+            <div className="relative">
+              <Avatar src={avatarUrl} alt={actorName} size="xs" />
+              <div className="absolute -bottom-1 -right-1 scale-75">
+                {getNotificationFilledIcon(notification.type)}
+              </div>
+            </div>
+          ) : (
+            getNotificationFilledIcon(notification.type)
+          )}
+
+          <div className="flex flex-col min-w-0 pr-1">
+            <span className="text-[12px] font-bold text-white truncate max-w-[130px]">
+              @{actorName}
+            </span>
+            <span className="text-[10.5px] text-white/75 truncate max-w-[140px] leading-tight">
+              {actionText}
+            </span>
+          </div>
+
+          {/* Notch / Arrow pointing down to Heart Icon */}
+          <div className="absolute -bottom-1.5 right-6 w-3 h-3 bg-black/90 dark:bg-[#121218]/95 border-b border-r border-white/15 rotate-45" />
+        </Link>
+      </motion.div>
+
+      {/* Desktop / PC Anchor (Directly to the right of Sidebar Heart Icon) */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8, x: -16 }}
+        animate={{ opacity: 1, scale: 1, x: 0 }}
+        exit={{ opacity: 0, scale: 0.8, x: -16 }}
+        transition={{ type: 'spring', stiffness: 480, damping: 26 }}
+        className="hidden md:flex fixed left-[82px] top-[260px] z-[9999] pointer-events-auto"
+      >
+        <Link
+          href={link}
+          onClick={handleClick}
+          className="relative flex items-center gap-2.5 bg-black/90 dark:bg-[#121218]/95 backdrop-blur-2xl border border-white/15 px-3.5 py-2.5 rounded-2xl shadow-[0_14px_36px_rgba(0,0,0,0.5)] text-white select-none hover:scale-[1.02] active:scale-[0.98] transition-transform"
+        >
+          {avatarUrl ? (
+            <div className="relative">
+              <Avatar src={avatarUrl} alt={actorName} size="xs" />
+              <div className="absolute -bottom-1 -right-1 scale-75">
+                {getNotificationFilledIcon(notification.type)}
+              </div>
+            </div>
+          ) : (
+            getNotificationFilledIcon(notification.type)
+          )}
+
+          <div className="flex flex-col min-w-0 pr-1">
+            <span className="text-[12px] font-bold text-white truncate max-w-[150px]">
+              @{actorName}
+            </span>
+            <span className="text-[11px] text-white/75 truncate max-w-[160px] leading-tight">
+              {actionText}
+            </span>
+          </div>
+
+          {/* Notch / Arrow pointing left to Sidebar Heart */}
+          <div className="absolute top-1/2 -left-1.5 -translate-y-1/2 w-3 h-3 bg-black/90 dark:bg-[#121218]/95 border-b border-l border-white/15 rotate-45" />
+        </Link>
+      </motion.div>
+    </>
   );
 });
 
-// ============================================
-// TOAST CONTAINER
-// ============================================
-
-interface NotificationToastContainerProps {
-  /** Posición de los toasts */
-  position?: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left' | 'top-center';
-  /** Máximo de toasts visibles */
-  maxVisible?: number;
-  /** Duración de cada toast (ms) */
-  duration?: number;
-}
-
-const positionClasses = {
-  'top-right': 'top-4 right-4',
-  'top-left': 'top-4 left-4',
-  'bottom-right': 'bottom-4 right-4',
-  'bottom-left': 'bottom-4 left-4',
-  'top-center': 'top-4 left-1/2 -translate-x-1/2',
-};
-
 export const NotificationToastContainer = memo(function NotificationToastContainer({
-  position = 'top-right',
-  maxVisible = 3,
-  duration = 5000,
-}: NotificationToastContainerProps) {
+  duration = 4200,
+}: {
+  duration?: number;
+  position?: string;
+  maxVisible?: number;
+}) {
   const notifications = useRealtimeStore(state => state.notifications);
   const isNotificationTypeAllowed = useNotificationSettingsStore(state => state.isNotificationTypeAllowed);
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
 
-  // Derive visible toasts filtered by user preferences and freshness (< 45s)
-  const visibleToasts = useMemo(() => {
+  // Show only the freshest active notification (< 40s) that is unread and not dismissed
+  const activeNotification = useMemo(() => {
     const now = Date.now();
-    return notifications
-      .filter(n => {
-        if (n.read || dismissedIds.has(n.id) || !isNotificationTypeAllowed(n.type)) return false;
-        if (n.created_at) {
-          const diff = now - new Date(n.created_at).getTime();
-          if (diff > 45 * 1000) return false;
-        }
-        return true;
-      })
-      .slice(0, maxVisible);
-  }, [notifications, maxVisible, dismissedIds, isNotificationTypeAllowed]);
+    return notifications.find(n => {
+      if (n.read || dismissedIds.has(n.id) || !isNotificationTypeAllowed(n.type)) return false;
+      if (n.created_at) {
+        const diff = now - new Date(n.created_at).getTime();
+        if (diff > 40 * 1000) return false;
+      }
+      return true;
+    }) || null;
+  }, [notifications, dismissedIds, isNotificationTypeAllowed]);
 
   const handleDismiss = useCallback((id: string) => {
     setDismissedIds(prev => new Set(prev).add(id));
   }, []);
 
+  if (!activeNotification) return null;
+
   return (
-    <div
-      className={`
-        fixed z-50 pointer-events-none
-        flex flex-col gap-2
-        ${positionClasses[position]}
-      `}
-      role="region"
-      aria-label="Notificaciones"
-    >
-      <AnimatePresence mode="popLayout">
-        {visibleToasts.map((notification) => (
-          <Toast
-            key={notification.id}
-            notification={notification}
-            onDismiss={handleDismiss}
-            duration={duration}
-          />
-        ))}
-      </AnimatePresence>
-    </div>
+    <AnimatePresence mode="wait">
+      <NavbarNotificationPopup
+        key={activeNotification.id}
+        notification={activeNotification}
+        onDismiss={handleDismiss}
+        duration={duration}
+      />
+    </AnimatePresence>
   );
 });
 

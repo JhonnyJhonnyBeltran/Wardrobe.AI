@@ -770,3 +770,23 @@ En cada conversación, el backend alimenta a CloSy con:
     - Se corrigió el salto de viñetas huérfanas (`•\nTexto`), unificando el punto con el texto de la recomendación.
     - Se instruyó a Kloe en su prompt del sistema para redactar en prosa fluida, utilizando negritas y listas de viñetas limpias (`- Prenda: descripción`) sin encabezados de almohadilla ni emojis.
   - Se eliminaron los emojis de las respuestas rápidas de cortesía (`lib/closy/fastResponses.ts`).
+
+### 56. Sincronización Global de Likes (Debounce 5s), Notificaciones Flotantes y Algoritmo de Búsqueda por Género (Septiembre 2026)
+- **Gestor Atómico de Likes con Cola Debounced de 5 Segundos (`lib/services/likeManager.ts`)**:
+  - Centraliza el ciclo de vida de los likes en toda la aplicación (`PostCard`, `post/[id]`, `/search`, `/feed`).
+  - **Actualización Optimista Inmediata**: Al interactuar con el corazón, se actualiza al milisegundo el estado visual y los stores de Zustand (`useFeedStore` y `useSearchStore`).
+  - **Debounce de 5 Segundos**: Si el usuario pulsa repetidamente (me gusta $\leftrightarrow$ ya no me gusta) o cambia de pantalla, las peticiones a base de datos se agrupan en una cola con retardo de 5.000 ms. Si el estado final coincide con el inicial, se cancela la llamada a la API evitando escrituras innecesarias en la base de datos y saturación de red.
+  - **Flush Automático al Salir**: Mediante `beforeunload` se garantiza que si el usuario cierra o recarga la página, las acciones pendientes se confirman de forma segura.
+- **Ocultación de Contadores Numéricos de Likes**:
+  - Se eliminaron los números de likes visibles en el feed principal (`PostCard.tsx`), la búsqueda y la vista detallada de post (`/post/[id]`). El corazón rosa interactivo permanece como feedback visual claro.
+- **Afinidad de Género en el Algoritmo de Búsqueda (`/search`)**:
+  - Se amplió la consulta de exploración para incluir el campo `gender` de `profiles`.
+  - El algoritmo de recomendación pondera con **+7 puntos** las publicaciones de creadores del mismo género y con **+3.5 puntos** las de catálogo unisex/mixto, sumándose a la afinidad de estilo (+3 pts), likes previos (+2.5 a +8 pts), morfología (+5 pts), colorimetría (+5 pts) y edad (+2 a +6 pts).
+- **Resolución Robusta de Sesión en `/api/saves` (Fix 401 Unauthorized)**:
+  - Se implementó `resolveAuthUser` y `supabaseAdmin` en `app/api/saves/route.ts` para todos los métodos (`GET`, `POST`, `DELETE`, `PUT`). Permite autenticar tanto por cookies de sesión de Supabase como por header `Authorization: Bearer <token>`, erradicando los errores 401 por desfase de tokens.
+- **Notificaciones In-App Flotantes Estilo Instagram / Pinterest (`NotificationToast.tsx`)**:
+  - Reemplazado el banner superior derecho por un popup flotante con fondo glassmorphic translúcido oscuro que emerge directamente sobre/al lado del icono del corazón en la barra de navegación (TabBar inferior en móvil y barra lateral en escritorio).
+  - Incluye iconos rellenos en blanco (`Heart` para me gusta, `MessageCircle` para comentarios y `UserPlus` para nuevos seguidores), feedback háptico (`haptics.notification()`) y animación fluida con cierre automático a los 4.2 segundos.
+- **Corrección de Mensajes de Comentario Vacíos (`NotificationList.tsx`)**:
+  - Se blindó la extracción del texto de comentarios en las notificaciones para soportar múltiples estructuras (`content`, `text`, `comment`, `data.content`) y fallback limpio a *"comentó en tu publicación."*, evitando mostrar comillas vacías (`comentó: ""`).
+

@@ -19,6 +19,7 @@ import { SkeletonPostDetail } from '@/components';
 import { haptics } from '@/lib/haptic';
 import { useFeedStore } from '@/store/feedStore';
 import { useSearchStore } from '@/store/searchStore';
+import { likeManager } from '@/lib/services/likeManager';
 
 interface Comment {
     id: string;
@@ -299,47 +300,19 @@ export default function PostDetailPage() {
     const author = Array.isArray(authorRaw) ? authorRaw[0] : (authorRaw || {});
 
     // Handle Interactions
-    const toggleLike = async () => {
+    const toggleLike = () => {
         if (!user) {
             router.push('/login');
             return;
         }
-        const previousState = isLiked;
-        const previousCount = likesCount;
 
-        // Optimistic Update
-        const nextState = !previousState;
-        const nextCount = Math.max(0, previousState ? previousCount - 1 : previousCount + 1);
-        setIsLiked(nextState);
-        setLikesCount(nextCount);
-
-        // Sync with Feed and Search stores
         try {
-            useFeedStore.getState().updatePostLike(postId, nextState, nextCount);
-            useSearchStore.getState().updatePostLike(postId, nextState, nextCount);
+            haptics.selection();
         } catch {}
 
-        try {
-            if (previousState) {
-                const res = await fetch(`/api/likes?post_id=${postId}`, { method: 'DELETE' });
-                if (!res.ok) throw new Error('Failed to unlike');
-            } else {
-                const res = await fetch('/api/likes', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ post_id: postId })
-                });
-                if (!res.ok) throw new Error('Failed to like');
-            }
-        } catch (error) {
-            console.error('toggleLike error:', error);
-            setIsLiked(previousState);
-            setLikesCount(previousCount);
-            try {
-                useFeedStore.getState().updatePostLike(postId, previousState, previousCount);
-                useSearchStore.getState().updatePostLike(postId, previousState, previousCount);
-            } catch {}
-        }
+        const res = likeManager.toggleLike(postId, isLiked, likesCount);
+        setIsLiked(res.isLiked);
+        setLikesCount(res.likesCount);
     };
 
     const toggleSave = async () => {
@@ -718,9 +691,8 @@ export default function PostDetailPage() {
                 {/* ACTION BAR - Below image */}
                 <div className="border-b border-gray-100 dark:border-gray-800 px-4 py-3 flex items-center justify-between flex-shrink-0">
                     <div className="flex items-center gap-5">
-                        <button onClick={toggleLike} className="flex items-center gap-1.5 font-bold hover:opacity-70 transition-opacity">
+                        <button onClick={toggleLike} className="flex items-center gap-1.5 font-bold hover:opacity-70 transition-opacity" aria-label={isLiked ? "Quitar me gusta" : "Me gusta"}>
                             <Heart className={`w-6 h-6 transition-colors ${isLiked ? 'fill-[var(--brand-pink)] text-[var(--brand-pink)]' : 'text-gray-900 dark:text-white'}`} strokeWidth={2.5} />
-                            <span className="text-[15px] text-gray-900 dark:text-white">{likesCount}</span>
                         </button>
                         <button 
                             onClick={() => {
