@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
     // 1. Fetch User Profile Calibration Photos (3 Face + 3 Body)
     const { data: profile, error: profileError } = await client
       .from('profiles')
-      .select('id, username, full_name, face_photos, body_photos, gender, age, preferred_styles')
+      .select('*')
       .eq('id', user.id)
       .maybeSingle();
 
@@ -64,8 +64,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Perfil de usuario no encontrado' }, { status: 404 });
     }
 
-    const facePhotos: string[] = (profile.face_photos || []).filter(Boolean);
-    const bodyPhotos: string[] = (profile.body_photos || []).filter(Boolean);
+    let facePhotos: string[] = (profile.face_photos || []).filter(Boolean);
+    let bodyPhotos: string[] = (profile.body_photos || []).filter(Boolean);
+
+    // Fallback to JSONB notification_preferences if columns are empty
+    if (facePhotos.length === 0 && bodyPhotos.length === 0) {
+      const notifPrefs = (profile as any).notification_preferences || {};
+      if (notifPrefs.avatar_calibration) {
+        facePhotos = (notifPrefs.avatar_calibration.face_photos || []).filter(Boolean);
+        bodyPhotos = (notifPrefs.avatar_calibration.body_photos || []).filter(Boolean);
+      }
+    }
+
+    // Fallback to request body if client provides cached calibration photos
+    if (facePhotos.length === 0 && body.calibrationPhotos?.face_photos) {
+      facePhotos = (body.calibrationPhotos.face_photos || []).filter(Boolean);
+    }
+    if (bodyPhotos.length === 0 && body.calibrationPhotos?.body_photos) {
+      bodyPhotos = (body.calibrationPhotos.body_photos || []).filter(Boolean);
+    }
 
     // If either face or body photos are missing, prompt calibration modal
     if (facePhotos.length === 0 || bodyPhotos.length === 0) {

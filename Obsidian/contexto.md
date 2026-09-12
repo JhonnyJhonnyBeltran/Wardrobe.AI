@@ -865,6 +865,24 @@ En cada conversación, el backend alimenta a CloSy con:
 - **Fondo Blanco de Estudio Fotográfico por Defecto**:
   - Se instruyó formalmente tanto a Kloe en su System Prompt (`/api/closy/chat`) como en las directivas de generación del avatar (`/api/closy/generate-avatar`) para que todos los modelados de outfits virtuales se conciban, procesen y muestren SIEMPRE sobre fondo blanco puro de estudio fotográfico profesional (`#FFFFFF`), con iluminación de catálogo de alta definición y sin fondos distractores.
 
+### 66. Botón de Mensaje con Icono de Avión de Papel y Resolución UUID / Username en Mensajería (`/profile/[id]` y `/messages/[id]`) (Septiembre 2026)
+- **Icono Oficial de Avión de Papel en Perfil**:
+  - Se sustituyó el botón de texto `"Mensaje"` en `app/(app)/profile/[id]/page.tsx` por el icono estilizado de avión de papel (`Send` de `lucide-react`), en coherencia con la barra de navegación y el sistema visual de la app.
+- **Resolución Bidireccional de UUID vs Username**:
+  - Al abrir un chat desde el perfil de un usuario (`/profile/@usuario` o `/profile/[uuid]`), la ruta de mensajes `/messages/[id]` ahora detecta dinámicamente si el identificador recibido es un UUID o un nombre de usuario (`username`).
+  - Si es un username, resuelve primero el UUID en `profiles` (`profiles.select('id,...').eq('username', ...)`), evitando de raíz los errores Postgres `400 Bad Request` por comparar cadenas de texto contra columnas de tipo `UUID`.
+  - Si la conversación ya existía, se selecciona y resalta automáticamente en la lista; si no existía, se inicializa sin errores y permite enviar el primer mensaje con vinculación RPC resiliente.
+
+### 67. Diagnóstico y Blindaje de Persistencia del Avatar Virtual (Calibración de 6 Fotos) (Septiembre 2026)
+- **Causa Raíz de la Pérdida de Fotos de Calibración**:
+  - En la base de datos de Supabase, la tabla `profiles` carecía de las columnas `face_photos` y `body_photos`. Al consultar o actualizar directamente `profiles` desde el cliente, Supabase arrojaba un error 400 (`column face_photos does not exist`), lo que provocaba que al cerrar y reabrir el modal, las fotos aparecieran vacías (`0 de 6`).
+- **Solución Arquitectónica Multicapa (Triple Blindaje)**:
+  - **Script de Migración SQL (`sql/add_avatar_calibration_photos.sql`)**: Añade las columnas `face_photos TEXT[]` y `body_photos TEXT[]` a `profiles` y asegura políticas públicas y autenticadas en el bucket `avatars`.
+  - **Endpoint Dedicado (`/api/user/avatar-calibration`)**: Gestiona `GET` y `POST` con cliente admin/servidor. Actualiza las columnas directas y mantiene un respaldo automático en `notification_preferences->avatar_calibration` (campo JSONB preexistente en todos los perfiles), haciendo imposible que las fotos se pierdan incluso si no se ha ejecutado el script SQL en Supabase.
+  - **Hidratación y Caché Inmediata (`localStorage`)**: `AvatarCalibrationModal.tsx` carga de inmediato las miniaturas desde el almacenamiento local sin parpadeos ni esperas y las sincroniza en segundo plano con el servidor.
+  - **Generación de Look en Avatar Virtual (`/api/closy/generate-avatar`)**: Lee las fotos de calibración tanto de las columnas directas como del respaldo JSONB o del payload enviado por el cliente, permitiendo probar cualquier look con IA sobre fondo blanco de estudio.
+
+
 
 
 

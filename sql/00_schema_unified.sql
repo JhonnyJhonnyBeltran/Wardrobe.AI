@@ -33,6 +33,9 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   occasions_preferences TEXT[] DEFAULT '{}'::TEXT[],
   budget_range TEXT,
   is_private BOOLEAN DEFAULT false,
+  -- Avatar Virtual & Calibración (3 Rostro + 3 Cuerpo)
+  face_photos TEXT[] DEFAULT '{}'::TEXT[],
+  body_photos TEXT[] DEFAULT '{}'::TEXT[],
   -- Suscripción Stripe & Kloe Pro
   is_premium BOOLEAN DEFAULT false,
   subscription_tier TEXT DEFAULT 'free',

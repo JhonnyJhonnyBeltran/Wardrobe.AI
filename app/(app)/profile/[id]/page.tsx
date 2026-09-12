@@ -272,7 +272,8 @@ export default function PublicProfilePage() {
   };
 
   const navigateToChat = () => {
-    router.push(`/messages/${profileId}`);
+    const targetIdentifier = profile?.id || profileId;
+    router.push(`/messages/${targetIdentifier}`);
   };
 
   const handleBlock = async () => {
@@ -492,9 +493,11 @@ export default function PublicProfilePage() {
 
               <button
                 onClick={navigateToChat}
-                className="flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-[var(--background-secondary)] border border-[var(--border-color)] text-sm font-medium text-[var(--foreground)] hover:bg-[var(--card-hover)] transition-colors"
+                className="flex items-center justify-center p-2.5 rounded-lg bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] hover:bg-[var(--card-hover)] hover:text-[var(--brand-pink)] transition-colors active:scale-95"
+                title="Enviar mensaje"
+                aria-label="Enviar mensaje"
               >
-                Mensaje
+                <Send className="w-4 h-4" />
               </button>
             </div>
           </div>

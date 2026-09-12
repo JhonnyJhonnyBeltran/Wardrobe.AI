@@ -76,21 +76,24 @@ export function ConversationList({
 
     return (
         <div className="flex flex-col">
-            {conversations.map((conv) => (
-                <div key={conv.id} className={conv.id === activeConversationId ? 'bg-[var(--background-secondary)]/50' : ''}>
-                    <ConversationItem
-                        conversationId={conv.id}
-                        otherUser={conv.other_user}
-                        lastMessageText={conv.last_message_text}
-                        lastMessageAt={conv.last_message_at}
-                        lastMessageSender={conv.last_message_sender}
-                        currentUserId={user?.id || ''}
-                        onClick={() => onConversationClick(conv.id)}
-                        onReport={() => console.log('Report', conv.id)}
-                        onDelete={() => console.log('Delete', conv.id)}
-                    />
-                </div>
-            ))}
+            {conversations.map((conv) => {
+                const isActive = conv.id === activeConversationId || conv.other_user?.username === activeConversationId;
+                return (
+                    <div key={conv.id} className={isActive ? 'bg-[var(--background-secondary)]/50' : ''}>
+                        <ConversationItem
+                            conversationId={conv.id}
+                            otherUser={conv.other_user}
+                            lastMessageText={conv.last_message_text}
+                            lastMessageAt={conv.last_message_at}
+                            lastMessageSender={conv.last_message_sender}
+                            currentUserId={user?.id || ''}
+                            onClick={() => onConversationClick(conv.id)}
+                            onReport={() => console.log('Report', conv.id)}
+                            onDelete={() => console.log('Delete', conv.id)}
+                        />
+                    </div>
+                );
+            })}
         </div>
     );
 }

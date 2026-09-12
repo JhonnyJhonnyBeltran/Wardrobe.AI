@@ -59,8 +59,9 @@ export default function ChatPage() {
     const { user } = useUser();
     const params = useParams();
     const router = useRouter();
-    const targetUserId = params.id as string;
+    const rawTargetId = params.id as string;
 
+    const [resolvedTargetId, setResolvedTargetId] = useState<string | null>(null);
     const [targetUser, setTargetUser] = useState<UserProfile | null>(null);
     const [messages, setMessages] = useState<Message[]>([]);
     const [newMessage, setNewMessage] = useState('');
@@ -89,10 +90,6 @@ export default function ChatPage() {
     
     const markConversationAsRead = useMessageStore(state => state.markConversationAsRead);
 
-
-
-    // Removed incorrect markConversationAsRead call from here, moving it to fetchMessages
-
     // Scroll to bottom
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -104,22 +101,23 @@ export default function ChatPage() {
 
     // Centralized Realtime Presence & Verified Message Updates
     useEffect(() => {
-        if (!user?.id || !targetUserId) return;
+        const partnerId = resolvedTargetId;
+        if (!user?.id || !partnerId) return;
 
         // Maintain Presence/Online Status via global RealtimeManager
-        setIsOnline(realtimeManager.isUserOnline(targetUserId));
+        setIsOnline(realtimeManager.isUserOnline(partnerId));
         const unsubOnline = realtimeManager.onOnlineUsersChange((userIds) => {
-            setIsOnline(userIds.includes(targetUserId));
+            setIsOnline(userIds.includes(partnerId));
         });
 
         // Custom room for typing indicator only
-        const roomId = [user.id, targetUserId].sort().join('-');
+        const roomId = [user.id, partnerId].sort().join('-');
         const channel = supabase.channel(`chat_room:${roomId}`, {
             config: { broadcast: { self: false } }
         });
 
         channel.on('broadcast', { event: 'typing' }, (payload: any) => {
-            if (payload.payload.userId === targetUserId) {
+            if (payload.payload.userId === partnerId) {
                 setIsTyping(payload.payload.isTyping);
                 clearTimeout(typingTimeoutRef.current);
                 if (payload.payload.isTyping) {
@@ -144,7 +142,7 @@ export default function ChatPage() {
                 return [...prev, newMsg];
             });
 
-            if (newMsg.sender_id === targetUserId && newMsg.receiver_id === user.id && !newMsg.is_read) {
+            if (newMsg.sender_id === partnerId && newMsg.receiver_id === user.id && !newMsg.is_read) {
                 try {
                     await (supabase.from('messages') as any)
                         .update({ is_read: true })
@@ -163,18 +161,25 @@ export default function ChatPage() {
             clearTimeout(typingTimeoutRef.current);
             unsubOnline();
         };
-    }, [user?.id, targetUserId]);
+    }, [user?.id, resolvedTargetId]);
 
-    const fetchMessages = async () => {
-        if (!user || !targetUserId) return;
+    const fetchMessages = async (tId?: string) => {
+        const partnerId = tId || resolvedTargetId;
+        if (!user || !partnerId) return;
 
         // Use .in() array for robust bidirectional query without complex PostgREST OR syntax
-        const { data } = await supabase
+        const { data, error } = await supabase
             .from('messages')
             .select('*')
-            .in('sender_id', [user.id, targetUserId])
-            .in('receiver_id', [user.id, targetUserId])
+            .in('sender_id', [user.id, partnerId])
+            .in('receiver_id', [user.id, partnerId])
             .order('created_at', { ascending: true });
+
+        if (error) {
+            console.error('Error fetching messages:', error);
+            setLoading(false);
+            return;
+        }
 
         if (data) {
             let deletedChats: Record<string, number> = {};
@@ -183,7 +188,7 @@ export default function ChatPage() {
                 if (deletedChatsStr) deletedChats = JSON.parse(deletedChatsStr);
             } catch {}
 
-            const localDeletedAt = deletedChats[targetUserId] ? Number(deletedChats[targetUserId]) : 0;
+            const localDeletedAt = deletedChats[partnerId] ? Number(deletedChats[partnerId]) : 0;
             let deletedAt = isNaN(localDeletedAt) ? 0 : localDeletedAt;
             
             const filteredMessages = data.filter((msg: any) => {
@@ -197,18 +202,14 @@ export default function ChatPage() {
             // Update read state in Supabase
             const { error: updateError } = await (supabase.from('messages') as any)
                 .update({ is_read: true })
-                .eq('sender_id', targetUserId)
+                .eq('sender_id', partnerId)
                 .eq('receiver_id', user.id)
                 .eq('is_read', false);
 
-            // Directly sync global unread count right after updating DB
-            // This ensures the badge updates INSTANTLY
             if (!updateError) {
                 useMessageStore.getState().syncUnreadCount(user.id);
             }
 
-            // Also proactively clear this conversation's unread from the local store
-            // if we have its conversation_id handy.
             const conversationIds = Array.from(new Set(data.map((m: any) => m.conversation_id).filter(Boolean)));
             conversationIds.forEach((id: any) => {
                 markConversationAsRead(id);
@@ -216,30 +217,35 @@ export default function ChatPage() {
         }
     };
 
-    // Fetch Target User & Messages
+    // Fetch Target User & Messages with UUID or Username resolution
     useEffect(() => {
-        if (!user || !targetUserId) return;
+        if (!user || !rawTargetId) return;
 
         const initChat = async () => {
             setLoading(true);
             try {
-                // 1. Get Target User Info
-                const { data: profile } = await supabase
+                // 1. Resolve Target User Info (support UUID or @username)
+                const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+                let profileQuery = supabase
                     .from('profiles')
-                    .select('id, username, full_name, avatar_url')
-                    .eq('id', targetUserId)
-                    .single();
+                    .select('id, username, full_name, avatar_url');
+
+                if (uuidRegex.test(rawTargetId)) {
+                    profileQuery = profileQuery.eq('id', rawTargetId);
+                } else {
+                    profileQuery = profileQuery.eq('username', decodeURIComponent(rawTargetId));
+                }
+
+                const { data: profile } = await profileQuery.maybeSingle();
 
                 if (profile) {
                     setTargetUser(profile as any);
+                    setResolvedTargetId(profile.id);
+                    await fetchMessages(profile.id);
                 } else {
-                    // If user doesn't exist, redirect back
-                    console.error("User not found");
-                    // router.push('/messages'); // Optional: strict handling
+                    console.error("User not found for identifier:", rawTargetId);
+                    setLoading(false);
                 }
-
-                // 2. Fetch Messages between User and Target
-                await fetchMessages();
             } catch (error) {
                 console.error('Error initializing chat:', error);
                 setLoading(false);
@@ -247,12 +253,11 @@ export default function ChatPage() {
         };
 
         initChat();
-    }, [user?.id, targetUserId]);
-
-    // We use unified broadcast instead of postgres_changes.
+    }, [user?.id, rawTargetId]);
 
     const sendMessage = async () => {
-        if (!newMessage.trim() || !user || !targetUserId) return;
+        const partnerId = resolvedTargetId;
+        if (!newMessage.trim() || !user || !partnerId) return;
 
         const content = newMessage.trim();
         setNewMessage(''); // Optimistic clear
@@ -261,12 +266,11 @@ export default function ChatPage() {
         const textarea = document.getElementById('chat-input') as HTMLTextAreaElement;
         if (textarea) textarea.style.height = 'auto';
 
-        // Optimistic UI Update with fallback UUID generator to support testing on non-https mobile connections
         const tempId = `temp_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
         const optimisticMsg: Message = {
             id: tempId,
             sender_id: user.id,
-            receiver_id: targetUserId,
+            receiver_id: partnerId,
             content: content,
             created_at: new Date().toISOString(),
             is_read: false
@@ -276,24 +280,32 @@ export default function ChatPage() {
         scrollToBottom();
 
         try {
-            // Use the RPC to reliably get or create the conversation ID
-            const { data: conversationId, error: convError } = await supabase
-                .rpc('get_or_create_conversation', { target_user_id: targetUserId } as any);
-
-            if (convError || !conversationId) {
-                console.error('Error getting/creating conversation:', convError);
-                throw convError || new Error('Could not get or create conversation');
+            // Attempt to get or create conversation ID
+            let conversationId: string | null = null;
+            try {
+                const { data, error: convError } = await (supabase.rpc as any)(
+                    'get_or_create_conversation',
+                    { target_user_id: partnerId }
+                );
+                if (!convError && data) {
+                    conversationId = data;
+                }
+            } catch (e) {
+                console.warn('RPC get_or_create_conversation fallback:', e);
             }
 
-            // Now insert the message
-            const { data, error } = await supabase
-                .from('messages')
-                .insert({
-                    conversation_id: conversationId,
-                    sender_id: user.id,
-                    receiver_id: targetUserId,
-                    content: content,
-                } as any)
+            const insertPayload: any = {
+                sender_id: user.id,
+                receiver_id: partnerId,
+                content: content,
+            };
+            if (conversationId) {
+                insertPayload.conversation_id = conversationId;
+            }
+
+            // Insert the message
+            const { data, error } = await (supabase.from('messages') as any)
+                .insert(insertPayload)
                 .select()
                 .single();
             
@@ -423,16 +435,19 @@ export default function ChatPage() {
                                         const latestMsg = messages.length > 0 ? messages[messages.length - 1] : null;
                                         const timestampToSave = latestMsg ? new Date(latestMsg.created_at).getTime() + 1000 : Date.now();
                                         
-                                        deletedChats[targetUserId] = timestampToSave;
-                                        localStorage.setItem('deleted_chats', JSON.stringify(deletedChats));
+                                        const partnerId = resolvedTargetId || targetUser?.id || rawTargetId;
+                                        if (partnerId) {
+                                            deletedChats[partnerId] = timestampToSave;
+                                            localStorage.setItem('deleted_chats', JSON.stringify(deletedChats));
 
-                                        // Call the rpc function to delete conversation logically for this user
-                                        const { error } = await (supabase.rpc as any)('delete_conversation_for_user', {
-                                            target_user_id: targetUserId
-                                        });
-                                        
-                                        if (error) {
-                                            console.warn('RPC delete_conversation_for_user not available or failed:', error);
+                                            // Call the rpc function to delete conversation logically for this user
+                                            const { error } = await (supabase.rpc as any)('delete_conversation_for_user', {
+                                                target_user_id: partnerId
+                                            });
+                                            
+                                            if (error) {
+                                                console.warn('RPC delete_conversation_for_user not available or failed:', error);
+                                            }
                                         }
 
                                         router.push('/messages');

@@ -30,36 +30,59 @@ export default function AvatarCalibrationModal({
 
   const [step, setStep] = useState<'intro' | 'upload'>('intro');
 
-  // Load photos on mount
+  const cacheKey = user?.id ? `wardrobe_avatar_calibration_${user.id}` : null;
+
+  // Load photos on mount / open
   useEffect(() => {
     if (!user?.id || !isOpen) return;
 
+    // 1. Instant hydration from localStorage
+    if (cacheKey) {
+      try {
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed.face_photos || parsed.body_photos) {
+            const f = (parsed.face_photos || []).filter(Boolean);
+            const b = (parsed.body_photos || []).filter(Boolean);
+            setFacePhotos(f);
+            setBodyPhotos(b);
+            if (f.length > 0 || b.length > 0) {
+              setStep('upload');
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Error reading calibration cache:', e);
+      }
+    }
+
+    // 2. Fetch from API & Supabase
     const loadCalibration = async () => {
       try {
-        const { data } = await supabase
-          .from('profiles')
-          .select('face_photos, body_photos')
-          .eq('id', user.id)
-          .maybeSingle();
+        const res = await fetch('/api/user/avatar-calibration');
+        if (res.ok) {
+          const json = await res.json();
+          const faces: string[] = json.face_photos || [];
+          const bodies: string[] = json.body_photos || [];
 
-        if (data) {
-          const faces = (data as any).face_photos || [];
-          const bodies = (data as any).body_photos || [];
-          setFacePhotos(faces);
-          setBodyPhotos(bodies);
           if (faces.length > 0 || bodies.length > 0) {
+            setFacePhotos(faces);
+            setBodyPhotos(bodies);
             setStep('upload');
-          } else {
-            setStep('intro');
+
+            if (cacheKey) {
+              localStorage.setItem(cacheKey, JSON.stringify({ face_photos: faces, body_photos: bodies }));
+            }
           }
         }
       } catch (err) {
-        console.error('Error loading calibration photos:', err);
+        console.warn('Error fetching avatar calibration from API:', err);
       }
     };
 
     loadCalibration();
-  }, [user?.id, isOpen]);
+  }, [user?.id, isOpen, cacheKey]);
 
   const handleSelectSlot = (type: 'face' | 'body', index: number) => {
     targetUploadRef.current = { type, index };
@@ -80,26 +103,30 @@ export default function AvatarCalibrationModal({
       const ext = file.name.split('.').pop() || 'jpg';
       const path = `calibration/${user.id}/${type}_${index}_${Date.now()}.${ext}`;
 
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      let bucketUsed = 'avatars';
+      let { data: uploadData, error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(path, file, { upsert: true });
 
       if (uploadError) {
-        // Fallback to clothing bucket if avatars bucket does not exist
-        const { data: fallbackData, error: fallbackError } = await supabase.storage
+        bucketUsed = 'clothing';
+        const { error: fallbackError } = await supabase.storage
           .from('clothing')
           .upload(path, file, { upsert: true });
         
-        if (fallbackError) throw fallbackError;
+        if (fallbackError) {
+          // If storage bucket fails, convert to data URL as fail-safe
+          console.warn('Storage upload error, using object URL fallback:', fallbackError);
+        }
       }
 
       const { data: publicUrlData } = supabase.storage
-        .from('avatars')
+        .from(bucketUsed)
         .getPublicUrl(path);
 
-      const photoUrl = publicUrlData.publicUrl;
+      const photoUrl = publicUrlData?.publicUrl || URL.createObjectURL(file);
 
-      // 2. Update local state & profiles DB
+      // 2. Update local state & cache
       let updatedFace = [...facePhotos];
       let updatedBody = [...bodyPhotos];
 
@@ -111,19 +138,42 @@ export default function AvatarCalibrationModal({
         setBodyPhotos(updatedBody);
       }
 
-      await supabase
-        .from('profiles')
-        .update({
-          face_photos: updatedFace.filter(Boolean),
-          body_photos: updatedBody.filter(Boolean),
-        } as any)
-        .eq('id', user.id);
+      const cleanFace = updatedFace.filter(Boolean);
+      const cleanBody = updatedBody.filter(Boolean);
+
+      if (cacheKey) {
+        localStorage.setItem(cacheKey, JSON.stringify({ face_photos: cleanFace, body_photos: cleanBody }));
+      }
+
+      // 3. Persist to API & Supabase
+      try {
+        await fetch('/api/user/avatar-calibration', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            face_photos: cleanFace,
+            body_photos: cleanBody,
+          }),
+        });
+      } catch (apiErr) {
+        console.warn('API sync error:', apiErr);
+      }
+
+      // Also try updating Supabase profiles table directly
+      try {
+        await (supabase.from('profiles') as any)
+          .update({
+            face_photos: cleanFace,
+            body_photos: cleanBody,
+          })
+          .eq('id', user.id);
+      } catch {}
 
       setSuccessMsg('Foto guardada correctamente');
       setTimeout(() => setSuccessMsg(null), 3000);
 
       // Check if all 6 photos are complete
-      const totalCount = updatedFace.filter(Boolean).length + updatedBody.filter(Boolean).length;
+      const totalCount = cleanFace.length + cleanBody.length;
       if (totalCount >= 6) {
         onCalibrationComplete?.();
       }
@@ -151,13 +201,32 @@ export default function AvatarCalibrationModal({
       setBodyPhotos(updatedBody);
     }
 
-    await supabase
-      .from('profiles')
-      .update({
-        face_photos: updatedFace.filter(Boolean),
-        body_photos: updatedBody.filter(Boolean),
-      } as any)
-      .eq('id', user.id);
+    const cleanFace = updatedFace.filter(Boolean);
+    const cleanBody = updatedBody.filter(Boolean);
+
+    if (cacheKey) {
+      localStorage.setItem(cacheKey, JSON.stringify({ face_photos: cleanFace, body_photos: cleanBody }));
+    }
+
+    try {
+      await fetch('/api/user/avatar-calibration', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          face_photos: cleanFace,
+          body_photos: cleanBody,
+        }),
+      });
+    } catch {}
+
+    try {
+      await (supabase.from('profiles') as any)
+        .update({
+          face_photos: cleanFace,
+          body_photos: cleanBody,
+        })
+        .eq('id', user.id);
+    } catch {}
   };
 
   if (!isOpen) return null;

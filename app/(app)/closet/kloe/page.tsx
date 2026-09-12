@@ -289,13 +289,20 @@ export default function KloePage() {
 
     setGeneratingAvatarForMsgId(msg.id);
     try {
+      let calibrationPhotos: any = null;
+      try {
+        const stored = localStorage.getItem(`wardrobe_avatar_calibration_${user.id}`);
+        if (stored) calibrationPhotos = JSON.parse(stored);
+      } catch {}
+
       const res = await fetch('/api/closy/generate-avatar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId: user.id,
           itemIds,
-          outfitName: msg.recommended_outfit?.name || 'Look Kloe'
+          outfitName: msg.recommended_outfit?.name || 'Look Kloe',
+          calibrationPhotos
         })
       });
 
