@@ -45,9 +45,34 @@ export default function PostDetailPage() {
     const [activeSlide, setActiveSlide] = useState(0);
     const [isMobile, setIsMobile] = useState(false);
 
+    // Initial like state from likeManager or store caches
+    const initialLiked = (() => {
+        if (!postId) return false;
+        const pending = likeManager.getPendingState(postId);
+        if (pending !== undefined) return pending;
+        const searchState = useSearchStore.getState();
+        const searchPost = searchState.explorePosts.find(p => p.id === postId) || searchState.results.find(p => p.id === postId);
+        if (searchPost?.isLiked !== undefined) return searchPost.isLiked;
+        const feedPost = useFeedStore.getState().posts.find(p => p.id === postId);
+        if (feedPost?.isLiked !== undefined) return feedPost.isLiked;
+        return false;
+    })();
+
+    const initialLikesCount = (() => {
+        if (!postId) return 0;
+        const searchState = useSearchStore.getState();
+        const searchPost = searchState.explorePosts.find(p => p.id === postId) || searchState.results.find(p => p.id === postId);
+        if (searchPost?.likes !== undefined) return searchPost.likes;
+        if ((searchPost as any)?.likes_count !== undefined) return (searchPost as any).likes_count;
+        const feedPost = useFeedStore.getState().posts.find(p => p.id === postId);
+        if (feedPost?.likes !== undefined) return feedPost.likes;
+        if ((feedPost as any)?.likes_count !== undefined) return (feedPost as any).likes_count;
+        return 0;
+    })();
+
     // Interaction States
-    const [isLiked, setIsLiked] = useState(false);
-    const [likesCount, setLikesCount] = useState(0);
+    const [isLiked, setIsLiked] = useState<boolean>(initialLiked);
+    const [likesCount, setLikesCount] = useState<number>(initialLikesCount);
     const [isSaved, setIsSaved] = useState(false);
     const [isFollowing, setIsFollowing] = useState(false);
     const [submittingComment, setSubmittingComment] = useState(false);
@@ -140,6 +165,21 @@ export default function PostDetailPage() {
                         throw postError;
                     }
                     postData = directPost;
+                }
+
+                // Fallback for creator profile if not loaded via join
+                if ((!postData?.profiles?.username && !postData?.user?.username) && postData?.user_id) {
+                    try {
+                        const { data: directProf } = await supabase
+                            .from('profiles')
+                            .select('id, username, full_name, avatar_url')
+                            .eq('id', postData.user_id)
+                            .maybeSingle();
+                        if (directProf) {
+                            postData.profiles = directProf;
+                            postData.user = directProf;
+                        }
+                    } catch (e) {}
                 }
 
                 // If post has outfit_id but outfits is null, fetch outfit directly
@@ -237,7 +277,15 @@ export default function PostDetailPage() {
                     .order('created_at', { ascending: true });
 
                 setPost(postData);
-                setIsLiked(likeRes.data && (likeRes.data as any[]).length > 0);
+
+                // Prioritize likeManager pending state or store state over direct db query
+                const pendingLike = likeManager.getPendingState(postId);
+                if (pendingLike !== undefined) {
+                    setIsLiked(pendingLike);
+                } else {
+                    setIsLiked(likeRes.data && (likeRes.data as any[]).length > 0);
+                }
+
                 setIsSaved(saveRes.data && (saveRes.data as any[]).length > 0);
                 setIsFollowing(followStatus === 'accepted');
                 setLikesCount((postData as any)?.likes_count || 0);
@@ -264,6 +312,12 @@ export default function PostDetailPage() {
         };
 
         fetchData();
+
+        return () => {
+            try {
+                likeManager.flushAll();
+            } catch {}
+        };
     }, [postId, user?.id]);
 
 
@@ -318,8 +372,9 @@ export default function PostDetailPage() {
     const currentSlide = slides[activeSlide] || slides[0];
     
     // Normalize author data
-    const authorRaw = post?.profiles;
+    const authorRaw = post?.profiles || post?.user || post?.author;
     const author = Array.isArray(authorRaw) ? authorRaw[0] : (authorRaw || {});
+    const authorIdentifier = author.username || author.id || post?.user_id || '';
 
     // Handle Interactions
     const toggleLike = () => {
@@ -514,7 +569,7 @@ export default function PostDetailPage() {
 
     return (
         <div className="min-h-screen w-full overflow-x-hidden bg-[var(--background)] flex flex-col">
-            {/* HEADER - Apple Glass Bar with 15% increased width */}
+            {/* HEADER - Apple Glass Bar with clean navigation */}
             <header className="sticky top-0 z-50 w-full max-w-[1600px] mx-auto apple-glass-bar pt-safe h-16 flex items-center justify-between px-4">
                 {/* Left: Back Button */}
                 <button 
@@ -525,14 +580,14 @@ export default function PostDetailPage() {
                     <ArrowLeft className="w-6 h-6 transition-colors" />
                 </button>
 
-                {/* Center: Username - smaller and profile photo */}
-                <Link href={`/profile/${author.id}`} className="flex items-center gap-2 flex-1 ml-2 select-none">
+                {/* Center: Username & Profile Photo - Mobile Only (md:hidden) */}
+                <Link href={`/profile/${authorIdentifier}`} className="flex md:hidden items-center gap-2 flex-1 ml-2 select-none">
                     <Avatar src={author.avatar_url || null} alt={author.username || 'Usuario'} size="sm" />
-                    <span className="font-semibold text-[15px] text-[var(--foreground)] truncate">{author.username}</span>
+                    <span className="font-semibold text-[15px] text-[var(--foreground)] truncate">@{author.username || 'usuario'}</span>
                 </Link>
 
-                {/* Right: Actions */}
-                <div className="flex items-center gap-1 relative">
+                {/* Right: Actions - Mobile Only (md:hidden) */}
+                <div className="flex md:hidden items-center gap-1 relative">
                     {/* Follow button (if not own post) */}
                     {/* @ts-ignore */}
                     {user?.id !== post.user_id ? (
@@ -713,7 +768,85 @@ export default function PostDetailPage() {
 
             {/* RIGHT COLUMN: Actions, Details, Comments (Expanded +15% width: 460px -> 520px) */}
             <div className="flex flex-col w-full min-w-0 md:w-[460px] lg:w-[520px] md:h-[calc(100vh-64px)] bg-[var(--background)] overflow-x-hidden pb-[72px] md:pb-0 border-l border-[var(--border-color)]/50 flex-shrink-0">
-                {/* ACTION BAR - Below image */}
+                
+                {/* DESKTOP AUTHOR HEADER */}
+                <div className="hidden md:flex items-center justify-between px-4 py-3.5 border-b border-[var(--border-color)]/50 flex-shrink-0 bg-[var(--background)]">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <Link href={`/profile/${authorIdentifier}`} className="flex-shrink-0">
+                            <Avatar src={author.avatar_url || null} alt={author.username || 'Usuario'} size="md" />
+                        </Link>
+                        <div className="flex items-center gap-3 min-w-0 flex-wrap">
+                            <Link 
+                                href={`/profile/${authorIdentifier}`} 
+                                className="font-bold text-[15px] text-[var(--foreground)] hover:text-[var(--brand-pink)] transition-colors truncate"
+                            >
+                                @{author.username || 'usuario'}
+                            </Link>
+
+                            {/* Follow button immediately to the right of the username */}
+                            {user?.id !== post.user_id && (
+                                <button 
+                                    onClick={toggleFollow} 
+                                    className={`px-3.5 py-1 rounded-full font-bold text-xs transition-all active:scale-95 ${
+                                        isFollowing 
+                                            ? 'bg-[var(--background-secondary)] text-[var(--foreground)] border border-[var(--border-color)]' 
+                                            : 'bg-[var(--brand-pink)] text-white hover:bg-[var(--brand-pink-dark)] shadow-sm shadow-[var(--brand-pink)]/20'
+                                    }`}
+                                >
+                                    {isFollowing ? 'Siguiendo' : 'Seguir'}
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Owner Options */}
+                    {user?.id === post.user_id && (
+                        <div className="relative">
+                            <button 
+                                onClick={() => setShowOptions(!showOptions)}
+                                className="touch-target-44 text-[var(--foreground)] hover:text-[var(--brand-pink)] transition-colors active:scale-90 flex items-center justify-center"
+                                aria-label="Opciones de publicación"
+                            >
+                                <MoreVertical className="w-5 h-5" />
+                            </button>
+                            
+                            <AnimatePresence>
+                                {showOptions && (
+                                    <>
+                                        <div 
+                                            className="fixed inset-0 z-40" 
+                                            onClick={() => setShowOptions(false)}
+                                        />
+                                        <motion.div
+                                            initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                                            exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                                            className="absolute right-0 mt-2 w-48 bg-[var(--card-bg)] rounded-2xl shadow-xl border border-[var(--border-color)] py-2 z-50 overflow-hidden"
+                                        >
+                                            <button
+                                                onClick={handleEditPost}
+                                                className="w-full px-4 py-3 flex items-center gap-3 text-sm font-semibold text-[var(--foreground)] hover:bg-[var(--background-secondary)] transition-colors"
+                                            >
+                                                <Edit2 className="w-4 h-4" />
+                                                Editar publicación
+                                            </button>
+                                            <button
+                                                onClick={handleDeletePost}
+                                                disabled={deleting}
+                                                className="w-full px-4 py-3 flex items-center gap-3 text-sm font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                                {deleting ? 'Borrando...' : 'Borrar publicación'}
+                                            </button>
+                                        </motion.div>
+                                    </>
+                                )}
+                            </AnimatePresence>
+                        </div>
+                    )}
+                </div>
+
+                {/* ACTION BAR - Below image on mobile / Below author on desktop */}
                 <div className="border-b border-gray-100 dark:border-gray-800 px-4 py-3 flex items-center justify-between flex-shrink-0">
                     <div className="flex items-center gap-5">
                         <button onClick={toggleLike} className="flex items-center gap-1.5 font-bold hover:opacity-70 transition-opacity" aria-label={isLiked ? "Quitar me gusta" : "Me gusta"}>

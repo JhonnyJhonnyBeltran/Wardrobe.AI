@@ -890,14 +890,20 @@ En cada conversación, el backend alimenta a CloSy con:
     - **Botón de Atrás Ergonómico**: Icono `ArrowLeft` con navegación fluida (`router.back()` o fallback al perfil del autor).
     - **Identidad del Creador**: Foto de perfil (`Avatar`) y `@username` clicable que enlaza directamente a su perfil de usuario.
 
-### 69. Menú Flotante de Creación con Cascada Cinemática (~1s), Burbujas Ampliadas y Sin Desenfoque de Fondo (`FloatingCreateButton.tsx`) (Septiembre 2026)
-- **Desplazamiento Ergonómico a la Izquierda**:
-  - Se ajustó el anclaje del botón flotante y sus opciones a `right-12 md:right-16` (y `bottom-24 md:bottom-10`), proporcionando mayor holgura y separación respecto al borde de la pantalla.
-- **Tamaño Homogéneo de Opciones (`w-14 h-14` / 56px)**:
-  - Las opciones de *Nuevo Post*, *Nuevo Outfit* y *Nueva Prenda* tienen exactamente el mismo diámetro (56px) y tamaño de icono (`w-7 h-7` / 28px) que el botón de activación `+`.
-- **Animación en Cascada Progresiva (~1s Total) y Transición Limpia Sin Desenfoque**:
-  - Se eliminó por completo el desenfoque (`backdrop-blur`) y oscurecimiento del fondo para mantener la interfaz nítida y limpia.
-  - Al abrirse el menú, el botón `+` se oculta con una transición suave y da paso al botón de cierre `X`, mientras las opciones se despliegan en una cascada lenta (~1s) con física `spring` elástica.
+### 70. Sincronización Blindada de Likes (Doble Capa Token + Supabase) y Rediseño de Detalle de Post en Escritorio (`/post/[id]`) (Septiembre 2026)
+- **Persistencia y Sincronización Blindada de Likes (`lib/services/likeManager.ts` & `app/(app)/post/[id]/page.tsx`)**:
+  - **Causa Raíz Solucionada**: Al dar/quitar like dentro de un post y navegar de vuelta a `/search`, el store local retenía el cambio pero las peticiones fetch a `/api/likes` carecían de cabeceras `Authorization: Bearer <token>`, provocando posibles 401 en segundo plano que impedían la persistencia en base de datos. Además, al reingresar a `/post/[id]`, el componente leía directo de Supabase sin consultar el estado pendiente de `likeManager` ni las memorias de `useSearchStore` / `useFeedStore`.
+  - **Doble Capa de Escritura**:
+    1. Operación directa con cliente Supabase (`supabase.from('likes').upsert/delete`) con el `session.user.id` activo.
+    2. Llamada a `/api/likes` con header `Authorization: Bearer ${session.access_token}` para actualizar notificaciones y conteos atómicos.
+  - **Inicialización Inmediata y Flush al Desmontar**: `/post/[id]` inicializa `isLiked` priorizando `likeManager.getPendingState(postId)` y las cachés de búsqueda/feed, y ejecuta `flushAll()` automáticamente en el cleanup del hook al salir o desmontar la pantalla.
+- **Rediseño del Layout de Detalle de Post en Escritorio (`app/(app)/post/[id]/page.tsx`)**:
+  - **Cabecera Superior Limpia en PC (`md:hidden` para usuario)**: En vista de ordenador, la barra superior sólo mantiene el botón de retorno (`ArrowLeft`), ocultando el avatar/username redundante del autor.
+  - **Ficha del Autor en Columna Lateral Derecha**:
+    - Se integró la cabecera del creador (`Avatar` + `@username`) al inicio de la columna derecha de detalles sobre el panel de acciones.
+    - **Botón de Seguir Inmediato a la Derecha del Username**: El botón de *Seguir / Siguiendo* se sitúa alineado exactamente a la derecha del nombre del usuario con respuesta instantánea.
+    - Debajo de la cabecera del autor se ubican la barra de acciones (Me gusta, Comentar, Compartir, Guardar), descripción/caption, prendas interactivas del look y comentarios.
+  - **Resolución Resiliente del Perfil**: Se incorporó un fallback directo a la tabla `profiles` por `user_id` para garantizar que el autor y su avatar siempre carguen sin fallos.
 
 
 

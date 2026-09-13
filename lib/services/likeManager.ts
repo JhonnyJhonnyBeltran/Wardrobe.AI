@@ -2,6 +2,7 @@
 
 import { useFeedStore } from '@/store/feedStore';
 import { useSearchStore } from '@/store/searchStore';
+import { supabase } from '@/lib/supabase/client';
 
 interface PendingEntry {
   postId: string;
@@ -24,7 +25,7 @@ class LikeManager {
   /**
    * Toggles the like state for a post.
    * Immediately updates Zustand feed & search stores optimistically,
-   * then debounces the database write by 5 seconds.
+   * then debounces the database write.
    */
   public toggleLike(
     postId: string,
@@ -89,10 +90,34 @@ class LikeManager {
     }
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      const userId = session?.user?.id;
+
+      // Guaranteed direct client write if user is authenticated
+      if (userId) {
+        if (entry.currentLiked) {
+          supabase.from('likes' as any).upsert(
+            { post_id: postId, user_id: userId },
+            { onConflict: 'post_id,user_id' }
+          ).then(() => {}).catch(() => {});
+        } else {
+          supabase.from('likes' as any).delete()
+            .eq('post_id', postId)
+            .eq('user_id', userId)
+            .then(() => {}).catch(() => {});
+        }
+      }
+
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       if (entry.currentLiked) {
         const res = await fetch('/api/likes', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers,
           body: JSON.stringify({ post_id: postId })
         });
         if (res.ok) {
@@ -104,7 +129,8 @@ class LikeManager {
         }
       } else {
         const res = await fetch(`/api/likes?post_id=${postId}`, {
-          method: 'DELETE'
+          method: 'DELETE',
+          headers
         });
         if (res.ok) {
           const data = await res.json();
@@ -123,22 +149,51 @@ class LikeManager {
    * Immediately commits all pending operations
    */
   public flushAll(): void {
-    this.pending.forEach((entry, postId) => {
+    if (this.pending.size === 0) return;
+
+    const entries = Array.from(this.pending.entries());
+    this.pending.clear();
+
+    entries.forEach(([postId, entry]) => {
       clearTimeout(entry.timeoutId);
       if (entry.currentLiked !== entry.initialLiked) {
-        const url = entry.currentLiked ? '/api/likes' : `/api/likes?post_id=${postId}`;
-        const method = entry.currentLiked ? 'POST' : 'DELETE';
-        try {
-          fetch(url, {
-            method,
-            headers: { 'Content-Type': 'application/json' },
-            body: entry.currentLiked ? JSON.stringify({ post_id: postId }) : undefined,
-            keepalive: true
-          }).catch(() => {});
-        } catch {}
+        supabase.auth.getSession().then((res: any) => {
+          const session = res?.data?.session;
+          const token = session?.access_token;
+          const userId = session?.user?.id;
+
+          if (userId) {
+            if (entry.currentLiked) {
+              supabase.from('likes' as any).upsert(
+                { post_id: postId, user_id: userId },
+                { onConflict: 'post_id,user_id' }
+              ).then(() => {}).catch(() => {});
+            } else {
+              supabase.from('likes' as any).delete()
+                .eq('post_id', postId)
+                .eq('user_id', userId)
+                .then(() => {}).catch(() => {});
+            }
+          }
+
+          const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+          if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+          }
+
+          const url = entry.currentLiked ? '/api/likes' : `/api/likes?post_id=${postId}`;
+          const method = entry.currentLiked ? 'POST' : 'DELETE';
+          try {
+            fetch(url, {
+              method,
+              headers,
+              body: entry.currentLiked ? JSON.stringify({ post_id: postId }) : undefined,
+              keepalive: true
+            }).catch(() => {});
+          } catch {}
+        }).catch(() => {});
       }
     });
-    this.pending.clear();
   }
 
   /**
