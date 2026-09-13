@@ -38,7 +38,7 @@ export default function FloatingCreateButton() {
         { id: 'item', label: 'Nueva Prenda', icon: Shirt, path: '/closet?action=new-item' },
     ];
 
-    // Slow, luxurious ~1s total cascade variants
+    // Cascading spring animation (~1s total duration feel)
     const containerVariants: Variants = {
         hidden: { 
             opacity: 0, 
@@ -50,8 +50,8 @@ export default function FloatingCreateButton() {
         visible: { 
             opacity: 1, 
             transition: { 
-                delayChildren: 0.12,
-                staggerChildren: 0.22 // Cascada lenta de ~1s total
+                delayChildren: 0.08,
+                staggerChildren: 0.25 // Cascada lenta ~1s
             } 
         }
     };
@@ -59,48 +59,45 @@ export default function FloatingCreateButton() {
     const itemVariants: Variants = {
         hidden: { 
             opacity: 0, 
-            y: 35, 
-            x: 10,
-            scale: 0.6 
+            y: 40, 
+            scale: 0.4,
+            transition: {
+                duration: 0.2,
+                ease: "easeIn"
+            }
         },
         visible: { 
             opacity: 1, 
             y: 0, 
-            x: 0,
             scale: 1,
             transition: { 
                 type: "spring" as const, 
-                stiffness: 170, 
-                damping: 18, 
-                mass: 0.85 
+                stiffness: 150, 
+                damping: 16, 
+                mass: 0.9,
+                duration: 0.75
             } 
         }
     };
 
     return (
         <>
-            {/* Click-outside backdrop when menu is open */}
-            <AnimatePresence>
-                {isCreateMenuOpen && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                        onClick={() => setCreateMenuOpen(false)}
-                        className="fixed inset-0 z-40 bg-black/35 backdrop-blur-[2px]"
-                    />
-                )}
-            </AnimatePresence>
+            {/* Transparent click-outside area (NO BLUR, NO DARKENING) */}
+            {isCreateMenuOpen && (
+                <div
+                    onClick={() => setCreateMenuOpen(false)}
+                    className="fixed inset-0 z-40 bg-transparent"
+                />
+            )}
 
-            {/* Desktop Speed Dial - Shifted slightly more to the left (right-10 md:right-14) */}
-            <div className="hidden md:flex fixed bottom-24 md:bottom-10 right-10 md:right-14 z-50 flex-col items-end pointer-events-none">
+            {/* Desktop Speed Dial - Shifted to the left (right-12 md:right-16) */}
+            <div className="hidden md:flex fixed bottom-24 md:bottom-10 right-12 md:right-16 z-50 flex-col items-end pointer-events-none">
                 
                 {/* Cascade Options (Desktop) */}
                 <AnimatePresence>
                     {isCreateMenuOpen && (
                         <motion.div
-                            className="flex flex-col items-end gap-3.5 mb-4 origin-bottom pointer-events-auto"
+                            className="flex flex-col items-end gap-3.5 mb-3.5 origin-bottom pointer-events-auto"
                             variants={containerVariants}
                             initial="hidden"
                             animate="visible"
@@ -115,12 +112,12 @@ export default function FloatingCreateButton() {
                                         onClick={() => handleActionClick(action.path)}
                                         className="group flex items-center gap-3.5 cursor-pointer focus:outline-none"
                                     >
-                                        {/* Label Tag */}
-                                        <span className="px-4 py-2 bg-[var(--card-bg)]/95 dark:bg-[#18181f]/95 text-[var(--foreground)] text-sm font-bold rounded-2xl shadow-xl border border-[var(--border-color)] group-hover:border-[var(--brand-pink)] group-hover:text-[var(--brand-pink)] transition-all">
+                                        {/* Label Tag (No blur) */}
+                                        <span className="px-4 py-2 bg-[var(--card-bg)] text-[var(--foreground)] text-sm font-bold rounded-2xl shadow-xl border border-[var(--border-color)] group-hover:border-[var(--brand-pink)] group-hover:text-[var(--brand-pink)] transition-colors select-none">
                                             {action.label}
                                         </span>
                                         {/* Option Bubble - Exactly 56px (w-14 h-14) with 28px (w-7 h-7) Icon */}
-                                        <div className="w-14 h-14 rounded-full flex items-center justify-center bg-black text-white dark:bg-white dark:text-black shadow-2xl border border-white/15 dark:border-black/15 transition-all group-hover:scale-110 group-active:scale-95 group-hover:shadow-[0_10px_25px_rgba(255,45,120,0.35)]">
+                                        <div className="w-14 h-14 rounded-full flex items-center justify-center bg-black text-white dark:bg-white dark:text-black shadow-2xl border border-white/15 dark:border-black/15 transition-transform group-hover:scale-110 group-active:scale-95 group-hover:shadow-[0_10px_25px_rgba(255,45,120,0.35)]">
                                             <Icon className="w-7 h-7" strokeWidth={2.2} />
                                         </div>
                                     </motion.button>
@@ -130,20 +127,36 @@ export default function FloatingCreateButton() {
                     )}
                 </AnimatePresence>
 
-                {/* Main Trigger Button (+ / X) */}
-                <motion.button
-                    whileTap={{ scale: 0.9 }}
-                    onClick={handleToggle}
-                    className="w-14 h-14 rounded-full bg-[var(--brand-pink)] flex items-center justify-center text-white shadow-2xl shadow-[var(--brand-pink)]/35 cursor-pointer overflow-hidden z-20 transition-all hover:scale-105 pointer-events-auto"
-                    aria-label={isCreateMenuOpen ? "Cerrar menú de creación" : "Crear nuevo"}
-                >
-                    <motion.div
-                        animate={{ rotate: isCreateMenuOpen ? 135 : 0 }}
-                        transition={{ type: "spring", stiffness: 280, damping: 20 }}
-                    >
-                        <Plus className="w-7 h-7" strokeWidth={2.5} />
-                    </motion.div>
-                </motion.button>
+                {/* Main Trigger Button - Hides when open, replaced by close button */}
+                <AnimatePresence mode="wait">
+                    {!isCreateMenuOpen ? (
+                        <motion.button
+                            key="fab-open"
+                            initial={{ scale: 0.6, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.4, opacity: 0, transition: { duration: 0.15 } }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={handleToggle}
+                            className="w-14 h-14 rounded-full bg-[var(--brand-pink)] flex items-center justify-center text-white shadow-2xl shadow-[var(--brand-pink)]/35 cursor-pointer overflow-hidden z-20 transition-all hover:scale-105 pointer-events-auto"
+                            aria-label="Crear nuevo"
+                        >
+                            <Plus className="w-7 h-7" strokeWidth={2.5} />
+                        </motion.button>
+                    ) : (
+                        <motion.button
+                            key="fab-close"
+                            initial={{ scale: 0.4, opacity: 0, rotate: -90 }}
+                            animate={{ scale: 1, opacity: 1, rotate: 0 }}
+                            exit={{ scale: 0.4, opacity: 0, transition: { duration: 0.15 } }}
+                            whileTap={{ scale: 0.9 }}
+                            onClick={handleToggle}
+                            className="w-14 h-14 rounded-full bg-[var(--background-secondary)] border border-[var(--border-color)] flex items-center justify-center text-[var(--foreground)] shadow-xl cursor-pointer hover:scale-105 hover:text-red-500 transition-all pointer-events-auto"
+                            aria-label="Cerrar opciones"
+                        >
+                            <X className="w-7 h-7" strokeWidth={2.2} />
+                        </motion.button>
+                    )}
+                </AnimatePresence>
             </div>
 
             {/* Mobile Bottom Sheet Modal */}
@@ -157,7 +170,7 @@ export default function FloatingCreateButton() {
                     >
                         {/* Backdrop */}
                         <div
-                            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                            className="absolute inset-0 bg-black/50"
                             onClick={() => setCreateMenuOpen(false)}
                         />
 
@@ -200,4 +213,5 @@ export default function FloatingCreateButton() {
         </>
     );
 }
+
 
