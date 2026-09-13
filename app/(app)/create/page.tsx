@@ -740,7 +740,7 @@ export default function CreateOutfitPage() {
                                 </div>
 
                                 {/* Unified Grid for filtered items */}
-                                <div className="flex-1 overflow-y-auto px-4 pb-32">
+                                <div className="flex-1 overflow-y-auto px-4 pb-48">
                                     <div className="grid grid-cols-3 gap-3">
                                         {filteredItems.length === 0 ? (
                                             <div className="col-span-full flex flex-col items-center justify-center py-12 text-center text-[var(--foreground-secondary)]">
@@ -810,7 +810,7 @@ export default function CreateOutfitPage() {
                                 initial={{ opacity: 0, x: 20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: 20 }}
-                                className="flex flex-col h-full p-4 space-y-4 pb-24 overflow-y-auto"
+                                className="flex flex-col h-full p-4 space-y-4 pb-36 overflow-y-auto"
                             >
                                 {/* Outfit Name Input */}
                                 <div className="bg-[var(--card-bg)] rounded-2xl p-4 border border-[var(--border-color)]">
@@ -936,16 +936,16 @@ export default function CreateOutfitPage() {
                                             initial={{ opacity: 0, y: 50 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             exit={{ opacity: 0, y: 50 }}
-                                            className="fixed bottom-0 left-0 right-0 p-4 border-t border-[var(--border-color)] bg-[var(--background)]/80 backdrop-blur-md z-40 flex gap-3"
+                                            className="fixed bottom-0 left-0 right-0 p-4 pb-[calc(16px+env(safe-area-inset-bottom,0px))] border-t border-[var(--border-color)] bg-[var(--background)]/90 backdrop-blur-md z-40 flex gap-3"
                                         >
                                             <Button
                                                 onClick={handleSave}
                                                 glow={true}
                                                 loading={loading}
-                                                className="w-full rounded-full py-4 text-sm font-semibold"
+                                                className="w-full rounded-2xl py-3.5 text-sm font-semibold shadow-xl"
                                             >
                                                 <Save className="w-5 h-5 mr-2" />
-                                                Guardar
+                                                Guardar Outfit
                                             </Button>
                                         </motion.div>
                                     )}
@@ -1203,17 +1203,17 @@ export default function CreateOutfitPage() {
 
             </main>
 
-            {/* Global Floating Selected Garments Bar (Mobile & Desktop) */}
+            {/* Floating Selected Garments Bar (Mobile Selection Step Only) */}
             <AnimatePresence>
-                {totalSelected > 0 && (
+                {mobileStep === 'selection' && totalSelected > 0 && (
                     <motion.div
-                        initial={{ opacity: 0, y: 50, scale: 0.95 }}
+                        initial={{ opacity: 0, y: 40, scale: 0.95 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 50, scale: 0.95 }}
-                        className="fixed bottom-[20px] md:bottom-[28px] left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2 w-[92vw] sm:w-auto sm:max-w-lg md:max-w-xl"
+                        exit={{ opacity: 0, y: 40, scale: 0.95 }}
+                        className="fixed bottom-[calc(16px+env(safe-area-inset-bottom,0px))] left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2.5 w-[92vw] sm:w-auto sm:max-w-lg md:max-w-xl lg:hidden pointer-events-auto"
                     >
                         {/* Selected Items Summary Container */}
-                        <div className="w-full bg-[var(--card-bg)]/95 backdrop-blur-2xl border border-[var(--border-color)] rounded-2xl p-2.5 sm:p-3 shadow-[0_16px_40px_rgba(0,0,0,0.14)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.5)] flex flex-col gap-2">
+                        <div className="w-full bg-[var(--card-bg)]/95 backdrop-blur-2xl border border-[var(--border-color)] rounded-2xl p-2.5 sm:p-3 shadow-[0_16px_40px_rgba(0,0,0,0.18)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.6)] flex flex-col gap-2">
                             {/* Header Info */}
                             <div className="flex items-center justify-between px-1 gap-2">
                                 <div className="flex items-center gap-1.5 min-w-0">
@@ -1222,7 +1222,7 @@ export default function CreateOutfitPage() {
                                         Prendas en el outfit ({totalSelected})
                                     </span>
                                 </div>
-                                <span className="text-[10px] text-[var(--foreground-tertiary)] shrink-0 hidden sm:inline">
+                                <span className="text-[10px] text-[var(--foreground-tertiary)] shrink-0">
                                     Toca × para quitar
                                 </span>
                             </div>
@@ -1235,7 +1235,7 @@ export default function CreateOutfitPage() {
                                         className="flex items-center gap-2 pl-1.5 pr-2 py-1 bg-[var(--background-secondary)]/90 hover:bg-[var(--background-secondary)] border border-[var(--border-color)] hover:border-[var(--brand-pink)]/40 rounded-xl shadow-xs shrink-0 transition-all group max-w-[155px] sm:max-w-[175px]"
                                     >
                                         {/* Image Thumbnail */}
-                                        <div className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-white dark:bg-[#151518] border border-[var(--border-color)] overflow-hidden shrink-0 flex items-center justify-center p-0.5">
+                                        <div className="relative w-8 h-8 rounded-lg bg-white dark:bg-[#151518] border border-[var(--border-color)] overflow-hidden shrink-0 flex items-center justify-center p-0.5">
                                             <img
                                                 src={item.imageUrl}
                                                 alt={item.name}
@@ -1271,26 +1271,24 @@ export default function CreateOutfitPage() {
                             </div>
                         </div>
 
-                        {/* Next Button Pill (Mobile Only) */}
-                        {mobileStep === 'selection' && (
-                            <div className="lg:hidden w-full">
-                                <Button
-                                    onClick={() => setMobileStep('preview')}
-                                    glow={true}
-                                    className="w-full rounded-2xl py-3.5 text-sm font-semibold overflow-hidden shadow-xl"
+                        {/* Next Button Pill */}
+                        <div className="w-full">
+                            <Button
+                                onClick={() => setMobileStep('preview')}
+                                glow={true}
+                                className="w-full rounded-2xl py-3.5 text-sm font-semibold overflow-hidden shadow-xl"
+                            >
+                                <motion.span
+                                    key={totalSelected}
+                                    initial={{ y: -15, opacity: 0 }}
+                                    animate={{ y: 0, opacity: 1 }}
+                                    className="inline-block"
                                 >
-                                    <motion.span
-                                        key={totalSelected}
-                                        initial={{ y: -15, opacity: 0 }}
-                                        animate={{ y: 0, opacity: 1 }}
-                                        className="inline-block"
-                                    >
-                                        Continuar con el look ({totalSelected})
-                                    </motion.span>
-                                    <ArrowRight className="w-4 h-4 ml-2" />
-                                </Button>
-                            </div>
-                        )}
+                                    Continuar con el look ({totalSelected})
+                                </motion.span>
+                                <ArrowRight className="w-4 h-4 ml-2" />
+                            </Button>
+                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>

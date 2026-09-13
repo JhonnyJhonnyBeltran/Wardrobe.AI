@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Camera, User, Sparkles, Check, Trash2, Upload, AlertCircle, Loader2 } from 'lucide-react';
+import { X, Camera, User, Check, Trash2, Upload, AlertCircle, Loader2 } from 'lucide-react';
 import { useUser } from '@/store/userStore';
 import { supabase } from '@/lib/supabase/client';
 import Image from 'next/image';
@@ -274,21 +274,18 @@ export default function AvatarCalibrationModal({
           />
 
           {step === 'intro' ? (
-            /* Intro Step - Explicitly Optional with detailed photo instructions */
+            /* Intro Step - Clean & Elegant */
             <div className="space-y-6 text-center py-2">
               <div className="w-16 h-16 rounded-3xl bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] flex items-center justify-center mx-auto shadow-inner">
-                <Sparkles className="w-8 h-8" />
+                <Camera className="w-8 h-8" />
               </div>
 
               <div>
-                <span className="text-[11px] font-bold uppercase tracking-widest text-[var(--brand-pink)] bg-[var(--brand-pink)]/10 px-3 py-1 rounded-full">
-                  Función Opcional
-                </span>
-                <h2 className="text-xl font-bold text-[var(--foreground)] mt-3">
-                  ¿Quieres crear tu Avatar Virtual?
+                <h2 className="text-xl font-bold text-[var(--foreground)] mt-2">
+                  Configura tu Avatar Personal
                 </h2>
                 <p className="text-xs text-[var(--foreground-secondary)] mt-2 leading-relaxed max-w-md mx-auto">
-                  Para que Kloe pueda modelar tus outfits con IA exactamente sobre ti, necesitamos 6 fotos de referencia con las siguientes pautas:
+                  Para que Kloe pueda modelar tus outfits exactamente sobre ti, sube 6 fotos de referencia con las siguientes pautas:
                 </p>
               </div>
 
@@ -326,20 +323,16 @@ export default function AvatarCalibrationModal({
                   className="w-full py-3.5 rounded-2xl bg-[var(--brand-pink)] text-white font-bold text-sm hover:bg-[var(--brand-pink-dark)] transition-colors shadow-lg shadow-[var(--brand-pink)]/20 active:scale-98 cursor-pointer flex items-center justify-center gap-2"
                 >
                   <Camera className="w-4 h-4" />
-                  Crear mi avatar ahora
+                  Subir mis fotos
                 </button>
 
                 <button
                   onClick={onClose}
                   className="w-full py-3 rounded-2xl bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:text-[var(--foreground)] hover:bg-[var(--border-color)]/60 text-xs font-semibold transition-colors cursor-pointer"
                 >
-                  No quiero crear mi avatar ahora
+                  Ahora no
                 </button>
               </div>
-
-              <p className="text-[11px] text-[var(--foreground-tertiary)] italic">
-                💡 Recuerda que puedes añadir o cambiar tus fotos cuando quieras desde el icono de la cámara en la esquina superior derecha.
-              </p>
             </div>
           ) : (
             /* Upload Step - 6 Slots */
@@ -347,10 +340,10 @@ export default function AvatarCalibrationModal({
               {/* Header */}
               <div className="text-center mb-6 pr-6">
                 <div className="w-12 h-12 rounded-2xl bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] flex items-center justify-center mx-auto mb-3">
-                  <Sparkles className="w-6 h-6" />
+                  <User className="w-6 h-6" />
                 </div>
                 <h2 className="text-xl font-bold text-[var(--foreground)]">
-                  Calibración de Avatar Virtual
+                  Fotos de tu Avatar
                 </h2>
                 <p className="text-xs text-[var(--foreground-secondary)] mt-1.5 max-w-md mx-auto leading-relaxed">
                   Fotos con buena luz: rostro de frente y perfil, y cuerpo entero de frente y de lado.
@@ -485,7 +478,7 @@ export default function AvatarCalibrationModal({
                   onClick={onClose}
                   className="flex-1 py-3.5 rounded-2xl bg-[var(--brand-pink)] text-white font-bold text-sm hover:bg-[var(--brand-pink-dark)] transition-colors shadow-lg shadow-[var(--brand-pink)]/20 active:scale-98 flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  {isComplete ? '✨ Guardar y Probar' : 'Guardar y Continuar'}
+                  {isComplete ? 'Guardar y Probar' : 'Guardar y Continuar'}
                 </button>
               </div>
             </div>

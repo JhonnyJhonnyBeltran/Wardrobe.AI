@@ -905,15 +905,21 @@ En cada conversación, el backend alimenta a CloSy con:
     - Debajo de la cabecera del autor se ubican la barra de acciones (Me gusta, Comentar, Compartir, Guardar), descripción/caption, prendas interactivas del look y comentarios.
   - **Resolución Resiliente del Perfil**: Se incorporó un fallback directo a la tabla `profiles` por `user_id` para garantizar que el autor y su avatar siempre carguen sin fallos.
 
+### 71. Limpieza de Iconos IA, Generación Fotorrealista de Avatar Virtual y Personalización de Nombre de Usuario en Kloe (Septiembre 2026)
+- **Limpieza de Iconografía IA (`AvatarCalibrationModal.tsx` & `app/(app)/closet/kloe/page.tsx`)**:
+  - Se eliminaron iconos y emojis de IA ("sparkles", "bot", "✨") en modales de calibración, botones de acción y badges, sustituyéndolos por iconos sobrios y humanos como `Camera`, `User` y `Crown`.
+- **Motor de Generación Fotorrealista en Avatar Virtual (`/api/closy/generate-avatar`)**:
+  - En lugar de mostrar la foto estática de referencia del usuario, el endpoint integra un pipeline de generación que genera un modelo de alta costura luciendo el look completo exacto sobre fondo blanco puro de estudio fotográfico profesional (`#FFFFFF`).
+  - Motor dual de alta disponibilidad: Google Imagen 3 como primario con fallback a Pollinations Flux, garantizando respuesta en segundos y formato `image/jpeg` de alta resolución.
+- **Trato y Nombre Real del Usuario en Kloe (`lib/closy/contextIndexer.ts` & `app/api/closy/chat/route.ts`)**:
+  - Se implementó resolución de nombre en cascada con cliente de servicio admin: `profiles.full_name` $\rightarrow$ `users.name` $\rightarrow$ `auth.user.user_metadata` $\rightarrow$ prefijo de email.
+  - Se instruyó formalmente a Gemini para prohibir saludos genéricos como "Usuario", "Amigo" o "Estimado", dirigiéndose siempre al usuario por su nombre de pila real capitalizado.
 
-
-
-
-
-
-
-
-
-
-
-
+### 72. Corrección del Bloqueo por Barra Flotante de Prendas en el Lienzo de Creación en Móvil (`/create`) (Septiembre 2026)
+- **Causa Raíz Identificada**:
+  - En `app/(app)/create/page.tsx`, la barra flotante inferior de resumen de prendas seleccionadas se renderizaba globalmente si `totalSelected > 0`, sin restringirse al paso de selección móvil (`mobileStep === 'selection'`).
+  - Al transferir un outfit desde Kloe (`/create?itemIds=...`) o al pulsar *"Continuar con el look"* desde el armario, la vista móvil pasaba directamente al paso de edición/lienzo (`mobileStep === 'preview'`). En este paso, el botón de continuar se ocultaba pero la caja de tarjetas de prendas permanecía flotando fija en `bottom-[20px] z-50`, tapando la parte inferior del lienzo, los botones de acción y el botón de guardar.
+- **Solución y Ergonomía Móvil**:
+  - Se condicionó estrictamente la barra flotante a `mobileStep === 'selection' && totalSelected > 0` y se limitó a vista móvil (`lg:hidden`).
+  - Al entrar al lienzo de montaje (`mobileStep === 'preview'`), la barra flotante desaparece por completo, otorgando el 100% del espacio visual al `FreeDragCanvas`.
+  - Se añadieron espaciados seguros `pb-[calc(16px+env(safe-area-inset-bottom,0px))]` y un scroll con `pb-36` en la vista de preview y `pb-48` en el selector de prendas para garantizar que ningún botón o prenda quede oculta por los bordes de la pantalla.

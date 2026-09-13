@@ -13,12 +13,13 @@ import {
   History, 
   Trash2, 
   X, 
-  Sparkles, 
   MessageSquare,
   Search,
-  Bot,
   Crown,
-  Bookmark
+  Bookmark,
+  User,
+  Camera,
+  AlertCircle
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -32,7 +33,6 @@ import KloeProModal from '@/components/KloeProModal';
 import AvatarCalibrationModal from '@/components/AvatarCalibrationModal';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { resolveImageUrl } from '@/lib/imageUtils';
-import { Camera, AlertCircle } from 'lucide-react';
 
 interface ChatMessage {
   id: string;
@@ -797,7 +797,7 @@ export default function KloePage() {
             className="bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-pink-500/10 border border-[var(--brand-pink)]/30 rounded-2xl p-3.5 flex items-center justify-between shadow-sm"
           >
             <div className="flex items-center gap-2.5">
-              <Sparkles className="w-5 h-5 text-[var(--brand-pink)] flex-shrink-0" />
+              <Crown className="w-5 h-5 text-[var(--brand-pink)] flex-shrink-0" />
               <p className="text-xs text-[var(--foreground-secondary)] leading-relaxed">
                 Estás en el plan <strong className="text-[var(--foreground)]">Free</strong>. Desbloquea <strong className="text-[var(--brand-pink)]">Klozet Premium</strong> para hablar con Kloe y crear looks ilimitados.
               </p>
@@ -955,7 +955,7 @@ export default function KloePage() {
                         </>
                       ) : (
                         <>
-                          <Sparkles className="w-4 h-4" />
+                          <Camera className="w-4 h-4" />
                           Probar look en mi avatar virtual
                         </>
                       )}
@@ -1578,8 +1578,8 @@ export default function KloePage() {
               </button>
 
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] text-xs font-bold mb-3">
-                <Sparkles className="w-3.5 h-3.5" />
-                Avatar Virtual Kloe
+                <User className="w-3.5 h-3.5" />
+                Avatar Personal
               </div>
 
               <h3 className="text-lg font-bold text-[var(--foreground)] mb-1">

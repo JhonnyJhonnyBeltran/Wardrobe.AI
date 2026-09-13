@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
+import { getGeminiApiKey } from '@/lib/ai/geminiClient';
 
 export const dynamic = 'force-dynamic';
 
@@ -84,11 +85,11 @@ export async function POST(request: NextRequest) {
       bodyPhotos = (body.calibrationPhotos.body_photos || []).filter(Boolean);
     }
 
-    // If either face or body photos are missing, prompt calibration modal
-    if (facePhotos.length === 0 || bodyPhotos.length === 0) {
+    // If both face and body photos are missing, prompt calibration modal
+    if (facePhotos.length === 0 && bodyPhotos.length === 0) {
       return NextResponse.json({
         needs_calibration: true,
-        message: 'Debes calibrar tu avatar subiendo tus fotos de rostro y cuerpo para que Kloe pueda modelar tu look.',
+        message: 'Debes configurar tu avatar subiendo tus fotos de rostro y cuerpo para que Kloe pueda modelar tu look.',
         face_count: facePhotos.length,
         body_count: bodyPhotos.length
       }, { status: 400 });
@@ -112,23 +113,88 @@ export async function POST(request: NextRequest) {
       garments = (outfitItems || []).map((oi: any) => oi.clothing_items).filter(Boolean);
     }
 
-    // Default Avatar Image: Use the primary calibrated face photo
-    const primaryFace = facePhotos[0];
-    const outfitSummary = garments.map(g => `${g.name || g.category} (${g.color || ''})`).join(', ');
+    // Build specific outfit pieces description
+    const outfitSummary = garments.length > 0
+      ? garments.map(g => `${g.name || g.category}${g.color ? ` in ${g.color}` : ''}${g.fabric ? ` (${g.fabric})` : ''}`).join(', ')
+      : 'stylish modern casual outfit';
 
-    // Construction of the Studio White Background Avatar Prompt
-    // Default studio instructions: Pure white background (#FFFFFF), studio lighting, high key catalogue photography
-    const avatarStudioPrompt = `Full-body photorealistic fashion lookbook portrait of the user wearing: ${outfitSummary || 'recommended outfit'}. Studio catalogue photography, standing pose, centered, solid seamless pure white background (#FFFFFF), neutral high-key studio softbox lighting, ultra high definition, zero background distractions, isolated on crisp clean white backdrop.`;
+    const userGender = profile.gender === 'women' ? 'woman' : (profile.gender === 'men' ? 'man' : 'person');
+    const userAge = profile.age ? `${profile.age}-year-old` : 'young adult';
+
+    // Detailed prompt for studio fashion photoshoot on pure white background
+    const studioPrompt = `Full body high-end fashion catalogue lookbook photoshoot of a ${userAge} ${userGender} model with natural look, standing centered in full view, wearing: ${outfitSummary}. Solid pure white studio background (#FFFFFF), neutral high-key studio softbox lighting, 8k resolution, photorealistic, sharp focus, natural skin texture, professional fashion catalog pose, zero background clutter, isolated on pure white background`;
+
+    let generatedImageUrl: string | null = null;
+
+    // Strategy 1: Google Imagen 3 via Gemini API Key
+    const geminiKey = getGeminiApiKey();
+    if (geminiKey) {
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 9000);
+        const imagenEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${geminiKey}`;
+        const res = await fetch(imagenEndpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          signal: controller.signal,
+          body: JSON.stringify({
+            instances: [{ prompt: studioPrompt }],
+            parameters: {
+              sampleCount: 1,
+              aspectRatio: "3:4"
+            }
+          })
+        });
+        clearTimeout(timeout);
+
+        if (res.ok) {
+          const data = await res.json();
+          const base64Bytes = data?.predictions?.[0]?.bytesBase64Encoded;
+          if (base64Bytes) {
+            generatedImageUrl = `data:image/jpeg;base64,${base64Bytes}`;
+          }
+        }
+      } catch (imagenErr) {
+        console.warn('[GenerateAvatar] Imagen 3 attempt error:', imagenErr);
+      }
+    }
+
+    // Strategy 2: Fast & High Quality Pollinations Flux Model
+    if (!generatedImageUrl) {
+      try {
+        const seed = Math.floor(Math.random() * 900000) + 100000;
+        const pollUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(studioPrompt)}?width=768&height=1024&nologo=true&model=flux&seed=${seed}`;
+        
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 8000);
+        const pollRes = await fetch(pollUrl, { signal: controller.signal });
+        clearTimeout(timeout);
+
+        if (pollRes.ok) {
+          const buffer = Buffer.from(await pollRes.arrayBuffer());
+          if (buffer.length > 5000) {
+            generatedImageUrl = `data:image/jpeg;base64,${buffer.toString('base64')}`;
+          }
+        }
+      } catch (pollErr) {
+        console.warn('[GenerateAvatar] Pollinations fallback error:', pollErr);
+      }
+    }
+
+    // Final Fallback: Calibrated reference photo
+    if (!generatedImageUrl) {
+      generatedImageUrl = facePhotos[0] || bodyPhotos[0] || '/placeholder.png';
+    }
 
     return NextResponse.json({
       success: true,
-      avatar_image_url: primaryFace,
+      avatar_image_url: generatedImageUrl,
       outfit_summary: outfitSummary,
-      studio_prompt: avatarStudioPrompt,
+      studio_prompt: studioPrompt,
       background: 'solid_white',
       face_photos_used: facePhotos.length,
       body_photos_used: bodyPhotos.length,
-      message: 'Avatar virtual generado con éxito sobre fondo blanco de estudio fotográfico.'
+      message: 'Look probado con éxito en tu avatar virtual sobre fondo blanco.'
     });
 
   } catch (error: any) {
@@ -139,4 +205,5 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
 

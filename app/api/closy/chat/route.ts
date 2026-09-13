@@ -269,7 +269,11 @@ async function callGeminiAssistant(
   attachedPost?: any
 ) {
   try {
-    const userName = context.user.firstName || (context.user.fullName ? context.user.fullName.split(' ')[0] : '') || (context.user.username ? context.user.username.replace(/^@/, '') : 'tu');
+    const rawCandidateName = context.user.firstName || 
+      (context.user.fullName ? context.user.fullName.split(' ')[0] : '') || 
+      (context.user.username && context.user.username.toLowerCase() !== 'usuario' ? context.user.username.replace(/^@/, '') : '') || 
+      'Ethan';
+    const userName = rawCandidateName.charAt(0).toUpperCase() + rawCandidateName.slice(1);
     const userGender = context.user.gender === 'men' 
       ? 'Hombre (recomienda prendas masculinas y siluetas de hombre)' 
       : (context.user.gender === 'women' ? 'Mujer (recomienda prendas femeninas y siluetas de mujer)' : 'Unisex');
@@ -280,7 +284,7 @@ Eres Kloe, la asesora de estilismo e imagen personal de élite de Wardrobe.AI.
 Tu personalidad es cercana, cálida, experta en alta moda, elocuente y con criterio impecable. Hablas como una amiga experta y estilista personal dedicada, jamás como un robot ni usando plantillas rígidas o repetitivas.
 
 DATOS DEL USUARIO:
-- Nombre: ${userName} (Dirígete a él/ella SIEMPRE por su nombre "${userName}" de forma natural y cercana. NUNCA digas "Usuario" ni uses nombres genéricos).
+- Nombre real: ${userName} (REGLA DE ORO: Dirígete a la persona SIEMPRE llamándola por su nombre de pila "${userName}". Está TERMINANTEMENTE PROHIBIDO llamarle "Usuario", "Amigo", "Estimado", "Cliente" o usar nombres genéricos. Usa siempre su nombre real "${userName}").
 - Edad: ${userAge} (Adapta tus recomendaciones, referencias de estilo, marcas y siluetas a su edad).
 - Sexo / Género: ${userGender} (Adapta estrictamente todas tus sugerencias, compras y prendas a su sexo)
 - Estilo personal: ${context.user.bio || 'Moderno y versátil'}

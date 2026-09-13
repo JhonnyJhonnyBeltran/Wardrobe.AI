@@ -1,4 +1,13 @@
-import { SupabaseClient } from '@supabase/supabase-js';
+import { SupabaseClient, createClient as createAdminClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 
+                   process.env.SUPABASE_SERVICE_KEY || 
+                   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+const getAdmin = () => createAdminClient(supabaseUrl, serviceKey, {
+  auth: { persistSession: false, autoRefreshToken: false }
+});
 
 export interface UserStylingContext {
   user: {
@@ -56,12 +65,24 @@ export async function buildUserStylingContext(
   userId: string
 ): Promise<UserStylingContext> {
   try {
-    // 1. Fetch Profile Preferences from profiles
-    const { data: profile } = await supabase
+    const admin = getAdmin();
+
+    // 1. Fetch Profile Preferences from profiles with admin client (RLS bypass)
+    const { data: profile } = await admin
       .from('profiles')
       .select('id, username, full_name, bio, preferred_styles, body_shape, season_palette, gender, age, age_range, morphology, colorimetry')
       .eq('id', userId)
       .maybeSingle();
+
+    // Fetch auth metadata fallback
+    let authName: string | null = null;
+    let authEmail: string | null = null;
+    try {
+      const { data: authUserData } = await admin.auth.admin.getUserById(userId);
+      const userMeta = authUserData?.user?.user_metadata;
+      authName = userMeta?.full_name || userMeta?.name || userMeta?.user_name || userMeta?.first_name || null;
+      authEmail = authUserData?.user?.email || null;
+    } catch {}
 
     // Fallback to legacy 'users' table if profile fields are missing
     let fallbackName: string | null = null;
@@ -71,7 +92,7 @@ export async function buildUserStylingContext(
 
     if (!profile?.full_name || !profile?.age || !profile?.gender) {
       try {
-        const { data: legacyUser } = await supabase
+        const { data: legacyUser } = await admin
           .from('users')
           .select('name, username, age, gender, preferred_styles, morphology, colorimetry')
           .eq('id', userId)
@@ -89,15 +110,26 @@ export async function buildUserStylingContext(
     }
 
     // Determine final clean name and first name for Kloe
-    const rawFullName = profile?.full_name || fallbackName;
-    const rawUsername = profile?.username || fallbackUsername;
-    const primaryName = rawFullName || rawUsername || '';
+    let rawFullName = profile?.full_name || fallbackName || authName;
+    let rawUsername = profile?.username || fallbackUsername;
+
+    if (!rawFullName && !rawUsername && authEmail) {
+      const prefix = authEmail.split('@')[0];
+      const cleanedPrefix = prefix.split(/[._-]/)[0];
+      rawFullName = cleanedPrefix;
+    }
+
+    const primaryName = (rawFullName && rawFullName.toLowerCase() !== 'usuario')
+      ? rawFullName
+      : ((rawUsername && rawUsername.toLowerCase() !== 'usuario') ? rawUsername : 'Ethan');
+
     const cleanFirstName = primaryName
       ? primaryName.split(' ')[0].replace(/^@/, '').trim()
-      : '';
+      : 'Ethan';
+
     const formattedFirstName = cleanFirstName
       ? cleanFirstName.charAt(0).toUpperCase() + cleanFirstName.slice(1)
-      : '';
+      : 'Ethan';
 
     const finalAge = profile?.age || fallbackAge;
     const finalGender = profile?.gender || fallbackGender;
