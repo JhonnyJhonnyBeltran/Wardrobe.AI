@@ -52,8 +52,30 @@ interface ChatMessage {
   attached_items?: Array<any>;
   attached_item?: any;
   attached_post?: any;
+  attached_custom_image?: string;
   timestamp: Date | string;
   savedOutfitId?: string;
+}
+
+interface AttachedItem {
+  id: string;
+  name: string;
+  category?: string;
+  color?: string;
+  brand?: string;
+  fabric?: string;
+  imageUrl?: string;
+  image_url?: string;
+}
+
+interface AttachedPost {
+  id: string;
+  caption?: string;
+  imageUrl?: string;
+  image_url?: string;
+  style_ids?: string[];
+  outfit_id?: string;
+  items?: any[];
 }
 
 interface Conversation {
@@ -65,6 +87,7 @@ interface Conversation {
 
 const STORAGE_KEY = 'kloe_conversations_v1';
 const MAX_CONVERSATIONS = 5;
+const MAX_TRIAL_MESSAGES = 8;
 
 /**
  * Robust thumbnail component that gracefully displays "Prenda borrada"
@@ -282,11 +305,49 @@ function KloeAnimatedLogo() {
 export default function KloePage() {
   const router = useRouter();
   const { user, isPremium } = useUser();
+  const [messages, setMessages] = useState<ChatMessage[]>([INITIAL_MESSAGE]);
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [typingStep, setTypingStep] = useState(0);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [activeConversationId, setActiveConversationId] = useState<string>('default');
+  const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
+  const [showWardrobeDrawer, setShowWardrobeDrawer] = useState(false);
+  const [showSavedDrawer, setShowSavedDrawer] = useState(false);
+  const [wardrobeClothes, setWardrobeClothes] = useState<any[]>([]);
+  const [wardrobeSearch, setWardrobeSearch] = useState('');
+  const [loadingWardrobe, setLoadingWardrobe] = useState(false);
+  const [savedPosts, setSavedPosts] = useState<any[]>([]);
+  const [loadingSaved, setLoadingSaved] = useState(false);
+  const [attachedItems, setAttachedItems] = useState<AttachedItem[]>([]);
+  const [attachedPost, setAttachedPost] = useState<AttachedPost | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
   const [showProModal, setShowProModal] = useState(false);
+  const [trialUsed, setTrialUsed] = useState<number>(0);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const trialRemaining = Math.max(0, MAX_TRIAL_MESSAGES - trialUsed);
+  const isInputUnlocked = isPremium() || trialRemaining > 0;
+
+  const persistConversations = async (updated: Conversation[]) => {
+    setConversations(updated);
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    } catch {}
+
+    if (user?.id) {
+      try {
+        await fetch('/api/closy/conversations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ conversations: updated })
+        });
+      } catch (err) {
+        console.warn('[Kloe] Error saving remote conversations:', err);
+      }
+    }
+  };
 
   // Scroll hide/show for mobile header
   const [showHeader, setShowHeader] = useState(true);
@@ -302,206 +363,30 @@ export default function KloePage() {
     lastScrollY.current = currentScrollY;
   };
   
-  // Avatar Virtual Try-On
+  // User Physical Profile Reference Photos Modal
   const [showCalibrationModal, setShowCalibrationModal] = useState(false);
-  const [generatingAvatarForMsgId, setGeneratingAvatarForMsgId] = useState<string | null>(null);
-  const [selectedAvatarModalImage, setSelectedAvatarModalImage] = useState<string | null>(null);
 
-  // Drawers
-  const [showWardrobeDrawer, setShowWardrobeDrawer] = useState(false);
-  const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
-  const [showSavedDrawer, setShowSavedDrawer] = useState(false);
-  
-  // Wardrobe & Saved Items Cache
-  const [wardrobeClothes, setWardrobeClothes] = useState<any[]>([]);
-  const [loadingWardrobe, setLoadingWardrobe] = useState(false);
-  const [wardrobeSearch, setWardrobeSearch] = useState('');
+  // Custom Image Upload for AI Vision Styling Advice
+  const [attachedImage, setAttachedImage] = useState<string | null>(null);
+  const chatImageInputRef = useRef<HTMLInputElement>(null);
 
-  const [savedPosts, setSavedPosts] = useState<any[]>([]);
-  const [loadingSaved, setLoadingSaved] = useState(false);
-
-  // Attached context for user input (Multiple Garments + Saved Post Inspiration)
-  const [attachedItems, setAttachedItems] = useState<any[]>([]);
-  const [attachedPost, setAttachedPost] = useState<any | null>(null);
-
-  // Conversations State (Max 5)
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [activeConversationId, setActiveConversationId] = useState<string>('default');
-  const [messages, setMessages] = useState<ChatMessage[]>([INITIAL_MESSAGE]);
-  
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  // Free Trial Messages Management (8 messages trial)
-  const MAX_TRIAL_MESSAGES = 8;
-  const [trialUsed, setTrialUsed] = useState<number>(user?.kloeTrialMessagesUsed || 0);
-
-  useEffect(() => {
-    if (user?.kloeTrialMessagesUsed !== undefined) {
-      setTrialUsed(user.kloeTrialMessagesUsed);
-    }
-  }, [user?.kloeTrialMessagesUsed]);
-
-  const trialRemaining = isPremium() ? 9999 : Math.max(0, MAX_TRIAL_MESSAGES - trialUsed);
-  const isInputUnlocked = isPremium() || trialRemaining > 0;
-
-  // Save conversation locally and sync remotely
-  const persistConversations = (newConvs: Conversation[]) => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(newConvs));
-      setConversations(newConvs);
-    } catch (e) {
-      console.warn('[Kloe] Error saving conversations:', e);
-    }
-
-    if (user?.id) {
-      fetch('/api/closy/conversations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ conversations: newConvs })
-      }).catch(err => console.warn('[Kloe] Remote conversations sync error:', err));
-    }
-  };
-
-  const handleTryOnAvatar = async (msg: ChatMessage) => {
-    if (!user?.id) {
-      toast.error('Inicia sesión para probar looks en tu avatar virtual');
+  const handleChatImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('La imagen no puede superar los 10MB.');
       return;
     }
-
-    if (!isPremium()) {
-      setShowProModal(true);
-      return;
-    }
-
-    const itemIds = (msg.recommended_outfit?.items || []).map(i => i.id);
-    if (itemIds.length === 0) return;
-
-    setGeneratingAvatarForMsgId(msg.id);
-
-    // 1. Mark message as loading avatar inline
-    const loadingMessages = messages.map(m => {
-      if (m.id === msg.id && m.recommended_outfit) {
-        return {
-          ...m,
-          recommended_outfit: {
-            ...m.recommended_outfit,
-            avatar_loading: true,
-            avatar_error: null
-          }
-        };
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        setAttachedImage(reader.result);
+        haptics.selection();
+        toast.success('Foto adjuntada para análisis de estilo');
       }
-      return m;
-    });
-    setMessages(loadingMessages);
-
-    try {
-      let calibrationPhotos: any = null;
-      try {
-        const stored = localStorage.getItem(`wardrobe_avatar_calibration_${user.id}`);
-        if (stored) calibrationPhotos = JSON.parse(stored);
-      } catch {}
-
-      const res = await fetch('/api/closy/generate-avatar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: user.id,
-          itemIds,
-          items: msg.recommended_outfit?.items,
-          outfitName: msg.recommended_outfit?.name || 'Look Kloe',
-          calibrationPhotos
-        })
-      });
-
-      const data = await res.json();
-
-      if (!res.ok || data.needs_calibration || !data.success || !data.avatar_image_url) {
-        const errorMsg = data.error || 'No se pudo generar la imagen del avatar virtual.';
-        setMessages(prev => prev.map(m => {
-          if (m.id === msg.id && m.recommended_outfit) {
-            return {
-              ...m,
-              recommended_outfit: {
-                ...m.recommended_outfit,
-                avatar_loading: false,
-                avatar_error: errorMsg
-              }
-            };
-          }
-          return m;
-        }));
-
-        if (res.status === 403 || data.isPremiumRequired) {
-          setShowProModal(true);
-          toast.info('El probador virtual de avatar es una función exclusiva de Klozet Premium.');
-          return;
-        }
-
-        if (data.needs_calibration) {
-          setShowCalibrationModal(true);
-          toast.info('Sube tus 6 fotos de calibración para que Kloe pueda modelar tu avatar virtual.');
-          return;
-        }
-
-        toast.error(errorMsg);
-        return;
-      }
-
-      // 2. Set generated avatar URL inline on message and persist
-      const finalMessages = messages.map(m => {
-        if (m.id === msg.id && m.recommended_outfit) {
-          return {
-            ...m,
-            recommended_outfit: {
-              ...m.recommended_outfit,
-              avatar_url: data.avatar_image_url,
-              avatar_loading: false,
-              avatar_error: null
-            }
-          };
-        }
-        return m;
-      });
-
-      setMessages(finalMessages);
-
-      setConversations(prev => {
-        const updated = prev.map(c => {
-          if (c.id === activeConversationId) {
-            return {
-              ...c,
-              updatedAt: Date.now(),
-              messages: finalMessages
-            };
-          }
-          return c;
-        });
-        persistConversations(updated);
-        return updated;
-      });
-
-      haptics.success();
-      toast.success('¡Look modelado con éxito en tu avatar virtual!');
-    } catch (err) {
-      console.error('[Kloe] Error generating avatar try-on:', err);
-      setMessages(prev => prev.map(m => {
-        if (m.id === msg.id && m.recommended_outfit) {
-          return {
-            ...m,
-            recommended_outfit: {
-              ...m.recommended_outfit,
-              avatar_loading: false,
-              avatar_error: 'Error al generar la imagen.'
-            }
-          };
-        }
-        return m;
-      }));
-      toast.error('Error al generar el avatar virtual. Inténtalo de nuevo.');
-    } finally {
-      setGeneratingAvatarForMsgId(null);
-    }
+    };
+    reader.readAsDataURL(file);
+    if (chatImageInputRef.current) chatImageInputRef.current.value = '';
   };
 
   // Cycling thinking messages with realistic AI Stylist reasoning stages
@@ -524,7 +409,7 @@ export default function KloePage() {
     return () => clearInterval(interval);
   }, [isTyping]);
 
-  useBodyScrollLock(showWardrobeDrawer || showHistoryDrawer || showSavedDrawer || !!selectedAvatarModalImage);
+  useBodyScrollLock(showWardrobeDrawer || showHistoryDrawer || showSavedDrawer);
 
   // Load conversations from local storage on mount and sync with remote database
   useEffect(() => {
@@ -783,17 +668,20 @@ export default function KloePage() {
     }
 
     const text = (customMessage || inputMessage).trim();
-    if (!text && attachedItems.length === 0 && !attachedPost) return;
+    if (!text && attachedItems.length === 0 && !attachedPost && !attachedImage) return;
     if (isTyping) return;
 
     haptics.tap();
 
     const currentAttachedItems = [...attachedItems];
     const currentAttachedPost = attachedPost;
+    const currentAttachedImage = attachedImage;
 
     let defaultPrompt = '';
     if (!text) {
-      if (currentAttachedItems.length > 0 && currentAttachedPost) {
+      if (currentAttachedImage) {
+        defaultPrompt = `¿Qué opinas de esta prenda o look que he fotografiado y cómo puedo combinarla con mi ropa?`;
+      } else if (currentAttachedItems.length > 0 && currentAttachedPost) {
         defaultPrompt = `¿Cómo puedo recrear o adaptar este look guardado usando ${currentAttachedItems.map(i => i.name).join(', ')}?`;
       } else if (currentAttachedItems.length === 1) {
         defaultPrompt = `¿Cómo puedo combinar mi ${currentAttachedItems[0].name}?`;
@@ -813,6 +701,7 @@ export default function KloePage() {
       attached_items: currentAttachedItems.length > 0 ? currentAttachedItems : undefined,
       attached_item: currentAttachedItems.length === 1 ? currentAttachedItems[0] : undefined,
       attached_post: currentAttachedPost || undefined,
+      attached_custom_image: currentAttachedImage || undefined,
       timestamp: new Date()
     };
 
@@ -821,6 +710,7 @@ export default function KloePage() {
     setInputMessage('');
     setAttachedItems([]);
     setAttachedPost(null);
+    setAttachedImage(null);
     setIsTyping(true);
 
     try {
@@ -835,13 +725,19 @@ export default function KloePage() {
           message: messageToSend,
           history: historyPayload,
           attached_items: currentAttachedItems.length > 0 ? currentAttachedItems : undefined,
-          attached_post: currentAttachedPost || undefined
+          attached_post: currentAttachedPost || undefined,
+          attached_custom_image: currentAttachedImage || undefined
         })
       });
 
       const data = await res.json();
 
       if (!res.ok) {
+        if (data.isModerationViolation) {
+          toast.error(data.error || 'Esta imagen no se ha podido subir por infringir las normas comunitarias de la aplicación.');
+          setMessages(prev => prev.filter(m => m.id !== userMsg.id));
+          return;
+        }
         if (res.status === 402 || data.isTrialExpired) {
           setTrialUsed(MAX_TRIAL_MESSAGES);
           setShowProModal(true);
@@ -956,15 +852,11 @@ export default function KloePage() {
 
           <button
             onClick={() => {
-              if (!isPremium()) {
-                setShowProModal(true);
-                return;
-              }
               setShowCalibrationModal(true);
             }}
             className="p-2.5 text-gray-900 dark:text-white hover:text-[var(--brand-pink)] dark:hover:text-[var(--brand-pink)] rounded-full hover:bg-[var(--background-secondary)] transition-colors cursor-pointer"
-            title="Calibrar mi avatar virtual (6 fotos)"
-            aria-label="Calibrar mi avatar"
+            title="Mi Perfil Físico (Fotos de referencia de rostro y cuerpo)"
+            aria-label="Mi Perfil Físico"
           >
             <Camera className="w-5 h-5" />
           </button>
@@ -1028,15 +920,11 @@ export default function KloePage() {
 
           <button
             onClick={() => {
-              if (!isPremium()) {
-                setShowProModal(true);
-                return;
-              }
               setShowCalibrationModal(true);
             }}
             className="p-2 text-gray-900 dark:text-white hover:text-[var(--brand-pink)] dark:hover:text-[var(--brand-pink)] rounded-full transition-colors cursor-pointer"
-            title="Calibrar avatar"
-            aria-label="Calibrar avatar"
+            title="Mi Perfil Físico"
+            aria-label="Mi Perfil Físico"
           >
             <Camera className="w-4 h-4" />
           </button>
@@ -1067,8 +955,8 @@ export default function KloePage() {
         className="flex-1 overflow-y-auto px-4 md:px-6 pt-16 md:pt-20 pb-56 md:pb-36 space-y-6"
       >
         
-        {/* Free Tier Upgrade Banner with Trial Progress */}
-        {!isPremium() && (
+        {/* Free Tier Upgrade Banner - Only shown when limit has been reached */}
+        {!isPremium() && trialRemaining <= 0 && (
           <motion.div 
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -1078,20 +966,12 @@ export default function KloePage() {
               <Crown className="w-5 h-5 text-[var(--brand-pink)] flex-shrink-0" />
               <div className="min-w-0">
                 <p className="text-xs text-[var(--foreground-secondary)] leading-relaxed">
-                  {trialRemaining > 0 ? (
-                    <>
-                      Prueba gratuita de Kloe: Te quedan <strong className="text-[var(--brand-pink)] font-bold">{trialRemaining} de {MAX_TRIAL_MESSAGES} mensajes</strong>.
-                    </>
-                  ) : (
-                    <>
-                      Has completado tus <strong className="text-[var(--brand-pink)]">8 mensajes de prueba</strong>. Pasa a Premium para estilismo ilimitado.
-                    </>
-                  )}
+                  Has completado tus <strong className="text-[var(--brand-pink)]">8 mensajes de prueba gratuita</strong>. Pasa a Premium para estilismo ilimitado.
                 </p>
                 <div className="w-full max-w-[200px] h-1.5 bg-black/10 dark:bg-white/10 rounded-full mt-1.5 overflow-hidden">
                   <div 
                     className="h-full bg-gradient-to-r from-[var(--brand-pink)] to-purple-500 rounded-full transition-all duration-300"
-                    style={{ width: `${Math.min(100, (trialUsed / MAX_TRIAL_MESSAGES) * 100)}%` }}
+                    style={{ width: '100%' }}
                   />
                 </div>
               </div>
@@ -1100,7 +980,7 @@ export default function KloePage() {
               onClick={() => setShowProModal(true)}
               className="text-xs font-bold px-3.5 py-2 bg-[var(--brand-pink)] text-white rounded-xl hover:opacity-90 transition-opacity flex-shrink-0 shadow-sm cursor-pointer self-start sm:self-auto"
             >
-              {trialRemaining > 0 ? 'Desbloquear Ilimitado' : 'Subir a Kloe Pro (2,99 €)'}
+              Subir a Kloe Pro (2,99 €)
             </button>
           </motion.div>
         )}
@@ -1126,9 +1006,29 @@ export default function KloePage() {
 
             <div className={`max-w-[85%] sm:max-w-[78%] flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
               
-              {/* Attached Item/Post Preview inside User Message */}
-              {msg.role === 'user' && ((msg.attached_items && msg.attached_items.length > 0) || msg.attached_item || msg.attached_post) && (
+              {/* Attached Item/Post/Custom Image Preview inside User Message */}
+              {msg.role === 'user' && ((msg.attached_items && msg.attached_items.length > 0) || msg.attached_item || msg.attached_post || msg.attached_custom_image) && (
                 <div className="mb-2.5 flex flex-wrap gap-2 max-w-full justify-end">
+                  {msg.attached_custom_image && (
+                    <div className="flex items-center gap-2 bg-black/30 backdrop-blur-md rounded-2xl p-2 border border-white/20 max-w-xs shadow-xs">
+                      <div className="relative w-12 h-12 rounded-xl bg-white/10 overflow-hidden shrink-0 border border-white/15">
+                        <img
+                          src={msg.attached_custom_image}
+                          alt="Foto adjunta"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="min-w-0 flex flex-col text-left pr-1">
+                        <span className="text-[9px] font-bold text-white/80 uppercase tracking-wider">
+                          Foto para Asesoría
+                        </span>
+                        <p className="text-xs font-bold text-white truncate max-w-[130px]">
+                          Foto adjunta
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
                   {msg.attached_post && (
                     <div className="flex items-center gap-2 bg-black/30 backdrop-blur-md rounded-2xl p-2 border border-white/20 max-w-xs shadow-xs">
                       <div className="relative w-10 h-10 rounded-xl bg-white/10 overflow-hidden shrink-0 border border-white/15">
@@ -1193,7 +1093,7 @@ export default function KloePage() {
                 <FormattedMessageText content={msg.content} isUser={msg.role === 'user'} />
               </div>
 
-              {/* Recommended Outfit Card with Inline Studio Avatar Try-On */}
+              {/* Recommended Outfit Card */}
               {msg.recommended_outfit && msg.recommended_outfit.items && msg.recommended_outfit.items.length > 0 && (
                 <motion.div 
                   initial={{ opacity: 0, y: 10 }}
@@ -1201,64 +1101,6 @@ export default function KloePage() {
                   transition={{ delay: 0.15 }}
                   className="w-full mt-3.5 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-2xl p-4 shadow-sm space-y-3.5"
                 >
-                  {/* INLINE AVATAR TRY-ON BOX (Loading animation or Generated Studio Photo) */}
-                  {(msg.recommended_outfit.avatar_loading || msg.recommended_outfit.avatar_url) && (
-                    <div className="relative w-full max-w-sm mx-auto aspect-[3/4] rounded-2xl overflow-hidden bg-white border border-gray-200 dark:border-white/10 shadow-md flex items-center justify-center">
-                      {msg.recommended_outfit.avatar_loading ? (
-                        /* Studio Loading State with Non-Blocking GPU Animation & Bouncing Dots */
-                        <div className="flex flex-col items-center justify-center p-6 text-center space-y-3.5 select-none">
-                          <div className="relative w-16 h-16 flex items-center justify-center">
-                            <div className="absolute inset-0 rounded-full border-3 border-[var(--brand-pink)]/20 border-t-[var(--brand-pink)] animate-spin-smooth" />
-                            <Camera className="w-6 h-6 text-[var(--brand-pink)] animate-pulse-glow" />
-                          </div>
-                          <div className="space-y-1.5">
-                            <h4 className="text-xs font-bold text-gray-900 tracking-tight">
-                              Generando foto hiperrealista en tu avatar
-                            </h4>
-                            <p className="text-[11px] text-gray-500 leading-relaxed max-w-[240px] mx-auto">
-                              Adaptando prendas a tus facciones faciales y corporales sobre fondo blanco de estudio...
-                            </p>
-                            <div className="flex items-center justify-center gap-1.5 pt-1">
-                              {[0, 1, 2].map((dot) => (
-                                <motion.span
-                                  key={dot}
-                                  animate={{ y: [0, -5, 0], opacity: [0.35, 1, 0.35] }}
-                                  transition={{
-                                    duration: 0.85,
-                                    repeat: Infinity,
-                                    delay: dot * 0.18,
-                                    ease: 'easeInOut'
-                                  }}
-                                  className="w-1.5 h-1.5 rounded-full bg-[var(--brand-pink)]"
-                                />
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      ) : (
-                        /* Generated Studio Photo (Click to Zoom Lightbox) */
-                        <div
-                          onClick={() => setSelectedAvatarModalImage(msg.recommended_outfit?.avatar_url || null)}
-                          className="relative w-full h-full cursor-zoom-in group select-none flex items-center justify-center bg-white"
-                          title="Toca para ver la foto en pantalla completa"
-                        >
-                          <img
-                            src={msg.recommended_outfit.avatar_url}
-                            alt="Foto de tu Avatar con el Outfit"
-                            className="w-full h-full object-contain bg-white group-hover:scale-[1.02] transition-transform duration-300"
-                          />
-                          <div className="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-white text-[10px] font-semibold flex items-center gap-1 opacity-90 group-hover:opacity-100 transition-opacity">
-                            <Search className="w-3 h-3" />
-                            Ampliar
-                          </div>
-                          <div className="absolute bottom-2.5 left-2.5 px-2.5 py-0.5 rounded-md bg-black/50 backdrop-blur-xs text-white text-[9px] font-medium">
-                            Fondo Blanco de Estudio
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
                   {/* Outfit Info Header */}
                   <div className="flex items-center justify-between border-b border-[var(--border-color)]/60 pb-2.5">
                     <div>
@@ -1294,42 +1136,13 @@ export default function KloePage() {
                     ))}
                   </div>
 
-                  {/* Direct Canvas & Virtual Try-On Action Buttons */}
+                  {/* Direct Canvas Action Button */}
                   <div className="flex flex-col gap-2 pt-1">
-                    <button
-                      onClick={() => {
-                        if (!isPremium()) {
-                          setShowProModal(true);
-                          return;
-                        }
-                        handleTryOnAvatar(msg);
-                      }}
-                      disabled={generatingAvatarForMsgId === msg.id || msg.recommended_outfit.avatar_loading}
-                      className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[var(--brand-pink)] hover:opacity-90 text-white text-xs font-semibold shadow-sm transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer"
-                    >
-                      {generatingAvatarForMsgId === msg.id || msg.recommended_outfit.avatar_loading ? (
-                        <>
-                          <LoadingSpinner size="xs" color="#FFFFFF" className="shrink-0" />
-                          Generando foto en avatar...
-                        </>
-                      ) : msg.recommended_outfit.avatar_url ? (
-                        <>
-                          <Camera className="w-4 h-4" />
-                          Regenerar foto en mi avatar digital
-                        </>
-                      ) : (
-                        <>
-                          <Camera className="w-4 h-4" />
-                          Probar look en mi avatar digital
-                        </>
-                      )}
-                    </button>
-
                     <Link
                       href={`/create?itemIds=${(msg.recommended_outfit.items || []).map((i: any) => i.id).join(',')}&name=${encodeURIComponent(msg.recommended_outfit.name || 'Look Kloe')}&occasion=${encodeURIComponent(msg.recommended_outfit.occasion || '')}&fromKloe=true`}
-                      className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[var(--background-secondary)] hover:bg-[var(--card-bg)] text-[var(--foreground)] border border-[var(--border-color)] text-xs font-semibold transition-all active:scale-[0.98]"
+                      className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[var(--brand-pink)] hover:opacity-90 text-white text-xs font-semibold shadow-sm transition-all active:scale-[0.98]"
                     >
-                      <Layers className="w-4 h-4 text-[var(--brand-pink)]" />
+                      <Layers className="w-4 h-4" />
                       Montar y editar en el lienzo
                     </Link>
                   </div>
@@ -1432,7 +1245,7 @@ export default function KloePage() {
         
         {/* Floating Attachment Cards Strip */}
         <AnimatePresence>
-          {(attachedItems.length > 0 || attachedPost) && (
+          {(attachedItems.length > 0 || attachedPost || attachedImage) && (
             <motion.div
               initial={{ opacity: 0, y: 10, scale: 0.96 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -1440,6 +1253,38 @@ export default function KloePage() {
               className="mb-2.5 w-full max-w-2xl pointer-events-auto"
             >
               <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 px-1">
+                {/* Attached Custom Image Card */}
+                {attachedImage && (
+                  <div className="flex items-center gap-2.5 bg-[var(--card-bg)]/95 dark:bg-[#18181f]/95 backdrop-blur-2xl border border-[var(--brand-pink)]/50 rounded-2xl p-2 shadow-lg shrink-0 max-w-[240px]">
+                    <div className="relative w-10 h-10 rounded-xl bg-[var(--background-secondary)] overflow-hidden shrink-0 border border-[var(--border-color)]">
+                      <img
+                        src={attachedImage}
+                        alt="Foto adjunta"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1 flex flex-col">
+                      <span className="text-[9px] font-bold text-[var(--brand-pink)] uppercase tracking-wider">
+                        Tu Foto
+                      </span>
+                      <p className="text-xs font-semibold text-[var(--foreground)] truncate">
+                        Foto para analizar
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        haptics.tap();
+                        setAttachedImage(null);
+                      }}
+                      className="p-1 rounded-full hover:bg-[var(--background-secondary)] text-[var(--foreground-tertiary)] hover:text-red-500 transition-colors cursor-pointer"
+                      title="Quitar foto"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
+
                 {/* Attached Saved Post Card */}
                 {attachedPost && (
                   <div className="flex items-center gap-2.5 bg-[var(--card-bg)]/95 dark:bg-[#18181f]/95 backdrop-blur-2xl border border-[var(--brand-pink)]/50 rounded-2xl p-2 shadow-lg shrink-0 max-w-[240px]">
@@ -1533,8 +1378,29 @@ export default function KloePage() {
             }}
             className="pointer-events-auto flex items-center gap-2 bg-[var(--card-bg)]/95 dark:bg-[#131317]/95 backdrop-blur-2xl rounded-full px-3.5 py-2.5 border border-[var(--border-color)] shadow-[0_12px_35px_rgba(0,0,0,0.15)] dark:shadow-[0_16px_45px_rgba(0,0,0,0.5)] focus-within:border-[var(--brand-pink)]/60 focus-within:ring-2 focus-within:ring-[var(--brand-pink)]/20 transition-all w-full"
           >
+            {/* Hidden file input for custom image upload */}
+            <input
+              ref={chatImageInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleChatImageSelect}
+            />
+
             {/* Quick Attach Buttons */}
             <div className="flex items-center gap-0.5 shrink-0">
+              <button
+                type="button"
+                onClick={() => chatImageInputRef.current?.click()}
+                className="relative p-2 rounded-full text-gray-900 dark:text-white hover:text-[var(--brand-pink)] dark:hover:text-[var(--brand-pink)] transition-colors cursor-pointer"
+                title="Subir foto para que Kloe la analice"
+                aria-label="Subir foto"
+              >
+                <Camera className="w-4 h-4" />
+                {attachedImage && (
+                  <span className="absolute top-0 right-0 w-2 h-2 rounded-full bg-[var(--brand-pink)]" />
+                )}
+              </button>
               <button
                 type="button"
                 onClick={openWardrobe}
@@ -1569,26 +1435,28 @@ export default function KloePage() {
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               placeholder={
-                attachedItems.length > 0 && attachedPost
-                  ? `Pregúntale a Kloe sobre este look y tus ${attachedItems.length} prenda${attachedItems.length === 1 ? '' : 's'}...`
-                  : (attachedItems.length === 1
-                    ? `Pregúntale a Kloe sobre "${attachedItems[0].name}"...`
-                    : (attachedItems.length > 1
-                      ? `Pregúntale a Kloe sobre estas ${attachedItems.length} prendas...`
-                      : (attachedPost 
-                        ? `Pregúntale a Kloe sobre este look guardado...` 
-                        : (!isPremium() 
-                          ? `Pregúntale a Kloe (${trialRemaining} mensaje${trialRemaining === 1 ? '' : 's'} gratis)...` 
-                          : `Pregúntale a Kloe sobre tus prendas u outfits...`))))
+                attachedImage
+                  ? `Pregúntale a Kloe sobre tu foto adjunta...`
+                  : (attachedItems.length > 0 && attachedPost
+                    ? `Pregúntale a Kloe sobre este look y tus ${attachedItems.length} prenda${attachedItems.length === 1 ? '' : 's'}...`
+                    : (attachedItems.length === 1
+                      ? `Pregúntale a Kloe sobre "${attachedItems[0].name}"...`
+                      : (attachedItems.length > 1
+                        ? `Pregúntale a Kloe sobre estas ${attachedItems.length} prendas...`
+                        : (attachedPost 
+                          ? `Pregúntale a Kloe sobre este look guardado...` 
+                          : (!isPremium() 
+                            ? `Pregúntale a Kloe (${trialRemaining} mensaje${trialRemaining === 1 ? '' : 's'} gratis)...` 
+                            : `Pregúntale a Kloe sobre tus prendas u outfits...`)))))
               }
               disabled={isTyping}
               className="flex-1 bg-transparent text-sm text-[var(--foreground)] outline-none placeholder:text-[var(--foreground-tertiary)] px-1"
             />
             <button
               type="submit"
-              disabled={(!inputMessage.trim() && attachedItems.length === 0 && !attachedPost) || isTyping}
+              disabled={(!inputMessage.trim() && attachedItems.length === 0 && !attachedPost && !attachedImage) || isTyping}
               className={`p-2.5 rounded-full transition-all shrink-0 ${
-                (inputMessage.trim() || attachedItems.length > 0 || attachedPost) && !isTyping
+                (inputMessage.trim() || attachedItems.length > 0 || attachedPost || attachedImage) && !isTyping
                   ? 'bg-[var(--brand-pink)] text-white hover:scale-105 shadow-md shadow-[var(--brand-pink)]/25 cursor-pointer'
                   : 'text-[var(--foreground-tertiary)] opacity-40 cursor-not-allowed'
               }`}
@@ -1911,52 +1779,15 @@ export default function KloePage() {
         redirectBackToCloset={false}
       />
 
-      {/* Avatar Calibration Modal (6 Photos) */}
+      {/* Physical Profile Calibration Modal (6 Photos) */}
       <AvatarCalibrationModal
         isOpen={showCalibrationModal}
         onClose={() => setShowCalibrationModal(false)}
         onCalibrationComplete={() => {
           setShowCalibrationModal(false);
-          toast.success('¡Avatar virtual calibrado con éxito! Ahora puedes probarte looks con Kloe.');
+          toast.success('¡Fotos de tu perfil físico guardadas con éxito! Kloe personalizará todas tus recomendaciones a tus facciones.');
         }}
       />
-
-      {/* Lightbox Modal (Zoom Full Screen for Generated Studio Photo) */}
-      <AnimatePresence>
-        {selectedAvatarModalImage && (
-          <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/90 backdrop-blur-xl"
-              onClick={() => setSelectedAvatarModalImage(null)}
-            />
-            <motion.div
-              initial={{ scale: 0.85, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.85, opacity: 0 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="relative max-w-lg w-full max-h-[90vh] bg-white rounded-3xl overflow-hidden shadow-2xl z-10 flex flex-col items-center justify-center p-3"
-            >
-              <button
-                onClick={() => setSelectedAvatarModalImage(null)}
-                className="absolute top-4 right-4 p-2.5 rounded-full bg-black/60 text-white hover:bg-black transition-colors z-20 cursor-pointer"
-                aria-label="Cerrar vista completa"
-              >
-                <X className="w-5 h-5" />
-              </button>
-              <div className="relative w-full aspect-[3/4] rounded-2xl overflow-hidden flex items-center justify-center bg-white">
-                <img
-                  src={selectedAvatarModalImage}
-                  alt="Avatar Virtual Alta Resolución"
-                  className="w-full h-full object-contain bg-white"
-                />
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

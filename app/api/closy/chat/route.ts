@@ -9,6 +9,8 @@ import { getGeminiApiKey } from '@/lib/ai/geminiClient';
 interface ChatRequestPayload {
   message: string;
   history?: Array<{ role: 'user' | 'assistant'; content: string }>;
+  attached_custom_image?: string;
+  attached_image?: string;
   attached_item?: {
     id: string;
     name: string;
@@ -51,6 +53,73 @@ interface ChatRequestPayload {
       fabric?: string;
     }>;
   };
+}
+
+/**
+ * Moderates user-uploaded custom images to ensure safety
+ */
+async function moderateImageWithGemini(
+  apiKey: string,
+  imageInlineData: { mimeType: string; data: string }
+): Promise<{ isSafe: boolean; reason?: string }> {
+  try {
+    const moderationInstruction = `You are a strict content safety and policy moderation AI.
+Analyze this image carefully.
+Detect if it contains ANY of the following prohibited content:
+1. Nudity, pornography, sexually explicit or suggestive sexual content.
+2. Graphic violence, gore, weapons (guns, knives held threateningly), physical harm or blood.
+3. Illicit drugs, drug paraphernalia or self-harm.
+4. Hate symbols or extremist imagery.
+
+Respond ONLY with a JSON object:
+{
+  "isSafe": true | false,
+  "reason": "safe" | "nudity" | "violence" | "weapons" | "drugs" | "other"
+}`;
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 6000);
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              {
+                inline_data: {
+                  mime_type: imageInlineData.mimeType,
+                  data: imageInlineData.data
+                }
+              },
+              { text: moderationInstruction }
+            ]
+          }
+        ],
+        generationConfig: {
+          response_mime_type: "application/json",
+          temperature: 0.1
+        }
+      })
+    });
+    clearTimeout(timeout);
+
+    if (res.ok) {
+      const data = await res.json();
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (text) {
+        const parsed = JSON.parse(text);
+        if (parsed.isSafe === false) {
+          return { isSafe: false, reason: parsed.reason };
+        }
+      }
+    }
+    return { isSafe: true };
+  } catch (err) {
+    console.warn('[ChatModeration] Error during moderation check:', err);
+    return { isSafe: true };
+  }
 }
 
 /**
@@ -125,6 +194,41 @@ export async function POST(request: NextRequest) {
 
     if (userPrompt.length > 500) {
       return NextResponse.json({ error: 'El mensaje supera el límite de 500 caracteres' }, { status: 400 });
+    }
+
+    // 3.5. Process Custom Attached Image (from Camera / Gallery) with Content Safety Moderation
+    let attachedCustomImagePart: { mimeType: string; data: string } | null = null;
+    const rawAttachedImage = (body as any).attached_custom_image || (body as any).attached_image;
+
+    if (rawAttachedImage && typeof rawAttachedImage === 'string') {
+      if (rawAttachedImage.startsWith('data:image/')) {
+        const match = rawAttachedImage.match(/^data:(image\/[a-zA-Z0-9+.-]+);base64,(.+)$/);
+        if (match) {
+          attachedCustomImagePart = {
+            mimeType: match[1].includes('png') ? 'image/png' : 'image/jpeg',
+            data: match[2]
+          };
+        }
+      } else {
+        attachedCustomImagePart = await fetchImageAsBase64(rawAttachedImage);
+      }
+
+      if (attachedCustomImagePart) {
+        const geminiKey = getGeminiApiKey();
+        if (geminiKey) {
+          const modResult = await moderateImageWithGemini(geminiKey, attachedCustomImagePart);
+          if (!modResult.isSafe) {
+            return NextResponse.json(
+              {
+                error: 'Esta imagen no se ha podido subir por infringir las normas comunitarias de la aplicación.',
+                message: 'Esta imagen no se ha podido subir por infringir las normas comunitarias de la aplicación.',
+                isModerationViolation: true
+              },
+              { status: 400 }
+            );
+          }
+        }
+      }
     }
 
     // 4. Check Subscription & Free Trial Message Limit
@@ -209,7 +313,8 @@ export async function POST(request: NextRequest) {
         context,
         body.history || [],
         attachedItems,
-        body.attached_post
+        body.attached_post,
+        attachedCustomImagePart
       );
     }
 
@@ -220,7 +325,8 @@ export async function POST(request: NextRequest) {
         context,
         body.history || [],
         attachedItems,
-        body.attached_post
+        body.attached_post,
+        attachedCustomImagePart
       );
     }
 
@@ -331,7 +437,8 @@ async function callGeminiAssistant(
   context: any,
   history: Array<{ role: string; content: string }>,
   attachedItems: any[] = [],
-  attachedPost?: any
+  attachedPost?: any,
+  attachedCustomImagePart?: { mimeType: string; data: string } | null
 ) {
   try {
     const rawCandidateName = context.user.firstName || 
@@ -377,21 +484,32 @@ REGLAS CRÍTICAS DE ESTILISMO Y DECISIÓN DE RESPUESTA (OBLIGATORIO):
      - Explica cómo cada compra propuesta amplía y multiplica las combinaciones con las prendas reales que ya tiene registradas en su armario.
      - IMPORTANTE: En este caso NO devuelvas un outfit de su armario ("recommended_outfit": null).
 
-2. ANÁLISIS DE FOTOS Y LOOKS GUARDADOS (INSPIRACIÓN):
+2. ASESORÍA PERSONALIZADA POR FACCIONES, PIEL, PELO, ALTURA Y MORFOLOGÍA REAL DEL USUARIO (OBLIGATORIO):
+   - Tienes acceso visual a las fotos de referencia física del usuario (rostro y cuerpo).
+   - Analiza sus rasgos naturales (color y tipo de pelo: moreno, rubio, castaño, rizado, liso; subtono de piel: moreno, cálido, frío, claro, oliva; altura, silueta y complexión física: alto, estatura media, estilizado, atlético, etc.).
+   - En tus explicaciones y consejos de estilo, JUSTIFICA SIEMPRE de forma elegante y natural por qué los tonos cromáticos, contrastes, cuellos, cortes y siluetas favorecen directamente sus facciones y su morfología física real.
+   - Ejemplos de personalización:
+     * "Como eres moreno y tienes un tono de piel con subtono cálido, estos tonos tierra, arena y azul marino contrastan y realzan notablemente tus facciones..."
+     * "Para tu altura y complexión estilizada, este corte regular con caída limpia equilibra tus proporciones..."
+     * "Dado tu pelo rubio y tez clara, estos contrastes neutros aportan luminosidad a tu rostro..."
+
+3. ANÁLISIS DE FOTO DIRECTA ADJUNTA POR EL USUARIO:
+   - Si el usuario adjunta una foto directamente en el chat (ej: prenda que vio en una tienda, captura de Pinterest, foto suya con una prenda o accesorio):
+     * Analiza visualmente la prenda u objeto en la foto (color exacto, textura, tipo de cuello, corte, estilo).
+     * Responde a su pregunta evaluando la prenda, aconsejándole si encaja con su estilo y armario, y sugiriéndole combinaciones reales con las prendas que ya tiene.
+
+4. ANÁLISIS DE FOTOS Y LOOKS GUARDADOS (INSPIRACIÓN):
    - Si el usuario te envía o consulta una foto / look guardado:
      * Si pide expresamente recrearlo o combinarlo con su armario -> Busca las prendas más parecidas de su armario y crea el conjunto en "recommended_outfit".
      * Si pregunta qué te parece, qué estilo es, qué compras necesita o qué tendencias tiene -> Analiza la imagen, explica sus puntos fuertes y tendencias, y dale consejos de estilo o compras con "recommended_outfit": null.
 
-3. TRATO PERSONALIZADO Y GÉNERO:
-   - Saluda o menciona a ${userName} de forma natural y adapta tus propuestas de ropa, tendencias y compras a su género (${userGender}) y edad (${userAge}).
-
-4. CONTINUIDAD CONVERSACIONAL Y AJUSTES DINÁMICOS:
+5. CONTINUIDAD CONVERSACIONAL Y AJUSTES DINÁMICOS:
    - Presta máxima atención al HISTORIAL DE CONVERSACIÓN.
    - Si el usuario te pide cambiar una pieza ("quiero otra parte de arriba", "cámbiame los zapatos", "otro pantalón", "algo más oscuro"):
      * Conserva las piezas compatibles del conjunto previo y sustituye la prenda solicitada por OTRA pieza diferente de su armario.
      * Nunca repitas la misma prenda que el usuario pidió cambiar.
 
-5. COMPOSICIÓN REALISTA Y EQUILIBRADA CUANDO SE CREE UN OUTFIT:
+6. COMPOSICIÓN REALISTA Y EQUILIBRADA CUANDO SE CREE UN OUTFIT:
    - Cada conjunto en "recommended_outfit.item_ids" DEBE ser vestible y equilibrado:
      * 1x Parte Superior (Camiseta, camisa, polo o top)
      * 1x Capa de Abrigo/Exterior (Opcional según clima: sudadera, jersey, cazadora, blazer, abrigo)
@@ -400,16 +518,13 @@ REGLAS CRÍTICAS DE ESTILISMO Y DECISIÓN DE RESPUESTA (OBLIGATORIO):
      * 1x Accesorio (Opcional: reloj, gorra, gafas, bolso)
    - JAMÁS pongas 2 camisetas juntas ni 2 pantalones juntos.
 
-6. LENGUAJE NATURAL, PROSA FLUIDA Y FORMATO LIMPIO:
+7. LENGUAJE NATURAL, PROSA FLUIDA Y FORMATO LIMPIO:
    - Saluda y dirígete al usuario por su nombre real (${userName}).
    - PROHIBIDO usar fórmulas robóticas ("Para responder a lo que me pides sobre...", "Composición del look: ...", "Estructura del look: ...", "Hola Usuario").
    - Escribe en prosa fluida, elocuente y bien estructurada.
    - Si desglosas prendas o compras, utiliza viñetas limpias ("- Prenda: descripción detallada...").
    - NO utilices encabezados con almohadillas ("###", "##", "#") dentro del texto del chat; utiliza negritas (ej: "**1. Camiseta Básica Esencial**") para titular o separar secciones.
    - NO incluyas emojis en el texto.
-
-7. AVATAR VIRTUAL Y MODELADO DE OUTFITS CON FONDO BLANCO:
-   - Todas las representaciones y looks generados para el Avatar Virtual del usuario se conciben y configuran SIEMPRE sobre fondo blanco puro de estudio fotográfico (#FFFFFF) por defecto, con iluminación homogénea y sin fondos complejos ni distracciones.
 
 8. FORMATO DE SALIDA (JSON ESTRICTO):
 Devuelve SIEMPRE tu respuesta en formato JSON estrictamente válido:
@@ -476,6 +591,20 @@ Devuelve SIEMPRE tu respuesta en formato JSON estrictamente válido:
       })
     );
 
+    // Fetch up to 3 face photos and 3 body photos for user physical profile recognition
+    const facePhotos: string[] = (context.user.facePhotos || []).slice(0, 3);
+    const bodyPhotos: string[] = (context.user.bodyPhotos || []).slice(0, 3);
+    const physicalPhotoUrls = [...facePhotos, ...bodyPhotos];
+
+    const physicalFetches = await Promise.allSettled(
+      physicalPhotoUrls.map(async (url: string, pIdx: number) => {
+        const imgData = await fetchImageAsBase64(url);
+        if (!imgData) return null;
+        const isFace = pIdx < facePhotos.length;
+        return { isFace, idx: isFace ? pIdx + 1 : pIdx - facePhotos.length + 1, imgData };
+      })
+    );
+
     const userParts: any[] = [
       {
         text: `
@@ -507,6 +636,34 @@ ${JSON.stringify(context.savedInspirations || [])}
 `
       }
     ];
+
+    // Append physical profile reference photos of user (face & body)
+    physicalFetches.forEach(res => {
+      if (res.status === 'fulfilled' && res.value) {
+        userParts.push({
+          text: `FOTO DE REFERENCIA FÍSICA DEL USUARIO (${res.value.isFace ? `Rostro #${res.value.idx}` : `Cuerpo #${res.value.idx}`} - Evalúa su tono de piel, color de pelo, ojos, altura y complexión física):`
+        });
+        userParts.push({
+          inline_data: {
+            mime_type: res.value.imgData.mimeType,
+            data: res.value.imgData.data
+          }
+        });
+      }
+    });
+
+    // Append custom image attached directly by the user in this message if present
+    if (attachedCustomImagePart) {
+      userParts.push({
+        text: `*** FOTO ADJUNTA DIRECTAMENTE POR EL USUARIO EN ESTE MENSAJE (Prenda que vio en tienda, look de Pinterest o foto a analizar): ***`
+      });
+      userParts.push({
+        inline_data: {
+          mime_type: attachedCustomImagePart.mimeType,
+          data: attachedCustomImagePart.data
+        }
+      });
+    }
 
     // Append visual images of garments so Gemini can directly inspect them
     imageFetches.forEach(res => {
@@ -901,7 +1058,8 @@ function generateHeuristicStylingResponse(
   context: any, 
   history: Array<{ role: string; content: string }> = [],
   attachedItems: any[] = [],
-  attachedPost?: any
+  attachedPost?: any,
+  attachedCustomImagePart?: any
 ) {
   const items = context.wardrobe.items || [];
   const lower = userPrompt.toLowerCase();

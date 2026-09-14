@@ -247,10 +247,10 @@ export default function AvatarCalibrationModal({
 
               <div>
                 <h2 className="text-xl font-bold text-[var(--foreground)] mt-2">
-                  Configura tu Avatar Personal
+                  Mi Perfil Físico
                 </h2>
                 <p className="text-xs text-[var(--foreground-secondary)] mt-2 leading-relaxed max-w-md mx-auto">
-                  Para que Kloe pueda modelar tus outfits exactamente sobre ti, sube 6 fotos de referencia con las siguientes pautas:
+                  Sube tus fotos de rostro y cuerpo para que Kloe analice tus facciones reales (tono de piel, pelo, ojos, altura y complexión) y adapte cada recomendación exactamente a ti:
                 </p>
               </div>
 
@@ -263,7 +263,7 @@ export default function AvatarCalibrationModal({
                   <div>
                     <h4 className="text-xs font-bold text-[var(--foreground)]">3 Fotos de Rostro</h4>
                     <p className="text-[11px] text-[var(--foreground-secondary)] leading-relaxed mt-0.5">
-                      Con buena iluminación natural o blanca, donde se te vea bien de <strong>frente</strong>, y fotos de perfil o 3/4 con expresión neutra.
+                      Buena luz natural, de <strong>frente y de perfil</strong> para detectar tu tono de piel, color y corte de pelo y facciones faciales.
                     </p>
                   </div>
                 </div>
@@ -275,7 +275,7 @@ export default function AvatarCalibrationModal({
                   <div>
                     <h4 className="text-xs font-bold text-[var(--foreground)]">3 Fotos de Cuerpo Entero</h4>
                     <p className="text-[11px] text-[var(--foreground-secondary)] leading-relaxed mt-0.5">
-                      Donde se te vea de pie, cuerpo completo de <strong>frente y de lado</strong>, con silueta clara y ropa neutra.
+                      De pie, cuerpo completo de <strong>frente y de lado</strong>, para que Kloe considere tu altura, morfología y proporciones anatómicas.
                     </p>
                   </div>
                 </div>
@@ -308,7 +308,7 @@ export default function AvatarCalibrationModal({
                   <User className="w-6 h-6" />
                 </div>
                 <h2 className="text-xl font-bold text-[var(--foreground)]">
-                  Fotos de tu Avatar
+                  Fotos de tu Perfil Físico
                 </h2>
                 <p className="text-xs text-[var(--foreground-secondary)] mt-1.5 max-w-md mx-auto leading-relaxed">
                   Fotos con buena luz: rostro de frente y perfil, y cuerpo entero de frente y de lado.
@@ -319,7 +319,7 @@ export default function AvatarCalibrationModal({
                   {isComplete ? (
                     <>
                       <Check className="w-4 h-4 text-emerald-500" />
-                      <span className="text-emerald-500">6/6 Fotos Listas para Probar Looks</span>
+                      <span className="text-emerald-500">6/6 Fotos Listas para Personalización</span>
                     </>
                   ) : (
                     <span>{totalUploaded} de 6 fotos subidas</span>
@@ -443,7 +443,7 @@ export default function AvatarCalibrationModal({
                   onClick={onClose}
                   className="flex-1 py-3.5 rounded-2xl bg-[var(--brand-pink)] text-white font-bold text-sm hover:bg-[var(--brand-pink-dark)] transition-colors shadow-lg shadow-[var(--brand-pink)]/20 active:scale-98 flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  {isComplete ? 'Guardar y Probar' : 'Guardar y Continuar'}
+                  Guardar Perfil Físico
                 </button>
               </div>
             </div>

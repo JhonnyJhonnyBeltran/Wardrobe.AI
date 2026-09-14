@@ -1011,3 +1011,18 @@ En cada conversación, el backend alimenta a CloSy con:
 - **Control de Acceso Premium Anti-Tampering**:
   - En cliente (`/closet/kloe`), pulsar el botón de probar avatar o abrir la calibración sin suscripción dispara inmediatamente el modal de suscripción a Klozet Pro (`setShowProModal(true)`).
   - En backend (`/api/closy/generate-avatar`), se valida en base de datos el estado de suscripción (`is_premium = true` en `profiles`), impidiendo manipulaciones o inyecciones desde la consola del navegador.
+
+### 81. Desactivación de Avatar Virtual, Estilismo por Perfil Físico, Subida de Imágenes en Chat y Moderación con IA (Septiembre 2026)
+- **Desactivación y Retirada Integral del Avatar Virtual**:
+  - Se eliminó del chat de Kloe (`/closet/kloe`) cualquier botón o acción de generación de imágenes de avatar digital ("Probar en mi avatar digital", visores Lightbox y tarjetas de generación de prueba virtual).
+- **Asesoría de Estilo Personalizada según Perfil Físico (Facciones, Tono y Complexión)**:
+  - Las 6 fotos de referencia (3 de rostro y 3 de cuerpo entero) pasan a ser **"Mi Perfil Físico"** (`components/AvatarCalibrationModal.tsx`).
+  - Kloe (Google Gemini 3.6 Flash) recibe directamente en su contexto multimodal las fotografías de rostro y cuerpo del usuario. Analiza visualmente el tono de piel (moreno, claro, cálido, oliva), color y corte de pelo, ojos y morfología/altura (alto, complexión esbelta, etc.), justificando explícitamente en sus recomendaciones por qué ciertos colores, cortes y contrastes favorecen sus facciones reales.
+- **Subida de Imágenes en el Input de Kloe (`attached_custom_image`)**:
+  - Se incorporó un botón de cámara en la barra de input del chat (`/closet/kloe`) que permite adjuntar fotografías (prendas vistas en tiendas, capturas de Pinterest, fotos de ropa) con visualizador chip previo.
+  - Kloe analiza visualmente la imagen adjunta con Gemini Vision y asesora al usuario sobre cómo combinarla con la ropa de su propio armario.
+- **Filtro de Moderación de Seguridad con IA**:
+  - Antes de procesar el estilismo, el backend (`/api/closy/chat`) ejecuta una moderación visual estricta con Gemini. Si la imagen contiene contenido sexual explícito, desnudez, violencia, armas o drogas ilícitas, la imagen es rechazada con el mensaje: *"Esta imagen no se ha podido subir por infringir las normas comunitarias de la aplicación."*
+- **Disparador de Banner Premium Exclusivo al Cumplir Límite**:
+  - El banner y aviso de suscripción a Kloe Pro solo se presenta cuando el usuario ha agotado sus 8 mensajes de prueba gratuita (`trialRemaining <= 0`), eliminando cualquier aparición prematura o intrusiva.
+

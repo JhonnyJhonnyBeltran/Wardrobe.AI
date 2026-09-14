@@ -23,6 +23,8 @@ export interface UserStylingContext {
     colorimetry?: string;
     gender?: string;
     age?: number;
+    facePhotos?: string[];
+    bodyPhotos?: string[];
   };
   wardrobe: {
     totalItems: number;
@@ -70,7 +72,7 @@ export async function buildUserStylingContext(
     // 1. Fetch Profile Preferences from profiles with admin client (RLS bypass)
     const { data: profile } = await admin
       .from('profiles')
-      .select('id, username, full_name, bio, preferred_styles, body_shape, season_palette, gender, age, age_range, morphology, colorimetry')
+      .select('id, username, full_name, bio, preferred_styles, body_shape, season_palette, gender, age, age_range, morphology, colorimetry, face_photos, body_photos, notification_preferences')
       .eq('id', userId)
       .maybeSingle();
 
@@ -265,7 +267,9 @@ export async function buildUserStylingContext(
         morphology: (profile as any)?.morphology || profile?.body_shape,
         colorimetry: (profile as any)?.colorimetry || profile?.season_palette,
         gender: finalGender,
-        age: typeof finalAge === 'number' ? finalAge : undefined
+        age: typeof finalAge === 'number' ? finalAge : undefined,
+        facePhotos: (profile?.face_photos || (profile?.notification_preferences as any)?.avatar_calibration?.face_photos || []).filter(Boolean),
+        bodyPhotos: (profile?.body_photos || (profile?.notification_preferences as any)?.avatar_calibration?.body_photos || []).filter(Boolean)
       },
       wardrobe: {
         totalItems: clothingList.length,
