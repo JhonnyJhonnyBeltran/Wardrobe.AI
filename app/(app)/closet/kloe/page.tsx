@@ -31,6 +31,7 @@ import { haptics } from '@/lib/haptic';
 import ProductModal from '@/components/ProductModal';
 import KloeProModal from '@/components/KloeProModal';
 import AvatarCalibrationModal from '@/components/AvatarCalibrationModal';
+import LoadingSpinner from '@/components/LoadingSpinner';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { resolveImageUrl } from '@/lib/imageUtils';
 
@@ -1197,19 +1198,34 @@ export default function KloePage() {
                   {(msg.recommended_outfit.avatar_loading || msg.recommended_outfit.avatar_url) && (
                     <div className="relative w-full max-w-sm mx-auto aspect-[3/4] rounded-2xl overflow-hidden bg-white border border-gray-200 dark:border-white/10 shadow-md flex items-center justify-center">
                       {msg.recommended_outfit.avatar_loading ? (
-                        /* Studio Loading State with Spinner & Adaptive Text */
-                        <div className="flex flex-col items-center justify-center p-6 text-center space-y-3 select-none">
-                          <div className="relative w-14 h-14 flex items-center justify-center">
-                            <div className="absolute inset-0 rounded-full border-4 border-[var(--brand-pink)]/20 border-t-[var(--brand-pink)] animate-spin" />
-                            <Camera className="w-6 h-6 text-[var(--brand-pink)] animate-pulse" />
+                        /* Studio Loading State with Non-Blocking GPU Animation & Bouncing Dots */
+                        <div className="flex flex-col items-center justify-center p-6 text-center space-y-3.5 select-none">
+                          <div className="relative w-16 h-16 flex items-center justify-center">
+                            <div className="absolute inset-0 rounded-full border-3 border-[var(--brand-pink)]/20 border-t-[var(--brand-pink)] animate-spin-smooth" />
+                            <Camera className="w-6 h-6 text-[var(--brand-pink)] animate-pulse-glow" />
                           </div>
-                          <div className="space-y-1">
+                          <div className="space-y-1.5">
                             <h4 className="text-xs font-bold text-gray-900 tracking-tight">
                               Generando foto hiperrealista en tu avatar
                             </h4>
                             <p className="text-[11px] text-gray-500 leading-relaxed max-w-[240px] mx-auto">
                               Adaptando prendas a tus facciones faciales y corporales sobre fondo blanco de estudio...
                             </p>
+                            <div className="flex items-center justify-center gap-1.5 pt-1">
+                              {[0, 1, 2].map((dot) => (
+                                <motion.span
+                                  key={dot}
+                                  animate={{ y: [0, -5, 0], opacity: [0.35, 1, 0.35] }}
+                                  transition={{
+                                    duration: 0.85,
+                                    repeat: Infinity,
+                                    delay: dot * 0.18,
+                                    ease: 'easeInOut'
+                                  }}
+                                  className="w-1.5 h-1.5 rounded-full bg-[var(--brand-pink)]"
+                                />
+                              ))}
+                            </div>
                           </div>
                         </div>
                       ) : (
@@ -1280,7 +1296,7 @@ export default function KloePage() {
                     >
                       {generatingAvatarForMsgId === msg.id || msg.recommended_outfit.avatar_loading ? (
                         <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <LoadingSpinner size="xs" color="#FFFFFF" className="shrink-0" />
                           Generando foto en avatar...
                         </>
                       ) : msg.recommended_outfit.avatar_url ? (

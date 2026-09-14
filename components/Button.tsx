@@ -7,7 +7,7 @@
 
 import React, { ReactNode } from 'react';
 import { motion, HTMLMotionProps } from 'framer-motion';
-import { Loader2 } from 'lucide-react';
+import LoadingSpinner from './LoadingSpinner';
 import { haptics } from '@/lib/haptic';
 
 interface ButtonProps extends Omit<HTMLMotionProps<'button'>, 'children'> {
@@ -115,7 +115,7 @@ export default function Button({
       {...props}
     >
       {loading && (
-        <Loader2 className="w-4 h-4 animate-spin" />
+        <LoadingSpinner size={size === 'sm' ? 'xs' : 'sm'} color="currentColor" className="shrink-0" />
       )}
       {children}
     </motion.button>

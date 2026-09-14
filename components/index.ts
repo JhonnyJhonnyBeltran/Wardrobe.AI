@@ -46,3 +46,4 @@ export { default as DiscoveredStyleBanner } from './DiscoveredStyleBanner';
 export { default as KloeProModal } from './KloeProModal';
 export { default as AvatarModal } from './AvatarModal';
 export { default as PullToRefresh } from './PullToRefresh';
+export { default as LoadingSpinner } from './LoadingSpinner';

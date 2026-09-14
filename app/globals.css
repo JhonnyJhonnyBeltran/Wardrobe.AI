@@ -227,6 +227,72 @@ html {
 }
 
 /* ============================================
+   GPU HARDWARE-ACCELERATED LOADING ANIMATIONS
+   Compositor-driven, non-blocking 60fps animations
+   ============================================ */
+
+@keyframes klozet-spin {
+  0% {
+    transform: rotate(0deg) translateZ(0);
+  }
+  100% {
+    transform: rotate(360deg) translateZ(0);
+  }
+}
+
+@keyframes klozet-pulse-glow {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(0.95) translateZ(0);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05) translateZ(0);
+  }
+}
+
+@keyframes klozet-bounce-dot {
+  0%, 100% {
+    transform: translateY(0) translateZ(0);
+    opacity: 0.4;
+  }
+  50% {
+    transform: translateY(-6px) translateZ(0);
+    opacity: 1;
+  }
+}
+
+.animate-spin-smooth {
+  animation: klozet-spin 0.8s linear infinite !important;
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.animate-pulse-glow {
+  animation: klozet-pulse-glow 1.5s ease-in-out infinite !important;
+  will-change: transform, opacity;
+  transform: translateZ(0);
+}
+
+.animate-bounce-dot-1 {
+  animation: klozet-bounce-dot 1s ease-in-out infinite 0s !important;
+  will-change: transform, opacity;
+  transform: translateZ(0);
+}
+
+.animate-bounce-dot-2 {
+  animation: klozet-bounce-dot 1s ease-in-out infinite 0.18s !important;
+  will-change: transform, opacity;
+  transform: translateZ(0);
+}
+
+.animate-bounce-dot-3 {
+  animation: klozet-bounce-dot 1s ease-in-out infinite 0.36s !important;
+  will-change: transform, opacity;
+  transform: translateZ(0);
+}
+
+/* ============================================
    CLOSET DOOR ANIMATION
    Wardrobe opening effect with curtain reveal
    ============================================ */

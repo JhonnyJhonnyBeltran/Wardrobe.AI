@@ -988,4 +988,18 @@ En cada conversación, el backend alimenta a CloSy con:
 - **Posicionamiento del Estilo/Ocasión**: La etiqueta de ocasión/estilo (*Casual*, *Diario*, *Streetwear*, etc.) se reubicó debajo del nombre del outfit en columna (`flex-col gap-2`), ofreciendo una jerarquía tipográfica limpia y sin saltos laterales.
 - **Optimización y Reubicación del Botón de Cierre**: Se redujo el tamaño del botón de cierre (`p-1.5 md:p-2`, icono `w-4 h-4`) y se ancló estrechamente a la esquina superior derecha (`top-3 md:top-4 right-3 md:right-4`), con fondo translúcido `bg-black/50 hover:bg-black/75` y sombra sutil, evitando cualquier solapamiento o conflicto visual con los botones de acción (como el de eliminar o editar).
 
+### 79. Erradicación de Bloqueos en Animaciones de Carga (Spinners/Gifs) y Blindaje del Motor de Avatar Virtual (Septiembre 2026)
+- **Causas Raíz Identificadas**:
+  1. **Spinners y Loaders Atascados**: En diversas pantallas, los spinners SVG dependían de `animate-spin` sin aceleración por hardware o se ejecutaban en hilos bloqueantes durante renders pesados de React, causando que la animación se congelara visualmente. En contraposición, el globo de texto de Kloe usaba física CSS con `will-change` y keyframes independientes en la GPU.
+  2. **Error de Retorno de Foto Selfie en Avatar Virtual (`/api/closy/generate-avatar`)**: Cuando los endpoints de generación alcanzaban límites de cuota (429), el código ejecutaba un fallback residual `generatedImageUrl = facePhotos[0]`, devolviendo la foto selfie original del usuario en lugar de la imagen generada sobre fondo blanco.
+- **Soluciones Implementadas**:
+  - **Componente Universal `LoadingSpinner.tsx` y Animaciones GPU (`app/globals.css`)**:
+    - Se definieron keyframes optimizados con aceleración por hardware (`klozet-spin`, `klozet-pulse-glow`, `klozet-bounce-dot`, `transform: translateZ(0)`, `will-change: transform`).
+    - Creado el componente [`LoadingSpinner.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/components/LoadingSpinner.tsx) con soporte para spinner vectorial y puntos rebotantes idénticos a la animación de Kloe, integrado en `Button.tsx`, `PullToRefresh.tsx` y la tarjeta de prueba de avatar en `/closet/kloe`.
+  - **Blindaje del Pipeline de Avatar con Gemini 3.6 Flash y Motor Multicapa**:
+    - Se eliminó por completo la devolución de la selfie del usuario como sustituto de avatar (`facePhotos[0]`).
+    - **Extracción Biométrica de Alta Fidelidad**: `gemini-3.6-flash` analiza las 6 fotos de calibración (rostro, facciones faciales, ojos, corte de pelo, tono de piel, barba/perilla y silueta corporal) junto con las prendas del outfit (colores, estampados 'scuffers', tejidos y calzado) para redactar el prompt de catálogo editorial Hasselblad sobre fondo blanco puro `#FFFFFF`.
+    - Generación multi-motor con renderizado fotorrealista directo en Base64 y ampliación Lightbox sin fallos ni congelamientos.
+
+
 

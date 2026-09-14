@@ -203,28 +203,28 @@ export async function POST(request: NextRequest) {
       try {
         const visionInstruction = `You are an elite biometric stylist and commercial fashion studio director.
 You are provided with:
-1. Reference photos of a real human person (face photos and full body photos).
+1. Reference photos of a real human person (face photos and body photos).
 2. The specific wardrobe clothing items chosen for the look (${garments.map(g => `${g.name || g.category} [${g.category}]`).join(', ')}).
 
 CRITICAL STRICT RULES:
 - THE CLOTHING WORN BY THE PERSON IN THE FACE AND BODY REFERENCE PHOTOS MUST BE 100% IGNORED AND DISCARDED. Do NOT describe or transfer any clothes from the reference photos.
-- The reference photos are EXCLUSIVELY to extract the real person's biometric identity: facial structure, eyes, eyebrows, nose, lips, jawline, facial hair, skin tone, hairstyle and body proportions.
+- Extract the person's REAL biometric identity: exact gender, age range, ethnicity/skin tone, facial structure (jawline, cheekbones), eye shape/color, eyebrow shape, nose structure, lips, hair (color, length, texture, haircut style), facial hair (beard/stubble/mustache), and body proportions (athletic/toned/build).
 - The ONLY clothing the person must be wearing in the generated photograph is the EXACT outfit pieces specified (${garments.map(g => `${g.name || g.category} (${g.color || ''})`).join(', ')}).
 
-Generate a single RAW 8k Hasselblad studio catalogue lookbook photographic prompt describing this real person standing centered in a full-body pose on a solid pure white studio background #FFFFFF with high-key commercial lighting, wearing ONLY the specified outfit with authentic fabric textures and drapery. Output ONLY the English prompt.`;
+Generate a single RAW 8k Hasselblad studio catalogue lookbook photographic prompt describing this real person standing centered in a full-length body pose on a pure solid seamless white studio background #FFFFFF with high-key commercial softbox lighting, wearing ONLY the specified outfit with authentic fabric drape and texture. Output ONLY the English prompt.`;
 
         const visionPayload = {
           contents: [
             {
               parts: [
-                ...imageParts,
+                ...imageParts.slice(0, 7),
                 { text: visionInstruction }
               ]
             }
           ]
         };
 
-        const visionModels = ['gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3-flash-preview'];
+        const visionModels = ['gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-flash-latest'];
         for (const model of visionModels) {
           try {
             const vRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`, {
@@ -255,20 +255,20 @@ Generate a single RAW 8k Hasselblad studio catalogue lookbook photographic promp
       const garmentSummary = garments.length > 0
         ? garments.map(g => `${g.name || g.category}${g.color ? ` in ${g.color}` : ''}${g.fabric ? ` (${g.fabric})` : ''}`).join(', ')
         : 'stylish modern casual outfit';
-      biometricPrompt = `RAW 8k full-body studio catalogue lookbook photograph of a real authentic ${userAge} ${userGender} model with natural human skin texture, standing centered in full view on a pure solid seamless white studio background #FFFFFF. Wearing: ${garmentSummary}. Shot on Hasselblad H6D-100c 85mm f/1.4 lens, neutral bright studio softbox lighting, ultra-sharp focus, natural fabric drape and texture, photorealistic, authentic human, completely isolated on white background`;
+      biometricPrompt = `RAW 8k full-body studio catalogue lookbook photograph of a real authentic ${userAge} ${userGender} model with natural human skin texture and real facial features, standing centered in full view on a pure solid seamless white studio background #FFFFFF. Wearing: ${garmentSummary}. Shot on Hasselblad H6D-100c 85mm f/1.4 lens, neutral bright studio softbox lighting, ultra-sharp focus, natural fabric drape and texture, photorealistic, authentic human, completely isolated on white background`;
     }
 
     const finalPhotoPrompt = `RAW 8k full-body studio catalogue photograph of real human, ${biometricPrompt}. Solid pure seamless white studio background #FFFFFF, neutral bright studio softbox lighting, ultra-sharp focus, authentic skin texture with natural pores, cinematic photorealism, isolated on solid white background`;
 
     let generatedImageUrl: string | null = null;
 
-    // Direct Google Gemini Multimodal Image Generation
+    // 1. Try Google Gemini Image Models
     if (geminiKey) {
-      const geminiImageModels = ['gemini-2.5-flash-image', 'gemini-3.1-flash-image', 'nano-banana-pro-preview'];
+      const geminiImageModels = ['gemini-2.5-flash-image', 'gemini-3.1-flash-image', 'gemini-3-pro-image'];
       for (const imgModel of geminiImageModels) {
         try {
           const controller = new AbortController();
-          const timeout = setTimeout(() => controller.abort(), 12000);
+          const timeout = setTimeout(() => controller.abort(), 10000);
           const gRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${imgModel}:generateContent?key=${geminiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -305,9 +305,38 @@ Generate a single RAW 8k Hasselblad studio catalogue lookbook photographic promp
       }
     }
 
-    // Fallback to high-res reference photo if generation API quota limit reached
+    // 2. High-Fidelity Studio Image Generation Engine Fallback
     if (!generatedImageUrl) {
-      generatedImageUrl = facePhotos[0] || bodyPhotos[0] || '/placeholder.png';
+      try {
+        const seed = Math.floor(Math.random() * 900000) + 100000;
+        const cleanPrompt = finalPhotoPrompt
+          .replace(/[\n\r]+/g, ' ')
+          .replace(/\s+/g, ' ')
+          .slice(0, 800);
+
+        const engineUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(cleanPrompt)}?width=768&height=1024&model=flux&enhance=true&nologo=true&seed=${seed}`;
+        
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 18000);
+        const imgRes = await fetch(engineUrl, { signal: controller.signal });
+        clearTimeout(timeout);
+
+        if (imgRes.ok) {
+          const arrayBuf = await imgRes.arrayBuffer();
+          if (arrayBuf.byteLength > 10000) {
+            const base64Img = Buffer.from(arrayBuf).toString('base64');
+            generatedImageUrl = `data:image/jpeg;base64,${base64Img}`;
+          }
+        }
+      } catch (eEngineErr) {
+        console.warn('[GenerateAvatar] Secondary studio engine error:', eEngineErr);
+      }
+    }
+
+    if (!generatedImageUrl) {
+      return NextResponse.json({
+        error: 'No se pudo generar la imagen del avatar en este momento. Por favor inténtalo de nuevo en unos segundos.'
+      }, { status: 500 });
     }
 
     return NextResponse.json({

@@ -2,7 +2,8 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, ArrowDown, Sparkles } from 'lucide-react';
+import { ArrowDown, Sparkles } from 'lucide-react';
+import LoadingSpinner from './LoadingSpinner';
 import { haptics } from '@/lib/haptic';
 
 interface PullToRefreshProps {
@@ -149,7 +150,7 @@ export default function PullToRefresh({ onRefresh, children, disabled = false }:
           >
             <div className="w-10 h-10 rounded-full bg-[var(--card-bg)]/95 backdrop-blur-lg border border-[var(--brand-pink)]/40 shadow-lg shadow-[var(--brand-pink)]/15 flex items-center justify-center">
               {isRefreshing ? (
-                <Loader2 className="w-5 h-5 text-[var(--brand-pink)] animate-spin" />
+                <LoadingSpinner size="sm" color="var(--brand-pink)" />
               ) : isTriggered ? (
                 <Sparkles className="w-5 h-5 text-[var(--brand-pink)] animate-pulse" />
               ) : (
