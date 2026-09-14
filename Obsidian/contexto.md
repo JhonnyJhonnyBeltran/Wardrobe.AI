@@ -933,8 +933,12 @@ En cada conversación, el backend alimenta a CloSy con:
   - Se eliminó el bloqueo/redirect inmediato para usuarios gratuitos, permitiéndoles acceder y probar a Kloe sin fricciones.
   - **Indicador Visual de Progreso**: Banner superior que muestra *"Prueba gratuita de Kloe: Te quedan X de 8 mensajes"* acompañado de una barra de progreso suave.
   - **Bloqueo Elegante al Agotar**: Cuando el contador llega a 0, la barra de input se transforma en un disparador hacia `KloeProModal` con botón *"Subir a Pro (2,99 €)"*.
-- **Análisis Financiero Unitario**:
-  - Coste de 8 mensajes de IA (Gemini Flash) por usuario de prueba: **~0,00216 €** (menos de un tercio de céntimo de euro).
-  - 1.000 usuarios en prueba gratuita generan un coste de IA de solo **~2,16 €**.
-  - Con un 4% de conversión a suscripción (2,99 €/mes o 3,99 €/mes), 1.000 pruebas producen **+120 € a +160 €/mes** de ingresos recurrentes netos.
+### 74. Rediseño de la Barra Superior de Kloe: Modo Escritorio con Logo Animado 10s y Modo Móvil Flotante Dinámico (Septiembre 2026)
+- **Barra Superior en Escritorio (`hidden md:flex`)**:
+  - Encabezado fijo que cubre el 100% del ancho de la pantalla (`w-full h-16 bg-[var(--background)]/85 backdrop-blur-xl border-b border-[var(--border-color)]/50 px-8`).
+  - **Logo Central Animado Cada 10 Segundos (`KloeAnimatedLogo`)**: Situado en el centro geométrico de la pantalla (`absolute left-1/2 -translate-x-1/2`), alterna automáticamente cada 10 segundos mediante un giro 3D de alta fidelidad (`rotateX: 90` a `0`) entre el logotipo tipográfico oficial de Kloe y el avatar/icono mascota con tipografía degradada.
+- **Barra Superior en Móvil (`md:hidden`)**:
+  - **Eliminación del Botón de Atrás**: Se retiró el icono de flecha hacia atrás para limpiar el viewport móvil.
+  - **Píldoras Flotantes Redondeadas**: El diseño pasa de ser una barra rectangular completa a islotes independientes con bordes redondeados completos (`rounded-full px-3.5 py-1.5 shadow-md` con efecto de cristal esmerilado `backdrop-blur-2xl`), uno a la izquierda para la marca y otro a la derecha exclusivamente para las acciones (`Historial`, `Calibrar Avatar`, `Guardados`, `Armario`).
+  - **Ocultamiento Dinámico al Deslizar**: Mediante el detector de scroll en el contenedor de mensajes (`handleMessagesScroll`), la barra superior móvil se desliza suavemente hacia arriba (`-y-full`, `opacity-0`) al hacer scroll hacia abajo, y reaparece instantáneamente al hacer scroll hacia arriba o detenerse.
 

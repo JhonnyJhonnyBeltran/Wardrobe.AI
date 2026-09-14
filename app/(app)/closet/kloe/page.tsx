@@ -222,6 +222,64 @@ function FormattedMessageText({ content, isUser }: { content: string; isUser?: b
   );
 }
 
+function KloeAnimatedLogo() {
+  const [logoVariant, setLogoVariant] = useState<0 | 1>(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setLogoVariant(prev => (prev === 0 ? 1 : 0));
+    }, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="relative h-10 w-44 flex items-center justify-center cursor-pointer select-none">
+      <AnimatePresence mode="wait">
+        {logoVariant === 0 ? (
+          <motion.div
+            key="logo-text"
+            initial={{ opacity: 0, scale: 0.85, rotateX: 90 }}
+            animate={{ opacity: 1, scale: 1, rotateX: 0 }}
+            exit={{ opacity: 0, scale: 0.85, rotateX: -90 }}
+            transition={{ duration: 0.6, type: 'spring', damping: 20, stiffness: 200 }}
+            className="relative w-28 h-8 flex items-center justify-center"
+          >
+            <Image
+              src="/kloe-logo-large.png"
+              alt="Kloe"
+              fill
+              className="object-contain drop-shadow-xs"
+              priority
+            />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="logo-character"
+            initial={{ opacity: 0, scale: 0.85, rotateX: 90 }}
+            animate={{ opacity: 1, scale: 1, rotateX: 0 }}
+            exit={{ opacity: 0, scale: 0.85, rotateX: -90 }}
+            transition={{ duration: 0.6, type: 'spring', damping: 20, stiffness: 200 }}
+            className="flex items-center gap-2"
+          >
+            <div className="relative w-8 h-8 flex-shrink-0">
+              <Image
+                src="/kloe-avatar-v2.png"
+                alt="Kloe Avatar"
+                fill
+                className="object-contain drop-shadow-sm"
+                priority
+              />
+            </div>
+            <span className="text-sm font-extrabold tracking-tight bg-gradient-to-r from-[var(--brand-pink)] via-purple-500 to-[var(--brand-pink)] bg-clip-text text-transparent">
+              Kloe
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 export default function KloePage() {
   const router = useRouter();
   const { user, isPremium } = useUser();
@@ -230,6 +288,20 @@ export default function KloePage() {
   const [typingStep, setTypingStep] = useState(0);
   const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
   const [showProModal, setShowProModal] = useState(false);
+
+  // Scroll hide/show for mobile header
+  const [showHeader, setShowHeader] = useState(true);
+  const lastScrollY = useRef(0);
+
+  const handleMessagesScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const currentScrollY = e.currentTarget.scrollTop;
+    if (currentScrollY > lastScrollY.current + 8 && currentScrollY > 30) {
+      setShowHeader(false);
+    } else if (currentScrollY < lastScrollY.current - 8) {
+      setShowHeader(true);
+    }
+    lastScrollY.current = currentScrollY;
+  };
   
   // Avatar Virtual Try-On
   const [showCalibrationModal, setShowCalibrationModal] = useState(false);
@@ -730,71 +802,61 @@ export default function KloePage() {
   return (
     <div className="min-h-screen bg-[var(--background)] flex flex-col justify-between max-w-5xl mx-auto">
       
-      {/* Header - Fixed top Apple HIG style */}
-      <header className="fixed top-0 left-0 right-0 z-30 bg-[var(--background)]/85 backdrop-blur-xl px-4 md:px-6 pt-safe h-16 flex items-center justify-between border-b border-[var(--border-color)]/50 max-w-5xl mx-auto">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => router.push('/closet')}
-            className="p-2 -ml-2 rounded-full text-gray-900 dark:text-white hover:text-[var(--brand-pink)] dark:hover:text-[var(--brand-pink)] transition-colors cursor-pointer"
-            aria-label="Volver al armario"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          
-          <div className="flex items-center">
-            <div className="relative w-24 h-9 flex-shrink-0 flex items-center justify-start">
-              <Image
-                src="/kloe-logo-large.png"
-                alt="Kloe"
-                fill
-                className="object-contain object-left drop-shadow-xs hover:scale-105 transition-transform"
-                priority
-              />
-            </div>
-          </div>
+      {/* DESKTOP HEADER (Full width, fixed top, centered 10s animated logo) */}
+      <header className="hidden md:flex fixed top-0 left-0 right-0 z-30 w-full h-16 bg-[var(--background)]/85 backdrop-blur-xl border-b border-[var(--border-color)]/50 px-8 items-center justify-between">
+        {/* Left Info */}
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-bold text-[var(--foreground)] tracking-wide">
+            Kloe
+          </span>
+          <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] font-bold">
+            IA Personal
+          </span>
+        </div>
+
+        {/* Center Animated Logo (Alternates with 3D animation every 10s) */}
+        <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center">
+          <KloeAnimatedLogo />
         </div>
 
         {/* Right Action Icons */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5">
           <button
             onClick={() => {
               haptics.selection();
               setShowHistoryDrawer(true);
             }}
-            className="p-2.5 text-gray-900 dark:text-white hover:text-[var(--brand-pink)] dark:hover:text-[var(--brand-pink)] rounded-full transition-colors relative cursor-pointer"
+            className="p-2.5 text-gray-900 dark:text-white hover:text-[var(--brand-pink)] dark:hover:text-[var(--brand-pink)] rounded-full hover:bg-[var(--background-secondary)] transition-colors relative cursor-pointer"
             title="Conversaciones guardadas"
             aria-label="Historial de conversaciones"
           >
             <History className="w-5 h-5" />
             {conversations.length > 1 && (
-              <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-[var(--brand-pink)]" />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[var(--brand-pink)]" />
             )}
           </button>
 
-          {/* Avatar Calibration Button */}
           <button
             onClick={() => setShowCalibrationModal(true)}
-            className="p-2.5 text-gray-900 dark:text-white hover:text-[var(--brand-pink)] dark:hover:text-[var(--brand-pink)] rounded-full transition-colors cursor-pointer"
+            className="p-2.5 text-gray-900 dark:text-white hover:text-[var(--brand-pink)] dark:hover:text-[var(--brand-pink)] rounded-full hover:bg-[var(--background-secondary)] transition-colors cursor-pointer"
             title="Calibrar mi avatar virtual (6 fotos)"
             aria-label="Calibrar mi avatar"
           >
             <Camera className="w-5 h-5" />
           </button>
 
-          {/* Saved Inspirations Drawer */}
           <button
             onClick={openSaved}
-            className="p-2.5 text-gray-900 dark:text-white hover:text-[var(--brand-pink)] dark:hover:text-[var(--brand-pink)] rounded-full transition-colors cursor-pointer"
+            className="p-2.5 text-gray-900 dark:text-white hover:text-[var(--brand-pink)] dark:hover:text-[var(--brand-pink)] rounded-full hover:bg-[var(--background-secondary)] transition-colors cursor-pointer"
             title="Ver looks guardados"
             aria-label="Ver looks guardados"
           >
             <Bookmark className="w-5 h-5" />
           </button>
 
-          {/* Wardrobe Drawer */}
           <button
             onClick={openWardrobe}
-            className="p-2.5 text-gray-900 dark:text-white hover:text-[var(--brand-pink)] dark:hover:text-[var(--brand-pink)] rounded-full transition-colors cursor-pointer"
+            className="p-2.5 text-gray-900 dark:text-white hover:text-[var(--brand-pink)] dark:hover:text-[var(--brand-pink)] rounded-full hover:bg-[var(--background-secondary)] transition-colors cursor-pointer"
             title="Ver mis prendas"
             aria-label="Ver mis prendas"
           >
@@ -803,8 +865,77 @@ export default function KloePage() {
         </div>
       </header>
 
+      {/* MOBILE HEADER (Floating rounded pill island, hides on scroll down, no back arrow) */}
+      <motion.header
+        initial={{ y: 0, opacity: 1 }}
+        animate={{ y: showHeader ? 0 : -80, opacity: showHeader ? 1 : 0 }}
+        transition={{ duration: 0.25, ease: 'easeInOut' }}
+        className="fixed top-3 left-0 right-0 z-30 px-4 flex items-center justify-between pointer-events-none md:hidden"
+      >
+        {/* Left: Floating Brand Pill */}
+        <div className="pointer-events-auto bg-[var(--card-bg)]/90 dark:bg-[#131317]/90 backdrop-blur-2xl border border-[var(--border-color)]/70 rounded-full px-3.5 py-1.5 shadow-md flex items-center gap-1.5">
+          <div className="relative w-16 h-6 flex-shrink-0 flex items-center justify-center">
+            <Image
+              src="/kloe-logo-large.png"
+              alt="Kloe"
+              fill
+              className="object-contain"
+              priority
+            />
+          </div>
+        </div>
+
+        {/* Right: Floating Actions Pill (Rounded only around the button zone) */}
+        <div className="pointer-events-auto bg-[var(--card-bg)]/90 dark:bg-[#131317]/90 backdrop-blur-2xl border border-[var(--border-color)]/70 rounded-full px-1.5 py-1 shadow-md flex items-center gap-0.5">
+          <button
+            onClick={() => {
+              haptics.selection();
+              setShowHistoryDrawer(true);
+            }}
+            className="p-2 text-gray-900 dark:text-white hover:text-[var(--brand-pink)] dark:hover:text-[var(--brand-pink)] rounded-full transition-colors relative cursor-pointer"
+            title="Historial"
+            aria-label="Historial de conversaciones"
+          >
+            <History className="w-4 h-4" />
+            {conversations.length > 1 && (
+              <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-[var(--brand-pink)]" />
+            )}
+          </button>
+
+          <button
+            onClick={() => setShowCalibrationModal(true)}
+            className="p-2 text-gray-900 dark:text-white hover:text-[var(--brand-pink)] dark:hover:text-[var(--brand-pink)] rounded-full transition-colors cursor-pointer"
+            title="Calibrar avatar"
+            aria-label="Calibrar avatar"
+          >
+            <Camera className="w-4 h-4" />
+          </button>
+
+          <button
+            onClick={openSaved}
+            className="p-2 text-gray-900 dark:text-white hover:text-[var(--brand-pink)] dark:hover:text-[var(--brand-pink)] rounded-full transition-colors cursor-pointer"
+            title="Looks guardados"
+            aria-label="Looks guardados"
+          >
+            <Bookmark className="w-4 h-4" />
+          </button>
+
+          <button
+            onClick={openWardrobe}
+            className="p-2 text-gray-900 dark:text-white hover:text-[var(--brand-pink)] dark:hover:text-[var(--brand-pink)] rounded-full transition-colors cursor-pointer"
+            title="Prendas de armario"
+            aria-label="Prendas de armario"
+          >
+            <Shirt className="w-4 h-4" />
+          </button>
+        </div>
+      </motion.header>
+
       {/* Messages Container */}
-      <div className="flex-1 overflow-y-auto px-4 md:px-6 pt-20 pb-56 md:pb-36 space-y-6">
+      <div 
+        onScroll={handleMessagesScroll}
+        className="flex-1 overflow-y-auto px-4 md:px-6 pt-16 md:pt-20 pb-56 md:pb-36 space-y-6"
+      >
         
         {/* Free Tier Upgrade Banner with Trial Progress */}
         {!isPremium() && (
