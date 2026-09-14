@@ -31,6 +31,7 @@ export interface UserProfile {
   styleCompleted?: boolean; // Has completed the style questionnaire
   isPrivate?: boolean; // Profile privacy
   notificationSettings?: { push: boolean; email: boolean } | any;
+  kloeTrialMessagesUsed?: number; // Count of free trial messages used with Kloe (out of 8)
 }
 
 export interface UserPreferences {

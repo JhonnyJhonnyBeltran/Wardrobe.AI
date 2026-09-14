@@ -164,6 +164,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
           email: false,
           ...(styleSource.notification_preferences || styleSource.notification_settings || {})
         },
+        kloeTrialMessagesUsed: styleSource.kloe_trial_messages_used ?? styleSource.notification_preferences?.kloe_trial_messages_used ?? 0,
       }));
 
       // Synchronize Cookie Consent to guarantee single-prompt experience

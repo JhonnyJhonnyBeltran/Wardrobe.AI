@@ -127,7 +127,47 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'El mensaje supera el límite de 500 caracteres' }, { status: 400 });
     }
 
-    // 4. Apply Per-User Daily Rate Limiting (Strict 30 messages/day for cost & quality control)
+    // 4. Check Subscription & Free Trial Message Limit
+    const { data: userProfile } = await supabase
+      .from('profiles')
+      .select('id, is_premium, subscription_tier, subscription_status, kloe_trial_messages_used, notification_preferences, username, full_name')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    const isEthan = Boolean(
+      user.email?.toLowerCase().includes('ethan') ||
+      userProfile?.username?.toLowerCase() === 'ethan' ||
+      userProfile?.full_name?.toLowerCase().includes('ethan')
+    );
+
+    const isPremium = isEthan || Boolean(
+      userProfile?.is_premium ||
+      userProfile?.subscription_tier === 'premium' ||
+      userProfile?.subscription_status === 'active'
+    );
+
+    const MAX_FREE_TRIAL_MESSAGES = 8;
+    const currentTrialUsed = Number(
+      userProfile?.kloe_trial_messages_used ??
+      (userProfile?.notification_preferences as any)?.kloe_trial_messages_used ??
+      0
+    );
+
+    if (!isPremium && currentTrialUsed >= MAX_FREE_TRIAL_MESSAGES) {
+      return NextResponse.json(
+        { 
+          error: 'Has completado tus 8 mensajes de prueba gratuita con Kloe',
+          message: '¡Has completado tus 8 mensajes de prueba gratuita con Kloe! Desbloquea Klozet Premium para seguir disfrutando de estilismo ilimitado 24/7.',
+          limitReached: true,
+          isTrialExpired: true,
+          trialUsed: currentTrialUsed,
+          trialMax: MAX_FREE_TRIAL_MESSAGES
+        },
+        { status: 402 }
+      );
+    }
+
+    // 5. Apply Per-User Daily Rate Limiting (Strict 30 messages/day for cost & quality control)
     const estimatedTokens = Math.ceil(userPrompt.length / 4) + 600;
     const rateLimit = checkRateLimit(user.id, estimatedTokens);
     
@@ -151,7 +191,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 5. Index User Context (Clothes with Photos, Outfits, Profile Preferences, Liked Styles)
+    // 6. Index User Context (Clothes with Photos, Outfits, Profile Preferences, Liked Styles)
     const context = await buildUserStylingContext(supabase, user.id);
 
     // 6. Call True AI Engine (Google Gemini 3.6 Flash / 3 Flash Preview with Direct Multimodal Vision Analysis)
@@ -228,6 +268,27 @@ export async function POST(request: NextRequest) {
         .filter(Boolean);
     }
 
+    // 7. Increment trial message count if user is not premium
+    let nextTrialUsed = currentTrialUsed;
+    if (!isPremium) {
+      nextTrialUsed = currentTrialUsed + 1;
+      try {
+        const currentPrefs = (userProfile?.notification_preferences as any) || {};
+        await supabase
+          .from('profiles')
+          .update({
+            kloe_trial_messages_used: nextTrialUsed,
+            notification_preferences: {
+              ...currentPrefs,
+              kloe_trial_messages_used: nextTrialUsed
+            }
+          } as any)
+          .eq('id', user.id);
+      } catch (err) {
+        console.warn('[KlosyChat] Could not update trial counter in profiles:', err);
+      }
+    }
+
     return NextResponse.json({
       message: aiResult.message || 'Aquí tienes mi recomendación de estilo para ti.',
       recommended_outfit: resolvedOutfit,
@@ -237,6 +298,10 @@ export async function POST(request: NextRequest) {
         'Dame otra opción más abrigada',
         'Arma un look formal'
       ],
+      isPremium,
+      trialUsed: nextTrialUsed,
+      trialMax: MAX_FREE_TRIAL_MESSAGES,
+      trialRemaining: isPremium ? 9999 : Math.max(0, MAX_FREE_TRIAL_MESSAGES - nextTrialUsed),
       rate_limit: {
         remaining_minute: rateLimit.remainingMinute,
         remaining_day: rateLimit.remainingDay

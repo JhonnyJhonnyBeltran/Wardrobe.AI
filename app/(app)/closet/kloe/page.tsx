@@ -266,12 +266,18 @@ export default function KloePage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Non-premium users must be redirected back to /closet with upgrade modal
+  // Free Trial Messages Management (8 messages trial)
+  const MAX_TRIAL_MESSAGES = 8;
+  const [trialUsed, setTrialUsed] = useState<number>(user?.kloeTrialMessagesUsed || 0);
+
   useEffect(() => {
-    if (user && !isPremium()) {
-      router.replace('/closet?upgrade=true');
+    if (user?.kloeTrialMessagesUsed !== undefined) {
+      setTrialUsed(user.kloeTrialMessagesUsed);
     }
-  }, [user, isPremium, router]);
+  }, [user?.kloeTrialMessagesUsed]);
+
+  const trialRemaining = isPremium() ? 9999 : Math.max(0, MAX_TRIAL_MESSAGES - trialUsed);
+  const isInputUnlocked = isPremium() || trialRemaining > 0;
 
   const handleTryOnAvatar = async (msg: ChatMessage) => {
     if (!user?.id) {
@@ -573,8 +579,9 @@ export default function KloePage() {
 
   // Send message handler
   const handleSend = async (customMessage?: string) => {
-    if (!isPremium()) {
+    if (!isPremium() && trialRemaining <= 0) {
       setShowProModal(true);
+      toast.info('Has completado tus 8 mensajes de prueba gratuita con Kloe');
       return;
     }
 
@@ -638,6 +645,12 @@ export default function KloePage() {
       const data = await res.json();
 
       if (!res.ok) {
+        if (res.status === 402 || data.isTrialExpired) {
+          setTrialUsed(MAX_TRIAL_MESSAGES);
+          setShowProModal(true);
+          toast.info('Has completado tus 8 mensajes de prueba gratuita con Kloe');
+          return;
+        }
         if (res.status === 429) {
           const limitMsg = data.message || 'Has agotado tus 30 mensajes diarios con Kloe. Tu límite se restablecerá mañana a las 00:00 para que puedas seguir creando looks increíbles.';
           const botMsg: ChatMessage = {
@@ -651,6 +664,10 @@ export default function KloePage() {
           return;
         }
         throw new Error(data.error || 'Error en la respuesta');
+      }
+
+      if (data.trialUsed !== undefined) {
+        setTrialUsed(data.trialUsed);
       }
 
       const botMsg: ChatMessage = {
@@ -789,24 +806,40 @@ export default function KloePage() {
       {/* Messages Container */}
       <div className="flex-1 overflow-y-auto px-4 md:px-6 pt-20 pb-56 md:pb-36 space-y-6">
         
-        {/* Free Tier Upgrade Banner */}
+        {/* Free Tier Upgrade Banner with Trial Progress */}
         {!isPremium() && (
           <motion.div 
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-pink-500/10 border border-[var(--brand-pink)]/30 rounded-2xl p-3.5 flex items-center justify-between shadow-sm"
+            className="bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-pink-500/10 border border-[var(--brand-pink)]/30 rounded-2xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm"
           >
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2.5 min-w-0">
               <Crown className="w-5 h-5 text-[var(--brand-pink)] flex-shrink-0" />
-              <p className="text-xs text-[var(--foreground-secondary)] leading-relaxed">
-                Estás en el plan <strong className="text-[var(--foreground)]">Free</strong>. Desbloquea <strong className="text-[var(--brand-pink)]">Klozet Premium</strong> para hablar con Kloe y crear looks ilimitados.
-              </p>
+              <div className="min-w-0">
+                <p className="text-xs text-[var(--foreground-secondary)] leading-relaxed">
+                  {trialRemaining > 0 ? (
+                    <>
+                      Prueba gratuita de Kloe: Te quedan <strong className="text-[var(--brand-pink)] font-bold">{trialRemaining} de {MAX_TRIAL_MESSAGES} mensajes</strong>.
+                    </>
+                  ) : (
+                    <>
+                      Has completado tus <strong className="text-[var(--brand-pink)]">8 mensajes de prueba</strong>. Pasa a Premium para estilismo ilimitado.
+                    </>
+                  )}
+                </p>
+                <div className="w-full max-w-[200px] h-1.5 bg-black/10 dark:bg-white/10 rounded-full mt-1.5 overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-[var(--brand-pink)] to-purple-500 rounded-full transition-all duration-300"
+                    style={{ width: `${Math.min(100, (trialUsed / MAX_TRIAL_MESSAGES) * 100)}%` }}
+                  />
+                </div>
+              </div>
             </div>
             <button
               onClick={() => setShowProModal(true)}
-              className="text-xs font-bold px-3.5 py-2 bg-[var(--brand-pink)] text-white rounded-xl hover:opacity-90 transition-opacity flex-shrink-0 shadow-sm ml-2 cursor-pointer"
+              className="text-xs font-bold px-3.5 py-2 bg-[var(--brand-pink)] text-white rounded-xl hover:opacity-90 transition-opacity flex-shrink-0 shadow-sm cursor-pointer self-start sm:self-auto"
             >
-              Desbloquear
+              {trialRemaining > 0 ? 'Desbloquear Ilimitado' : 'Subir a Kloe Pro (2,99 €)'}
             </button>
           </motion.div>
         )}
@@ -1161,7 +1194,7 @@ export default function KloePage() {
           )}
         </AnimatePresence>
 
-        {isPremium() ? (
+        {isInputUnlocked ? (
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -1211,7 +1244,11 @@ export default function KloePage() {
                     ? `Pregúntale a Kloe sobre "${attachedItems[0].name}"...`
                     : (attachedItems.length > 1
                       ? `Pregúntale a Kloe sobre estas ${attachedItems.length} prendas...`
-                      : (attachedPost ? `Pregúntale a Kloe sobre este look guardado...` : `Pregúntale a Kloe sobre tus prendas u outfits...`)))
+                      : (attachedPost 
+                        ? `Pregúntale a Kloe sobre este look guardado...` 
+                        : (!isPremium() 
+                          ? `Pregúntale a Kloe (${trialRemaining} mensaje${trialRemaining === 1 ? '' : 's'} gratis)...` 
+                          : `Pregúntale a Kloe sobre tus prendas u outfits...`))))
               }
               disabled={isTyping}
               className="flex-1 bg-transparent text-sm text-[var(--foreground)] outline-none placeholder:text-[var(--foreground-tertiary)] px-1"
@@ -1236,14 +1273,14 @@ export default function KloePage() {
                 <Crown className="w-4 h-4" />
               </div>
               <p className="text-xs text-[var(--foreground)] font-semibold truncate">
-                Desbloquea el chat y estilismo con <strong className="text-[var(--brand-pink)]">Klozet Premium</strong>
+                Has completado tus 8 mensajes de prueba. Pasa a <strong className="text-[var(--brand-pink)]">Kloe Pro</strong>
               </p>
             </div>
             <button
               onClick={() => setShowProModal(true)}
               className="px-4 py-2 bg-[var(--brand-pink)] hover:bg-[#ff3377] text-white font-bold text-xs rounded-2xl shadow-sm transition-all flex-shrink-0 cursor-pointer"
             >
-              Desbloquear
+              Subir a Pro (2,99 €)
             </button>
           </div>
         )}
@@ -1540,7 +1577,7 @@ export default function KloePage() {
       <KloeProModal
         isOpen={showProModal}
         onClose={() => setShowProModal(false)}
-        redirectBackToCloset={!isPremium()}
+        redirectBackToCloset={false}
       />
 
       {/* Avatar Calibration Modal (6 Photos) */}

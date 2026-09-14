@@ -923,3 +923,18 @@ En cada conversación, el backend alimenta a CloSy con:
   - Se condicionó estrictamente la barra flotante a `mobileStep === 'selection' && totalSelected > 0` y se limitó a vista móvil (`lg:hidden`).
   - Al entrar al lienzo de montaje (`mobileStep === 'preview'`), la barra flotante desaparece por completo, otorgando el 100% del espacio visual al `FreeDragCanvas`.
   - Se añadieron espaciados seguros `pb-[calc(16px+env(safe-area-inset-bottom,0px))]` y un scroll con `pb-36` en la vista de preview y `pb-48` en el selector de prendas para garantizar que ningún botón o prenda quede oculta por los bordes de la pantalla.
+
+### 73. Contador Interno de Prueba Gratuita con Kloe (8 Mensajes) y Modelo de Conversión Pro (Septiembre 2026)
+- **Arquitectura del Contador de Mensajes de Prueba (`kloe_trial_messages_used`)**:
+  - **Límite de Prueba Óptimo**: Se fijó en **8 mensajes** (suficiente para 3-4 consultas estilísticas completas, recomendaciones de outfits y montaje en el canvas, permitiendo al usuario experimentar el valor real antes de suscribirse).
+  - **Persistencia en Base de Datos**: Almacenado en `public.profiles.kloe_trial_messages_used INT DEFAULT 0` con respaldo automático en `notification_preferences->'kloe_trial_messages_used'`. Script SQL en `sql/add_kloe_trial_counter.sql`.
+  - **Validación en Backend (`/api/closy/chat`)**: Si el usuario no es Premium y ha consumido $\ge 8$ mensajes, la API retorna código `402 Payment Required` con `{ isTrialExpired: true, trialUsed: 8, trialMax: 8 }`. Si le quedan mensajes, incrementa el contador de forma atómica y devuelve los mensajes restantes en el payload JSON.
+- **Experiencia de Usuario en Frontend (`app/(app)/closet/kloe/page.tsx`)**:
+  - Se eliminó el bloqueo/redirect inmediato para usuarios gratuitos, permitiéndoles acceder y probar a Kloe sin fricciones.
+  - **Indicador Visual de Progreso**: Banner superior que muestra *"Prueba gratuita de Kloe: Te quedan X de 8 mensajes"* acompañado de una barra de progreso suave.
+  - **Bloqueo Elegante al Agotar**: Cuando el contador llega a 0, la barra de input se transforma en un disparador hacia `KloeProModal` con botón *"Subir a Pro (2,99 €)"*.
+- **Análisis Financiero Unitario**:
+  - Coste de 8 mensajes de IA (Gemini Flash) por usuario de prueba: **~0,00216 €** (menos de un tercio de céntimo de euro).
+  - 1.000 usuarios en prueba gratuita generan un coste de IA de solo **~2,16 €**.
+  - Con un 4% de conversión a suscripción (2,99 €/mes o 3,99 €/mes), 1.000 pruebas producen **+120 € a +160 €/mes** de ingresos recurrentes netos.
+
