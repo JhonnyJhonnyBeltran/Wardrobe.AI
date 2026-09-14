@@ -964,3 +964,26 @@ En cada conversación, el backend alimenta a CloSy con:
 - **Seguridad Anti-Inyección y Anti-Tampering (Zero-Trust)**:
   - Es imposible saltarse el muro de pago mediante inyección de código HTML, manipulación de DevTools o alteración de `localStorage`.
   - Todos los endpoints de backend (`/api/closy/generate-avatar`, `/api/user/avatar-calibration`, `/api/closy/chat`, etc.) validan obligatoriamente la sesión y consultan de forma atómica el registro en base de datos (`profiles.is_premium`, `subscription_tier` y `subscription_status === 'active'`). Si la base de datos no certifica la suscripción activa, el servidor rechaza la petición con código `403 Forbidden` (`isPremiumRequired: true`).
+
+### 77. Diagnóstico Integral y Erradicación de Congelamientos de UI, Bloqueos de Scroll y Gestos Táctiles (Septiembre 2026)
+- **Causas Raíz Identificadas**:
+  1. **Bloqueo Acumulativo de Scroll (`useBodyScrollLock.ts`)**: Al abrirse múltiples modales/drawers o al desmontar componentes durante navegaciones rápidas, `document.body.style.overflow` capturaba el valor `"hidden"` de un modal previo y lo restauraba como `"hidden"` al cerrar el superior, dejando la pantalla completamente bloqueada para deslizar.
+  2. **Intercepción y Retención Táctil en `PullToRefresh.tsx`**: Carecía de manejador de `onTouchCancel` y de discriminación de ángulo de deslizamiento horizontal/vertical. Si el usuario iniciaba un scroll vertical normal o si la promesa de refresco demoraba, el estado `isPulling` o `isRefreshing` retenía la UI.
+  3. **Conflicto de Gestos de Pulsación Larga en Armario (`/closet`)**: Las tarjetas de prendas y outfits iniciaban un temporizador de 500 ms al tocar la pantalla (`onTouchStart`), pero no cancelaban el temporizador en `onTouchMove`. Al deslizar lentamente hacia abajo, el temporizador saltaba a mitad del gesto, activando el modo selección (`selectionMode`), vibrando el dispositivo e interrumpiendo el scroll.
+  4. **Apertura Forzada de Modal en Kloe (`/closet/kloe`)**: Un `useEffect` forzaba `setShowProModal(true)` al montar la página para usuarios no premium, interfiriendo con la prueba gratuita de 8 mensajes y activando el bloqueo de scroll sobre el chat.
+  5. **Inestabilidad de Sincronización en Lienzo de Creación (`/create` & `FreeDragCanvas.tsx`)**: La recreación de la función inline `onStateChange` en cada renderizado disparaba el efecto de actualización de `itemStates` en bucle.
+- **Soluciones y Arquitectura de Alta Disponibilidad Implementada**:
+  - **Sistema Global de Bloqueo de Scroll con Conteo de Referencias (`lib/hooks/useBodyScrollLock.ts`)**:
+    - Implementado `lockCount` y almacenamiento de estilos prístinos originales antes del primer bloqueo.
+    - Se garantiza la restauración exacta de `overflow = ''`, `paddingRight = ''`, `position = ''`, `overscrollBehavior = ''` y remoción de `modal-open` cuando `lockCount === 0`.
+    - Exportada función de seguridad `forceUnlockBodyScroll()`, integrada en `AppLifecycleManager.tsx` para liberar automáticamente cualquier bloqueo residual al cambiar de ruta (`usePathname`).
+  - **Detección Direccional y Timeout de Seguridad en `PullToRefresh.tsx`**:
+    - Detección precisa de ángulo (ignora movimientos horizontales y scrolls hacia arriba).
+    - Incorporado `onTouchCancel` y límite de tiempo máximo de 8 segundos (`Promise.race`) para evitar que fallos de red o promesas pendientes cuelguen el refresco.
+  - **Cancelación Inmediata de Pulsación Larga en `closet/page.tsx`**:
+    - Añadido `onTouchMove={handleTouchEnd}` a todas las tarjetas de prendas y outfits en el armario.
+  - **Estabilización de Callbacks en `FreeDragCanvas.tsx`**:
+    - Uso de `onStateChangeRef` para aislar la sincronización de estado y eliminar bucles de re-renderizado en la vista de creación.
+  - **Eliminación del Auto-Popup en Kloe**:
+    - El chat de Kloe inicia directamente permitiendo los 8 mensajes de prueba gratuita con feedback fluido y sin bloqueos de scroll.
+

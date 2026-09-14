@@ -32,17 +32,21 @@ export const FreeDragCanvas = forwardRef<FreeDragCanvasRef, FreeDragCanvasProps>
     const [maxZIndex, setMaxZIndex] = useState(10);
 
     // Notify parent of state changes
-    // Debounce or only notify when it actually changes to prevent loop
+    const onStateChangeRef = useRef(onStateChange);
+    useEffect(() => {
+        onStateChangeRef.current = onStateChange;
+    }, [onStateChange]);
+
     const previousItemStates = useRef<Record<string, ItemState>>({});
     useEffect(() => {
-        if (onStateChange && Object.keys(itemStates).length > 0) {
+        if (onStateChangeRef.current && Object.keys(itemStates).length > 0) {
             // Check if actually changed
             if (JSON.stringify(previousItemStates.current) !== JSON.stringify(itemStates)) {
                 previousItemStates.current = itemStates;
-                onStateChange(itemStates);
+                onStateChangeRef.current(itemStates);
             }
         }
-    }, [itemStates, onStateChange]);
+    }, [itemStates]);
 
     // Initialize/Update items
     useEffect(() => {

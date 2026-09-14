@@ -1,14 +1,17 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { usePathname } from 'next/navigation';
 import { useUiStore } from '@/store/uiStore';
 import { useUser } from '@/store/userStore';
+import { forceUnlockBodyScroll } from '@/lib/hooks/useBodyScrollLock';
 
 /**
  * AppLifecycleManager - Centralized system for focus, visibility, and session health.
  * Ensures the app "wakes up" correctly after inactivity, similar to Top Apps like Instagram.
  */
 export default function AppLifecycleManager() {
+    const pathname = usePathname();
     const triggerRefetch = useUiStore((state) => state.triggerRefetch);
     const lastFocusTimestamp = useUiStore((state) => state.lastFocusTimestamp);
     const setLastFocusTimestamp = useUiStore((state) => state.setLastFocusTimestamp);
@@ -16,6 +19,11 @@ export default function AppLifecycleManager() {
     
     // Safety ref to prevent double-firing in strict mode
     const isWakingRef = useRef(false);
+
+    // Ensure scroll lock is safely reset on route transitions
+    useEffect(() => {
+        forceUnlockBodyScroll();
+    }, [pathname]);
 
     useEffect(() => {
         const handleWakeUp = async () => {

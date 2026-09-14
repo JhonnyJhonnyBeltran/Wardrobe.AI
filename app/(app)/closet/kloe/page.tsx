@@ -516,14 +516,7 @@ export default function KloePage() {
     return () => clearInterval(interval);
   }, [isTyping]);
 
-  useBodyScrollLock(showWardrobeDrawer || showHistoryDrawer || showSavedDrawer);
-
-  // Open Pro modal if user is not premium on mount
-  useEffect(() => {
-    if (!isPremium()) {
-      setShowProModal(true);
-    }
-  }, [isPremium]);
+  useBodyScrollLock(showWardrobeDrawer || showHistoryDrawer || showSavedDrawer || !!selectedAvatarModalImage);
 
   // Load conversations from local storage on mount and sync with remote database
   useEffect(() => {

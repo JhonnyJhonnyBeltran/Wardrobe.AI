@@ -850,6 +850,7 @@ export default function ClosetPage() {
                           transition={{ duration: 0.2 }}
                           className="relative"
                           onTouchStart={() => handleTouchStart(item.id)}
+                          onTouchMove={handleTouchEnd}
                           onTouchEnd={handleTouchEnd}
                           onTouchCancel={handleTouchEnd}
                         >
@@ -972,6 +973,7 @@ export default function ClosetPage() {
                       key={outfit.id}
                       className="relative"
                       onTouchStart={() => handleTouchStart(outfit.id)}
+                      onTouchMove={handleTouchEnd}
                       onTouchEnd={handleTouchEnd}
                       onTouchCancel={handleTouchEnd}
                     >
