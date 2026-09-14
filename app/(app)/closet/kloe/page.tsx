@@ -259,20 +259,15 @@ function KloeAnimatedLogo() {
             animate={{ opacity: 1, scale: 1, rotateX: 0 }}
             exit={{ opacity: 0, scale: 0.85, rotateX: -90 }}
             transition={{ duration: 0.6, type: 'spring', damping: 20, stiffness: 200 }}
-            className="flex items-center gap-2"
+            className="relative w-8 h-8 flex items-center justify-center flex-shrink-0"
           >
-            <div className="relative w-8 h-8 flex-shrink-0">
-              <Image
-                src="/kloe-avatar-v2.png"
-                alt="Kloe Avatar"
-                fill
-                className="object-contain drop-shadow-sm"
-                priority
-              />
-            </div>
-            <span className="text-sm font-extrabold tracking-tight bg-gradient-to-r from-[var(--brand-pink)] via-purple-500 to-[var(--brand-pink)] bg-clip-text text-transparent">
-              Kloe
-            </span>
+            <Image
+              src="/kloe-avatar-v2.png"
+              alt="Kloe Avatar"
+              fill
+              className="object-contain drop-shadow-sm"
+              priority
+            />
           </motion.div>
         )}
       </AnimatePresence>
@@ -802,17 +797,10 @@ export default function KloePage() {
   return (
     <div className="min-h-screen bg-[var(--background)] flex flex-col justify-between max-w-5xl mx-auto">
       
-      {/* DESKTOP HEADER (Full width, fixed top, centered 10s animated logo) */}
-      <header className="hidden md:flex fixed top-0 left-0 right-0 z-30 w-full h-16 bg-[var(--background)]/85 backdrop-blur-xl border-b border-[var(--border-color)]/50 px-8 items-center justify-between">
-        {/* Left Info */}
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-bold text-[var(--foreground)] tracking-wide">
-            Kloe
-          </span>
-          <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] font-bold">
-            IA Personal
-          </span>
-        </div>
+      {/* DESKTOP HEADER (Fixed top from sidebar edge, centered 10s animated logo) */}
+      <header className="hidden md:flex fixed top-0 md:left-[72px] left-0 right-0 z-30 h-16 bg-[var(--background)]/85 backdrop-blur-xl border-b border-[var(--border-color)]/50 px-8 items-center justify-between">
+        {/* Left spacer for optical centering */}
+        <div className="w-16" />
 
         {/* Center Animated Logo (Alternates with 3D animation every 10s) */}
         <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center">

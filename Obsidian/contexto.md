@@ -14,6 +14,7 @@ Wardrobe.AI es una plataforma de moda impulsada por IA que permite a los usuario
 ## Reglas y Convenciones
 - Mantener una estética premium y moderna.
 - **Identidad Visual y Cohesión**: Mantener siempre la cohesión visual entre todas las pantallas de la aplicación. Antes de crear o modificar componentes, **añade un paso en tu proceso para revisar la identidad visual general** (ej. usa los mismos componentes como `OutfitCard` para mostrar outfits, mantén los estilos, márgenes, bordes y botones consistentes).
+- **Prohibición de Etiquetas "IA Personal" / Lenguaje Artificial**: Queda estrictamente prohibido colocar badges, etiquetas o textos tipo "IA personal", "Asistente IA" o adornos artificiales en cualquier parte de la interfaz. La aplicación y Kloe deben presentarse siempre con un tono sobrio, humano, natural y premium.
 - Evitar placeholders en el código final.
 - **Siempre comprobar que el código funciona y compila correctamente (ej. `npm run build`) antes de hacer commit y subirlo al repositorio remoto.**
 - **No utilizar funciones nativas del navegador como `alert()` o `confirm()`. Utilizar siempre modales HTML/React o divs en la interfaz.**
@@ -935,8 +936,9 @@ En cada conversación, el backend alimenta a CloSy con:
   - **Bloqueo Elegante al Agotar**: Cuando el contador llega a 0, la barra de input se transforma en un disparador hacia `KloeProModal` con botón *"Subir a Pro (2,99 €)"*.
 ### 74. Rediseño de la Barra Superior de Kloe: Modo Escritorio con Logo Animado 10s y Modo Móvil Flotante Dinámico (Septiembre 2026)
 - **Barra Superior en Escritorio (`hidden md:flex`)**:
-  - Encabezado fijo que cubre el 100% del ancho de la pantalla (`w-full h-16 bg-[var(--background)]/85 backdrop-blur-xl border-b border-[var(--border-color)]/50 px-8`).
-  - **Logo Central Animado Cada 10 Segundos (`KloeAnimatedLogo`)**: Situado en el centro geométrico de la pantalla (`absolute left-1/2 -translate-x-1/2`), alterna automáticamente cada 10 segundos mediante un giro 3D de alta fidelidad (`rotateX: 90` a `0`) entre el logotipo tipográfico oficial de Kloe y el avatar/icono mascota con tipografía degradada.
+  - Encabezado fijo alineado al sidebar lateral (`md:left-[72px] right-0 h-16 bg-[var(--background)]/85 backdrop-blur-xl border-b border-[var(--border-color)]/50 px-8`), respetando el navbar de 72px de ordenador.
+  - **Eliminación Total de Etiquetas Artificiales**: Se eliminó cualquier etiqueta de "IA Personal" o adornos innecesarios.
+  - **Logo Central Animado Cada 10 Segundos (`KloeAnimatedLogo`)**: Situado en el centro geométrico de la pantalla (`absolute left-1/2 -translate-x-1/2`), alterna automáticamente cada 10 segundos mediante un giro 3D de alta fidelidad (`rotateX: 90` a `0`) entre el logotipo tipográfico oficial de Kloe y el icono mascota de Kloe solo (sin texto repetido al lado).
 - **Barra Superior en Móvil (`md:hidden`)**:
   - **Eliminación del Botón de Atrás**: Se retiró el icono de flecha hacia atrás para limpiar el viewport móvil.
   - **Píldoras Flotantes Redondeadas**: El diseño pasa de ser una barra rectangular completa a islotes independientes con bordes redondeados completos (`rounded-full px-3.5 py-1.5 shadow-md` con efecto de cristal esmerilado `backdrop-blur-2xl`), uno a la izquierda para la marca y otro a la derecha exclusivamente para las acciones (`Historial`, `Calibrar Avatar`, `Guardados`, `Armario`).
