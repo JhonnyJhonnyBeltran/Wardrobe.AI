@@ -176,22 +176,19 @@ export async function POST(request: NextRequest) {
 
     let biometricPrompt = '';
     const geminiKey = getGeminiApiKey();
-
     if (geminiKey && imageParts.length > 0) {
       try {
-        const visionInstruction = `You are a world-class biometric stylist and high-end fashion catalog photographer.
+        const visionInstruction = `You are an elite biometric stylist and commercial fashion studio director.
 You are provided with:
-- Reference photos of the real human user (face photos and body photos).
-- Real photographs of the specific wardrobe clothing items selected for this look (${garments.map(g => g.name || g.category).join(', ')}).
+1. Reference photos of a real human person (face photos and full body photos).
+2. The specific wardrobe clothing items chosen for the look (${garments.map(g => `${g.name || g.category} [${g.category}]`).join(', ')}).
 
-Your task:
-Carefully analyze all reference images of the person and the garments.
-Extract and describe with extreme photorealistic precision:
-1. Exact biometric facial features of this real person: eye shape and color, eyebrow arch and density, nose bridge and tip shape, lip fullness and shape, cheekbones and jawline structure, exact natural skin tone and complexion, facial hair / stubble, and hairstyle/hair color.
-2. Exact body build and proportions: shoulder width, chest, waist, and silhouette.
-3. The exact clothing items from their attached photos: colors, fabrics, textures, logos, layering, and realistic fit on this body.
+CRITICAL STRICT RULES:
+- THE CLOTHING WORN BY THE PERSON IN THE FACE AND BODY REFERENCE PHOTOS MUST BE 100% IGNORED AND DISCARDED. Do NOT describe or transfer any clothes from the reference photos.
+- The reference photos are EXCLUSIVELY to extract the real person's biometric identity: facial structure, eyes, eyebrows, nose, lips, jawline, facial hair, skin tone, hairstyle and body proportions.
+- The ONLY clothing the person must be wearing in the generated photograph is the EXACT outfit pieces specified (${garments.map(g => `${g.name || g.category} (${g.color || ''})`).join(', ')}).
 
-Return ONLY a single, highly-detailed English prompt for an 8k RAW Hasselblad studio fashion lookbook photoshoot of this real person on a seamless solid pure white studio background #FFFFFF with professional softbox lighting. Do not add conversational text or markdown titles.`;
+Generate a single RAW 8k Hasselblad studio catalogue lookbook photographic prompt describing this real person standing centered in a full-body pose on a solid pure white studio background #FFFFFF with high-key commercial lighting, wearing ONLY the specified outfit with authentic fabric textures and drapery. Output ONLY the English prompt.`;
 
         const visionPayload = {
           contents: [
