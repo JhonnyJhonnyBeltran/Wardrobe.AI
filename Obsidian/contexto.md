@@ -984,6 +984,8 @@ En cada conversación, el backend alimenta a CloSy con:
     - Añadido `onTouchMove={handleTouchEnd}` a todas las tarjetas de prendas y outfits en el armario.
   - **Estabilización de Callbacks en `FreeDragCanvas.tsx`**:
     - Uso de `onStateChangeRef` para aislar la sincronización de estado y eliminar bucles de re-renderizado en la vista de creación.
-  - **Eliminación del Auto-Popup en Kloe**:
-    - El chat de Kloe inicia directamente permitiendo los 8 mensajes de prueba gratuita con feedback fluido y sin bloqueos de scroll.
+### 78. Ajuste de Layout y Botón de Cierre en Detalle de Outfit (`OutfitDetailModal.tsx`) (Septiembre 2026)
+- **Posicionamiento del Estilo/Ocasión**: La etiqueta de ocasión/estilo (*Casual*, *Diario*, *Streetwear*, etc.) se reubicó debajo del nombre del outfit en columna (`flex-col gap-2`), ofreciendo una jerarquía tipográfica limpia y sin saltos laterales.
+- **Optimización y Reubicación del Botón de Cierre**: Se redujo el tamaño del botón de cierre (`p-1.5 md:p-2`, icono `w-4 h-4`) y se ancló estrechamente a la esquina superior derecha (`top-3 md:top-4 right-3 md:right-4`), con fondo translúcido `bg-black/50 hover:bg-black/75` y sombra sutil, evitando cualquier solapamiento o conflicto visual con los botones de acción (como el de eliminar o editar).
+
 

@@ -125,9 +125,10 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
                             {/* Close button - Top Right */}
                             <button
                                 onClick={onClose}
-                                className="absolute top-4 md:top-6 right-4 md:right-6 z-50 p-2 md:p-3 bg-black/20 hover:bg-black/40 backdrop-blur-md rounded-full transition-colors text-white"
+                                className="absolute top-3 md:top-4 right-3 md:right-4 z-50 p-1.5 md:p-2 bg-black/50 hover:bg-black/75 backdrop-blur-md rounded-full transition-colors text-white shadow-md cursor-pointer"
+                                aria-label="Cerrar modal"
                             >
-                                <X className="w-5 h-5 md:w-5 md:h-5" />
+                                <X className="w-4 h-4" />
                             </button>
 
                             {/* Left Column (Desktop) / Top Half (Mobile) */}
@@ -149,13 +150,15 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
                                 <div className="w-full flex flex-col md:pb-10">
                                     {/* Outfit Info */}
                                     <div className="px-6 py-5">
-                                        <div className="flex items-center gap-2.5 flex-wrap mb-4">
-                                            <h2 className="text-2xl font-bold text-[var(--foreground)]">{outfit.name || 'Outfit sin título'}</h2>
+                                        <div className="flex flex-col gap-2 mb-4">
+                                            <h2 className="text-2xl font-bold text-[var(--foreground)] leading-tight">{outfit.name || 'Outfit sin título'}</h2>
                                             {outfit.occasion && config && (
-                                                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] border border-[var(--brand-pink)]/20">
-                                                    {config.icon}
-                                                    {config.label}
-                                                </span>
+                                                <div className="flex items-center">
+                                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] border border-[var(--brand-pink)]/20">
+                                                        {config.icon}
+                                                        {config.label}
+                                                    </span>
+                                                </div>
                                             )}
                                         </div>
 
