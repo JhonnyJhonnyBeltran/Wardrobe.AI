@@ -338,9 +338,14 @@ export default function KloePage() {
 
     if (user?.id) {
       try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const token = sessionData?.session?.access_token;
+        const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
         await fetch('/api/closy/conversations', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers,
           body: JSON.stringify({ conversations: updated })
         });
       } catch (err) {
@@ -432,7 +437,12 @@ export default function KloePage() {
     if (user?.id) {
       const fetchRemoteConvs = async () => {
         try {
-          const res = await fetch('/api/closy/conversations');
+          const { data: sessionData } = await supabase.auth.getSession();
+          const token = sessionData?.session?.access_token;
+          const headers: Record<string, string> = {};
+          if (token) headers['Authorization'] = `Bearer ${token}`;
+
+          const res = await fetch('/api/closy/conversations', { headers });
           if (res.ok) {
             const data = await res.json();
             const remoteConvs: Conversation[] = data.conversations || [];

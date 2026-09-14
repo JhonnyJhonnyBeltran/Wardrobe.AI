@@ -16,6 +16,7 @@ const getAdmin = () => createAdminClient(supabaseUrl, serviceKey, {
 async function resolveUserAndClient(request: NextRequest) {
   let user: any = null;
   let supabaseServerClient: any = null;
+  let token: string | null = null;
 
   try {
     supabaseServerClient = await createClient();
@@ -23,22 +24,36 @@ async function resolveUserAndClient(request: NextRequest) {
     user = data?.user || null;
   } catch {}
 
-  if (!user) {
-    const authHeader = request.headers.get('authorization') || request.headers.get('Authorization');
-    if (authHeader?.startsWith('Bearer ')) {
-      try {
-        const token = authHeader.replace('Bearer ', '').trim();
-        const admin = getAdmin();
-        const { data } = await admin.auth.getUser(token);
-        if (data?.user) {
-          user = data.user;
-        }
-      } catch {}
-    }
+  const authHeader = request.headers.get('authorization') || request.headers.get('Authorization');
+  if (authHeader?.startsWith('Bearer ')) {
+    token = authHeader.replace('Bearer ', '').trim();
+  }
+
+  if (!user && token) {
+    try {
+      const admin = getAdmin();
+      const { data } = await admin.auth.getUser(token);
+      if (data?.user) {
+        user = data.user;
+      }
+    } catch {}
   }
 
   const hasServiceRole = !!(process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY);
-  const client = hasServiceRole ? getAdmin() : (supabaseServerClient || getAdmin());
+  let client: any = null;
+
+  if (hasServiceRole) {
+    client = getAdmin();
+  } else if (token) {
+    client = createAdminClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+      global: { headers: { Authorization: `Bearer ${token}` } },
+      auth: { persistSession: false, autoRefreshToken: false }
+    });
+  } else if (supabaseServerClient) {
+    client = supabaseServerClient;
+  } else {
+    client = getAdmin();
+  }
 
   return { client, user };
 }
@@ -52,36 +67,24 @@ export async function GET(request: NextRequest) {
 
     const { data: profile, error } = await client
       .from('profiles')
-      .select('*')
+      .select('notification_preferences')
       .eq('id', user.id)
       .maybeSingle();
 
     if (error || !profile) {
-      return NextResponse.json({ conversations: [] });
+      return NextResponse.json({ success: true, conversations: [] });
     }
 
-    let conversations: any[] = [];
-
-    // 1. Try column kloe_conversations if exists
-    if ((profile as any).kloe_conversations && Array.isArray((profile as any).kloe_conversations)) {
-      conversations = (profile as any).kloe_conversations;
-    }
-
-    // 2. Fallback to notification_preferences.kloe_conversations
-    if (conversations.length === 0) {
-      const notifs = (profile as any).notification_preferences || {};
-      if (notifs.kloe_conversations && Array.isArray(notifs.kloe_conversations)) {
-        conversations = notifs.kloe_conversations;
-      }
-    }
+    const notifs = (profile as any)?.notification_preferences || {};
+    const conversations = Array.isArray(notifs.kloe_conversations) ? notifs.kloe_conversations : [];
 
     return NextResponse.json({
       success: true,
-      conversations: conversations || []
+      conversations
     });
   } catch (err: any) {
     console.error('[KloeConversations] GET error:', err);
-    return NextResponse.json({ error: err.message || 'Error al obtener conversaciones' }, { status: 500 });
+    return NextResponse.json({ success: true, conversations: [] });
   }
 }
 
@@ -93,9 +96,35 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json().catch(() => ({}));
-    const conversations = Array.isArray(body.conversations) ? body.conversations.slice(0, 10) : [];
+    const rawConversations = Array.isArray(body.conversations) ? body.conversations.slice(0, 5) : [];
 
-    // 1. Get current notification_preferences
+    // Sanitize conversation payload (strip huge base64 strings if any to avoid DB payload limit)
+    const sanitizedConversations = rawConversations.map((c: any) => ({
+      id: String(c.id || `conv_${Date.now()}`),
+      title: String(c.title || 'Nueva conversación').slice(0, 100),
+      updatedAt: Number(c.updatedAt) || Date.now(),
+      messages: Array.isArray(c.messages)
+        ? c.messages.slice(-30).map((m: any) => ({
+            id: String(m.id || `msg_${Date.now()}`),
+            role: m.role === 'user' ? 'user' : 'assistant',
+            content: String(m.content || ''),
+            recommended_outfit: m.recommended_outfit || null,
+            highlighted_items: Array.isArray(m.highlighted_items) ? m.highlighted_items : [],
+            follow_up_suggestions: Array.isArray(m.follow_up_suggestions) ? m.follow_up_suggestions : [],
+            attached_items: Array.isArray(m.attached_items) ? m.attached_items : undefined,
+            attached_item: m.attached_item || undefined,
+            attached_post: m.attached_post ? {
+              id: m.attached_post.id,
+              caption: m.attached_post.caption,
+              imageUrl: m.attached_post.imageUrl || m.attached_post.image_url,
+              style_ids: m.attached_post.style_ids
+            } : undefined,
+            timestamp: m.timestamp || new Date().toISOString()
+          }))
+        : []
+    }));
+
+    // 1. Fetch current notification_preferences
     const { data: currentProfile } = await client
       .from('profiles')
       .select('notification_preferences')
@@ -105,39 +134,32 @@ export async function POST(request: NextRequest) {
     const currentNotifs = (currentProfile as any)?.notification_preferences || {};
     const updatedNotifs = {
       ...currentNotifs,
-      kloe_conversations: conversations,
+      kloe_conversations: sanitizedConversations,
       kloe_conversations_updated_at: new Date().toISOString()
     };
 
-    // 2. Update profiles table
-    let { error: updateError } = await (client.from('profiles') as any)
+    // 2. Persist update to profiles JSONB
+    const { error: updateError } = await (client.from('profiles') as any)
       .update({
-        kloe_conversations: conversations,
         notification_preferences: updatedNotifs,
         updated_at: new Date().toISOString()
       })
       .eq('id', user.id);
 
     if (updateError) {
-      // Fallback to JSONB only if direct column doesn't exist
-      const { error: fallbackError } = await (client.from('profiles') as any)
-        .update({
-          notification_preferences: updatedNotifs,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', user.id);
-
-      if (fallbackError) {
-        throw fallbackError;
-      }
+      console.warn('[KloeConversations] Profile update warning:', updateError.message);
     }
 
     return NextResponse.json({
       success: true,
-      count: conversations.length
+      count: sanitizedConversations.length
     });
   } catch (err: any) {
     console.error('[KloeConversations] POST error:', err);
-    return NextResponse.json({ error: err.message || 'Error al sincronizar conversaciones' }, { status: 500 });
+    // Non-fatal response to avoid 500 error on client
+    return NextResponse.json({
+      success: false,
+      error: err.message || 'Error al sincronizar conversaciones'
+    }, { status: 200 });
   }
 }

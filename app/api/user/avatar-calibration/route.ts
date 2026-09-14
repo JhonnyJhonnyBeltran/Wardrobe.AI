@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
     const isPremium = checkUserIsPremium(currentProfile, user);
     if (!isPremium) {
       return NextResponse.json({
-        error: 'La calibración y subida de fotos de avatar es una función exclusiva de Klozet Premium.',
+        error: 'La subida de fotos de tu perfil físico es una función exclusiva de Klozet Premium.',
         isPremiumRequired: true
       }, { status: 403 });
     }
@@ -237,7 +237,7 @@ export async function POST(request: NextRequest) {
       photoUrl: uploadedPhotoUrl,
       face_photos: cleanFace,
       body_photos: cleanBody,
-      message: 'Fotos de calibración guardadas exitosamente'
+      message: 'Fotos de perfil físico guardadas exitosamente'
     });
   } catch (err: any) {
     console.error('[AvatarCalibration] POST error:', err);

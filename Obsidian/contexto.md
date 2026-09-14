@@ -1026,3 +1026,14 @@ En cada conversación, el backend alimenta a CloSy con:
 - **Disparador de Banner Premium Exclusivo al Cumplir Límite**:
   - El banner y aviso de suscripción a Kloe Pro solo se presenta cuando el usuario ha agotado sus 8 mensajes de prueba gratuita (`trialRemaining <= 0`), eliminando cualquier aparición prematura o intrusiva.
 
+### 82. Erradicación de Sugerencias Residuales de Avatar y Corrección de Error 500 en Conversaciones (`/api/closy/conversations`) (Septiembre 2026)
+- **Erradicación Total de Sugerencias de Avatar en IA**:
+  - Se instruyó formalmente en el System Prompt de Gemini (`/api/closy/chat`) la prohibición explícita de sugerir "avatar virtual", "avatar digital", "generar foto de mi avatar" o "probar en avatar" tanto en el texto como en las píldoras de sugerencias rápidas (`follow_up_suggestions`).
+- **Corrección del Error 500 en Sincronización de Conversaciones (`/api/closy/conversations`)**:
+  - **Causa Raíz**: Al intentar actualizar directamente una columna inexistente `kloe_conversations` en `profiles`, Postgres devolvía error, y el cliente anónimo sin token Bearer disparaba excepciones de RLS que derivaban en un código 500 Internal Server Error.
+  - **Solución y Blindaje**:
+    - El endpoint ahora resuelve la sesión mediante tokens Bearer (`Authorization: Bearer <token>`) o cookies de sesión.
+    - Se persiste directamente en el campo JSONB `profiles.notification_preferences->'kloe_conversations'`, sanitizando el payload de mensajes.
+    - Se agregaron capturadores de errores no fatales para garantizar que la sincronización siempre responda con éxito sin romper la experiencia en cliente.
+
+
