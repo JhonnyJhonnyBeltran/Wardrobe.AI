@@ -264,11 +264,17 @@ Generate a single RAW 8k Hasselblad studio catalogue lookbook photographic promp
 
     // 1. Try Google Gemini Image Models
     if (geminiKey) {
-      const geminiImageModels = ['gemini-2.5-flash-image', 'gemini-3.1-flash-image', 'gemini-3-pro-image'];
+      const geminiImageModels = [
+        'gemini-2.5-flash-image',
+        'gemini-3.1-flash-image',
+        'gemini-3.1-flash-lite-image',
+        'gemini-3-pro-image',
+        'nano-banana-pro-preview'
+      ];
       for (const imgModel of geminiImageModels) {
         try {
           const controller = new AbortController();
-          const timeout = setTimeout(() => controller.abort(), 10000);
+          const timeout = setTimeout(() => controller.abort(), 12000);
           const gRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${imgModel}:generateContent?key=${geminiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -305,38 +311,78 @@ Generate a single RAW 8k Hasselblad studio catalogue lookbook photographic promp
       }
     }
 
-    // 2. High-Fidelity Studio Image Generation Engine Fallback
-    if (!generatedImageUrl) {
+    // 2. Try OpenAI DALL-E 3 if API Key is configured
+    if (!generatedImageUrl && process.env.OPENAI_API_KEY) {
       try {
-        const seed = Math.floor(Math.random() * 900000) + 100000;
-        const cleanPrompt = finalPhotoPrompt
-          .replace(/[\n\r]+/g, ' ')
-          .replace(/\s+/g, ' ')
-          .slice(0, 800);
-
-        const engineUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(cleanPrompt)}?width=768&height=1024&model=flux&enhance=true&nologo=true&seed=${seed}`;
-        
         const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 18000);
-        const imgRes = await fetch(engineUrl, { signal: controller.signal });
+        const timeout = setTimeout(() => controller.abort(), 20000);
+        const oRes = await fetch('https://api.openai.com/v1/images/generations', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+          },
+          signal: controller.signal,
+          body: JSON.stringify({
+            model: 'dall-e-3',
+            prompt: finalPhotoPrompt.slice(0, 1000),
+            n: 1,
+            size: '1024x1024',
+            response_format: 'b64_json'
+          })
+        });
         clearTimeout(timeout);
 
-        if (imgRes.ok) {
-          const arrayBuf = await imgRes.arrayBuffer();
-          if (arrayBuf.byteLength > 10000) {
-            const base64Img = Buffer.from(arrayBuf).toString('base64');
-            generatedImageUrl = `data:image/jpeg;base64,${base64Img}`;
+        if (oRes.ok) {
+          const oData = await oRes.json();
+          const b64 = oData.data?.[0]?.b64_json;
+          if (b64) {
+            generatedImageUrl = `data:image/png;base64,${b64}`;
           }
         }
-      } catch (eEngineErr) {
-        console.warn('[GenerateAvatar] Secondary studio engine error:', eEngineErr);
+      } catch (oErr) {
+        console.warn('[GenerateAvatar] OpenAI DALL-E error:', oErr);
+      }
+    }
+
+    // 3. Try custom image provider if IMAGE_GEN_API_URL is configured
+    if (!generatedImageUrl && process.env.IMAGE_GEN_API_URL) {
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 15000);
+        const cRes = await fetch(process.env.IMAGE_GEN_API_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(process.env.IMAGE_GEN_API_KEY ? { 'Authorization': `Bearer ${process.env.IMAGE_GEN_API_KEY}` } : {})
+          },
+          signal: controller.signal,
+          body: JSON.stringify({
+            prompt: finalPhotoPrompt,
+            aspect_ratio: '3:4'
+          })
+        });
+        clearTimeout(timeout);
+
+        if (cRes.ok) {
+          const cData = await cRes.json();
+          if (cData.image_url || cData.url) {
+            generatedImageUrl = cData.image_url || cData.url;
+          } else if (cData.b64 || cData.base64) {
+            generatedImageUrl = `data:image/jpeg;base64,${cData.b64 || cData.base64}`;
+          }
+        }
+      } catch (cErr) {
+        console.warn('[GenerateAvatar] Custom image provider error:', cErr);
       }
     }
 
     if (!generatedImageUrl) {
       return NextResponse.json({
-        error: 'No se pudo generar la imagen del avatar en este momento. Por favor inténtalo de nuevo en unos segundos.'
-      }, { status: 500 });
+        success: false,
+        error: 'El servicio de generación de imágenes por IA ha alcanzado su límite de cuota temporal con Google Gemini. Por favor inténtalo de nuevo más tarde.',
+        quota_exceeded: true
+      }, { status: 422 });
     }
 
     return NextResponse.json({
@@ -354,7 +400,7 @@ Generate a single RAW 8k Hasselblad studio catalogue lookbook photographic promp
   } catch (error: any) {
     console.error('[GenerateAvatar] Error:', error);
     return NextResponse.json(
-      { error: error?.message || 'Error al generar el avatar virtual' },
+      { success: false, error: error?.message || 'Error al procesar la solicitud del avatar virtual' },
       { status: 500 }
     );
   }

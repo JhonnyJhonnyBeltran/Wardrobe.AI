@@ -416,14 +416,16 @@ export default function KloePage() {
 
       const data = await res.json();
 
-      if (!res.ok || data.needs_calibration) {
+      if (!res.ok || data.needs_calibration || !data.success || !data.avatar_image_url) {
+        const errorMsg = data.error || 'No se pudo generar la imagen del avatar virtual.';
         setMessages(prev => prev.map(m => {
           if (m.id === msg.id && m.recommended_outfit) {
             return {
               ...m,
               recommended_outfit: {
                 ...m.recommended_outfit,
-                avatar_loading: false
+                avatar_loading: false,
+                avatar_error: errorMsg
               }
             };
           }
@@ -436,8 +438,13 @@ export default function KloePage() {
           return;
         }
 
-        setShowCalibrationModal(true);
-        toast.info('Sube tus 6 fotos de calibración para que Kloe pueda modelar tu avatar virtual.');
+        if (data.needs_calibration) {
+          setShowCalibrationModal(true);
+          toast.info('Sube tus 6 fotos de calibración para que Kloe pueda modelar tu avatar virtual.');
+          return;
+        }
+
+        toast.error(errorMsg);
         return;
       }
 
@@ -1290,7 +1297,13 @@ export default function KloePage() {
                   {/* Direct Canvas & Virtual Try-On Action Buttons */}
                   <div className="flex flex-col gap-2 pt-1">
                     <button
-                      onClick={() => handleTryOnAvatar(msg)}
+                      onClick={() => {
+                        if (!isPremium()) {
+                          setShowProModal(true);
+                          return;
+                        }
+                        handleTryOnAvatar(msg);
+                      }}
                       disabled={generatingAvatarForMsgId === msg.id || msg.recommended_outfit.avatar_loading}
                       className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[var(--brand-pink)] hover:opacity-90 text-white text-xs font-semibold shadow-sm transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer"
                     >

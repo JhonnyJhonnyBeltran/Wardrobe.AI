@@ -1001,5 +1001,13 @@ En cada conversación, el backend alimenta a CloSy con:
     - **Extracción Biométrica de Alta Fidelidad**: `gemini-3.6-flash` analiza las 6 fotos de calibración (rostro, facciones faciales, ojos, corte de pelo, tono de piel, barba/perilla y silueta corporal) junto con las prendas del outfit (colores, estampados 'scuffers', tejidos y calzado) para redactar el prompt de catálogo editorial Hasselblad sobre fondo blanco puro `#FFFFFF`.
     - Generación multi-motor con renderizado fotorrealista directo en Base64 y ampliación Lightbox sin fallos ni congelamientos.
 
-
-
+### 80. Erradicación Definitiva de Pollinations y Estabilización del Probador Virtual de Avatar (Septiembre 2026)
+- **Eliminación Total de `pollinations.ai`**:
+  - Se purgó de forma permanente cualquier referencia, llamada HTTP o fallback a `pollinations.ai` en todo el repositorio (`/api/closy/generate-avatar`).
+  - El pipeline de visión sigue impulsado al 100% por **Google Gemini 3.6 Flash** para la extracción biométrica de alta resolución a partir de las 6 fotos de calibración (3 de rostro y 3 de cuerpo) y las prendas reales del armario, ignorando estrictamente las prendas que vestía el usuario en las fotos de calibración.
+- **Manejo Resiliente de Cuotas de Imagen y Errores (Sin Códigos 500)**:
+  - Si los modelos de generación de imágenes de Google Gemini o proveedores configurados (OpenAI DALL-E, Stability, Custom API) agotan su cuota o sufren restricciones geográficas, el servidor responde limpiamente con código estructurado `422 Unprocessable Entity` y mensaje descriptivo (`quota_exceeded: true`), eliminando cualquier caída del servidor con error 500.
+  - En la interfaz de Kloe (`/closet/kloe`), se gestionan estos estados de cuota de forma amigable con notificación toast explicativa y reseteo inmediato del botón y spinner de carga, sin abrir erróneamente el modal de calibración cuando el usuario ya tiene fotos subidas.
+- **Control de Acceso Premium Anti-Tampering**:
+  - En cliente (`/closet/kloe`), pulsar el botón de probar avatar o abrir la calibración sin suscripción dispara inmediatamente el modal de suscripción a Klozet Pro (`setShowProModal(true)`).
+  - En backend (`/api/closy/generate-avatar`), se valida en base de datos el estado de suscripción (`is_premium = true` en `profiles`), impidiendo manipulaciones o inyecciones desde la consola del navegador.
