@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json().catch(() => ({}));
 
-    // 1. Fetch User Profile Calibration Photos (3 Face + 3 Body)
+    // 1. Fetch User Profile Calibration Photos (3 Face + 3 Body) & Personal Attributes
     const { data: profile, error: profileError } = await client
       .from('profiles')
       .select('*')
@@ -111,18 +111,42 @@ export async function POST(request: NextRequest) {
         .select('clothing_items(*)')
         .eq('outfit_id', body.outfitId);
       garments = (outfitItems || []).map((oi: any) => oi.clothing_items).filter(Boolean);
+    } else if (Array.isArray(body.items) && body.items.length > 0) {
+      garments = body.items;
     }
 
-    // Build specific outfit pieces description
+    // Categorize garments for anatomical realism
+    const tops = garments.filter(g => ['top', 'shirt', 't-shirt', 'camiseta', 'camisa', 'sweater', 'jersey', 'hoodie', 'sudadera'].includes((g.category || '').toLowerCase()));
+    const bottoms = garments.filter(g => ['bottom', 'pants', 'pantalones', 'pantalon', 'jeans', 'shorts', 'skirt', 'falda'].includes((g.category || '').toLowerCase()));
+    const shoes = garments.filter(g => ['shoes', 'zapatos', 'zapatillas', 'sneakers', 'boots', 'botas', 'calzado'].includes((g.category || '').toLowerCase()));
+    const jackets = garments.filter(g => ['jacket', 'coat', 'chaqueta', 'cazadora', 'abrigo', 'outerwear'].includes((g.category || '').toLowerCase()));
+    const accessories = garments.filter(g => ['accessories', 'accesorio', 'bag', 'bolso', 'hat', 'gorra', 'belt', 'cinturon'].includes((g.category || '').toLowerCase()));
+
+    const formatGarmentList = (list: any[]) => list.map(g => `${g.name || g.category}${g.color ? ` (${g.color})` : ''}${g.fabric ? ` [${g.fabric}]` : ''}`).join(', ');
+
+    const garmentSections: string[] = [];
+    if (tops.length > 0) garmentSections.push(`Top: ${formatGarmentList(tops)}`);
+    if (bottoms.length > 0) garmentSections.push(`Bottom: ${formatGarmentList(bottoms)}`);
+    if (shoes.length > 0) garmentSections.push(`Shoes: ${formatGarmentList(shoes)}`);
+    if (jackets.length > 0) garmentSections.push(`Outerwear/Jacket: ${formatGarmentList(jackets)}`);
+    if (accessories.length > 0) garmentSections.push(`Accessories: ${formatGarmentList(accessories)}`);
+
+    const outfitDetails = garmentSections.length > 0 
+      ? garmentSections.join(' | ') 
+      : garments.map(g => `${g.name || g.category}${g.color ? ` in ${g.color}` : ''}`).join(', ');
+
     const outfitSummary = garments.length > 0
-      ? garments.map(g => `${g.name || g.category}${g.color ? ` in ${g.color}` : ''}${g.fabric ? ` (${g.fabric})` : ''}`).join(', ')
-      : 'stylish modern casual outfit';
+      ? garments.map(g => g.name || g.category).join(' + ')
+      : body.outfitName || 'Look Kloe';
 
     const userGender = profile.gender === 'women' ? 'woman' : (profile.gender === 'men' ? 'man' : 'person');
-    const userAge = profile.age ? `${profile.age}-year-old` : 'young adult';
+    const userAge = profile.age ? `${profile.age}-year-old` : (profile.age_range ? `${profile.age_range} year old` : 'young adult');
+    const userBody = profile.body_shape ? `with ${profile.body_shape} body proportions` : 'with natural bodily proportions';
+    const userSkin = profile.skin_tone ? `, ${profile.skin_tone} skin tone` : '';
+    const userHair = profile.hair_type ? `, ${profile.hair_type} hair` : '';
 
-    // Detailed prompt for studio fashion photoshoot on pure white background
-    const studioPrompt = `Full body high-end fashion catalogue lookbook photoshoot of a ${userAge} ${userGender} model with natural look, standing centered in full view, wearing: ${outfitSummary}. Solid pure white studio background (#FFFFFF), neutral high-key studio softbox lighting, 8k resolution, photorealistic, sharp focus, natural skin texture, professional fashion catalog pose, zero background clutter, isolated on pure white background`;
+    // Prompt taking facial features, bodily proportions, age, sex/gender, outfit and pure solid white studio background
+    const studioPrompt = `Hyperrealistic, ultra-detailed 8k full-body studio catalogue photoshoot of a real ${userAge} ${userGender} model with natural look, matching the exact facial features, facial structure${userSkin}${userHair}, and ${userBody} of the reference person. The person is standing centered in full view in an editorial fashion pose looking at the camera, wearing this exact complete outfit: ${outfitDetails}. Clean, solid pure white studio background (#FFFFFF), neutral bright studio softbox lighting, 8k resolution, photorealistic, sharp focus, natural skin texture, realistic fabric folds and textures, high-end fashion catalog photography, zero background clutter, full body visible from head to toe, completely isolated on solid white background.`;
 
     let generatedImageUrl: string | null = null;
 
@@ -181,7 +205,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Final Fallback: Calibrated reference photo
+    // Final Fallback: Calibrated reference photo if generation service unavailable
     if (!generatedImageUrl) {
       generatedImageUrl = facePhotos[0] || bodyPhotos[0] || '/placeholder.png';
     }
@@ -194,7 +218,7 @@ export async function POST(request: NextRequest) {
       background: 'solid_white',
       face_photos_used: facePhotos.length,
       body_photos_used: bodyPhotos.length,
-      message: 'Look probado con éxito en tu avatar virtual sobre fondo blanco.'
+      message: 'Look probado con éxito en tu avatar virtual sobre fondo blanco de estudio.'
     });
 
   } catch (error: any) {
@@ -205,5 +229,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
-

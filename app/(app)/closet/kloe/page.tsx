@@ -42,6 +42,9 @@ interface ChatMessage {
     name: string;
     occasion?: string;
     items: Array<any>;
+    avatar_url?: string;
+    avatar_loading?: boolean;
+    avatar_error?: string | null;
   } | null;
   highlighted_items?: Array<any>;
   follow_up_suggestions?: string[];
@@ -301,12 +304,7 @@ export default function KloePage() {
   // Avatar Virtual Try-On
   const [showCalibrationModal, setShowCalibrationModal] = useState(false);
   const [generatingAvatarForMsgId, setGeneratingAvatarForMsgId] = useState<string | null>(null);
-  const [tryOnResult, setTryOnResult] = useState<{
-    isOpen: boolean;
-    avatarUrl: string;
-    outfitName: string;
-    summary?: string;
-  } | null>(null);
+  const [selectedAvatarModalImage, setSelectedAvatarModalImage] = useState<string | null>(null);
 
   // Drawers
   const [showWardrobeDrawer, setShowWardrobeDrawer] = useState(false);
@@ -346,6 +344,24 @@ export default function KloePage() {
   const trialRemaining = isPremium() ? 9999 : Math.max(0, MAX_TRIAL_MESSAGES - trialUsed);
   const isInputUnlocked = isPremium() || trialRemaining > 0;
 
+  // Save conversation locally and sync remotely
+  const persistConversations = (newConvs: Conversation[]) => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(newConvs));
+      setConversations(newConvs);
+    } catch (e) {
+      console.warn('[Kloe] Error saving conversations:', e);
+    }
+
+    if (user?.id) {
+      fetch('/api/closy/conversations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ conversations: newConvs })
+      }).catch(err => console.warn('[Kloe] Remote conversations sync error:', err));
+    }
+  };
+
   const handleTryOnAvatar = async (msg: ChatMessage) => {
     if (!user?.id) {
       toast.error('Inicia sesión para probar looks en tu avatar virtual');
@@ -361,6 +377,23 @@ export default function KloePage() {
     if (itemIds.length === 0) return;
 
     setGeneratingAvatarForMsgId(msg.id);
+
+    // 1. Mark message as loading avatar inline
+    const loadingMessages = messages.map(m => {
+      if (m.id === msg.id && m.recommended_outfit) {
+        return {
+          ...m,
+          recommended_outfit: {
+            ...m.recommended_outfit,
+            avatar_loading: true,
+            avatar_error: null
+          }
+        };
+      }
+      return m;
+    });
+    setMessages(loadingMessages);
+
     try {
       let calibrationPhotos: any = null;
       try {
@@ -374,6 +407,7 @@ export default function KloePage() {
         body: JSON.stringify({
           userId: user.id,
           itemIds,
+          items: msg.recommended_outfit?.items,
           outfitName: msg.recommended_outfit?.name || 'Look Kloe',
           calibrationPhotos
         })
@@ -382,20 +416,73 @@ export default function KloePage() {
       const data = await res.json();
 
       if (!res.ok || data.needs_calibration) {
+        setMessages(prev => prev.map(m => {
+          if (m.id === msg.id && m.recommended_outfit) {
+            return {
+              ...m,
+              recommended_outfit: {
+                ...m.recommended_outfit,
+                avatar_loading: false
+              }
+            };
+          }
+          return m;
+        }));
         setShowCalibrationModal(true);
         toast.info('Sube tus 6 fotos de calibración para que Kloe pueda modelar tu avatar virtual.');
         return;
       }
 
-      setTryOnResult({
-        isOpen: true,
-        avatarUrl: data.avatar_image_url,
-        outfitName: msg.recommended_outfit?.name || 'Look Kloe',
-        summary: data.outfit_summary
+      // 2. Set generated avatar URL inline on message and persist
+      const finalMessages = messages.map(m => {
+        if (m.id === msg.id && m.recommended_outfit) {
+          return {
+            ...m,
+            recommended_outfit: {
+              ...m.recommended_outfit,
+              avatar_url: data.avatar_image_url,
+              avatar_loading: false,
+              avatar_error: null
+            }
+          };
+        }
+        return m;
       });
+
+      setMessages(finalMessages);
+
+      setConversations(prev => {
+        const updated = prev.map(c => {
+          if (c.id === activeConversationId) {
+            return {
+              ...c,
+              updatedAt: Date.now(),
+              messages: finalMessages
+            };
+          }
+          return c;
+        });
+        persistConversations(updated);
+        return updated;
+      });
+
       haptics.success();
+      toast.success('¡Look modelado con éxito en tu avatar virtual!');
     } catch (err) {
       console.error('[Kloe] Error generating avatar try-on:', err);
+      setMessages(prev => prev.map(m => {
+        if (m.id === msg.id && m.recommended_outfit) {
+          return {
+            ...m,
+            recommended_outfit: {
+              ...m.recommended_outfit,
+              avatar_loading: false,
+              avatar_error: 'Error al generar la imagen.'
+            }
+          };
+        }
+        return m;
+      }));
       toast.error('Error al generar el avatar virtual. Inténtalo de nuevo.');
     } finally {
       setGeneratingAvatarForMsgId(null);
@@ -431,8 +518,9 @@ export default function KloePage() {
     }
   }, [isPremium]);
 
-  // Load conversations from local storage
+  // Load conversations from local storage on mount and sync with remote database
   useEffect(() => {
+    // 1. Instant local storage hydration
     try {
       const stored = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('klosy_conversations_v1');
       if (stored) {
@@ -446,17 +534,51 @@ export default function KloePage() {
     } catch (e) {
       console.warn('[Kloe] Could not load stored conversations:', e);
     }
-  }, []);
 
-  // Save active conversation
-  const persistConversations = (newConvs: Conversation[]) => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(newConvs));
-      setConversations(newConvs);
-    } catch (e) {
-      console.warn('[Kloe] Error saving conversations:', e);
+    // 2. Fetch and merge remote conversations from database
+    if (user?.id) {
+      const fetchRemoteConvs = async () => {
+        try {
+          const res = await fetch('/api/closy/conversations');
+          if (res.ok) {
+            const data = await res.json();
+            const remoteConvs: Conversation[] = data.conversations || [];
+            if (remoteConvs.length > 0) {
+              setConversations(prev => {
+                const map = new Map<string, Conversation>();
+                remoteConvs.forEach(c => map.set(c.id, c));
+                prev.forEach(c => {
+                  const remote = map.get(c.id);
+                  if (!remote || (c.updatedAt && c.updatedAt > (remote.updatedAt || 0))) {
+                    map.set(c.id, c);
+                  }
+                });
+                const merged = Array.from(map.values())
+                  .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))
+                  .slice(0, MAX_CONVERSATIONS);
+
+                try {
+                  localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+                } catch {}
+
+                const currentActive = merged.find(c => c.id === activeConversationId) || merged[0];
+                if (currentActive) {
+                  setActiveConversationId(currentActive.id);
+                  setMessages(currentActive.messages || [INITIAL_MESSAGE]);
+                }
+
+                return merged;
+              });
+            }
+          }
+        } catch (err) {
+          console.warn('[Kloe] Error fetching remote conversations:', err);
+        }
+      };
+
+      fetchRemoteConvs();
     }
-  };
+  }, [user?.id]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -1051,15 +1173,59 @@ export default function KloePage() {
                 <FormattedMessageText content={msg.content} isUser={msg.role === 'user'} />
               </div>
 
-              {/* Recommended Outfit Card */}
+              {/* Recommended Outfit Card with Inline Studio Avatar Try-On */}
               {msg.recommended_outfit && msg.recommended_outfit.items && msg.recommended_outfit.items.length > 0 && (
                 <motion.div 
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.15 }}
-                  className="w-full mt-3.5 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-2xl p-4 shadow-sm space-y-3"
+                  className="w-full mt-3.5 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-2xl p-4 shadow-sm space-y-3.5"
                 >
-                  <div className="flex items-center justify-between">
+                  {/* INLINE AVATAR TRY-ON BOX (Loading animation or Generated Studio Photo) */}
+                  {(msg.recommended_outfit.avatar_loading || msg.recommended_outfit.avatar_url) && (
+                    <div className="relative w-full max-w-sm mx-auto aspect-[3/4] rounded-2xl overflow-hidden bg-white border border-gray-200 dark:border-white/10 shadow-md flex items-center justify-center">
+                      {msg.recommended_outfit.avatar_loading ? (
+                        /* Studio Loading State with Spinner & Adaptive Text */
+                        <div className="flex flex-col items-center justify-center p-6 text-center space-y-3 select-none">
+                          <div className="relative w-14 h-14 flex items-center justify-center">
+                            <div className="absolute inset-0 rounded-full border-4 border-[var(--brand-pink)]/20 border-t-[var(--brand-pink)] animate-spin" />
+                            <Camera className="w-6 h-6 text-[var(--brand-pink)] animate-pulse" />
+                          </div>
+                          <div className="space-y-1">
+                            <h4 className="text-xs font-bold text-gray-900 tracking-tight">
+                              Generando foto hiperrealista en tu avatar
+                            </h4>
+                            <p className="text-[11px] text-gray-500 leading-relaxed max-w-[240px] mx-auto">
+                              Adaptando prendas a tus facciones faciales y corporales sobre fondo blanco de estudio...
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        /* Generated Studio Photo (Click to Zoom Lightbox) */
+                        <div
+                          onClick={() => setSelectedAvatarModalImage(msg.recommended_outfit?.avatar_url || null)}
+                          className="relative w-full h-full cursor-zoom-in group select-none flex items-center justify-center bg-white"
+                          title="Toca para ver la foto en pantalla completa"
+                        >
+                          <img
+                            src={msg.recommended_outfit.avatar_url}
+                            alt="Foto de tu Avatar con el Outfit"
+                            className="w-full h-full object-contain bg-white group-hover:scale-[1.02] transition-transform duration-300"
+                          />
+                          <div className="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-white text-[10px] font-semibold flex items-center gap-1 opacity-90 group-hover:opacity-100 transition-opacity">
+                            <Search className="w-3 h-3" />
+                            Ampliar
+                          </div>
+                          <div className="absolute bottom-2.5 left-2.5 px-2.5 py-0.5 rounded-md bg-black/50 backdrop-blur-xs text-white text-[9px] font-medium">
+                            Fondo Blanco de Estudio
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Outfit Info Header */}
+                  <div className="flex items-center justify-between border-b border-[var(--border-color)]/60 pb-2.5">
                     <div>
                       <h4 className="text-sm font-bold text-[var(--foreground)]">
                         {msg.recommended_outfit.name || 'Outfit Recomendado'}
@@ -1075,7 +1241,7 @@ export default function KloePage() {
                     </span>
                   </div>
 
-                  {/* Garments Preview Grid with robust GarmentThumbnail fallback */}
+                  {/* Garments Preview Grid */}
                   <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                     {msg.recommended_outfit.items.map((item: any) => (
                       <div
@@ -1097,18 +1263,23 @@ export default function KloePage() {
                   <div className="flex flex-col gap-2 pt-1">
                     <button
                       onClick={() => handleTryOnAvatar(msg)}
-                      disabled={generatingAvatarForMsgId === msg.id}
+                      disabled={generatingAvatarForMsgId === msg.id || msg.recommended_outfit.avatar_loading}
                       className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[var(--brand-pink)] hover:opacity-90 text-white text-xs font-semibold shadow-sm transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer"
                     >
-                      {generatingAvatarForMsgId === msg.id ? (
+                      {generatingAvatarForMsgId === msg.id || msg.recommended_outfit.avatar_loading ? (
                         <>
                           <Loader2 className="w-4 h-4 animate-spin" />
-                          Generando avatar virtual...
+                          Generando foto en avatar...
+                        </>
+                      ) : msg.recommended_outfit.avatar_url ? (
+                        <>
+                          <Camera className="w-4 h-4" />
+                          Regenerar foto en mi avatar digital
                         </>
                       ) : (
                         <>
                           <Camera className="w-4 h-4" />
-                          Probar look en mi avatar virtual
+                          Probar look en mi avatar digital
                         </>
                       )}
                     </button>
@@ -1709,62 +1880,38 @@ export default function KloePage() {
         }}
       />
 
-      {/* Virtual Try-On Result Modal */}
+      {/* Lightbox Modal (Zoom Full Screen for Generated Studio Photo) */}
       <AnimatePresence>
-        {tryOnResult?.isOpen && (
-          <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
+        {selectedAvatarModalImage && (
+          <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-black/80 backdrop-blur-md"
-              onClick={() => setTryOnResult(null)}
+              className="absolute inset-0 bg-black/90 backdrop-blur-xl"
+              onClick={() => setSelectedAvatarModalImage(null)}
             />
             <motion.div
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="relative w-full max-w-sm bg-[var(--background)] rounded-3xl shadow-2xl border border-[var(--border-color)] overflow-hidden p-6 z-10 text-center"
+              initial={{ scale: 0.85, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.85, opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="relative max-w-lg w-full max-h-[90vh] bg-white rounded-3xl overflow-hidden shadow-2xl z-10 flex flex-col items-center justify-center p-3"
             >
               <button
-                onClick={() => setTryOnResult(null)}
-                className="absolute top-4 right-4 p-2 rounded-full text-[var(--foreground-secondary)] hover:text-[var(--foreground)] hover:bg-[var(--background-secondary)] transition-colors"
+                onClick={() => setSelectedAvatarModalImage(null)}
+                className="absolute top-4 right-4 p-2.5 rounded-full bg-black/60 text-white hover:bg-black transition-colors z-20 cursor-pointer"
+                aria-label="Cerrar vista completa"
               >
                 <X className="w-5 h-5" />
               </button>
-
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] text-xs font-bold mb-3">
-                <User className="w-3.5 h-3.5" />
-                Avatar Personal
-              </div>
-
-              <h3 className="text-lg font-bold text-[var(--foreground)] mb-1">
-                {tryOnResult.outfitName}
-              </h3>
-              {tryOnResult.summary && (
-                <p className="text-xs text-[var(--foreground-secondary)] mb-4 truncate">
-                  {tryOnResult.summary}
-                </p>
-              )}
-
-              {/* Avatar Render (Fondo Blanco de Estudio Fotográfico) */}
-              <div className="relative aspect-[3/4] w-full rounded-2xl overflow-hidden shadow-sm bg-white mb-4 border border-[var(--border-color)] flex items-center justify-center">
+              <div className="relative w-full aspect-[3/4] rounded-2xl overflow-hidden flex items-center justify-center bg-white">
                 <img
-                  src={tryOnResult.avatarUrl}
-                  alt="Avatar Virtual con Fondo Blanco"
+                  src={selectedAvatarModalImage}
+                  alt="Avatar Virtual Alta Resolución"
                   className="w-full h-full object-contain bg-white"
                 />
-                <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded-md bg-black/60 backdrop-blur-xs text-white text-[9px] font-medium">
-                  Fondo Blanco de Estudio
-                </div>
               </div>
-
-              <button
-                onClick={() => setTryOnResult(null)}
-                className="w-full py-3 rounded-xl bg-[var(--brand-pink)] text-white text-xs font-bold shadow-sm hover:opacity-90 transition-opacity"
-              >
-                Guardar o Cerrar
-              </button>
             </motion.div>
           </div>
         )}

@@ -943,4 +943,16 @@ En cada conversación, el backend alimenta a CloSy con:
   - **Eliminación del Botón de Atrás**: Se retiró el icono de flecha hacia atrás para limpiar el viewport móvil.
   - **Píldoras Flotantes Redondeadas**: El diseño pasa de ser una barra rectangular completa a islotes independientes con bordes redondeados completos (`rounded-full px-3.5 py-1.5 shadow-md` con efecto de cristal esmerilado `backdrop-blur-2xl`), uno a la izquierda para la marca y otro a la derecha exclusivamente para las acciones (`Historial`, `Calibrar Avatar`, `Guardados`, `Armario`).
   - **Ocultamiento Dinámico al Deslizar**: Mediante el detector de scroll en el contenedor de mensajes (`handleMessagesScroll`), la barra superior móvil se desliza suavemente hacia arriba (`-y-full`, `opacity-0`) al hacer scroll hacia abajo, y reaparece instantáneamente al hacer scroll hacia arriba o detenerse.
-
+### 75. Sincronización Multi-Dispositivo de Chats de Kloe, Calibración de Avatar y Probador en Chat con Fondo Blanco (Septiembre 2026)
+- **Sincronización de Conversaciones entre Móvil y Ordenador (`/api/closy/conversations`)**:
+  - Las conversaciones de Kloe ya no viven de forma aislada en el `localStorage` de cada navegador: ahora se sincronizan en tiempo real con Supabase (`profiles.notification_preferences->'kloe_conversations'`).
+  - Al abrir la app en móvil o escritorio, se hidrata al instante desde la memoria local y se fusiona silenciosamente con la base de datos por timestamp de actualización.
+- **Persistencia y Subida Segura de Fotos de Calibración (`/api/user/avatar-calibration`)**:
+  - Las 3 fotos de rostro y 3 fotos de cuerpo se procesan y suben directamente al bucket `avatars` mediante el Service Role de Supabase en backend, garantizando que queden permanentemente almacenadas tanto en las columnas `face_photos`/`body_photos` como en el JSONB de respaldo, accesibles sin pérdida desde cualquier dispositivo.
+- **Probador Virtual Directo en el Chat con Fotografía de Estudio sobre Fondo Blanco**:
+  - **Cuadro Integrado en el Mensaje**: Al pulsar *"Probar look en mi avatar digital"* en una tarjeta de outfit, se despliega en el mismo chat un marco con fondo blanco de estudio y animación de carga (*"Generando foto hiperrealista en tu avatar... Kloe está adaptando las prendas a tus facciones faciales y proporciones corporales sobre fondo blanco de estudio..."*).
+  - **Generación Hiperrealista de Estudio (`/api/closy/generate-avatar`)**:
+    - La IA toma las facciones faciales de las fotos de referencia, la estructura corporal, la edad y el sexo del perfil para generar una fotografía de catálogo de moda en 8k de cuerpo entero posando con el look exacto sobre un fondo blanco puro de estudio (#FFFFFF) con iluminación softbox neutral.
+  - **Ampliación Lightbox y Estructura Completa**:
+    - Al pulsar sobre la foto generada, se abre un visualizador Lightbox en pantalla completa para inspeccionar todos los detalles.
+    - Justo debajo de la foto se muestra el desglose del outfit con sus prendas interactivas (`GarmentThumbnail`) y el botón para *"Montar y editar en el lienzo"* (`/create?itemIds=...`).

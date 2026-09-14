@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Camera, User, Check, Trash2, Upload, AlertCircle, Loader2 } from 'lucide-react';
 import { useUser } from '@/store/userStore';
 import { supabase } from '@/lib/supabase/client';
-import Image from 'next/image';
 
 interface AvatarCalibrationModalProps {
   isOpen: boolean;
@@ -89,6 +88,15 @@ export default function AvatarCalibrationModal({
     fileInputRef.current?.click();
   };
 
+  const readFileAsBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
+      reader.readAsDataURL(file);
+    });
+  };
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user?.id || !targetUploadRef.current) return;
@@ -99,77 +107,37 @@ export default function AvatarCalibrationModal({
     setErrorMsg(null);
 
     try {
-      // 1. Upload to Supabase Storage
-      const ext = file.name.split('.').pop() || 'jpg';
-      const path = `calibration/${user.id}/${type}_${index}_${Date.now()}.${ext}`;
+      // Convert file to Base64
+      const base64Data = await readFileAsBase64(file);
 
-      let bucketUsed = 'avatars';
-      let { data: uploadData, error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(path, file, { upsert: true });
+      // Upload directly via backend API with Admin credentials
+      const res = await fetch('/api/user/avatar-calibration', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          imageBase64: base64Data,
+          type,
+          index,
+          fileName: file.name
+        })
+      });
 
-      if (uploadError) {
-        bucketUsed = 'clothing';
-        const { error: fallbackError } = await supabase.storage
-          .from('clothing')
-          .upload(path, file, { upsert: true });
-        
-        if (fallbackError) {
-          // If storage bucket fails, convert to data URL as fail-safe
-          console.warn('Storage upload error, using object URL fallback:', fallbackError);
-        }
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(json.error || 'Error al subir la imagen');
       }
 
-      const { data: publicUrlData } = supabase.storage
-        .from(bucketUsed)
-        .getPublicUrl(path);
+      const cleanFace = (json.face_photos || []).filter(Boolean);
+      const cleanBody = (json.body_photos || []).filter(Boolean);
 
-      const photoUrl = publicUrlData?.publicUrl || URL.createObjectURL(file);
-
-      // 2. Update local state & cache
-      let updatedFace = [...facePhotos];
-      let updatedBody = [...bodyPhotos];
-
-      if (type === 'face') {
-        updatedFace[index] = photoUrl;
-        setFacePhotos(updatedFace);
-      } else {
-        updatedBody[index] = photoUrl;
-        setBodyPhotos(updatedBody);
-      }
-
-      const cleanFace = updatedFace.filter(Boolean);
-      const cleanBody = updatedBody.filter(Boolean);
+      setFacePhotos(cleanFace);
+      setBodyPhotos(cleanBody);
 
       if (cacheKey) {
         localStorage.setItem(cacheKey, JSON.stringify({ face_photos: cleanFace, body_photos: cleanBody }));
       }
 
-      // 3. Persist to API & Supabase
-      try {
-        await fetch('/api/user/avatar-calibration', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            face_photos: cleanFace,
-            body_photos: cleanBody,
-          }),
-        });
-      } catch (apiErr) {
-        console.warn('API sync error:', apiErr);
-      }
-
-      // Also try updating Supabase profiles table directly
-      try {
-        await (supabase.from('profiles') as any)
-          .update({
-            face_photos: cleanFace,
-            body_photos: cleanBody,
-          })
-          .eq('id', user.id);
-      } catch {}
-
-      setSuccessMsg('Foto guardada correctamente');
+      setSuccessMsg('Foto guardada correctamente en tu avatar');
       setTimeout(() => setSuccessMsg(null), 3000);
 
       // Check if all 6 photos are complete
@@ -217,16 +185,9 @@ export default function AvatarCalibrationModal({
           body_photos: cleanBody,
         }),
       });
-    } catch {}
-
-    try {
-      await (supabase.from('profiles') as any)
-        .update({
-          face_photos: cleanFace,
-          body_photos: cleanBody,
-        })
-        .eq('id', user.id);
-    } catch {}
+    } catch (err) {
+      console.warn('Error deleting photo on backend:', err);
+    }
   };
 
   if (!isOpen) return null;

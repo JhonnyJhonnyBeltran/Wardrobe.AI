@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
 
@@ -50,7 +50,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    // Try reading profile with face_photos, body_photos, and notification_preferences
     const { data: profile, error } = await client
       .from('profiles')
       .select('*')
@@ -74,8 +73,8 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({
-      face_photos: facePhotos.filter(Boolean),
-      body_photos: bodyPhotos.filter(Boolean),
+      face_photos: (facePhotos || []).filter(Boolean),
+      body_photos: (bodyPhotos || []).filter(Boolean),
     });
   } catch (err: any) {
     console.error('[AvatarCalibration] GET error:', err);
@@ -91,30 +90,98 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json().catch(() => ({}));
-    const facePhotos: string[] = (body.face_photos || []).filter(Boolean);
-    const bodyPhotos: string[] = (body.body_photos || []).filter(Boolean);
+    const admin = getAdmin();
 
-    // 1. Fetch current notification_preferences to safely inject backup
+    // 1. Fetch current profile state
     const { data: currentProfile } = await client
       .from('profiles')
-      .select('notification_preferences')
+      .select('*')
       .eq('id', user.id)
       .maybeSingle();
 
+    let currentFace: string[] = (currentProfile as any)?.face_photos || [];
+    let currentBody: string[] = (currentProfile as any)?.body_photos || [];
+
     const currentNotifs = (currentProfile as any)?.notification_preferences || {};
+    if (currentFace.length === 0 && currentBody.length === 0 && currentNotifs.avatar_calibration) {
+      currentFace = currentNotifs.avatar_calibration.face_photos || [];
+      currentBody = currentNotifs.avatar_calibration.body_photos || [];
+    }
+
+    let uploadedPhotoUrl: string | null = null;
+
+    // Case A: Direct Base64 single photo upload via server-side storage
+    if (body.imageBase64 && body.type && typeof body.index === 'number') {
+      const { imageBase64, type, index, fileName } = body;
+      const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, '');
+      const buffer = Buffer.from(cleanBase64, 'base64');
+      const ext = (fileName ? fileName.split('.').pop() : 'jpg') || 'jpg';
+      const storagePath = `calibration/${user.id}/${type}_${index}_${Date.now()}.${ext}`;
+
+      let bucketUsed = 'avatars';
+      let { error: uploadErr } = await admin.storage
+        .from('avatars')
+        .upload(storagePath, buffer, {
+          contentType: `image/${ext === 'png' ? 'png' : 'jpeg'}`,
+          upsert: true
+        });
+
+      if (uploadErr) {
+        bucketUsed = 'clothing';
+        const { error: fallbackUploadErr } = await admin.storage
+          .from('clothing')
+          .upload(storagePath, buffer, {
+            contentType: `image/${ext === 'png' ? 'png' : 'jpeg'}`,
+            upsert: true
+          });
+        if (fallbackUploadErr) {
+          console.error('[AvatarCalibration] Server storage upload failed:', fallbackUploadErr);
+          throw fallbackUploadErr;
+        }
+      }
+
+      const { data: publicUrlData } = admin.storage
+        .from(bucketUsed)
+        .getPublicUrl(storagePath);
+
+      const finalUrl = publicUrlData?.publicUrl || (imageBase64 as string);
+      uploadedPhotoUrl = finalUrl;
+
+      if (type === 'face') {
+        const nextFace = [...currentFace];
+        nextFace[index] = finalUrl;
+        currentFace = nextFace;
+      } else if (type === 'body') {
+        const nextBody = [...currentBody];
+        nextBody[index] = finalUrl;
+        currentBody = nextBody;
+      }
+    } else if (body.face_photos !== undefined || body.body_photos !== undefined) {
+      // Case B: Entire arrays update
+      if (Array.isArray(body.face_photos)) {
+        currentFace = body.face_photos;
+      }
+      if (Array.isArray(body.body_photos)) {
+        currentBody = body.body_photos;
+      }
+    }
+
+    const cleanFace = (currentFace || []).filter(Boolean);
+    const cleanBody = (currentBody || []).filter(Boolean);
+
     const updatedNotifs = {
       ...currentNotifs,
       avatar_calibration: {
-        face_photos: facePhotos,
-        body_photos: bodyPhotos,
+        face_photos: cleanFace,
+        body_photos: cleanBody,
         updated_at: new Date().toISOString()
       }
     };
 
-    // 2. First attempt: update both columns AND backup JSONB
+    // 2. Persist update to profiles
     let updatePayload: any = {
-      face_photos: facePhotos,
-      body_photos: bodyPhotos,
+      face_photos: cleanFace,
+      body_photos: cleanBody,
       notification_preferences: updatedNotifs,
       updated_at: new Date().toISOString()
     };
@@ -123,7 +190,6 @@ export async function POST(request: NextRequest) {
       .update(updatePayload)
       .eq('id', user.id);
 
-    // If column face_photos does not exist in schema yet, fallback to JSONB only
     if (updateError) {
       console.warn('[AvatarCalibration] Direct column update failed, saving in JSONB fallback:', updateError.message);
       const { error: fallbackError } = await (client.from('profiles') as any)
@@ -141,8 +207,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      face_photos: facePhotos,
-      body_photos: bodyPhotos,
+      photoUrl: uploadedPhotoUrl,
+      face_photos: cleanFace,
+      body_photos: cleanBody,
       message: 'Fotos de calibración guardadas exitosamente'
     });
   } catch (err: any) {
