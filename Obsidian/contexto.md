@@ -1036,4 +1036,11 @@ En cada conversación, el backend alimenta a CloSy con:
     - Se persiste directamente en el campo JSONB `profiles.notification_preferences->'kloe_conversations'`, sanitizando el payload de mensajes.
     - Se agregaron capturadores de errores no fatales para garantizar que la sincronización siempre responda con éxito sin romper la experiencia en cliente.
 
+### 83. Acceso Exclusivo a "Mi Perfil Físico" para Usuarios Klozet Pro (Septiembre 2026)
+- **Bloqueo y Puerta de Pago en Perfil Físico (Rostro y Cuerpo)**:
+  - La subida y calibración de las 6 fotos de referencia física (3 de rostro y 3 de cuerpo entero) es una **función exclusiva de Klozet Pro**.
+  - Si un usuario del plan gratuito pulsa el botón de cámara en la cabecera del chat (`/closet/kloe`) o dentro del modal [`AvatarCalibrationModal.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/components/AvatarCalibrationModal.tsx), el sistema activa de inmediato el modal de suscripción [`KloeProModal`](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/components/KloeProModal.tsx).
+  - En backend ([`/api/user/avatar-calibration`](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/app/api/user/avatar-calibration/route.ts)), se valida de forma atómica en base de datos la suscripción activa (`is_premium = true`), impidiendo cualquier subida o manipulación no autorizada.
+
+
 

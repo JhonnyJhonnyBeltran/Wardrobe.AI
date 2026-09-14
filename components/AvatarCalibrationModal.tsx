@@ -2,9 +2,10 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Camera, User, Check, Trash2, Upload, AlertCircle, Loader2 } from 'lucide-react';
+import { X, Camera, User, Check, Trash2, Upload, AlertCircle, Loader2, Crown } from 'lucide-react';
 import { useUser } from '@/store/userStore';
 import { supabase } from '@/lib/supabase/client';
+import KloeProModal from '@/components/KloeProModal';
 
 interface AvatarCalibrationModalProps {
   isOpen: boolean;
@@ -17,12 +18,13 @@ export default function AvatarCalibrationModal({
   onClose,
   onCalibrationComplete,
 }: AvatarCalibrationModalProps) {
-  const { user } = useUser();
+  const { user, isPremium } = useUser();
   const [facePhotos, setFacePhotos] = useState<string[]>([]);
   const [bodyPhotos, setBodyPhotos] = useState<string[]>([]);
   const [uploadingSlot, setUploadingSlot] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [showProModal, setShowProModal] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const targetUploadRef = useRef<{ type: 'face' | 'body'; index: number } | null>(null);
@@ -84,6 +86,10 @@ export default function AvatarCalibrationModal({
   }, [user?.id, isOpen, cacheKey]);
 
   const handleSelectSlot = (type: 'face' | 'body', index: number) => {
+    if (!isPremium()) {
+      setShowProModal(true);
+      return;
+    }
     targetUploadRef.current = { type, index };
     fileInputRef.current?.click();
   };
@@ -101,57 +107,71 @@ export default function AvatarCalibrationModal({
     const file = e.target.files?.[0];
     if (!file || !user?.id || !targetUploadRef.current) return;
 
+    if (!isPremium()) {
+      setShowProModal(true);
+      return;
+    }
+
     const { type, index } = targetUploadRef.current;
     const slotId = `${type}_${index}`;
     setUploadingSlot(slotId);
     setErrorMsg(null);
 
     try {
-      // Convert file to Base64
-      const base64Data = await readFileAsBase64(file);
+      const base64 = await readFileAsBase64(file);
 
-      // Upload directly via backend API with Admin credentials
+      // Optimistic update
+      if (type === 'face') {
+        const next = [...facePhotos];
+        next[index] = base64;
+        setFacePhotos(next);
+      } else {
+        const next = [...bodyPhotos];
+        next[index] = base64;
+        setBodyPhotos(next);
+      }
+
       const res = await fetch('/api/user/avatar-calibration', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          imageBase64: base64Data,
           type,
           index,
-          fileName: file.name
-        })
+          fileName: file.name,
+          imageBase64: base64,
+        }),
       });
 
-      const json = await res.json();
+      const data = await res.json();
       if (!res.ok) {
-        if (res.status === 403 || json.isPremiumRequired) {
-          onClose();
-          throw new Error('La calibración y subida de fotos de avatar es exclusiva de Klozet Premium.');
+        if (res.status === 403 || data.isPremiumRequired) {
+          setShowProModal(true);
+          return;
         }
-        throw new Error(json.error || 'Error al subir la imagen');
+        throw new Error(data.error || 'Error al subir la fotografía');
       }
 
-      const cleanFace = (json.face_photos || []).filter(Boolean);
-      const cleanBody = (json.body_photos || []).filter(Boolean);
+      if (data.face_photos) setFacePhotos(data.face_photos);
+      if (data.body_photos) setBodyPhotos(data.body_photos);
 
-      setFacePhotos(cleanFace);
-      setBodyPhotos(cleanBody);
-
-      if (cacheKey) {
-        localStorage.setItem(cacheKey, JSON.stringify({ face_photos: cleanFace, body_photos: cleanBody }));
+      if (cacheKey && (data.face_photos || data.body_photos)) {
+        localStorage.setItem(cacheKey, JSON.stringify({
+          face_photos: data.face_photos || facePhotos,
+          body_photos: data.body_photos || bodyPhotos
+        }));
       }
 
-      setSuccessMsg('Foto guardada correctamente en tu avatar');
-      setTimeout(() => setSuccessMsg(null), 3000);
+      setSuccessMsg('Foto subida y guardada');
+      setTimeout(() => setSuccessMsg(null), 2500);
 
-      // Check if all 6 photos are complete
-      const totalCount = cleanFace.length + cleanBody.length;
-      if (totalCount >= 6) {
-        onCalibrationComplete?.();
+      const total = (data.face_photos || facePhotos).filter(Boolean).length + 
+                    (data.body_photos || bodyPhotos).filter(Boolean).length;
+      if (total >= 6 && onCalibrationComplete) {
+        onCalibrationComplete();
       }
     } catch (err: any) {
-      console.error('Error uploading calibration photo:', err);
-      setErrorMsg(err.message || 'Error al subir la imagen. Inténtalo de nuevo.');
+      console.error('[AvatarCalibration] Upload error:', err);
+      setErrorMsg(err.message || 'Error al procesar la imagen');
     } finally {
       setUploadingSlot(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -162,8 +182,13 @@ export default function AvatarCalibrationModal({
     e.stopPropagation();
     if (!user?.id) return;
 
-    let updatedFace = [...facePhotos];
-    let updatedBody = [...bodyPhotos];
+    if (!isPremium()) {
+      setShowProModal(true);
+      return;
+    }
+
+    const updatedFace = [...facePhotos];
+    const updatedBody = [...bodyPhotos];
 
     if (type === 'face') {
       updatedFace.splice(index, 1);
@@ -246,7 +271,13 @@ export default function AvatarCalibrationModal({
               </div>
 
               <div>
-                <h2 className="text-xl font-bold text-[var(--foreground)] mt-2">
+                {!isPremium() && (
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] text-xs font-bold border border-[var(--brand-pink)]/20 mb-2">
+                    <Crown className="w-3.5 h-3.5" />
+                    <span>Función Exclusiva Pro</span>
+                  </div>
+                )}
+                <h2 className="text-xl font-bold text-[var(--foreground)] mt-1">
                   Mi Perfil Físico
                 </h2>
                 <p className="text-xs text-[var(--foreground-secondary)] mt-2 leading-relaxed max-w-md mx-auto">
@@ -284,11 +315,17 @@ export default function AvatarCalibrationModal({
               {/* Action Buttons */}
               <div className="space-y-2.5 pt-2">
                 <button
-                  onClick={() => setStep('upload')}
+                  onClick={() => {
+                    if (!isPremium()) {
+                      setShowProModal(true);
+                      return;
+                    }
+                    setStep('upload');
+                  }}
                   className="w-full py-3.5 rounded-2xl bg-[var(--brand-pink)] text-white font-bold text-sm hover:bg-[var(--brand-pink-dark)] transition-colors shadow-lg shadow-[var(--brand-pink)]/20 active:scale-98 cursor-pointer flex items-center justify-center gap-2"
                 >
-                  <Camera className="w-4 h-4" />
-                  Subir mis fotos
+                  {!isPremium() ? <Crown className="w-4 h-4" /> : <Camera className="w-4 h-4" />}
+                  {!isPremium() ? 'Desbloquear con Kloe Pro (2,99 €)' : 'Subir mis fotos'}
                 </button>
 
                 <button
@@ -307,6 +344,12 @@ export default function AvatarCalibrationModal({
                 <div className="w-12 h-12 rounded-2xl bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] flex items-center justify-center mx-auto mb-3">
                   <User className="w-6 h-6" />
                 </div>
+                {!isPremium() && (
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] text-xs font-bold border border-[var(--brand-pink)]/20 mb-2">
+                    <Crown className="w-3.5 h-3.5" />
+                    <span>Función Exclusiva Pro</span>
+                  </div>
+                )}
                 <h2 className="text-xl font-bold text-[var(--foreground)]">
                   Fotos de tu Perfil Físico
                 </h2>
@@ -450,6 +493,13 @@ export default function AvatarCalibrationModal({
           )}
         </motion.div>
       </div>
+
+      {/* Klozet Pro Modal */}
+      <KloeProModal
+        isOpen={showProModal}
+        onClose={() => setShowProModal(false)}
+        redirectBackToCloset={false}
+      />
     </AnimatePresence>
   );
 }

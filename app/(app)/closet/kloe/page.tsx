@@ -862,6 +862,11 @@ export default function KloePage() {
 
           <button
             onClick={() => {
+              if (!isPremium()) {
+                setShowProModal(true);
+                toast.info('La personalización por perfil físico es una función exclusiva de Klozet Pro');
+                return;
+              }
               setShowCalibrationModal(true);
             }}
             className="p-2.5 text-gray-900 dark:text-white hover:text-[var(--brand-pink)] dark:hover:text-[var(--brand-pink)] rounded-full hover:bg-[var(--background-secondary)] transition-colors cursor-pointer"
@@ -930,6 +935,11 @@ export default function KloePage() {
 
           <button
             onClick={() => {
+              if (!isPremium()) {
+                setShowProModal(true);
+                toast.info('La personalización por perfil físico es una función exclusiva de Klozet Pro');
+                return;
+              }
               setShowCalibrationModal(true);
             }}
             className="p-2 text-gray-900 dark:text-white hover:text-[var(--brand-pink)] dark:hover:text-[var(--brand-pink)] rounded-full transition-colors cursor-pointer"
