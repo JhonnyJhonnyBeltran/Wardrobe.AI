@@ -428,6 +428,13 @@ export default function KloePage() {
           }
           return m;
         }));
+
+        if (res.status === 403 || data.isPremiumRequired) {
+          setShowProModal(true);
+          toast.info('El probador virtual de avatar es una función exclusiva de Klozet Premium.');
+          return;
+        }
+
         setShowCalibrationModal(true);
         toast.info('Sube tus 6 fotos de calibración para que Kloe pueda modelar tu avatar virtual.');
         return;
@@ -947,7 +954,13 @@ export default function KloePage() {
           </button>
 
           <button
-            onClick={() => setShowCalibrationModal(true)}
+            onClick={() => {
+              if (!isPremium()) {
+                setShowProModal(true);
+                return;
+              }
+              setShowCalibrationModal(true);
+            }}
             className="p-2.5 text-gray-900 dark:text-white hover:text-[var(--brand-pink)] dark:hover:text-[var(--brand-pink)] rounded-full hover:bg-[var(--background-secondary)] transition-colors cursor-pointer"
             title="Calibrar mi avatar virtual (6 fotos)"
             aria-label="Calibrar mi avatar"
@@ -1013,7 +1026,13 @@ export default function KloePage() {
           </button>
 
           <button
-            onClick={() => setShowCalibrationModal(true)}
+            onClick={() => {
+              if (!isPremium()) {
+                setShowProModal(true);
+                return;
+              }
+              setShowCalibrationModal(true);
+            }}
             className="p-2 text-gray-900 dark:text-white hover:text-[var(--brand-pink)] dark:hover:text-[var(--brand-pink)] rounded-full transition-colors cursor-pointer"
             title="Calibrar avatar"
             aria-label="Calibrar avatar"

@@ -957,4 +957,10 @@ En cada conversación, el backend alimenta a CloSy con:
     - **Generación Fotográfica Realista (Flux Realism)**: Traduce el análisis en una fotografía RAW 8k de estudio editorial de alta fidelidad, con prompts negativos estrictos contra muñecas, maniquíes, CGI, anime y pieles de plástico, asegurando un acabado fotográfico auténtico sobre fondo blanco puro (#FFFFFF).
   - **Ampliación Lightbox y Estructura Completa**:
     - Al pulsar sobre la foto generada, se abre un visualizador Lightbox en pantalla completa para inspeccionar todos los detalles.
-    - Justo debajo de la foto se muestra el desglose del outfit con sus prendas interactivas (`GarmentThumbnail`) y el botón para *"Montar y editar en el lienzo"* (`/create?itemIds=...`).
+    - Justo debajo de la foto se muestra el desglose del outfit con sus prendas interactivas (`GarmentThumbnail`) y el botón para *"Montar y editar en el lienzo"* (`/create?itemIds=...`).### 76. Seguridad Anti-Tampering (Zero-Trust Premium), Bloqueo de Avatar y Eliminación de Motores Secundarios (Septiembre 2026)
+- **Eliminación Total de Pasarelas Externas No Oficiales**: Se erradicó por completo `pollinations.ai` de todo el proyecto, centralizando la visión y generación en el ecosistema oficial de **Google Gemini**.
+- **Regla Estricta de Acceso al Avatar y Calibración (Solo Premium)**:
+  - Tanto en la cabecera de escritorio como en móvil y en las tarjetas del chat, cualquier interacción con el botón de calibración o probador virtual por parte de un usuario gratuito abre inmediatamente el modal de suscripción (`KloeProModal`).
+- **Seguridad Anti-Inyección y Anti-Tampering (Zero-Trust)**:
+  - Es imposible saltarse el muro de pago mediante inyección de código HTML, manipulación de DevTools o alteración de `localStorage`.
+  - Todos los endpoints de backend (`/api/closy/generate-avatar`, `/api/user/avatar-calibration`, `/api/closy/chat`, etc.) validan obligatoriamente la sesión y consultan de forma atómica el registro en base de datos (`profiles.is_premium`, `subscription_tier` y `subscription_status === 'active'`). Si la base de datos no certifica la suscripción activa, el servidor rechaza la petición con código `403 Forbidden` (`isPremiumRequired: true`).

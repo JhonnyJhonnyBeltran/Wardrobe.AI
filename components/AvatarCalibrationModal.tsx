@@ -124,6 +124,10 @@ export default function AvatarCalibrationModal({
 
       const json = await res.json();
       if (!res.ok) {
+        if (res.status === 403 || json.isPremiumRequired) {
+          onClose();
+          throw new Error('La calibración y subida de fotos de avatar es exclusiva de Klozet Premium.');
+        }
         throw new Error(json.error || 'Error al subir la imagen');
       }
 

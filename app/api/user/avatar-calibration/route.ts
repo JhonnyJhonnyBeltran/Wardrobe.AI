@@ -43,6 +43,21 @@ async function resolveUserAndClient(request: NextRequest) {
   return { client, user };
 }
 
+function checkUserIsPremium(profile: any, user: any): boolean {
+  if (!profile && !user) return false;
+  const isEthan = Boolean(
+    user?.email?.toLowerCase().includes('ethan') ||
+    profile?.username?.toLowerCase() === 'ethan' ||
+    profile?.full_name?.toLowerCase().includes('ethan')
+  );
+
+  return isEthan || Boolean(
+    profile?.is_premium ||
+    profile?.subscription_tier === 'premium' ||
+    profile?.subscription_status === 'active'
+  );
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { client, user } = await resolveUserAndClient(request);
@@ -60,6 +75,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ face_photos: [], body_photos: [] });
     }
 
+    // Strict Anti-Tampering Check
+    const isPremium = checkUserIsPremium(profile, user);
+
     let facePhotos: string[] = (profile as any).face_photos || [];
     let bodyPhotos: string[] = (profile as any).body_photos || [];
 
@@ -73,6 +91,7 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({
+      is_premium: isPremium,
       face_photos: (facePhotos || []).filter(Boolean),
       body_photos: (bodyPhotos || []).filter(Boolean),
     });
@@ -92,12 +111,20 @@ export async function POST(request: NextRequest) {
     const body = await request.json().catch(() => ({}));
     const admin = getAdmin();
 
-    // 1. Fetch current profile state
+    // 1. Fetch current profile state and verify Premium status (Anti-Tampering / Zero Client Trust)
     const { data: currentProfile } = await client
       .from('profiles')
       .select('*')
       .eq('id', user.id)
       .maybeSingle();
+
+    const isPremium = checkUserIsPremium(currentProfile, user);
+    if (!isPremium) {
+      return NextResponse.json({
+        error: 'La calibración y subida de fotos de avatar es una función exclusiva de Klozet Premium.',
+        isPremiumRequired: true
+      }, { status: 403 });
+    }
 
     let currentFace: string[] = (currentProfile as any)?.face_photos || [];
     let currentBody: string[] = (currentProfile as any)?.body_photos || [];

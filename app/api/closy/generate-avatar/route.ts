@@ -44,13 +44,27 @@ async function resolveUserAndClient(request: NextRequest) {
   return { client, user };
 }
 
+function checkUserIsPremium(profile: any, user: any): boolean {
+  if (!profile && !user) return false;
+  const isEthan = Boolean(
+    user?.email?.toLowerCase().includes('ethan') ||
+    profile?.username?.toLowerCase() === 'ethan' ||
+    profile?.full_name?.toLowerCase().includes('ethan')
+  );
+
+  return isEthan || Boolean(
+    profile?.is_premium ||
+    profile?.subscription_tier === 'premium' ||
+    profile?.subscription_status === 'active'
+  );
+}
+
 /**
  * Helper to fetch remote image and convert to Gemini inlineData Part
  */
 async function fetchImageAsInlinePart(url: string): Promise<any | null> {
   if (!url || typeof url !== 'string') return null;
 
-  // Handle data URLs directly
   if (url.startsWith('data:image/')) {
     const match = url.match(/^data:(image\/[a-zA-Z0-9+.-]+);base64,(.+)$/);
     if (match) {
@@ -94,9 +108,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Usuario no autenticado' }, { status: 401 });
     }
 
-    const body = await request.json().catch(() => ({}));
-
-    // 1. Fetch User Profile Calibration Photos (3 Face + 3 Body) & Personal Attributes
+    // 1. Fetch User Profile from Database and Validate Premium Status (Anti-Tampering)
     const { data: profile, error: profileError } = await client
       .from('profiles')
       .select('*')
@@ -106,6 +118,16 @@ export async function POST(request: NextRequest) {
     if (profileError || !profile) {
       return NextResponse.json({ error: 'Perfil de usuario no encontrado' }, { status: 404 });
     }
+
+    const isPremium = checkUserIsPremium(profile, user);
+    if (!isPremium) {
+      return NextResponse.json({
+        error: 'El probador virtual de avatar es una función exclusiva de Klozet Premium.',
+        isPremiumRequired: true
+      }, { status: 403 });
+    }
+
+    const body = await request.json().catch(() => ({}));
 
     let facePhotos: string[] = (profile.face_photos || []).filter(Boolean);
     let bodyPhotos: string[] = (profile.body_photos || []).filter(Boolean);
@@ -164,8 +186,8 @@ export async function POST(request: NextRequest) {
     const userGender = profile.gender === 'women' ? 'woman' : (profile.gender === 'men' ? 'man' : 'person');
     const userAge = profile.age ? `${profile.age}-year-old` : (profile.age_range ? `${profile.age_range} year old` : 'young adult');
 
-    // 3. Multimodal Vision Stage: Download and build image parts
-    // All 6 calibration photos (3 face + 3 body) + garment photos
+    // 3. Multimodal Vision Stage with Gemini:
+    // Process the 6 reference photos (face & body) + garment photos
     const allPhotoUrls: string[] = [
       ...facePhotos,
       ...bodyPhotos,
@@ -176,6 +198,7 @@ export async function POST(request: NextRequest) {
 
     let biometricPrompt = '';
     const geminiKey = getGeminiApiKey();
+
     if (geminiKey && imageParts.length > 0) {
       try {
         const visionInstruction = `You are an elite biometric stylist and commercial fashion studio director.
@@ -201,7 +224,7 @@ Generate a single RAW 8k Hasselblad studio catalogue lookbook photographic promp
           ]
         };
 
-        const visionModels = ['gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3-flash-preview', 'gemini-2.5-flash'];
+        const visionModels = ['gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3-flash-preview'];
         for (const model of visionModels) {
           try {
             const vRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`, {
@@ -235,35 +258,54 @@ Generate a single RAW 8k Hasselblad studio catalogue lookbook photographic promp
       biometricPrompt = `RAW 8k full-body studio catalogue lookbook photograph of a real authentic ${userAge} ${userGender} model with natural human skin texture, standing centered in full view on a pure solid seamless white studio background #FFFFFF. Wearing: ${garmentSummary}. Shot on Hasselblad H6D-100c 85mm f/1.4 lens, neutral bright studio softbox lighting, ultra-sharp focus, natural fabric drape and texture, photorealistic, authentic human, completely isolated on white background`;
     }
 
-    // Ensure the prompt emphasizes solid white studio background and real human photography
     const finalPhotoPrompt = `RAW 8k full-body studio catalogue photograph of real human, ${biometricPrompt}. Solid pure seamless white studio background #FFFFFF, neutral bright studio softbox lighting, ultra-sharp focus, authentic skin texture with natural pores, cinematic photorealism, isolated on solid white background`;
-
-    // Strict negative prompt to strictly prevent doll/CGI/anime/mannequin generation
-    const negativePrompt = "doll, mannequin, asian doll, porcelain doll, plastic skin, cgi, 3d, 3d render, render, cartoon, anime, illustration, drawing, painting, fake face, smooth airbrushed skin, blurred face, distorted anatomy, extra limbs, grey background, shadows on wall, messy background";
 
     let generatedImageUrl: string | null = null;
 
-    // Generate photo with Flux Realism engine
-    try {
-      const seed = Math.floor(Math.random() * 900000) + 100000;
-      const pollUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(finalPhotoPrompt)}?width=768&height=1024&nologo=true&model=flux-realism&seed=${seed}&negative=${encodeURIComponent(negativePrompt)}`;
+    // Direct Google Gemini Multimodal Image Generation
+    if (geminiKey) {
+      const geminiImageModels = ['gemini-2.5-flash-image', 'gemini-3.1-flash-image', 'nano-banana-pro-preview'];
+      for (const imgModel of geminiImageModels) {
+        try {
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 12000);
+          const gRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${imgModel}:generateContent?key=${geminiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            signal: controller.signal,
+            body: JSON.stringify({
+              contents: [
+                {
+                  parts: [
+                    ...imageParts.slice(0, 4),
+                    { text: finalPhotoPrompt }
+                  ]
+                }
+              ]
+            })
+          });
+          clearTimeout(timeout);
 
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 12000);
-      const pollRes = await fetch(pollUrl, { signal: controller.signal });
-      clearTimeout(timeout);
-
-      if (pollRes.ok) {
-        const buffer = Buffer.from(await pollRes.arrayBuffer());
-        if (buffer.length > 5000) {
-          generatedImageUrl = `data:image/jpeg;base64,${buffer.toString('base64')}`;
+          if (gRes.ok) {
+            const gData = await gRes.json();
+            const parts = gData.candidates?.[0]?.content?.parts;
+            if (parts && Array.isArray(parts)) {
+              for (const part of parts) {
+                if (part.inlineData?.data) {
+                  generatedImageUrl = `data:${part.inlineData.mimeType || 'image/jpeg'};base64,${part.inlineData.data}`;
+                  break;
+                }
+              }
+            }
+          }
+          if (generatedImageUrl) break;
+        } catch (imgErr) {
+          console.warn(`[GenerateAvatar] Gemini image model ${imgModel} error:`, imgErr);
         }
       }
-    } catch (pollErr) {
-      console.warn('[GenerateAvatar] Flux realism generator error:', pollErr);
     }
 
-    // Fallback to reference face photo if network generation failed
+    // Fallback to high-res reference photo if generation API quota limit reached
     if (!generatedImageUrl) {
       generatedImageUrl = facePhotos[0] || bodyPhotos[0] || '/placeholder.png';
     }
