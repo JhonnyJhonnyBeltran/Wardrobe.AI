@@ -44,6 +44,48 @@ async function resolveUserAndClient(request: NextRequest) {
   return { client, user };
 }
 
+/**
+ * Helper to fetch remote image and convert to Gemini inlineData Part
+ */
+async function fetchImageAsInlinePart(url: string): Promise<any | null> {
+  if (!url || typeof url !== 'string') return null;
+
+  // Handle data URLs directly
+  if (url.startsWith('data:image/')) {
+    const match = url.match(/^data:(image\/[a-zA-Z0-9+.-]+);base64,(.+)$/);
+    if (match) {
+      return {
+        inlineData: {
+          mimeType: match[1].includes('png') ? 'image/png' : 'image/jpeg',
+          data: match[2]
+        }
+      };
+    }
+  }
+
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 6000);
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeout);
+
+    if (!res.ok) return null;
+    const arrayBuffer = await res.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    const mime = res.headers.get('content-type') || 'image/jpeg';
+
+    return {
+      inlineData: {
+        mimeType: mime.includes('png') ? 'image/png' : 'image/jpeg',
+        data: buffer.toString('base64')
+      }
+    };
+  } catch (err) {
+    console.warn('[GenerateAvatar] Error downloading image part:', url, err);
+    return null;
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { client, user } = await resolveUserAndClient(request);
@@ -95,7 +137,7 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // 2. Fetch Outfit / Garment details
+    // 2. Fetch Outfit / Garment details and their photos
     let garments: any[] = [];
     const itemIds: string[] = body.itemIds || [];
 
@@ -115,97 +157,116 @@ export async function POST(request: NextRequest) {
       garments = body.items;
     }
 
-    // Categorize garments for anatomical realism
-    const tops = garments.filter(g => ['top', 'shirt', 't-shirt', 'camiseta', 'camisa', 'sweater', 'jersey', 'hoodie', 'sudadera'].includes((g.category || '').toLowerCase()));
-    const bottoms = garments.filter(g => ['bottom', 'pants', 'pantalones', 'pantalon', 'jeans', 'shorts', 'skirt', 'falda'].includes((g.category || '').toLowerCase()));
-    const shoes = garments.filter(g => ['shoes', 'zapatos', 'zapatillas', 'sneakers', 'boots', 'botas', 'calzado'].includes((g.category || '').toLowerCase()));
-    const jackets = garments.filter(g => ['jacket', 'coat', 'chaqueta', 'cazadora', 'abrigo', 'outerwear'].includes((g.category || '').toLowerCase()));
-    const accessories = garments.filter(g => ['accessories', 'accesorio', 'bag', 'bolso', 'hat', 'gorra', 'belt', 'cinturon'].includes((g.category || '').toLowerCase()));
-
-    const formatGarmentList = (list: any[]) => list.map(g => `${g.name || g.category}${g.color ? ` (${g.color})` : ''}${g.fabric ? ` [${g.fabric}]` : ''}`).join(', ');
-
-    const garmentSections: string[] = [];
-    if (tops.length > 0) garmentSections.push(`Top: ${formatGarmentList(tops)}`);
-    if (bottoms.length > 0) garmentSections.push(`Bottom: ${formatGarmentList(bottoms)}`);
-    if (shoes.length > 0) garmentSections.push(`Shoes: ${formatGarmentList(shoes)}`);
-    if (jackets.length > 0) garmentSections.push(`Outerwear/Jacket: ${formatGarmentList(jackets)}`);
-    if (accessories.length > 0) garmentSections.push(`Accessories: ${formatGarmentList(accessories)}`);
-
-    const outfitDetails = garmentSections.length > 0 
-      ? garmentSections.join(' | ') 
-      : garments.map(g => `${g.name || g.category}${g.color ? ` in ${g.color}` : ''}`).join(', ');
-
     const outfitSummary = garments.length > 0
       ? garments.map(g => g.name || g.category).join(' + ')
       : body.outfitName || 'Look Kloe';
 
     const userGender = profile.gender === 'women' ? 'woman' : (profile.gender === 'men' ? 'man' : 'person');
     const userAge = profile.age ? `${profile.age}-year-old` : (profile.age_range ? `${profile.age_range} year old` : 'young adult');
-    const userBody = profile.body_shape ? `with ${profile.body_shape} body proportions` : 'with natural bodily proportions';
-    const userSkin = profile.skin_tone ? `, ${profile.skin_tone} skin tone` : '';
-    const userHair = profile.hair_type ? `, ${profile.hair_type} hair` : '';
 
-    // Prompt taking facial features, bodily proportions, age, sex/gender, outfit and pure solid white studio background
-    const studioPrompt = `Hyperrealistic, ultra-detailed 8k full-body studio catalogue photoshoot of a real ${userAge} ${userGender} model with natural look, matching the exact facial features, facial structure${userSkin}${userHair}, and ${userBody} of the reference person. The person is standing centered in full view in an editorial fashion pose looking at the camera, wearing this exact complete outfit: ${outfitDetails}. Clean, solid pure white studio background (#FFFFFF), neutral bright studio softbox lighting, 8k resolution, photorealistic, sharp focus, natural skin texture, realistic fabric folds and textures, high-end fashion catalog photography, zero background clutter, full body visible from head to toe, completely isolated on solid white background.`;
+    // 3. Multimodal Vision Stage: Download and build image parts
+    // All 6 calibration photos (3 face + 3 body) + garment photos
+    const allPhotoUrls: string[] = [
+      ...facePhotos,
+      ...bodyPhotos,
+      ...garments.map(g => g.image_url || g.imageUrl || g.original_image_url || g.original_image).filter(Boolean)
+    ].filter(Boolean);
+
+    const imageParts = (await Promise.all(allPhotoUrls.map(url => fetchImageAsInlinePart(url)))).filter(Boolean);
+
+    let biometricPrompt = '';
+    const geminiKey = getGeminiApiKey();
+
+    if (geminiKey && imageParts.length > 0) {
+      try {
+        const visionInstruction = `You are a world-class biometric stylist and high-end fashion catalog photographer.
+You are provided with:
+- Reference photos of the real human user (face photos and body photos).
+- Real photographs of the specific wardrobe clothing items selected for this look (${garments.map(g => g.name || g.category).join(', ')}).
+
+Your task:
+Carefully analyze all reference images of the person and the garments.
+Extract and describe with extreme photorealistic precision:
+1. Exact biometric facial features of this real person: eye shape and color, eyebrow arch and density, nose bridge and tip shape, lip fullness and shape, cheekbones and jawline structure, exact natural skin tone and complexion, facial hair / stubble, and hairstyle/hair color.
+2. Exact body build and proportions: shoulder width, chest, waist, and silhouette.
+3. The exact clothing items from their attached photos: colors, fabrics, textures, logos, layering, and realistic fit on this body.
+
+Return ONLY a single, highly-detailed English prompt for an 8k RAW Hasselblad studio fashion lookbook photoshoot of this real person on a seamless solid pure white studio background #FFFFFF with professional softbox lighting. Do not add conversational text or markdown titles.`;
+
+        const visionPayload = {
+          contents: [
+            {
+              parts: [
+                ...imageParts,
+                { text: visionInstruction }
+              ]
+            }
+          ]
+        };
+
+        const visionModels = ['gemini-3.6-flash', 'gemini-3.5-flash', 'gemini-3-flash-preview', 'gemini-2.5-flash'];
+        for (const model of visionModels) {
+          try {
+            const vRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(visionPayload)
+            });
+
+            if (vRes.ok) {
+              const vData = await vRes.json();
+              const textOutput = vData.candidates?.[0]?.content?.parts?.[0]?.text;
+              if (textOutput && textOutput.trim().length > 50) {
+                biometricPrompt = textOutput.trim();
+                break;
+              }
+            }
+          } catch (mErr) {
+            console.warn(`[GenerateAvatar] Vision model ${model} error:`, mErr);
+          }
+        }
+      } catch (visionErr) {
+        console.warn('[GenerateAvatar] Vision analysis error:', visionErr);
+      }
+    }
+
+    // Fallback prompt if vision text extraction was unavailable
+    if (!biometricPrompt) {
+      const garmentSummary = garments.length > 0
+        ? garments.map(g => `${g.name || g.category}${g.color ? ` in ${g.color}` : ''}${g.fabric ? ` (${g.fabric})` : ''}`).join(', ')
+        : 'stylish modern casual outfit';
+      biometricPrompt = `RAW 8k full-body studio catalogue lookbook photograph of a real authentic ${userAge} ${userGender} model with natural human skin texture, standing centered in full view on a pure solid seamless white studio background #FFFFFF. Wearing: ${garmentSummary}. Shot on Hasselblad H6D-100c 85mm f/1.4 lens, neutral bright studio softbox lighting, ultra-sharp focus, natural fabric drape and texture, photorealistic, authentic human, completely isolated on white background`;
+    }
+
+    // Ensure the prompt emphasizes solid white studio background and real human photography
+    const finalPhotoPrompt = `RAW 8k full-body studio catalogue photograph of real human, ${biometricPrompt}. Solid pure seamless white studio background #FFFFFF, neutral bright studio softbox lighting, ultra-sharp focus, authentic skin texture with natural pores, cinematic photorealism, isolated on solid white background`;
+
+    // Strict negative prompt to strictly prevent doll/CGI/anime/mannequin generation
+    const negativePrompt = "doll, mannequin, asian doll, porcelain doll, plastic skin, cgi, 3d, 3d render, render, cartoon, anime, illustration, drawing, painting, fake face, smooth airbrushed skin, blurred face, distorted anatomy, extra limbs, grey background, shadows on wall, messy background";
 
     let generatedImageUrl: string | null = null;
 
-    // Strategy 1: Google Imagen 3 via Gemini API Key
-    const geminiKey = getGeminiApiKey();
-    if (geminiKey) {
-      try {
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 9000);
-        const imagenEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${geminiKey}`;
-        const res = await fetch(imagenEndpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          signal: controller.signal,
-          body: JSON.stringify({
-            instances: [{ prompt: studioPrompt }],
-            parameters: {
-              sampleCount: 1,
-              aspectRatio: "3:4"
-            }
-          })
-        });
-        clearTimeout(timeout);
+    // Generate photo with Flux Realism engine
+    try {
+      const seed = Math.floor(Math.random() * 900000) + 100000;
+      const pollUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(finalPhotoPrompt)}?width=768&height=1024&nologo=true&model=flux-realism&seed=${seed}&negative=${encodeURIComponent(negativePrompt)}`;
 
-        if (res.ok) {
-          const data = await res.json();
-          const base64Bytes = data?.predictions?.[0]?.bytesBase64Encoded;
-          if (base64Bytes) {
-            generatedImageUrl = `data:image/jpeg;base64,${base64Bytes}`;
-          }
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 12000);
+      const pollRes = await fetch(pollUrl, { signal: controller.signal });
+      clearTimeout(timeout);
+
+      if (pollRes.ok) {
+        const buffer = Buffer.from(await pollRes.arrayBuffer());
+        if (buffer.length > 5000) {
+          generatedImageUrl = `data:image/jpeg;base64,${buffer.toString('base64')}`;
         }
-      } catch (imagenErr) {
-        console.warn('[GenerateAvatar] Imagen 3 attempt error:', imagenErr);
       }
+    } catch (pollErr) {
+      console.warn('[GenerateAvatar] Flux realism generator error:', pollErr);
     }
 
-    // Strategy 2: Fast & High Quality Pollinations Flux Model
-    if (!generatedImageUrl) {
-      try {
-        const seed = Math.floor(Math.random() * 900000) + 100000;
-        const pollUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(studioPrompt)}?width=768&height=1024&nologo=true&model=flux&seed=${seed}`;
-        
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 8000);
-        const pollRes = await fetch(pollUrl, { signal: controller.signal });
-        clearTimeout(timeout);
-
-        if (pollRes.ok) {
-          const buffer = Buffer.from(await pollRes.arrayBuffer());
-          if (buffer.length > 5000) {
-            generatedImageUrl = `data:image/jpeg;base64,${buffer.toString('base64')}`;
-          }
-        }
-      } catch (pollErr) {
-        console.warn('[GenerateAvatar] Pollinations fallback error:', pollErr);
-      }
-    }
-
-    // Final Fallback: Calibrated reference photo if generation service unavailable
+    // Fallback to reference face photo if network generation failed
     if (!generatedImageUrl) {
       generatedImageUrl = facePhotos[0] || bodyPhotos[0] || '/placeholder.png';
     }
@@ -214,10 +275,11 @@ export async function POST(request: NextRequest) {
       success: true,
       avatar_image_url: generatedImageUrl,
       outfit_summary: outfitSummary,
-      studio_prompt: studioPrompt,
+      studio_prompt: finalPhotoPrompt,
       background: 'solid_white',
       face_photos_used: facePhotos.length,
       body_photos_used: bodyPhotos.length,
+      garment_photos_used: garments.length,
       message: 'Look probado con éxito en tu avatar virtual sobre fondo blanco de estudio.'
     });
 

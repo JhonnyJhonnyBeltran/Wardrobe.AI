@@ -951,8 +951,10 @@ En cada conversación, el backend alimenta a CloSy con:
   - Las 3 fotos de rostro y 3 fotos de cuerpo se procesan y suben directamente al bucket `avatars` mediante el Service Role de Supabase en backend, garantizando que queden permanentemente almacenadas tanto en las columnas `face_photos`/`body_photos` como en el JSONB de respaldo, accesibles sin pérdida desde cualquier dispositivo.
 - **Probador Virtual Directo en el Chat con Fotografía de Estudio sobre Fondo Blanco**:
   - **Cuadro Integrado en el Mensaje**: Al pulsar *"Probar look en mi avatar digital"* en una tarjeta de outfit, se despliega en el mismo chat un marco con fondo blanco de estudio y animación de carga (*"Generando foto hiperrealista en tu avatar... Kloe está adaptando las prendas a tus facciones faciales y proporciones corporales sobre fondo blanco de estudio..."*).
-  - **Generación Hiperrealista de Estudio (`/api/closy/generate-avatar`)**:
-    - La IA toma las facciones faciales de las fotos de referencia, la estructura corporal, la edad y el sexo del perfil para generar una fotografía de catálogo de moda en 8k de cuerpo entero posando con el look exacto sobre un fondo blanco puro de estudio (#FFFFFF) con iluminación softbox neutral.
+  - **Pipeline Multimodal con Imágenes de Entrada Reales (`/api/closy/generate-avatar`)**:
+    - **Entrada de Imágenes Múltiples**: El backend descarga y procesa como `inlineData` Base64 tanto las **6 fotos de calibración del usuario** (3 de rostro y 3 de cuerpo entero) como las **fotografías reales de las prendas del outfit**.
+    - **Análisis Biométrico de Precisión por Gemini Vision**: La IA analiza visualmente la anatomía real de la persona (facciones faciales exactas, ojos, cejas, nariz, labios, tono de piel, corte y peinado, proporciones corporales y silueta) junto con los tejidos, colores, cortes y detalles de las prendas reales.
+    - **Generación Fotográfica Realista (Flux Realism)**: Traduce el análisis en una fotografía RAW 8k de estudio editorial de alta fidelidad, con prompts negativos estrictos contra muñecas, maniquíes, CGI, anime y pieles de plástico, asegurando un acabado fotográfico auténtico sobre fondo blanco puro (#FFFFFF).
   - **Ampliación Lightbox y Estructura Completa**:
     - Al pulsar sobre la foto generada, se abre un visualizador Lightbox en pantalla completa para inspeccionar todos los detalles.
     - Justo debajo de la foto se muestra el desglose del outfit con sus prendas interactivas (`GarmentThumbnail`) y el botón para *"Montar y editar en el lienzo"* (`/create?itemIds=...`).
