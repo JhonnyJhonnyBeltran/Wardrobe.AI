@@ -1042,5 +1042,10 @@ En cada conversación, el backend alimenta a CloSy con:
   - Si un usuario del plan gratuito pulsa el botón de cámara en la cabecera del chat (`/closet/kloe`) o dentro del modal [`AvatarCalibrationModal.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/components/AvatarCalibrationModal.tsx), el sistema activa de inmediato el modal de suscripción [`KloeProModal`](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/components/KloeProModal.tsx).
   - En backend ([`/api/user/avatar-calibration`](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/app/api/user/avatar-calibration/route.ts)), se valida de forma atómica en base de datos la suscripción activa (`is_premium = true`), impidiendo cualquier subida o manipulación no autorizada.
 
-
-
+### 84. Maquetación Panorámica y Contenedor Central al 70% en Detalle de Publicación (`/post/[id]`) (Septiembre 2026)
+- **Cabecera Panorámica de Borde a Borde (`w-full`)**:
+  - El elemento `<header>` en [`app/(app)/post/[id]/page.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/app/%28app%29/post/%5Bid%5D/page.tsx) ahora abarca el 100% del ancho del viewport (`w-full apple-glass-bar border-b`), permitiendo que el fondo translúcido y la línea divisoria se extiendan de extremo a extremo sin cortes.
+  - El contenido interno de la cabecera (botón volver hacia atrás, datos de autor en móvil y acciones) se alinea dentro de un contenedor centrado al 70% del ancho de la pantalla (`w-full md:w-[70%] max-w-[1400px] mx-auto`).
+- **Contenedor Principal Centrado al 70%**:
+  - El área principal que alberga el carrusel de fotografías del post y la columna lateral de comentarios, interacción y prendas se enmarca en un envoltorio de ancho completo (`w-full flex-1 flex justify-center`) con su contenedor principal centrado en el 70% del ancho en pantallas medianas y grandes (`w-full md:w-[70%] max-w-[1400px] mx-auto flex flex-col md:flex-row`).
+  - La columna lateral de detalles y comentarios se adaptó de forma equilibrada a `md:w-[380px] lg:w-[420px]` con el carrusel en `md:flex-1`, proporcionando una experiencia visual proporcionada y limpia sin desbordamientos ni scroll horizontal.
