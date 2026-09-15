@@ -11,6 +11,7 @@ import { useTranslation } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase/client';
 import * as followService from '@/lib/services/followService';
 import OutfitCard from '@/components/OutfitCard';
+import PostCard, { type Post } from '@/components/Feed/PostCard';
 import AvatarModal from '@/components/AvatarModal';
 import { SkeletonProfile } from '@/components';
 import Link from 'next/link';
@@ -558,28 +559,27 @@ export default function PublicProfilePage() {
                     <h3 className="text-lg font-semibold mb-2">Aún no hay publicaciones</h3>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-3 gap-1.5 md:gap-3 p-1.5 md:p-3">
-                    {posts.map((post) => (
-                      <motion.div
-                        key={post.id}
-                        whileHover={{
-                          scale: 1.03,
-                          transition: { duration: 0.2 }
-                        }}
-                        className="relative aspect-square overflow-hidden rounded-[16px] md:rounded-[20px] bg-[var(--card-bg)] shadow-sm border border-[var(--border-color)] cursor-pointer z-0 hover:z-40 hover:shadow-xl transition-shadow duration-300"
-                      >
-                        <Link
-                          href={`/post/${post.id}`}
-                          className="block w-full h-full"
-                        >
-                          {post.image_url ? (
-                            <img src={post.image_url} alt="Post" className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-4xl">👗</div>
-                          )}
-                        </Link>
-                      </motion.div>
-                    ))}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 gap-3 md:gap-4 p-2 md:p-4">
+                    {posts.map((post) => {
+                      const postCardData: Post = {
+                        id: post.id,
+                        imageUrl: post.image_url || post.imageUrl,
+                        title: post.caption || post.title || '',
+                        author: {
+                          name: profile.username || profile.full_name || 'usuario',
+                          avatar: profile.avatar_url || ''
+                        },
+                        likes: post.likes_count || post.likes || 0,
+                        comments: post.comments_count || post.comments || 0,
+                        isLiked: post.isLiked ?? false,
+                        isSaved: post.isSaved ?? false
+                      };
+                      return (
+                        <div key={post.id} className="w-full">
+                          <PostCard post={postCardData} />
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </motion.div>

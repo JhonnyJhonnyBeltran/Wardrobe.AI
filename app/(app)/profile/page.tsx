@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 
 import { Avatar, Button as UiButton, OutfitCard, EmptyState, Skeleton, SkeletonProfile, SkeletonProfileGrid, DiscoveredStyleBanner, AvatarModal, PullToRefresh } from '@/components';
+import PostCard, { type Post } from '@/components/Feed/PostCard';
 import FolderPreview from '@/components/FolderPreview';
 import { useUiStore } from '@/store/uiStore';
 
@@ -480,26 +481,29 @@ export default function ProfilePage() {
                     fullHeight={false}
                   />
                 ) : (
-                  <div className="grid grid-cols-3 gap-1.5 md:gap-3 p-1.5 md:p-3">
-                    {posts.map((post) => (
-                      <motion.div
-                        key={post.id}
-                        whileHover={{
-                          scale: 1.03,
-                          transition: { duration: 0.2 }
-                        }}
-                        className="relative aspect-square overflow-hidden rounded-[16px] md:rounded-[20px] bg-[var(--card-bg)] shadow-sm border border-[var(--border-color)] cursor-pointer z-0 hover:z-40 hover:shadow-xl transition-shadow duration-300"
-                      >
-                        <Link
-                          href={`/post/${post.id}`}
-                          className="block w-full h-full"
-                        >
-                          <img src={post.image_url} alt="Post" className="w-full h-full object-cover" />
-                        </Link>
-                      </motion.div>
-                    ))}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 gap-3 md:gap-4 p-2 md:p-4">
+                    {posts.map((post) => {
+                      const postCardData: Post = {
+                        id: post.id,
+                        imageUrl: post.image_url || post.imageUrl,
+                        title: post.caption || post.title || '',
+                        author: {
+                          name: user?.username || user?.name || 'usuario',
+                          avatar: user?.avatar || ''
+                        },
+                        likes: post.likes_count || post.likes || 0,
+                        comments: post.comments_count || post.comments || 0,
+                        isLiked: post.isLiked ?? false,
+                        isSaved: post.isSaved ?? false
+                      };
+                      return (
+                        <div key={post.id} className="w-full">
+                          <PostCard post={postCardData} />
+                        </div>
+                      );
+                    })}
                     {postsHasMore && (
-                      <div ref={postsObserverRef} className="col-span-3">
+                      <div ref={postsObserverRef} className="col-span-2 sm:col-span-3 md:col-span-3">
                         {loadingMorePosts && <SkeletonProfileGrid count={3} />}
                       </div>
                     )}
@@ -599,29 +603,29 @@ export default function ProfilePage() {
                       fullHeight={false}
                     />
                   ) : (
-                    <div className="grid grid-cols-3 gap-1.5 md:gap-3">
-                      {savedPosts.map((post) => (
-                        <motion.div
-                          key={post.id}
-                          whileHover={{
-                            scale: 1.03,
-                            transition: { duration: 0.2 }
-                          }}
-                          className="relative aspect-square overflow-hidden rounded-[16px] md:rounded-[20px] bg-[var(--card-bg)] shadow-sm border border-[var(--border-color)] cursor-pointer z-0 hover:z-40 hover:shadow-xl transition-shadow duration-300 group"
-                        >
-                          <Link
-                            href={`/post/${post.id}`}
-                            className="block w-full h-full"
-                          >
-                            <img src={post.image_url} alt="Saved Post" className="w-full h-full object-cover" />
-                            <div className="absolute top-2 right-2 bg-black/50 p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Bookmark className="w-3.5 h-3.5 text-white fill-current" />
-                            </div>
-                          </Link>
-                        </motion.div>
-                      ))}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 gap-3 md:gap-4">
+                      {savedPosts.map((post) => {
+                        const postCardData: Post = {
+                          id: post.id,
+                          imageUrl: post.image_url || post.imageUrl,
+                          title: post.caption || post.title || '',
+                          author: {
+                            name: post.profiles?.username || post.author?.name || 'usuario',
+                            avatar: post.profiles?.avatar_url || post.author?.avatar || ''
+                          },
+                          likes: post.likes_count || post.likes || 0,
+                          comments: post.comments_count || post.comments || 0,
+                          isLiked: post.isLiked ?? false,
+                          isSaved: true
+                        };
+                        return (
+                          <div key={post.id || post.save_id} className="w-full">
+                            <PostCard post={postCardData} />
+                          </div>
+                        );
+                      })}
                       {savedHasMore && (
-                        <div ref={savedObserverRef} className="col-span-3">
+                        <div ref={savedObserverRef} className="col-span-2 sm:col-span-3 md:col-span-3">
                           {loadingMoreSaved && <SkeletonProfileGrid count={3} />}
                         </div>
                       )}

@@ -1054,9 +1054,10 @@ En cada conversación, el backend alimenta a CloSy con:
   - Las flechas izquierda y derecha solo se muestran cuando existe una diapositiva anterior (`activeSlide > 0`) o siguiente (`activeSlide < slides.length - 1`).
   - Se eliminó el fondo circular opaco/semitransparente: ahora son iconos vectoriales limpios con sombreado difuso (`drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]`), mejorando la visibilidad sobre cualquier fondo de imagen sin recargar la interfaz.
 
-### 85. Unificación del Efecto Hover y Estética de Tarjeta de Outfits a Publicaciones en Perfil (`/profile` y `/profile/[id]`) (Septiembre 2026)
-- **Efecto Hover Suave y Aceleración por GPU (`whileHover`)**:
-  - Las publicaciones en las pestañas de publicaciones y guardados de [`app/(app)/profile/page.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/app/%28app%29/profile/page.tsx) y [`app/(app)/profile/[id]/page.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/app/%28app%29/profile/%5Bid%5D/page.tsx) ahora utilizan la misma animación fluida que `OutfitCard` (`motion.div` con `whileHover={{ scale: 1.03, transition: { duration: 0.2 } }}`).
-- **Diseño de Tarjeta Homogéneo**:
-  - Se añadieron esquinas redondeadas continuas (`rounded-[16px] md:rounded-[20px]`), bordes sutiles (`border border-[var(--border-color)]`), elevación con sombra suave en reposo y sombra profunda al interactuar (`shadow-sm hover:shadow-xl hover:z-40`).
-  - La cuadrícula de 3 columnas (`grid-cols-3`) ahora cuenta con separación proporcionada (`gap-1.5 md:gap-3 p-1.5 md:p-3`), sincronizada con el componente esqueleto `SkeletonProfileGrid`.
+### 85. Formato de Publicaciones Idéntico a Feed y Search en Perfil (`/profile` y `/profile/[id]`) (Septiembre 2026)
+- **Integración de `PostCard` en Cuadrícula de Perfil**:
+  - Las publicaciones de las pestañas de publicaciones y guardados en [`app/(app)/profile/page.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/app/%28app%29/profile/page.tsx) y [`app/(app)/profile/[id]/page.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/app/%28app%29/profile/%5Bid%5D/page.tsx) ahora renderizan el componente oficial [`PostCard`](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/components/Feed/PostCard.tsx), compartiendo la misma experiencia visual que el Feed y el Buscador (avatares del autor, botón flotante de guardado rápido en escritorio, degradado inferior y previsualización por pulsación larga en móvil `PostPreviewModal`).
+- **Cuadrícula Limitada a 3 Elementos por Fila**:
+  - Se estructuró la disposición con `grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 gap-3 md:gap-4 p-2 md:p-4`, garantizando un máximo estricto de 3 columnas en pantallas medianas y de escritorio con separación limpia y uniforme.
+- **Sincronización del Esqueleto de Carga**:
+  - `SkeletonProfileGrid` en [`components/Skeleton.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/components/Skeleton.tsx) se adaptó con la misma proporción `aspect-[4/5]` y bordes `rounded-[22px]`.

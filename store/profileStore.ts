@@ -151,7 +151,7 @@ export const useProfileStore = create<ProfileState>()(
           ] = await Promise.allSettled([
             supabase
               .from('posts')
-              .select('id, image_url, created_at')
+              .select('id, image_url, caption, created_at, likes_count, comments_count, user_id')
               .eq('user_id', userId)
               .order('created_at', { ascending: false })
               .range(0, PROFILE_POSTS_PER_PAGE - 1),
@@ -167,7 +167,17 @@ export const useProfileStore = create<ProfileState>()(
                 posts (
                   id,
                   image_url,
-                  created_at
+                  caption,
+                  created_at,
+                  likes_count,
+                  comments_count,
+                  user_id,
+                  profiles (
+                    id,
+                    username,
+                    full_name,
+                    avatar_url
+                  )
                 )
               `)
               .eq('user_id', userId)
@@ -214,7 +224,6 @@ export const useProfileStore = create<ProfileState>()(
             lastFetchedUserId: userId,
             lastFetchedAt: Date.now(),
           });
-
         } catch (error) {
           console.error('[ProfileStore] Error fetching profile data:', error);
           set({ isLoading: false });
@@ -233,7 +242,7 @@ export const useProfileStore = create<ProfileState>()(
         try {
           const { data } = await supabase
             .from('posts')
-            .select('id, image_url, created_at')
+            .select('id, image_url, caption, created_at, likes_count, comments_count, user_id')
             .eq('user_id', userId)
             .order('created_at', { ascending: false })
             .range(from, to);
@@ -287,7 +296,17 @@ export const useProfileStore = create<ProfileState>()(
               posts (
                 id,
                 image_url,
-                created_at
+                caption,
+                created_at,
+                likes_count,
+                comments_count,
+                user_id,
+                profiles (
+                  id,
+                  username,
+                  full_name,
+                  avatar_url
+                )
               )
             `)
             .eq('user_id', userId)
