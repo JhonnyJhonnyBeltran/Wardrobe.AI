@@ -1061,3 +1061,21 @@ En cada conversación, el backend alimenta a CloSy con:
   - Se estructuró la disposición con `grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 gap-3 md:gap-4 p-2 md:p-4`, garantizando un máximo estricto de 3 columnas en pantallas medianas y de escritorio con separación limpia y uniforme.
 - **Sincronización del Esqueleto de Carga**:
   - `SkeletonProfileGrid` en [`components/Skeleton.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/components/Skeleton.tsx) se adaptó con la misma proporción `aspect-[4/5]` y bordes `rounded-[22px]`.
+
+### 86. Eliminación Definitiva y Atómica de Conversaciones en Mensajería (`/messages`, `/messages/[id]`, `/api/messages/conversation`) (Septiembre 2026)
+- **Causa Raíz del Error al Eliminar Conversaciones**:
+  - Las páginas de mensajes intentaban invocar la función RPC `delete_conversation_for_user`, la cual no existía en el esquema de Supabase (`404 PGRST202`). Al fallar el RPC, los mensajes no eran borrados en la base de datos de Supabase.
+  - Además, la barra lateral en versión escritorio (`app/(app)/messages/layout.tsx`) no escuchaba la eliminación realizada desde el chat activo ni tenía conectado el callback de borrado en `ConversationList`, manteniendo la conversación visible con el último mensaje.
+- **Arquitectura de Eliminación Atómica en Servidor (`/api/messages/conversation` & `/api/messages`)**:
+  - Creado endpoint con autenticación por cookies de sesión y Bearer token (`resolveAuthUser` y `supabaseAdmin`):
+    1. Resuelve identificadores tanto por UUID como por nombre de usuario (`@username`).
+    2. Elimina todas las filas de mensajes bidireccionales entre el usuario autenticado y el interlocutor en `public.messages`.
+    3. Elimina en cascada los registros de `conversation_participants` y `conversations` asociados.
+    4. Purga cualquier notificación de tipo `'message'` pendiente entre ambos usuarios.
+- **Sincronización Inmediata Multi-Componente (`lib/services/messageService.ts`)**:
+  - Centralizada la función `deleteConversationForUser(partnerId, currentUserId)`:
+    1. Actualiza `localStorage` (`deleted_chats`) con timestamp del servidor.
+    2. Actualiza el store global `useMessageStore.getState().removeConversation(partnerId)` y sincroniza conteos no leídos.
+    3. Emite el evento personalizado global `klozet:conversation_deleted` en `window`.
+    4. `MessagesLayout` (`layout.tsx`), `MessagesPage` (`page.tsx`) y `ConversationList` sincronizan instantáneamente el estado eliminando la conversación de la bandeja sin parpadeos y redirigiendo limpiamente a `/messages`.
+

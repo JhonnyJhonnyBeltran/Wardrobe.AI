@@ -19,6 +19,7 @@ interface ConversationListProps {
     }>;
     activeConversationId?: string;
     onConversationClick: (id: string) => void;
+    onDeleteConversation?: (id: string) => void;
     onNewMessage?: () => void;
     loading?: boolean;
 }
@@ -27,6 +28,7 @@ export function ConversationList({
     conversations,
     activeConversationId,
     onConversationClick,
+    onDeleteConversation,
     onNewMessage,
     loading = false
 }: ConversationListProps) {
@@ -89,7 +91,7 @@ export function ConversationList({
                             currentUserId={user?.id || ''}
                             onClick={() => onConversationClick(conv.id)}
                             onReport={() => console.log('Report', conv.id)}
-                            onDelete={() => console.log('Delete', conv.id)}
+                            onDelete={() => onDeleteConversation?.(conv.id)}
                         />
                     </div>
                 );

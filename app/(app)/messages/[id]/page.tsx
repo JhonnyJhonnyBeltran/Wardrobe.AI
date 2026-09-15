@@ -11,6 +11,7 @@ import Link from 'next/link';
 import { useMessageStore } from '@/store/messageStore';
 import { useUiStore } from '@/store/uiStore';
 import { realtimeManager } from '@/lib/realtime/RealtimeManager';
+import { deleteConversationForUser } from '@/lib/services/messageService';
 
 // Types
 interface Message {
@@ -426,37 +427,16 @@ export default function ChatPage() {
                                 onClick={async () => {
                                     setShowMenu(false);
                                     setLoading(true);
-                                    try {
-                                        // Local Storage logic for hiding conversation: store the current latest server timestamp to prevent clock skew
-                                        const deletedChatsStr = localStorage.getItem('deleted_chats');
-                                        const deletedChats = deletedChatsStr ? JSON.parse(deletedChatsStr) : {};
-                                        
-                                        // Encontramos el tiempo del último mensaje en la UI para usar tiempo de servidor y evitar desfase de relojes locales
-                                        const latestMsg = messages.length > 0 ? messages[messages.length - 1] : null;
-                                        const timestampToSave = latestMsg ? new Date(latestMsg.created_at).getTime() + 1000 : Date.now();
-                                        
-                                        const partnerId = resolvedTargetId || targetUser?.id || rawTargetId;
-                                        if (partnerId) {
-                                            deletedChats[partnerId] = timestampToSave;
-                                            localStorage.setItem('deleted_chats', JSON.stringify(deletedChats));
-
-                                            // Call the rpc function to delete conversation logically for this user
-                                            const { error } = await (supabase.rpc as any)('delete_conversation_for_user', {
-                                                target_user_id: partnerId
-                                            });
-                                            
-                                            if (error) {
-                                                console.warn('RPC delete_conversation_for_user not available or failed:', error);
-                                            }
-                                        }
-
-                                        router.push('/messages');
-                                    } catch (e) {
-                                        console.error(e);
-                                        setLoading(false);
+                                    const partnerId = resolvedTargetId || targetUser?.id || rawTargetId;
+                                    
+                                    if (partnerId && user?.id) {
+                                        setMessages([]);
+                                        await deleteConversationForUser(partnerId, user.id);
                                     }
+
+                                    router.push('/messages');
                                 }}
-                                className="w-full text-center px-4 py-3 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors font-medium"
+                                className="w-full text-center px-4 py-3 text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors font-medium cursor-pointer"
                             >
                                 Eliminar conversación
                             </button>

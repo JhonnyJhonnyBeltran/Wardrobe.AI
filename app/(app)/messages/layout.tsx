@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { Search, Edit } from 'lucide-react';
 import { ConversationList } from '@/components/Messages/ConversationList';
 import { NewMessageModal } from '@/components/Messages/NewMessageModal';
 import { useUser } from '@/store/userStore';
 import { supabase } from '@/lib/supabase/client';
+import { deleteConversationForUser } from '@/lib/services/messageService';
 
 interface Conversation {
     id: string;
@@ -40,6 +41,34 @@ export default function MessagesLayout({ children }: { children: React.ReactNode
     const activeConversationId = pathname.startsWith('/messages/') && pathname !== '/messages'
         ? pathname.split('/messages/')[1]
         : null;
+
+    const handleDeleteConversation = useCallback(async (targetPartnerId: string) => {
+        if (!user?.id || !targetPartnerId) return;
+
+        // Optimistically remove from state immediately
+        setConversations(prev => prev.filter(c => c.id !== targetPartnerId && c.other_user?.id !== targetPartnerId));
+
+        // If the active chat was deleted, navigate back to /messages
+        if (activeConversationId === targetPartnerId || activeConversationId?.toLowerCase() === targetPartnerId.toLowerCase()) {
+            router.push('/messages');
+        }
+
+        // Perform server & storage deletion
+        await deleteConversationForUser(targetPartnerId, user.id);
+    }, [user?.id, activeConversationId, router]);
+
+    // Listen for conversation deleted events from anywhere (e.g. ChatPage or mobile)
+    useEffect(() => {
+        const handleDeletedEvent = (e: any) => {
+            const partnerId = e.detail?.partnerId;
+            if (partnerId) {
+                setConversations(prev => prev.filter(c => c.id !== partnerId && c.other_user?.id !== partnerId));
+            }
+        };
+
+        window.addEventListener('klozet:conversation_deleted', handleDeletedEvent);
+        return () => window.removeEventListener('klozet:conversation_deleted', handleDeletedEvent);
+    }, []);
 
     useEffect(() => {
         const fetchConversations = async () => {
@@ -234,6 +263,7 @@ export default function MessagesLayout({ children }: { children: React.ReactNode
                             conversations={filteredConversations}
                             activeConversationId={activeConversationId || undefined}
                             onConversationClick={handleConversationClick}
+                            onDeleteConversation={handleDeleteConversation}
                             onNewMessage={() => setShowNewMessageModal(true)}
                             loading={loading}
                         />
