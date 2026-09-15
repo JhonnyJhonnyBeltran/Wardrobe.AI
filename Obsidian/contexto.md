@@ -1053,3 +1053,10 @@ En cada conversación, el backend alimenta a CloSy con:
 - **Flechas de Navegación del Carrusel Condicionales y Sombreadas**:
   - Las flechas izquierda y derecha solo se muestran cuando existe una diapositiva anterior (`activeSlide > 0`) o siguiente (`activeSlide < slides.length - 1`).
   - Se eliminó el fondo circular opaco/semitransparente: ahora son iconos vectoriales limpios con sombreado difuso (`drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]`), mejorando la visibilidad sobre cualquier fondo de imagen sin recargar la interfaz.
+
+### 85. Unificación del Efecto Hover y Estética de Tarjeta de Outfits a Publicaciones en Perfil (`/profile` y `/profile/[id]`) (Septiembre 2026)
+- **Efecto Hover Suave y Aceleración por GPU (`whileHover`)**:
+  - Las publicaciones en las pestañas de publicaciones y guardados de [`app/(app)/profile/page.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/app/%28app%29/profile/page.tsx) y [`app/(app)/profile/[id]/page.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/app/%28app%29/profile/%5Bid%5D/page.tsx) ahora utilizan la misma animación fluida que `OutfitCard` (`motion.div` con `whileHover={{ scale: 1.03, transition: { duration: 0.2 } }}`).
+- **Diseño de Tarjeta Homogéneo**:
+  - Se añadieron esquinas redondeadas continuas (`rounded-[16px] md:rounded-[20px]`), bordes sutiles (`border border-[var(--border-color)]`), elevación con sombra suave en reposo y sombra profunda al interactuar (`shadow-sm hover:shadow-xl hover:z-40`).
+  - La cuadrícula de 3 columnas (`grid-cols-3`) ahora cuenta con separación proporcionada (`gap-1.5 md:gap-3 p-1.5 md:p-3`), sincronizada con el componente esqueleto `SkeletonProfileGrid`.

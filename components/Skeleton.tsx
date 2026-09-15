@@ -39,9 +39,9 @@ export function SkeletonCard({ className = '', height = 260 }: { className?: str
  */
 export function SkeletonProfileGrid({ count = 9, className = '' }: { count?: number; className?: string }) {
   return (
-    <div className={`grid grid-cols-3 gap-0.5 ${className}`}>
+    <div className={`grid grid-cols-3 gap-1.5 md:gap-3 p-1.5 md:p-3 ${className}`}>
       {[...Array(count)].map((_, i) => (
-        <div key={i} className="aspect-square skeleton-wave rounded-none" />
+        <div key={i} className="aspect-square skeleton-wave rounded-[16px] md:rounded-[20px]" />
       ))}
     </div>
   );

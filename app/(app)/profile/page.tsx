@@ -480,15 +480,23 @@ export default function ProfilePage() {
                     fullHeight={false}
                   />
                 ) : (
-                  <div className="grid grid-cols-3 gap-0.5">
+                  <div className="grid grid-cols-3 gap-1.5 md:gap-3 p-1.5 md:p-3">
                     {posts.map((post) => (
-                      <Link
+                      <motion.div
                         key={post.id}
-                        href={`/post/${post.id}`}
-                        className="aspect-square bg-[var(--background-secondary)] relative block z-0 hover:z-40 transition-all duration-300 hover:scale-[1.05] hover:shadow-xl hover:rounded-md"
+                        whileHover={{
+                          scale: 1.03,
+                          transition: { duration: 0.2 }
+                        }}
+                        className="relative aspect-square overflow-hidden rounded-[16px] md:rounded-[20px] bg-[var(--card-bg)] shadow-sm border border-[var(--border-color)] cursor-pointer z-0 hover:z-40 hover:shadow-xl transition-shadow duration-300"
                       >
-                        <img src={post.image_url} alt="Post" className="w-full h-full object-cover" />
-                      </Link>
+                        <Link
+                          href={`/post/${post.id}`}
+                          className="block w-full h-full"
+                        >
+                          <img src={post.image_url} alt="Post" className="w-full h-full object-cover" />
+                        </Link>
+                      </motion.div>
                     ))}
                     {postsHasMore && (
                       <div ref={postsObserverRef} className="col-span-3">
@@ -591,18 +599,26 @@ export default function ProfilePage() {
                       fullHeight={false}
                     />
                   ) : (
-                    <div className="grid grid-cols-3 gap-0.5">
+                    <div className="grid grid-cols-3 gap-1.5 md:gap-3">
                       {savedPosts.map((post) => (
-                        <Link
+                        <motion.div
                           key={post.id}
-                          href={`/post/${post.id}`}
-                          className="aspect-square bg-[var(--background-secondary)] relative block z-0 hover:z-40 transition-all duration-300 hover:scale-[1.05] hover:shadow-xl hover:rounded-md group"
+                          whileHover={{
+                            scale: 1.03,
+                            transition: { duration: 0.2 }
+                          }}
+                          className="relative aspect-square overflow-hidden rounded-[16px] md:rounded-[20px] bg-[var(--card-bg)] shadow-sm border border-[var(--border-color)] cursor-pointer z-0 hover:z-40 hover:shadow-xl transition-shadow duration-300 group"
                         >
-                          <img src={post.image_url} alt="Saved Post" className="w-full h-full object-cover" />
-                          <div className="absolute top-1 right-1 bg-black/50 p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Bookmark className="w-3.5 h-3.5 text-white fill-current" />
-                          </div>
-                        </Link>
+                          <Link
+                            href={`/post/${post.id}`}
+                            className="block w-full h-full"
+                          >
+                            <img src={post.image_url} alt="Saved Post" className="w-full h-full object-cover" />
+                            <div className="absolute top-2 right-2 bg-black/50 p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Bookmark className="w-3.5 h-3.5 text-white fill-current" />
+                            </div>
+                          </Link>
+                        </motion.div>
                       ))}
                       {savedHasMore && (
                         <div ref={savedObserverRef} className="col-span-3">
