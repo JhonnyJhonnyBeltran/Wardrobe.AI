@@ -569,86 +569,83 @@ export default function PostDetailPage() {
 
     return (
         <div className="min-h-screen w-full overflow-x-hidden bg-[var(--background)] flex flex-col">
-            {/* HEADER - Apple Glass Bar spanning 100% with content centered at 70% */}
-            <header className="sticky top-0 z-50 w-full apple-glass-bar border-b border-[var(--border-color)]/50 pt-safe h-16 flex items-center">
-                <div className="w-full md:w-[70%] max-w-[1400px] mx-auto flex items-center justify-between px-4 md:px-0 h-full">
-                    {/* Left: Back Button */}
-                    <button 
-                        onClick={handleBack} 
-                        className="touch-target-44 text-[var(--foreground)] hover:text-[var(--brand-pink)] transition-colors active:scale-90 flex items-center justify-center"
-                        aria-label="Volver"
-                    >
-                        <ArrowLeft className="w-6 h-6 transition-colors" />
-                    </button>
+            {/* HEADER - Apple Glass Bar spanning full width, back button docked to the left near navbar */}
+            <header className="sticky top-0 z-50 w-full apple-glass-bar border-b border-[var(--border-color)]/50 pt-safe h-16 flex items-center justify-between px-4 md:px-6">
+                {/* Left: Back Button */}
+                <button 
+                    onClick={handleBack} 
+                    className="touch-target-44 text-[var(--foreground)] hover:text-[var(--brand-pink)] transition-colors active:scale-90 flex items-center justify-center -ml-1 md:ml-0"
+                    aria-label="Volver"
+                >
+                    <ArrowLeft className="w-6 h-6 transition-colors" />
+                </button>
 
-                    {/* Center: Username & Profile Photo - Mobile Only (md:hidden) */}
-                    <Link href={`/profile/${authorIdentifier}`} className="flex md:hidden items-center gap-2 flex-1 ml-2 select-none">
-                        <Avatar src={author.avatar_url || null} alt={author.username || 'Usuario'} size="sm" />
-                        <span className="font-semibold text-[15px] text-[var(--foreground)] truncate">@{author.username || 'usuario'}</span>
-                    </Link>
+                {/* Center: Username & Profile Photo - Mobile Only (md:hidden) */}
+                <Link href={`/profile/${authorIdentifier}`} className="flex md:hidden items-center gap-2 flex-1 ml-2 select-none">
+                    <Avatar src={author.avatar_url || null} alt={author.username || 'Usuario'} size="sm" />
+                    <span className="font-semibold text-[15px] text-[var(--foreground)] truncate">@{author.username || 'usuario'}</span>
+                </Link>
 
-                    {/* Right: Actions - Mobile Only (md:hidden) */}
-                    <div className="flex md:hidden items-center gap-1 relative">
-                        {/* Follow button (if not own post) */}
-                        {/* @ts-ignore */}
-                        {user?.id !== post.user_id ? (
-                            <button onClick={toggleFollow} className={`px-4 py-1.5 rounded-full font-bold text-xs transition-all active:scale-95 ${isFollowing ? 'bg-[var(--background-secondary)] text-[var(--foreground)]' : 'bg-[var(--brand-pink)] text-white hover:bg-[var(--brand-pink-dark)]'}`}>
-                                {isFollowing ? 'Siguiendo' : 'Seguir'}
+                {/* Right: Actions - Mobile Only (md:hidden) */}
+                <div className="flex md:hidden items-center gap-1 relative">
+                    {/* Follow button (if not own post) */}
+                    {/* @ts-ignore */}
+                    {user?.id !== post.user_id ? (
+                        <button onClick={toggleFollow} className={`px-4 py-1.5 rounded-full font-bold text-xs transition-all active:scale-95 ${isFollowing ? 'bg-[var(--background-secondary)] text-[var(--foreground)]' : 'bg-[var(--brand-pink)] text-white hover:bg-[var(--brand-pink-dark)]'}`}>
+                            {isFollowing ? 'Siguiendo' : 'Seguir'}
+                        </button>
+                    ) : (
+                        <div className="relative">
+                            <button 
+                                onClick={() => setShowOptions(!showOptions)}
+                                className="touch-target-44 text-[var(--foreground)] hover:text-[var(--brand-pink)] transition-colors active:scale-90 flex items-center justify-center"
+                                aria-label="Opciones de publicación"
+                            >
+                                <MoreVertical className="w-6 h-6" />
                             </button>
-                        ) : (
-                            <div className="relative">
-                                <button 
-                                    onClick={() => setShowOptions(!showOptions)}
-                                    className="touch-target-44 text-[var(--foreground)] hover:text-[var(--brand-pink)] transition-colors active:scale-90 flex items-center justify-center"
-                                    aria-label="Opciones de publicación"
-                                >
-                                    <MoreVertical className="w-6 h-6" />
-                                </button>
-                                
-                                <AnimatePresence>
-                                    {showOptions && (
-                                        <>
-                                            {/* Backdrop to close menu */}
-                                            <div 
-                                                className="fixed inset-0 z-40" 
-                                                onClick={() => setShowOptions(false)}
-                                            />
-                                            <motion.div
-                                                initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                                                animate={{ opacity: 1, scale: 1, y: 0 }}
-                                                exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                                                className="absolute right-0 mt-2 w-48 bg-[var(--card-bg)] rounded-2xl shadow-xl border border-[var(--border-color)] py-2 z-50 overflow-hidden"
+                            
+                            <AnimatePresence>
+                                {showOptions && (
+                                    <>
+                                        {/* Backdrop to close menu */}
+                                        <div 
+                                            className="fixed inset-0 z-40" 
+                                            onClick={() => setShowOptions(false)}
+                                        />
+                                        <motion.div
+                                            initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                                            exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                                            className="absolute right-0 mt-2 w-48 bg-[var(--card-bg)] rounded-2xl shadow-xl border border-[var(--border-color)] py-2 z-50 overflow-hidden"
+                                        >
+                                            <button
+                                                onClick={handleEditPost}
+                                                className="w-full px-4 py-3 flex items-center gap-3 text-sm font-semibold text-[var(--foreground)] hover:bg-[var(--background-secondary)] transition-colors"
                                             >
-                                                <button
-                                                    onClick={handleEditPost}
-                                                    className="w-full px-4 py-3 flex items-center gap-3 text-sm font-semibold text-[var(--foreground)] hover:bg-[var(--background-secondary)] transition-colors"
-                                                >
-                                                    <Edit2 className="w-4 h-4" />
-                                                    Editar publicación
-                                                </button>
-                                                <button
-                                                    onClick={handleDeletePost}
-                                                    disabled={deleting}
-                                                    className="w-full px-4 py-3 flex items-center gap-3 text-sm font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                    {deleting ? 'Borrando...' : 'Borrar publicación'}
-                                                </button>
-                                            </motion.div>
-                                        </>
-                                    )}
-                                </AnimatePresence>
-                            </div>
-                        )}
-                    </div>
+                                                <Edit2 className="w-4 h-4" />
+                                                Editar publicación
+                                            </button>
+                                            <button
+                                                onClick={handleDeletePost}
+                                                disabled={deleting}
+                                                className="w-full px-4 py-3 flex items-center gap-3 text-sm font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                                {deleting ? 'Borrando...' : 'Borrar publicación'}
+                                            </button>
+                                        </motion.div>
+                                    </>
+                                )}
+                            </AnimatePresence>
+                        </div>
+                    )}
                 </div>
             </header>
 
-            {/* Desktop Container (Centered in 70% width) */}
-            <div className="w-full flex-1 flex justify-center">
-                <div className="flex flex-col md:flex-row w-full md:w-[70%] max-w-[1400px] mx-auto flex-1 md:h-[calc(100vh-64px)]">
+            {/* Main Content Area - Full width with left image area and right details column docked to the right edge */}
+            <div className="flex flex-col md:flex-row w-full flex-1 md:h-[calc(100vh-64px)] overflow-hidden">
 
-                {/* IMAGE CAROUSEL - Swipeable ONLY on mobile; Button/Dots controlled on desktop */}
+                {/* IMAGE CAROUSEL - Swipeable ONLY on mobile; Shaded icon arrows on desktop */}
                 <div className="relative w-full h-auto min-h-[50vh] md:flex-1 md:h-[calc(100vh-64px)] bg-[var(--background)] md:bg-[var(--background-secondary)]/30 flex-shrink-0 overflow-hidden flex items-center justify-center">
                 <AnimatePresence initial={false} mode="wait">
                     <motion.div
@@ -730,24 +727,30 @@ export default function PostDetailPage() {
                     </motion.div>
                 )}
 
-                {/* Navigation Arrows & Dots Indicator */}
+                {/* Navigation Arrows (Conditional & Shaded without solid background) & Dots Indicator */}
                 {slides.length > 1 && (
                     <>
-                        <button
-                            onClick={(e) => { e.stopPropagation(); setActiveSlide(prev => prev === 0 ? slides.length - 1 : prev - 1); setShowSwipeHint(false); }}
-                            className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md items-center justify-center border border-white/10 text-white hover:text-[var(--brand-pink)] shadow-lg z-30 transition-all duration-300 hover:scale-110 active:scale-95 group/btn"
-                            aria-label="Anterior"
-                        >
-                            <ChevronLeft className="w-6 h-6 group-hover/btn:-translate-x-0.5 transition-all" />
-                        </button>
+                        {/* Left Arrow: Only appears when activeSlide > 0 */}
+                        {activeSlide > 0 && (
+                            <button
+                                onClick={(e) => { e.stopPropagation(); setActiveSlide(prev => Math.max(0, prev - 1)); setShowSwipeHint(false); }}
+                                className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 text-white/90 hover:text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)] z-30 transition-all duration-200 hover:scale-125 active:scale-95 p-2 focus:outline-none"
+                                aria-label="Anterior"
+                            >
+                                <ChevronLeft className="w-10 h-10 drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]" strokeWidth={2.5} />
+                            </button>
+                        )}
 
-                        <button
-                            onClick={(e) => { e.stopPropagation(); setActiveSlide(prev => prev === slides.length - 1 ? 0 : prev + 1); setShowSwipeHint(false); }}
-                            className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-md items-center justify-center border border-white/10 text-white hover:text-[var(--brand-pink)] shadow-lg z-30 transition-all duration-300 hover:scale-110 active:scale-95 group/btn"
-                            aria-label="Siguiente"
-                        >
-                            <ChevronRight className="w-6 h-6 group-hover/btn:translate-x-0.5 transition-all" />
-                        </button>
+                        {/* Right Arrow: Only appears when activeSlide < slides.length - 1 */}
+                        {activeSlide < slides.length - 1 && (
+                            <button
+                                onClick={(e) => { e.stopPropagation(); setActiveSlide(prev => Math.min(slides.length - 1, prev + 1)); setShowSwipeHint(false); }}
+                                className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 text-white/90 hover:text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)] z-30 transition-all duration-200 hover:scale-125 active:scale-95 p-2 focus:outline-none"
+                                aria-label="Siguiente"
+                            >
+                                <ChevronRight className="w-10 h-10 drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]" strokeWidth={2.5} />
+                            </button>
+                        )}
 
                         {/* Dots indicator - refined with morphing effect */}
                         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2.5 z-30 bg-black/20 backdrop-blur-md px-3 py-2 rounded-full border border-white/5">
@@ -769,8 +772,8 @@ export default function PostDetailPage() {
                 )}
             </div>
 
-            {/* RIGHT COLUMN: Actions, Details, Comments */}
-            <div className="flex flex-col w-full min-w-0 md:w-[380px] lg:w-[420px] md:h-[calc(100vh-64px)] bg-[var(--background)] overflow-x-hidden pb-[72px] md:pb-0 border-l border-[var(--border-color)]/50 flex-shrink-0">
+            {/* RIGHT COLUMN: Actions, Details, Comments (Docked tightly to the right edge) */}
+            <div className="flex flex-col w-full min-w-0 md:w-[440px] lg:w-[480px] xl:w-[520px] md:h-[calc(100vh-64px)] bg-[var(--background)] overflow-x-hidden pb-[72px] md:pb-0 border-l border-[var(--border-color)]/50 flex-shrink-0">
                 
                 {/* DESKTOP AUTHOR HEADER */}
                 <div className="hidden md:flex items-center justify-between px-4 py-3.5 border-b border-[var(--border-color)]/50 flex-shrink-0 bg-[var(--background)]">
@@ -996,8 +999,7 @@ export default function PostDetailPage() {
             </form>
 
             </div> {/* End Right Column */}
-                </div> {/* End 70% Centered Container */}
-            </div> {/* End Full-Width Main Content Wrapper */}
+            </div> {/* End Main Content Wrapper */}
 
             {/* Mobile Comments Overlay */}
             {showMobileComments && (

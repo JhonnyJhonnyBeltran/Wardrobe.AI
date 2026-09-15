@@ -1042,10 +1042,14 @@ En cada conversación, el backend alimenta a CloSy con:
   - Si un usuario del plan gratuito pulsa el botón de cámara en la cabecera del chat (`/closet/kloe`) o dentro del modal [`AvatarCalibrationModal.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/components/AvatarCalibrationModal.tsx), el sistema activa de inmediato el modal de suscripción [`KloeProModal`](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/components/KloeProModal.tsx).
   - En backend ([`/api/user/avatar-calibration`](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/app/api/user/avatar-calibration/route.ts)), se valida de forma atómica en base de datos la suscripción activa (`is_premium = true`), impidiendo cualquier subida o manipulación no autorizada.
 
-### 84. Maquetación Panorámica y Contenedor Central al 70% en Detalle de Publicación (`/post/[id]`) (Septiembre 2026)
-- **Cabecera Panorámica de Borde a Borde (`w-full`)**:
-  - El elemento `<header>` en [`app/(app)/post/[id]/page.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/app/%28app%29/post/%5Bid%5D/page.tsx) ahora abarca el 100% del ancho del viewport (`w-full apple-glass-bar border-b`), permitiendo que el fondo translúcido y la línea divisoria se extiendan de extremo a extremo sin cortes.
-  - El contenido interno de la cabecera (botón volver hacia atrás, datos de autor en móvil y acciones) se alinea dentro de un contenedor centrado al 70% del ancho de la pantalla (`w-full md:w-[70%] max-w-[1400px] mx-auto`).
-- **Contenedor Principal Centrado al 70%**:
-  - El área principal que alberga el carrusel de fotografías del post y la columna lateral de comentarios, interacción y prendas se enmarca en un envoltorio de ancho completo (`w-full flex-1 flex justify-center`) con su contenedor principal centrado en el 70% del ancho en pantallas medianas y grandes (`w-full md:w-[70%] max-w-[1400px] mx-auto flex flex-col md:flex-row`).
-  - La columna lateral de detalles y comentarios se adaptó de forma equilibrada a `md:w-[380px] lg:w-[420px]` con el carrusel en `md:flex-1`, proporcionando una experiencia visual proporcionada y limpia sin desbordamientos ni scroll horizontal.
+### 84. Maquetación Panorámica, Botón Lateral y Flechas Flotantes en Detalle de Publicación (`/post/[id]`) (Septiembre 2026)
+- **Cabecera Panorámica con Botón de Atrás Pegado al Margen Izquierdo**:
+  - El elemento `<header>` en [`app/(app)/post/[id]/page.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/app/%28app%29/post/%5Bid%5D/page.tsx) abarca el 100% del ancho del viewport (`w-full apple-glass-bar border-b px-4 md:px-6`).
+  - El botón de volver atrás está situado en el extremo izquierdo de la cabecera, junto a la barra lateral/navbar.
+- **Columna Lateral de Comentarios y Prendas Ceñida a la Derecha**:
+  - La estructura principal ocupa todo el ancho de la pantalla (`w-full flex-1 md:h-[calc(100vh-64px)] flex flex-col md:flex-row`).
+  - El área izquierda (`md:flex-1`) aloja el carrusel de imágenes centrado y optimizado.
+  - La columna lateral derecha (`md:w-[440px] lg:w-[480px] xl:w-[520px]`) que contiene autor, acciones, prendas del look y comentarios queda ceñida al extremo derecho de la pantalla.
+- **Flechas de Navegación del Carrusel Condicionales y Sombreadas**:
+  - Las flechas izquierda y derecha solo se muestran cuando existe una diapositiva anterior (`activeSlide > 0`) o siguiente (`activeSlide < slides.length - 1`).
+  - Se eliminó el fondo circular opaco/semitransparente: ahora son iconos vectoriales limpios con sombreado difuso (`drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]`), mejorando la visibilidad sobre cualquier fondo de imagen sin recargar la interfaz.
