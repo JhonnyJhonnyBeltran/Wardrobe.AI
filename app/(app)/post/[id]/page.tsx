@@ -569,76 +569,78 @@ export default function PostDetailPage() {
 
     return (
         <div className="min-h-screen w-full overflow-x-hidden bg-[var(--background)] flex flex-col">
-            {/* HEADER - Apple Glass Bar spanning full width, back button docked to the left near navbar */}
-            <header className="sticky top-0 z-50 w-full apple-glass-bar border-b border-[var(--border-color)]/50 pt-safe h-16 flex items-center justify-between px-4 md:px-6">
-                {/* Left: Back Button */}
-                <button 
-                    onClick={handleBack} 
-                    className="touch-target-44 text-[var(--foreground)] hover:text-[var(--brand-pink)] transition-colors active:scale-90 flex items-center justify-center -ml-1 md:ml-0"
-                    aria-label="Volver"
-                >
-                    <ArrowLeft className="w-6 h-6 transition-colors" />
-                </button>
+            {/* HEADER - Apple Glass Bar spanning full width, back button vertically centered at middle height */}
+            <header className="sticky top-0 z-50 w-full apple-glass-bar border-b border-[var(--border-color)]/50 pt-safe">
+                <div className="h-16 w-full flex items-center justify-between px-4 md:px-6">
+                    {/* Left: Back Button - Vertically centered in the 64px header */}
+                    <button 
+                        onClick={handleBack} 
+                        className="touch-target-44 text-[var(--foreground)] hover:text-[var(--brand-pink)] transition-colors active:scale-90 flex items-center justify-center -ml-1 md:ml-0 rounded-full hover:bg-[var(--background-secondary)]/50"
+                        aria-label="Volver"
+                    >
+                        <ArrowLeft className="w-6 h-6 transition-colors" />
+                    </button>
 
-                {/* Center: Username & Profile Photo - Mobile Only (md:hidden) */}
-                <Link href={`/profile/${authorIdentifier}`} className="flex md:hidden items-center gap-2 flex-1 ml-2 select-none">
-                    <Avatar src={author.avatar_url || null} alt={author.username || 'Usuario'} size="sm" />
-                    <span className="font-semibold text-[15px] text-[var(--foreground)] truncate">@{author.username || 'usuario'}</span>
-                </Link>
+                    {/* Center: Username & Profile Photo - Mobile Only (md:hidden) */}
+                    <Link href={`/profile/${authorIdentifier}`} className="flex md:hidden items-center gap-2 flex-1 ml-2 select-none">
+                        <Avatar src={author.avatar_url || null} alt={author.username || 'Usuario'} size="sm" />
+                        <span className="font-semibold text-[15px] text-[var(--foreground)] truncate">@{author.username || 'usuario'}</span>
+                    </Link>
 
-                {/* Right: Actions - Mobile Only (md:hidden) */}
-                <div className="flex md:hidden items-center gap-1 relative">
-                    {/* Follow button (if not own post) */}
-                    {/* @ts-ignore */}
-                    {user?.id !== post.user_id ? (
-                        <button onClick={toggleFollow} className={`px-4 py-1.5 rounded-full font-bold text-xs transition-all active:scale-95 ${isFollowing ? 'bg-[var(--background-secondary)] text-[var(--foreground)]' : 'bg-[var(--brand-pink)] text-white hover:bg-[var(--brand-pink-dark)]'}`}>
-                            {isFollowing ? 'Siguiendo' : 'Seguir'}
-                        </button>
-                    ) : (
-                        <div className="relative">
-                            <button 
-                                onClick={() => setShowOptions(!showOptions)}
-                                className="touch-target-44 text-[var(--foreground)] hover:text-[var(--brand-pink)] transition-colors active:scale-90 flex items-center justify-center"
-                                aria-label="Opciones de publicación"
-                            >
-                                <MoreVertical className="w-6 h-6" />
+                    {/* Right: Actions - Mobile Only (md:hidden) */}
+                    <div className="flex md:hidden items-center gap-1 relative">
+                        {/* Follow button (if not own post) */}
+                        {/* @ts-ignore */}
+                        {user?.id !== post.user_id ? (
+                            <button onClick={toggleFollow} className={`px-4 py-1.5 rounded-full font-bold text-xs transition-all active:scale-95 ${isFollowing ? 'bg-[var(--background-secondary)] text-[var(--foreground)]' : 'bg-[var(--brand-pink)] text-white hover:bg-[var(--brand-pink-dark)]'}`}>
+                                {isFollowing ? 'Siguiendo' : 'Seguir'}
                             </button>
-                            
-                            <AnimatePresence>
-                                {showOptions && (
-                                    <>
-                                        {/* Backdrop to close menu */}
-                                        <div 
-                                            className="fixed inset-0 z-40" 
-                                            onClick={() => setShowOptions(false)}
-                                        />
-                                        <motion.div
-                                            initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                                            exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                                            className="absolute right-0 mt-2 w-48 bg-[var(--card-bg)] rounded-2xl shadow-xl border border-[var(--border-color)] py-2 z-50 overflow-hidden"
-                                        >
-                                            <button
-                                                onClick={handleEditPost}
-                                                className="w-full px-4 py-3 flex items-center gap-3 text-sm font-semibold text-[var(--foreground)] hover:bg-[var(--background-secondary)] transition-colors"
+                        ) : (
+                            <div className="relative">
+                                <button 
+                                    onClick={() => setShowOptions(!showOptions)}
+                                    className="touch-target-44 text-[var(--foreground)] hover:text-[var(--brand-pink)] transition-colors active:scale-90 flex items-center justify-center"
+                                    aria-label="Opciones de publicación"
+                                >
+                                    <MoreVertical className="w-6 h-6" />
+                                </button>
+                                
+                                <AnimatePresence>
+                                    {showOptions && (
+                                        <>
+                                            {/* Backdrop to close menu */}
+                                            <div 
+                                                className="fixed inset-0 z-40" 
+                                                onClick={() => setShowOptions(false)}
+                                            />
+                                            <motion.div
+                                                initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                                exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                                                className="absolute right-0 mt-2 w-48 bg-[var(--card-bg)] rounded-2xl shadow-xl border border-[var(--border-color)] py-2 z-50 overflow-hidden"
                                             >
-                                                <Edit2 className="w-4 h-4" />
-                                                Editar publicación
-                                            </button>
-                                            <button
-                                                onClick={handleDeletePost}
-                                                disabled={deleting}
-                                                className="w-full px-4 py-3 flex items-center gap-3 text-sm font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                                {deleting ? 'Borrando...' : 'Borrar publicación'}
-                                            </button>
-                                        </motion.div>
-                                    </>
-                                )}
-                            </AnimatePresence>
-                        </div>
-                    )}
+                                                <button
+                                                    onClick={handleEditPost}
+                                                    className="w-full px-4 py-3 flex items-center gap-3 text-sm font-semibold text-[var(--foreground)] hover:bg-[var(--background-secondary)] transition-colors"
+                                                >
+                                                    <Edit2 className="w-4 h-4" />
+                                                    Editar publicación
+                                                </button>
+                                                <button
+                                                    onClick={handleDeletePost}
+                                                    disabled={deleting}
+                                                    className="w-full px-4 py-3 flex items-center gap-3 text-sm font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                    {deleting ? 'Borrando...' : 'Borrar publicación'}
+                                                </button>
+                                            </motion.div>
+                                        </>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </header>
 
