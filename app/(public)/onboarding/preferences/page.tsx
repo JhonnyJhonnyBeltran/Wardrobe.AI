@@ -7,9 +7,9 @@
  * Step 2: Visual Style Selection (Dynamic gender-based photography)
  */
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { ChevronRight, ChevronLeft, Check, Minus, Plus, X } from 'lucide-react';
 import { Button, LogoMark } from '@/components';
 import { useUser } from '@/store/userStore';
@@ -392,8 +392,13 @@ function getAgeLabel(age: number): string {
     return '60+ años';
 }
 
-export default function PreferencesPage() {
+function PreferencesContent() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const fromSource = searchParams?.get('from');
+    const isFromSettings = fromSource === 'settings' || fromSource === 'profile';
+    const isEditModeQuery = searchParams?.get('mode') === 'edit';
+
     const { user, setUser, isLoading: isLoadingUser } = useUser();
 
     // Core state
@@ -417,7 +422,8 @@ export default function PreferencesPage() {
             return;
         }
 
-        if (user.styleCompleted) {
+        const isUserConfigured = Boolean(user.styleCompleted);
+        if (isUserConfigured || isFromSettings || isEditModeQuery) {
             setIsEditing(true);
             if (user.age) {
                 setAge(user.age);
@@ -572,10 +578,16 @@ export default function PreferencesPage() {
                 styleCompleted: true
             });
 
-            // Redirect to closet (start guided tour if first time)
-            if (isEditing) {
-                router.push('/closet');
+            // Redirect logic:
+            // If editing preferences (from profile settings or existing profile), NEVER trigger the tour!
+            if (isEditing || isFromSettings || isEditModeQuery || user.styleCompleted) {
+                if (isFromSettings) {
+                    router.push('/profile/settings');
+                } else {
+                    router.push('/closet');
+                }
             } else {
+                // Brand new user finishing onboarding for the first time
                 router.push('/closet?startTour=true');
             }
         } catch (err: any) {
@@ -610,7 +622,7 @@ export default function PreferencesPage() {
                 </div>
                 {isEditing ? (
                     <button
-                        onClick={() => router.push('/closet')}
+                        onClick={() => router.push(isFromSettings ? '/profile/settings' : '/closet')}
                         className="p-2 rounded-full hover:bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:text-[var(--foreground)] transition-colors"
                         aria-label="Cerrar"
                     >
@@ -998,5 +1010,17 @@ export default function PreferencesPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function PreferencesPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-[var(--background)] flex items-center justify-center">
+                <LogoMark className="animate-pulse opacity-50 w-12 h-12" />
+            </div>
+        }>
+            <PreferencesContent />
+        </Suspense>
     );
 }

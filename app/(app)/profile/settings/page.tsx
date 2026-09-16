@@ -467,7 +467,7 @@ export default function SettingsPage() {
                                 {t.profile.yourStyle}
                             </h2>
                             <Link
-                                href="/onboarding/preferences"
+                                href="/onboarding/preferences?from=settings"
                                 className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--brand-pink)] text-white text-sm font-medium hover:opacity-90 transition-opacity"
                             >
                                 <Edit className="w-4 h-4" />

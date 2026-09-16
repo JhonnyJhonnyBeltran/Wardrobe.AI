@@ -1261,6 +1261,11 @@ En cada conversación, el backend alimenta a CloSy con:
   - **Búsqueda por Prendas y Marcas**: Al buscar términos como *"sudadera scuffers"*, *"nike dunk"* o *"pantalones zara"*, el endpoint consulta `clothing_items` y `outfits` para encontrar los posts asociados a dichos outfits y prendas.
   - **Diccionario de Sinónimos de Categorías (`CATEGORY_SYNONYMS`)**: Resuelve términos como *zapatos, calzado, zapatillas, sneakers, botas* $\rightarrow$ `shoes`; *chaqueta, cazadora, abrigo, blazer* $\rightarrow$ `jacket` / `outerwear`; *sudadera, hoodie* $\rightarrow$ `hoodie`; *pantalón, jeans, vaqueros, cargo* $\rightarrow$ `bottom`.
   - **Chips de Descubrimiento Rápido**: Accesos directos a estilos, marcas populares y tipos de prendas en la barra de búsqueda.
+- **Distinción Estricta entre Onboarding Inicial y Edición de Preferencias (`/profile/settings`)**:
+  - Al acceder a editar preferencias desde `/profile/settings` (`/onboarding/preferences?from=settings`), se activa el modo de edición (`isEditing = true`).
+  - **Botón de Cierre (X)**: Permite regresar directamente a `/profile/settings` sin perder la navegación.
+  - **Finalización sin Tour**: Al pulsar "Finalizar y explorar", los cambios se guardan en el perfil y redirige de vuelta a `/profile/settings` (o `/closet`) **sin activar el tour ni añadir `?startTour=true`**.
+  - **Activación Exclusiva para Nuevos Registros**: El tour interactivo de micro-acciones sólo se dispara una única vez tras completar el onboarding de registro inicial por primera vez (`user.styleCompleted === false`).
 
 
 
