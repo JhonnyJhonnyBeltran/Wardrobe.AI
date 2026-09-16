@@ -1105,12 +1105,13 @@ En cada conversación, el backend alimenta a CloSy con:
     - Al guardar en una carpeta, el endpoint actualiza de forma segura tanto la columna `saves.folder_id` como la tabla relacional `save_folder_items` con bloques tolerantes a fallos.
     - En `GET /api/saves?folder_id=...`, se consulta mediante estrategia dual (búsqueda por IDs de `save_folder_items` y por `saves.folder_id`), fusionando y deduplicando resultados para garantizar que todas las publicaciones guardadas en la carpeta aparezcan de forma inmediata en la pestaña de guardados del perfil.
 
-### 89. Rediseño de Pull-to-Refresh Bajo Encabezados y Motor de Puntuación por Afinidad, Amigos de Amigos y Novedad (`/search` y `/feed`) (Septiembre 2026)
-- **Indicador Limpio de Pull-to-Refresh Bajo Encabezados (`PullToRefresh.tsx`)**:
-  - Se eliminó el icono tipo "Sparkles" / IA del indicador de recarga y se implementó un spinner suave de 3 puntos (`LoadingSpinner` variant `dots` y `spinner`) con aceleración por hardware en color rosa de marca (`var(--brand-pink)`).
-  - Se agregó la propiedad `topOffsetClass` para posicionar con precisión el indicador flotante en vista móvil:
-    - **En Búsqueda (`/search`)**: Configurado con `topOffsetClass="top-24 md:top-28"`, situándose exactamente debajo de la barra de búsqueda flotante sin taparla ni interferir en el foco.
-    - **En Feed (`/feed`)**: Configurado con `topOffsetClass="top-16 md:top-20"`, situándose justamente debajo de la barra de navegación superior móvil que contiene los botones de crear y mensajes directos.
+### 89. Rediseño de Pull-to-Refresh Integrado en el Flujo de Posts y Motor de Puntuación por Afinidad, Amigos de Amigos y Novedad (`/search` y `/feed`) (Septiembre 2026)
+- **Indicador Integrado de Pull-to-Refresh (Inline Header Flow) (`PullToRefresh.tsx`)**:
+  - Se eliminó el icono tipo "Sparkles" / IA y se sustituyeron los 3 puntos por el spinner circular vectorizado con aceleración por hardware en color rosa de marca (`LoadingSpinner` con `variant="spinner"` y `var(--brand-pink)`).
+  - Se eliminó el contenedor flotante desconectado (`fixed` div) y se transformó en un elemento integrado (**inline**) dentro del mismo contenedor de publicaciones:
+    - **En Feed (`/feed`)**: Se sitúa directamente dentro del contenedor de publicaciones, desplegándose suavemente encima de los posts y debajo de la cabecera móvil.
+    - **En Búsqueda (`/search`)**: Se sitúa directamente dentro del contenedor de resultados, desplegándose suavemente encima de las publicaciones y debajo de la barra de búsqueda fija.
+  - **Retirada de Pull-to-Refresh en Armario (`/closet`)**: Se eliminó la envoltura de `PullToRefresh` en `/closet`, optimizando la experiencia nativa de catálogo de prendas.
 - **Motor de Interés, Interacción y Frescura de Publicaciones (`lib/services/interestManager.ts`)**:
   - Se implementó el servicio singleton `interestManager` con persistencia en `localStorage`:
     - `recordPostInteraction(postId, authorId, styleIds)`: Registra automáticamente clics, visitas a publicaciones y estilos explorados tanto al pulsar una tarjeta (`PostCard.tsx`) como al cargar el visor de detalle (`post/[id]/page.tsx`).
@@ -1125,3 +1126,4 @@ En cada conversación, el backend alimenta a CloSy con:
     1. **Publicaciones directas de usuarios seguidos (`following`)**: Máxima prioridad (+50 pts) combinada con el boost de frescura y novedad reciente.
     2. **Publicaciones de Amigos de Amigos (`FOF` - Seguidos de mis seguidos)**: Prioridad destacada (+25 pts) para descubrir personas y looks cercanos a su círculo social.
     3. **Sugerencias de afinidad comunitaria y exploración**: Contenido afín (+5 pts base + estilo y novedad) para mantener el feed siempre activo e infinito.
+

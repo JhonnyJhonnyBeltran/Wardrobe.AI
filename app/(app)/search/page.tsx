@@ -615,9 +615,8 @@ export default function SearchPage() {
   }, [loadMoreUsers, loadMorePosts, usersHasMore, postsHasMore, usersLoadingMore, postsLoadingMore, loading, usersLoadError, postsLoadError]);
 
   return (
-    <PullToRefresh onRefresh={handleRefresh} topOffsetClass="top-24 md:top-28">
-      <div className="min-h-[100dvh] w-full max-w-[100vw] overflow-x-hidden bg-[var(--background)] pb-24">
-        {/* Floating Header */}
+    <div className="min-h-[100dvh] w-full max-w-[100vw] overflow-x-hidden bg-[var(--background)] pb-24">
+      {/* Floating Header */}
       <div className="fixed top-4 md:top-6 left-0 right-0 z-[4980] px-4 pointer-events-none flex justify-center">
         <div className="w-full max-w-2xl pointer-events-auto">
           <div className="relative w-full rounded-full bg-[var(--background)]/90 backdrop-blur-xl border border-[var(--border-color)] shadow-lg overflow-hidden transition-all duration-300 focus-within:shadow-xl focus-within:border-[var(--brand-pink)]">
@@ -642,7 +641,9 @@ export default function SearchPage() {
         </div>
       </div>
 
-      <div className="w-full px-3 md:px-6 pt-24 sm:pt-28 pb-4 flex flex-col gap-6 sm:gap-8 min-w-0">
+      {/* Search Content with inline Pull-to-Refresh above results */}
+      <PullToRefresh onRefresh={handleRefresh}>
+        <div className="w-full px-3 md:px-6 pt-24 sm:pt-28 pb-4 flex flex-col gap-6 sm:gap-8 min-w-0">
         {loading ? (
           query ? (
             <SkeletonUserList count={6} />
@@ -831,8 +832,9 @@ export default function SearchPage() {
           </>
         )}
       </div>
+    </PullToRefresh>
 
-      <style jsx global>{`
+    <style jsx global>{`
         .search-input-no-outline {
           outline: none !important;
           border: none !important;
@@ -866,7 +868,6 @@ export default function SearchPage() {
           }
         }
       `}</style>
-      </div>
-    </PullToRefresh>
+    </div>
   );
 }

@@ -357,40 +357,40 @@ export default function FeedPage() {
   }, [loadMorePosts, hasMore, loadingMore, loading, loadError]);
 
   return (
-    <PullToRefresh onRefresh={() => fetchPosts(false, true)} topOffsetClass="top-16 md:top-20">
-      <div className="min-h-screen bg-[var(--background)] pb-24 md:pb-8">
-        {/* Top Header (Mobile Only) */}
-        <header className="sticky top-0 z-30 apple-glass-bar pt-safe md:hidden">
-          <div className="px-4 h-14 flex items-center justify-between">
-            <button
-              onClick={toggleCreateMenu}
-              aria-label="Crear publicación"
-              className="touch-target-44 text-[var(--brand-pink)] hover:bg-[var(--background-secondary)]/80 rounded-full transition-all duration-150 active:scale-90"
-            >
-              <Plus className="w-6 h-6" />
-            </button>
+    <div className="min-h-screen bg-[var(--background)] pb-24 md:pb-8">
+      {/* Top Header (Mobile Only) */}
+      <header className="sticky top-0 z-30 apple-glass-bar pt-safe md:hidden">
+        <div className="px-4 h-14 flex items-center justify-between">
+          <button
+            onClick={toggleCreateMenu}
+            aria-label="Crear publicación"
+            className="touch-target-44 text-[var(--brand-pink)] hover:bg-[var(--background-secondary)]/80 rounded-full transition-all duration-150 active:scale-90"
+          >
+            <Plus className="w-6 h-6" />
+          </button>
 
-            <h1 className="text-lg font-bold tracking-tight text-[var(--foreground)] absolute left-1/2 -translate-x-1/2 select-none">
-              Para ti
-            </h1>
+          <h1 className="text-lg font-bold tracking-tight text-[var(--foreground)] absolute left-1/2 -translate-x-1/2 select-none">
+            Para ti
+          </h1>
 
-            <div className="flex items-center gap-1">
-              <Link href="/messages" aria-label="Mensajes directos">
-                <button className="touch-target-44 text-[var(--brand-pink)] hover:bg-[var(--background-secondary)]/80 rounded-full transition-all duration-150 active:scale-90 relative">
-                  <Send className="w-5.5 h-5.5" />
-                  {messageBadgeVisible && messageUnreadCount > 0 && (
-                    <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-[var(--brand-pink)] text-white text-[10px] font-bold rounded-full border-2 border-[var(--background)] shadow-sm">
-                      {messageUnreadCount > 99 ? '+99' : messageUnreadCount}
-                    </span>
-                  )}
-                </button>
-              </Link>
-            </div>
+          <div className="flex items-center gap-1">
+            <Link href="/messages" aria-label="Mensajes directos">
+              <button className="touch-target-44 text-[var(--brand-pink)] hover:bg-[var(--background-secondary)]/80 rounded-full transition-all duration-150 active:scale-90 relative">
+                <Send className="w-5.5 h-5.5" />
+                {messageBadgeVisible && messageUnreadCount > 0 && (
+                  <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-[var(--brand-pink)] text-white text-[10px] font-bold rounded-full border-2 border-[var(--background)] shadow-sm">
+                    {messageUnreadCount > 99 ? '+99' : messageUnreadCount}
+                  </span>
+                )}
+              </button>
+            </Link>
           </div>
-        </header>
+        </div>
+      </header>
 
-        {/* Feed Content */}
-        <div className="px-3 pt-4 md:px-6 md:pt-6">
+      {/* Feed Content with inline Pull-To-Refresh above posts */}
+      <PullToRefresh onRefresh={() => fetchPosts(false, true)}>
+        <div className="px-3 pt-3 md:px-6 md:pt-6">
           {loading && posts.length === 0 ? (
             <SkeletonFeed count={8} />
           ) : posts.length === 0 ? (
@@ -462,37 +462,37 @@ export default function FeedPage() {
             </div>
           )}
         </div>
+      </PullToRefresh>
 
-        <style jsx global>{`
+      <style jsx global>{`
+        .masonry-grid {
+          column-count: 2;
+          column-gap: 10px;
+        }
+        @media (min-width: 768px) {
           .masonry-grid {
-            column-count: 2;
-            column-gap: 10px;
+            column-count: 3;
+            column-gap: 16px;
           }
-          @media (min-width: 768px) {
-            .masonry-grid {
-              column-count: 3;
-              column-gap: 16px;
-            }
+        }
+        @media (min-width: 1024px) {
+          .masonry-grid {
+            column-count: 4;
+            column-gap: 20px;
           }
-          @media (min-width: 1024px) {
-            .masonry-grid {
-              column-count: 4;
-              column-gap: 20px;
-            }
+        }
+        @media (min-width: 1280px) {
+          .masonry-grid {
+            column-count: 5;
+            column-gap: 24px;
           }
-          @media (min-width: 1280px) {
-            .masonry-grid {
-              column-count: 5;
-              column-gap: 24px;
-            }
-          }
-          .break-inside-avoid {
-            break-inside: avoid;
-            page-break-inside: avoid;
-            -webkit-column-break-inside: avoid;
-          }
-        `}</style>
-      </div>
-    </PullToRefresh>
+        }
+        .break-inside-avoid {
+          break-inside: avoid;
+          page-break-inside: avoid;
+          -webkit-column-break-inside: avoid;
+        }
+      `}</style>
+    </div>
   );
 }

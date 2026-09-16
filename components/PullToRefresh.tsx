@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowDown } from 'lucide-react';
 import LoadingSpinner from './LoadingSpinner';
@@ -11,17 +11,17 @@ interface PullToRefreshProps {
   onRefresh: () => Promise<any>;
   children: React.ReactNode;
   disabled?: boolean;
-  topOffsetClass?: string;
+  className?: string;
 }
 
-const PULL_THRESHOLD = 65; // Distance in px to trigger refresh
-const MAX_PULL_DISTANCE = 110; // Maximum visual pull distance
+const PULL_THRESHOLD = 60; // Distance in px to trigger refresh
+const MAX_PULL_DISTANCE = 90; // Maximum visual pull distance
 
 export default function PullToRefresh({ 
   onRefresh, 
   children, 
   disabled = false,
-  topOffsetClass = "top-16"
+  className
 }: PullToRefreshProps) {
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -73,7 +73,6 @@ export default function PullToRefresh({
     // Determine gesture direction once movement starts
     if (!isDeterminedRef.current && (Math.abs(diffY) > 5 || diffX > 5)) {
       isDeterminedRef.current = true;
-      // If movement is mostly horizontal or user is scrolling up (diffY < 0), cancel pull-to-refresh
       if (diffX > Math.abs(diffY) || diffY <= 0) {
         resetState();
         return;
@@ -81,8 +80,7 @@ export default function PullToRefresh({
     }
 
     if (diffY > 0) {
-      // Apply rubber-band damping
-      const damping = 0.4;
+      const damping = 0.45;
       const distance = Math.min(diffY * damping, MAX_PULL_DISTANCE);
       setPullDistance(distance);
 
@@ -106,13 +104,12 @@ export default function PullToRefresh({
 
     if (pullDistance >= PULL_THRESHOLD) {
       setIsRefreshing(true);
-      setPullDistance(50); // Keep spinner visible at 50px during refresh
+      setPullDistance(44);
       try {
         haptics.heavy();
       } catch {}
 
       try {
-        // Safety timeout of 8s to prevent eternal hang on bad network
         await Promise.race([
           onRefresh(),
           new Promise((resolve) => setTimeout(resolve, 8000))
@@ -143,25 +140,23 @@ export default function PullToRefresh({
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
       onTouchCancel={handleTouchCancel}
-      className="relative min-h-screen"
+      className={cn("relative w-full", className)}
     >
-      {/* Pull-to-refresh Indicator (Mobile Area below header) */}
+      {/* Inline Pull Indicator directly above the posts */}
       <AnimatePresence>
         {(pullDistance > 0 || isRefreshing) && (
           <motion.div
-            initial={{ opacity: 0, y: -15 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -15 }}
-            className={cn(
-              "fixed inset-x-0 z-50 flex items-center justify-center pointer-events-none md:hidden",
-              topOffsetClass
-            )}
-            style={{ transform: `translateY(${Math.min(pullDistance * 0.65, 40)}px)` }}
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ 
+              height: isRefreshing ? 44 : Math.min(pullDistance * 0.75, 50),
+              opacity: 1 
+            }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="w-full flex items-center justify-center overflow-hidden pointer-events-none md:hidden py-1"
           >
-            <div className="w-9 h-9 rounded-full bg-[var(--card-bg)]/95 backdrop-blur-xl border border-[var(--border-color)]/80 shadow-md flex items-center justify-center">
-              {isRefreshing ? (
-                <LoadingSpinner size="xs" variant="dots" color="var(--brand-pink)" />
-              ) : isTriggered ? (
+            <div className="w-8 h-8 rounded-full bg-[var(--background-secondary)]/95 backdrop-blur-xl border border-[var(--border-color)] shadow-sm flex items-center justify-center">
+              {isRefreshing || isTriggered ? (
                 <LoadingSpinner size="xs" variant="spinner" color="var(--brand-pink)" />
               ) : (
                 <motion.div
@@ -176,15 +171,8 @@ export default function PullToRefresh({
         )}
       </AnimatePresence>
 
-      {/* Main Content with subtle spring offset when pulling */}
-      <div
-        style={{
-          transform: pullDistance > 0 ? `translateY(${pullDistance * 0.25}px)` : undefined,
-          transition: isPullingRef.current ? 'none' : 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)'
-        }}
-      >
-        {children}
-      </div>
+      {/* Main Content */}
+      {children}
     </div>
   );
 }

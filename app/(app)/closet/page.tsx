@@ -13,7 +13,7 @@ import {
   Heart, Grid3x3, List, Search, Filter, Plus, Wand2, X, Shirt, Layers, Share2, Trash2, Check, CalendarDays, Sparkles
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { Button, Card, FloatingCreateButton, OutfitCard, ClothingItem, NotificationToastContainer, WardrobeSelectionModal, OutfitDetailModal, EmptyState, SkeletonCard, PullToRefresh } from '@/components';
+import { Button, Card, FloatingCreateButton, OutfitCard, ClothingItem, NotificationToastContainer, WardrobeSelectionModal, OutfitDetailModal, EmptyState, SkeletonCard } from '@/components';
 import AddItemModal from '@/components/AddItemModal';
 import ProductModal from '@/components/ProductModal';
 import KloeProModal from '@/components/KloeProModal';
@@ -646,7 +646,6 @@ export default function ClosetPage() {
 
   return (
     <>
-    <PullToRefresh onRefresh={async () => { await refresh(); }}>
       <motion.div
         className="min-h-screen bg-[var(--background)] pb-24 md:pb-8 relative overflow-hidden touch-pan-y"
         initial={{ opacity: 0 }}
@@ -1320,7 +1319,6 @@ export default function ClosetPage() {
         )}
       </AnimatePresence>
       </motion.div>
-    </PullToRefresh>
 
       {/* Modals — moved outside draggable container to fix fixed positioning */}
       <AddItemModal
