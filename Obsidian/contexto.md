@@ -1162,3 +1162,11 @@ En cada conversación, el backend alimenta a CloSy con:
   - Al hacer clic en dicho botón cuando la pestaña activa es el Calendario, se emite el evento personalizado `klozet:calendar_add_today`.
 - **Recepción y Apertura del Selector en Calendario (`components/OutfitCalendar.tsx`)**:
   - `OutfitCalendar` escucha el evento global `klozet:calendar_add_today` y abre de forma inmediata el selector de outfits asignando la fecha actual de hoy (`selectedDate = new Date()`, `loadUserOutfits()` y `showPicker = true`).
+
+### 93. Animación de Skeleton Estática por Pulso de Color Sin Desplazamiento (`app/globals.css`) (Septiembre 2026)
+- **Supresión de Movimiento Espacial y Shimmer Desplazable**:
+  - Se eliminaron las transformaciones de desplazamiento horizontal (`transform: translateX(...)`) y los gradientes deslizables en pseudo-elementos `::after`.
+- **Animación Fluida de Pulso y Transición de Color en el Sitio**:
+  - Se implementó `@keyframes skeleton-color-pulse` (modo claro) y `@keyframes skeleton-color-pulse-dark` (modo oscuro) en [`app/globals.css`](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/app/globals.css).
+  - Los componentes de esqueleto (`.skeleton`, `.skeleton-wave`) permanecen fijos en su posición física y realizan una respiración/transición cromática suave y continua de fondo (de tono neutro a tono atenuado y viceversa) en un ciclo de 1.8s, ofreciendo una experiencia visual sobria, limpia y 100% libre de vibraciones o saltos en todas las pantallas.
+
