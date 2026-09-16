@@ -1231,6 +1231,11 @@ En cada conversación, el backend alimenta a CloSy con:
 - **Encuadre y Contención de la Imagen del Outfit**:
   - El contenedor de la prenda ahora cuenta con altura máxima calibrada (`max-h-[260px] sm:max-h-[300px]`, `aspect-[3/4]`), fondo neutro adaptativo y ajuste `object-contain`, permitiendo que el outfit completo se visualice de un solo golpe de vista de manera nítida, elegante y sin zoom excesivo ni cortes en las prendas.
 
+### 99. Eliminación de Visualización de Edad en Configuración de Perfil (`app/(app)/profile/settings/page.tsx`) (Septiembre 2026)
+- **Supresión del Bloque de Edad en la Sección "Tu estilo"**:
+  - Se eliminó el campo de visualización de edad (`user.age` / `user.ageRange`) de la cuadrícula de información de estilo en [`app/(app)/profile/settings/page.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/app/%28app%29/profile/settings/page.tsx).
+  - La sección conserva la información relevante y visualmente limpia de género, altura (si aplica), accesorios y estilos preferidos sin exponer públicamente ni en la ficha de ajustes la edad del usuario.
+
 
 
 
