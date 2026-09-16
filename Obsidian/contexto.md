@@ -1111,7 +1111,7 @@ En cada conversación, el backend alimenta a CloSy con:
   - Se eliminó el contenedor flotante desconectado (`fixed` div) y se transformó en un elemento integrado (**inline**) dentro del mismo contenedor de publicaciones:
     - **En Feed (`/feed`)**: Se sitúa directamente dentro del contenedor de publicaciones, desplegándose suavemente encima de los posts y debajo de la cabecera móvil.
     - **En Búsqueda (`/search`)**: Se sitúa directamente dentro del contenedor de resultados, desplegándose suavemente encima de las publicaciones y debajo de la barra de búsqueda fija.
-  - **Retirada de Pull-to-Refresh en Armario (`/closet`)**: Se eliminó la envoltura de `PullToRefresh` en `/closet`, optimizando la experiencia nativa de catálogo de prendas.
+  - **Restricción Exclusiva a Feed y Search**: Se eliminó la envoltura de `PullToRefresh` en Perfil (`/profile`), Armario (`/closet`), Notificaciones y demás pantallas secundarias, manteniéndose activo **única y exclusivamente en `/feed` y `/search`**.
 - **Motor de Interés, Interacción y Frescura de Publicaciones (`lib/services/interestManager.ts`)**:
   - Se implementó el servicio singleton `interestManager` con persistencia en `localStorage`:
     - `recordPostInteraction(postId, authorId, styleIds)`: Registra automáticamente clics, visitas a publicaciones y estilos explorados tanto al pulsar una tarjeta (`PostCard.tsx`) como al cargar el visor de detalle (`post/[id]/page.tsx`).

@@ -27,7 +27,7 @@ import {
   Loader2
 } from 'lucide-react';
 
-import { Avatar, Button as UiButton, OutfitCard, EmptyState, Skeleton, SkeletonProfile, SkeletonProfileGrid, DiscoveredStyleBanner, AvatarModal, PullToRefresh } from '@/components';
+import { Avatar, Button as UiButton, OutfitCard, EmptyState, Skeleton, SkeletonProfile, SkeletonProfileGrid, DiscoveredStyleBanner, AvatarModal } from '@/components';
 import PostCard, { type Post } from '@/components/Feed/PostCard';
 import FolderPreview from '@/components/FolderPreview';
 import { useUiStore } from '@/store/uiStore';
@@ -220,8 +220,7 @@ export default function ProfilePage() {
   );
 
   return (
-    <PullToRefresh onRefresh={async () => { if (user?.id) await fetchProfileData(user.id, true); }}>
-      <div className="min-h-screen bg-[var(--background)] pb-24">
+    <div className="min-h-screen bg-[var(--background)] pb-24">
 
       {/* Create Folder Modal */}
       <AnimatePresence>
@@ -810,7 +809,6 @@ export default function ProfilePage() {
           -webkit-column-break-inside: avoid;
         }
       `}</style>
-      </div>
-    </PullToRefresh>
+    </div>
   );
 }
