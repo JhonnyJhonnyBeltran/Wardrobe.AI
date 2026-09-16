@@ -1105,5 +1105,23 @@ En cada conversación, el backend alimenta a CloSy con:
     - Al guardar en una carpeta, el endpoint actualiza de forma segura tanto la columna `saves.folder_id` como la tabla relacional `save_folder_items` con bloques tolerantes a fallos.
     - En `GET /api/saves?folder_id=...`, se consulta mediante estrategia dual (búsqueda por IDs de `save_folder_items` y por `saves.folder_id`), fusionando y deduplicando resultados para garantizar que todas las publicaciones guardadas en la carpeta aparezcan de forma inmediata en la pestaña de guardados del perfil.
 
-
-
+### 89. Rediseño de Pull-to-Refresh Bajo Encabezados y Motor de Puntuación por Afinidad, Amigos de Amigos y Novedad (`/search` y `/feed`) (Septiembre 2026)
+- **Indicador Limpio de Pull-to-Refresh Bajo Encabezados (`PullToRefresh.tsx`)**:
+  - Se eliminó el icono tipo "Sparkles" / IA del indicador de recarga y se implementó un spinner suave de 3 puntos (`LoadingSpinner` variant `dots` y `spinner`) con aceleración por hardware en color rosa de marca (`var(--brand-pink)`).
+  - Se agregó la propiedad `topOffsetClass` para posicionar con precisión el indicador flotante en vista móvil:
+    - **En Búsqueda (`/search`)**: Configurado con `topOffsetClass="top-24 md:top-28"`, situándose exactamente debajo de la barra de búsqueda flotante sin taparla ni interferir en el foco.
+    - **En Feed (`/feed`)**: Configurado con `topOffsetClass="top-16 md:top-20"`, situándose justamente debajo de la barra de navegación superior móvil que contiene los botones de crear y mensajes directos.
+- **Motor de Interés, Interacción y Frescura de Publicaciones (`lib/services/interestManager.ts`)**:
+  - Se implementó el servicio singleton `interestManager` con persistencia en `localStorage`:
+    - `recordPostInteraction(postId, authorId, styleIds)`: Registra automáticamente clics, visitas a publicaciones y estilos explorados tanto al pulsar una tarjeta (`PostCard.tsx`) como al cargar el visor de detalle (`post/[id]/page.tsx`).
+    - `getStyleInterestBonus(styleIds)`: Pondera bonificaciones dinámicas (+0 a +10 pts) según los estilos que el usuario explora con mayor frecuencia.
+    - `getAuthorInterestBonus(authorId)`: Pondera afinidad con los creadores más visitados (+0 a +6 pts).
+    - `calculateRecencyScore(createdAt)`: Premia la novedad y frescura de las publicaciones recién subidas (<6h: +18 pts, <12h: +15, <24h: +12, <48h: +9, <4d: +6, <7d: +3, <14d: +1), garantizando que las novedades siempre destaquen en los primeros puestos.
+- **Algoritmo de Recomendación y Descubrimiento en Búsqueda (`/search`)**:
+  - El algoritmo de scoring multicriterio fusiona la novedad de las publicaciones (`recencyScore`), el interés por estilos explorados (`styleInterestBonus`), afinidad con el creador (`authorInterestBonus`), gustos del perfil (`preferredStyles`), historial dinámico de likes (`recentLikedStylesMap`), concordancia morfológica, colorimétrica, de género y proximidad etaria.
+  - Al realizar pull-to-refresh en `/search`, se recargan los posts exploratorios con contenidos frescos y actualizados.
+- **Algoritmo de Priorización y Amigos de Amigos en Feed (`/feed`)**:
+  - Se reestructuró la consulta y ordenación del Feed para priorizar:
+    1. **Publicaciones directas de usuarios seguidos (`following`)**: Máxima prioridad (+50 pts) combinada con el boost de frescura y novedad reciente.
+    2. **Publicaciones de Amigos de Amigos (`FOF` - Seguidos de mis seguidos)**: Prioridad destacada (+25 pts) para descubrir personas y looks cercanos a su círculo social.
+    3. **Sugerencias de afinidad comunitaria y exploración**: Contenido afín (+5 pts base + estilo y novedad) para mantener el feed siempre activo e infinito.

@@ -20,6 +20,7 @@ import { haptics } from '@/lib/haptic';
 import { useFeedStore } from '@/store/feedStore';
 import { useSearchStore } from '@/store/searchStore';
 import { likeManager } from '@/lib/services/likeManager';
+import { interestManager } from '@/lib/services/interestManager';
 
 interface Comment {
     id: string;
@@ -277,6 +278,10 @@ export default function PostDetailPage() {
                     .order('created_at', { ascending: true });
 
                 setPost(postData);
+
+                try {
+                    interestManager.recordPostInteraction(postData.id, postData.user_id, postData.style_ids);
+                } catch {}
 
                 // Prioritize likeManager pending state or store state over direct db query
                 const pendingLike = likeManager.getPendingState(postId);

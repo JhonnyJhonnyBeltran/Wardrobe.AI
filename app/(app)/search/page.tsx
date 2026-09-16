@@ -12,6 +12,7 @@ import { useUiStore } from '@/store/uiStore';
 import { useSearchStore, SearchUserProfile } from '@/store/searchStore';
 import { useSearchHistory } from '@/lib/hooks';
 import { likeManager } from '@/lib/services/likeManager';
+import { interestManager } from '@/lib/services/interestManager';
 import Link from 'next/link';
 import { useRef, useCallback } from 'react';
 
@@ -348,6 +349,18 @@ export default function SearchPage() {
             let scoreA = 0;
             let scoreB = 0;
 
+            // 0. Recency Boost (Priority to newly published posts: up to 18 pts)
+            scoreA += interestManager.calculateRecencyScore(a.created_at);
+            scoreB += interestManager.calculateRecencyScore(b.created_at);
+
+            // 0.1 Interaction & Clicked Style Interest (up to 10 pts)
+            scoreA += interestManager.getStyleInterestBonus(a.style_ids);
+            scoreB += interestManager.getStyleInterestBonus(b.style_ids);
+
+            // 0.2 Author Interest bonus (up to 6 pts)
+            scoreA += interestManager.getAuthorInterestBonus(a.user_id);
+            scoreB += interestManager.getAuthorInterestBonus(b.user_id);
+
             // 1. Likes weight
             scoreA += (a.likes?.[0]?.count || 0) * 0.5;
             scoreB += (b.likes?.[0]?.count || 0) * 0.5;
@@ -602,7 +615,7 @@ export default function SearchPage() {
   }, [loadMoreUsers, loadMorePosts, usersHasMore, postsHasMore, usersLoadingMore, postsLoadingMore, loading, usersLoadError, postsLoadError]);
 
   return (
-    <PullToRefresh onRefresh={handleRefresh}>
+    <PullToRefresh onRefresh={handleRefresh} topOffsetClass="top-24 md:top-28">
       <div className="min-h-[100dvh] w-full max-w-[100vw] overflow-x-hidden bg-[var(--background)] pb-24">
         {/* Floating Header */}
       <div className="fixed top-4 md:top-6 left-0 right-0 z-[4980] px-4 pointer-events-none flex justify-center">

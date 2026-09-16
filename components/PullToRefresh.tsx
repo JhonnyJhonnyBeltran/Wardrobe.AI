@@ -2,20 +2,27 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowDown, Sparkles } from 'lucide-react';
+import { ArrowDown } from 'lucide-react';
 import LoadingSpinner from './LoadingSpinner';
 import { haptics } from '@/lib/haptic';
+import { cn } from '@/lib/utils';
 
 interface PullToRefreshProps {
   onRefresh: () => Promise<any>;
   children: React.ReactNode;
   disabled?: boolean;
+  topOffsetClass?: string;
 }
 
 const PULL_THRESHOLD = 65; // Distance in px to trigger refresh
 const MAX_PULL_DISTANCE = 110; // Maximum visual pull distance
 
-export default function PullToRefresh({ onRefresh, children, disabled = false }: PullToRefreshProps) {
+export default function PullToRefresh({ 
+  onRefresh, 
+  children, 
+  disabled = false,
+  topOffsetClass = "top-16"
+}: PullToRefreshProps) {
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isTriggered, setIsTriggered] = useState(false);
@@ -138,27 +145,30 @@ export default function PullToRefresh({ onRefresh, children, disabled = false }:
       onTouchCancel={handleTouchCancel}
       className="relative min-h-screen"
     >
-      {/* Pull-to-refresh Indicator (Mobile Top Area) */}
+      {/* Pull-to-refresh Indicator (Mobile Area below header) */}
       <AnimatePresence>
         {(pullDistance > 0 || isRefreshing) && (
           <motion.div
-            initial={{ opacity: 0, y: -20 }}
+            initial={{ opacity: 0, y: -15 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="fixed top-2 inset-x-0 z-50 flex items-center justify-center pointer-events-none md:hidden"
-            style={{ transform: `translateY(${Math.min(pullDistance * 0.7, 45)}px)` }}
+            exit={{ opacity: 0, y: -15 }}
+            className={cn(
+              "fixed inset-x-0 z-50 flex items-center justify-center pointer-events-none md:hidden",
+              topOffsetClass
+            )}
+            style={{ transform: `translateY(${Math.min(pullDistance * 0.65, 40)}px)` }}
           >
-            <div className="w-10 h-10 rounded-full bg-[var(--card-bg)]/95 backdrop-blur-lg border border-[var(--brand-pink)]/40 shadow-lg shadow-[var(--brand-pink)]/15 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-full bg-[var(--card-bg)]/95 backdrop-blur-xl border border-[var(--border-color)]/80 shadow-md flex items-center justify-center">
               {isRefreshing ? (
-                <LoadingSpinner size="sm" color="var(--brand-pink)" />
+                <LoadingSpinner size="xs" variant="dots" color="var(--brand-pink)" />
               ) : isTriggered ? (
-                <Sparkles className="w-5 h-5 text-[var(--brand-pink)] animate-pulse" />
+                <LoadingSpinner size="xs" variant="spinner" color="var(--brand-pink)" />
               ) : (
                 <motion.div
                   style={{ rotate: progress * 180 }}
                   className="text-[var(--foreground-secondary)]"
                 >
-                  <ArrowDown className="w-4 h-4 text-[var(--brand-pink)]" />
+                  <ArrowDown className="w-3.5 h-3.5 text-[var(--brand-pink)]" />
                 </motion.div>
               )}
             </div>

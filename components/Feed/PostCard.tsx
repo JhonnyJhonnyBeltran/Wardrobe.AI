@@ -12,9 +12,8 @@ import { supabase } from '@/lib/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { haptics } from '@/lib/haptic';
 import PostPreviewModal from './PostPreviewModal';
-import { useFeedStore } from '@/store/feedStore';
-import { useSearchStore } from '@/store/searchStore';
 import { likeManager } from '@/lib/services/likeManager';
+import { interestManager } from '@/lib/services/interestManager';
 
 export interface Post {
     id: string;
@@ -30,6 +29,7 @@ export interface Post {
     isSaved?: boolean;
     description?: string;
     isSuggested?: boolean;
+    style_ids?: string[];
 }
 
 interface PostCardProps {
@@ -109,6 +109,9 @@ export default function PostCard({
             e.stopPropagation();
             return;
         }
+        try {
+            interestManager.recordPostInteraction(post.id, null, (post as any).style_ids);
+        } catch {}
         if (onClick) {
             onClick();
         } else {

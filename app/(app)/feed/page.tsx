@@ -17,6 +17,7 @@ import { useUser } from '@/store/userStore';
 import { useFeedStore } from '@/store/feedStore';
 import { getFollowing } from '@/lib/services/followService';
 import { likeManager } from '@/lib/services/likeManager';
+import { interestManager } from '@/lib/services/interestManager';
 
 export default function FeedPage() {
   const { posts, setPosts, hasMore, setHasMore, lastFetchedAt } = useFeedStore();
@@ -66,32 +67,81 @@ export default function FeedPage() {
       const from = currentPage * POSTS_PER_PAGE;
       const to = from + POSTS_PER_PAGE - 1;
 
-      // Get all users that the current user follows
+      // 1. Get all users that the current user follows
       const following = await getFollowing(user.id);
       const followingIds = following.map(f => f.id);
-
-      // Include current user's posts and friends' posts
       const targetIds = [user.id, ...followingIds];
 
-      // 1. Fetch posts from following
-      const { data: followingPostsData, error: postsError } = await supabase
-        .from('posts')
-        .select(`
-          id, caption, image_url, created_at, user_id,
-          outfits ( name, outfit_items ( clothing_items ( image_url ) ) ),
-          likes_count, comments_count, style_ids
-        `)
-        .in('user_id', targetIds)
-        .order('created_at', { ascending: false })
-        .range(from, to);
+      // 2. Fetch friends of friends (users followed by the people the current user follows)
+      let fofIds: string[] = [];
+      if (followingIds.length > 0) {
+        try {
+          const { data: fofRows } = await supabase
+            .from('follows')
+            .select('following_id')
+            .in('follower_id', followingIds.slice(0, 50))
+            .limit(100);
 
-      if (postsError) throw postsError;
+          if (fofRows) {
+            const uniqueFof = new Set<string>(
+              (fofRows as any[])
+                .map((r: any) => r.following_id as string)
+                .filter((id: string) => id && id !== user.id && !followingIds.includes(id))
+            );
+            fofIds = Array.from(uniqueFof).slice(0, 40);
+          }
+        } catch (e) {
+          console.warn('Error fetching friends of friends:', e);
+        }
+      }
 
-      // 2. Fetch suggested posts based on preferredStyles & affinity
+      // 3. Fetch posts from following & current user
+      let followingPostsData: any[] = [];
+      if (targetIds.length > 0) {
+        const { data: fData, error: postsError } = await supabase
+          .from('posts')
+          .select(`
+            id, caption, image_url, created_at, user_id,
+            outfits ( name, outfit_items ( clothing_items ( image_url ) ) ),
+            likes_count, comments_count, style_ids
+          `)
+          .in('user_id', targetIds)
+          .order('created_at', { ascending: false })
+          .range(from, to);
+
+        if (postsError) throw postsError;
+        followingPostsData = fData || [];
+      }
+
+      // 4. Fetch posts from friends of friends (FOFs)
+      let fofPostsData: any[] = [];
+      if (fofIds.length > 0) {
+        try {
+          const { data: fofPosts } = await supabase
+            .from('posts')
+            .select(`
+              id, caption, image_url, created_at, user_id,
+              outfits ( name, outfit_items ( clothing_items ( image_url ) ) ),
+              likes_count, comments_count, style_ids
+            `)
+            .in('user_id', fofIds)
+            .order('created_at', { ascending: false })
+            .limit(30);
+
+          if (fofPosts) {
+            fofPostsData = fofPosts.map((p: any) => ({ ...p, isFof: true, isSuggested: true }));
+          }
+        } catch (e) {
+          console.warn('Error fetching FOF posts:', e);
+        }
+      }
+
+      // 5. Fetch suggested posts based on preferredStyles & affinity
       let suggestedPostsData: any[] = [];
       const userStyles = user.preferredStyles || [];
 
       if (userStyles.length > 0) {
+        const excludedIds = [...targetIds, ...fofIds];
         let query = supabase
           .from('posts')
           .select(`
@@ -102,8 +152,8 @@ export default function FeedPage() {
           .overlaps('style_ids', userStyles)
           .order('likes_count', { ascending: false });
 
-        if (targetIds.length > 0) {
-          query = query.not('user_id', 'in', `(${targetIds.join(',')})`);
+        if (excludedIds.length > 0) {
+          query = query.not('user_id', 'in', `(${excludedIds.join(',')})`);
         }
 
         const { data: suggestions } = await query.range(currentPage * 20, (currentPage * 20) + 19);
@@ -112,8 +162,8 @@ export default function FeedPage() {
         }
       }
 
-      // If user has 0 following or no posts from following, fetch general community explore posts
-      if ((!followingPostsData || followingPostsData.length === 0) && suggestedPostsData.length === 0 && currentPage === 0) {
+      // Fallback: If user has no following/fof or no posts found, fetch general explore posts
+      if (followingPostsData.length === 0 && fofPostsData.length === 0 && suggestedPostsData.length === 0 && currentPage === 0) {
         const { data: explorePosts } = await supabase
           .from('posts')
           .select(`
@@ -129,22 +179,51 @@ export default function FeedPage() {
         }
       }
 
-      // Mix following posts and suggested posts
-      let mixedPosts: any[] = [];
-      const mainPosts = followingPostsData || [];
+      // Combine and rank all candidate posts:
+      // Priority 1: Following + Recency
+      // Priority 2: Friends of Friends + Recency
+      // Priority 3: Affinity / Community + Recency
+      const allCandidatePosts = [...followingPostsData, ...fofPostsData, ...suggestedPostsData];
       
-      let sIdx = 0;
-      for (let i = 0; i < mainPosts.length; i++) {
-        mixedPosts.push(mainPosts[i]);
-        if ((i + 1) % 2 === 0 && sIdx < suggestedPostsData.length) {
-          mixedPosts.push(suggestedPostsData[sIdx]);
-          sIdx++;
+      // Deduplicate by ID
+      const uniquePostsMap = new Map<string, any>();
+      allCandidatePosts.forEach((post) => {
+        if (!uniquePostsMap.has(post.id)) {
+          uniquePostsMap.set(post.id, post);
         }
-      }
-      while (sIdx < suggestedPostsData.length) {
-        mixedPosts.push(suggestedPostsData[sIdx]);
-        sIdx++;
-      }
+      });
+
+      const mixedPosts = Array.from(uniquePostsMap.values()).sort((a: any, b: any) => {
+        const scorePost = (p: any) => {
+          let score = 0;
+          const isDirect = followingIds.includes(p.user_id) || p.user_id === user.id;
+          const isFriendOfFriend = fofIds.includes(p.user_id);
+
+          if (isDirect) {
+            score += 50; // Direct following priority
+          } else if (isFriendOfFriend) {
+            score += 25; // Friends of friends priority
+          } else {
+            score += 5; // Community explore / suggestion
+          }
+
+          // Recency Boost (up to 18 pts for newest posts)
+          score += interestManager.calculateRecencyScore(p.created_at);
+
+          // Interaction / Style Interest bonus (up to 10 pts)
+          score += interestManager.getStyleInterestBonus(p.style_ids);
+
+          // Author interaction bonus (up to 6 pts)
+          score += interestManager.getAuthorInterestBonus(p.user_id);
+
+          // Likes popularity bonus
+          score += Math.min((p.likes_count || 0) * 0.2, 5);
+
+          return score;
+        };
+
+        return scorePost(b) - scorePost(a);
+      });
 
       if (mixedPosts.length > 0) {
         // Manually fetch profiles for ALL mixed posts
@@ -278,7 +357,7 @@ export default function FeedPage() {
   }, [loadMorePosts, hasMore, loadingMore, loading, loadError]);
 
   return (
-    <PullToRefresh onRefresh={() => fetchPosts(false, true)}>
+    <PullToRefresh onRefresh={() => fetchPosts(false, true)} topOffsetClass="top-16 md:top-20">
       <div className="min-h-screen bg-[var(--background)] pb-24 md:pb-8">
         {/* Top Header (Mobile Only) */}
         <header className="sticky top-0 z-30 apple-glass-bar pt-safe md:hidden">
