@@ -481,8 +481,8 @@ export default function SettingsPage() {
                                     {user.gender && (
                                         <div>
                                             <div className="text-xs text-[var(--foreground-tertiary)] mb-1">{t.profile.gender}</div>
-                                            <div className="font-medium text-[var(--foreground)] capitalize">
-                                                {user.gender}
+                                            <div className="font-medium text-[var(--foreground)]">
+                                                {user.gender === 'woman' ? 'Mujer' : user.gender === 'man' ? 'Hombre' : user.gender === 'other' ? 'Unisex / Mixto' : user.gender}
                                             </div>
                                         </div>
                                     )}
@@ -490,7 +490,16 @@ export default function SettingsPage() {
                                         <div>
                                             <div className="text-xs text-[var(--foreground-tertiary)] mb-1">{t.profile.age}</div>
                                             <div className="font-medium text-[var(--foreground)]">
-                                                {user.age ? `${user.age} años` : user.ageRange}
+                                                {user.age ? `${user.age} años` : (
+                                                    (user.ageRange as string) === 'under_18' ? 'Menor de 18 años' :
+                                                    (user.ageRange as string) === '18_24' || (user.ageRange as string) === '18-24' ? '18 - 24 años' :
+                                                    (user.ageRange as string) === '25_34' || (user.ageRange as string) === '25-34' ? '25 - 34 años' :
+                                                    (user.ageRange as string) === '35_44' || (user.ageRange as string) === '35-44' ? '35 - 44 años' :
+                                                    (user.ageRange as string) === '45_plus' || (user.ageRange as string) === '45+' ? '45+ años' :
+                                                    (user.ageRange as string) === '45-54' ? '45 - 54 años' :
+                                                    (user.ageRange as string) === '55+' ? '55+ años' :
+                                                    `${user.ageRange} años`
+                                                )}
                                             </div>
                                         </div>
                                     )}
@@ -507,7 +516,12 @@ export default function SettingsPage() {
                                             {t.profile.accessories}
                                         </div>
                                         <div className="font-medium text-[var(--foreground)]">
-                                            {user.usesAccessories ? t.profile.yes : t.profile.minimalist}
+                                            {user.accessoriesStyle === 'minimalista' ? 'Minimalista' :
+                                             user.accessoriesStyle === 'clasico' ? 'Clásico / Elegante' :
+                                             user.accessoriesStyle === 'llamativo' ? 'Statement / Llamativo' :
+                                             user.accessoriesStyle === 'urbano' ? 'Urbano / Streetwear' :
+                                             user.accessoriesStyle === 'ninguno' ? 'Sin accesorios' :
+                                             user.usesAccessories ? 'Minimalista' : 'Sin accesorios'}
                                         </div>
                                     </div>
                                 </div>
@@ -525,25 +539,6 @@ export default function SettingsPage() {
                                                     className="px-3 py-1.5 rounded-full bg-[var(--brand-pink)]/8 text-[var(--brand-pink)] text-xs font-medium"
                                                 >
                                                     {styleNames[style] || style}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Preferencias visuales */}
-                                {user.visualStylePreferences && user.visualStylePreferences.length > 0 && (
-                                    <div>
-                                        <div className="text-xs text-[var(--foreground-tertiary)] mb-2">
-                                            {t.profile.preferences}
-                                        </div>
-                                        <div className="flex flex-wrap gap-2">
-                                            {user.visualStylePreferences.map((pref, idx) => (
-                                                <span
-                                                    key={idx}
-                                                    className="px-3 py-1.5 rounded-full bg-[var(--background-tertiary)] text-[var(--foreground-secondary)] text-xs font-medium"
-                                                >
-                                                    {styleNames[pref] || pref}
                                                 </span>
                                             ))}
                                         </div>

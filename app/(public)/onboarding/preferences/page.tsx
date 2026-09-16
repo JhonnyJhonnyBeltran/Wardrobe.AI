@@ -25,6 +25,58 @@ interface StyleItem {
     image_url_man?: string;
 }
 
+interface AccessoryOption {
+    id: string;
+    name: string;
+    sublabel: string;
+    image_woman: string;
+    image_man: string;
+    image_unisex: string;
+}
+
+const ACCESSORY_OPTIONS: AccessoryOption[] = [
+    {
+        id: 'minimalista',
+        name: 'Minimalista',
+        sublabel: 'Sutil, discreto y funcional (reloj fino, anillos sutiles o cadenas finas)',
+        image_woman: 'https://images.unsplash.com/photo-1602751584552-8ba73aad10e1?w=800&q=80',
+        image_man: 'https://images.unsplash.com/photo-1524805444758-089113d48a6d?w=800&q=80',
+        image_unisex: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&q=80',
+    },
+    {
+        id: 'clasico',
+        name: 'Clásico / Elegante',
+        sublabel: 'Atemporal y refinado (joyería clásica, reloj de piel, perlas o acero)',
+        image_woman: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=800&q=80',
+        image_man: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&q=80',
+        image_unisex: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&q=80',
+    },
+    {
+        id: 'llamativo',
+        name: 'Statement / Llamativo',
+        sublabel: 'Piezas protagonistas con presencia, volumen y brillo destacado',
+        image_woman: 'https://images.unsplash.com/photo-1535556116002-6281ff3e9f36?w=800&q=80',
+        image_man: 'https://images.unsplash.com/photo-1611652022419-a9419f74343d?w=800&q=80',
+        image_unisex: 'https://images.unsplash.com/photo-1535556116002-6281ff3e9f36?w=800&q=80',
+    },
+    {
+        id: 'urbano',
+        name: 'Urbano / Streetwear',
+        sublabel: 'Cadenas, gorras, gafas de sol y complementos de tendencia urbana',
+        image_woman: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800&q=80',
+        image_man: 'https://images.unsplash.com/photo-1576995853123-5a10305d93c0?w=800&q=80',
+        image_unisex: 'https://images.unsplash.com/photo-1576995853123-5a10305d93c0?w=800&q=80',
+    },
+    {
+        id: 'ninguno',
+        name: 'Sin accesorios',
+        sublabel: 'Prefiero vestir looks limpios sin complementos adicionales',
+        image_woman: 'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=800&q=80',
+        image_man: 'https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=800&q=80',
+        image_unisex: 'https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=800&q=80',
+    },
+];
+
 // 34 Comprehensive Style Definitions with Real Fashion Outfit Photography
 const COMPREHENSIVE_STYLES: StyleItem[] = [
     {
@@ -349,6 +401,7 @@ export default function PreferencesPage() {
     const [age, setAge] = useState<number>(24);
     const [gender, setGender] = useState('');
     const [selectedStyles, setSelectedStyles] = useState<string[]>([]);
+    const [selectedAccessory, setSelectedAccessory] = useState<string>('minimalista');
 
     // DB state
     const [dbStyles, setDbStyles] = useState<StyleItem[]>([]);
@@ -378,6 +431,13 @@ export default function PreferencesPage() {
             setGender(prev => prev || user.gender || '');
             if (Array.isArray(user.preferredStyles)) {
                 setSelectedStyles(prev => prev.length ? prev : user.preferredStyles!);
+            }
+            if (user.accessoriesStyle) {
+                setSelectedAccessory(user.accessoriesStyle);
+            } else if (user.usesAccessories === false) {
+                setSelectedAccessory('ninguno');
+            } else if (user.usesAccessories === true) {
+                setSelectedAccessory('minimalista');
             }
         }
 
@@ -455,11 +515,19 @@ export default function PreferencesPage() {
             : (style.image_url_man || style.image_url || style.image_url_woman || '');
     };
 
+    const getAccessoryImage = (option: AccessoryOption) => {
+        if (gender === 'man') return option.image_man;
+        if (gender === 'woman') return option.image_woman;
+        return option.image_unisex;
+    };
+
     const handleNext = () => {
         if (step === 0 && !age) return;
         if (step === 1 && !gender) return;
+        if (step === 2 && selectedStyles.length === 0) return;
+        if (step === 3 && !selectedAccessory) return;
 
-        if (step < 2) {
+        if (step < 3) {
             setStep(prev => prev + 1);
         } else {
             handleComplete();
@@ -471,6 +539,7 @@ export default function PreferencesPage() {
         setIsSaving(true);
 
         const ageRangeComputed = getAgeRangeFromAge(age);
+        const usesAccessoriesVal = selectedAccessory !== 'ninguno';
 
         try {
             const { error } = await (supabase as any)
@@ -482,6 +551,8 @@ export default function PreferencesPage() {
                     gender: gender,
                     preferred_styles: selectedStyles,
                     visual_style_preferences: selectedStyles,
+                    uses_accessories: usesAccessoriesVal,
+                    accessories_style: selectedAccessory,
                     style_completed: true,
                     updated_at: new Date().toISOString(),
                 });
@@ -496,6 +567,8 @@ export default function PreferencesPage() {
                 gender: gender as any,
                 preferredStyles: selectedStyles,
                 visualStylePreferences: selectedStyles,
+                usesAccessories: usesAccessoriesVal,
+                accessoriesStyle: selectedAccessory,
                 styleCompleted: true
             });
 
@@ -526,11 +599,12 @@ export default function PreferencesPage() {
             {/* Minimal Header */}
             <header className="px-6 py-5 flex items-center justify-between sticky top-0 z-50 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-color)]/30">
                 <div className="flex gap-2 items-center">
-                    <div className={`h-1.5 w-10 md:w-14 rounded-full transition-all duration-300 ${step >= 0 ? 'bg-[var(--brand-pink)]' : 'bg-[var(--border-color)]'}`} />
-                    <div className={`h-1.5 w-10 md:w-14 rounded-full transition-all duration-300 ${step >= 1 ? 'bg-[var(--brand-pink)]' : 'bg-[var(--border-color)]'}`} />
-                    <div className={`h-1.5 w-10 md:w-14 rounded-full transition-all duration-300 ${step >= 2 ? 'bg-[var(--brand-pink)]' : 'bg-[var(--border-color)]'}`} />
+                    <div className={`h-1.5 w-8 sm:w-12 rounded-full transition-all duration-300 ${step >= 0 ? 'bg-[var(--brand-pink)]' : 'bg-[var(--border-color)]'}`} />
+                    <div className={`h-1.5 w-8 sm:w-12 rounded-full transition-all duration-300 ${step >= 1 ? 'bg-[var(--brand-pink)]' : 'bg-[var(--border-color)]'}`} />
+                    <div className={`h-1.5 w-8 sm:w-12 rounded-full transition-all duration-300 ${step >= 2 ? 'bg-[var(--brand-pink)]' : 'bg-[var(--border-color)]'}`} />
+                    <div className={`h-1.5 w-8 sm:w-12 rounded-full transition-all duration-300 ${step >= 3 ? 'bg-[var(--brand-pink)]' : 'bg-[var(--border-color)]'}`} />
                 </div>
-                {isEditing && (
+                {isEditing ? (
                     <button
                         onClick={() => router.push('/closet')}
                         className="p-2 rounded-full hover:bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:text-[var(--foreground)] transition-colors"
@@ -538,14 +612,8 @@ export default function PreferencesPage() {
                     >
                         <X className="w-5 h-5" />
                     </button>
-                )}
-                {step > 0 && !isEditing && (
-                    <button
-                        onClick={() => setStep(prev => prev - 1)}
-                        className="text-[var(--foreground-secondary)] hover:text-[var(--foreground)] text-sm font-medium transition-colors py-1.5 px-3 rounded-lg hover:bg-[var(--background-secondary)]"
-                    >
-                        Volver
-                    </button>
+                ) : (
+                    <div className="w-9" />
                 )}
             </header>
 
@@ -738,16 +806,20 @@ export default function PreferencesPage() {
                                     <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-[var(--foreground)]">
                                         Tus estilos favoritos
                                     </h1>
-                                    <span className="text-xs font-semibold px-3 py-1 rounded-full bg-[var(--background-secondary)] text-[var(--brand-pink)] border border-[var(--border-color)]">
-                                        {selectedStyles.length} seleccionados
+                                    <span className={`text-xs font-semibold px-3 py-1 rounded-full border transition-colors ${
+                                        selectedStyles.length > 0
+                                            ? 'bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] border-[var(--brand-pink)]/30'
+                                            : 'bg-[var(--background-secondary)] text-[var(--foreground-tertiary)] border-[var(--border-color)]'
+                                    }`}>
+                                        {selectedStyles.length > 0 ? `${selectedStyles.length} seleccionados` : 'Elige al menos 1'}
                                     </span>
                                 </div>
                                 <p className="text-sm sm:text-base text-[var(--foreground-secondary)]">
-                                    Elige los estilos que mejor representen cómo te gusta vestir.
+                                    Elige los estilos que mejor representen cómo te gusta vestir (selección obligatoria).
                                 </p>
                             </div>
 
-                            {/* 32 Grid Items with dynamic gender-specific photography */}
+                            {/* 34 Grid Items with dynamic gender-specific photography */}
                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 pb-4">
                                 {availableStyles.map((style, idx) => {
                                     const styleKey = style.slug || style.id;
@@ -810,6 +882,76 @@ export default function PreferencesPage() {
                             </div>
                         </motion.div>
                     )}
+
+                    {/* STEP 3: ACCESSORIES STYLE SELECTION */}
+                    {step === 3 && (
+                        <motion.div
+                            key="step3"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            transition={{ duration: 0.25 }}
+                            className="flex flex-col gap-6"
+                        >
+                            <div className="text-center md:text-left space-y-2">
+                                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-[var(--foreground)]">
+                                    ¿Qué tipo de accesorios sueles llevar?
+                                </h1>
+                                <p className="text-sm sm:text-base text-[var(--foreground-secondary)]">
+                                    Personalizamos cómo completamos tus looks, recomendaciones y complementos.
+                                </p>
+                            </div>
+
+                            <div className="grid gap-3 sm:gap-4 mt-1 pb-4">
+                                {ACCESSORY_OPTIONS.map((option) => {
+                                    const isSelected = selectedAccessory === option.id;
+                                    const imageSrc = getAccessoryImage(option);
+
+                                    return (
+                                        <button
+                                            key={option.id}
+                                            type="button"
+                                            onClick={() => setSelectedAccessory(option.id)}
+                                            className={`relative w-full h-28 sm:h-32 rounded-2xl overflow-hidden text-left transition-all duration-200 group ${
+                                                isSelected
+                                                    ? 'ring-3 ring-[var(--brand-pink)] scale-[0.99] shadow-lg'
+                                                    : 'border border-[var(--border-color)] hover:border-[var(--brand-pink)]/50 active:scale-[0.98]'
+                                            }`}
+                                        >
+                                            <Image
+                                                src={imageSrc}
+                                                alt={option.name}
+                                                fill
+                                                className="object-cover transition-transform duration-500 group-hover:scale-105"
+                                            />
+                                            <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/30" />
+
+                                            <div className="absolute inset-0 p-5 sm:p-6 flex items-center justify-between z-10">
+                                                <div className="space-y-1 max-w-[80%]">
+                                                    <span className="text-white text-lg sm:text-xl font-bold tracking-wide block">
+                                                        {option.name}
+                                                    </span>
+                                                    <span className="text-white/80 text-xs sm:text-sm block line-clamp-2">
+                                                        {option.sublabel}
+                                                    </span>
+                                                </div>
+
+                                                <div
+                                                    className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shrink-0 transition-all ${
+                                                        isSelected
+                                                            ? 'bg-[var(--brand-pink)] text-white shadow-md'
+                                                            : 'bg-white/20 text-white/50 group-hover:bg-white/40'
+                                                    }`}
+                                                >
+                                                    {isSelected && <Check className="w-4 h-4 sm:w-5 sm:h-5" strokeWidth={2.5} />}
+                                                </div>
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </motion.div>
+                    )}
                 </AnimatePresence>
             </main>
 
@@ -831,17 +973,23 @@ export default function PreferencesPage() {
 
                     <Button
                         size="lg"
-                        className="flex-1 h-13 rounded-2xl text-[15px] font-semibold max-w-sm ml-auto"
+                        className="flex-1 h-13 rounded-2xl text-[15px] font-semibold max-w-sm ml-auto disabled:opacity-40 disabled:cursor-not-allowed"
                         onClick={handleNext}
-                        disabled={(step === 0 && !age) || (step === 1 && !gender) || isSaving}
+                        disabled={
+                            (step === 0 && !age) ||
+                            (step === 1 && !gender) ||
+                            (step === 2 && selectedStyles.length === 0) ||
+                            (step === 3 && !selectedAccessory) ||
+                            isSaving
+                        }
                         type="button"
                     >
                         {isSaving
                             ? 'Guardando...'
-                            : step === 2
+                            : step === 3
                             ? 'Finalizar y explorar'
                             : 'Continuar'}
-                        {step < 2 && !isSaving && <ChevronRight className="w-4 h-4 ml-1.5" />}
+                        {step < 3 && !isSaving && <ChevronRight className="w-4 h-4 ml-1.5" />}
                     </Button>
                 </div>
             </div>

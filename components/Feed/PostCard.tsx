@@ -235,11 +235,7 @@ export default function PostCard({
                             <div className="hidden md:block absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-60" />
                         )}
 
-                        {post.isSuggested && (
-                            <div className="absolute top-3 left-3 bg-white/20 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/30 flex items-center gap-1 shadow-sm">
-                                <span className="text-[10px] font-semibold text-white tracking-wide uppercase">Para ti</span>
-                            </div>
-                        )}
+
 
                         {!hideAuthorOverlay && (
                             <div className={cn(

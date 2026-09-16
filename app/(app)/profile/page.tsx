@@ -383,11 +383,19 @@ export default function ProfilePage() {
               className="w-24 h-24 rounded-full overflow-hidden hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer group shrink-0"
               title="Ver foto de perfil"
             >
-              <img
-                src={user.avatar || `https://ui-avatars.com/api/?name=${user.email}&background=random`}
-                alt="Profile"
-                className="w-full h-full rounded-full object-cover group-hover:opacity-90 transition-opacity"
-              />
+              {user.avatar ? (
+                <img
+                  src={user.avatar}
+                  alt="Profile"
+                  className="w-full h-full rounded-full object-cover group-hover:opacity-90 transition-opacity"
+                />
+              ) : (
+                <div className="w-full h-full bg-[var(--brand-pink)] flex items-center justify-center">
+                  <span className="text-3xl md:text-4xl font-bold text-white">
+                    {(user.name || user.username || user.email || '?')[0].toUpperCase()}
+                  </span>
+                </div>
+              )}
             </button>
 
             <div className="flex-1 flex justify-around text-center">

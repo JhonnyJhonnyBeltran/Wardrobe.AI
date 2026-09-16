@@ -105,7 +105,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
       // 3. Construct user object
       const name = profile?.full_name || legacyProfile?.name || authUser.user_metadata?.name || authUser.email?.split('@')[0] || 'User';
-      const avatar = profile?.avatar_url || legacyProfile?.avatar || authUser.user_metadata?.avatar_url;
+      const avatar = profile?.avatar_url || legacyProfile?.avatar || undefined;
       const username = profile?.username;
 
       // Get subscription tier from profile or legacy
@@ -149,6 +149,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         heightRange: styleSource.height_range,
         preferredStyles: styleSource.preferred_styles,
         usesAccessories: styleSource.uses_accessories,
+        accessoriesStyle: styleSource.accessories_style || (styleSource.uses_accessories ? 'minimalista' : undefined),
         visualStylePreferences: styleSource.visual_style_preferences,
         styleCompleted: styleSource.style_completed || false,
         isPrivate: styleSource.is_private || false,
@@ -224,7 +225,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
           email: session.user.email || '',
           name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || 'User',
           username: undefined,
-          avatar: session.user.user_metadata?.avatar_url,
+          avatar: undefined,
           subscriptionTier: SubscriptionTier.FREE,
           createdAt: new Date(session.user.created_at || Date.now()),
           styleCompleted: false,

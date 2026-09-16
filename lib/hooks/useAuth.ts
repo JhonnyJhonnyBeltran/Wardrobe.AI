@@ -79,7 +79,7 @@ export function useAuth(): UseAuthReturn {
     // 3. Construct user object
     // Priority: Profile (New) -> Users (Old) -> Auth Metadata -> Email
     const name = profile?.full_name || legacyProfile?.name || authUser.user_metadata?.name || authUser.email!.split('@')[0];
-    const avatar = profile?.avatar_url || legacyProfile?.avatar || authUser.user_metadata?.avatar_url;
+    const avatar = profile?.avatar_url || legacyProfile?.avatar || undefined;
     const username = profile?.username;
     const bio = profile?.bio;
 

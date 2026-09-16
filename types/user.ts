@@ -27,6 +27,7 @@ export interface UserProfile {
   heightRange?: 'short' | 'medium' | 'tall';
   preferredStyles?: string[]; // e.g., ['casual', 'sporty', 'elegant']
   usesAccessories?: boolean;
+  accessoriesStyle?: string; // 'minimalista' | 'llamativo' | 'clasico' | 'urbano' | 'ninguno'
   visualStylePreferences?: string[]; // IDs of selected images from visual quiz
   styleCompleted?: boolean; // Has completed the style questionnaire
   isPrivate?: boolean; // Profile privacy

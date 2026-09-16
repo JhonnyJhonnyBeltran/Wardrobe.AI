@@ -8,8 +8,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Save, Camera, Loader2, CheckCircle, XCircle } from 'lucide-react';
-import { Card, Button } from '@/components';
+import { ChevronLeft, Save, Camera, Loader2, CheckCircle, XCircle } from 'lucide-react';
+import { Button } from '@/components';
 import { useUser } from '@/store/userStore';
 import { supabase } from '@/lib/supabase/client';
 import { useSocial } from '@/lib/hooks/useSocial';
@@ -167,22 +167,40 @@ export default function PersonalSettingsPage() {
 
   return (
     <div className="min-h-screen bg-[var(--background)] pb-24 md:pb-8">
-      <header className="sticky top-0 z-30 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-color)]">
-        <div className="flex items-center justify-between px-4 h-14 max-w-2xl mx-auto">
-          <Link
-            href="/profile/settings"
-            className="flex items-center gap-2 text-[var(--foreground-secondary)] hover:text-[var(--foreground)] transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            <span className="font-medium">Volver</span>
-          </Link>
-          <h1 className="text-lg font-bold text-[var(--foreground)]">Datos personales</h1>
-          <div className="w-20" />
-        </div>
+      {/* Mobile Top Header */}
+      <header className="sticky top-0 z-30 h-14 apple-glass-bar px-4 flex items-center justify-between pt-safe md:hidden">
+        <Link
+          href="/profile/settings"
+          className="touch-target-44 flex items-center justify-center -ml-2 text-[var(--foreground)] hover:text-[var(--brand-pink)] transition-colors"
+          aria-label="Volver"
+        >
+          <ChevronLeft className="w-6 h-6" />
+        </Link>
+        <h1 className="text-lg font-bold tracking-tight text-[var(--foreground)] absolute left-1/2 -translate-x-1/2 select-none">
+          Datos personales
+        </h1>
+        <div className="w-10" />
       </header>
 
-      <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
-        <Card className="p-5 space-y-4">
+      <div className="max-w-2xl mx-auto px-4 py-4 md:py-8 space-y-6">
+        {/* Desktop Top Header */}
+        <div className="hidden md:flex items-center justify-between mb-8 pb-4 border-b border-[var(--border-color)] relative">
+          <Link href="/profile/settings">
+            <button
+              className="p-2 -ml-2 rounded-full text-[var(--foreground-secondary)] hover:text-[var(--foreground)] hover:bg-[var(--background-secondary)] transition-colors cursor-pointer"
+              aria-label="Volver a configuración"
+              title="Volver a configuración"
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </button>
+          </Link>
+          <h1 className="text-xl font-bold tracking-tight text-[var(--foreground)] absolute left-1/2 -translate-x-1/2 select-none">
+            Datos personales
+          </h1>
+          <div className="w-10" />
+        </div>
+
+        <div className="bg-[var(--card-bg)] rounded-3xl p-6 sm:p-8 space-y-5 shadow-sm">
           <div className="flex flex-col items-center mb-4">
             <div className="relative group cursor-pointer" onClick={() => document.getElementById('avatar-upload')?.click()}>
               <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-[var(--background-secondary)] shadow-lg relative bg-[var(--background-secondary)]">
@@ -289,7 +307,7 @@ export default function PersonalSettingsPage() {
             <Save className="w-4 h-4 mr-2" />
             {saving ? 'Guardando...' : 'Guardar'}
           </Button>
-        </Card>
+        </div>
       </div>
     </div>
   );

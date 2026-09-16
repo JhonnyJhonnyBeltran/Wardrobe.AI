@@ -1207,6 +1207,24 @@ En cada conversación, el backend alimenta a CloSy con:
   - Se corrigió el orden de las columnas de conflicto en PostgREST (`onConflict: 'user_id,post_id'`) para concordar con la clave primaria `PRIMARY KEY (user_id, post_id)` de PostgreSQL, eliminando el error `400 Bad Request`.
   - En `/api/likes`, se blindó la operación de inserción/upsert con `ignoreDuplicates: true` y sincronización atómica de contadores para prevenir cualquier error 500 y garantizar likes instantáneos y fiables al 100%.
 
+### 97. Rediseño de Onboarding de Preferencias, Paso de Accesorios, Normalización de Ajustes de Perfil y Consistencia de Avatares (Septiembre 2026)
+- **Onboarding de Preferencias Adaptativo y No Skippable (`app/(public)/onboarding/preferences/page.tsx`)**:
+  - **Compatibilidad Total con Tema Oscuro**: Adaptadas todas las tarjetas, controles deslizantes, botones táctiles y fondos a los estándares semánticos (`bg-[var(--card-bg)]`, `bg-[var(--background-secondary)]`, `text-[var(--foreground)]`).
+  - **Selección Obligatoria de Estilos**: Se bloquea el avance en el Paso 2 si el usuario no ha seleccionado al menos 1 estilo (`disabled` si `selectedStyles.length === 0`).
+  - **Botón de Cerrar (X) Condicional**: El botón `X` de salida sólo se muestra cuando el usuario está editando sus preferencias existentes (`isEditing` / `user.styleCompleted === true`). En el registro inicial el onboarding es obligatorio y no skippable.
+  - **Paso 4 de Accesorios ("Accesorios")**:
+    - Incorporado el selector de accesorios (`minimalista`, `clasico`, `llamativo`, `urbano`, `ninguno`) con fotografía editorial adaptativa según el género seleccionado (relojes y pulseras masculinas para hombre; anillos, collares finos y pendientes para mujer; selección equilibrada para unisex).
+    - Persistencia en `profiles` (`uses_accessories` y `accessories_style`) y sincronización en `userStore`.
+- **Parseo Correcto en Español y Limpieza en Configuración de Perfil (`/profile/settings` & `/profile/settings/personal`)**:
+  - **Traducción y Parseo de Edad y Género**: Género traducido a español (`Mujer`, `Hombre`, `Unisex / Mixto`) y edad formateada limpiamente (`24 años`, `18 - 24 años`, `45+ años`).
+  - **Visualización de Estilo de Accesorios**: Muestra el valor seleccionado (`Minimalista`, `Clásico / Elegante`, etc.).
+  - **Eliminación de "Preferencias" Redundantes**: Se eliminó la sección duplicada de preferencias visuales en `/profile/settings`, mostrando únicamente "Estilos preferidos".
+  - **Normalización de Datos Personales (`/profile/settings/personal`)**: Cabecera móvil `h-14 apple-glass-bar pt-safe`, cabecera de escritorio centrada con botón circular `ChevronLeft` y contenedor de formulario sin borde externo rígido.
+- **Eliminación de Badge "PARA TI" en Feed (`components/Feed/PostCard.tsx`)**:
+  - Se eliminó el distintivo flotante *"Para ti"* en las tarjetas de publicaciones del feed para mantener la cuadrícula completamente limpia e inmersiva.
+- **Unificación de Avatares Sin Foto (`store/userStore.tsx`, `lib/hooks/useAuth.ts`, `app/(app)/profile/page.tsx`)**:
+  - Se eliminó el fallback automático a la foto por defecto de Google OAuth (`authUser.user_metadata?.avatar_url`) en `userStore` y `useAuth`, garantizando que si el usuario no ha subido una foto propia a Klozet, se renderice de forma consistente tanto en su propio perfil (`/profile`) como al ser visto por otros usuarios (`/profile/[id]`) el avatar oficial de fondo rosa corporativo (`bg-[var(--brand-pink)]`) con la letra inicial en mayúsculas blanco.
+
 
 
 
