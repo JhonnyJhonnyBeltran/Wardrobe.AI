@@ -99,7 +99,7 @@ export default function OutfitCalendar() {
     fetchCalendarData();
   }, [fetchCalendarData]);
 
-  const loadUserOutfits = async () => {
+  const loadUserOutfits = useCallback(async () => {
     if (!user || userOutfits.length > 0) return;
     setOutfitsLoading(true);
     try {
@@ -127,7 +127,23 @@ export default function OutfitCalendar() {
     } finally {
       setOutfitsLoading(false);
     }
-  };
+  }, [user, userOutfits.length]);
+
+  const handleAddToday = useCallback(() => {
+    setSelectedDate(new Date());
+    loadUserOutfits();
+    setShowPicker(true);
+  }, [loadUserOutfits]);
+
+  useEffect(() => {
+    const onAddToday = () => {
+      handleAddToday();
+    };
+    window.addEventListener('klozet:calendar_add_today', onAddToday);
+    return () => {
+      window.removeEventListener('klozet:calendar_add_today', onAddToday);
+    };
+  }, [handleAddToday]);
 
   const handlePrevMonth = () => {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));

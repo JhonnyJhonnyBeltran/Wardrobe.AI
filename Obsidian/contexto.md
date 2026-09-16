@@ -1156,3 +1156,9 @@ En cada conversación, el backend alimenta a CloSy con:
 - **Normalización Exhaustiva de Cabeceras Móviles en Toda la Aplicación**:
   - Estandarizadas las especificaciones de cabecera móvil en todas las pantallas principales y secundarias: altura consistente `h-14` (56px), efecto `apple-glass-bar pt-safe`, títulos tipográficos centrados (`text-lg font-bold tracking-tight absolute left-1/2 -translate-x-1/2`) y botones táctiles con área mínima de 44px.
 
+### 92. Botón de Acción "Añadir outfit para hoy" Unificado en Armario (`/closet` y `OutfitCalendar.tsx`) (Septiembre 2026)
+- **Unificación del Botón Flotante de Acción Principal**:
+  - En [`app/(app)/closet/page.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/app/%28app%29/closet/page.tsx), se habilitó el botón de acción principal de la esquina inferior derecha para la pestaña de **Calendario** (`activeTab === 'calendar'`), mostrando el texto *"Añadir outfit para hoy"* en versión escritorio y el icono rosa `+` en móvil de forma idéntica a *"Nueva Prenda"* y *"Nuevo Outfit"*.
+  - Al hacer clic en dicho botón cuando la pestaña activa es el Calendario, se emite el evento personalizado `klozet:calendar_add_today`.
+- **Recepción y Apertura del Selector en Calendario (`components/OutfitCalendar.tsx`)**:
+  - `OutfitCalendar` escucha el evento global `klozet:calendar_add_today` y abre de forma inmediata el selector de outfits asignando la fecha actual de hoy (`selectedDate = new Date()`, `loadUserOutfits()` y `showPicker = true`).

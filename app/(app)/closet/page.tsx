@@ -997,157 +997,165 @@ export default function ClosetPage() {
       </main>
 
       {/* FAB stack: Filter + Add — always stacked, fully responsive */}
-      {!showAddModal && !selectedItem && !selectedOutfit && activeTab !== 'calendar' && (
+      {!showAddModal && !selectedItem && !selectedOutfit && (
         <div className={`fixed right-6 z-[4990] flex flex-col items-end gap-3 transition-all duration-300 ${
           selectionMode 
             ? 'bottom-[calc(var(--tabbar-height)+env(safe-area-inset-bottom,0px)+108px)]' 
             : 'bottom-[calc(var(--tabbar-height)+env(safe-area-inset-bottom,0px)+36px)]'
         } md:bottom-[42px]`}>
           {/* Desktop Select Button */}
-          <button
-            onClick={() => {
-              if (selectionMode) {
-                setSelectionMode(false);
-                setSelectedIds(new Set());
-              } else {
-                setSelectionMode(true);
-              }
-            }}
-            className="hidden md:flex items-center gap-2 bg-[var(--card-bg)] px-4 py-2.5 rounded-full shadow-lg font-medium text-[var(--foreground)] border border-[var(--border-color)] hover:bg-[var(--background-secondary)] transition-colors"
-          >
-            <Check className="w-5 h-5" />
-            {selectionMode ? 'Cancelar' : 'Seleccionar'}
-          </button>
+          {activeTab !== 'calendar' && (
+            <button
+              onClick={() => {
+                if (selectionMode) {
+                  setSelectionMode(false);
+                  setSelectedIds(new Set());
+                } else {
+                  setSelectionMode(true);
+                }
+              }}
+              className="hidden md:flex items-center gap-2 bg-[var(--card-bg)] px-4 py-2.5 rounded-full shadow-lg font-medium text-[var(--foreground)] border border-[var(--border-color)] hover:bg-[var(--background-secondary)] transition-colors"
+            >
+              <Check className="w-5 h-5" />
+              {selectionMode ? 'Cancelar' : 'Seleccionar'}
+            </button>
+          )}
 
           {/* Filter Bubble */}
-          <BubbleToggle
-            isOpen={showFilters}
-            onToggle={() => setShowFilters(prev => !prev)}
-            icon={Filter}
-            activeCount={activeFilterCount}
-            ariaLabel="Filtros"
-            origin="bottom right"
-            label="Filtrar"
-          >
-            <div className="w-[calc(100vw-3rem)] max-w-sm bg-[var(--card-bg)] rounded-3xl border border-[var(--border-color)] shadow-2xl p-4 max-h-[70vh] overflow-auto">
-              {/* Header */}
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <span className="text-base font-bold text-[var(--foreground)]">Filtros</span>
-                  {activeFilterCount > 0 && (
+          {activeTab !== 'calendar' && (
+            <BubbleToggle
+              isOpen={showFilters}
+              onToggle={() => setShowFilters(prev => !prev)}
+              icon={Filter}
+              activeCount={activeFilterCount}
+              ariaLabel="Filtros"
+              origin="bottom right"
+              label="Filtrar"
+            >
+              <div className="w-[calc(100vw-3rem)] max-w-sm bg-[var(--card-bg)] rounded-3xl border border-[var(--border-color)] shadow-2xl p-4 max-h-[70vh] overflow-auto">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <span className="text-base font-bold text-[var(--foreground)]">Filtros</span>
+                    {activeFilterCount > 0 && (
+                      <button
+                        onClick={() => {
+                          setSearchQuery('');
+                          setSelectedCategories(new Set());
+                          setShowFavoritesOnly(false);
+                        }}
+                        className="text-xs font-semibold text-[var(--brand-pink)] hover:underline"
+                      >
+                        Borrar filtros
+                      </button>
+                    )}
+                  </div>
+                  <motion.button
+                    whileHover={{ scale: 1.1, rotate: 90 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => setShowFilters(false)}
+                    className="w-9 h-9 rounded-full bg-[var(--background-secondary)] flex items-center justify-center text-[var(--foreground-secondary)] hover:bg-[var(--foreground)] hover:text-[var(--background)] transition-colors"
+                    aria-label="Cerrar filtros"
+                  >
+                    <X className="w-5 h-5" />
+                  </motion.button>
+                </div>
+
+                {/* Search */}
+                <div className="relative mb-3">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--foreground-tertiary)]" />
+                  <input
+                    type="text"
+                    placeholder={`Buscar ${activeTab === 'items' ? 'prendas' : 'outfits'}...`}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full bg-[var(--background-secondary)] border border-transparent focus:border-[var(--foreground-tertiary)] rounded-xl py-2.5 pl-9 pr-10 text-sm outline-none"
+                  />
+                  {searchQuery && (
                     <button
-                      onClick={() => {
-                        setSearchQuery('');
-                        setSelectedCategories(new Set());
-                        setShowFavoritesOnly(false);
-                      }}
-                      className="text-xs font-semibold text-[var(--brand-pink)] hover:underline"
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2"
                     >
-                      Borrar filtros
+                      <X className="w-4 h-4 text-[var(--foreground-tertiary)]" />
                     </button>
                   )}
                 </div>
-                <motion.button
-                  whileHover={{ scale: 1.1, rotate: 90 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => setShowFilters(false)}
-                  className="w-9 h-9 rounded-full bg-[var(--background-secondary)] flex items-center justify-center text-[var(--foreground-secondary)] hover:bg-[var(--foreground)] hover:text-[var(--background)] transition-colors"
-                  aria-label="Cerrar filtros"
-                >
-                  <X className="w-5 h-5" />
-                </motion.button>
-              </div>
 
-              {/* Search */}
-              <div className="relative mb-3">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--foreground-tertiary)]" />
-                <input
-                  type="text"
-                  placeholder={`Buscar ${activeTab === 'items' ? 'prendas' : 'outfits'}...`}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-[var(--background-secondary)] border border-transparent focus:border-[var(--foreground-tertiary)] rounded-xl py-2.5 pl-9 pr-10 text-sm outline-none"
-                />
-                {searchQuery && (
-                  <button
-                    onClick={() => setSearchQuery('')}
-                    className="absolute right-3 top-1/2 -translate-y-1/2"
-                  >
-                    <X className="w-4 h-4 text-[var(--foreground-tertiary)]" />
-                  </button>
-                )}
-              </div>
+                {/* Categories (Only for Items tab) */}
+                {activeTab === 'items' && (
+                  <>
+                    <p className="text-xs font-semibold text-[var(--foreground-tertiary)] uppercase tracking-wider mb-3 pl-1">Categoría</p>
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {categories.map((category) => (
+                        <button
+                          key={category}
+                          onClick={() => toggleCategory(category)}
+                          className={`px-4 py-2 rounded-full text-sm font-medium capitalize whitespace-nowrap transition-all duration-200 ${selectedCategories.has(category)
+                            ? 'bg-[var(--foreground)] text-[var(--background)]'
+                            : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)]'
+                            }`}
+                        >
+                          {selectedCategories.has(category) && (
+                            <span className="mr-1">✓</span>
+                          )}
+                          {t.itemTypes?.[category as keyof typeof t.itemTypes] || category}
+                        </button>
+                      ))}
+                    </div>
 
-              {/* Categories (Only for Items tab) */}
-              {activeTab === 'items' && (
-                <>
-                  <p className="text-xs font-semibold text-[var(--foreground-tertiary)] uppercase tracking-wider mb-3 pl-1">Categoría</p>
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {categories.map((category) => (
+                    {selectedCategories.size > 0 && (
                       <button
-                        key={category}
-                        onClick={() => toggleCategory(category)}
-                        className={`px-4 py-2 rounded-full text-sm font-medium capitalize whitespace-nowrap transition-all duration-200 ${selectedCategories.has(category)
-                          ? 'bg-[var(--foreground)] text-[var(--background)]'
-                          : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)]'
-                          }`}
+                        onClick={() => setSelectedCategories(new Set())}
+                        className="text-xs text-[var(--brand-pink)] font-semibold mb-3 pl-1 hover:underline flex items-center gap-1"
                       >
-                        {selectedCategories.has(category) && (
-                          <span className="mr-1">✓</span>
-                        )}
-                        {t.itemTypes?.[category as keyof typeof t.itemTypes] || category}
+                        <X className="w-3 h-3" />
+                        Limpiar categorías
                       </button>
-                    ))}
-                  </div>
+                    )}
 
-                  {selectedCategories.size > 0 && (
-                    <button
-                      onClick={() => setSelectedCategories(new Set())}
-                      className="text-xs text-[var(--brand-pink)] font-semibold mb-3 pl-1 hover:underline flex items-center gap-1"
-                    >
-                      <X className="w-3 h-3" />
-                      Limpiar categorías
-                    </button>
-                  )}
-
-                  {/* Divider */}
-                  <div className="h-px bg-[var(--border-color)] mb-4" />
-                </>
-              )}
-
-              {/* Favorites Toggle */}
-              <button
-                onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-200 ${showFavoritesOnly
-                  ? 'bg-[var(--foreground)] text-[var(--background)]'
-                  : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)]'
-                  }`}
-              >
-                <Heart className={`w-5 h-5 ${showFavoritesOnly ? 'fill-current' : ''}`} />
-                <span className="text-sm font-semibold">Solo favoritos</span>
-                {showFavoritesOnly && (
-                  <span className="ml-auto">✓</span>
+                    {/* Divider */}
+                    <div className="h-px bg-[var(--border-color)] mb-4" />
+                  </>
                 )}
-              </button>
-            </div>
-          </BubbleToggle>
 
-          {/* Create Outfit Button */}
+                {/* Favorites Toggle */}
+                <button
+                  onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-200 ${showFavoritesOnly
+                    ? 'bg-[var(--foreground)] text-[var(--background)]'
+                    : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)]'
+                    }`}
+                >
+                  <Heart className={`w-5 h-5 ${showFavoritesOnly ? 'fill-current' : ''}`} />
+                  <span className="text-sm font-semibold">Solo favoritos</span>
+                  {showFavoritesOnly && (
+                    <span className="ml-auto">✓</span>
+                  )}
+                </button>
+              </div>
+            </BubbleToggle>
+          )}
+
+          {/* Action Button: Nueva Prenda / Nuevo Outfit / Añadir outfit para hoy */}
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => {
               if (activeTab === 'items') {
                 setShowAddModal(true);
-              } else {
+              } else if (activeTab === 'outfits') {
                 router.push('/create');
+              } else if (activeTab === 'calendar') {
+                if (typeof window !== 'undefined') {
+                  window.dispatchEvent(new CustomEvent('klozet:calendar_add_today'));
+                }
               }
             }}
             className="h-14 min-w-[56px] px-0 md:px-6 rounded-full bg-[var(--brand-pink)] flex items-center justify-center text-white shadow-xl hover:shadow-[0_0_20px_rgba(236,72,153,0.5)] transition-all cursor-pointer group"
           >
             <Plus className="w-7 h-7" />
             <span className="hidden md:block font-bold whitespace-nowrap text-[15px] ml-1 pr-1">
-              {activeTab === 'items' ? 'Nueva Prenda' : activeTab === 'outfits' ? 'Nuevo Outfit' : 'Crear'}
+              {activeTab === 'items' ? 'Nueva Prenda' : activeTab === 'outfits' ? 'Nuevo Outfit' : 'Añadir outfit para hoy'}
             </span>
           </motion.button>
         </div>
