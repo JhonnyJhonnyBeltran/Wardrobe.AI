@@ -1127,3 +1127,7 @@ En cada conversación, el backend alimenta a CloSy con:
     2. **Publicaciones de Amigos de Amigos (`FOF` - Seguidos de mis seguidos)**: Prioridad destacada (+25 pts) para descubrir personas y looks cercanos a su círculo social.
     3. **Sugerencias de afinidad comunitaria y exploración**: Contenido afín (+5 pts base + estilo y novedad) para mantener el feed siempre activo e infinito.
 
+### 90. Fijación Permanente de Botones de Creación en Armario (`/closet`) (Septiembre 2026)
+- **Eliminación del Auto-Hide en Scroll de Cabecera**:
+  - En [`app/(app)/closet/page.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/app/%28app%29/closet/page.tsx), se eliminó el detector de scroll que ocultaba la cabecera al hacer scroll (`setIsHeaderVisible(false)` / `-translate-y-full`).
+  - La cabecera superior y el contenedor con los botones **"Crear Outfit"** y **"Crear con IA" (Kloe)** permanecen de forma permanente fijos y accesibles (`sticky top-0`) tanto en vista móvil como en escritorio, garantizando que nunca desaparezcan al hacer scroll hacia arriba o abajo por el catálogo de prendas.

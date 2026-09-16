@@ -43,32 +43,6 @@ export default function ClosetPage() {
   const [selectedOutfit, setSelectedOutfit] = useState<Outfit | null>(null);
   const [showKloeProModal, setShowKloeProModal] = useState(false);
 
-  // Auto-hide Header State
-  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
-  const lastScrollY = useRef(0);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-
-      // If pulled past top (iOS bounce) or at very top, show header
-      if (currentScrollY <= 0) {
-        setIsHeaderVisible(true);
-      } else if (currentScrollY > lastScrollY.current + 5) {
-        // Scrolling down
-        setIsHeaderVisible(false);
-      } else if (currentScrollY < lastScrollY.current - 5) {
-        // Scrolling up
-        setIsHeaderVisible(true);
-      }
-
-      lastScrollY.current = currentScrollY;
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
   // Auto-open Add Item Modal, switch Tab or open Upgrade modal based on query param
   useEffect(() => {
     const action = searchParams.get('action');
@@ -654,8 +628,8 @@ export default function ClosetPage() {
         transition={{ duration: 0.3 }}
       >
 
-      {/* Header Sticky & Auto-hide */}
-      <header className={`sticky top-0 z-40 bg-[var(--background)]/95 backdrop-blur-md pb-2 transition-transform duration-300 supports-[ios]:pt-safe-top ${isHeaderVisible ? 'translate-y-0' : '-translate-y-full'}`}>
+      {/* Header Sticky */}
+      <header className="sticky top-0 z-40 bg-[var(--background)]/95 backdrop-blur-md pb-2 supports-[ios]:pt-safe-top">
         <div className="max-w-7xl mx-auto px-4 pt-4 space-y-4">
 
           {/* Top Actions: Create & AI */}
