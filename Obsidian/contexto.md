@@ -1267,6 +1267,20 @@ En cada conversación, el backend alimenta a CloSy con:
   - **Finalización sin Tour**: Al pulsar "Finalizar y explorar", los cambios se guardan en el perfil y redirige de vuelta a `/profile/settings` (o `/closet`) **sin activar el tour ni añadir `?startTour=true`**.
   - **Activación Exclusiva para Nuevos Registros**: El tour interactivo de micro-acciones sólo se dispara una única vez tras completar el onboarding de registro inicial por primera vez (`user.styleCompleted === false`).
 
+### 101. Rediseño de Cabecera Sticky en Búsqueda, Eliminación de Superposiciones y Recomendaciones Dinámicas Basadas en Historial (`app/(app)/search/page.tsx`) (Septiembre 2026)
+- **Eliminación Total de Solapamientos y Cortes de Contenido**:
+  - Se sustituyó la cabecera flotante fija (`fixed`) por una cabecera integrada con comportamiento **Sticky (`sticky top-0 z-30`)**, fondo adaptativo con cristal translúcido (`bg-[var(--background)]/90 backdrop-blur-xl border-b border-[var(--border-color)]/30`) y padding optimizado.
+  - El contenedor de resultados comienza de forma natural sin desbordamientos ni márgenes artificiales descalibrados (`pt-4 sm:pt-6`), garantizando que la barra de búsqueda y los chips jamás se superpongan ni tapen la primera fila de publicaciones o imágenes.
+- **Recomendaciones Dinámicas Basadas en Últimas Búsquedas y Estilo**:
+  - Los chips de sugerencia se generan reactivamente (`useMemo`) fusionando:
+    1. **Últimas búsquedas del usuario (`history`)**: Mostradas con icono de reloj (`Clock`) para repetir búsquedas rápidas con un solo toque.
+    2. **Estilos favoritos del perfil (`preferredStyles`)**: Sugerencias personalizadas con distintivo visual (`Sparkles`).
+    3. **Categorías y marcas populares de tendencia**: Sudaderas, Scuffers, Zapatos, Chaquetas, Pantalones, Nike, etc.
+  - Comportamiento toggle: al pulsar un chip seleccionado, se deselecciona y limpia el buscador; al pulsar otro, se lanza la búsqueda de inmediato y se actualiza el historial.
+- **Cuadrícula y Contadores en Resultados**:
+  - Cabecera informativa con el total de publicaciones encontradas para la búsqueda actual (`N publicaciones encontradas`) y cuadrícula responsiva sin cortes.
+
+
 
 
 
