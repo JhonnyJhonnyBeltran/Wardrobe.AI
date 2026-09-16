@@ -471,7 +471,7 @@ export default function OutfitCalendar() {
               exit={{ y: '100%' }}
               transition={{ type: "spring", bounce: 0, duration: 0.4 }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-[var(--background)] w-full max-w-lg md:max-w-4xl rounded-t-3xl sm:rounded-3xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden"
+              className={`bg-[var(--background)] w-full ${selectedDayOutfits.length > 1 ? 'max-w-xl md:max-w-2xl' : 'max-w-md'} rounded-t-3xl sm:rounded-3xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden`}
             >
               {/* Handle for mobile */}
               <div className="w-full flex justify-center py-3 sm:hidden">
@@ -495,7 +495,7 @@ export default function OutfitCalendar() {
                 </button>
               </div>
 
-              <div className="p-6 overflow-y-auto flex-1">
+              <div className="p-4 sm:p-6 overflow-y-auto flex-1">
                 {selectedDayOutfits.length === 0 ? (
                   <div className="text-center py-12">
                     <div className="w-16 h-16 bg-[var(--background-secondary)] rounded-full flex items-center justify-center mx-auto mb-4">
@@ -504,12 +504,12 @@ export default function OutfitCalendar() {
                     <p className="text-[var(--foreground-secondary)]">No hay outfits planeados para este día.</p>
                   </div>
                 ) : (
-                  <div className="space-y-6">
+                  <div className={`grid ${selectedDayOutfits.length > 1 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'} gap-4`}>
                     {selectedDayOutfits.map((outfit) => (
-                      <div key={outfit.calendar_id} className="bg-[var(--card-bg)] rounded-3xl border border-[var(--border-color)] p-4 shadow-sm relative overflow-hidden flex flex-col gap-4">
+                      <div key={outfit.calendar_id} className="bg-[var(--card-bg)] rounded-3xl border border-[var(--border-color)] p-4 shadow-sm relative overflow-hidden flex flex-col gap-3">
                         <div 
                             onClick={() => setSelectedOutfitDetail(outfit)}
-                            className="cursor-pointer hover:opacity-90 transition-opacity shrink-0 flex items-center justify-center bg-[#f8f9fa] dark:bg-[#111] rounded-2xl border border-[var(--border-color)] overflow-hidden w-full aspect-[4/5] relative"
+                            className="cursor-pointer hover:opacity-90 transition-opacity shrink-0 flex items-center justify-center bg-[var(--background-secondary)] rounded-2xl border border-[var(--border-color)]/60 overflow-hidden w-full aspect-[3/4] max-h-[260px] sm:max-h-[300px] relative p-2"
                         >
                             <button 
                               onClick={(e) => {
@@ -518,35 +518,35 @@ export default function OutfitCalendar() {
                                 loadUserOutfits();
                                 setShowPicker(true);
                               }}
-                              className="absolute top-3 right-14 z-10 p-2 bg-white/90 dark:bg-black/90 backdrop-blur-sm text-[var(--foreground)] rounded-full hover:bg-[var(--background-secondary)] transition-colors shadow-sm"
+                              className="absolute top-2.5 right-11 z-10 p-1.5 bg-white/90 dark:bg-black/80 backdrop-blur-sm text-[var(--foreground)] rounded-full hover:bg-[var(--background-secondary)] transition-colors shadow-sm"
                               title="Cambiar outfit"
                             >
-                              <Edit2 className="w-4 h-4" />
+                              <Edit2 className="w-3.5 h-3.5" />
                             </button>
                             <button 
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleRemoveAssignment(outfit.calendar_id);
                               }}
-                              className="absolute top-3 right-3 z-10 p-2 bg-red-100/90 backdrop-blur-sm text-red-500 rounded-full hover:bg-red-500 hover:text-white transition-colors shadow-sm"
+                              className="absolute top-2.5 right-2.5 z-10 p-1.5 bg-red-100/90 dark:bg-red-950/80 backdrop-blur-sm text-red-500 rounded-full hover:bg-red-500 hover:text-white transition-colors shadow-sm"
                               title="Quitar de hoy"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 className="w-3.5 h-3.5" />
                             </button>
                             {outfit.image_url ? (
-                                <img src={outfit.image_url} alt={outfit.name} className="w-full h-full object-cover" />
+                                <img src={outfit.image_url} alt={outfit.name} className="w-full h-full object-contain" />
                             ) : (
                                 <span className="text-xs text-[var(--foreground-tertiary)]">Sin foto</span>
                             )}
                         </div>
-                        <div className="flex flex-col justify-center flex-1 text-center mt-2">
+                        <div className="flex flex-col justify-center flex-1 text-center">
                             <h4 
-                                className="font-bold text-[var(--foreground)] text-lg md:text-xl mb-1 cursor-pointer hover:text-[var(--brand-pink)] transition-colors"
+                                className="font-bold text-[var(--foreground)] text-base mb-0.5 cursor-pointer hover:text-[var(--brand-pink)] transition-colors"
                                 onClick={() => setSelectedOutfitDetail(outfit)}
                             >
                                 {outfit.name || 'Outfit sin nombre'}
                             </h4>
-                            <p className="text-sm text-[var(--foreground-secondary)]">{outfit.items?.length || 0} prendas</p>
+                            <p className="text-xs text-[var(--foreground-secondary)]">{outfit.items?.length || 0} prendas</p>
                         </div>
                       </div>
                     ))}

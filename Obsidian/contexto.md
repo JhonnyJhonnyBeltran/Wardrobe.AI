@@ -1225,6 +1225,12 @@ En cada conversación, el backend alimenta a CloSy con:
 - **Unificación de Avatares Sin Foto (`store/userStore.tsx`, `lib/hooks/useAuth.ts`, `app/(app)/profile/page.tsx`)**:
   - Se eliminó el fallback automático a la foto por defecto de Google OAuth (`authUser.user_metadata?.avatar_url`) en `userStore` y `useAuth`, garantizando que si el usuario no ha subido una foto propia a Klozet, se renderice de forma consistente tanto en su propio perfil (`/profile`) como al ser visto por otros usuarios (`/profile/[id]`) el avatar oficial de fondo rosa corporativo (`bg-[var(--brand-pink)]`) con la letra inicial en mayúsculas blanco.
 
+### 98. Calibración de Tamaño y Proporciones en Detalle de Outfits del Calendario (`components/OutfitCalendar.tsx`) (Septiembre 2026)
+- **Ajuste y Proporción Óptima del Modal de Detalles del Día**:
+  - Se redujo el ancho sobredimensionado del modal (`max-w-md` para 1 outfit y `max-w-xl md:max-w-2xl` con cuadrícula de 2 columnas para múltiples looks), eliminando el estiramiento desproporcionado en pantallas de escritorio y tablets.
+- **Encuadre y Contención de la Imagen del Outfit**:
+  - El contenedor de la prenda ahora cuenta con altura máxima calibrada (`max-h-[260px] sm:max-h-[300px]`, `aspect-[3/4]`), fondo neutro adaptativo y ajuste `object-contain`, permitiendo que el outfit completo se visualice de un solo golpe de vista de manera nítida, elegante y sin zoom excesivo ni cortes en las prendas.
+
 
 
 
