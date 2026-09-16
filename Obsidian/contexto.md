@@ -1079,3 +1079,16 @@ En cada conversación, el backend alimenta a CloSy con:
     3. Emite el evento personalizado global `klozet:conversation_deleted` en `window`.
     4. `MessagesLayout` (`layout.tsx`), `MessagesPage` (`page.tsx`) y `ConversationList` sincronizan instantáneamente el estado eliminando la conversación de la bandeja sin parpadeos y redirigiendo limpiamente a `/messages`.
 
+### 87. Maquetación Pinterest Masonry en Perfil y Tarjetas Limpias Hover-Only (`/profile`, `/profile/[id]`, `PostCard.tsx`) (Septiembre 2026)
+- **Disposición Dinámica Estilo Pinterest / Masonry en Perfil**:
+  - En [`app/(app)/profile/page.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/app/%28app%29/profile/page.tsx) y [`app/(app)/profile/[id]/page.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/app/%28app%29/profile/%5Bid%5D/page.tsx), se implementó la arquitectura de renderizado de Feed y Búsqueda:
+    - **En móvil (`md:hidden`)**: Cuadrícula de 2 columnas paralelas (`grid grid-cols-2 gap-2.5 items-start`) que distribuye los posts pares e impares de forma equilibrada y asegura que ambas columnas comiencen exactamente a la misma altura superior.
+    - **En escritorio (`hidden md:block`)**: Cuadrícula masonry con clase `.profile-masonry-grid` limitada a **3 columnas** (`column-count: 3; column-gap: 16px;`) con `.break-inside-avoid` para adaptarse a las alturas naturales variables de cada look.
+- **Tarjetas de Publicación Limpias con Hover-Only**:
+  - En [`components/Feed/PostCard.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/components/Feed/PostCard.tsx), se añadieron las propiedades opcionales `hideLikeButton` y `hideAuthorOverlay` junto a `hideSaveButton`.
+  - Al visualizarse en el perfil propio (`/profile`) o en perfiles públicos (`/profile/[id]`), se pasan `hideSaveButton={true}`, `hideLikeButton={true}` y `hideAuthorOverlay={true}`, suprimiendo por completo el botón flotante de bookmark, el corazón de me gusta y la capa inferior de autor/like.
+  - Se mantiene el efecto interactivo de elevación y escala al hacer hover (`whileHover={{ scale: 1.025 }}`) idéntico a las tarjetas de `OutfitCard`, ofreciendo un catálogo limpio, editorial y centrado 100% en la fotografía.
+- **Sincronización de Skeletons Wave**:
+  - `SkeletonProfileGrid` en [`components/Skeleton.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/components/Skeleton.tsx) renderiza tarjetas con alturas variadas intercaladas (`[260, 310, 220, 290, 250, 330, 230, 300, 270]`) para reflejar la distribución real de las imágenes antes de cargar.
+
+

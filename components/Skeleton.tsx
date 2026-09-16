@@ -35,14 +35,32 @@ export function SkeletonCard({ className = '', height = 260 }: { className?: str
 }
 
 /**
- * 3-Column Square Grid Skeleton (Instagram Profile style)
+ * Pinterest-style Masonry Grid Skeleton for Profile (Staggered varied heights)
  */
 export function SkeletonProfileGrid({ count = 9, className = '' }: { count?: number; className?: string }) {
+  const heights = [260, 310, 220, 290, 250, 330, 230, 300, 270];
   return (
-    <div className={`grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 gap-3 md:gap-4 p-2 md:p-4 ${className}`}>
-      {[...Array(count)].map((_, i) => (
-        <div key={i} className="aspect-[4/5] skeleton-wave rounded-[22px]" />
-      ))}
+    <div className={`w-full p-2 md:p-4 ${className}`}>
+      {/* Mobile 2-column layout */}
+      <div className="grid grid-cols-2 gap-2.5 md:hidden">
+        <div className="flex flex-col gap-2.5">
+          {heights.slice(0, count).filter((_, i) => i % 2 === 0).map((h, i) => (
+            <div key={`pm-l-${i}`} className="w-full rounded-[22px] skeleton-wave" style={{ height: `${h}px` }} />
+          ))}
+        </div>
+        <div className="flex flex-col gap-2.5">
+          {heights.slice(0, count).filter((_, i) => i % 2 === 1).map((h, i) => (
+            <div key={`pm-r-${i}`} className="w-full rounded-[22px] skeleton-wave" style={{ height: `${h}px` }} />
+          ))}
+        </div>
+      </div>
+
+      {/* Desktop 3-Column Masonry */}
+      <div className="hidden md:grid md:grid-cols-3 gap-4">
+        {heights.slice(0, count).map((h, i) => (
+          <div key={`pd-${i}`} className="w-full rounded-[22px] skeleton-wave" style={{ height: `${h}px` }} />
+        ))}
+      </div>
     </div>
   );
 }

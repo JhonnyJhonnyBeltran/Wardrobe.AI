@@ -36,9 +36,17 @@ interface PostCardProps {
     post: Post;
     onClick?: () => void;
     hideSaveButton?: boolean;
+    hideLikeButton?: boolean;
+    hideAuthorOverlay?: boolean;
 }
 
-export default function PostCard({ post, onClick, hideSaveButton = false }: PostCardProps) {
+export default function PostCard({ 
+    post, 
+    onClick, 
+    hideSaveButton = false,
+    hideLikeButton = false,
+    hideAuthorOverlay = false 
+}: PostCardProps) {
     const { user } = useUser();
     const [isHovered, setIsHovered] = useState(false);
     const [isSavedState, setIsSavedState] = useState(post.isSaved || false);
@@ -171,17 +179,21 @@ export default function PostCard({ post, onClick, hideSaveButton = false }: Post
     if (!post.imageUrl) {
         return (
             <div onClick={handleNavigation} className="block w-full h-full outline-none">
-                <div className="group relative rounded-2xl overflow-hidden bg-[var(--card-bg)] shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer p-6 flex flex-col gap-4 border border-[var(--border-color)] h-full w-full">
-                    <div className="hidden md:flex items-center gap-2">
-                        <Avatar src={post.author.avatar || null} alt={post.author.name} size="sm" />
-                        <span className="text-xs font-medium text-[var(--foreground-secondary)]">{post.author.name}</span>
-                    </div>
+                <div className="group relative rounded-2xl overflow-hidden bg-[var(--card-bg)] shadow-sm hover:shadow-xl hover:scale-[1.02] transition-all duration-300 cursor-pointer p-6 flex flex-col gap-4 border border-[var(--border-color)] h-full w-full">
+                    {!hideAuthorOverlay && (
+                        <div className="hidden md:flex items-center gap-2">
+                            <Avatar src={post.author.avatar || null} alt={post.author.name} size="sm" />
+                            <span className="text-xs font-medium text-[var(--foreground-secondary)]">{post.author.name}</span>
+                        </div>
+                    )}
                     <p className="text-[var(--foreground)] font-serif text-lg leading-relaxed line-clamp-4">
                         {post.title || post.description}
                     </p>
-                    <div className="hidden md:flex items-center gap-1 text-xs mt-auto">
-                        <Heart className={cn("w-4 h-4 transition-colors", isLikedState ? "fill-[var(--brand-pink)] text-[var(--brand-pink)]" : "text-[var(--foreground-tertiary)]")} />
-                    </div>
+                    {!hideLikeButton && (
+                        <div className="hidden md:flex items-center gap-1 text-xs mt-auto">
+                            <Heart className={cn("w-4 h-4 transition-colors", isLikedState ? "fill-[var(--brand-pink)] text-[var(--brand-pink)]" : "text-[var(--foreground-tertiary)]")} />
+                        </div>
+                    )}
                 </div>
             </div>
         );
@@ -196,6 +208,7 @@ export default function PostCard({ post, onClick, hideSaveButton = false }: Post
                 onTouchEnd={handleTouchEnd}
                 onTouchMove={handleTouchMove}
                 onTouchCancel={handleTouchEnd}
+                whileHover={{ scale: 1.025, transition: { duration: 0.2 } }}
                 whileTap={{ scale: 0.97 }}
                 transition={{ type: "spring", stiffness: 420, damping: 28 }}
                 className="w-full h-full relative z-10 apple-tap-feedback"
@@ -215,7 +228,9 @@ export default function PostCard({ post, onClick, hideSaveButton = false }: Post
                             sizes="(max-width: 768px) 50vw, (max-width: 1024px) 25vw, 16vw"
                         />
 
-                        <div className="hidden md:block absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-60" />
+                        {!hideAuthorOverlay && (
+                            <div className="hidden md:block absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-60" />
+                        )}
 
                         {post.isSuggested && (
                             <div className="absolute top-3 left-3 bg-white/20 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/30 flex items-center gap-1 shadow-sm">
@@ -223,18 +238,22 @@ export default function PostCard({ post, onClick, hideSaveButton = false }: Post
                             </div>
                         )}
 
-                        <div className={cn(
-                            "absolute bottom-3 left-3 right-3 hidden md:flex items-center justify-between transition-opacity duration-300",
-                            isLikedState ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-                        )}>
-                            <div className="flex items-center gap-2">
-                                <Avatar src={post.author.avatar || null} alt={post.author.name || "Foto de perfil"} size="sm" />
-                                <span className="text-xs font-semibold text-white truncate max-w-[120px] drop-shadow-md">{post.author.name}</span>
+                        {!hideAuthorOverlay && (
+                            <div className={cn(
+                                "absolute bottom-3 left-3 right-3 hidden md:flex items-center justify-between transition-opacity duration-300",
+                                isLikedState && !hideLikeButton ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                            )}>
+                                <div className="flex items-center gap-2">
+                                    <Avatar src={post.author.avatar || null} alt={post.author.name || "Foto de perfil"} size="sm" />
+                                    <span className="text-xs font-semibold text-white truncate max-w-[120px] drop-shadow-md">{post.author.name}</span>
+                                </div>
+                                {!hideLikeButton && (
+                                    <div className="flex items-center gap-1 text-white text-xs drop-shadow-md">
+                                        <Heart className={cn("w-4 h-4 transition-colors", isLikedState ? "fill-[var(--brand-pink)] text-[var(--brand-pink)]" : "text-white")} />
+                                    </div>
+                                )}
                             </div>
-                            <div className="flex items-center gap-1 text-white text-xs drop-shadow-md">
-                                <Heart className={cn("w-4 h-4 transition-colors", isLikedState ? "fill-[var(--brand-pink)] text-[var(--brand-pink)]" : "text-white")} />
-                            </div>
-                        </div>
+                        )}
                     </div>
                     
                     {!hideSaveButton && (

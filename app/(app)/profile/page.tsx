@@ -481,29 +481,96 @@ export default function ProfilePage() {
                     fullHeight={false}
                   />
                 ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 gap-3 md:gap-4 p-2 md:p-4">
-                    {posts.map((post) => {
-                      const postCardData: Post = {
-                        id: post.id,
-                        imageUrl: post.image_url || post.imageUrl,
-                        title: post.caption || post.title || '',
-                        author: {
-                          name: user?.username || user?.name || 'usuario',
-                          avatar: user?.avatar || ''
-                        },
-                        likes: post.likes_count || post.likes || 0,
-                        comments: post.comments_count || post.comments || 0,
-                        isLiked: post.isLiked ?? false,
-                        isSaved: post.isSaved ?? false
-                      };
-                      return (
-                        <div key={post.id} className="w-full">
-                          <PostCard post={postCardData} />
-                        </div>
-                      );
-                    })}
+                  <div className="p-2 md:p-4">
+                    {/* Mobile 2-Column Parallel Layout: Guarantees column 1 & column 2 start at the exact same top height with varied natural Pinterest heights */}
+                    <div className="grid grid-cols-2 gap-2.5 md:hidden items-start">
+                      <div className="flex flex-col gap-2.5">
+                        {posts.filter((_, i) => i % 2 === 0).map((post) => {
+                          const postCardData: Post = {
+                            id: post.id,
+                            imageUrl: post.image_url || post.imageUrl,
+                            title: post.caption || post.title || '',
+                            author: {
+                              name: user?.username || user?.name || 'usuario',
+                              avatar: user?.avatar || ''
+                            },
+                            likes: post.likes_count || post.likes || 0,
+                            comments: post.comments_count || post.comments || 0,
+                            isLiked: post.isLiked ?? false,
+                            isSaved: post.isSaved ?? false
+                          };
+                          return (
+                            <div key={post.id} className="w-full">
+                              <PostCard 
+                                post={postCardData} 
+                                hideSaveButton={true}
+                                hideLikeButton={true}
+                                hideAuthorOverlay={true}
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <div className="flex flex-col gap-2.5">
+                        {posts.filter((_, i) => i % 2 === 1).map((post) => {
+                          const postCardData: Post = {
+                            id: post.id,
+                            imageUrl: post.image_url || post.imageUrl,
+                            title: post.caption || post.title || '',
+                            author: {
+                              name: user?.username || user?.name || 'usuario',
+                              avatar: user?.avatar || ''
+                            },
+                            likes: post.likes_count || post.likes || 0,
+                            comments: post.comments_count || post.comments || 0,
+                            isLiked: post.isLiked ?? false,
+                            isSaved: post.isSaved ?? false
+                          };
+                          return (
+                            <div key={post.id} className="w-full">
+                              <PostCard 
+                                post={postCardData} 
+                                hideSaveButton={true}
+                                hideLikeButton={true}
+                                hideAuthorOverlay={true}
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Desktop Masonry Grid (3 Columns) */}
+                    <div className="hidden md:block profile-masonry-grid">
+                      {posts.map((post) => {
+                        const postCardData: Post = {
+                          id: post.id,
+                          imageUrl: post.image_url || post.imageUrl,
+                          title: post.caption || post.title || '',
+                          author: {
+                            name: user?.username || user?.name || 'usuario',
+                            avatar: user?.avatar || ''
+                          },
+                          likes: post.likes_count || post.likes || 0,
+                          comments: post.comments_count || post.comments || 0,
+                          isLiked: post.isLiked ?? false,
+                          isSaved: post.isSaved ?? false
+                        };
+                        return (
+                          <div key={post.id} className="break-inside-avoid mb-4">
+                            <PostCard 
+                              post={postCardData} 
+                              hideSaveButton={true}
+                              hideLikeButton={true}
+                              hideAuthorOverlay={true}
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
+
                     {postsHasMore && (
-                      <div ref={postsObserverRef} className="col-span-2 sm:col-span-3 md:col-span-3">
+                      <div ref={postsObserverRef} className="w-full mt-4">
                         {loadingMorePosts && <SkeletonProfileGrid count={3} />}
                       </div>
                     )}
@@ -577,8 +644,8 @@ export default function ProfilePage() {
                 )}
 
                 {/* Saved Posts Section */}
-                <div className="p-4">
-                  <div className="flex items-center justify-between mb-3">
+                <div className="p-2 md:p-4">
+                  <div className="flex items-center justify-between mb-3 px-2">
                     <h3 className="font-semibold text-sm text-[var(--foreground)]">
                       {selectedFolder ? `${selectedFolder.name}` : 'Guardados'}
                     </h3>
@@ -603,29 +670,96 @@ export default function ProfilePage() {
                       fullHeight={false}
                     />
                   ) : (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 gap-3 md:gap-4">
-                      {savedPosts.map((post) => {
-                        const postCardData: Post = {
-                          id: post.id,
-                          imageUrl: post.image_url || post.imageUrl,
-                          title: post.caption || post.title || '',
-                          author: {
-                            name: post.profiles?.username || post.author?.name || 'usuario',
-                            avatar: post.profiles?.avatar_url || post.author?.avatar || ''
-                          },
-                          likes: post.likes_count || post.likes || 0,
-                          comments: post.comments_count || post.comments || 0,
-                          isLiked: post.isLiked ?? false,
-                          isSaved: true
-                        };
-                        return (
-                          <div key={post.id || post.save_id} className="w-full">
-                            <PostCard post={postCardData} />
-                          </div>
-                        );
-                      })}
+                    <div>
+                      {/* Mobile 2-Column Parallel Layout */}
+                      <div className="grid grid-cols-2 gap-2.5 md:hidden items-start">
+                        <div className="flex flex-col gap-2.5">
+                          {savedPosts.filter((_, i) => i % 2 === 0).map((post) => {
+                            const postCardData: Post = {
+                              id: post.id,
+                              imageUrl: post.image_url || post.imageUrl,
+                              title: post.caption || post.title || '',
+                              author: {
+                                name: post.profiles?.username || post.author?.name || 'usuario',
+                                avatar: post.profiles?.avatar_url || post.author?.avatar || ''
+                              },
+                              likes: post.likes_count || post.likes || 0,
+                              comments: post.comments_count || post.comments || 0,
+                              isLiked: post.isLiked ?? false,
+                              isSaved: true
+                            };
+                            return (
+                              <div key={post.id || post.save_id} className="w-full">
+                                <PostCard 
+                                  post={postCardData} 
+                                  hideSaveButton={true}
+                                  hideLikeButton={true}
+                                  hideAuthorOverlay={true}
+                                />
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <div className="flex flex-col gap-2.5">
+                          {savedPosts.filter((_, i) => i % 2 === 1).map((post) => {
+                            const postCardData: Post = {
+                              id: post.id,
+                              imageUrl: post.image_url || post.imageUrl,
+                              title: post.caption || post.title || '',
+                              author: {
+                                name: post.profiles?.username || post.author?.name || 'usuario',
+                                avatar: post.profiles?.avatar_url || post.author?.avatar || ''
+                              },
+                              likes: post.likes_count || post.likes || 0,
+                              comments: post.comments_count || post.comments || 0,
+                              isLiked: post.isLiked ?? false,
+                              isSaved: true
+                            };
+                            return (
+                              <div key={post.id || post.save_id} className="w-full">
+                                <PostCard 
+                                  post={postCardData} 
+                                  hideSaveButton={true}
+                                  hideLikeButton={true}
+                                  hideAuthorOverlay={true}
+                                />
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Desktop Masonry Grid (3 Columns) */}
+                      <div className="hidden md:block profile-masonry-grid">
+                        {savedPosts.map((post) => {
+                          const postCardData: Post = {
+                            id: post.id,
+                            imageUrl: post.image_url || post.imageUrl,
+                            title: post.caption || post.title || '',
+                            author: {
+                              name: post.profiles?.username || post.author?.name || 'usuario',
+                              avatar: post.profiles?.avatar_url || post.author?.avatar || ''
+                            },
+                            likes: post.likes_count || post.likes || 0,
+                            comments: post.comments_count || post.comments || 0,
+                            isLiked: post.isLiked ?? false,
+                            isSaved: true
+                          };
+                          return (
+                            <div key={post.id || post.save_id} className="break-inside-avoid mb-4">
+                              <PostCard 
+                                post={postCardData} 
+                                hideSaveButton={true}
+                                hideLikeButton={true}
+                                hideAuthorOverlay={true}
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+
                       {savedHasMore && (
-                        <div ref={savedObserverRef} className="col-span-2 sm:col-span-3 md:col-span-3">
+                        <div ref={savedObserverRef} className="w-full mt-4">
                           {loadingMoreSaved && <SkeletonProfileGrid count={3} />}
                         </div>
                       )}
@@ -647,6 +781,30 @@ export default function ProfilePage() {
         name={user?.name || undefined}
         username={user?.username || undefined}
       />
+
+      <style jsx global>{`
+        .profile-masonry-grid {
+          column-count: 2;
+          column-gap: 10px;
+        }
+        @media (min-width: 640px) {
+          .profile-masonry-grid {
+            column-count: 3;
+            column-gap: 14px;
+          }
+        }
+        @media (min-width: 768px) {
+          .profile-masonry-grid {
+            column-count: 3;
+            column-gap: 16px;
+          }
+        }
+        .break-inside-avoid {
+          break-inside: avoid;
+          page-break-inside: avoid;
+          -webkit-column-break-inside: avoid;
+        }
+      `}</style>
       </div>
     </PullToRefresh>
   );

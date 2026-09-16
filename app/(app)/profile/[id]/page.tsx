@@ -559,27 +559,93 @@ export default function PublicProfilePage() {
                     <h3 className="text-lg font-semibold mb-2">Aún no hay publicaciones</h3>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 gap-3 md:gap-4 p-2 md:p-4">
-                    {posts.map((post) => {
-                      const postCardData: Post = {
-                        id: post.id,
-                        imageUrl: post.image_url || post.imageUrl,
-                        title: post.caption || post.title || '',
-                        author: {
-                          name: profile.username || profile.full_name || 'usuario',
-                          avatar: profile.avatar_url || ''
-                        },
-                        likes: post.likes_count || post.likes || 0,
-                        comments: post.comments_count || post.comments || 0,
-                        isLiked: post.isLiked ?? false,
-                        isSaved: post.isSaved ?? false
-                      };
-                      return (
-                        <div key={post.id} className="w-full">
-                          <PostCard post={postCardData} />
-                        </div>
-                      );
-                    })}
+                  <div className="p-2 md:p-4">
+                    {/* Mobile 2-Column Parallel Layout: Guarantees column 1 & column 2 start at the exact same top height with varied natural Pinterest heights */}
+                    <div className="grid grid-cols-2 gap-2.5 md:hidden items-start">
+                      <div className="flex flex-col gap-2.5">
+                        {posts.filter((_, i) => i % 2 === 0).map((post) => {
+                          const postCardData: Post = {
+                            id: post.id,
+                            imageUrl: post.image_url || post.imageUrl,
+                            title: post.caption || post.title || '',
+                            author: {
+                              name: profile.username || profile.full_name || 'usuario',
+                              avatar: profile.avatar_url || ''
+                            },
+                            likes: post.likes_count || post.likes || 0,
+                            comments: post.comments_count || post.comments || 0,
+                            isLiked: post.isLiked ?? false,
+                            isSaved: post.isSaved ?? false
+                          };
+                          return (
+                            <div key={post.id} className="w-full">
+                              <PostCard 
+                                post={postCardData} 
+                                hideSaveButton={true}
+                                hideLikeButton={true}
+                                hideAuthorOverlay={true}
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <div className="flex flex-col gap-2.5">
+                        {posts.filter((_, i) => i % 2 === 1).map((post) => {
+                          const postCardData: Post = {
+                            id: post.id,
+                            imageUrl: post.image_url || post.imageUrl,
+                            title: post.caption || post.title || '',
+                            author: {
+                              name: profile.username || profile.full_name || 'usuario',
+                              avatar: profile.avatar_url || ''
+                            },
+                            likes: post.likes_count || post.likes || 0,
+                            comments: post.comments_count || post.comments || 0,
+                            isLiked: post.isLiked ?? false,
+                            isSaved: post.isSaved ?? false
+                          };
+                          return (
+                            <div key={post.id} className="w-full">
+                              <PostCard 
+                                post={postCardData} 
+                                hideSaveButton={true}
+                                hideLikeButton={true}
+                                hideAuthorOverlay={true}
+                              />
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Desktop Masonry Grid (3 Columns) */}
+                    <div className="hidden md:block profile-masonry-grid">
+                      {posts.map((post) => {
+                        const postCardData: Post = {
+                          id: post.id,
+                          imageUrl: post.image_url || post.imageUrl,
+                          title: post.caption || post.title || '',
+                          author: {
+                            name: profile.username || profile.full_name || 'usuario',
+                            avatar: profile.avatar_url || ''
+                          },
+                          likes: post.likes_count || post.likes || 0,
+                          comments: post.comments_count || post.comments || 0,
+                          isLiked: post.isLiked ?? false,
+                          isSaved: post.isSaved ?? false
+                        };
+                        return (
+                          <div key={post.id} className="break-inside-avoid mb-4">
+                            <PostCard 
+                              post={postCardData} 
+                              hideSaveButton={true}
+                              hideLikeButton={true}
+                              hideAuthorOverlay={true}
+                            />
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
               </motion.div>
@@ -627,6 +693,30 @@ export default function PublicProfilePage() {
         name={profile.full_name || undefined}
         username={profile.username || undefined}
       />
+
+      <style jsx global>{`
+        .profile-masonry-grid {
+          column-count: 2;
+          column-gap: 10px;
+        }
+        @media (min-width: 640px) {
+          .profile-masonry-grid {
+            column-count: 3;
+            column-gap: 14px;
+          }
+        }
+        @media (min-width: 768px) {
+          .profile-masonry-grid {
+            column-count: 3;
+            column-gap: 16px;
+          }
+        }
+        .break-inside-avoid {
+          break-inside: avoid;
+          page-break-inside: avoid;
+          -webkit-column-break-inside: avoid;
+        }
+      `}</style>
     </div>
   );
 }
