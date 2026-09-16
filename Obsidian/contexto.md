@@ -1131,3 +1131,28 @@ En cada conversación, el backend alimenta a CloSy con:
 - **Eliminación del Auto-Hide en Scroll de Cabecera**:
   - En [`app/(app)/closet/page.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/app/%28app%29/closet/page.tsx), se eliminó el detector de scroll que ocultaba la cabecera al hacer scroll (`setIsHeaderVisible(false)` / `-translate-y-full`).
   - La cabecera superior y el contenedor con los botones **"Crear Outfit"** y **"Crear con IA" (Kloe)** permanecen de forma permanente fijos y accesibles (`sticky top-0`) tanto en vista móvil como en escritorio, garantizando que nunca desaparezcan al hacer scroll hacia arriba o abajo por el catálogo de prendas.
+
+### 91. Normalización de Cabeceras Móviles, Optimización de Kloe, Esqueletos Desvinculados de GPU y Ajustes de Armario/Perfil (Septiembre 2026)
+- **Ajuste de Posición y Scroll en Kloe Chat (`/closet/kloe`)**:
+  - Se corrigió el padding inferior de la vista de chat (`pb-28 md:pb-24`), eliminando el espacio en blanco excesivo (`pb-56`) que permitía scroll innecesario.
+  - Al abrir el chat o recibir respuestas, el scroll se posiciona de forma precisa en el último mensaje de Kloe con `scrollToBottom('auto')` inicial y `smooth` en mensajes nuevos.
+- **Supresión Global de Barras de Scroll en Móvil**:
+  - Se añadieron reglas globales en [`app/globals.css`](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/app/globals.css) con `@media (max-width: 768px)` y utilidad `.no-scrollbar` para ocultar barras de scroll nativas (módem `-webkit-scrollbar: none`, `scrollbar-width: none`), manteniendo un deslizamiento táctil fluido y aspecto premium.
+  - Aplicada la clase `.no-scrollbar` en los modales de selección de prendas y publicaciones guardadas en el chat de Kloe (`SavedSelectorDrawer` y `WardrobeSelectorDrawer`).
+- **Botón Atrás en Kloe y Desvinculación de GPU del Logo**:
+  - En [`app/(app)/closet/kloe/page.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/app/%28app%29/closet/kloe/page.tsx), se añadió un botón de navegación hacia atrás con `<ArrowLeft />` que redirige a `/closet` tanto en la cabecera de escritorio como en la cabecera móvil.
+  - El logo animado `KloeAnimatedLogo` fue desvinculado de transformaciones 3D pesadas (`rotateX: 90`), utilizando transiciones 2D ultra-ligeras de escala y opacidad (`scale: 0.92 -> 1`) para evitar reasignaciones continuas de capas de composición en GPU.
+- **Acceso Rápido a Outfits de Hoy en Calendario de Armario (`/closet`)**:
+  - En [`components/OutfitCalendar.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/components/OutfitCalendar.tsx), se incorporó un botón principal en versión móvil debajo de la cuadrícula del calendario: *"Añadir outfit para hoy"*, con el estilo rosa distintivo de la app (`bg-gradient-to-r from-pink-500 to-rose-500`), seleccionando la fecha actual y abriendo el selector de outfits.
+- **Esqueleto de Carga Dedicado para Detalle de Outfit (`SkeletonOutfitDetail`)**:
+  - En [`components/Skeleton.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/components/Skeleton.tsx), se creó e integró `SkeletonOutfitDetail` que emula la disposición panorámica del visor de imagen y la columna lateral de detalles.
+  - Integrado en [`app/(app)/profile/[id]/outfit/[outfitId]/page.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/app/%28app%29/profile/%5Bid%5D/outfit/%5BoutfitId%5D/page.tsx) y [`app/(app)/outfit/[id]/page.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/app/%28app%29/outfit/%5Bid%5D/page.tsx) sustituyendo spinners circulares básicos.
+- **Animaciones de Esqueleto Desvinculadas de la GPU (`app/globals.css`)**:
+  - Se refactorizó la animación de shimmer de los esqueletos (`@keyframes shimmer-wave` y `.skeleton-wave::after`) utilizando `transform: translateX(-100%)` a `translateX(100%)` sobre pseudo-elementos compuestos, garantizando 60 FPS estables sin saturar el hilo de renderizado.
+- **Rediseño y Normalización de Pantalla de Configuración (`/profile/settings`)**:
+  - Se alineó el ancho máximo al estándar de perfil (`max-w-4xl mx-auto`).
+  - Se centró el título *"Configuración"* en versión escritorio con botón de retroceso circular minimalista sin texto redundante.
+  - Se eliminaron botones flotantes no deseados y se incorporó la cabecera estándar de cristal (`h-14 apple-glass-bar`).
+- **Normalización Exhaustiva de Cabeceras Móviles en Toda la Aplicación**:
+  - Estandarizadas las especificaciones de cabecera móvil en todas las pantallas principales y secundarias: altura consistente `h-14` (56px), efecto `apple-glass-bar pt-safe`, títulos tipográficos centrados (`text-lg font-bold tracking-tight absolute left-1/2 -translate-x-1/2`) y botones táctiles con área mínima de 44px.
+

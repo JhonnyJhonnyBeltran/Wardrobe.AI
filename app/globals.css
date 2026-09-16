@@ -2213,6 +2213,86 @@ select option:checked {
 }
 
 /* ============================================
+   INSTAGRAM-STYLE SKELETON WAVE SHIMMER (GPU-DECOUPLED)
+   ============================================ */
+
+@keyframes shimmer-wave {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.skeleton,
+.skeleton-wave {
+  position: relative;
+  overflow: hidden;
+  background-color: rgba(229, 231, 235, 0.85);
+  border-radius: var(--radius-md);
+}
+
+.skeleton::after,
+.skeleton-wave::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.7) 50%,
+    transparent 100%
+  );
+  animation: shimmer-wave 1.6s infinite;
+  will-change: transform;
+}
+
+.dark .skeleton,
+.dark .skeleton-wave {
+  background-color: rgba(31, 41, 55, 0.85);
+}
+
+.dark .skeleton::after,
+.dark .skeleton-wave::after {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.08) 50%,
+    transparent 100%
+  );
+}
+
+/* ============================================
+   GLOBAL MOBILE SCROLLBAR SUPPRESSION
+   ============================================ */
+
+@media (max-width: 768px) {
+  * {
+    scrollbar-width: none !important;
+    -ms-overflow-style: none !important;
+  }
+  *::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+}
+
+.no-scrollbar::-webkit-scrollbar,
+.scrollbar-none::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+.no-scrollbar,
+.scrollbar-none {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+/* ============================================
    GLOBAL INPUT / TEXTAREA / SELECT FOCUS RESET
    Eliminate pink glow/rings and enforce clean Apple-style focus
    ============================================ */

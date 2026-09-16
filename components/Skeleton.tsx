@@ -291,3 +291,61 @@ export function SkeletonPostDetail() {
     </div>
   );
 }
+
+/**
+ * Outfit Detail Page Skeleton with Wave Shimmer (Left Canvas + Right Garments & Details)
+ */
+export function SkeletonOutfitDetail() {
+  return (
+    <div className="min-h-screen w-full bg-[var(--background)] flex flex-col">
+      {/* Header Skeleton */}
+      <div className="sticky top-0 z-50 w-full bg-[var(--background)]/85 backdrop-blur-xl border-b border-[var(--border-color)]/50 pt-safe h-16 flex items-center justify-between px-4 max-w-7xl mx-auto">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full skeleton-wave" />
+          <div className="w-8 h-8 rounded-full skeleton-wave" />
+          <div className="h-4 w-28 rounded-md skeleton-wave" />
+        </div>
+      </div>
+
+      {/* Main 2-Column Desktop / Mobile Stacked Layout */}
+      <div className="w-full flex flex-col md:flex-row md:h-[calc(100vh-64px)] md:justify-center overflow-hidden bg-[var(--background)]">
+        {/* Left: Canvas Area */}
+        <div className="w-full aspect-[3/4] md:w-auto md:h-full md:aspect-[3/4] md:max-w-[calc(100%-400px)] shrink-0 p-4 flex items-center justify-center border-b md:border-b-0 md:border-r border-[var(--border-color)]">
+          <div className="w-full h-full rounded-3xl skeleton-wave" />
+        </div>
+
+        {/* Right: Details & Garments Grid */}
+        <div className="w-full md:w-[400px] lg:w-[450px] p-4 md:p-6 space-y-6 flex flex-col overflow-y-auto">
+          {/* Title & Badge */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2.5">
+              <div className="h-7 w-48 rounded-lg skeleton-wave" />
+              <div className="h-6 w-20 rounded-full skeleton-wave" />
+            </div>
+            <div className="h-4 w-3/4 rounded skeleton-wave opacity-70" />
+          </div>
+
+          {/* Garments Grid Skeleton */}
+          <div className="space-y-4">
+            <div className="h-5 w-40 rounded skeleton-wave" />
+            <div className="grid grid-cols-2 gap-3">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="aspect-square rounded-2xl skeleton-wave" />
+              ))}
+            </div>
+          </div>
+
+          {/* Related Posts Skeleton */}
+          <div className="space-y-3 pt-4 border-t border-[var(--border-color)]">
+            <div className="h-5 w-32 rounded skeleton-wave" />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="aspect-square rounded-xl skeleton-wave" />
+              <div className="aspect-square rounded-xl skeleton-wave" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+

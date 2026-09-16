@@ -272,18 +272,27 @@ export default function MessagesPage() {
 
     return (
         <div className="fixed inset-0 z-[40] md:z-auto md:relative flex flex-col bg-[var(--background)] overflow-hidden">
-            {/* Mobile: Header + Search + List. Desktop: layout shows list; this page is only for placeholder when no chat selected. */}
             {/* Mobile: Full Screen Layout */}
             <div className="md:hidden flex-1 flex flex-col overflow-hidden">
-                <header className="bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-color)] shrink-0">
-                    <div className="px-4 h-14 flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <button onClick={() => router.push('/feed')} className="p-2 -ml-2 hover:bg-[var(--background-secondary)] rounded-full transition-colors">
-                                <ChevronLeft className="w-6 h-6 text-[var(--foreground)]" />
-                            </button>
-                            <h1 className="text-lg font-bold text-[var(--foreground)]">Mensajes</h1>
-                        </div>
-                        <button onClick={() => setShowNewConversationModal(true)} className="p-2 -mr-2 text-[var(--brand-pink)] hover:bg-[var(--brand-pink)]/10 rounded-full transition-colors">
+                <header className="sticky top-0 z-30 apple-glass-bar pt-safe shrink-0">
+                    <div className="px-4 h-14 flex items-center justify-between relative">
+                        <button 
+                            onClick={() => router.push('/feed')} 
+                            className="touch-target-44 flex items-center justify-center -ml-2 text-[var(--foreground)] hover:text-[var(--brand-pink)] transition-colors"
+                            aria-label="Volver"
+                        >
+                            <ChevronLeft className="w-6 h-6" />
+                        </button>
+
+                        <h1 className="text-lg font-bold tracking-tight text-[var(--foreground)] absolute left-1/2 -translate-x-1/2 select-none">
+                            Mensajes
+                        </h1>
+
+                        <button 
+                            onClick={() => setShowNewConversationModal(true)} 
+                            className="touch-target-44 flex items-center justify-center -mr-2 text-[var(--brand-pink)] hover:bg-[var(--brand-pink)]/10 rounded-full transition-colors"
+                            aria-label="Nueva conversación"
+                        >
                             <Plus className="w-6 h-6" />
                         </button>
                     </div>
@@ -291,6 +300,7 @@ export default function MessagesPage() {
 
                 {/* Scrollable List Content */}
                 <div className="flex-1 overflow-y-auto pb-[env(safe-area-inset-bottom,20px)]">
+
                     {/* Search - mobile only */}
                     <div className="p-4">
                         <div className="relative">

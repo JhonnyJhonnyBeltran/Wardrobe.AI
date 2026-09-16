@@ -260,39 +260,39 @@ function KloeAnimatedLogo() {
   }, []);
 
   return (
-    <div className="relative h-10 w-44 flex items-center justify-center cursor-pointer select-none">
+    <div className="relative h-10 w-36 md:w-44 flex items-center justify-center cursor-pointer select-none">
       <AnimatePresence mode="wait">
         {logoVariant === 0 ? (
           <motion.div
             key="logo-text"
-            initial={{ opacity: 0, scale: 0.85, rotateX: 90 }}
-            animate={{ opacity: 1, scale: 1, rotateX: 0 }}
-            exit={{ opacity: 0, scale: 0.85, rotateX: -90 }}
-            transition={{ duration: 0.6, type: 'spring', damping: 20, stiffness: 200 }}
-            className="relative w-28 h-8 flex items-center justify-center"
+            initial={{ opacity: 0, scale: 0.92 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.92 }}
+            transition={{ duration: 0.35, ease: 'easeInOut' }}
+            className="relative w-24 md:w-28 h-7 md:h-8 flex items-center justify-center"
           >
             <Image
               src="/kloe-logo-large.png"
               alt="Kloe"
               fill
-              className="object-contain drop-shadow-xs"
+              className="object-contain"
               priority
             />
           </motion.div>
         ) : (
           <motion.div
             key="logo-character"
-            initial={{ opacity: 0, scale: 0.85, rotateX: 90 }}
-            animate={{ opacity: 1, scale: 1, rotateX: 0 }}
-            exit={{ opacity: 0, scale: 0.85, rotateX: -90 }}
-            transition={{ duration: 0.6, type: 'spring', damping: 20, stiffness: 200 }}
-            className="relative w-8 h-8 flex items-center justify-center flex-shrink-0"
+            initial={{ opacity: 0, scale: 0.92 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.92 }}
+            transition={{ duration: 0.35, ease: 'easeInOut' }}
+            className="relative w-7 md:w-8 h-7 md:h-8 flex items-center justify-center flex-shrink-0"
           >
             <Image
               src="/kloe-avatar-v2.png"
               alt="Kloe Avatar"
               fill
-              className="object-contain drop-shadow-sm"
+              className="object-contain"
               priority
             />
           </motion.div>
@@ -301,6 +301,7 @@ function KloeAnimatedLogo() {
     </div>
   );
 }
+
 
 export default function KloePage() {
   const router = useRouter();
@@ -483,13 +484,20 @@ export default function KloePage() {
     }
   }, [user?.id]);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
+    messagesEndRef.current?.scrollIntoView({ behavior, block: 'end' });
   };
 
   useEffect(() => {
-    scrollToBottom();
+    scrollToBottom('auto');
+    const timer = setTimeout(() => scrollToBottom('auto'), 150);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    scrollToBottom('smooth');
   }, [messages, isTyping]);
+
 
   // Fetch user wardrobe for drawer
   const fetchWardrobe = async () => {
@@ -833,13 +841,20 @@ export default function KloePage() {
   return (
     <div className="min-h-screen bg-[var(--background)] flex flex-col justify-between max-w-5xl mx-auto">
       
-      {/* DESKTOP HEADER (Fixed top from sidebar edge, centered 10s animated logo) */}
+      {/* DESKTOP HEADER (Fixed top from sidebar edge, centered 10s animated logo, back button to /closet) */}
       <header className="hidden md:flex fixed top-0 md:left-[72px] left-0 right-0 z-30 h-16 bg-[var(--background)]/85 backdrop-blur-xl border-b border-[var(--border-color)]/50 px-8 items-center justify-between">
-        {/* Left spacer for optical centering */}
-        <div className="w-16" />
+        {/* Back button to /closet */}
+        <button
+          onClick={() => router.push('/closet')}
+          className="p-2 -ml-2 rounded-full text-[var(--foreground)] hover:text-[var(--brand-pink)] hover:bg-[var(--background-secondary)] transition-colors cursor-pointer"
+          title="Volver a Armario"
+          aria-label="Volver a Armario"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </button>
 
-        {/* Center Animated Logo (Alternates with 3D animation every 10s) */}
-        <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center">
+        {/* Center Animated Logo */}
+        <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center pointer-events-none">
           <KloeAnimatedLogo />
         </div>
 
@@ -896,34 +911,31 @@ export default function KloePage() {
         </div>
       </header>
 
-      {/* MOBILE HEADER (Floating rounded pill island, hides on scroll down, no back arrow) */}
-      <motion.header
-        initial={{ y: 0, opacity: 1 }}
-        animate={{ y: showHeader ? 0 : -80, opacity: showHeader ? 1 : 0 }}
-        transition={{ duration: 0.25, ease: 'easeInOut' }}
-        className="fixed top-3 left-0 right-0 z-30 px-4 flex items-center justify-between pointer-events-none md:hidden"
-      >
-        {/* Left: Floating Brand Pill */}
-        <div className="pointer-events-auto bg-[var(--card-bg)]/90 dark:bg-[#131317]/90 backdrop-blur-2xl border border-[var(--border-color)]/70 rounded-full px-3.5 py-1.5 shadow-md flex items-center gap-1.5">
-          <div className="relative w-16 h-6 flex-shrink-0 flex items-center justify-center">
-            <Image
-              src="/kloe-logo-large.png"
-              alt="Kloe"
-              fill
-              className="object-contain"
-              priority
-            />
-          </div>
+      {/* MOBILE HEADER (Normalized h-14 apple-glass-bar with back button to /closet, centered logo, right actions) */}
+      <header className="fixed top-0 left-0 right-0 z-30 h-14 apple-glass-bar px-4 flex items-center justify-between pt-safe md:hidden">
+        {/* Left: Back button to /closet */}
+        <button
+          onClick={() => router.push('/closet')}
+          className="touch-target-44 flex items-center justify-center -ml-2 text-[var(--foreground)] hover:text-[var(--brand-pink)] transition-colors cursor-pointer"
+          aria-label="Volver a Armario"
+          title="Volver a Armario"
+        >
+          <ArrowLeft className="w-6 h-6" />
+        </button>
+
+        {/* Center: Animated Logo */}
+        <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center pointer-events-none">
+          <KloeAnimatedLogo />
         </div>
 
-        {/* Right: Floating Actions Pill (Rounded only around the button zone) */}
-        <div className="pointer-events-auto bg-[var(--card-bg)]/90 dark:bg-[#131317]/90 backdrop-blur-2xl border border-[var(--border-color)]/70 rounded-full px-1.5 py-1 shadow-md flex items-center gap-0.5">
+        {/* Right: Actions */}
+        <div className="flex items-center gap-0.5">
           <button
             onClick={() => {
               haptics.selection();
               setShowHistoryDrawer(true);
             }}
-            className="p-2 text-gray-900 dark:text-white hover:text-[var(--brand-pink)] dark:hover:text-[var(--brand-pink)] rounded-full transition-colors relative cursor-pointer"
+            className="p-2 text-[var(--foreground)] hover:text-[var(--brand-pink)] rounded-full transition-colors relative cursor-pointer"
             title="Historial"
             aria-label="Historial de conversaciones"
           >
@@ -942,7 +954,7 @@ export default function KloePage() {
               }
               setShowCalibrationModal(true);
             }}
-            className="p-2 text-gray-900 dark:text-white hover:text-[var(--brand-pink)] dark:hover:text-[var(--brand-pink)] rounded-full transition-colors cursor-pointer"
+            className="p-2 text-[var(--foreground)] hover:text-[var(--brand-pink)] rounded-full transition-colors cursor-pointer"
             title="Mi Perfil Físico"
             aria-label="Mi Perfil Físico"
           >
@@ -951,7 +963,7 @@ export default function KloePage() {
 
           <button
             onClick={openSaved}
-            className="p-2 text-gray-900 dark:text-white hover:text-[var(--brand-pink)] dark:hover:text-[var(--brand-pink)] rounded-full transition-colors cursor-pointer"
+            className="p-2 text-[var(--foreground)] hover:text-[var(--brand-pink)] rounded-full transition-colors cursor-pointer"
             title="Looks guardados"
             aria-label="Looks guardados"
           >
@@ -960,20 +972,21 @@ export default function KloePage() {
 
           <button
             onClick={openWardrobe}
-            className="p-2 text-gray-900 dark:text-white hover:text-[var(--brand-pink)] dark:hover:text-[var(--brand-pink)] rounded-full transition-colors cursor-pointer"
+            className="p-2 text-[var(--foreground)] hover:text-[var(--brand-pink)] rounded-full transition-colors cursor-pointer"
             title="Prendas de armario"
             aria-label="Prendas de armario"
           >
             <Shirt className="w-4 h-4" />
           </button>
         </div>
-      </motion.header>
+      </header>
 
       {/* Messages Container */}
       <div 
         onScroll={handleMessagesScroll}
-        className="flex-1 overflow-y-auto px-4 md:px-6 pt-16 md:pt-20 pb-56 md:pb-36 space-y-6"
+        className="flex-1 overflow-y-auto px-4 md:px-6 pt-16 md:pt-20 pb-28 md:pb-24 space-y-6 no-scrollbar"
       >
+
         
         {/* Free Tier Upgrade Banner - Only shown when limit has been reached */}
         {!isPremium() && trialRemaining <= 0 && (
@@ -1523,7 +1536,7 @@ export default function KloePage() {
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
               className="fixed inset-y-0 left-0 md:left-[72px] w-full max-w-xs sm:max-w-sm bg-[var(--card-bg)] border-r border-[var(--border-color)] z-[60] p-5 flex flex-col justify-between shadow-2xl"
             >
-              <div className="space-y-4 overflow-y-auto">
+              <div className="space-y-4 overflow-y-auto no-scrollbar">
                 <div className="flex items-center justify-between pb-3 border-b border-[var(--border-color)]">
                   <div className="flex items-center gap-2">
                     <History className="w-5 h-5 text-[var(--brand-pink)]" />
@@ -1594,7 +1607,7 @@ export default function KloePage() {
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
               className="fixed inset-y-0 right-0 w-[85%] max-w-sm bg-[var(--card-bg)] border-l border-[var(--border-color)] z-[100000] p-5 flex flex-col justify-between shadow-2xl"
             >
-              <div className="space-y-4 overflow-y-auto flex-1">
+              <div className="space-y-4 overflow-y-auto flex-1 no-scrollbar">
                 <div className="flex items-center justify-between pb-3 border-b border-[var(--border-color)]">
                   <div className="flex items-center gap-2">
                     <Bookmark className="w-5 h-5 text-[var(--brand-pink)]" />
@@ -1689,7 +1702,7 @@ export default function KloePage() {
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
               className="fixed inset-y-0 right-0 w-[85%] max-w-sm bg-[var(--card-bg)] border-l border-[var(--border-color)] z-[100000] p-5 flex flex-col justify-between shadow-2xl"
             >
-              <div className="space-y-4 overflow-y-auto flex-1">
+              <div className="space-y-4 overflow-y-auto flex-1 no-scrollbar">
                 <div className="flex items-center justify-between pb-3 border-b border-[var(--border-color)]">
                   <div className="flex items-center gap-2">
                     <Shirt className="w-5 h-5 text-[var(--brand-pink)]" />
@@ -1702,6 +1715,7 @@ export default function KloePage() {
                     <X className="w-5 h-5" />
                   </button>
                 </div>
+
 
                 <div className="relative">
                   <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--foreground-tertiary)]" />

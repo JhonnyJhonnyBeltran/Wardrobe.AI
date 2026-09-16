@@ -233,20 +233,42 @@ export default function SettingsPage() {
 
     return (
         <div className="min-h-screen bg-[var(--background)] pb-24 md:pb-8">
+            {/* Mobile Top Header */}
+            <header className="sticky top-0 z-30 h-14 apple-glass-bar px-4 flex items-center justify-between pt-safe md:hidden">
+                <Link
+                    href="/profile"
+                    className="touch-target-44 flex items-center justify-center -ml-2 text-[var(--foreground)] hover:text-[var(--brand-pink)] transition-colors"
+                    aria-label="Volver"
+                >
+                    <ChevronLeft className="w-6 h-6" />
+                </Link>
+                <h1 className="text-lg font-bold tracking-tight text-[var(--foreground)] absolute left-1/2 -translate-x-1/2 select-none">
+                    Configuración
+                </h1>
+                <div className="w-10" />
+            </header>
+
             <motion.div
-                className="max-w-2xl mx-auto px-4 py-8"
+                className="max-w-4xl mx-auto px-4 py-4 md:py-8"
                 variants={containerVariants}
                 initial="hidden"
                 animate="visible"
             >
-                {/* Back Button */}
-                <motion.div variants={itemVariants} className="mb-6">
+                {/* Desktop Top Header */}
+                <motion.div variants={itemVariants} className="hidden md:flex items-center justify-between mb-8 pb-4 border-b border-[var(--border-color)] relative">
                     <Link href="/profile">
-                        <button className="flex items-center gap-2 text-[var(--foreground-secondary)] hover:text-[var(--foreground)] transition-colors">
-                            <ChevronLeft className="w-5 h-5" />
-                            <span className="font-medium">{t.profile.backToProfile}</span>
+                        <button
+                            className="p-2 -ml-2 rounded-full text-[var(--foreground-secondary)] hover:text-[var(--foreground)] hover:bg-[var(--background-secondary)] transition-colors cursor-pointer"
+                            aria-label="Volver al perfil"
+                            title="Volver al perfil"
+                        >
+                            <ChevronLeft className="w-6 h-6" />
                         </button>
                     </Link>
+                    <h1 className="text-xl font-bold tracking-tight text-[var(--foreground)] absolute left-1/2 -translate-x-1/2 select-none">
+                        Configuración
+                    </h1>
+                    <div className="w-10" />
                 </motion.div>
 
                 {/* CONFIGURACIÓN - Contexto §4F: Datos personales (Avatar, Nombre, Bio, Usuario) */}
@@ -254,6 +276,7 @@ export default function SettingsPage() {
                     <h2 className="text-sm font-semibold text-[var(--foreground-secondary)] uppercase tracking-wider mb-4">
                         {t.profile.configuration}
                     </h2>
+
 
                     {/* Datos personales - Contexto §4F: Avatar, Nombre, Bio, Usuario */}
                     <Link href="/profile/settings/personal">

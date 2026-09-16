@@ -29,6 +29,7 @@ import { haptics } from '@/lib/haptic';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import InteractiveOutfitViewer from '@/components/InteractiveOutfitViewer';
 import { ClothingItem } from '@/components/ClothingItem';
+import { SkeletonOutfitDetail } from '@/components/Skeleton';
 
 const getOccasionInfo = (occ?: string) => {
   if (!occ || typeof occ !== 'string') return null;
@@ -192,12 +193,9 @@ export default function ProfileOutfitDetailPage() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-[var(--background)] flex items-center justify-center">
-        <div className="w-8 h-8 rounded-full border-2 border-[var(--brand-pink)] border-t-transparent animate-spin" />
-      </div>
-    );
+    return <SkeletonOutfitDetail />;
   }
+
 
   if (!outfit) {
     return (
