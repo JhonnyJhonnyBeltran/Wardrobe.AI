@@ -79,7 +79,6 @@ export default function PostDetailPage() {
     const [submittingComment, setSubmittingComment] = useState(false);
     const [showMobileComments, setShowMobileComments] = useState(false);
     const [showSaveModal, setShowSaveModal] = useState(false);
-    const [showSwipeHint, setShowSwipeHint] = useState(true);
     const [showOptions, setShowOptions] = useState(false);
     const [deleting, setDeleting] = useState(false);
     const [replyingTo, setReplyingTo] = useState<{ id: string, username: string } | null>(null);
@@ -653,26 +652,9 @@ export default function PostDetailPage() {
             {/* Main Content Area - Full width with left image area and right details column docked to the right edge */}
             <div className="flex flex-col md:flex-row w-full flex-1 md:h-[calc(100vh-64px)] overflow-hidden">
 
-                {/* IMAGE CAROUSEL - Smooth sliding track identical to Instagram */}
+                {/* IMAGE CAROUSEL - Smooth sliding track identical to Instagram with real-time drag */}
                 <div 
-                    className={`relative w-full h-auto min-h-[50vh] md:flex-1 md:h-[calc(100vh-64px)] bg-[var(--background)] md:bg-[var(--background-secondary)]/30 flex-shrink-0 overflow-hidden flex items-center justify-center ${isMobile ? 'cursor-grab active:cursor-grabbing' : 'cursor-default select-none'}`}
-                    onTouchStart={isMobile ? (e) => {
-                        touchStartXRef.current = e.touches[0].clientX;
-                    } : undefined}
-                    onTouchEnd={isMobile ? (e) => {
-                        if (touchStartXRef.current === null) return;
-                        const diff = touchStartXRef.current - e.changedTouches[0].clientX;
-                        if (diff > 40 && activeSlide < slides.length - 1) {
-                            setActiveSlide(prev => Math.min(slides.length - 1, prev + 1));
-                            setShowSwipeHint(false);
-                            haptics.selection();
-                        } else if (diff < -40 && activeSlide > 0) {
-                            setActiveSlide(prev => Math.max(0, prev - 1));
-                            setShowSwipeHint(false);
-                            haptics.selection();
-                        }
-                        touchStartXRef.current = null;
-                    } : undefined}
+                    className="relative w-full h-auto min-h-[50vh] md:flex-1 md:h-[calc(100vh-64px)] bg-[var(--background)] md:bg-[var(--background-secondary)]/30 flex-shrink-0 overflow-hidden flex items-center justify-center select-none"
                     onDoubleClick={() => {
                         if (!isLiked) toggleLike();
                         setShowHeartAnim(true);
@@ -695,10 +677,31 @@ export default function PostDetailPage() {
                         )}
                     </AnimatePresence>
 
-                    {/* Sliding track: both slides pre-rendered side-by-side, gliding smoothly */}
-                    <div 
-                        className="flex w-full h-full transition-transform duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] will-change-transform"
-                        style={{ transform: `translateX(-${activeSlide * 100}%)` }}
+                    {/* Sliding track: both slides pre-rendered side-by-side with Framer Motion spring sliding */}
+                    <motion.div 
+                        className="flex w-full h-full will-change-transform cursor-grab active:cursor-grabbing"
+                        style={{ touchAction: 'pan-y' }}
+                        animate={{ x: `-${activeSlide * 100}%` }}
+                        transition={{
+                            type: "spring",
+                            stiffness: 280,
+                            damping: 30,
+                            mass: 0.8
+                        }}
+                        drag={isMobile ? "x" : false}
+                        dragConstraints={{ left: 0, right: 0 }}
+                        dragElastic={0.3}
+                        onDragEnd={isMobile ? (_, { offset, velocity }) => {
+                            const swipe = offset.x;
+                            const speed = velocity.x;
+                            if ((swipe < -35 || speed < -350) && activeSlide < slides.length - 1) {
+                                setActiveSlide(prev => Math.min(slides.length - 1, prev + 1));
+                                haptics.selection();
+                            } else if ((swipe > 35 || speed > 350) && activeSlide > 0) {
+                                setActiveSlide(prev => Math.max(0, prev - 1));
+                                haptics.selection();
+                            }
+                        } : undefined}
                     >
                         {slides.map((slide, idx) => (
                             <div
@@ -711,7 +714,7 @@ export default function PostDetailPage() {
                                         alt="Post"
                                         width={1200}
                                         height={1200}
-                                        className="w-full h-auto md:w-auto md:h-full max-h-[85vh] md:max-h-[calc(100vh-64px)] object-contain"
+                                        className="w-full h-auto md:w-auto md:h-full max-h-[85vh] md:max-h-[calc(100vh-64px)] object-contain pointer-events-none"
                                         priority
                                         draggable={false}
                                     />
@@ -727,22 +730,7 @@ export default function PostDetailPage() {
                                 )}
                             </div>
                         ))}
-                    </div>
-
-                    {/* Swipe Hint Indicator (Overlay on Mobile Only) */}
-                    {showSwipeHint && isMobile && slides.length > 1 && activeSlide === 0 && (
-                        <motion.div
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: [0, 1, 1, 0], x: [20, -20, -20, 20] }}
-                            transition={{ repeat: Infinity, duration: 2, times: [0, 0.2, 0.8, 1] }}
-                            className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2 pointer-events-none"
-                        >
-                            <div className="px-4 py-2 bg-black/60 backdrop-blur-md rounded-full text-white text-xs font-bold shadow-xl border border-white/10 flex items-center gap-2">
-                                <span>Desliza para ver el look</span>
-                                <ChevronRight className="w-4 h-4 animate-bounce-x" />
-                            </div>
-                        </motion.div>
-                    )}
+                    </motion.div>
 
                     {/* Navigation Arrows (Conditional & Shaded without solid background) & Dots Indicator */}
                     {slides.length > 1 && (
@@ -750,7 +738,7 @@ export default function PostDetailPage() {
                             {/* Left Arrow: Only appears when activeSlide > 0 */}
                             {activeSlide > 0 && (
                                 <button
-                                    onClick={(e) => { e.stopPropagation(); setActiveSlide(prev => Math.max(0, prev - 1)); setShowSwipeHint(false); }}
+                                    onClick={(e) => { e.stopPropagation(); setActiveSlide(prev => Math.max(0, prev - 1)); }}
                                     className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 text-white/90 hover:text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)] z-30 transition-all duration-200 hover:scale-125 active:scale-95 p-2 focus:outline-none"
                                     aria-label="Anterior"
                                 >
@@ -761,7 +749,7 @@ export default function PostDetailPage() {
                             {/* Right Arrow: Only appears when activeSlide < slides.length - 1 */}
                             {activeSlide < slides.length - 1 && (
                                 <button
-                                    onClick={(e) => { e.stopPropagation(); setActiveSlide(prev => Math.min(slides.length - 1, prev + 1)); setShowSwipeHint(false); }}
+                                    onClick={(e) => { e.stopPropagation(); setActiveSlide(prev => Math.min(slides.length - 1, prev + 1)); }}
                                     className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 text-white/90 hover:text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)] z-30 transition-all duration-200 hover:scale-125 active:scale-95 p-2 focus:outline-none"
                                     aria-label="Siguiente"
                                 >
@@ -774,7 +762,7 @@ export default function PostDetailPage() {
                                 {slides.map((_, idx) => (
                                     <button
                                         key={idx}
-                                        onClick={(e) => { e.stopPropagation(); setActiveSlide(idx); setShowSwipeHint(false); }}
+                                        onClick={(e) => { e.stopPropagation(); setActiveSlide(idx); }}
                                         className={`rounded-full transition-all duration-200 drop-shadow-[0_1px_3px_rgba(0,0,0,0.7)] ${
                                             activeSlide === idx 
                                                 ? 'w-2 h-2 bg-[var(--brand-pink,#FF66C4)] scale-110' 
@@ -878,7 +866,6 @@ export default function PostDetailPage() {
                             onClick={() => {
                                 if (activeSlide !== 0) {
                                     setActiveSlide(0);
-                                    setShowSwipeHint(false);
                                 }
                                 if (window.innerWidth < 768) {
                                     setShowMobileComments(true);

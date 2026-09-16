@@ -1189,11 +1189,14 @@ En cada conversación, el backend alimenta a CloSy con:
   - Sustituido el icono genérico de IA por el logotipo oficial de Kloe (`/kloe-logo-large.png`).
 
 ### 95. Carrusel Deslizable Estilo Instagram en Detalle de Publicación (`app/(app)/post/[id]/page.tsx`) (Septiembre 2026)
-- **Pista de Deslizamiento Continuo Estilo Instagram**:
-  - Ambos slides (fotografía de la publicación y look interactivo con prendas `InteractiveOutfitViewer`) se encuentran pre-renderizados en paralelo sobre un contenedor flex continuo con aceleración por hardware (`translateX(-${activeSlide * 100}%)`).
-  - Al deslizar en móvil o pulsar las flechas en PC, se visualiza la transición continua y suave de salida del slide anterior e ingreso del siguiente (`transition-transform duration-300 ease-[cubic-bezier(0.25,1,0.5,1)]`), eliminando cualquier retraso, hueco blanco o desmontaje de componentes.
+- **Pista de Deslizamiento Continuo y Física de Resorte Estilo Instagram**:
+  - Ambos slides (fotografía de la publicación y look interactivo con prendas `InteractiveOutfitViewer`) se encuentran pre-renderizados en paralelo sobre un contenedor continuo acelerado por hardware con Framer Motion (`motion.div`).
+  - Arrastre táctil en tiempo real (`drag="x"`, `dragElastic={0.3}`, `touchAction: 'pan-y'`) con física de resorte (`spring`, `stiffness: 280`, `damping: 30`), permitiendo que el look acompañe el dedo con suavidad y encaje de forma fluida de una diapositiva a otra, exactamente como en Instagram.
 - **Puntos Indicadores Limpios Sin Contenedor Oscuro**:
   - Se eliminó el fondo de píldora oscuro (`bg-black/20 backdrop-blur-md`) alrededor de los puntos del carrusel, flotando directamente y de forma limpia sobre el contenido multimedia con sombra sutil y resaltado en rosa para el slide activo.
+- **Eliminación del Mensaje Flotante de Deslizar**:
+  - Se suprimió completamente el aviso flotante *"Desliza para ver el look"* (`showSwipeHint`), dejando la interfaz totalmente limpia y despejada.
+
 
 
 
