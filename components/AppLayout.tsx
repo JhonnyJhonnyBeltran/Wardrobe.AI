@@ -10,6 +10,7 @@ import Sidebar from './Sidebar';
 import AuthGuard from './AuthGuard';
 import FloatingCreateButton from './FloatingCreateButton';
 import SaveModal from './SaveModal';
+import GuidedTourModal from './GuidedTour/GuidedTourModal';
 import { useUiStore } from '@/store/uiStore';
 import { UploadCloud, X } from 'lucide-react';
 import Link from 'next/link';
@@ -142,6 +143,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
       {/* Global Modals */}
       <SaveModal />
+      <GuidedTourModal />
 
       {/* Global Save Toast */}
       <AnimatePresence>

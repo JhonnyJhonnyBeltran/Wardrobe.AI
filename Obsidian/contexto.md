@@ -1236,6 +1236,33 @@ En cada conversación, el backend alimenta a CloSy con:
   - Se eliminó el campo de visualización de edad (`user.age` / `user.ageRange`) de la cuadrícula de información de estilo en [`app/(app)/profile/settings/page.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/app/%28app%29/profile/settings/page.tsx).
   - La sección conserva la información relevante y visualmente limpia de género, altura (si aplica), accesorios y estilos preferidos sin exponer públicamente ni en la ficha de ajustes la edad del usuario.
 
+### 100. Micro-Acciones Guiadas (Estilo Duolingo), Progreso del Perfil, Límites y Tips en Kloe, y Búsqueda Avanzada de Prendas (`store/tourStore.ts`, `GuidedTourModal.tsx`, `ProfileProgressBar.tsx`, `app/api/search/route.ts`, `app/api/closy/chat/route.ts`) (Septiembre 2026)
+- **Micro-Acciones Guiadas Estilo Duolingo (`store/tourStore.ts` & `components/GuidedTour/GuidedTourModal.tsx`)**:
+  - **Activación Post-Onboarding**: Al completar el onboarding inicial (`/onboarding/preferences`), el usuario es redirigido a `/closet?startTour=true`, activando el asistente de micro-acciones guiadas.
+  - **Flujo de 6 Pasos Interiores de Valor**:
+    1. **Sube tus 2 primeras prendas**: Guía interactiva con tarjetas explicativas para fotografiar prendas (luz natural, plano sobre superficie neutra o percha en pared lisa) o capturas/descargas de tiendas online (Zara, ASOS, Nike, Mango, etc.). Comprobación en tiempo real de `wardrobeCount >= 2`.
+    2. **Crea tu primer look**: Salto a `/create` para combinar prendas en el lienzo interactivo.
+    3. **Planifica tu outfit**: Asignación de fecha en el calendario de outfits.
+    4. **Consulta con Kloe**: Iniciar conversación con la asesora IA.
+    5. **Comparte tu look**: Publicar el outfit en la comunidad (`/create-post`).
+    6. **Explora e interactúa**: Descubrir tendencias en `/search` y dar me gusta.
+  - **Mecánica Duolingo**: Barra de progreso animada paso a paso, opción clara de "Saltar tour por ahora" (con confirmación de descartar) y banner flotante de micro-celebración con confeti al completar cada hito.
+- **Indicador de Progreso del Perfil (`components/Profile/ProfileProgressBar.tsx` & `app/(app)/profile/page.tsx`)**:
+  - Barra sutil de completitud en la cabecera del perfil (ej. *"Tu armario está al 40% · Añade 2 prendas más"*).
+  - Cálculo dinámico de retención: 2+ prendas (20%), 5+ prendas (35%), primer outfit creado (50%), look planificado (65%), primer post compartido (80%), interactuar con Kloe y likes (100%).
+  - Desplegable interactivo con checklist y enlaces de acceso directo a cada micro-acción.
+- **Kloe AI: Límites Clarificados y Consejos para Usuarios Nuevos (`app/api/closy/chat/route.ts`)**:
+  - **Límites de Uso**:
+    - **Usuarios Nuevos / Free**: Disponen de **8 mensajes de prueba gratuita (Trial)** (`kloe_trial_messages_used` en `profiles`), junto con un límite diario de seguridad de 30 consultas (`MAX_PER_DAY_USER = 30`).
+    - **Usuarios Pro**: Consultas y análisis multimodal ilimitado.
+  - **Tratamiento Cálido de Usuarios con Pocas Prendas (0 a 3 prendas)**:
+    - Cuando un usuario tiene pocas prendas, Kloe lo detecta en el contexto y le invita con calidez a nutrir su armario, dándole consejos prácticos de fotografía (fotos con luz natural sobre la cama o percha en pared neutra, o capturas directas de e-commerce como Zara, Nike, Uniqlo o ASOS), explicando cómo su visión por IA clasifica automáticamente colores, cortes y tejidos.
+- **Motor de Búsqueda Avanzada Multi-Entidad (`app/api/search/route.ts` & `app/(app)/search/page.tsx`)**:
+  - **Búsqueda por Prendas y Marcas**: Al buscar términos como *"sudadera scuffers"*, *"nike dunk"* o *"pantalones zara"*, el endpoint consulta `clothing_items` y `outfits` para encontrar los posts asociados a dichos outfits y prendas.
+  - **Diccionario de Sinónimos de Categorías (`CATEGORY_SYNONYMS`)**: Resuelve términos como *zapatos, calzado, zapatillas, sneakers, botas* $\rightarrow$ `shoes`; *chaqueta, cazadora, abrigo, blazer* $\rightarrow$ `jacket` / `outerwear`; *sudadera, hoodie* $\rightarrow$ `hoodie`; *pantalón, jeans, vaqueros, cargo* $\rightarrow$ `bottom`.
+  - **Chips de Descubrimiento Rápido**: Accesos directos a estilos, marcas populares y tipos de prendas en la barra de búsqueda.
+
+
 
 
 

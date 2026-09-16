@@ -527,7 +527,17 @@ REGLAS CRÍTICAS DE ESTILISMO Y DECISIÓN DE RESPUESTA (OBLIGATORIO):
    - NO utilices encabezados con almohadillas ("###", "##", "#") dentro del texto del chat; utiliza negritas (ej: "**1. Camiseta Básica Esencial**") para titular o separar secciones.
    - NO incluyas emojis en el texto.
 
-8. FORMATO DE SALIDA (JSON ESTRICTO):
+9. USUARIOS NUEVOS O CON POCAS PRENDAS (0 a 3 prendas registradas):
+   - Si el usuario tiene pocas prendas registradas (${context.wardrobe.totalItems} prendas actualmente):
+     * Felicítale con entusiasmo por dar los primeros pasos en su armario inteligente.
+     * Invítale con calidez a añadir más prendas para multiplicar sus combinaciones posibles.
+     * Dale tips prácticos de estilismo y cómo subir ropa fácilmente:
+       - **Luz natural**: Cerca de una ventana para captar el color y textura real.
+       - **Fondo liso y limpio**: Prenda extendida sobre la cama/mesa o colgada en una percha sobre pared blanca/neutra.
+       - **Fotos de tiendas online**: Puede subir capturas de pantalla o imágenes descargadas de tiendas de moda (Zara, ASOS, Nike, Uniqlo, Mango); nuestra IA recortará el fondo automáticamente y detectará color, tejido y corte.
+       - Explícale que con solo 4 o 5 prendas ya podrá desbloquear decenas de outfits completos diarios.
+
+10. FORMATO DE SALIDA (JSON ESTRICTO):
 Devuelve SIEMPRE tu respuesta en formato JSON estrictamente válido:
 {
   "message": "Tu explicación experta, enriquecida y estructurada en Markdown.",
@@ -1160,18 +1170,24 @@ Estas piezas te permitirán multiplicar tus opciones de look aprovechando tus pr
 
   const userName = context.user?.firstName || (context.user?.fullName ? context.user.fullName.split(' ')[0] : '') || (context.user?.username ? context.user.username.replace(/^@/, '') : '');
 
-  // Scenario 1: Empty wardrobe
+  // Scenario 1: Empty or very few items in wardrobe (0-2 items)
   if (items.length === 0) {
     return {
-      message: `¡Hola${userName ? ` ${userName}` : ''}! Para poder armarte combinaciones con tus prendas reales y darte asesoría personalizada, añade algunas fotos de tu ropa a tu armario.
+      message: `¡Hola${userName ? ` ${userName}` : ''}! Me alegra mucho darte la bienvenida a tu asesoría de estilo personal.
 
-Mientras tanto, puedes preguntarme sobre cualquier tendencia, combinaciones de colores o qué tipo de prendas elegir para cada ocasión.`,
+Para poder armarte combinaciones increíbles con tu ropa real, añade tus primeras prendas a tu armario. Aquí tienes los mejores tips para subirlas en segundos:
+
+• **Luz natural**: Haz las fotos cerca de una ventana o con buena iluminación para captar los colores y texturas reales.
+• **Fondo liso y limpio**: Extiende la prenda en plano sobre la cama o mesa, o cuélgala en una percha contra una pared neutra.
+• **O fotos de tiendas online**: Si prefieres no tomar fotos, puedes subir capturas de pantalla o imágenes de tiendas (Zara, ASOS, Nike, Uniqlo, Mango); nuestra IA recortará el fondo automáticamente y detectará color, tejido y temporada.
+
+Con solo 3 o 4 prendas ya podremos empezar a crear looks completos. ¿Quieres que te asesore mientras tanto sobre básicos o combinaciones?`,
       recommended_outfit: null,
       highlighted_item_ids: [],
       follow_up_suggestions: [
-        '¿Cómo combinar prendas de cuero?',
-        '¿Qué ponerse para una boda de tarde?',
-        'Básicos imprescindibles de armario'
+        '¿Qué básicos imprescindibles necesito?',
+        '¿Cómo combinar prendas para el día a día?',
+        'Consejos para mi tipo de cuerpo'
       ]
     };
   }

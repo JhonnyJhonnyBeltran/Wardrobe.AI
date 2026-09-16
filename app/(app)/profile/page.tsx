@@ -30,6 +30,7 @@ import {
 import { Avatar, Button as UiButton, OutfitCard, EmptyState, Skeleton, SkeletonProfile, SkeletonProfileGrid, DiscoveredStyleBanner, AvatarModal } from '@/components';
 import PostCard, { type Post } from '@/components/Feed/PostCard';
 import FolderPreview from '@/components/FolderPreview';
+import ProfileProgressBar from '@/components/Profile/ProfileProgressBar';
 import { useUiStore } from '@/store/uiStore';
 
 // Simple Button Component Local
@@ -441,6 +442,9 @@ export default function ProfilePage() {
                 <Settings className="w-5 h-5" />
               </Link>
             </div>
+
+            {/* Profile & Closet Completeness Progress Bar */}
+            <ProfileProgressBar />
 
             {/* Smart Taste Discovery Banner */}
             <DiscoveredStyleBanner />

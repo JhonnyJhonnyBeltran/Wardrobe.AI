@@ -572,8 +572,12 @@ export default function PreferencesPage() {
                 styleCompleted: true
             });
 
-            // Redirect to closet
-            router.push('/closet');
+            // Redirect to closet (start guided tour if first time)
+            if (isEditing) {
+                router.push('/closet');
+            } else {
+                router.push('/closet?startTour=true');
+            }
         } catch (err: any) {
             console.error('Error saving onboarding preferences:', err);
             setIsSaving(false);

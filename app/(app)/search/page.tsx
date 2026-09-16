@@ -450,31 +450,26 @@ export default function SearchPage() {
           });
         }
       } else {
-        // Search posts by caption (description)
-        const { data: searchData } = await supabase
-          .from('posts')
-          .select(`
-            id,
-            caption,
-            image_url,
-            created_at,
-            user_id,
-            style_ids,
-            outfits (
-                name,
-                outfit_items (
-                    clothing_items (
-                        image_url
-                    )
-                )
-            ),
-            likes (count)
-        `)
-          .ilike('caption', `%${searchTerm}%`)
-          .order('created_at', { ascending: false })
-          .range(from, to);
+        // Deep multi-entity search via /api/search (captions, outfit names, brands, garments, categories)
+        const response = await fetch(`/api/search?q=${encodeURIComponent(searchTerm)}&page=${currentPage}&limit=${POSTS_PER_PAGE}`);
+        if (!response.ok) {
+          throw new Error('Search failed');
+        }
+        const searchJson = await response.json();
+        
+        if (isLoadMore) {
+          setResults(prev => [...prev, ...(searchJson.posts || [])]);
+        } else {
+          setResults(searchJson.posts || []);
+        }
 
-        data = searchData;
+        if (searchJson.users && searchJson.users.length > 0 && !isLoadMore) {
+          setUserResults(searchJson.users);
+        }
+
+        setPostsHasMore(Boolean(searchJson.hasMore));
+        postsPageRef.current = currentPage;
+        return;
       }
 
       if (data && data.length > 0) {
@@ -617,7 +612,7 @@ export default function SearchPage() {
   return (
     <div className="min-h-[100dvh] w-full max-w-[100vw] overflow-x-hidden bg-[var(--background)] pb-24">
       {/* Floating Header */}
-      <div className="fixed top-4 md:top-6 left-0 right-0 z-[4980] px-4 pointer-events-none flex justify-center">
+      <div className="fixed top-4 md:top-6 left-0 right-0 z-[4980] px-4 pointer-events-none flex flex-col items-center gap-2">
         <div className="w-full max-w-2xl pointer-events-auto">
           <div className="relative w-full rounded-full bg-[var(--background)]/90 backdrop-blur-xl border border-[var(--border-color)] shadow-lg overflow-hidden transition-all duration-300 focus-within:shadow-xl focus-within:border-[var(--brand-pink)]">
             <SearchIcon className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--foreground-secondary)]" />
@@ -626,8 +621,8 @@ export default function SearchPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSearchSubmit()}
-              placeholder="Buscar estilos, prendas, usuarios..."
-              className="search-input-no-outline w-full bg-transparent py-4 pl-14 pr-12 text-base font-medium text-[var(--foreground)] placeholder-[var(--foreground-tertiary)]"
+              placeholder="Buscar marcas (Scuffers, Nike), prendas, estilos..."
+              className="search-input-no-outline w-full bg-transparent py-3.5 sm:py-4 pl-14 pr-12 text-sm sm:text-base font-medium text-[var(--foreground)] placeholder-[var(--foreground-tertiary)]"
             />
             {query && (
               <button
@@ -638,6 +633,27 @@ export default function SearchPage() {
               </button>
             )}
           </div>
+        </div>
+
+        {/* Quick Discovery Tags */}
+        <div className="w-full max-w-2xl pointer-events-auto flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1 px-1">
+          {['Sudaderas', 'Scuffers', 'Zapatos', 'Chaquetas', 'Streetwear', 'Pantalones', 'Old Money', 'Nike', 'Minimalista'].map((chip) => (
+            <button
+              key={chip}
+              onClick={() => {
+                setQuery(chip);
+                setDebouncedQuery(chip);
+                addSearch(chip);
+              }}
+              className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all border shrink-0 ${
+                query.toLowerCase() === chip.toLowerCase()
+                  ? 'bg-[var(--brand-pink)] text-white border-[var(--brand-pink)] shadow-sm'
+                  : 'bg-[var(--card-bg)]/80 backdrop-blur-md text-[var(--foreground-secondary)] hover:text-[var(--foreground)] border-[var(--border-color)] hover:border-[var(--brand-pink)]/40 active:scale-95'
+              }`}
+            >
+              {chip}
+            </button>
+          ))}
         </div>
       </div>
 
