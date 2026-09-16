@@ -1188,12 +1188,13 @@ En cada conversación, el backend alimenta a CloSy con:
   - Textos optimizados y acortados para evitar desbordamientos o saltos en pantallas móviles.
   - Sustituido el icono genérico de IA por el logotipo oficial de Kloe (`/kloe-logo-large.png`).
 
-### 95. Renderizado Instantáneo y Fluido del Carrusel en Detalle de Publicación (`app/(app)/post/[id]/page.tsx`) (Septiembre 2026)
-- **Eliminación de la Animación de Espera y Pantallazo Blanco**:
-  - Se eliminó el wrapper `<AnimatePresence mode="wait">` y las transiciones pesadas de traslación (`x: 300` / `x: -300`) que desmontaban el slide activo y dejaban un fondo blanco mientras se montaba el visor interactivo de prendas.
-- **Pre-renderizado y Transición Inmediata de Diapositivas**:
-  - Ambos slides (foto de la publicación y outfit interactivo con stickers de prendas `InteractiveOutfitViewer`) se mantienen pre-renderizados y montados en el DOM con posicionamiento apilado y cambio instantáneo de visibilidad y opacidad (`transition-opacity duration-150`).
-  - La navegación táctil (deslizamiento / swipe en móvil) y las flechas de navegación en escritorio cambian de diapositiva en 0ms sin retrasos, parpadeos ni huecos blancos, logrando una experiencia 100% fluida y ultra-rápida.
+### 95. Carrusel Deslizable Estilo Instagram en Detalle de Publicación (`app/(app)/post/[id]/page.tsx`) (Septiembre 2026)
+- **Pista de Deslizamiento Continuo Estilo Instagram**:
+  - Ambos slides (fotografía de la publicación y look interactivo con prendas `InteractiveOutfitViewer`) se encuentran pre-renderizados en paralelo sobre un contenedor flex continuo con aceleración por hardware (`translateX(-${activeSlide * 100}%)`).
+  - Al deslizar en móvil o pulsar las flechas en PC, se visualiza la transición continua y suave de salida del slide anterior e ingreso del siguiente (`transition-transform duration-300 ease-[cubic-bezier(0.25,1,0.5,1)]`), eliminando cualquier retraso, hueco blanco o desmontaje de componentes.
+- **Puntos Indicadores Limpios Sin Contenedor Oscuro**:
+  - Se eliminó el fondo de píldora oscuro (`bg-black/20 backdrop-blur-md`) alrededor de los puntos del carrusel, flotando directamente y de forma limpia sobre el contenido multimedia con sombra sutil y resaltado en rosa para el slide activo.
+
 
 
 

@@ -653,7 +653,7 @@ export default function PostDetailPage() {
             {/* Main Content Area - Full width with left image area and right details column docked to the right edge */}
             <div className="flex flex-col md:flex-row w-full flex-1 md:h-[calc(100vh-64px)] overflow-hidden">
 
-                {/* IMAGE CAROUSEL - Swipeable on mobile; Instant zero-lag pre-rendered rendering */}
+                {/* IMAGE CAROUSEL - Smooth sliding track identical to Instagram */}
                 <div 
                     className={`relative w-full h-auto min-h-[50vh] md:flex-1 md:h-[calc(100vh-64px)] bg-[var(--background)] md:bg-[var(--background-secondary)]/30 flex-shrink-0 overflow-hidden flex items-center justify-center ${isMobile ? 'cursor-grab active:cursor-grabbing' : 'cursor-default select-none'}`}
                     onTouchStart={isMobile ? (e) => {
@@ -695,16 +695,15 @@ export default function PostDetailPage() {
                         )}
                     </AnimatePresence>
 
-                    {/* Pre-rendered slides for instant zero-lag switching without white flash */}
-                    <div className="w-full h-full relative flex items-center justify-center">
+                    {/* Sliding track: both slides pre-rendered side-by-side, gliding smoothly */}
+                    <div 
+                        className="flex w-full h-full transition-transform duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] will-change-transform"
+                        style={{ transform: `translateX(-${activeSlide * 100}%)` }}
+                    >
                         {slides.map((slide, idx) => (
                             <div
                                 key={idx}
-                                className={`w-full h-full flex items-center justify-center transition-opacity duration-150 ${
-                                    activeSlide === idx 
-                                        ? 'relative z-10 opacity-100 pointer-events-auto' 
-                                        : 'absolute inset-0 z-0 opacity-0 pointer-events-none'
-                                }`}
+                                className="w-full h-full flex-shrink-0 flex items-center justify-center relative select-none"
                             >
                                 {slide.type === 'photo' ? (
                                     <Image
@@ -730,65 +729,64 @@ export default function PostDetailPage() {
                         ))}
                     </div>
 
-                {/* Swipe Hint Indicator (Overlay on Mobile Only) */}
-                {showSwipeHint && isMobile && slides.length > 1 && activeSlide === 0 && (
-                    <motion.div
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: [0, 1, 1, 0], x: [20, -20, -20, 20] }}
-                        transition={{ repeat: Infinity, duration: 2, times: [0, 0.2, 0.8, 1] }}
-                        className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2 pointer-events-none"
-                    >
-                        <div className="px-4 py-2 bg-black/60 backdrop-blur-md rounded-full text-white text-xs font-bold shadow-xl border border-white/10 flex items-center gap-2">
-                            <span>Desliza para ver el look</span>
-                            <ChevronRight className="w-4 h-4 animate-bounce-x" />
-                        </div>
-                    </motion.div>
-                )}
+                    {/* Swipe Hint Indicator (Overlay on Mobile Only) */}
+                    {showSwipeHint && isMobile && slides.length > 1 && activeSlide === 0 && (
+                        <motion.div
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: [0, 1, 1, 0], x: [20, -20, -20, 20] }}
+                            transition={{ repeat: Infinity, duration: 2, times: [0, 0.2, 0.8, 1] }}
+                            className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2 pointer-events-none"
+                        >
+                            <div className="px-4 py-2 bg-black/60 backdrop-blur-md rounded-full text-white text-xs font-bold shadow-xl border border-white/10 flex items-center gap-2">
+                                <span>Desliza para ver el look</span>
+                                <ChevronRight className="w-4 h-4 animate-bounce-x" />
+                            </div>
+                        </motion.div>
+                    )}
 
-                {/* Navigation Arrows (Conditional & Shaded without solid background) & Dots Indicator */}
-                {slides.length > 1 && (
-                    <>
-                        {/* Left Arrow: Only appears when activeSlide > 0 */}
-                        {activeSlide > 0 && (
-                            <button
-                                onClick={(e) => { e.stopPropagation(); setActiveSlide(prev => Math.max(0, prev - 1)); setShowSwipeHint(false); }}
-                                className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 text-white/90 hover:text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)] z-30 transition-all duration-200 hover:scale-125 active:scale-95 p-2 focus:outline-none"
-                                aria-label="Anterior"
-                            >
-                                <ChevronLeft className="w-10 h-10 drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]" strokeWidth={2.5} />
-                            </button>
-                        )}
+                    {/* Navigation Arrows (Conditional & Shaded without solid background) & Dots Indicator */}
+                    {slides.length > 1 && (
+                        <>
+                            {/* Left Arrow: Only appears when activeSlide > 0 */}
+                            {activeSlide > 0 && (
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); setActiveSlide(prev => Math.max(0, prev - 1)); setShowSwipeHint(false); }}
+                                    className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 text-white/90 hover:text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)] z-30 transition-all duration-200 hover:scale-125 active:scale-95 p-2 focus:outline-none"
+                                    aria-label="Anterior"
+                                >
+                                    <ChevronLeft className="w-10 h-10 drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]" strokeWidth={2.5} />
+                                </button>
+                            )}
 
-                        {/* Right Arrow: Only appears when activeSlide < slides.length - 1 */}
-                        {activeSlide < slides.length - 1 && (
-                            <button
-                                onClick={(e) => { e.stopPropagation(); setActiveSlide(prev => Math.min(slides.length - 1, prev + 1)); setShowSwipeHint(false); }}
-                                className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 text-white/90 hover:text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)] z-30 transition-all duration-200 hover:scale-125 active:scale-95 p-2 focus:outline-none"
-                                aria-label="Siguiente"
-                            >
-                                <ChevronRight className="w-10 h-10 drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]" strokeWidth={2.5} />
-                            </button>
-                        )}
+                            {/* Right Arrow: Only appears when activeSlide < slides.length - 1 */}
+                            {activeSlide < slides.length - 1 && (
+                                <button
+                                    onClick={(e) => { e.stopPropagation(); setActiveSlide(prev => Math.min(slides.length - 1, prev + 1)); setShowSwipeHint(false); }}
+                                    className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 text-white/90 hover:text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)] z-30 transition-all duration-200 hover:scale-125 active:scale-95 p-2 focus:outline-none"
+                                    aria-label="Siguiente"
+                                >
+                                    <ChevronRight className="w-10 h-10 drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]" strokeWidth={2.5} />
+                                </button>
+                            )}
 
-                        {/* Dots indicator - refined with morphing effect */}
-                        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-2.5 z-30 bg-black/20 backdrop-blur-md px-3 py-2 rounded-full border border-white/5">
-                            {slides.map((_, idx) => (
-                                <motion.button
-                                    key={idx}
-                                    onClick={(e) => { e.stopPropagation(); setActiveSlide(idx); setShowSwipeHint(false); }}
-                                    animate={{
-                                        scale: activeSlide === idx ? 1.2 : 1,
-                                        width: activeSlide === idx ? 20 : 8,
-                                        backgroundColor: activeSlide === idx ? '#FF66C4' : 'rgba(255,255,255,0.4)'
-                                    }}
-                                    className="h-2 rounded-full cursor-pointer transition-colors"
-                                    aria-label={`View slide ${idx + 1}`}
-                                />
-                            ))}
-                        </div>
-                    </>
-                )}
-            </div>
+                            {/* Dots indicator - Clean Instagram style without dark container */}
+                            <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-30 pointer-events-auto">
+                                {slides.map((_, idx) => (
+                                    <button
+                                        key={idx}
+                                        onClick={(e) => { e.stopPropagation(); setActiveSlide(idx); setShowSwipeHint(false); }}
+                                        className={`rounded-full transition-all duration-200 drop-shadow-[0_1px_3px_rgba(0,0,0,0.7)] ${
+                                            activeSlide === idx 
+                                                ? 'w-2 h-2 bg-[var(--brand-pink,#FF66C4)] scale-110' 
+                                                : 'w-1.5 h-1.5 bg-white/70 hover:bg-white'
+                                        }`}
+                                        aria-label={`View slide ${idx + 1}`}
+                                    />
+                                ))}
+                            </div>
+                        </>
+                    )}
+                </div>
 
             {/* RIGHT COLUMN: Actions, Details, Comments (Docked tightly to the right edge) */}
             <div className="flex flex-col w-full min-w-0 md:w-[440px] lg:w-[480px] xl:w-[520px] md:h-[calc(100vh-64px)] bg-[var(--background)] overflow-x-hidden pb-[72px] md:pb-0 border-l border-[var(--border-color)]/50 flex-shrink-0">
