@@ -113,6 +113,7 @@ export default function PostDetailPage() {
     useBodyScrollLock(!!selectedItem);
 
     const commentInputRef = useRef<HTMLInputElement>(null);
+    const touchStartXRef = useRef<number | null>(null);
 
     // Fetch Post Data
     useEffect(() => {
@@ -652,72 +653,82 @@ export default function PostDetailPage() {
             {/* Main Content Area - Full width with left image area and right details column docked to the right edge */}
             <div className="flex flex-col md:flex-row w-full flex-1 md:h-[calc(100vh-64px)] overflow-hidden">
 
-                {/* IMAGE CAROUSEL - Swipeable ONLY on mobile; Shaded icon arrows on desktop */}
-                <div className="relative w-full h-auto min-h-[50vh] md:flex-1 md:h-[calc(100vh-64px)] bg-[var(--background)] md:bg-[var(--background-secondary)]/30 flex-shrink-0 overflow-hidden flex items-center justify-center">
-                <AnimatePresence initial={false} mode="wait">
-                    <motion.div
-                        key={activeSlide}
-                        initial={{ x: 300, opacity: 0 }}
-                        animate={{ x: 0, opacity: 1 }}
-                        exit={{ x: -300, opacity: 0 }}
-                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                        drag={isMobile ? "x" : false}
-                        dragConstraints={{ left: 0, right: 0 }}
-                        dragElastic={0.7}
-                        onDragEnd={isMobile ? (e, { offset }) => {
-                            const swipe = offset.x;
-                            if (swipe < -50 && activeSlide < slides.length - 1) {
-                                setActiveSlide(activeSlide + 1);
-                                setShowSwipeHint(false);
-                            } else if (swipe > 50 && activeSlide > 0) {
-                                setActiveSlide(activeSlide - 1);
-                                setShowSwipeHint(false);
-                            }
-                        } : undefined}
-                        className={`w-full h-full md:w-auto md:h-full relative ${isMobile ? 'cursor-grab active:cursor-grabbing' : 'cursor-default select-none'} flex items-center justify-center`}
-                        onDoubleClick={() => {
-                            if (!isLiked) toggleLike();
-                            setShowHeartAnim(true);
-                            setTimeout(() => setShowHeartAnim(false), 1000);
+                {/* IMAGE CAROUSEL - Swipeable on mobile; Instant zero-lag pre-rendered rendering */}
+                <div 
+                    className={`relative w-full h-auto min-h-[50vh] md:flex-1 md:h-[calc(100vh-64px)] bg-[var(--background)] md:bg-[var(--background-secondary)]/30 flex-shrink-0 overflow-hidden flex items-center justify-center ${isMobile ? 'cursor-grab active:cursor-grabbing' : 'cursor-default select-none'}`}
+                    onTouchStart={isMobile ? (e) => {
+                        touchStartXRef.current = e.touches[0].clientX;
+                    } : undefined}
+                    onTouchEnd={isMobile ? (e) => {
+                        if (touchStartXRef.current === null) return;
+                        const diff = touchStartXRef.current - e.changedTouches[0].clientX;
+                        if (diff > 40 && activeSlide < slides.length - 1) {
+                            setActiveSlide(prev => Math.min(slides.length - 1, prev + 1));
+                            setShowSwipeHint(false);
                             haptics.selection();
-                        }}
-                    >
-                        <AnimatePresence>
-                            {showHeartAnim && (
-                                <motion.div
-                                    initial={{ scale: 0, opacity: 0 }}
-                                    animate={{ scale: 1.5, opacity: 1 }}
-                                    exit={{ scale: 0, opacity: 0 }}
-                                    transition={{ type: "spring", damping: 15 }}
-                                    className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none"
-                                >
-                                    <Heart className="w-32 h-32 text-white fill-white drop-shadow-[0_0_20px_rgba(0,0,0,0.5)]" />
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-
-                        {currentSlide.type === 'photo' ? (
-                            <Image
-                                src={currentSlide.url || '/placeholder.png'}
-                                alt="Post"
-                                width={1200}
-                                height={1200}
-                                className="w-full h-auto md:w-auto md:h-full max-h-[85vh] md:max-h-[calc(100vh-64px)] object-contain"
-                                priority
-                                draggable={false}
-                            />
-                        ) : (
-                            <div className="w-full aspect-[3/4] md:w-auto md:h-full md:aspect-[3/4] max-h-[85vh] md:max-h-[calc(100vh-64px)] relative bg-[#f8f9fa] dark:bg-[#111]">
-                                <InteractiveOutfitViewer 
-                                    outfit={currentSlide.outfit} 
-                                    onItemClick={(item) => setSelectedItem(item)}
-                                    className="w-full h-full absolute inset-0"
-                                    isMobileSticker={true}
-                                />
-                            </div>
+                        } else if (diff < -40 && activeSlide > 0) {
+                            setActiveSlide(prev => Math.max(0, prev - 1));
+                            setShowSwipeHint(false);
+                            haptics.selection();
+                        }
+                        touchStartXRef.current = null;
+                    } : undefined}
+                    onDoubleClick={() => {
+                        if (!isLiked) toggleLike();
+                        setShowHeartAnim(true);
+                        setTimeout(() => setShowHeartAnim(false), 1000);
+                        haptics.selection();
+                    }}
+                >
+                    {/* Heart double-click animation */}
+                    <AnimatePresence>
+                        {showHeartAnim && (
+                            <motion.div
+                                initial={{ scale: 0, opacity: 0 }}
+                                animate={{ scale: 1.5, opacity: 1 }}
+                                exit={{ scale: 0, opacity: 0 }}
+                                transition={{ type: "spring", damping: 15 }}
+                                className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none"
+                            >
+                                <Heart className="w-32 h-32 text-white fill-white drop-shadow-[0_0_20px_rgba(0,0,0,0.5)]" />
+                            </motion.div>
                         )}
-                    </motion.div>
-                </AnimatePresence>
+                    </AnimatePresence>
+
+                    {/* Pre-rendered slides for instant zero-lag switching without white flash */}
+                    <div className="w-full h-full relative flex items-center justify-center">
+                        {slides.map((slide, idx) => (
+                            <div
+                                key={idx}
+                                className={`w-full h-full flex items-center justify-center transition-opacity duration-150 ${
+                                    activeSlide === idx 
+                                        ? 'relative z-10 opacity-100 pointer-events-auto' 
+                                        : 'absolute inset-0 z-0 opacity-0 pointer-events-none'
+                                }`}
+                            >
+                                {slide.type === 'photo' ? (
+                                    <Image
+                                        src={slide.url || '/placeholder.png'}
+                                        alt="Post"
+                                        width={1200}
+                                        height={1200}
+                                        className="w-full h-auto md:w-auto md:h-full max-h-[85vh] md:max-h-[calc(100vh-64px)] object-contain"
+                                        priority
+                                        draggable={false}
+                                    />
+                                ) : (
+                                    <div className="w-full aspect-[3/4] md:w-auto md:h-full md:aspect-[3/4] max-h-[85vh] md:max-h-[calc(100vh-64px)] relative bg-[#f8f9fa] dark:bg-[#111]">
+                                        <InteractiveOutfitViewer 
+                                            outfit={slide.outfit} 
+                                            onItemClick={(item) => setSelectedItem(item)}
+                                            className="w-full h-full absolute inset-0"
+                                            isMobileSticker={true}
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
 
                 {/* Swipe Hint Indicator (Overlay on Mobile Only) */}
                 {showSwipeHint && isMobile && slides.length > 1 && activeSlide === 0 && (

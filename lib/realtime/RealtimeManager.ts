@@ -378,16 +378,34 @@ class RealtimeManager {
     this.emitNotification(notification);
   }
 
-  private handleNotificationInsert(payload: RealtimePostgresChangesPayload<Record<string, unknown>>): void {
+  private async handleNotificationInsert(payload: RealtimePostgresChangesPayload<Record<string, unknown>>): Promise<void> {
     const data = payload.new as Record<string, unknown>;
+    if (!data) return;
     
+    const senderId = (data.sender_id || data.actor_id || (data.data as any)?.actor_id) as string;
+    let senderInfo: { username: string; avatar_url: string | null } | undefined = undefined;
+
+    if (senderId) {
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('username, avatar_url')
+          .eq('id', senderId)
+          .single();
+        if (profile) {
+          senderInfo = profile as { username: string; avatar_url: string | null };
+        }
+      } catch {}
+    }
+
     const notification: Notification = {
-      id: data.id as string,
+      id: data.id as string || `notif_${Date.now()}`,
       type: data.type as Notification['type'],
       title: data.title as string || 'Notificación',
       message: data.message as string || '',
-      data: data.data as Record<string, unknown>,
-      sender_id: (data.sender_id || data.actor_id) as string,
+      data: data.data as Record<string, unknown> || {},
+      sender_id: senderId,
+      sender: senderInfo,
       read: false,
       created_at: data.created_at as string || new Date().toISOString(),
     };
@@ -587,6 +605,9 @@ class RealtimeManager {
   private emitNotification(notification: Notification): void {
     console.log('[RealtimeManager] New notification:', notification.type);
     this.notificationCallbacks.forEach(cb => cb(notification));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('klozet:new_notification', { detail: notification }));
+    }
   }
 
   private emitOnlineUsers(): void {

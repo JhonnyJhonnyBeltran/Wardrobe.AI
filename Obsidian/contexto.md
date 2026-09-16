@@ -1170,3 +1170,30 @@ En cada conversación, el backend alimenta a CloSy con:
   - Se implementó `@keyframes skeleton-color-pulse` (modo claro) y `@keyframes skeleton-color-pulse-dark` (modo oscuro) en [`app/globals.css`](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/app/globals.css).
   - Los componentes de esqueleto (`.skeleton`, `.skeleton-wave`) permanecen fijos en su posición física y realizan una respiración/transición cromática suave y continua de fondo (de tono neutro a tono atenuado y viceversa) en un ciclo de 1.8s, ofreciendo una experiencia visual sobria, limpia y 100% libre de vibraciones o saltos en todas las pantallas.
 
+### 94. Notificaciones en Tiempo Real, Popups con Imágenes Oficiales, Persistencia Instantánea de Likes y Rediseño de Configuración (`NotificationToast.tsx`, `NotificationList.tsx`, `likeManager.ts`, `/profile/settings/notifications`) (Septiembre 2026)
+- **Notificaciones en Tiempo Real y Actualización Automática (`NotificationList.tsx` & `RealtimeManager.ts`)**:
+  - `NotificationList` se sincroniza ahora de forma reactiva con el canal Realtime de Supabase (`notifications`, `follows`, `likes`, `comments`) y con el evento `klozet:new_notification`. Las nuevas actividades aparecen al instante en la lista sin requerir recargar la página.
+  - `RealtimeManager` resuelve el perfil del autor de forma enriquecida y emite las notificaciones de manera inmediata con 0 latencia.
+- **Popups de Notificación con Diseños Gráficos Oficiales (`NotificationToast.tsx`)**:
+  - Se integraron los activos de imagen oficiales (`public/notifications/`):
+    - **Me gusta**: `notif-like-mobile.png` (Móvil) y `notif-like-pc.png` (PC).
+    - **Comentarios**: `notif-comment-mobile.png` (Móvil) y `notif-comment-pc.png` (PC).
+    - **Seguidores**: `notif-follow-mobile.png` (Móvil) y `notif-follow-pc.png` (PC).
+  - Posicionamiento exacto: en versión móvil se despliegan directamente encima del icono de notificaciones del TabBar inferior, y en PC a la derecha del icono de notificaciones de la barra lateral.
+- **Persistencia Instantánea y Blindada de Likes (`likeManager.ts`)**:
+  - Eliminado el retraso por debounce al dar me gusta: la escritura en base de datos cliente (`likes` upsert/delete) y la llamada a `/api/likes` con cabecera `keepalive: true` se ejecutan de forma instantánea. Si el usuario da like y sale de la publicación de inmediato, el like y la notificación para el autor quedan guardados y emitidos al 100%.
+- **Rediseño y Normalización de Configuración de Notificaciones (`/profile/settings/notifications`)**:
+  - Cabecera móvil normalizada (`h-14 apple-glass-bar pt-safe`) con botón de retroceso circular minimalista `ChevronLeft` sin texto y título centrado.
+  - Cabecera de escritorio centrada con ancho `max-w-4xl mx-auto`.
+  - Textos optimizados y acortados para evitar desbordamientos o saltos en pantallas móviles.
+  - Sustituido el icono genérico de IA por el logotipo oficial de Kloe (`/kloe-logo-large.png`).
+
+### 95. Renderizado Instantáneo y Fluido del Carrusel en Detalle de Publicación (`app/(app)/post/[id]/page.tsx`) (Septiembre 2026)
+- **Eliminación de la Animación de Espera y Pantallazo Blanco**:
+  - Se eliminó el wrapper `<AnimatePresence mode="wait">` y las transiciones pesadas de traslación (`x: 300` / `x: -300`) que desmontaban el slide activo y dejaban un fondo blanco mientras se montaba el visor interactivo de prendas.
+- **Pre-renderizado y Transición Inmediata de Diapositivas**:
+  - Ambos slides (foto de la publicación y outfit interactivo con stickers de prendas `InteractiveOutfitViewer`) se mantienen pre-renderizados y montados en el DOM con posicionamiento apilado y cambio instantáneo de visibilidad y opacidad (`transition-opacity duration-150`).
+  - La navegación táctil (deslizamiento / swipe en móvil) y las flechas de navegación en escritorio cambian de diapositiva en 0ms sin retrasos, parpadeos ni huecos blancos, logrando una experiencia 100% fluida y ultra-rápida.
+
+
+

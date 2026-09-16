@@ -1,49 +1,34 @@
 'use client';
 
 /**
- * NotificationToast (Instagram / Pinterest style navbar popup)
- * Componente para mostrar popups flotantes sobre el icono de notificaciones del navbar
+ * NotificationToast (Popups con imágenes de diseño para Móvil y PC)
+ * Muestra las imágenes personalizadas de notificación situadas sobre el icono de notificaciones
  */
 
 import { memo, useEffect, useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageCircle, UserPlus, Heart, Bell } from 'lucide-react';
 import { useRealtimeStore } from '@/store/realtimeStore';
 import { useNotificationSettingsStore } from '@/store/notificationSettingsStore';
 import type { Notification, NotificationType } from '@/lib/realtime';
 import Link from 'next/link';
-import Avatar from '@/components/Avatar';
+import Image from 'next/image';
 import { haptics } from '@/lib/haptic';
 
-// Filled white icons for Instagram/Pinterest style
-const getNotificationFilledIcon = (type: NotificationType) => {
+// Helper to get image path based on type and platform
+const getNotificationImageSrc = (type: NotificationType | string, isMobile: boolean) => {
+  const suffix = isMobile ? 'mobile' : 'pc';
   switch (type) {
     case 'like':
-      return (
-        <div className="w-6 h-6 rounded-full bg-[var(--brand-pink)] flex items-center justify-center shrink-0 shadow-xs">
-          <Heart className="w-3.5 h-3.5 fill-white text-white" />
-        </div>
-      );
+      return `/notifications/notif-like-${suffix}.png`;
     case 'comment':
-      return (
-        <div className="w-6 h-6 rounded-full bg-purple-600 flex items-center justify-center shrink-0 shadow-xs">
-          <MessageCircle className="w-3.5 h-3.5 fill-white text-white" />
-        </div>
-      );
+      return `/notifications/notif-comment-${suffix}.png`;
     case 'new_follower':
+    case 'follow':
     case 'follow_request':
     case 'follow_accepted':
-      return (
-        <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center shrink-0 shadow-xs">
-          <UserPlus className="w-3.5 h-3.5 fill-white text-white" />
-        </div>
-      );
+      return `/notifications/notif-follow-${suffix}.png`;
     default:
-      return (
-        <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center shrink-0 shadow-xs">
-          <Bell className="w-3.5 h-3.5 fill-white text-white" />
-        </div>
-      );
+      return `/notifications/notif-like-${suffix}.png`;
   }
 };
 
@@ -56,7 +41,7 @@ interface ToastProps {
 const NavbarNotificationPopup = memo(function NavbarNotificationPopup({
   notification,
   onDismiss,
-  duration = 4200
+  duration = 4500
 }: ToastProps) {
   const markAsRead = useRealtimeStore(state => state.markAsRead);
 
@@ -84,15 +69,12 @@ const NavbarNotificationPopup = memo(function NavbarNotificationPopup({
           ? `/messages/${notification.data.sender_id}`
           : '/messages';
       case 'follow_request':
-        return '/notifications';
       case 'new_follower':
       case 'follow_accepted':
-        return notification.sender_id
-          ? `/profile/${notification.sender?.username || notification.sender_id}`
-          : '/notifications';
+        return '/notifications';
       case 'like':
       case 'comment':
-        const postId = notification.data?.post_id || notification.data?.postId || (notification as any).postId;
+        const postId = notification.data?.post_id || notification.data?.postId || (notification as any).postId || (notification as any).entity_id;
         return postId ? `/post/${postId}` : '/notifications';
       default:
         return '/notifications';
@@ -100,96 +82,54 @@ const NavbarNotificationPopup = memo(function NavbarNotificationPopup({
   };
 
   const link = getLink();
-  const actorName = notification.sender?.username || (notification as any).actor?.username || (notification as any).actor?.name || 'Alguien';
-  const avatarUrl = notification.sender?.avatar_url || (notification as any).actor?.avatar || null;
-
-  const actionText = useMemo(() => {
-    if (notification.type === 'like') return 'le gustó tu foto';
-    if (notification.type === 'comment') {
-      const c = notification.data?.content || (notification as any).content || '';
-      return c ? `"${c.slice(0, 24)}"` : 'comentó tu foto';
-    }
-    if (notification.type === 'new_follower') return 'empezó a seguirte';
-    if (notification.type === 'follow_request') return 'quiere seguirte';
-    if (notification.type === 'follow_accepted') return 'aceptó tu solicitud';
-    return notification.title || 'nueva actividad';
-  }, [notification]);
+  const mobileImageSrc = getNotificationImageSrc(notification.type, true);
+  const pcImageSrc = getNotificationImageSrc(notification.type, false);
 
   return (
     <>
       {/* Mobile Anchor (Directly above Heart icon in bottom TabBar) */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.8, y: 16 }}
+        initial={{ opacity: 0, scale: 0.85, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.8, y: 16 }}
-        transition={{ type: 'spring', stiffness: 480, damping: 26 }}
-        className="fixed bottom-[80px] right-[16%] md:hidden z-[9999] pointer-events-auto"
+        exit={{ opacity: 0, scale: 0.85, y: 20 }}
+        transition={{ type: 'spring', stiffness: 450, damping: 25 }}
+        className="fixed bottom-[calc(72px+env(safe-area-inset-bottom,0px)+10px)] right-[10%] sm:right-[16%] md:hidden z-[9999] pointer-events-auto"
       >
         <Link
           href={link}
           onClick={handleClick}
-          className="relative flex items-center gap-2.5 bg-black/90 dark:bg-[#121218]/95 backdrop-blur-2xl border border-white/15 px-3 py-2 rounded-2xl shadow-[0_12px_32px_rgba(0,0,0,0.5)] text-white select-none hover:scale-[1.02] active:scale-[0.98] transition-transform"
+          className="block relative active:scale-95 transition-transform"
         >
-          {avatarUrl ? (
-            <div className="relative">
-              <Avatar src={avatarUrl} alt={actorName} size="xs" />
-              <div className="absolute -bottom-1 -right-1 scale-75">
-                {getNotificationFilledIcon(notification.type)}
-              </div>
-            </div>
-          ) : (
-            getNotificationFilledIcon(notification.type)
-          )}
-
-          <div className="flex flex-col min-w-0 pr-1">
-            <span className="text-[12px] font-bold text-white truncate max-w-[130px]">
-              @{actorName}
-            </span>
-            <span className="text-[10.5px] text-white/75 truncate max-w-[140px] leading-tight">
-              {actionText}
-            </span>
+          <div className="w-[210px] sm:w-[240px] h-auto drop-shadow-[0_12px_28px_rgba(0,0,0,0.5)]">
+            <img
+              src={mobileImageSrc}
+              alt="Notificación"
+              className="w-full h-auto object-contain pointer-events-none select-none"
+            />
           </div>
-
-          {/* Notch / Arrow pointing down to Heart Icon */}
-          <div className="absolute -bottom-1.5 right-6 w-3 h-3 bg-black/90 dark:bg-[#121218]/95 border-b border-r border-white/15 rotate-45" />
         </Link>
       </motion.div>
 
       {/* Desktop / PC Anchor (Directly to the right of Sidebar Heart Icon) */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.8, x: -16 }}
+        initial={{ opacity: 0, scale: 0.85, x: -20 }}
         animate={{ opacity: 1, scale: 1, x: 0 }}
-        exit={{ opacity: 0, scale: 0.8, x: -16 }}
-        transition={{ type: 'spring', stiffness: 480, damping: 26 }}
-        className="hidden md:flex fixed left-[82px] top-[260px] z-[9999] pointer-events-auto"
+        exit={{ opacity: 0, scale: 0.85, x: -20 }}
+        transition={{ type: 'spring', stiffness: 450, damping: 25 }}
+        className="hidden md:flex fixed left-[78px] top-[260px] z-[9999] pointer-events-auto"
       >
         <Link
           href={link}
           onClick={handleClick}
-          className="relative flex items-center gap-2.5 bg-black/90 dark:bg-[#121218]/95 backdrop-blur-2xl border border-white/15 px-3.5 py-2.5 rounded-2xl shadow-[0_14px_36px_rgba(0,0,0,0.5)] text-white select-none hover:scale-[1.02] active:scale-[0.98] transition-transform"
+          className="block relative hover:scale-[1.03] active:scale-98 transition-transform"
         >
-          {avatarUrl ? (
-            <div className="relative">
-              <Avatar src={avatarUrl} alt={actorName} size="xs" />
-              <div className="absolute -bottom-1 -right-1 scale-75">
-                {getNotificationFilledIcon(notification.type)}
-              </div>
-            </div>
-          ) : (
-            getNotificationFilledIcon(notification.type)
-          )}
-
-          <div className="flex flex-col min-w-0 pr-1">
-            <span className="text-[12px] font-bold text-white truncate max-w-[150px]">
-              @{actorName}
-            </span>
-            <span className="text-[11px] text-white/75 truncate max-w-[160px] leading-tight">
-              {actionText}
-            </span>
+          <div className="w-[260px] lg:w-[290px] h-auto drop-shadow-[0_16px_36px_rgba(0,0,0,0.55)]">
+            <img
+              src={pcImageSrc}
+              alt="Notificación"
+              className="w-full h-auto object-contain pointer-events-none select-none"
+            />
           </div>
-
-          {/* Notch / Arrow pointing left to Sidebar Heart */}
-          <div className="absolute top-1/2 -left-1.5 -translate-y-1/2 w-3 h-3 bg-black/90 dark:bg-[#121218]/95 border-b border-l border-white/15 rotate-45" />
         </Link>
       </motion.div>
     </>
@@ -197,7 +137,7 @@ const NavbarNotificationPopup = memo(function NavbarNotificationPopup({
 });
 
 export const NotificationToastContainer = memo(function NotificationToastContainer({
-  duration = 4200,
+  duration = 4500,
 }: {
   duration?: number;
   position?: string;

@@ -305,6 +305,77 @@ export default function NotificationList({ compact = false, onClose }: Notificat
 
     useEffect(() => {
         fetchNotifications(false);
+
+        if (!user?.id) return;
+
+        // 1. Listen for global notification custom event from RealtimeManager
+        const handleNewNotificationEvent = () => {
+            fetchNotifications(false);
+        };
+        window.addEventListener('klozet:new_notification', handleNewNotificationEvent);
+
+        // 2. Direct Realtime Subscription for notifications, follows, likes & comments
+        const channel = supabase
+            .channel(`notification-list-feed-${user.id}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'notifications',
+                    filter: `user_id=eq.${user.id}`
+                },
+                () => {
+                    fetchNotifications(false);
+                }
+            )
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'follows',
+                    filter: `following_id=eq.${user.id}`
+                },
+                () => {
+                    fetchNotifications(false);
+                }
+            )
+            .on(
+                'postgres_changes',
+                {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'likes'
+                },
+                () => {
+                    fetchNotifications(false);
+                }
+            )
+            .on(
+                'postgres_changes',
+                {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'comments'
+                },
+                () => {
+                    fetchNotifications(false);
+                }
+            )
+            .subscribe();
+
+        // 3. Auto-sync on window focus
+        const handleFocus = () => {
+            fetchNotifications(false);
+        };
+        window.addEventListener('focus', handleFocus);
+
+        return () => {
+            window.removeEventListener('klozet:new_notification', handleNewNotificationEvent);
+            window.removeEventListener('focus', handleFocus);
+            supabase.removeChannel(channel);
+        };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [user?.id]);
 
