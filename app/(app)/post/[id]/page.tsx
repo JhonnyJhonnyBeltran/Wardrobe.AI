@@ -654,7 +654,7 @@ export default function PostDetailPage() {
 
                 {/* IMAGE CAROUSEL - Smooth sliding track identical to Instagram with real-time drag */}
                 <div 
-                    className="relative w-full h-auto min-h-[50vh] md:flex-1 md:h-[calc(100vh-64px)] bg-[var(--background)] md:bg-[var(--background-secondary)]/30 flex-shrink-0 overflow-hidden flex items-center justify-center select-none"
+                    className="relative w-full h-auto md:flex-1 md:h-[calc(100vh-64px)] bg-[var(--background)] md:bg-[var(--background-secondary)]/30 flex-shrink-0 overflow-hidden flex items-center justify-center select-none"
                     onDoubleClick={() => {
                         if (!isLiked) toggleLike();
                         setShowHeartAnim(true);
@@ -679,7 +679,7 @@ export default function PostDetailPage() {
 
                     {/* Sliding track: both slides pre-rendered side-by-side with Framer Motion spring sliding */}
                     <motion.div 
-                        className="flex w-full h-full will-change-transform cursor-grab active:cursor-grabbing"
+                        className="flex w-full h-auto md:h-full will-change-transform cursor-grab active:cursor-grabbing items-center"
                         style={{ touchAction: 'pan-y' }}
                         animate={{ x: `-${activeSlide * 100}%` }}
                         transition={{
@@ -706,7 +706,7 @@ export default function PostDetailPage() {
                         {slides.map((slide, idx) => (
                             <div
                                 key={idx}
-                                className="w-full h-full flex-shrink-0 flex items-center justify-center relative select-none"
+                                className="w-full h-auto md:h-full flex-shrink-0 flex items-center justify-center relative select-none"
                             >
                                 {slide.type === 'photo' ? (
                                     <Image
@@ -758,7 +758,7 @@ export default function PostDetailPage() {
                             )}
 
                             {/* Dots indicator - Clean Instagram style without dark container */}
-                            <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-30 pointer-events-auto">
+                            <div className="absolute bottom-3 md:bottom-5 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-30 pointer-events-auto">
                                 {slides.map((_, idx) => (
                                     <button
                                         key={idx}

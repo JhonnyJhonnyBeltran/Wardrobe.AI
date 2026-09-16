@@ -51,7 +51,7 @@ class LikeManager {
         if (nextLiked) {
           supabase.from('likes' as any).upsert(
             { post_id: postId, user_id: userId },
-            { onConflict: 'post_id,user_id' }
+            { onConflict: 'user_id,post_id', ignoreDuplicates: true }
           ).then(() => {}).catch(() => {});
         } else {
           supabase.from('likes' as any).delete()

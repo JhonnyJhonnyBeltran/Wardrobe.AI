@@ -87,20 +87,20 @@ const NavbarNotificationPopup = memo(function NavbarNotificationPopup({
 
   return (
     <>
-      {/* Mobile Anchor (Directly above Heart icon in bottom TabBar) */}
+      {/* Mobile Anchor (Directly centered above Heart icon in bottom TabBar at 70% width) */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.85, y: 20 }}
+        initial={{ opacity: 0, scale: 0.85, y: 15 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.85, y: 20 }}
+        exit={{ opacity: 0, scale: 0.85, y: 15 }}
         transition={{ type: 'spring', stiffness: 450, damping: 25 }}
-        className="fixed bottom-[calc(72px+env(safe-area-inset-bottom,0px)+10px)] right-[10%] sm:right-[16%] md:hidden z-[9999] pointer-events-auto"
+        className="fixed bottom-[calc(72px+env(safe-area-inset-bottom,0px)+6px)] left-[70%] -translate-x-1/2 md:hidden z-[9999] pointer-events-auto"
       >
         <Link
           href={link}
           onClick={handleClick}
           className="block relative active:scale-95 transition-transform"
         >
-          <div className="w-[210px] sm:w-[240px] h-auto drop-shadow-[0_12px_28px_rgba(0,0,0,0.5)]">
+          <div className="w-[145px] sm:w-[160px] h-auto drop-shadow-[0_8px_20px_rgba(0,0,0,0.45)]">
             <img
               src={mobileImageSrc}
               alt="Notificación"
@@ -112,18 +112,18 @@ const NavbarNotificationPopup = memo(function NavbarNotificationPopup({
 
       {/* Desktop / PC Anchor (Directly to the right of Sidebar Heart Icon) */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.85, x: -20 }}
+        initial={{ opacity: 0, scale: 0.85, x: -15 }}
         animate={{ opacity: 1, scale: 1, x: 0 }}
-        exit={{ opacity: 0, scale: 0.85, x: -20 }}
+        exit={{ opacity: 0, scale: 0.85, x: -15 }}
         transition={{ type: 'spring', stiffness: 450, damping: 25 }}
-        className="hidden md:flex fixed left-[78px] top-[260px] z-[9999] pointer-events-auto"
+        className="hidden md:flex fixed left-[76px] top-[305px] -translate-y-1/2 z-[9999] pointer-events-auto"
       >
         <Link
           href={link}
           onClick={handleClick}
-          className="block relative hover:scale-[1.03] active:scale-98 transition-transform"
+          className="block relative hover:scale-[1.02] active:scale-98 transition-transform"
         >
-          <div className="w-[260px] lg:w-[290px] h-auto drop-shadow-[0_16px_36px_rgba(0,0,0,0.55)]">
+          <div className="w-[185px] lg:w-[205px] h-auto drop-shadow-[0_12px_28px_rgba(0,0,0,0.5)]">
             <img
               src={pcImageSrc}
               alt="Notificación"

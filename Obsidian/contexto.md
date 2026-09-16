@@ -1197,6 +1197,17 @@ En cada conversación, el backend alimenta a CloSy con:
 - **Eliminación del Mensaje Flotante de Deslizar**:
   - Se suprimió completamente el aviso flotante *"Desliza para ver el look"* (`showSwipeHint`), dejando la interfaz totalmente limpia y despejada.
 
+### 96. Calibración de Popups de Notificación, Adaptación de Altura en Posts y Corrección de Likes (`NotificationToast.tsx`, `app/(app)/post/[id]/page.tsx`, `likeManager.ts`, `/api/likes`) (Septiembre 2026)
+- **Calibración de Popups de Notificación (`NotificationToast.tsx`)**:
+  - **Móvil**: Tamaño optimizado y reducido (`w-[145px] sm:w-[160px]`), posicionado con precisión matemática centrado sobre la pestaña del corazón en el TabBar inferior (`left-[70%] -translate-x-1/2`, `bottom-[calc(72px+env(safe-area-inset-bottom,0px)+6px)]`).
+  - **Escritorio**: Tamaño compacto (`w-[185px] lg:w-[205px]`) alineado a la derecha del icono de notificaciones en la barra lateral (`left-[76px] top-[305px]`).
+- **Ajuste Dinámico de Altura en Publicaciones Horizontales (`app/(app)/post/[id]/page.tsx`)**:
+  - Se eliminó la restricción rígida `min-h-[50vh]` en versión móvil, permitiendo que las fotografías apaisadas/horizontales (ej. fotos panorámicas o 16:9) se ajusten de forma natural a su altura real sin dejar espacios muertos en blanco debajo de la imagen.
+- **Corrección de Clave Primaria y Robustez en Likes (`likeManager.ts` & `/api/likes`)**:
+  - Se corrigió el orden de las columnas de conflicto en PostgREST (`onConflict: 'user_id,post_id'`) para concordar con la clave primaria `PRIMARY KEY (user_id, post_id)` de PostgreSQL, eliminando el error `400 Bad Request`.
+  - En `/api/likes`, se blindó la operación de inserción/upsert con `ignoreDuplicates: true` y sincronización atómica de contadores para prevenir cualquier error 500 y garantizar likes instantáneos y fiables al 100%.
+
+
 
 
 
