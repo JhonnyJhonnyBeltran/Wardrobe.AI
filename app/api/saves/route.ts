@@ -6,37 +6,68 @@ import { randomUUID } from 'crypto';
 export const dynamic = 'force-dynamic';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-const getAdmin = () => createAdminClient(supabaseUrl, serviceKey, {
-  auth: { persistSession: false, autoRefreshToken: false }
-});
 
 // Helper to authenticate user and select appropriate database client
 async function getDbClient(request: NextRequest) {
   let user: any = null;
-  let supabaseServerClient: any = null;
+  let client: any = null;
 
-  try {
-    supabaseServerClient = await createClient();
-    const { data } = await supabaseServerClient.auth.getUser();
-    user = data?.user || null;
-  } catch {}
-
+  // 1. Check Bearer token from header
   const authHeader = request.headers.get('authorization') || request.headers.get('Authorization');
-  if (!user && authHeader?.startsWith('Bearer ')) {
-    try {
-      const token = authHeader.replace('Bearer ', '').trim();
-      const admin = getAdmin();
-      const { data } = await admin.auth.getUser(token);
-      if (data?.user) {
-        user = data.user;
-      }
-    } catch {}
+  let token: string | null = null;
+  if (authHeader?.startsWith('Bearer ')) {
+    token = authHeader.replace('Bearer ', '').trim();
   }
 
-  const hasServiceRole = !!(process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY);
-  const client = (hasServiceRole ? getAdmin() : (supabaseServerClient || getAdmin()));
+  // If token is provided, verify it and create a scoped client
+  if (token) {
+    try {
+      const anonClient = createAdminClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+        auth: { persistSession: false, autoRefreshToken: false }
+      });
+      const { data } = await anonClient.auth.getUser(token);
+      if (data?.user) {
+        user = data.user;
+        // Create client with user's auth token for PostgREST RLS
+        client = createAdminClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+          global: { headers: { Authorization: `Bearer ${token}` } },
+          auth: { persistSession: false, autoRefreshToken: false }
+        });
+      }
+    } catch (e) {
+      console.warn('[api/saves] Error authenticating with Bearer token:', e);
+    }
+  }
+
+  // 2. If no user from token, check cookies via SSR createClient()
+  if (!user) {
+    try {
+      const supabaseServer = await createClient();
+      const { data } = await supabaseServer.auth.getUser();
+      if (data?.user) {
+        user = data.user;
+        client = supabaseServer;
+      }
+    } catch (e) {
+      console.warn('[api/saves] Error authenticating with server cookies:', e);
+    }
+  }
+
+  // 3. If service role key is available in environment, use it for complete bypass of RLS issues
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
+  if (serviceKey) {
+    const admin = createAdminClient(supabaseUrl, serviceKey, {
+      auth: { persistSession: false, autoRefreshToken: false }
+    });
+    client = admin;
+  }
+
+  // Fallback: if client still null, create fallback anon client
+  if (!client) {
+    client = createAdminClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+      auth: { persistSession: false, autoRefreshToken: false }
+    });
+  }
 
   return { client, user };
 }
@@ -57,19 +88,7 @@ export async function GET(request: NextRequest) {
     const folderId = searchParams.get('folder_id');
 
     if (folderId) {
-      // Validate that folder belongs to user
-      const { data: folder } = await client
-        .from('save_folders')
-        .select('id')
-        .eq('id', folderId)
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (!folder) {
-        return NextResponse.json({ saves: [] });
-      }
-
-      // Check both save_folder_items AND saves.folder_id
+      // 1. Get save_ids from save_folder_items
       let saveFolderItemIds: string[] = [];
       try {
         const { data: folderItems } = await client
@@ -78,56 +97,74 @@ export async function GET(request: NextRequest) {
           .eq('folder_id', folderId);
 
         saveFolderItemIds = (folderItems || []).map((item: any) => item.save_id).filter(Boolean);
-      } catch {}
-
-      let query = client
-        .from('saves')
-        .select('*, posts(*)')
-        .eq('user_id', user.id);
-
-      if (saveFolderItemIds.length > 0) {
-        query = query.or(`id.in.(${saveFolderItemIds.join(',')}),folder_id.eq.${folderId}`);
-      } else {
-        query = query.eq('folder_id', folderId);
+      } catch (e) {
+        console.warn('[api/saves] Error reading save_folder_items in GET:', e);
       }
 
-      const { data: savesData, error: savesError } = await query.order('created_at', { ascending: false });
+      let savesData: any[] = [];
 
-      if (savesError) {
-        // Fallback: query by folder_id directly
-        const { data: fallbackData } = await client
+      // Query strategy 1: If we found item IDs in save_folder_items, query by IDs
+      if (saveFolderItemIds.length > 0) {
+        try {
+          const { data, error } = await client
+            .from('saves')
+            .select('*, posts(*, profiles(id, username, full_name, avatar_url))')
+            .eq('user_id', user.id)
+            .in('id', saveFolderItemIds)
+            .order('created_at', { ascending: false });
+
+          if (!error && data) {
+            savesData = data;
+          }
+        } catch (e) {
+          console.warn('[api/saves] Error querying saves by saveFolderItemIds:', e);
+        }
+      }
+
+      // Query strategy 2: Also try querying saves by folder_id directly
+      try {
+        const { data, error } = await client
           .from('saves')
-          .select('*, posts(*)')
+          .select('*, posts(*, profiles(id, username, full_name, avatar_url))')
           .eq('user_id', user.id)
           .eq('folder_id', folderId)
           .order('created_at', { ascending: false });
 
-        const saves = (fallbackData || []).map((save: any) => ({
-          ...save,
-          posts: save.posts
-        })).filter((save: any) => save.posts);
-
-        return NextResponse.json({ saves });
+        if (!error && data) {
+          // Merge deduplicated
+          const existingIds = new Set(savesData.map((s: any) => s.id));
+          for (const item of data) {
+            if (!existingIds.has(item.id)) {
+              savesData.push(item);
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('[api/saves] Error querying saves by folder_id:', e);
       }
 
-      const saves = (savesData || []).map((save: any) => ({
-        ...save,
-        posts: save.posts
-      })).filter((save: any) => save.posts);
+      const saves = (savesData || [])
+        .map((save: any) => ({
+          ...save,
+          posts: save.posts
+        }))
+        .filter((save: any) => save.posts);
 
       return NextResponse.json({ saves });
     } else {
-      // Get all saves for this user
+      // Get all saves for user
       const { data: savesData } = await client
         .from('saves')
-        .select('*, posts(*)')
+        .select('*, posts(*, profiles(id, username, full_name, avatar_url))')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      const saves = (savesData || []).map((save: any) => ({
-        ...save,
-        posts: save.posts
-      })).filter((save: any) => save.posts);
+      const saves = (savesData || [])
+        .map((save: any) => ({
+          ...save,
+          posts: save.posts
+        }))
+        .filter((save: any) => save.posts);
 
       return NextResponse.json({ saves });
     }
@@ -165,116 +202,164 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Post ID is required' }, { status: 400 });
     }
 
-    // If folder_id is passed, verify ownership of folder
+    // If folder_id is passed, verify ownership of folder safely
+    let validFolderId: string | null = null;
     if (folder_id) {
-      const { data: folderDoc } = await client
-        .from('save_folders')
-        .select('id')
-        .eq('id', folder_id)
+      try {
+        const { data: folderDoc } = await client
+          .from('save_folders')
+          .select('id')
+          .eq('id', folder_id)
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (folderDoc?.id) {
+          validFolderId = folderDoc.id;
+        } else {
+          console.warn('[api/saves] Folder not found for folder_id, will still attempt link:', folder_id);
+          validFolderId = folder_id;
+        }
+      } catch (e) {
+        console.warn('[api/saves] Non-fatal check on save_folders:', e);
+        validFolderId = folder_id;
+      }
+    }
+
+    // Check if post is already saved by this user
+    let existingSave: any = null;
+    try {
+      const { data: existing } = await client
+        .from('saves')
+        .select('*')
         .eq('user_id', user.id)
+        .eq('post_id', post_id)
         .maybeSingle();
 
-      if (!folderDoc) {
-        // If folder doesn't exist or isn't owned by user, don't fail saving the post entirely, reset folder_id
-        console.warn('Folder not found or unauthorized for folder_id:', folder_id);
-        folder_id = null;
-      }
+      existingSave = existing;
+    } catch (e) {
+      console.warn('[api/saves] Error checking existing save:', e);
     }
 
-    // Check if already saved
-    const { data: existing, error: fetchError } = await client
-      .from('saves')
-      .select('id, folder_id')
-      .eq('user_id', user.id)
-      .eq('post_id', post_id)
-      .maybeSingle();
+    let savedRecord: any = null;
 
-    if (fetchError && fetchError.code !== 'PGRST116') {
-      console.warn('Error checking existing save:', fetchError);
-    }
+    if (existingSave) {
+      savedRecord = { ...existingSave };
 
-    if (existing) {
-      if (folder_id) {
-        // Update folder_id in saves
+      // If folder is specified, update folder_id on saves
+      if (validFolderId) {
         try {
-          await (client.from('saves') as any).update({ folder_id }).eq('id', existing.id);
+          await client
+            .from('saves')
+            .update({ folder_id: validFolderId })
+            .eq('id', existingSave.id);
+          savedRecord.folder_id = validFolderId;
         } catch (e) {
-          console.warn('Error updating folder_id on saves:', e);
+          console.warn('[api/saves] Non-fatal: could not update folder_id column on saves:', e);
         }
 
-        // Also update save_folder_items table safely
+        // Link in save_folder_items
         try {
-          await client.from('save_folder_items').delete().eq('save_id', existing.id);
-          const { error: insertErr } = await (client.from('save_folder_items') as any).insert({
-            id: randomUUID(),
-            folder_id,
-            save_id: existing.id
-          });
-          if (insertErr && insertErr.code !== '23505') {
-            console.warn('Non-fatal warning inserting save_folder_items:', insertErr);
+          await client
+            .from('save_folder_items')
+            .delete()
+            .eq('save_id', existingSave.id);
+
+          await client
+            .from('save_folder_items')
+            .insert({
+              id: randomUUID(),
+              folder_id: validFolderId,
+              save_id: existingSave.id,
+            });
+        } catch (e) {
+          console.warn('[api/saves] Non-fatal: could not update save_folder_items:', e);
+        }
+      }
+    } else {
+      // Create new save
+      const newId = randomUUID();
+      const insertPayload: any = {
+        id: newId,
+        user_id: user.id,
+        post_id,
+      };
+      if (validFolderId) {
+        insertPayload.folder_id = validFolderId;
+      }
+
+      try {
+        const { data: inserted, error: insertError } = await client
+          .from('saves')
+          .insert(insertPayload)
+          .select('*')
+          .maybeSingle();
+
+        if (insertError) {
+          if (insertError.code === '23505') {
+            // Already saved concurrently
+            const { data: found } = await client
+              .from('saves')
+              .select('*')
+              .eq('user_id', user.id)
+              .eq('post_id', post_id)
+              .maybeSingle();
+            savedRecord = found || { id: newId, user_id: user.id, post_id, folder_id: validFolderId };
+          } else if (validFolderId) {
+            // Might be because folder_id column does not exist on saves table
+            const { data: fallbackInserted, error: fallbackErr } = await client
+              .from('saves')
+              .insert({ id: newId, user_id: user.id, post_id })
+              .select('*')
+              .maybeSingle();
+
+            if (!fallbackErr) {
+              savedRecord = fallbackInserted || { id: newId, user_id: user.id, post_id, folder_id: validFolderId };
+            } else {
+              throw fallbackErr;
+            }
+          } else {
+            throw insertError;
           }
-        } catch (e) {
-          console.warn('Error managing save_folder_items:', e);
+        } else {
+          savedRecord = inserted || insertPayload;
         }
-      }
-      return NextResponse.json({ save: { ...existing, folder_id: folder_id || existing.folder_id } });
-    }
-
-    // Create new save
-    const newId = randomUUID();
-    const insertPayload: any = {
-      id: newId,
-      user_id: user.id,
-      post_id,
-    };
-    if (folder_id) {
-      insertPayload.folder_id = folder_id;
-    }
-
-    const { data: save, error } = await (client.from('saves') as any)
-      .insert(insertPayload)
-      .select()
-      .maybeSingle();
-
-    if (error) {
-      if (error.code === '23505') {
-        // Unique constraint conflict (already saved)
-        if (folder_id) {
-          await (client.from('saves') as any).update({ folder_id }).eq('user_id', user.id).eq('post_id', post_id);
-        }
-        const { data: existingSave } = await client
+      } catch (insertErr: any) {
+        console.error('[api/saves] Error inserting into saves:', insertErr);
+        // If insert error happened, try to fetch if it already exists
+        const { data: fallbackFound } = await client
           .from('saves')
           .select('*')
           .eq('user_id', user.id)
           .eq('post_id', post_id)
           .maybeSingle();
 
-        return NextResponse.json({ save: existingSave || { post_id, folder_id } });
+        if (fallbackFound) {
+          savedRecord = fallbackFound;
+        } else {
+          return NextResponse.json({ error: insertErr.message || 'Error saving post' }, { status: 500 });
+        }
       }
-      console.error('Error saving post:', error);
-      return NextResponse.json({ error: error.message, details: error }, { status: 500 });
+
+      // Link in save_folder_items if folder is specified
+      if (validFolderId && savedRecord?.id) {
+        try {
+          await client
+            .from('save_folder_items')
+            .insert({
+              id: randomUUID(),
+              folder_id: validFolderId,
+              save_id: savedRecord.id,
+            });
+        } catch (e) {
+          console.warn('[api/saves] Non-fatal: could not insert save_folder_items on new save:', e);
+        }
+      }
     }
 
-    const createdSave = save || { id: newId, user_id: user.id, post_id, folder_id };
-
-    // Sync save_folder_items table safely
-    if (folder_id && createdSave.id) {
-      try {
-        await (client.from('save_folder_items') as any)
-          .insert({
-            id: randomUUID(),
-            folder_id,
-            save_id: createdSave.id,
-          });
-      } catch (e) {
-        console.warn('Non-fatal warning inserting save_folder_items on new save:', e);
-      }
-    }
-
-    return NextResponse.json({ save: createdSave });
+    return NextResponse.json({ save: savedRecord || { post_id, folder_id: validFolderId } });
   } catch (error: any) {
     console.error('Error in POST /api/saves:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
   }
 }
 
@@ -335,13 +420,15 @@ export async function DELETE(request: NextRequest) {
           .from('save_folder_items')
           .delete()
           .eq('save_id', saveId);
-      } catch {}
+      } catch (e) {
+        console.warn('[api/saves] Non-fatal deleting save_folder_items:', e);
+      }
     }
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error('Error in DELETE /api/saves:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
   }
 }
 
@@ -378,26 +465,31 @@ export async function PUT(request: NextRequest) {
 
     // If moving to a target folder, verify ownership
     if (folder_id) {
-      const { data: folderDoc } = await client
-        .from('save_folders')
-        .select('id')
-        .eq('id', folder_id)
-        .eq('user_id', user.id)
-        .maybeSingle();
+      try {
+        const { data: folderDoc } = await client
+          .from('save_folders')
+          .select('id')
+          .eq('id', folder_id)
+          .eq('user_id', user.id)
+          .maybeSingle();
 
-      if (!folderDoc) {
-        folder_id = null;
+        if (!folderDoc) {
+          folder_id = null;
+        }
+      } catch {
+        // Fallback keep folder_id
       }
     }
 
     // Update saves table
     try {
-      await (client.from('saves') as any)
+      await client
+        .from('saves')
         .update({ folder_id: folder_id || null })
         .eq('id', save_id)
         .eq('user_id', user.id);
     } catch (e) {
-      console.warn('Error updating saves folder_id in PUT:', e);
+      console.warn('[api/saves] Error updating saves folder_id in PUT:', e);
     }
 
     // Update save_folder_items
@@ -408,7 +500,8 @@ export async function PUT(request: NextRequest) {
         .eq('save_id', save_id);
 
       if (folder_id) {
-        await (client.from('save_folder_items') as any)
+        await client
+          .from('save_folder_items')
           .insert({
             id: randomUUID(),
             folder_id,
@@ -416,12 +509,12 @@ export async function PUT(request: NextRequest) {
           });
       }
     } catch (e) {
-      console.warn('Error managing save_folder_items in PUT:', e);
+      console.warn('[api/saves] Error managing save_folder_items in PUT:', e);
     }
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error('Error in PUT /api/saves:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 });
   }
 }

@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useUiStore } from '@/store/uiStore';
 import Image from 'next/image';
 import FolderPreview from '@/components/FolderPreview';
+import { supabase } from '@/lib/supabase/client';
 
 interface SaveFolder {
   id: string;
@@ -16,7 +17,7 @@ interface SaveFolder {
 }
 
 export default function SaveModal() {
-  const { folderModalPostId, closeFolderModal, showSaveToast } = useUiStore();
+  const { folderModalPostId, closeFolderModal, showSaveToast, triggerRefetch } = useUiStore();
   const [folders, setFolders] = useState<SaveFolder[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -34,7 +35,12 @@ export default function SaveModal() {
   const fetchFolders = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/save-folders');
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      const headers: Record<string, string> = {};
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const response = await fetch('/api/save-folders', { headers });
       const data = await response.json();
       if (data.folders) {
         setFolders(data.folders);
@@ -50,9 +56,14 @@ export default function SaveModal() {
     if (!folderModalPostId) return;
     setIsSaving(true);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
       const response = await fetch('/api/saves', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           post_id: folderModalPostId,
           folder_id: folderId
@@ -60,6 +71,7 @@ export default function SaveModal() {
       });
       const data = await response.json();
 
+      triggerRefetch();
       closeFolderModal();
       showSaveToast({ message: `Guardado en ${folderName}` });
     } catch (error) {
@@ -73,9 +85,14 @@ export default function SaveModal() {
     if (!newFolderName.trim() || !folderModalPostId) return;
     setIsSaving(true);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
       const response = await fetch('/api/save-folders', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ name: newFolderName.trim() })
       });
       const data = await response.json();

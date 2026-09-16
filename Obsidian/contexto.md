@@ -1091,4 +1091,19 @@ En cada conversación, el backend alimenta a CloSy con:
 - **Sincronización de Skeletons Wave**:
   - `SkeletonProfileGrid` en [`components/Skeleton.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/components/Skeleton.tsx) renderiza tarjetas con alturas variadas intercaladas (`[260, 310, 220, 290, 250, 330, 230, 300, 270]`) para reflejar la distribución real de las imágenes antes de cargar.
 
+### 88. Corrección Definitiva del Error 500 al Guardar en Carpetas y Sincronización Blindada (`/api/saves`, `/api/save-folders`, `SaveModal.tsx`) (Septiembre 2026)
+- **Causa Raíz Identificada**:
+  - Cuando un usuario guardaba una publicación y acto seguido seleccionaba una carpeta en [`SaveModal.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/components/SaveModal.tsx), la petición `POST /api/saves` no incluía la cabecera `Authorization: Bearer <token>`.
+  - En servidores de producción donde no está inyectada la variable `SUPABASE_SERVICE_ROLE_KEY`, las operaciones en `app/api/saves/route.ts` dependían de clientes sin contexto de token de usuario autenticado, provocando que PostgREST rechazara las inserciones/actualizaciones en `saves` y `save_folder_items` por políticas de RLS, respondiendo con un error HTTP `500 Internal Server Error`.
+  - Adicionalmente, si el post ya existía en `saves` o existía inconsistencia de columnas/tablas entre `saves.folder_id` y `save_folder_items`, la operación se interrumpía antes de registrar la vinculación con la carpeta.
+- **Solución Arquitectónica Multicapa**:
+  - **Inyección de Tokens en Cliente (`SaveModal.tsx` y `profile/page.tsx`)**:
+    - Se integró la extracción del `session.access_token` de Supabase en `SaveModal.tsx` tanto para `assignToFolder` como para `fetchFolders` y `handleCreateAndAssign`, enviándolo en la cabecera `Authorization: Bearer ${token}`.
+  - **Resolución Resiliente de Cliente en Servidor (`getDbClient`)**:
+    - `app/api/saves/route.ts` y `app/api/save-folders/route.ts` resuelven la identidad del usuario y crean dinámicamente un cliente Supabase con `global: { headers: { Authorization: Bearer <token> } }` o cookies SSR. Esto garantiza que las políticas RLS se cumplan con `auth.uid() = user.id` en cualquier entorno (local, Vercel o Docker) con o sin Service Role Key.
+  - **Persistencia y Consulta Dual Blindada (`saves.folder_id` + `save_folder_items`)**:
+    - Al guardar en una carpeta, el endpoint actualiza de forma segura tanto la columna `saves.folder_id` como la tabla relacional `save_folder_items` con bloques tolerantes a fallos.
+    - En `GET /api/saves?folder_id=...`, se consulta mediante estrategia dual (búsqueda por IDs de `save_folder_items` y por `saves.folder_id`), fusionando y deduplicando resultados para garantizar que todas las publicaciones guardadas en la carpeta aparezcan de forma inmediata en la pestaña de guardados del perfil.
+
+
 

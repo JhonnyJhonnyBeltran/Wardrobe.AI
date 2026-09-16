@@ -172,9 +172,14 @@ export default function ProfilePage() {
       if (!user || activeTab !== 'saved') return;
 
       try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token;
+        const headers: Record<string, string> = {};
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
         if (selectedFolder) {
           // Get saves in a specific folder
-          const response = await fetch(`/api/saves?folder_id=${selectedFolder.id}&t=${Date.now()}`);
+          const response = await fetch(`/api/saves?folder_id=${selectedFolder.id}&t=${Date.now()}`, { headers });
           const data = await response.json();
           if (data.saves) {
             setSavedPosts(data.saves.map((save: any) => ({
@@ -184,7 +189,7 @@ export default function ProfilePage() {
           }
         } else {
           // Get all saves without folder
-          const response = await fetch(`/api/saves?t=${Date.now()}`);
+          const response = await fetch(`/api/saves?t=${Date.now()}`, { headers });
           const data = await response.json();
           if (data.saves) {
             setSavedPosts(data.saves.map((save: any) => ({
