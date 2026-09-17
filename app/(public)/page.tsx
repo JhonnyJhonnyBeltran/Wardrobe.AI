@@ -283,18 +283,18 @@ export default function LandingPage() {
                       </div>
                     </div>
 
-                    {/* Side Floating Cutout (Zara Shirt) */}
-                    <div className="absolute right-0 sm:right-2 bottom-0 w-[140px] sm:w-[180px] rounded-3xl p-3 bg-[var(--card-bg)]/80 backdrop-blur-md border border-[var(--border-color)] shadow-xl rotate-12 pointer-events-none">
-                      <div className="w-full aspect-square relative flex items-center justify-center">
+                    {/* Side Floating Cutout (Golden Goose Sneaker & Zara) */}
+                    <div className="absolute right-0 sm:right-2 bottom-0 w-[160px] sm:w-[200px] rounded-3xl p-3 bg-[var(--card-bg)]/90 backdrop-blur-md border border-[var(--border-color)] shadow-xl rotate-12 pointer-events-none">
+                      <div className="w-full aspect-video relative flex items-center justify-center">
                         <Image 
-                          src="/landing/camisa-zara-cutout.png" 
-                          alt="Camisa Zara" 
-                          width={160} 
-                          height={160} 
-                          className="w-full h-full object-contain"
+                          src="/landing/golden-goose.png" 
+                          alt="Golden Goose Sneaker" 
+                          width={180} 
+                          height={100} 
+                          className="w-full h-full object-contain drop-shadow-md"
                         />
                       </div>
-                      <p className="text-[10px] font-black text-center mt-1 text-[var(--foreground-secondary)]">Zara Cropped</p>
+                      <p className="text-[10px] font-black text-center mt-1 text-[var(--brand-pink)]">Golden Goose Glitter</p>
                     </div>
 
                   </div>
@@ -373,7 +373,7 @@ export default function LandingPage() {
 
 
               {/* ======================================================== */}
-              {/* KEYFRAME 3: PLANIFICADOR & ASISTENTE KLOE */}
+              {/* KEYFRAME 3: PLANIFICADOR, ASISTENTE KLOE & OUTFITS */}
               {/* ======================================================== */}
               {activeStep === 3 && (
                 <motion.div
@@ -387,7 +387,7 @@ export default function LandingPage() {
                   {/* Left Column: Bold Text */}
                   <div className="md:col-span-6 text-center md:text-left flex flex-col justify-center">
                     <span className="px-3.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-black uppercase tracking-wider mb-3 inline-block w-fit mx-auto md:mx-0">
-                      03 • Planificación & Kloe
+                      03 • Inspiración & Estilo
                     </span>
                     <h2 className="text-3xl sm:text-5xl md:text-6xl font-black text-[var(--foreground)] tracking-tight leading-[1.05]">
                       Despiértate sabiendo <br />
@@ -396,7 +396,7 @@ export default function LandingPage() {
                       </span>
                     </h2>
                     <p className="mt-4 text-sm sm:text-lg text-[var(--foreground-secondary)] leading-relaxed max-w-md mx-auto md:mx-0 font-medium">
-                      Asigna tus outfits a días específicos en el calendario. Ahorra tiempo cada mañana y pide consejos a Kloe sobre cómo combinar tus prendas.
+                      Planifica tus looks para toda la semana, combina prendas reales de tu armario y descubre inspiración real de chicos y chicas con tu mismo estilo.
                     </p>
 
                     <div className="mt-6 flex flex-col gap-2.5 text-xs sm:text-sm font-bold text-[var(--foreground)] items-center md:items-start">
@@ -404,53 +404,63 @@ export default function LandingPage() {
                         <div className="w-5 h-5 rounded-full bg-emerald-500/15 text-emerald-500 flex items-center justify-center shrink-0">
                           <Check className="w-3.5 h-3.5 stroke-[3]" />
                         </div>
-                        <span>Calendario visual de outfits para toda la semana</span>
+                        <span>Looks completos para chica y chico</span>
                       </div>
                       <div className="flex items-center gap-2.5">
                         <div className="w-5 h-5 rounded-full bg-emerald-500/15 text-emerald-500 flex items-center justify-center shrink-0">
                           <Check className="w-3.5 h-3.5 stroke-[3]" />
                         </div>
-                        <span>Asesoría de estilo personalizada con Kloe</span>
+                        <span>Asesoría de estilo y combinación con Kloe</span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Right Column: Clean Grid of Pre-cutout Pieces */}
+                  {/* Right Column: Editorial Mixed Grid of Outfits & Pieces */}
                   <div className="md:col-span-6 flex items-center justify-center">
-                    <div className="relative w-full max-w-[320px] sm:max-w-[400px] rounded-3xl p-5 shadow-2xl border border-[var(--border-color)] bg-[var(--card-bg)] flex flex-col items-center gap-3.5">
-                      <div className="w-full flex items-center justify-between pb-2.5 border-b border-[var(--border-color)] text-xs font-bold text-[var(--foreground-secondary)]">
+                    <div className="relative w-full max-w-[320px] sm:max-w-[420px] rounded-3xl p-4 sm:p-5 shadow-2xl border border-[var(--border-color)] bg-[var(--card-bg)] flex flex-col items-center gap-3">
+                      <div className="w-full flex items-center justify-between pb-2 border-b border-[var(--border-color)] text-xs font-bold text-[var(--foreground-secondary)]">
                         <span className="flex items-center gap-1.5 font-black text-[var(--foreground)]">
                           <Calendar className="w-4 h-4 text-[var(--brand-pink)]" />
-                          Lookbook Semanal
+                          Inspiración & Armario
                         </span>
                         <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 font-black text-[10px]">
-                          6 PRENDAS LISTAS
+                          FASHION MOODBOARD
                         </span>
                       </div>
 
-                      <div className="grid grid-cols-3 gap-2.5 w-full">
-                        <div className="aspect-square relative rounded-2xl bg-[var(--background-secondary)]/70 p-2 flex items-center justify-center border border-[var(--border-color)]/40 hover:scale-105 transition-transform">
-                          <Image src="/landing/studio-longsleeve.png" alt="Studio Navy" width={100} height={100} className="object-contain w-full h-full" />
+                      <div className="grid grid-cols-4 gap-2 w-full">
+                        {/* Chica Outfit 1 */}
+                        <div className="aspect-[3/4] relative rounded-xl overflow-hidden border border-[var(--border-color)]/60 shadow-xs hover:scale-105 transition-transform">
+                          <Image src="/landing/outfits/chica-cookies-denim.jpg" alt="Outfit Chica Denim" fill className="object-cover" />
                         </div>
-                        <div className="aspect-square relative rounded-2xl bg-[var(--background-secondary)]/70 p-2 flex items-center justify-center border border-[var(--border-color)]/40 hover:scale-105 transition-transform">
-                          <Image src="/landing/jeans-stars.png" alt="Star Denim" width={100} height={100} className="object-contain w-full h-full" />
+                        {/* Chico Outfit 1 */}
+                        <div className="aspect-[3/4] relative rounded-xl overflow-hidden border border-[var(--border-color)]/60 shadow-xs hover:scale-105 transition-transform">
+                          <Image src="/landing/outfits/chico-henley-pleated.jpg" alt="Outfit Chico Henley" fill className="object-cover" />
                         </div>
-                        <div className="aspect-square relative rounded-2xl bg-[var(--background-secondary)]/70 p-2 flex items-center justify-center border border-[var(--border-color)]/40 hover:scale-105 transition-transform">
-                          <Image src="/landing/onitsuka-tiger.png" alt="Onitsuka Tiger" width={100} height={100} className="object-contain w-full h-full" />
+                        {/* Chica Outfit 2 */}
+                        <div className="aspect-[3/4] relative rounded-xl overflow-hidden border border-[var(--border-color)]/60 shadow-xs hover:scale-105 transition-transform">
+                          <Image src="/landing/outfits/chica-leopard-scarf.jpg" alt="Outfit Chica Scarf" fill className="object-cover" />
                         </div>
-                        <div className="aspect-square relative rounded-2xl bg-[var(--background-secondary)]/70 p-2 flex items-center justify-center border border-[var(--border-color)]/40 hover:scale-105 transition-transform">
-                          <Image src="/landing/pantalon-blanco.png" alt="Pantalón Blanco" width={100} height={100} className="object-contain w-full h-full" />
+                        {/* Chico Outfit 2 */}
+                        <div className="aspect-[3/4] relative rounded-xl overflow-hidden border border-[var(--border-color)]/60 shadow-xs hover:scale-105 transition-transform">
+                          <Image src="/landing/outfits/chico-yellow-baggy.jpg" alt="Outfit Chico Baggy" fill className="object-cover" />
                         </div>
-                        <div className="aspect-square relative rounded-2xl bg-[var(--background-secondary)]/70 p-2 flex items-center justify-center border border-[var(--border-color)]/40 hover:scale-105 transition-transform">
-                          <Image src="/landing/botas-cowboy.png" alt="Botas Cowboy" width={100} height={100} className="object-contain w-full h-full" />
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-2 w-full pt-1 border-t border-[var(--border-color)]/40">
+                        <div className="h-14 relative rounded-xl bg-[var(--background-secondary)]/80 p-1 flex items-center justify-center border border-[var(--border-color)]/40">
+                          <Image src="/landing/golden-goose.png" alt="Golden Goose" width={70} height={35} className="object-contain" />
                         </div>
-                        <div className="aspect-square relative rounded-2xl bg-[var(--background-secondary)]/70 p-2 flex items-center justify-center border border-[var(--border-color)]/40 hover:scale-105 transition-transform">
-                          <Image src="/landing/sudadera-scuffers-cutout.png" alt="Scuffers Hoodie" width={100} height={100} className="object-contain w-full h-full" />
+                        <div className="h-14 relative rounded-xl bg-[var(--background-secondary)]/80 p-1 flex items-center justify-center border border-[var(--border-color)]/40">
+                          <Image src="/landing/sudadera-scuffers-cutout.png" alt="Scuffers" width={50} height={50} className="object-contain" />
+                        </div>
+                        <div className="h-14 relative rounded-xl bg-[var(--background-secondary)]/80 p-1 flex items-center justify-center border border-[var(--border-color)]/40">
+                          <Image src="/landing/onitsuka-tiger.png" alt="Onitsuka" width={55} height={55} className="object-contain" />
                         </div>
                       </div>
 
                       <p className="text-[11px] text-center text-[var(--foreground-secondary)] font-semibold">
-                        Streetwear, Minimal & Casual Chic
+                        Streetwear, Quiet Luxury & Clean Look
                       </p>
                     </div>
                   </div>

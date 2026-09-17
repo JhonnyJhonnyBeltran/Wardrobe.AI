@@ -1398,7 +1398,18 @@ En cada conversación, el backend alimenta a CloSy con:
   - **Keyframe 3 (Planificación & Estilismo Semanal):** (*"Despiértate sabiendo qué ponerte hoy"*), cuadrícula de 6 prendas clave agendadas.
   - **Keyframe 4 (Acceso Inmediato & Pie Legal Integrado):**
     - Botón de acceso directo principal (*"Entrar a Klozet gratis"* / *"Ir a mi armario"*).
-    - **Sección Legal Integrada en la Base del Keyframe:** Enlaces directos a Términos y Condiciones (`/terms`), Política de Privacidad (`/privacy`), Cookies (`/cookies`), Soporte (`mailto:soporte@klozet.es`) y Copyright, eliminando el footer tradicional separado y manteniendo la experiencia 100% contenida en los keyframes.
+### 115. Integración de Zapatilla Golden Goose Transparente y Outfits Reales Chicos / Chicas (Septiembre 2026)
+- **Recorte y Limpieza de Zapatilla Golden Goose Glitter (`public/landing/golden-goose.png`)**:
+  - Eliminación del fondo blanco y sombras de contacto para dejar la sneaker 100% transparente en canal alfa.
+  - Integrada en el Keyframe 1 con rotación editorial y etiqueta oficial.
+- **Colección de Outfits Reales de Moda para Landing (`public/landing/outfits/`)**:
+  - `chica-cookies-denim.jpg`: Look editorial femenino con pantalón ancho de tiro alto, top blanco y detalles en rojo.
+  - `chica-leopard-scarf.jpg`: Look editorial femenino con pañuelo leopard, camiseta negra entallada y denim vintage.
+  - `chico-henley-pleated.jpg`: Look editorial masculino con polo henley blanco ajustado y pantalón de pinzas ancho negro.
+  - `chico-yellow-baggy.jpg`: Look editorial masculino con camiseta amarilla cropped y vaqueros baggy noventeros.
+- **Keyframe 3 (Inspiración & Moodboard)**:
+  - Cuadrícula híbrida que combina los 4 looks editoriales reales de chicas y chicos junto a los recortes de calzado y prendas (`golden-goose.png`, `sudadera-scuffers-cutout.png`, `onitsuka-tiger.png`).
+
 
 
 
