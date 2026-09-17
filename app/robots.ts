@@ -9,10 +9,13 @@ export default function robots(): MetadataRoute.Robots {
         userAgent: '*',
         allow: [
           '/',
+          '/auth',
+          '/login',
           '/feed',
           '/search',
           '/terms',
           '/privacy',
+          '/cookies',
           '/post/*',
           '/profile/*',
           '/outfit/*'

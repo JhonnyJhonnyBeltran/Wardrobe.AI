@@ -1344,6 +1344,22 @@ En cada conversación, el backend alimenta a CloSy con:
 - **Estandarización de Contacto Legal (`app/(public)/terms/page.tsx` & `cookies/page.tsx`)**:
   - Unificado el correo oficial de contacto y soporte en `soporte@klozet.es`.
 
+### 107. Rediseño Editorial Estilo Apple de Landing Page, Smart Header Reactivo y Galería de Outfits (`app/(public)/page.tsx`, `sitemap.ts`, `robots.ts`) (Septiembre 2026)
+- **Cabecera Flotante Inteligente (*Smart Sticky Header*)**:
+  - Implementada detección de dirección de scroll con `framer-motion` y `AnimatePresence`.
+  - La barra de navegación se oculta suavemente al hacer scroll hacia abajo y reaparece al instante con transición elástica al deslizar ligeramente hacia arriba.
+  - Cristal translúcido `apple-glass-bar` con bordes sutiles y logo oficial perfectamente renderizado y adaptado a dark/light mode.
+- **Copywriting y Enfoque al Problema Cotidiano**:
+  - Titulares directos y empáticos (*"¿Harta de no saber qué ponerte cada mañana?"*, *"Combina sin desordenar tu habitación"*, *"Despiértate sabiendo qué ponerte"*).
+  - Eliminadas etiquetas, clichés e iconos artificiales tipo IA, sustituidos por iconos Apple limpios (`Camera`, `Layers`, `SlidersHorizontal`, `Calendar`, `Bookmark`).
+- **Galería Editorial de Outfits Reales (*Inspo & Outfits*)**:
+  - Cuadrícula inmersiva con fotografías editoriales en alta definición de looks completos (Clean Look, Streetwear Urbano, Old Money / Quiet Luxury, Casual Moderno) con etiquetas de prendas.
+- **Indexación y SEO Optimizado para Google (`app/sitemap.ts` & `app/robots.ts`)**:
+  - Indexada la Landing Page `/` con prioridad máxima `1.0`.
+  - Indexadas las rutas directas de acceso `/auth` y `/login` con prioridad `0.9` en el Sitemap y habilitadas explícitamente en `robots.txt`.
+  - Pie de página Apple-style con enlaces organizados a Privacidad, Términos, Cookies y soporte oficial.
+
+
 
 
 
