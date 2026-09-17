@@ -1388,6 +1388,18 @@ En cada conversación, el backend alimenta a CloSy con:
   - El estado `activeStep` (0 a 4) renderiza un único bloque a la vez con transiciones fluidas de entrada y salida (`opacity`, `y`, `scale`), garantizando que en pantallas móviles pequeñas y en cualquier posición intermedia de scroll nunca se mezclen elementos de diferentes pasos.
   - Añadida barra de navegación inferior móvil (`Anterior / Siguiente` con contador `01 / 05`) e indicador táctil de pasos en la cabecera.
 
+### 114. Landing Page Ultra Bold Estilo Whering, Sin Header y Footer Legal Integrado (Septiembre 2026)
+- **Eliminación Total del Header Superior**:
+  - Eliminada la barra fija de navegación superior (`<header>`) para dotar a la landing de una experiencia 100% inmersiva a pantalla completa centrada en los keyframes visuales.
+- **Keyframes de Gran Tamaño y Tipografía Bold Editorial (`app/(public)/page.tsx`)**:
+  - **Keyframe 0 (Hero):** Titular editorial gigante (*"Ama tu armario. Vístete mejor con lo que ya tienes"*), logotipo tipográfico oficial `klozet-nombre-grande.png` e integración de prendas flotantes con tilt editorial (`sudadera-scuffers-cutout.png`, `camisa-zara-cutout.png`, `pantalon-blanco.png`, `botas-cowboy.png`).
+  - **Keyframe 1 (Seen & Worn):** Mensaje bold inspirado en Whering (*"Merecen verse. Merecen llevarse. Tu ropa no debería quedarse olvidada en el fondo del armario"*), con tarjetas inclinadas flotantes de la Sudadera Scuffers, Star Denim y Camisa Zara.
+  - **Keyframe 2 (Lienzo Creativo):** Enfoque moodboard estilista (*"Combina como un estilista. Crea, combina, experimenta"*), con showcase del lienzo interactivo (`outfit-canvas-clean.png`).
+  - **Keyframe 3 (Planificación & Estilismo Semanal):** (*"Despiértate sabiendo qué ponerte hoy"*), cuadrícula de 6 prendas clave agendadas.
+  - **Keyframe 4 (Acceso Inmediato & Pie Legal Integrado):**
+    - Botón de acceso directo principal (*"Entrar a Klozet gratis"* / *"Ir a mi armario"*).
+    - **Sección Legal Integrada en la Base del Keyframe:** Enlaces directos a Términos y Condiciones (`/terms`), Política de Privacidad (`/privacy`), Cookies (`/cookies`), Soporte (`mailto:soporte@klozet.es`) y Copyright, eliminando el footer tradicional separado y manteniendo la experiencia 100% contenida en los keyframes.
+
 
 
 
