@@ -1410,6 +1410,16 @@ En cada conversación, el backend alimenta a CloSy con:
 - **Keyframe 3 (Inspiración & Moodboard)**:
   - Cuadrícula híbrida que combina los 4 looks editoriales reales de chicas y chicos junto a los recortes de calzado y prendas (`golden-goose.png`, `sudadera-scuffers-cutout.png`, `onitsuka-tiger.png`).
 
+### 116. Landing Page con Flujo de Keyframes Continuo, Header Minimalista y Limpieza de Iconos (Septiembre 2026)
+- **Header Ultra Minimalista**:
+  - Eliminado el logotipo y controles de la cabecera superior. Ahora únicamente muestra los botones de acción directos: `Iniciar sesión` y `Registrarse` / `Mi Armario` en la esquina superior derecha.
+- **Flujo Continuo de Keyframes a Pantalla Completa (`app/(public)/page.tsx`)**:
+  - Eliminados los cálculos de scroll artificiales que causaban saltos o bloqueos. Cada keyframe es una sección inmersiva a pantalla completa (`min-h-screen`) que fluye con scroll natural y fluido en móvil y ordenador.
+  - Eliminado el contador numérico `01 / 05` y los botones de `Anterior / Siguiente` para una experiencia editorial limpia sin distracciones.
+- **Depuración Editorial y Eliminación de Iconos Innecesarios**:
+  - Eliminados iconos superfluos de verificación (`Check`), capas y decoraciones en las descripciones de moda, logrando un lenguaje visual sobrio, directo y de alto impacto estético.
+
+
 
 
 
