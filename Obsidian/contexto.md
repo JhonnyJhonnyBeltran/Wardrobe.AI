@@ -1371,6 +1371,20 @@ En cada conversación, el backend alimenta a CloSy con:
   - Resuelto el error `500 Server configuration error`: el backend ahora resuelve la identidad del usuario tanto por cookies de servidor (`createServerClient`) como por cabeceras `Authorization: Bearer <token>`.
   - Fallback tolerante para claves de servicio de Supabase (`SUPABASE_SERVICE_ROLE_KEY` o `NEXT_PUBLIC_SUPABASE_ANON_KEY`), asegurando el vaciado en cascada de publicaciones, outfits, prendas, guardados, likes, comentarios, carpetas, mensajes, archivos en Storage (`avatars`, `clothing-images`) y registro en `profiles`.
 
+### 111. Rediseño Editorial de Landing Page Estilo Whering.co con Combinador Interactivo "Dress Me" (Septiembre 2026)
+- **Experiencia Interactiva "Dress Me" (Slot Machine de Armario)**:
+  - Componente interactivo en el inicio con 4 slots anatómicos (Prenda Superior, Prenda Inferior, Calzado y Accesorio/Detalle).
+  - Selector individual por slot con flechas de navegación y botón principal *"Combíname un look"* con rotación aleatoria fluida (Shuffle) y física elástica.
+  - Diseñado para mostrar de forma instantánea el concepto de armario digital estilo Clueless sin barreras de registro.
+- **Narrativa Editorial y Enfoque de Armario Sostenible (Filosofía Whering)**:
+  - Copywriting audaz centrado en *"El 80% de las veces usamos solo el 20% de nuestro armario"*.
+  - Comparativa directa *"Antes de Klozet vs Con Klozet"* (adiós a la montaña de ropa en la silla y la indecisión matutina).
+  - Tarjetas de propuesta de valor en 4 pasos: Digitalización con recorte automático, Lienzo libre & Dress Me, Asesoría de estilo 24/7 con Kloe y Planificador semanal en calendario.
+- **Identidad Visual y Compatibilidad**:
+  - Cabecera inteligente (*Smart Sticky Header*) con autodetección de scroll y alternancia automática de logo para Dark/Light mode.
+  - Galería editorial de estilos de moda y footer completo con enlaces a Privacidad, Términos, Cookies y soporte oficial (`soporte@klozet.es`).
+
+
 
 
 
