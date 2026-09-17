@@ -240,16 +240,16 @@ export default function LandingPage() {
               </button>
             </div>
 
-            {/* Floating Cutout Garments (Left & Right) */}
+            {/* Floating Cutout Garments (Left & Right Parallax) */}
             <motion.div 
               style={{ y: floatTopY, rotate: floatRotate1 }}
-              className="hidden lg:block absolute left-12 xl:left-24 top-1/4 w-44 xl:w-56 pointer-events-none drop-shadow-2xl"
+              className="hidden lg:block absolute left-8 xl:left-20 top-20 w-40 xl:w-52 pointer-events-none drop-shadow-2xl"
             >
               <Image 
                 src="/landing/sudadera-scuffers.png" 
                 alt="Sudadera Scuffers" 
-                width={320} 
-                height={400} 
+                width={300} 
+                height={380} 
                 className="w-full h-auto object-contain rounded-3xl"
                 priority 
               />
@@ -257,14 +257,42 @@ export default function LandingPage() {
 
             <motion.div 
               style={{ y: floatBotY, rotate: floatRotate2 }}
-              className="hidden lg:block absolute right-12 xl:right-24 top-1/4 w-44 xl:w-56 pointer-events-none drop-shadow-2xl"
+              className="hidden lg:block absolute left-12 xl:left-24 bottom-20 w-36 xl:w-44 pointer-events-none drop-shadow-2xl"
+            >
+              <Image 
+                src="/landing/pantalon-blanco.png" 
+                alt="Pantalón Blanco" 
+                width={260} 
+                height={340} 
+                className="w-full h-auto object-contain"
+                priority 
+              />
+            </motion.div>
+
+            <motion.div 
+              style={{ y: floatBotY, rotate: floatRotate1 }}
+              className="hidden lg:block absolute right-8 xl:right-20 top-20 w-40 xl:w-52 pointer-events-none drop-shadow-2xl"
             >
               <Image 
                 src="/landing/camisa-zara.png" 
                 alt="Camisa Zara" 
-                width={320} 
-                height={400} 
+                width={300} 
+                height={380} 
                 className="w-full h-auto object-contain rounded-3xl"
+                priority 
+              />
+            </motion.div>
+
+            <motion.div 
+              style={{ y: floatTopY, rotate: floatRotate2 }}
+              className="hidden lg:block absolute right-12 xl:right-24 bottom-20 w-36 xl:w-44 pointer-events-none drop-shadow-2xl"
+            >
+              <Image 
+                src="/landing/botas-cowboy.png" 
+                alt="Botas Cowboy" 
+                width={260} 
+                height={340} 
+                className="w-full h-auto object-contain"
                 priority 
               />
             </motion.div>
@@ -320,7 +348,7 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              {/* Right Column: Card of Sudadera Scuffers / Camisa Zara */}
+              {/* Right Column: Garment cards stacked */}
               <div className="flex items-center justify-center relative">
                 <div className="relative w-full max-w-sm sm:max-w-md rounded-3xl overflow-hidden shadow-2xl border border-[var(--border-color)] bg-[var(--card-bg)]">
                   <Image 
@@ -395,7 +423,7 @@ export default function LandingPage() {
 
 
           {/* ======================================================== */}
-          {/* FRAME 3: PLANIFICA & ASESÓRATE */}
+          {/* FRAME 3: PLANIFICA & ASESÓRATE CON LOOKS REALES */}
           {/* ======================================================== */}
           <motion.div 
             style={{ opacity: frame3Opacity, y: frame3Y }}
@@ -432,26 +460,27 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              {/* Right Column: Visual Showcase (Studio Longsleeve + Jeans Stars) */}
+              {/* Right Column: Visual Showcase (Look 1: Streetwear & Look 2: Western Chic) */}
               <div className="flex items-center justify-center relative">
                 <div className="relative w-full max-w-sm sm:max-w-md rounded-3xl p-6 shadow-2xl border border-[var(--border-color)] bg-[var(--card-bg)] flex flex-col items-center gap-4">
                   <div className="w-full flex items-center justify-between pb-3 border-b border-[var(--border-color)] text-xs font-bold text-[var(--foreground-secondary)]">
                     <span className="flex items-center gap-1.5">
                       <Calendar className="w-4 h-4 text-[var(--brand-pink)]" />
-                      Outfit para hoy • Viernes
+                      Planificador Semanal
                     </span>
                     <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-500 font-extrabold text-[10px]">
-                      LISTO
+                      LOOKS AGENDADOS
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3 w-full">
+                  {/* 4 Items Grid in Preview */}
+                  <div className="grid grid-cols-2 gap-2.5 w-full">
                     <div className="aspect-square relative rounded-2xl bg-[var(--background-secondary)]/50 p-2 flex items-center justify-center border border-[var(--border-color)]/50">
                       <Image 
                         src="/landing/studio-longsleeve.png" 
                         alt="Studio Longsleeve" 
-                        width={200} 
-                        height={200} 
+                        width={180} 
+                        height={180} 
                         className="object-contain w-full h-full"
                       />
                     </div>
@@ -459,15 +488,33 @@ export default function LandingPage() {
                       <Image 
                         src="/landing/jeans-stars.png" 
                         alt="Jeans Stars One Dilemma" 
-                        width={200} 
-                        height={200} 
+                        width={180} 
+                        height={180} 
+                        className="object-contain w-full h-full"
+                      />
+                    </div>
+                    <div className="aspect-square relative rounded-2xl bg-[var(--background-secondary)]/50 p-2 flex items-center justify-center border border-[var(--border-color)]/50">
+                      <Image 
+                        src="/landing/pantalon-blanco.png" 
+                        alt="Pantalón Blanco" 
+                        width={180} 
+                        height={180} 
+                        className="object-contain w-full h-full"
+                      />
+                    </div>
+                    <div className="aspect-square relative rounded-2xl bg-[var(--background-secondary)]/50 p-2 flex items-center justify-center border border-[var(--border-color)]/50">
+                      <Image 
+                        src="/landing/botas-cowboy.png" 
+                        alt="Botas Cowboy" 
+                        width={180} 
+                        height={180} 
                         className="object-contain w-full h-full"
                       />
                     </div>
                   </div>
 
-                  <p className="text-xs text-center text-[var(--foreground-secondary)] font-medium">
-                    Streetwear Fit • Studio Longsleeve + One Dilemma Star Denim
+                  <p className="text-[11px] text-center text-[var(--foreground-secondary)] font-medium">
+                    Streetwear & Western Chic • Combinaciones listas para la semana
                   </p>
                 </div>
               </div>
