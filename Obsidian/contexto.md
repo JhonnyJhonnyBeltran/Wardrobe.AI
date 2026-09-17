@@ -1371,19 +1371,23 @@ En cada conversación, el backend alimenta a CloSy con:
   - Resuelto el error `500 Server configuration error`: el backend ahora resuelve la identidad del usuario tanto por cookies de servidor (`createServerClient`) como por cabeceras `Authorization: Bearer <token>`.
   - Fallback tolerante para claves de servicio de Supabase (`SUPABASE_SERVICE_ROLE_KEY` o `NEXT_PUBLIC_SUPABASE_ANON_KEY`), asegurando el vaciado en cascada de publicaciones, outfits, prendas, guardados, likes, comentarios, carpetas, mensajes, archivos en Storage (`avatars`, `clothing-images`) y registro en `profiles`.
 
-### 112. Landing Page Scroll-Driven Keyframe Showcase con Prendas Reales (Septiembre 2026)
-- **Experiencia Sticky Scroll-Driven Cinematográfica (`app/(public)/page.tsx`)**:
-  - Toda la página está estructurada en una experiencia de pantalla fija (`sticky top-0 h-screen`) sobre un contenedor de scroll ralentizado (`420vh`) gobernado por `useScroll` y `useTransform` de Framer Motion.
-  - Al deslizar la rueda o trackpad, los elementos transicionan fluidamente entre 5 keyframes:
-    1. **Frame 0 (Hero):** Titular minimalista (*"Vístete mejor con lo que ya tienes"*), logo oficial y prendas flotando con parallax (`sudadera-scuffers.png`, `camisa-zara.png`, `pantalon-blanco.png`, `botas-cowboy.png`).
-    2. **Frame 1 (Digitalización Instantánea):** Animación de recorte sin fondo con la ficha modal oficial de la Sudadera Scuffers (`sudadera-scuffers.png`).
-    3. **Frame 2 (Lienzo Libre de Creación):** Montaje interactivo de outfit completo en lienzo con prendas combinadas (`outfit-canvas.png`).
-    4. **Frame 3 (Planificación & Estilismo):** Showcase de look agendado para la semana con Studio Longsleeve (`studio-longsleeve.png`), Jeans Star Denim (`jeans-stars.png`), Zapatillas Onitsuka Tiger Amarillas (`onitsuka-tiger.png`), Pantalón Blanco (`pantalon-blanco.png`), Botas Cowboy (`botas-cowboy.png`) y Sudadera Scuffers.
-    5. **Frame 4 (Llamada a la Acción):** CTA final minimalista para empezar gratis.
-- **Navegación Rápida por Pasos**:
-  - Píldoras de salto manual en el Header (Inicio, Digitaliza, Lienzo, Planifica, Empieza) que calculan y desplazan suavemente el scroll a la altura exacta de cada fase.
-- **Minimalismo de Texto**:
-  - Textos cortos, directos y de alto impacto visual, eliminando densidad excesiva de lectura.
+### 113. Corrección de Keyframes en Móvil con AnimatePresence y Prendas Transparentes (Septiembre 2026)
+- **Eliminación Total de Fondos en Prendas de la Landing (`public/landing/`)**:
+  - Procesadas con algoritmo de Alpha Masking / Cutout en alta fidelidad todas las prendas reales para dejarlas 100% transparentes sin bordes blancos:
+    - `sudadera-scuffers-cutout.png`: Sudadera Scuffers boxy con transparencia total.
+    - `camisa-zara-cutout.png`: Camisa cropped amarilla Zara recortada.
+    - `studio-longsleeve.png`: Studio Navy Longsleeve limpia.
+    - `jeans-stars.png`: One Dilemma Star Jeans con transparencia.
+    - `pantalon-blanco.png`: Pantalón Denim blanco recortado.
+    - `botas-cowboy.png`: Botas Cowboy ante camel limpias.
+    - `onitsuka-tiger.png`: Zapatillas Onitsuka Tiger Mexico 66 amarillas recortadas.
+    - `outfit-canvas-clean.png`: Montaje de outfit completo en lienzo con transparencia de fondo.
+- **Arquitectura Anti-Colisión de Keyframes (`app/(public)/page.tsx`)**:
+  - Resuelto el problema de superposición masiva de textos y fotos en dispositivos móviles.
+  - Se sustituyeron las capas `absolute inset-0` simultáneas con opacidades parciales por un sistema de aislamiento estricto gobernado por `AnimatePresence mode="wait"`.
+  - El estado `activeStep` (0 a 4) renderiza un único bloque a la vez con transiciones fluidas de entrada y salida (`opacity`, `y`, `scale`), garantizando que en pantallas móviles pequeñas y en cualquier posición intermedia de scroll nunca se mezclen elementos de diferentes pasos.
+  - Añadida barra de navegación inferior móvil (`Anterior / Siguiente` con contador `01 / 05`) e indicador táctil de pasos en la cabecera.
+
 
 
 
