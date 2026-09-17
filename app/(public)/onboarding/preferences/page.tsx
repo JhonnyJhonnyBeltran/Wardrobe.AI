@@ -7,12 +7,13 @@
  * Step 2: Visual Style Selection (Dynamic gender-based photography)
  */
 
-import { useState, useEffect, useMemo, Suspense } from 'react';
+import { useState, useEffect, useMemo, Suspense, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ChevronRight, ChevronLeft, Check, Minus, Plus, X } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Check, Minus, Plus, X, User, AtSign, Loader2, Sparkles } from 'lucide-react';
 import { Button, LogoMark } from '@/components';
 import { useUser } from '@/store/userStore';
+import { useSocial } from '@/lib/hooks/useSocial';
 import { supabase } from '@/lib/supabase/client';
 import Image from 'next/image';
 
@@ -400,8 +401,16 @@ function PreferencesContent() {
     const isEditModeQuery = searchParams?.get('mode') === 'edit';
 
     const { user, setUser, isLoading: isLoadingUser } = useUser();
+    const { checkUsernameAvailability } = useSocial();
 
-    // Core state
+    // Step 0: Identity state
+    const [fullName, setFullName] = useState('');
+    const [username, setUsername] = useState('');
+    const [isCheckingUsername, setIsCheckingUsername] = useState(false);
+    const [isUsernameAvailable, setIsUsernameAvailable] = useState<boolean | null>(null);
+    const [usernameError, setUsernameError] = useState('');
+
+    // Steps 1 to 4: Core state
     const [step, setStep] = useState(0);
     const [age, setAge] = useState<number>(24);
     const [gender, setGender] = useState('');
@@ -420,6 +429,15 @@ function PreferencesContent() {
         if (!user) {
             router.push('/auth');
             return;
+        }
+
+        // Initialize user info
+        if (user.name) {
+            setFullName(prev => prev || user.name);
+        }
+        if (user.username && !user.username.startsWith('user_')) {
+            setUsername(prev => prev || user.username!);
+            setIsUsernameAvailable(true);
         }
 
         const isUserConfigured = Boolean(user.styleCompleted);
@@ -465,7 +483,28 @@ function PreferencesContent() {
         };
 
         loadStyles();
-    }, [user, router, isLoadingUser]);
+    }, [user, router, isLoadingUser, isFromSettings, isEditModeQuery]);
+
+    const handleUsernameChange = async (rawVal: string) => {
+        const clean = rawVal.toLowerCase().replace(/[^a-z0-9_]/g, '');
+        setUsername(clean);
+        setIsUsernameAvailable(null);
+        setUsernameError('');
+
+        if (clean.length < 3) {
+            if (clean.length > 0) setUsernameError('Mínimo 3 caracteres');
+            return;
+        }
+
+        setIsCheckingUsername(true);
+        const available = await checkUsernameAvailability(clean);
+        setIsCheckingUsername(false);
+        setIsUsernameAvailable(available);
+
+        if (!available) {
+            setUsernameError('Este nombre de usuario ya está cogido');
+        }
+    };
 
     // Merge DB styles with comprehensive fallback list ensuring full coverage
     const availableStyles = useMemo(() => {
@@ -528,12 +567,16 @@ function PreferencesContent() {
     };
 
     const handleNext = () => {
-        if (step === 0 && !age) return;
-        if (step === 1 && !gender) return;
-        if (step === 2 && selectedStyles.length === 0) return;
-        if (step === 3 && !selectedAccessory) return;
+        if (step === 0) {
+            if (!fullName.trim() || fullName.trim().length < 2) return;
+            if (username.length < 3 || isUsernameAvailable === false || isCheckingUsername) return;
+        }
+        if (step === 1 && !age) return;
+        if (step === 2 && !gender) return;
+        if (step === 3 && selectedStyles.length === 0) return;
+        if (step === 4 && !selectedAccessory) return;
 
-        if (step < 3) {
+        if (step < 4) {
             setStep(prev => prev + 1);
         } else {
             handleComplete();
@@ -546,10 +589,14 @@ function PreferencesContent() {
 
         const ageRangeComputed = getAgeRangeFromAge(age);
         const usesAccessoriesVal = selectedAccessory !== 'ninguno';
+        const cleanUsername = (username.trim() || user.username || `user_${user.id.substring(0, 8)}`).toLowerCase().replace(/[^a-z0-9_]/g, '');
+        const finalName = fullName.trim() || user.name || 'Usuario';
 
         try {
             let payload: Record<string, any> = {
                 id: user.id,
+                full_name: finalName,
+                username: cleanUsername,
                 age: age,
                 age_range: ageRangeComputed,
                 gender: gender,
@@ -584,6 +631,8 @@ function PreferencesContent() {
             // Update local store
             setUser({
                 ...user,
+                name: finalName,
+                username: cleanUsername,
                 age: age,
                 ageRange: ageRangeComputed as any,
                 gender: gender as any,
@@ -628,13 +677,15 @@ function PreferencesContent() {
 
     return (
         <div className="min-h-screen bg-[var(--background)] pb-28 md:pb-32 overflow-hidden flex flex-col selection:bg-[var(--brand-pink)] selection:text-white">
-            {/* Minimal Header */}
+            {/* Minimal Header with 5 Step Indicators */}
             <header className="px-6 py-5 flex items-center justify-between sticky top-0 z-50 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-color)]/30">
-                <div className="flex gap-2 items-center">
-                    <div className={`h-1.5 w-8 sm:w-12 rounded-full transition-all duration-300 ${step >= 0 ? 'bg-[var(--brand-pink)]' : 'bg-[var(--border-color)]'}`} />
-                    <div className={`h-1.5 w-8 sm:w-12 rounded-full transition-all duration-300 ${step >= 1 ? 'bg-[var(--brand-pink)]' : 'bg-[var(--border-color)]'}`} />
-                    <div className={`h-1.5 w-8 sm:w-12 rounded-full transition-all duration-300 ${step >= 2 ? 'bg-[var(--brand-pink)]' : 'bg-[var(--border-color)]'}`} />
-                    <div className={`h-1.5 w-8 sm:w-12 rounded-full transition-all duration-300 ${step >= 3 ? 'bg-[var(--brand-pink)]' : 'bg-[var(--border-color)]'}`} />
+                <div className="flex gap-1.5 sm:gap-2 items-center">
+                    {[0, 1, 2, 3, 4].map((s) => (
+                        <div
+                            key={s}
+                            className={`h-1.5 w-6 sm:w-10 rounded-full transition-all duration-300 ${step >= s ? 'bg-[var(--brand-pink)]' : 'bg-[var(--border-color)]'}`}
+                        />
+                    ))}
                 </div>
                 {isEditing ? (
                     <button
@@ -651,10 +702,94 @@ function PreferencesContent() {
 
             <main className="flex-1 px-4 sm:px-6 max-w-2xl mx-auto w-full pt-6 md:pt-10 relative">
                 <AnimatePresence mode="wait">
-                    {/* STEP 0: AGE SLIDER */}
+                    {/* STEP 0: IDENTITY / NAME & USERNAME */}
                     {step === 0 && (
                         <motion.div
                             key="step0"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            transition={{ duration: 0.25 }}
+                            className="flex flex-col gap-6 md:gap-8"
+                        >
+                            <div className="text-center md:text-left space-y-2">
+                                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-[var(--foreground)]">
+                                    ¿Cómo te llamas?
+                                </h1>
+                                <p className="text-sm sm:text-base text-[var(--foreground-secondary)]">
+                                    Elige tu nombre y un @usuario único para que tus amigos y la comunidad te reconozcan.
+                                </p>
+                            </div>
+
+                            <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-3xl p-6 sm:p-8 space-y-5 shadow-sm">
+                                {/* Full Name */}
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold uppercase tracking-wider text-[var(--foreground-secondary)] block">
+                                        Tu nombre o alias
+                                    </label>
+                                    <div className="relative">
+                                        <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--foreground-tertiary)]" />
+                                        <input
+                                            type="text"
+                                            value={fullName}
+                                            onChange={(e) => setFullName(e.target.value)}
+                                            placeholder="Ej. Ethan"
+                                            maxLength={50}
+                                            autoFocus
+                                            className="w-full bg-[var(--background-secondary)] text-[var(--foreground)] pl-12 pr-4 py-3.5 sm:py-4 rounded-2xl border border-[var(--border-color)] focus:border-[var(--brand-pink)] focus:ring-1 focus:ring-[var(--brand-pink)] transition-all outline-none text-sm sm:text-base font-medium placeholder:text-[var(--foreground-tertiary)]"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Username Handle */}
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold uppercase tracking-wider text-[var(--foreground-secondary)] block">
+                                        Nombre de usuario único (@handle)
+                                    </label>
+                                    <div className="relative">
+                                        <AtSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--foreground-tertiary)]" />
+                                        <input
+                                            type="text"
+                                            value={username}
+                                            onChange={(e) => handleUsernameChange(e.target.value)}
+                                            placeholder="tu_usuario"
+                                            maxLength={30}
+                                            className={`w-full bg-[var(--background-secondary)] text-[var(--foreground)] pl-12 pr-28 py-3.5 sm:py-4 rounded-2xl border transition-all outline-none text-sm sm:text-base font-medium placeholder:text-[var(--foreground-tertiary)] ${
+                                                usernameError
+                                                    ? 'border-red-500/80 focus:border-red-500 focus:ring-1 focus:ring-red-500'
+                                                    : isUsernameAvailable === true
+                                                    ? 'border-emerald-500/80 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500'
+                                                    : 'border-[var(--border-color)] focus:border-[var(--brand-pink)] focus:ring-1 focus:ring-[var(--brand-pink)]'
+                                            }`}
+                                        />
+                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+                                            {isCheckingUsername && (
+                                                <Loader2 className="w-4 h-4 text-[var(--brand-pink)] animate-spin" />
+                                            )}
+                                            {!isCheckingUsername && isUsernameAvailable === true && username.length >= 3 && (
+                                                <span className="text-xs font-bold text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-full flex items-center gap-1">
+                                                    <Check className="w-3 h-3" strokeWidth={3} />
+                                                    Libre
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                    {usernameError ? (
+                                        <p className="text-xs text-red-500 font-medium ml-1">{usernameError}</p>
+                                    ) : (
+                                        <p className="text-xs text-[var(--foreground-tertiary)] ml-1">
+                                            Solo letras, números y guiones bajos (mínimo 3 caracteres).
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
+
+                    {/* STEP 1: AGE SLIDER */}
+                    {step === 1 && (
+                        <motion.div
+                            key="step1"
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -20 }}
@@ -752,10 +887,10 @@ function PreferencesContent() {
                         </motion.div>
                     )}
 
-                    {/* STEP 1: GENDER / PREFERENCE CATEGORY */}
-                    {step === 1 && (
+                    {/* STEP 2: GENDER / PREFERENCE CATEGORY */}
+                    {step === 2 && (
                         <motion.div
-                            key="step1"
+                            key="step2"
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -20 }}
@@ -780,7 +915,7 @@ function PreferencesContent() {
                                             type="button"
                                             onClick={() => {
                                                 setGender(option.value);
-                                                setTimeout(() => setStep(2), 220);
+                                                setTimeout(() => setStep(3), 220);
                                             }}
                                             className={`relative w-full h-28 sm:h-36 rounded-2xl overflow-hidden text-left transition-all duration-200 group ${
                                                 isSelected
@@ -823,10 +958,10 @@ function PreferencesContent() {
                         </motion.div>
                     )}
 
-                    {/* STEP 2: EXPANDED STYLES GRID */}
-                    {step === 2 && (
+                    {/* STEP 3: EXPANDED STYLES GRID */}
+                    {step === 3 && (
                         <motion.div
-                            key="step2"
+                            key="step3"
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -20 }}
@@ -915,10 +1050,10 @@ function PreferencesContent() {
                         </motion.div>
                     )}
 
-                    {/* STEP 3: ACCESSORIES STYLE SELECTION */}
-                    {step === 3 && (
+                    {/* STEP 4: ACCESSORIES STYLE SELECTION */}
+                    {step === 4 && (
                         <motion.div
-                            key="step3"
+                            key="step4"
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -20 }}
@@ -1008,20 +1143,21 @@ function PreferencesContent() {
                         className="flex-1 h-13 rounded-2xl text-[15px] font-semibold max-w-sm ml-auto disabled:opacity-40 disabled:cursor-not-allowed"
                         onClick={handleNext}
                         disabled={
-                            (step === 0 && !age) ||
-                            (step === 1 && !gender) ||
-                            (step === 2 && selectedStyles.length === 0) ||
-                            (step === 3 && !selectedAccessory) ||
+                            (step === 0 && (!fullName.trim() || fullName.trim().length < 2 || username.length < 3 || isUsernameAvailable === false || isCheckingUsername)) ||
+                            (step === 1 && !age) ||
+                            (step === 2 && !gender) ||
+                            (step === 3 && selectedStyles.length === 0) ||
+                            (step === 4 && !selectedAccessory) ||
                             isSaving
                         }
                         type="button"
                     >
                         {isSaving
                             ? 'Guardando...'
-                            : step === 3
+                            : step === 4
                             ? 'Finalizar y explorar'
                             : 'Continuar'}
-                        {step < 3 && !isSaving && <ChevronRight className="w-4 h-4 ml-1.5" />}
+                        {step < 4 && !isSaving && <ChevronRight className="w-4 h-4 ml-1.5" />}
                     </Button>
                 </div>
             </div>

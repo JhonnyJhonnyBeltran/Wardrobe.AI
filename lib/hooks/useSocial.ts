@@ -62,13 +62,13 @@ export function useSocial() {
         .maybeSingle();
 
       if (error) return false; // Database error
-      if (data) return false; // Found = taken
-      return true; // Not found (data null) = available
+      if (data && data.id !== user?.id) return false; // Found other user = taken
+      return true; // Not found (data null) or is own = available
     } catch (err) {
       console.error('Error checking username availability:', err);
       return false;
     }
-  }, []);
+  }, [user?.id]);
 
   // Check availability of an email
   const checkEmailAvailability = useCallback(async (email: string) => {

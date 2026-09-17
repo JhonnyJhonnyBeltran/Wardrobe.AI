@@ -164,7 +164,7 @@ export default function GuidedTourModal() {
                   </div>
                   <div>
                     <span className="text-xs font-bold uppercase tracking-wider text-[var(--brand-pink)]">
-                      Tour de Inicio Rápido
+                      Tu Ruta de Estilo
                     </span>
                     <h3 className="text-sm font-semibold text-[var(--foreground)] leading-tight">
                       {currentStep.subtitle}
@@ -178,7 +178,7 @@ export default function GuidedTourModal() {
                     className="text-xs text-[var(--foreground-tertiary)] hover:text-red-500 px-2 py-1 rounded-lg hover:bg-[var(--background-secondary)] transition-colors font-medium"
                     title="Saltar y cerrar el tour definitivamente"
                   >
-                    Saltar tour
+                    Saltar
                   </button>
                   <button
                     onClick={closeTour}
@@ -360,7 +360,7 @@ export default function GuidedTourModal() {
               </div>
               <div className="text-left">
                 <span className="text-[10px] uppercase tracking-wider font-bold text-[var(--brand-pink)] block leading-tight">
-                  Guía Activa
+                  Tu ruta de estilo
                 </span>
                 <span className="text-xs font-semibold text-[var(--foreground)] block leading-tight truncate max-w-[150px] sm:max-w-[200px]">
                   {currentStep.shortTitle}

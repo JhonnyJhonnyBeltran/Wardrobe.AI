@@ -1359,19 +1359,18 @@ En cada conversación, el backend alimenta a CloSy con:
   - Indexadas las rutas directas de acceso `/auth` y `/login` con prioridad `0.9` en el Sitemap y habilitadas explícitamente en `robots.txt`.
   - Pie de página Apple-style con enlaces organizados a Privacidad, Términos, Cookies y soporte oficial.
 
-### 109. Aislamiento por Usuario del Tour de Inicio Rápido, Widget Flotante Continuo y Sincronización SQL de Profiles (Septiembre 2026)
-- **Aislamiento Estricto por Usuario en el Tour (`store/tourStore.ts`)**:
-  - Se erradicó la clave global compartida en `localStorage` (`klozet_guided_tour_state_v2`), migrando a claves dinámicas aisladas por identificador de usuario: `klozet_tour_user_${userId}`.
-  - Al iniciar sesión con una cuenta nueva, `initUserTour(userId)` y `startNewUserTour(userId)` garantizan que la cuenta empiece siempre limpia con `0` pasos completados (`completedSteps: []`), eliminando por completo falsos positivos cruzados de cuentas previas.
-- **Widget Flotante de Acompañamiento Continuo (*Floating Tour Pill*) (`components/GuidedTour/GuidedTourModal.tsx`)**:
-  - El tour ya no desaparece tras la primera acción ni se pierde entre pantallas:
-  - Mientras el tour esté activo (`hasStartedTour && !isDismissed && completedSteps.length < 6`), si el usuario minimiza el modal o navega para realizar una micro-acción, un widget sutil en forma de píldora flotante (*"Guía Activa: Paso X de 6"*) permanece visible en la esquina inferior.
-  - Al pulsar el widget, el modal del tour se reabre instantáneamente en el paso en curso con todos sus consejos fotográficos y botones directos.
-  - Las celebraciones de hito estilo Duolingo ofrecen un botón *"Continuar"* que redirige automáticamente al siguiente objetivo pendiente.
-- **Erradicación de Falsos Positivos en la Barra de Progreso del Perfil (`components/Profile/ProfileProgressBar.tsx`)**:
-  - Se eliminó la lectura indiscriminada de conversaciones globales en `localStorage`, evaluando `hasKloe` únicamente sobre las conversaciones pertenecientes al `user.id` activo o registradas en `profiles.notification_preferences`.
-- **Script SQL Definitivo e Idempotente (`sql/sync_all_profile_columns.sql`)**:
-  - Creado script SQL unificado que añade de forma segura mediante `ADD COLUMN IF NOT EXISTS` todas las columnas de la tabla `profiles` (`accessories_style`, `uses_accessories`, `preferred_styles`, `face_photos`, `body_photos`, `kloe_trial_messages_used`, etc.), configura políticas de RLS e invoca `NOTIFY pgrst, 'reload schema';` para eliminar cualquier error `400 Bad Request / PGRST204` en Supabase.
+### 110. Integración de Identidad (Nombre & @usuario) en Onboarding, Copywriting Joven y Blindaje de Borrado de Cuenta (Septiembre 2026)
+- **Paso 0 Obligatorio de Identidad en Onboarding (`app/(public)/onboarding/preferences/page.tsx`)**:
+  - Se estructuró el flujo en **5 pasos interactivos** (0: Identidad, 1: Edad, 2: Catálogo de género, 3: Estilos de moda, 4: Accesorios y complementos).
+  - El **Paso 0 ("¿Cómo te llamas?")** solicita el nombre de pila/alias y el nombre de usuario único (`@handle`) con verificación debounced en tiempo real de disponibilidad ("Libre" / "En uso" / "Mínimo 3 caracteres"), impidiendo que cuentas creadas con Google OAuth queden con nombres autogenerados (`user_12345678`).
+  - Al completar el onboarding, se actualizan `full_name`, `username`, `age`, `gender`, `preferred_styles`, `accessories_style` y `style_completed = true` en Supabase y en `userStore`.
+- **Copywriting Joven, Fresco y Vibrante para Moda / Streetwear**:
+  - Se eliminaron etiquetas corporativas o aburridas ("Guía Activa", "Tour de Inicio Rápido", "Nivel de armario").
+  - Sustituidas por expresiones auténticas para público joven: *"Tu ruta de estilo"*, *"Nivel de estilo"*, *"Monta tu fit"*, *"Crea tu look"*, *"Digitaliza tu ropa en segundos"*, *"Despiértate sabiendo qué ponerte"*, *"Pídele estilismo a Kloe"*, *"Caza inspiración y entrena tu algoritmo"*.
+- **Blindaje del Endpoint de Eliminación de Cuenta (`/api/user/delete`)**:
+  - Resuelto el error `500 Server configuration error`: el backend ahora resuelve la identidad del usuario tanto por cookies de servidor (`createServerClient`) como por cabeceras `Authorization: Bearer <token>`.
+  - Fallback tolerante para claves de servicio de Supabase (`SUPABASE_SERVICE_ROLE_KEY` o `NEXT_PUBLIC_SUPABASE_ANON_KEY`), asegurando el vaciado en cascada de publicaciones, outfits, prendas, guardados, likes, comentarios, carpetas, mensajes, archivos en Storage (`avatars`, `clothing-images`) y registro en `profiles`.
+
 
 
 

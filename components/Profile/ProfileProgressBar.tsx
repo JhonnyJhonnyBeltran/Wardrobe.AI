@@ -70,22 +70,22 @@ export default function ProfileProgressBar() {
   // Dynamic status text matching the exact missing milestone
   let statusMessage = '';
   if (totalPercent >= 100) {
-    statusMessage = '¡Armario y perfil al 100%! Tu estilo está completamente optimizado';
+    statusMessage = '¡Armario al 100%! Tienes un estilazo impecable 🔥';
   } else if (!hasStyle) {
-    statusMessage = `Tu perfil está al ${totalPercent}% · Define tus preferencias de estilo`;
+    statusMessage = `Nivel de estilo al ${totalPercent}% · Define tus vibes de moda`;
   } else if (!hasAvatar) {
-    statusMessage = `Tu perfil está al ${totalPercent}% · Añade una foto de perfil`;
+    statusMessage = `Nivel de estilo al ${totalPercent}% · Sube tu mejor foto de perfil`;
   } else if (!has2Items) {
     const needed = Math.max(1, 2 - items.length);
-    statusMessage = `Tu armario está al ${totalPercent}% · Añade ${needed} prenda${needed > 1 ? 's' : ''} más para combinar`;
+    statusMessage = `Nivel de estilo al ${totalPercent}% · Sube ${needed} prenda${needed > 1 ? 's' : ''} más para combinar`;
   } else if (!hasOutfit) {
-    statusMessage = `Tu armario está al ${totalPercent}% · Crea tu primer look en el lienzo`;
+    statusMessage = `Nivel de estilo al ${totalPercent}% · Monta tu primer fit en el lienzo`;
   } else if (!hasKloe) {
-    statusMessage = `Tu perfil está al ${totalPercent}% · Pide tu primera recomendación a Kloe`;
+    statusMessage = `Nivel de estilo al ${totalPercent}% · Pídele estilismo a Kloe`;
   } else if (!hasPost) {
-    statusMessage = `Tu perfil está al ${totalPercent}% · Publica tu primer look en el feed`;
+    statusMessage = `Nivel de estilo al ${totalPercent}% · Sube tu primer fit a la comunidad`;
   } else {
-    statusMessage = `Nivel de armario al ${totalPercent}% · Sigue descubriendo nuevas tendencias`;
+    statusMessage = `Nivel de estilo al ${totalPercent}% · Caza nuevas tendencias`;
   }
 
   // If 100% complete and user doesn't want to expand, keep it subtle
@@ -101,7 +101,7 @@ export default function ProfileProgressBar() {
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold uppercase tracking-wider text-[var(--brand-pink)]">
-                  Nivel de armario
+                  Nivel de estilo
                 </span>
                 <span className="text-xs font-semibold text-[var(--foreground)] tabular-nums">
                   {totalPercent}%
@@ -117,7 +117,7 @@ export default function ProfileProgressBar() {
             <button
               onClick={() => openTour()}
               className="text-xs text-[var(--foreground-tertiary)] hover:text-[var(--brand-pink)] p-1.5 rounded-lg hover:bg-[var(--background-secondary)] transition-colors"
-              title="Abrir tour de inicio"
+              title="Abrir ruta de estilo"
             >
               <HelpCircle className="w-4 h-4" />
             </button>
