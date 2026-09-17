@@ -1320,6 +1320,13 @@ En cada conversación, el backend alimenta a CloSy con:
   - Detección exhaustiva de Kloe en almacenamiento local, base de datos y memoria.
   - Mensajes de estado dinámicos que reflejan el hito real pendiente y eliminación estricta de cualquier etiqueta "IA" de acuerdo a las normas de diseño del proyecto.
 
+### 105. Selector Obligatorio de Cuentas en Google OAuth (`prompt: 'select_account'`) y Configuración de Nombre de Aplicación (Septiembre 2026)
+- **Selector de Cuenta Google Obligatorio (`app/(public)/auth/page.tsx` & `lib/hooks/useAuth.ts`)**:
+  - Se configuró `queryParams: { prompt: 'select_account', access_type: 'offline' }` en `supabase.auth.signInWithOAuth({ provider: 'google', ... })`.
+  - Al cerrar sesión e iniciar de nuevo con Google, Google muestra siempre la pantalla de selección de cuenta (*Account Chooser*) en lugar de iniciar automáticamente con la sesión anterior, permitiendo cambiar de cuenta con total comodidad.
+- **Identidad de Marca en la Pantalla de Consentimiento de Google**:
+  - El nombre mostrado en la ventana de autorización de Google depende de la *Pantalla de consentimiento de OAuth* en **Google Cloud Console** (cambiar "App Name" por **Klozet** o **Klozet - Wardrobe AI**) y del nombre del proyecto en **Supabase Dashboard** (*Project Settings > General > Project Name*).
+
 
 
 
