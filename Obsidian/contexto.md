@@ -1427,9 +1427,21 @@ En cada conversación, el backend alimenta a CloSy con:
   - **Keyframe 0 (Hero con Logo de Fondo)**: Logotipo grande de Klozet (`/landing/klozet-nombre-grande.png`) integrado en el fondo con opacidad sutil, titular impactante (*"Ama tu armario. Vístete mejor con lo que ya tienes"*), botón de llamada a la acción y prendas recortadas flotantes alrededor (`animate-float`).
   - **Keyframe 1 (Digitalización)**: Tarjetas flotantes inclinadas estilo editorial (Star Jeans, Sudadera Scuffers, Zapatilla Golden Goose Glitter recortada).
   - **Keyframe 2 (Lienzo Creativo)**: Showcase interactivo del moodboard con look activo.
-  - **Keyframe 3 (Inspiración y Outfits Reales)**: Cuadrícula con 4 modelos reales (chicos y chicas) y catálogo de calzado y prendas recortadas.
-  - **Keyframe 4 (Acceso Final y Enlaces Legales)**: Tarjeta de acceso directo y pie de página integrado con enlaces a Términos y Condiciones, Privacidad, Cookies y contacto.
-  - Puntos discretos de navegación en el lateral derecho para consultar progreso o saltar directamente entre fotogramas.
+### 118. Maximalismo Tipográfico Editorial, Storytelling Humano y Protagonismo de Kloe (Septiembre 2026)
+- **Maximalismo Tipográfico Monumental (`app/(public)/page.tsx`)**:
+  - Titulares gigantescos (`text-5xl sm:text-7xl md:text-8xl lg:text-[7.5rem] xl:text-[8.8rem] font-black tracking-tighter uppercase leading-[0.88]`) que actúan como columna vertebral visual y compositiva de la landing.
+  - Alto contraste entre fuentes sólidas y degradados dinámicos magenta/morado (`from-[var(--brand-pink)] via-pink-400 to-purple-500`).
+- **Eliminación Total de Clichés y Badges de IA**:
+  - Eliminados todos los textos superficiales ("DIGITALIZACIÓN", "LIENZO CREATIVO", "LOOK ACTIVO", "CHICOS & CHICAS", "Tu armario digital definitivo").
+  - Eliminado el prompt inferior flotante de *"Desliza"*.
+  - Eliminada la prenda con recorte imperfecto (`camisa-zara-cutout.png`), manteniendo prendas de corte nítido (Sudadera Scuffers, Star Jeans, Golden Goose, Onitsuka, Botas Cowboy, Studio Navy).
+- **Hilo Narrativo de Moda y Estilismo**:
+  - **Keyframe 0 (El Problema)**: *"ARMARIO LLENO. NADA QUE PONERTE."* - *"Todas las mañanas el mismo lío frente al espejo. Klozet organiza tu ropa y te dice exactamente qué ponerte."*
+  - **Keyframe 1 (Digitalización)**: *"TODA TU ROPA. EN UN TOQUE."* - *"Saca una foto y el fondo desaparece al instante. Tu ropa real ordenada y lista para combinar."*
+  - **Keyframe 2 (Hero Kloe)**: *"¿QUÉ ME PONGO? KLOE TE AYUDA."* - Gran icono oficial de Kloe con resplandor atmosférico, aura pulsante rosa/violeta y badge sutil: *"Look armado en 3 segundos"*.
+  - **Keyframe 3 (El Fit y la Semana)**: *"MONTA TU FIT. LISTO PARA HOY."* - Galería lookbook con 4 modelos reales y tira de prendas/calzado recortados.
+  - **Keyframe 4 (Acceso y Cierre)**: *"VÍSTETE MEJOR. DISFRUTA TU ROPA."* - Tarjeta de acceso directo y enlaces legales integrados.
+
 
 
 
