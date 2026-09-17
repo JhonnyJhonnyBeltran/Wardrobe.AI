@@ -60,20 +60,31 @@ export default function GuidedTourModal() {
     hideCelebration
   } = useTourStore();
 
-  // Auto-start tour if coming from onboarding with ?startTour=true or for first-time users
+  // Auto-start tour ONLY if coming from onboarding with ?startTour=true
   useEffect(() => {
-    if (searchParams.get('startTour') === 'true' && !isDismissed) {
-      openTour();
-    }
-  }, [searchParams, isDismissed, openTour]);
+    if (!user) return;
+    const isStartTourParam = searchParams.get('startTour') === 'true';
 
-  // Auto-detect completed real actions
+    if (isStartTourParam) {
+      openTour();
+      // Clean query parameter from URL so it doesn't re-trigger on refresh/navigation
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('startTour');
+        window.history.replaceState({}, '', url.pathname + (url.search ? url.search : ''));
+      } catch (e) {
+        console.warn('Could not clean startTour query param:', e);
+      }
+    }
+  }, [searchParams, user, openTour]);
+
+  // Auto-detect completed real actions (WITHOUT popping celebration toasts to unengaged/existing users)
   useEffect(() => {
     if (!user) return;
 
     // Check items count for upload_clothes (>= 2 items)
     if (items.length >= 2 && !completedSteps.includes('upload_clothes')) {
-      markStepComplete('upload_clothes', '¡Has subido tus primeras prendas al armario!');
+      markStepComplete('upload_clothes', '¡Has subido tus primeras prendas al armario!', false);
     }
   }, [items.length, user, completedSteps, markStepComplete]);
 
@@ -87,29 +98,33 @@ export default function GuidedTourModal() {
     }
   }, [showCelebration, hideCelebration]);
 
-  if (!isOpen) return null;
+  if (!isOpen && !showCelebration) return null;
 
   const currentStep = TOUR_STEPS[currentStepIndex];
-  const StepIcon = STEP_ICONS[currentStep.id] || Sparkles;
-  const isCurrentCompleted = completedSteps.includes(currentStep.id);
+  const StepIcon = currentStep ? (STEP_ICONS[currentStep.id] || Sparkles) : Sparkles;
+  const isCurrentCompleted = currentStep ? completedSteps.includes(currentStep.id) : false;
   const progressPercent = Math.round(((completedSteps.length) / TOUR_STEPS.length) * 100);
 
   const handleAction = () => {
+    if (!currentStep) return;
     closeTour();
     router.push(currentStep.actionUrl);
   };
 
   return (
-    <AnimatePresence>
-      <div className="fixed inset-0 z-[6500] flex items-center justify-center p-4 sm:p-6">
-        {/* Backdrop */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="absolute inset-0 bg-black/60 backdrop-blur-md"
-          onClick={closeTour}
-        />
+    <>
+      {/* Tour Modal */}
+      <AnimatePresence>
+        {isOpen && currentStep && (
+          <div className="fixed inset-0 z-[6500] flex items-center justify-center p-4 sm:p-6">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-black/60 backdrop-blur-md"
+              onClick={closeTour}
+            />
 
         {/* Modal Container */}
         <motion.div
@@ -302,7 +317,9 @@ export default function GuidedTourModal() {
             </button>
           </div>
         </motion.div>
-      </div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Duolingo Style Success Toast / Micro-Celebration */}
       <AnimatePresence>
@@ -330,6 +347,6 @@ export default function GuidedTourModal() {
           </motion.div>
         )}
       </AnimatePresence>
-    </AnimatePresence>
+    </>
   );
 }

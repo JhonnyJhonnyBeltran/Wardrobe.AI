@@ -1280,6 +1280,16 @@ En cada conversación, el backend alimenta a CloSy con:
 - **Cuadrícula y Contadores en Resultados**:
   - Cabecera informativa con el total de publicaciones encontradas para la búsqueda actual (`N publicaciones encontradas`) y cuadrícula responsiva sin cortes.
 
+### 102. Blindaje del Tour Guiado y Celebraciones para Usuarios Ya Registrados (`store/tourStore.ts`, `GuidedTourModal.tsx`) (Septiembre 2026)
+- **Bloqueo de Auto-Inicio en Cuentas Existentes**:
+  - El estado inicial de `tourStore` (`klozet_guided_tour_state_v2`) establece `isDismissed = true` y `hasStartedTour = false` por defecto.
+  - El tour interactivo y sus modales **sólo se activan si la URL contiene explícitamente `?startTour=true`** (proveniente exclusivamente del registro inicial) o si el usuario pulsa deliberadamente el botón de ayuda del tour en su perfil (`openTour()`).
+- **Supresión de Toasts de Celebración en Background**:
+  - La sincronización en segundo plano de prendas (`items.length >= 2`) actualiza el estado de completitud silenciosamente (`shouldCelebrate = false`) sin disparar el banner de celebración flotante a usuarios existentes que simplemente estén navegando o cargando su armario.
+- **Limpieza Automática de Parámetro URL**:
+  - Al procesar `?startTour=true` en un nuevo registro, el parámetro se elimina de inmediato del historial del navegador (`history.replaceState`) para que recargas o navegaciones posteriores no vuelvan a disparar el tour.
+
+
 
 
 

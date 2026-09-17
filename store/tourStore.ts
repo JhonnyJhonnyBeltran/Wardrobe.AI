@@ -86,6 +86,7 @@ export const TOUR_STEPS: TourStep[] = [
 
 interface TourState {
   isOpen: boolean;
+  hasStartedTour: boolean;
   currentStepIndex: number;
   completedSteps: TourStepId[];
   isDismissed: boolean;
@@ -100,20 +101,21 @@ interface TourState {
   nextStep: () => void;
   prevStep: () => void;
   goToStep: (index: number) => void;
-  markStepComplete: (stepId: TourStepId, customMessage?: string) => void;
+  markStepComplete: (stepId: TourStepId, customMessage?: string, shouldCelebrate?: boolean) => void;
   resetTour: () => void;
   hideCelebration: () => void;
 }
 
-const STORAGE_KEY = 'klozet_guided_tour_state_v1';
+const STORAGE_KEY = 'klozet_guided_tour_state_v2';
 
 const getInitialState = () => {
   if (typeof window === 'undefined') {
     return {
       isOpen: false,
+      hasStartedTour: false,
       currentStepIndex: 0,
       completedSteps: [] as TourStepId[],
-      isDismissed: false
+      isDismissed: true
     };
   }
 
@@ -123,9 +125,10 @@ const getInitialState = () => {
       const parsed = JSON.parse(raw);
       return {
         isOpen: Boolean(parsed.isOpen),
+        hasStartedTour: Boolean(parsed.hasStartedTour),
         currentStepIndex: typeof parsed.currentStepIndex === 'number' ? parsed.currentStepIndex : 0,
         completedSteps: Array.isArray(parsed.completedSteps) ? parsed.completedSteps : [],
-        isDismissed: Boolean(parsed.isDismissed)
+        isDismissed: typeof parsed.isDismissed === 'boolean' ? parsed.isDismissed : true
       };
     }
   } catch (e) {
@@ -134,13 +137,14 @@ const getInitialState = () => {
 
   return {
     isOpen: false,
+    hasStartedTour: false,
     currentStepIndex: 0,
     completedSteps: [] as TourStepId[],
-    isDismissed: false
+    isDismissed: true
   };
 };
 
-const saveToStorage = (state: { isOpen: boolean; currentStepIndex: number; completedSteps: TourStepId[]; isDismissed: boolean }) => {
+const saveToStorage = (state: { isOpen: boolean; hasStartedTour: boolean; currentStepIndex: number; completedSteps: TourStepId[]; isDismissed: boolean }) => {
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -154,6 +158,7 @@ export const useTourStore = create<TourState>((set, get) => {
 
   return {
     isOpen: initial.isOpen,
+    hasStartedTour: initial.hasStartedTour,
     currentStepIndex: initial.currentStepIndex,
     completedSteps: initial.completedSteps,
     isDismissed: initial.isDismissed,
@@ -162,10 +167,11 @@ export const useTourStore = create<TourState>((set, get) => {
     celebrationMessage: 'Has completado una micro-acción de estilo.',
 
     openTour: () => {
-      set({ isOpen: true, isDismissed: false });
+      set({ isOpen: true, hasStartedTour: true, isDismissed: false });
       const current = get();
       saveToStorage({
         isOpen: true,
+        hasStartedTour: true,
         currentStepIndex: current.currentStepIndex,
         completedSteps: current.completedSteps,
         isDismissed: false
@@ -177,6 +183,7 @@ export const useTourStore = create<TourState>((set, get) => {
       const current = get();
       saveToStorage({
         isOpen: false,
+        hasStartedTour: current.hasStartedTour,
         currentStepIndex: current.currentStepIndex,
         completedSteps: current.completedSteps,
         isDismissed: current.isDismissed
@@ -184,10 +191,11 @@ export const useTourStore = create<TourState>((set, get) => {
     },
 
     dismissTour: () => {
-      set({ isOpen: false, isDismissed: true });
+      set({ isOpen: false, isDismissed: true, hasStartedTour: false, showCelebration: false });
       const current = get();
       saveToStorage({
         isOpen: false,
+        hasStartedTour: false,
         currentStepIndex: current.currentStepIndex,
         completedSteps: current.completedSteps,
         isDismissed: true
@@ -201,6 +209,7 @@ export const useTourStore = create<TourState>((set, get) => {
       const current = get();
       saveToStorage({
         isOpen: current.isOpen,
+        hasStartedTour: current.hasStartedTour,
         currentStepIndex: nextIdx,
         completedSteps: current.completedSteps,
         isDismissed: current.isDismissed
@@ -214,6 +223,7 @@ export const useTourStore = create<TourState>((set, get) => {
       const current = get();
       saveToStorage({
         isOpen: current.isOpen,
+        hasStartedTour: current.hasStartedTour,
         currentStepIndex: prevIdx,
         completedSteps: current.completedSteps,
         isDismissed: current.isDismissed
@@ -222,18 +232,19 @@ export const useTourStore = create<TourState>((set, get) => {
 
     goToStep: (index: number) => {
       const clamped = Math.max(0, Math.min(TOUR_STEPS.length - 1, index));
-      set({ currentStepIndex: clamped, isOpen: true });
+      set({ currentStepIndex: clamped, isOpen: true, hasStartedTour: true, isDismissed: false });
       const current = get();
       saveToStorage({
         isOpen: true,
+        hasStartedTour: true,
         currentStepIndex: clamped,
         completedSteps: current.completedSteps,
-        isDismissed: current.isDismissed
+        isDismissed: false
       });
     },
 
-    markStepComplete: (stepId: TourStepId, customMessage?: string) => {
-      const { completedSteps, currentStepIndex } = get();
+    markStepComplete: (stepId: TourStepId, customMessage?: string, shouldCelebrate: boolean = false) => {
+      const { completedSteps, hasStartedTour, isDismissed } = get();
       const alreadyDone = completedSteps.includes(stepId);
       const nextCompleted = alreadyDone ? completedSteps : [...completedSteps, stepId];
       
@@ -243,16 +254,18 @@ export const useTourStore = create<TourState>((set, get) => {
         ? 'Ya has completado esta acción con éxito.' 
         : '¡Genial! Tu armario y perfil han ganado nivel.');
 
+      const canCelebrate = shouldCelebrate && hasStartedTour && !isDismissed;
+
       set({
         completedSteps: nextCompleted,
-        showCelebration: true,
-        celebrationTitle: title,
-        celebrationMessage: msg
+        showCelebration: canCelebrate,
+        ...(canCelebrate ? { celebrationTitle: title, celebrationMessage: msg } : {})
       });
 
       const current = get();
       saveToStorage({
         isOpen: current.isOpen,
+        hasStartedTour: current.hasStartedTour,
         currentStepIndex: current.currentStepIndex,
         completedSteps: nextCompleted,
         isDismissed: current.isDismissed
@@ -262,12 +275,14 @@ export const useTourStore = create<TourState>((set, get) => {
     resetTour: () => {
       set({
         isOpen: true,
+        hasStartedTour: true,
         currentStepIndex: 0,
         completedSteps: [],
         isDismissed: false
       });
       saveToStorage({
         isOpen: true,
+        hasStartedTour: true,
         currentStepIndex: 0,
         completedSteps: [],
         isDismissed: false
