@@ -85,6 +85,7 @@ export const TOUR_STEPS: TourStep[] = [
 ];
 
 interface TourState {
+  currentUserId: string | null;
   isOpen: boolean;
   hasStartedTour: boolean;
   currentStepIndex: number;
@@ -93,8 +94,11 @@ interface TourState {
   showCelebration: boolean;
   celebrationTitle: string;
   celebrationMessage: string;
+  celebrationNextUrl?: string;
 
   // Actions
+  initUserTour: (userId: string) => void;
+  startNewUserTour: (userId: string) => void;
   openTour: () => void;
   closeTour: () => void;
   dismissTour: () => void;
@@ -106,21 +110,23 @@ interface TourState {
   hideCelebration: () => void;
 }
 
-const STORAGE_KEY = 'klozet_guided_tour_state_v2';
+const getStorageKey = (userId?: string | null) => {
+  return userId ? `klozet_tour_user_${userId}` : 'klozet_tour_anon';
+};
 
-const getInitialState = () => {
-  if (typeof window === 'undefined') {
+const loadUserState = (userId: string | null) => {
+  if (typeof window === 'undefined' || !userId) {
     return {
       isOpen: false,
       hasStartedTour: false,
       currentStepIndex: 0,
       completedSteps: [] as TourStepId[],
-      isDismissed: true
+      isDismissed: false
     };
   }
 
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(getStorageKey(userId));
     if (raw) {
       const parsed = JSON.parse(raw);
       return {
@@ -128,7 +134,7 @@ const getInitialState = () => {
         hasStartedTour: Boolean(parsed.hasStartedTour),
         currentStepIndex: typeof parsed.currentStepIndex === 'number' ? parsed.currentStepIndex : 0,
         completedSteps: Array.isArray(parsed.completedSteps) ? parsed.completedSteps : [],
-        isDismissed: typeof parsed.isDismissed === 'boolean' ? parsed.isDismissed : true
+        isDismissed: typeof parsed.isDismissed === 'boolean' ? parsed.isDismissed : false
       };
     }
   } catch (e) {
@@ -140,165 +146,197 @@ const getInitialState = () => {
     hasStartedTour: false,
     currentStepIndex: 0,
     completedSteps: [] as TourStepId[],
-    isDismissed: true
+    isDismissed: false
   };
 };
 
-const saveToStorage = (state: { isOpen: boolean; hasStartedTour: boolean; currentStepIndex: number; completedSteps: TourStepId[]; isDismissed: boolean }) => {
-  if (typeof window === 'undefined') return;
+const persistUserState = (userId: string | null, state: { isOpen: boolean; hasStartedTour: boolean; currentStepIndex: number; completedSteps: TourStepId[]; isDismissed: boolean }) => {
+  if (typeof window === 'undefined' || !userId) return;
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    localStorage.setItem(getStorageKey(userId), JSON.stringify(state));
   } catch (e) {
     console.warn('Could not persist tour state:', e);
   }
 };
 
-export const useTourStore = create<TourState>((set, get) => {
-  const initial = getInitialState();
+export const useTourStore = create<TourState>((set, get) => ({
+  currentUserId: null,
+  isOpen: false,
+  hasStartedTour: false,
+  currentStepIndex: 0,
+  completedSteps: [],
+  isDismissed: false,
+  showCelebration: false,
+  celebrationTitle: '¡Bien hecho!',
+  celebrationMessage: 'Has completado una micro-acción de estilo.',
+  celebrationNextUrl: undefined,
 
-  return {
-    isOpen: initial.isOpen,
-    hasStartedTour: initial.hasStartedTour,
-    currentStepIndex: initial.currentStepIndex,
-    completedSteps: initial.completedSteps,
-    isDismissed: initial.isDismissed,
-    showCelebration: false,
-    celebrationTitle: '¡Bien hecho!',
-    celebrationMessage: 'Has completado una micro-acción de estilo.',
+  initUserTour: (userId: string) => {
+    if (!userId) return;
+    const { currentUserId } = get();
+    if (currentUserId === userId) return; // already initialized for this user
 
-    openTour: () => {
-      set({ isOpen: true, hasStartedTour: true, isDismissed: false });
-      const current = get();
-      saveToStorage({
-        isOpen: true,
-        hasStartedTour: true,
-        currentStepIndex: current.currentStepIndex,
-        completedSteps: current.completedSteps,
-        isDismissed: false
-      });
-    },
+    const userState = loadUserState(userId);
+    set({
+      currentUserId: userId,
+      isOpen: userState.isOpen,
+      hasStartedTour: userState.hasStartedTour,
+      currentStepIndex: userState.currentStepIndex,
+      completedSteps: userState.completedSteps,
+      isDismissed: userState.isDismissed
+    });
+  },
 
-    closeTour: () => {
-      set({ isOpen: false });
-      const current = get();
-      saveToStorage({
-        isOpen: false,
-        hasStartedTour: current.hasStartedTour,
-        currentStepIndex: current.currentStepIndex,
-        completedSteps: current.completedSteps,
-        isDismissed: current.isDismissed
-      });
-    },
+  startNewUserTour: (userId: string) => {
+    const newState = {
+      isOpen: true,
+      hasStartedTour: true,
+      currentStepIndex: 0,
+      completedSteps: [],
+      isDismissed: false
+    };
+    set({
+      currentUserId: userId,
+      ...newState
+    });
+    persistUserState(userId, newState);
+  },
 
-    dismissTour: () => {
-      set({ isOpen: false, isDismissed: true, hasStartedTour: false, showCelebration: false });
-      const current = get();
-      saveToStorage({
-        isOpen: false,
-        hasStartedTour: false,
-        currentStepIndex: current.currentStepIndex,
-        completedSteps: current.completedSteps,
-        isDismissed: true
-      });
-    },
+  openTour: () => {
+    set({ isOpen: true, hasStartedTour: true, isDismissed: false });
+    const current = get();
+    persistUserState(current.currentUserId, {
+      isOpen: true,
+      hasStartedTour: true,
+      currentStepIndex: current.currentStepIndex,
+      completedSteps: current.completedSteps,
+      isDismissed: false
+    });
+  },
 
-    nextStep: () => {
-      const { currentStepIndex } = get();
-      const nextIdx = Math.min(TOUR_STEPS.length - 1, currentStepIndex + 1);
-      set({ currentStepIndex: nextIdx });
-      const current = get();
-      saveToStorage({
-        isOpen: current.isOpen,
-        hasStartedTour: current.hasStartedTour,
-        currentStepIndex: nextIdx,
-        completedSteps: current.completedSteps,
-        isDismissed: current.isDismissed
-      });
-    },
+  closeTour: () => {
+    set({ isOpen: false });
+    const current = get();
+    persistUserState(current.currentUserId, {
+      isOpen: false,
+      hasStartedTour: current.hasStartedTour,
+      currentStepIndex: current.currentStepIndex,
+      completedSteps: current.completedSteps,
+      isDismissed: current.isDismissed
+    });
+  },
 
-    prevStep: () => {
-      const { currentStepIndex } = get();
-      const prevIdx = Math.max(0, currentStepIndex - 1);
-      set({ currentStepIndex: prevIdx });
-      const current = get();
-      saveToStorage({
-        isOpen: current.isOpen,
-        hasStartedTour: current.hasStartedTour,
-        currentStepIndex: prevIdx,
-        completedSteps: current.completedSteps,
-        isDismissed: current.isDismissed
-      });
-    },
+  dismissTour: () => {
+    set({ isOpen: false, isDismissed: true, hasStartedTour: false, showCelebration: false });
+    const current = get();
+    persistUserState(current.currentUserId, {
+      isOpen: false,
+      hasStartedTour: false,
+      currentStepIndex: current.currentStepIndex,
+      completedSteps: current.completedSteps,
+      isDismissed: true
+    });
+  },
 
-    goToStep: (index: number) => {
-      const clamped = Math.max(0, Math.min(TOUR_STEPS.length - 1, index));
-      set({ currentStepIndex: clamped, isOpen: true, hasStartedTour: true, isDismissed: false });
-      const current = get();
-      saveToStorage({
-        isOpen: true,
-        hasStartedTour: true,
-        currentStepIndex: clamped,
-        completedSteps: current.completedSteps,
-        isDismissed: false
-      });
-    },
+  nextStep: () => {
+    const { currentStepIndex, currentUserId } = get();
+    const nextIdx = Math.min(TOUR_STEPS.length - 1, currentStepIndex + 1);
+    set({ currentStepIndex: nextIdx });
+    const current = get();
+    persistUserState(currentUserId, {
+      isOpen: current.isOpen,
+      hasStartedTour: current.hasStartedTour,
+      currentStepIndex: nextIdx,
+      completedSteps: current.completedSteps,
+      isDismissed: current.isDismissed
+    });
+  },
 
-    markStepComplete: (stepId: TourStepId, customMessage?: string, shouldCelebrate: boolean = true) => {
-      const { completedSteps, hasStartedTour, isDismissed, currentStepIndex } = get();
-      const alreadyDone = completedSteps.includes(stepId);
-      const nextCompleted = alreadyDone ? completedSteps : [...completedSteps, stepId];
-      
-      const stepIdx = TOUR_STEPS.findIndex(s => s.id === stepId);
-      const stepObj = TOUR_STEPS[stepIdx];
-      const title = alreadyDone ? '¡Completado!' : `¡${stepObj?.shortTitle || 'Hito'} conseguido!`;
-      const msg = customMessage || (alreadyDone 
-        ? 'Ya has completado esta acción con éxito.' 
-        : '¡Genial! Tu armario y perfil han ganado nivel.');
+  prevStep: () => {
+    const { currentStepIndex, currentUserId } = get();
+    const prevIdx = Math.max(0, currentStepIndex - 1);
+    set({ currentStepIndex: prevIdx });
+    const current = get();
+    persistUserState(currentUserId, {
+      isOpen: current.isOpen,
+      hasStartedTour: current.hasStartedTour,
+      currentStepIndex: prevIdx,
+      completedSteps: current.completedSteps,
+      isDismissed: current.isDismissed
+    });
+  },
 
-      const canCelebrate = shouldCelebrate && hasStartedTour && !isDismissed;
+  goToStep: (index: number) => {
+    const clamped = Math.max(0, Math.min(TOUR_STEPS.length - 1, index));
+    set({ currentStepIndex: clamped, isOpen: true, hasStartedTour: true, isDismissed: false });
+    const current = get();
+    persistUserState(current.currentUserId, {
+      isOpen: true,
+      hasStartedTour: true,
+      currentStepIndex: clamped,
+      completedSteps: current.completedSteps,
+      isDismissed: false
+    });
+  },
 
-      // If completing current step, advance index to next step
-      let nextStepIdx = currentStepIndex;
-      if (stepIdx === currentStepIndex && stepIdx < TOUR_STEPS.length - 1) {
-        nextStepIdx = stepIdx + 1;
-      }
+  markStepComplete: (stepId: TourStepId, customMessage?: string, shouldCelebrate: boolean = true) => {
+    const { completedSteps, hasStartedTour, isDismissed, currentStepIndex, currentUserId } = get();
+    const alreadyDone = completedSteps.includes(stepId);
+    const nextCompleted = alreadyDone ? completedSteps : [...completedSteps, stepId];
+    
+    const stepIdx = TOUR_STEPS.findIndex(s => s.id === stepId);
+    const stepObj = TOUR_STEPS[stepIdx];
+    const title = alreadyDone ? '¡Completado!' : `¡${stepObj?.shortTitle || 'Hito'} conseguido!`;
+    const msg = customMessage || (alreadyDone 
+      ? 'Ya has completado esta acción con éxito.' 
+      : '¡Genial! Tu armario y perfil han ganado nivel.');
 
-      set({
-        completedSteps: nextCompleted,
-        currentStepIndex: nextStepIdx,
-        showCelebration: canCelebrate,
-        ...(canCelebrate ? { celebrationTitle: title, celebrationMessage: msg } : {})
-      });
+    const canCelebrate = shouldCelebrate && hasStartedTour && !isDismissed;
 
-      const current = get();
-      saveToStorage({
-        isOpen: current.isOpen,
-        hasStartedTour: current.hasStartedTour,
-        currentStepIndex: nextStepIdx,
-        completedSteps: nextCompleted,
-        isDismissed: current.isDismissed
-      });
-    },
-
-    resetTour: () => {
-      set({
-        isOpen: true,
-        hasStartedTour: true,
-        currentStepIndex: 0,
-        completedSteps: [],
-        isDismissed: false
-      });
-      saveToStorage({
-        isOpen: true,
-        hasStartedTour: true,
-        currentStepIndex: 0,
-        completedSteps: [],
-        isDismissed: false
-      });
-    },
-
-    hideCelebration: () => {
-      set({ showCelebration: false });
+    // Determine next step index (find first uncompleted step)
+    let nextStepIdx = currentStepIndex;
+    const firstPendingIdx = TOUR_STEPS.findIndex(s => !nextCompleted.includes(s.id));
+    if (firstPendingIdx !== -1) {
+      nextStepIdx = firstPendingIdx;
     }
-  };
-});
+
+    const nextStepObj = TOUR_STEPS[nextStepIdx];
+
+    set({
+      completedSteps: nextCompleted,
+      currentStepIndex: nextStepIdx,
+      showCelebration: canCelebrate,
+      ...(canCelebrate ? { 
+        celebrationTitle: title, 
+        celebrationMessage: msg,
+        celebrationNextUrl: nextStepObj?.actionUrl
+      } : {})
+    });
+
+    persistUserState(currentUserId, {
+      isOpen: get().isOpen,
+      hasStartedTour: hasStartedTour,
+      currentStepIndex: nextStepIdx,
+      completedSteps: nextCompleted,
+      isDismissed: isDismissed
+    });
+  },
+
+  resetTour: () => {
+    const { currentUserId } = get();
+    const newState = {
+      isOpen: true,
+      hasStartedTour: true,
+      currentStepIndex: 0,
+      completedSteps: [],
+      isDismissed: false
+    };
+    set(newState);
+    persistUserState(currentUserId, newState);
+  },
+
+  hideCelebration: () => {
+    set({ showCelebration: false });
+  }
+}));
+

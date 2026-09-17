@@ -1359,11 +1359,20 @@ En cada conversación, el backend alimenta a CloSy con:
   - Indexadas las rutas directas de acceso `/auth` y `/login` con prioridad `0.9` en el Sitemap y habilitadas explícitamente en `robots.txt`.
   - Pie de página Apple-style con enlaces organizados a Privacidad, Términos, Cookies y soporte oficial.
 
-### 108. Resiliencia y Fallback Automático en Guardado de Preferencias de Onboarding (`app/(public)/onboarding/preferences/page.tsx`, `00_schema_unified.sql`) (Septiembre 2026)
-- **Corrección de Error PGRST204 en Supabase**:
-  - El guardado de preferencias en onboarding fallaba con `400 Bad Request (PGRST204: Could not find the 'accessories_style' column of 'profiles' in the schema cache)` debido a que la columna `accessories_style` no estaba creada en la base de datos remota.
-  - Implementado mecanismo de reintento automático y resiliente: si Supabase devuelve error de esquema (`PGRST204`), la aplicación elimina automáticamente los campos no reconocidos (`accessories_style`, `uses_accessories`) y vuelve a guardar de inmediato sin interrumpir el onboarding ni mostrar errores al usuario.
-  - Actualizado el esquema de referencia `00_schema_unified.sql` con `accessories_style TEXT DEFAULT 'ninguno'`.
+### 109. Aislamiento por Usuario del Tour de Inicio Rápido, Widget Flotante Continuo y Sincronización SQL de Profiles (Septiembre 2026)
+- **Aislamiento Estricto por Usuario en el Tour (`store/tourStore.ts`)**:
+  - Se erradicó la clave global compartida en `localStorage` (`klozet_guided_tour_state_v2`), migrando a claves dinámicas aisladas por identificador de usuario: `klozet_tour_user_${userId}`.
+  - Al iniciar sesión con una cuenta nueva, `initUserTour(userId)` y `startNewUserTour(userId)` garantizan que la cuenta empiece siempre limpia con `0` pasos completados (`completedSteps: []`), eliminando por completo falsos positivos cruzados de cuentas previas.
+- **Widget Flotante de Acompañamiento Continuo (*Floating Tour Pill*) (`components/GuidedTour/GuidedTourModal.tsx`)**:
+  - El tour ya no desaparece tras la primera acción ni se pierde entre pantallas:
+  - Mientras el tour esté activo (`hasStartedTour && !isDismissed && completedSteps.length < 6`), si el usuario minimiza el modal o navega para realizar una micro-acción, un widget sutil en forma de píldora flotante (*"Guía Activa: Paso X de 6"*) permanece visible en la esquina inferior.
+  - Al pulsar el widget, el modal del tour se reabre instantáneamente en el paso en curso con todos sus consejos fotográficos y botones directos.
+  - Las celebraciones de hito estilo Duolingo ofrecen un botón *"Continuar"* que redirige automáticamente al siguiente objetivo pendiente.
+- **Erradicación de Falsos Positivos en la Barra de Progreso del Perfil (`components/Profile/ProfileProgressBar.tsx`)**:
+  - Se eliminó la lectura indiscriminada de conversaciones globales en `localStorage`, evaluando `hasKloe` únicamente sobre las conversaciones pertenecientes al `user.id` activo o registradas en `profiles.notification_preferences`.
+- **Script SQL Definitivo e Idempotente (`sql/sync_all_profile_columns.sql`)**:
+  - Creado script SQL unificado que añade de forma segura mediante `ADD COLUMN IF NOT EXISTS` todas las columnas de la tabla `profiles` (`accessories_style`, `uses_accessories`, `preferred_styles`, `face_photos`, `body_photos`, `kloe_trial_messages_used`, etc.), configura políticas de RLS e invoca `NOTIFY pgrst, 'reload schema';` para eliminar cualquier error `400 Bad Request / PGRST204` en Supabase.
+
 
 
 

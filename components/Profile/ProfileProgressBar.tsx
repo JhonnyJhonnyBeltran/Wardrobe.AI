@@ -16,36 +16,37 @@ export default function ProfileProgressBar() {
   const { openTour, completedSteps } = useTourStore();
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // Check if Kloe has been used from all client & server sources
+  // Check if Kloe has been used from user-scoped client & server sources
   const hasKloeFromStorage = React.useMemo(() => {
-    if (typeof window === 'undefined') return false;
+    if (typeof window === 'undefined' || !user?.id) return false;
     try {
-      const raw = localStorage.getItem('kloe_conversations_v1');
+      const raw = localStorage.getItem(`kloe_conversations_${user.id}`);
       if (raw) {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed) && parsed.some((c: any) => c.messages && c.messages.length > 0)) {
           return true;
         }
       }
-      const trialRaw = localStorage.getItem('kloe_trial_used_v1');
+      const trialRaw = localStorage.getItem(`kloe_trial_used_${user.id}`);
       if (trialRaw && parseInt(trialRaw, 10) > 0) return true;
     } catch {}
     return false;
-  }, []);
+  }, [user?.id]);
 
   const hasKloeFromProfile = Boolean(
     (user as any)?.notification_preferences?.kloe_conversations?.length > 0 ||
+    ((user as any)?.kloe_trial_messages_used && (user as any).kloe_trial_messages_used > 0) ||
     ((user as any)?.trial_messages_used && (user as any).trial_messages_used > 0)
   );
 
   const hasKloe = completedSteps.includes('talk_to_kloe') || hasKloeFromStorage || hasKloeFromProfile;
 
-  // Auto-sync Kloe step if detected
+  // Auto-sync Kloe step if detected for this user
   React.useEffect(() => {
-    if (hasKloe && !completedSteps.includes('talk_to_kloe')) {
+    if (user?.id && hasKloe && !completedSteps.includes('talk_to_kloe')) {
       useTourStore.getState().markStepComplete('talk_to_kloe', undefined, false);
     }
-  }, [hasKloe, completedSteps]);
+  }, [user?.id, hasKloe, completedSteps]);
 
   if (!user) return null;
 
