@@ -473,14 +473,14 @@ export default function LandingPage() {
                     </span>
                   </div>
 
-                  {/* 4 Items Grid in Preview */}
-                  <div className="grid grid-cols-2 gap-2.5 w-full">
+                  {/* Showcase Items Grid in Preview */}
+                  <div className="grid grid-cols-3 gap-2 w-full">
                     <div className="aspect-square relative rounded-2xl bg-[var(--background-secondary)]/50 p-2 flex items-center justify-center border border-[var(--border-color)]/50">
                       <Image 
                         src="/landing/studio-longsleeve.png" 
                         alt="Studio Longsleeve" 
-                        width={180} 
-                        height={180} 
+                        width={140} 
+                        height={140} 
                         className="object-contain w-full h-full"
                       />
                     </div>
@@ -488,8 +488,17 @@ export default function LandingPage() {
                       <Image 
                         src="/landing/jeans-stars.png" 
                         alt="Jeans Stars One Dilemma" 
-                        width={180} 
-                        height={180} 
+                        width={140} 
+                        height={140} 
+                        className="object-contain w-full h-full"
+                      />
+                    </div>
+                    <div className="aspect-square relative rounded-2xl bg-[var(--background-secondary)]/50 p-2 flex items-center justify-center border border-[var(--border-color)]/50">
+                      <Image 
+                        src="/landing/onitsuka-tiger.png" 
+                        alt="Onitsuka Tiger Yellow" 
+                        width={140} 
+                        height={140} 
                         className="object-contain w-full h-full"
                       />
                     </div>
@@ -497,8 +506,8 @@ export default function LandingPage() {
                       <Image 
                         src="/landing/pantalon-blanco.png" 
                         alt="Pantalón Blanco" 
-                        width={180} 
-                        height={180} 
+                        width={140} 
+                        height={140} 
                         className="object-contain w-full h-full"
                       />
                     </div>
@@ -506,15 +515,24 @@ export default function LandingPage() {
                       <Image 
                         src="/landing/botas-cowboy.png" 
                         alt="Botas Cowboy" 
-                        width={180} 
-                        height={180} 
+                        width={140} 
+                        height={140} 
                         className="object-contain w-full h-full"
+                      />
+                    </div>
+                    <div className="aspect-square relative rounded-2xl bg-[var(--background-secondary)]/50 p-2 flex items-center justify-center border border-[var(--border-color)]/50">
+                      <Image 
+                        src="/landing/sudadera-scuffers.png" 
+                        alt="Sudadera Scuffers" 
+                        width={140} 
+                        height={140} 
+                        className="object-contain w-full h-full rounded-xl"
                       />
                     </div>
                   </div>
 
                   <p className="text-[11px] text-center text-[var(--foreground-secondary)] font-medium">
-                    Streetwear & Western Chic • Combinaciones listas para la semana
+                    Streetwear & Western Chic • Combinaciones listas para toda tu semana
                   </p>
                 </div>
               </div>

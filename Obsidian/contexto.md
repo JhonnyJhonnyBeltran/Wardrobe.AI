@@ -1375,15 +1375,16 @@ En cada conversación, el backend alimenta a CloSy con:
 - **Experiencia Sticky Scroll-Driven Cinematográfica (`app/(public)/page.tsx`)**:
   - Toda la página está estructurada en una experiencia de pantalla fija (`sticky top-0 h-screen`) sobre un contenedor de scroll ralentizado (`420vh`) gobernado por `useScroll` y `useTransform` de Framer Motion.
   - Al deslizar la rueda o trackpad, los elementos transicionan fluidamente entre 5 keyframes:
-    1. **Frame 0 (Hero):** Titular minimalista (*"Vístete mejor con lo que ya tienes"*), logo oficial y 4 prendas flotando con parallax (`sudadera-scuffers.png`, `camisa-zara.png`, `pantalon-blanco.png`, `botas-cowboy.png`).
+    1. **Frame 0 (Hero):** Titular minimalista (*"Vístete mejor con lo que ya tienes"*), logo oficial y prendas flotando con parallax (`sudadera-scuffers.png`, `camisa-zara.png`, `pantalon-blanco.png`, `botas-cowboy.png`).
     2. **Frame 1 (Digitalización Instantánea):** Animación de recorte sin fondo con la ficha modal oficial de la Sudadera Scuffers (`sudadera-scuffers.png`).
     3. **Frame 2 (Lienzo Libre de Creación):** Montaje interactivo de outfit completo en lienzo con prendas combinadas (`outfit-canvas.png`).
-    4. **Frame 3 (Planificación & Estilismo):** Showcase de look agendado para la semana con Studio Longsleeve (`studio-longsleeve.png`), Jeans Star Denim (`jeans-stars.png`), Pantalón Blanco (`pantalon-blanco.png`) y Botas Cowboy (`botas-cowboy.png`).
+    4. **Frame 3 (Planificación & Estilismo):** Showcase de look agendado para la semana con Studio Longsleeve (`studio-longsleeve.png`), Jeans Star Denim (`jeans-stars.png`), Zapatillas Onitsuka Tiger Amarillas (`onitsuka-tiger.png`), Pantalón Blanco (`pantalon-blanco.png`), Botas Cowboy (`botas-cowboy.png`) y Sudadera Scuffers.
     5. **Frame 4 (Llamada a la Acción):** CTA final minimalista para empezar gratis.
 - **Navegación Rápida por Pasos**:
   - Píldoras de salto manual en el Header (Inicio, Digitaliza, Lienzo, Planifica, Empieza) que calculan y desplazan suavemente el scroll a la altura exacta de cada fase.
 - **Minimalismo de Texto**:
   - Textos cortos, directos y de alto impacto visual, eliminando densidad excesiva de lectura.
+
 
 
 
