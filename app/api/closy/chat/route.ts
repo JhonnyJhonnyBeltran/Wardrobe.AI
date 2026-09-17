@@ -81,7 +81,10 @@ Respond ONLY with a JSON object:
     const timeout = setTimeout(() => controller.abort(), 6000);
     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'x-goog-api-key': apiKey
+      },
       signal: controller.signal,
       body: JSON.stringify({
         contents: [
@@ -796,12 +799,13 @@ PETICIÓN DEL USUARIO:
       }
     ];
 
-    // Cascade of active verified Gemini models (Prioritizing fast preview and lite)
+    // Cascade of active verified Gemini models
     const models = [
-      'gemini-3-flash-preview',
-      'gemini-3.5-flash-lite',
+      'gemini-3.6-flash',
+      'gemini-flash-latest',
       'gemini-3.5-flash',
-      'gemini-3.6-flash'
+      'gemini-3.5-flash-lite',
+      'gemini-3-flash-preview'
     ];
     
     // First attempt: with multimodal vision images
@@ -812,7 +816,10 @@ PETICIÓN DEL USUARIO:
         const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
         const res = await fetch(endpoint, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'x-goog-api-key': apiKey
+          },
           signal: controller.signal,
           body: JSON.stringify({
             system_instruction: { parts: [{ text: systemInstruction }] },
@@ -895,7 +902,10 @@ PETICIÓN DEL USUARIO:
         const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
         const res = await fetch(endpoint, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'x-goog-api-key': apiKey
+          },
           signal: controller.signal,
           body: JSON.stringify({
             system_instruction: { parts: [{ text: systemInstruction }] },

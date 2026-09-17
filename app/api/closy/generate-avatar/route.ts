@@ -229,7 +229,10 @@ Generate a single RAW 8k Hasselblad studio catalogue lookbook photographic promp
           try {
             const vRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiKey}`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: { 
+                'Content-Type': 'application/json',
+                'x-goog-api-key': geminiKey
+              },
               body: JSON.stringify(visionPayload)
             });
 
@@ -277,7 +280,10 @@ Generate a single RAW 8k Hasselblad studio catalogue lookbook photographic promp
           const timeout = setTimeout(() => controller.abort(), 12000);
           const gRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${imgModel}:generateContent?key=${geminiKey}`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+              'Content-Type': 'application/json',
+              'x-goog-api-key': geminiKey
+            },
             signal: controller.signal,
             body: JSON.stringify({
               contents: [

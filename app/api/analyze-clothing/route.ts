@@ -76,7 +76,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Models verified active with vision generateContent support
-    const models = ['gemini-3-flash-preview', 'gemini-3.5-flash-lite', 'gemini-3.5-flash', 'gemini-3.6-flash'];
+    const models = [
+      'gemini-3.6-flash',
+      'gemini-flash-latest',
+      'gemini-3.5-flash',
+      'gemini-3.5-flash-lite',
+      'gemini-3-flash-preview'
+    ];
 
     const prompt = `Eres un experto clasificador visual de moda y prendas de vestir para la app Klozet.
 Analiza detenidamente la fotografía real de la prenda u objeto subido por el usuario.
@@ -129,7 +135,10 @@ Devuelve ÚNICAMENTE un JSON válido sin texto extra:
         const response = await fetch(geminiUrl, {
           method: 'POST',
           signal: controller.signal,
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'x-goog-api-key': apiKey
+          },
           body: JSON.stringify({
             contents: [
               {
