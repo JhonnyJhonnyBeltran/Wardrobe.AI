@@ -1289,6 +1289,18 @@ En cada conversación, el backend alimenta a CloSy con:
 - **Limpieza Automática de Parámetro URL**:
   - Al procesar `?startTour=true` en un nuevo registro, el parámetro se elimina de inmediato del historial del navegador (`history.replaceState`) para que recargas o navegaciones posteriores no vuelvan a disparar el tour.
 
+### 103. Sincronización y Notificación en Tiempo Real de Micro-Acciones del Tour Guiado (`store/tourStore.ts`, `store/wardrobeStore.ts`, `app/(app)/closet/kloe/page.tsx`, `app/(app)/create/page.tsx`, `components/OutfitCalendar.tsx`, `app/(app)/create-post/page.tsx`, `lib/services/likeManager.ts`) (Septiembre 2026)
+- **Ejecución Reactiva en Tiempo Real (Real-Time Triggers)**:
+  - **Subida de Prendas (`upload_clothes`)**: Al añadir una prenda en `store/wardrobeStore.ts` (`addItem`), se detecta si el armario alcanza $\ge 2$ prendas y se marca el paso 1 como completado con micro-celebración instantánea.
+  - **Consulta a Kloe (`talk_to_kloe`)**: Al enviar un mensaje y recibir la respuesta de Kloe en `/closet/kloe`, se invoca de inmediato `markStepComplete('talk_to_kloe')`, celebrando la primera sesión de estilismo interactivo.
+  - **Creación de Look en Lienzo (`create_outfit`)**: Al guardar un look en `/create`, se registra y celebra instantáneamente el paso 2 (`markStepComplete('create_outfit')`).
+  - **Planificación en Calendario (`schedule_outfit`)**: Al asignar un look a cualquier fecha desde `OutfitCalendar.tsx` o al programar fecha en `/create`, se completa el paso 3 en tiempo real.
+  - **Publicación en Comunidad (`create_post`)**: Al publicar un post con outfit/foto en `/create-post`, se completa el paso 5.
+  - **Exploración y Likes (`explore_like`)**: Al dar like a cualquier look en la app vía `likeManager.ts`, se completa el paso 6.
+- **Avance Automático de Pasos y Respeto a Usuarios Existentes**:
+  - `markStepComplete` avanza dinámicamente `currentStepIndex` al siguiente paso no completado para que, al reabrir el tour o consultar el progreso, el usuario vea su siguiente objetivo.
+  - El banner flotante de éxito estilo Duolingo solo se muestra a usuarios que estén activamente en el tour (`hasStartedTour && !isDismissed && shouldCelebrate`), mientras que las cuentas existentes registran el progreso internamente sin interrupciones.
+
 
 
 

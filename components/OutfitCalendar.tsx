@@ -11,6 +11,7 @@ import OutfitCard from '@/components/OutfitCard';
 import type { Outfit } from '@/types/outfit';
 import { Button } from '@/components';
 import { useUiStore } from '@/store/uiStore';
+import { useTourStore } from '@/store/tourStore';
 
 // Helper to format date as YYYY-MM-DD local time
 const formatDateToSQL = (date: Date) => {
@@ -246,6 +247,13 @@ export default function OutfitCalendar() {
         }
       }
       
+      // Guided tour real-time trigger
+      try {
+        useTourStore.getState().markStepComplete('schedule_outfit', '¡Has planificado tu outfit en el calendario!', true);
+      } catch (tourErr) {
+        console.warn('[OutfitCalendar] Error updating tour step:', tourErr);
+      }
+
       // Refresh
       fetchCalendarData();
       setShowPicker(false);

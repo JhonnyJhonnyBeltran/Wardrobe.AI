@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { supabase } from '@/lib/supabase/client';
 import { ClothingItem, ClothingCategory, ClothingColor, Season } from '@/types/clothing';
+import { useTourStore } from './tourStore';
 import {
   uploadImage,
   deleteImage,
@@ -185,7 +186,18 @@ export const useWardrobeStore = create<WardrobeState>((set, get) => ({
         sourceUrl: dbItem.source_url || undefined,
       };
 
-      set(state => ({ items: [newItem, ...state.items] }));
+      const nextItems = [newItem, ...get().items];
+      set({ items: nextItems });
+
+      // Guided Tour Realtime Step Progression
+      try {
+        if (nextItems.length >= 2) {
+          useTourStore.getState().markStepComplete('upload_clothes', '¡Has subido tus 2 primeras prendas al armario!', true);
+        }
+      } catch (tourErr) {
+        console.warn('[WardrobeStore] Error updating tour step:', tourErr);
+      }
+
       return newItem;
     } catch (err) {
       console.error('Error adding item in store:', err);

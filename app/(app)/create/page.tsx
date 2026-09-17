@@ -49,6 +49,7 @@ import { uploadImage, BUCKETS } from '@/lib/supabase/storage';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useUiStore } from '@/store/uiStore';
+import { useTourStore } from '@/store/tourStore';
 
 const OUTFIT_OCCASIONS = [
     { id: 'everyday', label: 'Diario', icon: Sparkles },
@@ -667,9 +668,18 @@ export default function CreateOutfitPage() {
                         outfit_id: savedOutfitId,
                         date: scheduledDate
                     }, { onConflict: 'user_id,date,outfit_id' });
+
+                    useTourStore.getState().markStepComplete('schedule_outfit', '¡Has planificado tu outfit en el calendario!', true);
                 } catch (calErr) {
                     console.warn('Could not sync calendar_outfits:', calErr);
                 }
+            }
+
+            // Guided tour real-time trigger for outfit creation
+            try {
+                useTourStore.getState().markStepComplete('create_outfit', '¡Has creado tu primer look en el lienzo interactivo!', true);
+            } catch (tourErr) {
+                console.warn('[CreateOutfit] Error updating tour step:', tourErr);
             }
 
             setSuccessModalConfig({

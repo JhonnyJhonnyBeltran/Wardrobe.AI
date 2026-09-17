@@ -2,6 +2,7 @@
 
 import { useFeedStore } from '@/store/feedStore';
 import { useSearchStore } from '@/store/searchStore';
+import { useTourStore } from '@/store/tourStore';
 import { supabase } from '@/lib/supabase/client';
 
 class LikeManager {
@@ -32,6 +33,15 @@ class LikeManager {
       useSearchStore.getState().updatePostLike(postId, nextLiked, nextCount);
     } catch (e) {
       console.warn('[LikeManager] Error updating stores:', e);
+    }
+
+    // Guided tour real-time trigger when user gives a like
+    if (nextLiked) {
+      try {
+        useTourStore.getState().markStepComplete('explore_like', '¡Has entrenado tu algoritmo dando like a un look!', true);
+      } catch (tourErr) {
+        console.warn('[LikeManager] Error updating tour step:', tourErr);
+      }
     }
 
     // 2. Direct immediate execution with keepalive

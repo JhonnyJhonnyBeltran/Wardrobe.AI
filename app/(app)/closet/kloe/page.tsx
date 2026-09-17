@@ -25,6 +25,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/store/userStore';
+import { useTourStore } from '@/store/tourStore';
 import { supabase } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 import { haptics } from '@/lib/haptic';
@@ -819,6 +820,13 @@ export default function KloePage() {
       }
 
       persistConversations(currentConvs);
+
+      // Guided tour real-time trigger
+      try {
+        useTourStore.getState().markStepComplete('talk_to_kloe', '¡Has completado tu primera consulta de estilo con Kloe!', true);
+      } catch (tourErr) {
+        console.warn('[Kloe] Error updating tour step:', tourErr);
+      }
 
     } catch (err: any) {
       console.error('[Kloe] Chat error:', err);

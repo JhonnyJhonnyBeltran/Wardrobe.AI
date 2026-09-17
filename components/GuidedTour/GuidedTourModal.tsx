@@ -44,6 +44,7 @@ export default function GuidedTourModal() {
 
   const {
     isOpen,
+    hasStartedTour,
     currentStepIndex,
     completedSteps,
     isDismissed,
@@ -78,15 +79,16 @@ export default function GuidedTourModal() {
     }
   }, [searchParams, user, openTour]);
 
-  // Auto-detect completed real actions (WITHOUT popping celebration toasts to unengaged/existing users)
+  // Auto-detect completed real actions (Only pop celebration if actively on tour)
   useEffect(() => {
     if (!user) return;
 
     // Check items count for upload_clothes (>= 2 items)
     if (items.length >= 2 && !completedSteps.includes('upload_clothes')) {
-      markStepComplete('upload_clothes', '¡Has subido tus primeras prendas al armario!', false);
+      const isActivelyOnTour = hasStartedTour && !isDismissed;
+      markStepComplete('upload_clothes', '¡Has subido tus primeras prendas al armario!', isActivelyOnTour);
     }
-  }, [items.length, user, completedSteps, markStepComplete]);
+  }, [items.length, user, completedSteps, hasStartedTour, isDismissed, markStepComplete]);
 
   // Auto-hide celebration after 3 seconds
   useEffect(() => {

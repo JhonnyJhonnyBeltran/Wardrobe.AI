@@ -243,12 +243,13 @@ export const useTourStore = create<TourState>((set, get) => {
       });
     },
 
-    markStepComplete: (stepId: TourStepId, customMessage?: string, shouldCelebrate: boolean = false) => {
-      const { completedSteps, hasStartedTour, isDismissed } = get();
+    markStepComplete: (stepId: TourStepId, customMessage?: string, shouldCelebrate: boolean = true) => {
+      const { completedSteps, hasStartedTour, isDismissed, currentStepIndex } = get();
       const alreadyDone = completedSteps.includes(stepId);
       const nextCompleted = alreadyDone ? completedSteps : [...completedSteps, stepId];
       
-      const stepObj = TOUR_STEPS.find(s => s.id === stepId);
+      const stepIdx = TOUR_STEPS.findIndex(s => s.id === stepId);
+      const stepObj = TOUR_STEPS[stepIdx];
       const title = alreadyDone ? '¡Completado!' : `¡${stepObj?.shortTitle || 'Hito'} conseguido!`;
       const msg = customMessage || (alreadyDone 
         ? 'Ya has completado esta acción con éxito.' 
@@ -256,8 +257,15 @@ export const useTourStore = create<TourState>((set, get) => {
 
       const canCelebrate = shouldCelebrate && hasStartedTour && !isDismissed;
 
+      // If completing current step, advance index to next step
+      let nextStepIdx = currentStepIndex;
+      if (stepIdx === currentStepIndex && stepIdx < TOUR_STEPS.length - 1) {
+        nextStepIdx = stepIdx + 1;
+      }
+
       set({
         completedSteps: nextCompleted,
+        currentStepIndex: nextStepIdx,
         showCelebration: canCelebrate,
         ...(canCelebrate ? { celebrationTitle: title, celebrationMessage: msg } : {})
       });
@@ -266,7 +274,7 @@ export const useTourStore = create<TourState>((set, get) => {
       saveToStorage({
         isOpen: current.isOpen,
         hasStartedTour: current.hasStartedTour,
-        currentStepIndex: current.currentStepIndex,
+        currentStepIndex: nextStepIdx,
         completedSteps: nextCompleted,
         isDismissed: current.isDismissed
       });

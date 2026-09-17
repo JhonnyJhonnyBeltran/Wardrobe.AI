@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';
 import Image from 'next/image';
 import { useUser } from '@/store/userStore';
+import { useTourStore } from '@/store/tourStore';
 import { Button } from '@/components';
 import OutfitCard from '@/components/OutfitCard';
 import { haptics } from '@/lib/haptic';
@@ -305,6 +306,14 @@ export default function CreatePostPage() {
                     });
 
                 if (insertError) throw insertError;
+
+                // Guided tour real-time trigger
+                try {
+                    useTourStore.getState().markStepComplete('create_post', '¡Has compartido tu look con la comunidad!', true);
+                } catch (tourErr) {
+                    console.warn('[CreatePost] Error updating tour step:', tourErr);
+                }
+
                 router.push('/profile');
             }
 
