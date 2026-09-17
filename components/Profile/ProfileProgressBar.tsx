@@ -16,41 +16,75 @@ export default function ProfileProgressBar() {
   const { openTour, completedSteps } = useTourStore();
   const [isExpanded, setIsExpanded] = useState(false);
 
+  // Check if Kloe has been used from all client & server sources
+  const hasKloeFromStorage = React.useMemo(() => {
+    if (typeof window === 'undefined') return false;
+    try {
+      const raw = localStorage.getItem('kloe_conversations_v1');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.some((c: any) => c.messages && c.messages.length > 0)) {
+          return true;
+        }
+      }
+      const trialRaw = localStorage.getItem('kloe_trial_used_v1');
+      if (trialRaw && parseInt(trialRaw, 10) > 0) return true;
+    } catch {}
+    return false;
+  }, []);
+
+  const hasKloeFromProfile = Boolean(
+    (user as any)?.notification_preferences?.kloe_conversations?.length > 0 ||
+    ((user as any)?.trial_messages_used && (user as any).trial_messages_used > 0)
+  );
+
+  const hasKloe = completedSteps.includes('talk_to_kloe') || hasKloeFromStorage || hasKloeFromProfile;
+
+  // Auto-sync Kloe step if detected
+  React.useEffect(() => {
+    if (hasKloe && !completedSteps.includes('talk_to_kloe')) {
+      useTourStore.getState().markStepComplete('talk_to_kloe', undefined, false);
+    }
+  }, [hasKloe, completedSteps]);
+
   if (!user) return null;
 
-  // Calculate completeness breakdown
+  // Calculate completeness breakdown (100% clean sum)
   const hasStyle = Boolean(user.styleCompleted || (user.preferredStyles && user.preferredStyles.length > 0));
   const hasAvatar = Boolean(user.avatar && !user.avatar.includes('placeholder'));
   const has2Items = items.length >= 2;
-  const has5Items = items.length >= 5;
   const hasOutfit = completedSteps.includes('create_outfit') || (profileStats.posts > 0);
   const hasPost = (posts.length > 0) || (profileStats.posts > 0);
-  const hasKloe = completedSteps.includes('talk_to_kloe');
 
   let score = 0;
   if (hasStyle) score += 20;
   if (hasAvatar) score += 15;
-  if (has2Items) score += 20;
-  if (has5Items) score += 10;
+  if (has2Items) score += 25;
   if (hasOutfit) score += 15;
-  if (hasPost) score += 10;
   if (hasKloe) score += 10;
+  if (hasPost) score += 15;
 
   const totalPercent = Math.min(100, score);
 
-  // Dynamic status text
-  let statusMessage = 'Tu armario está al 20% · Añade 2 prendas más para combinar';
+  // Dynamic status text matching the exact missing milestone
+  let statusMessage = '';
   if (totalPercent >= 100) {
-    statusMessage = '¡Armario y perfil al 100%! Tu estilo está optimizado';
-  } else if (!has2Items) {
-    const needed = Math.max(1, 2 - items.length);
-    statusMessage = `Tu armario está al ${totalPercent}% · Añade ${needed} prenda${needed > 1 ? 's' : ''} más`;
-  } else if (!hasOutfit) {
-    statusMessage = `Tu armario está al ${totalPercent}% · Crea tu primer outfit en el lienzo`;
-  } else if (!hasPost) {
-    statusMessage = `Tu perfil está al ${totalPercent}% · Publica tu primer look en el feed`;
+    statusMessage = '¡Armario y perfil al 100%! Tu estilo está completamente optimizado';
+  } else if (!hasStyle) {
+    statusMessage = `Tu perfil está al ${totalPercent}% · Define tus preferencias de estilo`;
   } else if (!hasAvatar) {
     statusMessage = `Tu perfil está al ${totalPercent}% · Añade una foto de perfil`;
+  } else if (!has2Items) {
+    const needed = Math.max(1, 2 - items.length);
+    statusMessage = `Tu armario está al ${totalPercent}% · Añade ${needed} prenda${needed > 1 ? 's' : ''} más para combinar`;
+  } else if (!hasOutfit) {
+    statusMessage = `Tu armario está al ${totalPercent}% · Crea tu primer look en el lienzo`;
+  } else if (!hasKloe) {
+    statusMessage = `Tu perfil está al ${totalPercent}% · Pide tu primera recomendación a Kloe`;
+  } else if (!hasPost) {
+    statusMessage = `Tu perfil está al ${totalPercent}% · Publica tu primer look en el feed`;
+  } else {
+    statusMessage = `Nivel de armario al ${totalPercent}% · Sigue descubriendo nuevas tendencias`;
   }
 
   // If 100% complete and user doesn't want to expand, keep it subtle
@@ -202,7 +236,7 @@ export default function ProfileProgressBar() {
                     {hasKloe && <Check className="w-2.5 h-2.5" strokeWidth={3} />}
                   </div>
                   <span className={hasKloe ? 'text-[var(--foreground)] font-medium' : 'text-[var(--foreground-secondary)]'}>
-                    Consultar asesoría con Kloe IA
+                    Consultar asesoría y estilo con Kloe
                   </span>
                 </div>
                 {!hasKloe && (
