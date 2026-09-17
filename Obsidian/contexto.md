@@ -1359,6 +1359,13 @@ En cada conversación, el backend alimenta a CloSy con:
   - Indexadas las rutas directas de acceso `/auth` y `/login` con prioridad `0.9` en el Sitemap y habilitadas explícitamente en `robots.txt`.
   - Pie de página Apple-style con enlaces organizados a Privacidad, Términos, Cookies y soporte oficial.
 
+### 108. Resiliencia y Fallback Automático en Guardado de Preferencias de Onboarding (`app/(public)/onboarding/preferences/page.tsx`, `00_schema_unified.sql`) (Septiembre 2026)
+- **Corrección de Error PGRST204 en Supabase**:
+  - El guardado de preferencias en onboarding fallaba con `400 Bad Request (PGRST204: Could not find the 'accessories_style' column of 'profiles' in the schema cache)` debido a que la columna `accessories_style` no estaba creada en la base de datos remota.
+  - Implementado mecanismo de reintento automático y resiliente: si Supabase devuelve error de esquema (`PGRST204`), la aplicación elimina automáticamente los campos no reconocidos (`accessories_style`, `uses_accessories`) y vuelve a guardar de inmediato sin interrumpir el onboarding ni mostrar errores al usuario.
+  - Actualizado el esquema de referencia `00_schema_unified.sql` con `accessories_style TEXT DEFAULT 'ninguno'`.
+
+
 
 
 

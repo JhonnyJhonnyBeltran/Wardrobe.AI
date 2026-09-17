@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   height_range TEXT,
   preferred_styles TEXT[] DEFAULT '{}'::TEXT[],
   uses_accessories BOOLEAN DEFAULT false,
+  accessories_style TEXT DEFAULT 'ninguno',
   visual_style_preferences TEXT[] DEFAULT '{}'::TEXT[],
   style_completed BOOLEAN DEFAULT false,
   morphology TEXT,

@@ -548,20 +548,36 @@ function PreferencesContent() {
         const usesAccessoriesVal = selectedAccessory !== 'ninguno';
 
         try {
-            const { error } = await (supabase as any)
+            let payload: Record<string, any> = {
+                id: user.id,
+                age: age,
+                age_range: ageRangeComputed,
+                gender: gender,
+                preferred_styles: selectedStyles,
+                visual_style_preferences: selectedStyles,
+                uses_accessories: usesAccessoriesVal,
+                accessories_style: selectedAccessory,
+                style_completed: true,
+                updated_at: new Date().toISOString(),
+            };
+
+            let { error } = await (supabase as any)
                 .from('profiles')
-                .upsert({
-                    id: user.id,
-                    age: age,
-                    age_range: ageRangeComputed,
-                    gender: gender,
-                    preferred_styles: selectedStyles,
-                    visual_style_preferences: selectedStyles,
-                    uses_accessories: usesAccessoriesVal,
-                    accessories_style: selectedAccessory,
-                    style_completed: true,
-                    updated_at: new Date().toISOString(),
-                });
+                .upsert(payload);
+
+            // Fallback: If accessories_style column doesn't exist in remote Supabase DB yet
+            if (error && (error.code === 'PGRST204' || error.message?.includes('accessories_style') || error.message?.includes('uses_accessories'))) {
+                console.warn('Retrying profiles upsert without accessories columns:', error.message);
+                delete payload.accessories_style;
+                const retry1 = await (supabase as any).from('profiles').upsert(payload);
+                if (retry1.error && (retry1.error.code === 'PGRST204' || retry1.error.message?.includes('uses_accessories'))) {
+                    delete payload.uses_accessories;
+                    const retry2 = await (supabase as any).from('profiles').upsert(payload);
+                    error = retry2.error;
+                } else {
+                    error = retry1.error;
+                }
+            }
 
             if (error) throw error;
 
