@@ -134,16 +134,33 @@ export default function PrivacyPage() {
                         </section>
 
                         <section className="space-y-4">
-                            <h2 className="text-2xl font-bold text-[var(--foreground)] tracking-tight">6. Conservación de los Datos</h2>
+                            <h2 className="text-2xl font-bold text-[var(--foreground)] tracking-tight">6. Conservación y Eliminación de Datos</h2>
                             <p className="text-sm">
-                                Los datos se conservarán mientras mantengas activa tu cuenta en Klozet. En el momento en que solicites la eliminación de tu cuenta, todos los registros de tu perfil, fotos de prendas, outfits y conversaciones se eliminarán de forma inmediata y definitiva de nuestros servidores.
+                                Los datos se conservarán mientras mantengas activa tu cuenta en Klozet. En el momento en que solicites la eliminación de tu cuenta, todos los registros de tu perfil, fotos de prendas, outfits y conversaciones se eliminarán de forma inmediata y definitiva de nuestros servidores. Puedes solicitar la eliminación de tus datos en cualquier momento desde los Ajustes de Perfil de la aplicación o enviando un correo a <a href="mailto:soporte@klozet.es" className="text-[var(--brand-pink)] underline font-medium">soporte@klozet.es</a>.
                             </p>
+                        </section>
+
+                        <section className="space-y-4 border-t border-[var(--border-color)]/60 pt-6">
+                            <div className="flex items-center gap-2">
+                                <LockKeyhole className="w-5 h-5 text-[var(--brand-pink)]" />
+                                <h2 className="text-2xl font-bold text-[var(--foreground)] tracking-tight">7. Uso y Protección de Datos de Servicios de Google (Google API Services User Data Policy)</h2>
+                            </div>
+                            <p className="text-sm leading-relaxed">
+                                Cuando decides registrarte o iniciar sesión en Klozet utilizando tu cuenta de Google (Google Sign-In / OAuth 2.0), únicamente solicitamos acceso a tu información básica de perfil no sensible (dirección de correo electrónico, nombre completo e imagen de perfil).
+                            </p>
+                            <ul className="list-disc pl-6 space-y-2 marker:text-[var(--brand-pink)] text-sm">
+                                <li><strong>Propósito Exclusivo:</strong> La información obtenida de tu cuenta de Google se utiliza única y exclusivamente para verificar tu identidad, permitirte acceder de manera segura a tu armario virtual y crear tu ficha de usuario en Klozet.</li>
+                                <li><strong>No Cesión ni Venta de Datos:</strong> Klozet <strong>no vende, cede ni transfiere</strong> datos personales obtenidos a través de las APIs de Google a terceros, plataformas de intercambio de datos ni agencias de publicidad.</li>
+                                <li><strong>No Uso para Entrenamiento de Modelos de IA:</strong> Los datos de tu cuenta de Google nunca se utilizan para desarrollar, mejorar ni entrenar modelos generalizados de inteligencia artificial o aprendizaje automático.</li>
+                                <li><strong>Cumplimiento de Requisitos de Uso Limitado (Limited Use):</strong> El uso y la transferencia por parte de Klozet de cualquier información recibida a través de las APIs de Google a cualquier otra aplicación se adhiere estrictamente a la <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener noreferrer" className="text-[var(--brand-pink)] font-semibold underline">Política de Datos de Usuario de los Servicios de API de Google</a>, incluidos los requisitos de Uso Limitado.</li>
+                                <li><strong>Revocación de Permisos:</strong> Puedes revocar en cualquier momento el acceso concedido a Klozet desde la configuración de seguridad de tu cuenta de Google en <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener noreferrer" className="text-[var(--brand-pink)] underline font-semibold">myaccount.google.com/permissions</a>.</li>
+                            </ul>
                         </section>
 
                         <div className="pt-8 mt-8 border-t border-[var(--border-color)]/50 text-sm text-center">
                             <p>¿Quieres ejercer tus derechos de privacidad o tienes alguna consulta?</p>
-                            <a href="mailto:privacidad@klozet.app" className="text-[var(--brand-pink)] font-semibold hover:underline mt-1 inline-block">
-                                Contactar con privacidad@klozet.app
+                            <a href="mailto:soporte@klozet.es" className="text-[var(--brand-pink)] font-semibold hover:underline mt-1 inline-block">
+                                Contactar con soporte@klozet.es
                             </a>
                         </div>
                     </div>

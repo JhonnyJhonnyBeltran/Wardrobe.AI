@@ -1327,6 +1327,24 @@ En cada conversación, el backend alimenta a CloSy con:
 - **Identidad de Marca en la Pantalla de Consentimiento de Google**:
   - El nombre mostrado en la ventana de autorización de Google depende de la *Pantalla de consentimiento de OAuth* en **Google Cloud Console** (cambiar "App Name" por **Klozet** o **Klozet - Wardrobe AI**) y del nombre del proyecto en **Supabase Dashboard** (*Project Settings > General > Project Name*).
 
+### 106. Landing Page Pública Completa, Política de Datos de Google API y Verificación de Dominio (Septiembre 2026)
+- **Landing Page Pública Operativa (`app/(public)/page.tsx`)**:
+  - Eliminado el bloqueo y redirección obligatoria a la pantalla de login (`/auth`).
+  - Creada una página de inicio pública y completa con estética Apple / Glassmorphic:
+    - Barra de navegación con logo, enlaces a Funcionalidades, Cómo funciona, Privacidad, Términos y botón de acceso directo ("Entrar a Klozet" o "Ir a mi Armario" si ya hay sesión).
+    - Hero Section con propuesta de valor clara y explícita: *Armario virtual inteligente y red social de moda*.
+    - Rejilla de 6 funcionalidades principales con iconos y descripciones detalladas.
+    - Sección de 3 pasos ("¿Cómo funciona Klozet?": Sube tu ropa, Crea y Asesórate, Planifica y Comparte).
+    - Llamada a la acción (CTA) y Pie de página con enlaces legales a Privacidad, Términos, Cookies y correo de soporte (`soporte@klozet.es`).
+- **Política de Privacidad y Cláusula de Cumplimiento de Google API (`app/(public)/privacy/page.tsx`)**:
+  - Incorporada la **Sección 7: Uso y Protección de Datos de Servicios de Google (Google API Services User Data Policy)**.
+  - Especifica que solo se recopilan datos básicos no sensibles (`email`, `profile` y `openid`) con el único fin de autenticación y creación de perfil en Klozet.
+  - Declaración expresa de no cesión, no venta de datos de Google a terceros y no uso para entrenamiento de modelos generalizados de IA.
+  - Inclusión de la cláusula obligatoria de cumplimiento con la política de Uso Limitado (*Limited Use Requirements*) y enlace a la revocación de permisos en `myaccount.google.com/permissions`.
+- **Estandarización de Contacto Legal (`app/(public)/terms/page.tsx` & `cookies/page.tsx`)**:
+  - Unificado el correo oficial de contacto y soporte en `soporte@klozet.es`.
+
+
 
 
 

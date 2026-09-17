@@ -140,8 +140,8 @@ export default function TermsPage() {
 
                         <div className="pt-8 mt-8 border-t border-[var(--border-color)]/50 text-sm text-center">
                             <p>¿Tienes dudas sobre nuestros Términos Legales?</p>
-                            <a href="mailto:soporte@klozet.app" className="text-[var(--brand-pink)] font-semibold hover:underline mt-1 inline-block">
-                                Escríbenos a soporte@klozet.app
+                            <a href="mailto:soporte@klozet.es" className="text-[var(--brand-pink)] font-semibold hover:underline mt-1 inline-block">
+                                Escríbenos a soporte@klozet.es
                             </a>
                         </div>
                     </div>

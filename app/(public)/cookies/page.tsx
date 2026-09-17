@@ -163,8 +163,8 @@ export default function CookiesPage() {
 
                         <div className="pt-8 mt-8 border-t border-[var(--border-color)]/50 text-sm text-center">
                             <p>¿Tienes preguntas sobre el uso de cookies en Klozet?</p>
-                            <a href="mailto:privacidad@klozet.app" className="text-[var(--brand-pink)] font-semibold hover:underline mt-1 inline-block">
-                                Escríbenos a privacidad@klozet.app
+                            <a href="mailto:soporte@klozet.es" className="text-[var(--brand-pink)] font-semibold hover:underline mt-1 inline-block">
+                                Escríbenos a soporte@klozet.es
                             </a>
                         </div>
                     </div>
