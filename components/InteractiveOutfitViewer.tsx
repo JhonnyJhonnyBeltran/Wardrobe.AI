@@ -97,7 +97,9 @@ const InteractiveOutfitViewer = ({ outfit, onItemClick, className = '', isMobile
                     src={staticImage}
                     alt={outfit.name || 'Outfit'}
                     fill
-                    className="object-cover"
+                    quality={92}
+                    className="object-cover transform-gpu"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 70vw, 50vw"
                     priority
                 />
             </div>
@@ -155,8 +157,9 @@ const InteractiveOutfitViewer = ({ outfit, onItemClick, className = '', isMobile
                                 src={item.img}
                                 alt={item.clothing.name || 'Prenda'}
                                 fill
-                                className="object-contain"
-                                sizes="(max-width: 768px) 50vw, 33vw"
+                                quality={92}
+                                className="object-contain transform-gpu"
+                                sizes="(max-width: 768px) 60vw, 40vw"
                             />
                         </div>
                     </motion.div>

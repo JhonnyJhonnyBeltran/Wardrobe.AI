@@ -261,7 +261,8 @@ export default function PostPreviewModal({
                         alt={postTitle || 'Post preview'}
                         fill
                         className="object-cover"
-                        sizes="(max-width: 768px) 90vw, 380px"
+                        sizes="(max-width: 768px) 100vw, 600px"
+                        quality={95}
                         priority
                       />
                     ) : (
@@ -285,7 +286,8 @@ export default function PostPreviewModal({
                         alt="Outfit preview"
                         fill
                         className="object-cover"
-                        sizes="(max-width: 768px) 90vw, 380px"
+                        sizes="(max-width: 768px) 100vw, 600px"
+                        quality={95}
                         priority
                       />
                     ) : (

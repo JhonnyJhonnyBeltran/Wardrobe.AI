@@ -120,7 +120,7 @@ export async function compressImage(
   blob: Blob,
   options: { quality?: number; maxWidth?: number; maxHeight?: number } = {}
 ): Promise<Blob> {
-  const { quality = 0.85, maxWidth = 1200, maxHeight = 1200 } = options;
+  const { quality = 0.95, maxWidth = 2048, maxHeight = 2048 } = options;
 
   return new Promise((resolve) => {
     const img = new Image();
@@ -140,8 +140,8 @@ export async function compressImage(
         height = maxHeight;
       }
 
-      canvas.width = width;
-      canvas.height = height;
+      canvas.width = Math.round(width);
+      canvas.height = Math.round(height);
 
       const ctx = canvas.getContext('2d');
       if (!ctx) {
@@ -149,7 +149,9 @@ export async function compressImage(
         return;
       }
 
-      ctx.drawImage(img, 0, 0, width, height);
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
       canvas.toBlob(
         (newBlob) => {

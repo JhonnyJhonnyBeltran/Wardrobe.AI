@@ -712,9 +712,11 @@ export default function PostDetailPage() {
                                     <Image
                                         src={slide.url || '/placeholder.png'}
                                         alt="Post"
-                                        width={1200}
-                                        height={1200}
-                                        className="w-full h-auto md:w-auto md:h-full max-h-[85vh] md:max-h-[calc(100vh-64px)] object-contain pointer-events-none"
+                                        width={1400}
+                                        height={1400}
+                                        quality={95}
+                                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
+                                        className="w-full h-auto md:w-auto md:h-full max-h-[85vh] md:max-h-[calc(100vh-64px)] object-contain pointer-events-none transform-gpu"
                                         priority
                                         draggable={false}
                                     />

@@ -225,10 +225,11 @@ export default function PostCard({
                         <Image
                             src={post.imageUrl}
                             alt={post.title || (post.author?.name ? `Publicación de @${post.author.name}` : "Publicación de look")}
-                            width={500}
-                            height={600}
-                            className="w-full h-full object-cover"
-                            sizes="(max-width: 768px) 50vw, (max-width: 1024px) 25vw, 16vw"
+                            width={720}
+                            height={900}
+                            quality={90}
+                            className="w-full h-full object-cover transform-gpu"
+                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                         />
 
                         {!hideAuthorOverlay && (

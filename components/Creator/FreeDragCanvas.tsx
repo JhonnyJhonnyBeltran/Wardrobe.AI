@@ -98,12 +98,13 @@ export const FreeDragCanvas = forwardRef<FreeDragCanvasRef, FreeDragCanvasProps>
             try {
                 const canvas = await html2canvas(containerRef.current, {
                     backgroundColor: '#ffffff',
-                    scale: 3, // High quality
+                    scale: 3, // Ultra-sharp 3x retina quality
                     useCORS: true,
                     allowTaint: true,
                     logging: false,
+                    imageTimeout: 15000,
                 });
-                return canvas.toDataURL('image/jpeg', 0.8);
+                return canvas.toDataURL('image/webp', 0.96);
             } catch (error) {
                 console.error('Canvas export failed:', error);
                 return null;

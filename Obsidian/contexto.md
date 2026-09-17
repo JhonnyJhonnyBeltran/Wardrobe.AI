@@ -1301,6 +1301,25 @@ En cada conversación, el backend alimenta a CloSy con:
   - `markStepComplete` avanza dinámicamente `currentStepIndex` al siguiente paso no completado para que, al reabrir el tour o consultar el progreso, el usuario vea su siguiente objetivo.
   - El banner flotante de éxito estilo Duolingo solo se muestra a usuarios que estén activamente en el tour (`hasStartedTour && !isDismissed && shouldCelebrate`), mientras que las cuentas existentes registran el progreso internamente sin interrupciones.
 
+### 104. Optimización Integral de Nitidez, Calidad y Resolución en Feed, Post, Search, Profile y Exportación de Canvas (Septiembre 2026)
+- **Eliminación de Borrosidad en Cuadrículas y Tarjetas de Publicaciones (`components/Feed/PostCard.tsx`)**:
+  - **Resolución y Calidad Optimizadas**: Actualizado a `width={720}` y `height={900}` con `quality={90}`.
+  - **Calibración del Atributo `sizes`**: Corregido el valor previo de `16vw` (que provocaba que el optimizador de Next.js entregase imágenes submuestreadas de ~200px) a `sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"`, garantizando imágenes nítidas y de alta densidad para pantallas 2x/3x Retina en Feed, Explorar y Perfiles.
+  - **Aceleración por GPU**: Incorporada la clase `transform-gpu` para un renderizado suave y nítido por hardware.
+- **Detalle de Publicación y Vista Previa (`app/(app)/post/[id]/page.tsx` & `components/Feed/PostPreviewModal.tsx`)**:
+  - **Detalle de Post**: Resolución ampliada a `width={1400}`, `height={1400}`, `quality={95}` y `sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"`.
+  - **Modal de Vista Previa**: Configurado con `quality={95}` y `sizes="(max-width: 768px) 100vw, 600px"`, evitando artefactos de compresión en las transiciones entre foto y look interactivo.
+- **Visualizador Interactivo de Outfits (`components/InteractiveOutfitViewer.tsx`)**:
+  - Configurado `quality={92}` tanto para la vista estática del outfit como para cada prenda individual cargada en el lienzo interactivo con tamaños responsivos de hasta 70vw.
+- **Exportación de Outfits en Lienzo Libre (`components/Creator/FreeDragCanvas.tsx`)**:
+  - `exportToImage()`: Actualizado el formato de exportación a `image/webp` con factor de calidad `0.96` y escalado 3x Retina (`scale: 3`), sustituyendo la compresión JPEG 0.8 previa y eliminando artefactos y bordes borrosos en looks creados.
+- **Compresión de Subida y Armario (`lib/supabase/storage.ts` & `store/wardrobeStore.ts`)**:
+  - `compressImage()`: Límite dimensional ampliado a `2048x2048` (anteriormente 1200px) y calidad `0.95` (antes 0.85) con suavizado de alta calidad activado (`ctx.imageSmoothingQuality = 'high'`).
+  - `wardrobeStore`: Procesamiento de imágenes procesadas y originales elevado a resoluciones de `1600x1600` y `2048x2048` a calidad `0.95`.
+- **Perfeccionamiento de la Barra de Progreso del Perfil (`components/Profile/ProfileProgressBar.tsx`)**:
+  - Detección exhaustiva de Kloe en almacenamiento local, base de datos y memoria.
+  - Mensajes de estado dinámicos que reflejan el hito real pendiente y eliminación estricta de cualquier etiqueta "IA" de acuerdo a las normas de diseño del proyecto.
+
 
 
 

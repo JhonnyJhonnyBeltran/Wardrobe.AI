@@ -116,9 +116,9 @@ export const useWardrobeStore = create<WardrobeState>((set, get) => ({
       if (item.imageUrl && isDataUrl(item.imageUrl)) {
         const uploadResult = await uploadImage(item.imageUrl, BUCKETS.CLOTHING, {
           folder: userId,
-          maxWidth: 800,
-          maxHeight: 800,
-          quality: 0.85
+          maxWidth: 1600,
+          maxHeight: 1600,
+          quality: 0.95
         });
         if (uploadResult.error) throw new Error('Error al subir la imagen');
         processedImageUrl = uploadResult.url ?? null;
@@ -129,9 +129,9 @@ export const useWardrobeStore = create<WardrobeState>((set, get) => ({
       if (item.originalImageUrl && isDataUrl(item.originalImageUrl)) {
         const uploadResult = await uploadImage(item.originalImageUrl, BUCKETS.CLOTHING, {
           folder: `${userId}/originals`,
-          maxWidth: 1200,
-          maxHeight: 1200,
-          quality: 0.9
+          maxWidth: 2048,
+          maxHeight: 2048,
+          quality: 0.95
         });
         originalImageUrl = uploadResult.url ?? null;
       } else {
@@ -212,9 +212,9 @@ export const useWardrobeStore = create<WardrobeState>((set, get) => ({
       if (updates.imageUrl !== undefined && isDataUrl(updates.imageUrl)) {
         const uploadResult = await uploadImage(updates.imageUrl, BUCKETS.CLOTHING, {
           folder: userId,
-          maxWidth: 800,
-          maxHeight: 800,
-          quality: 0.85
+          maxWidth: 1600,
+          maxHeight: 1600,
+          quality: 0.95
         });
         if (uploadResult.error) throw new Error('Error al subir la imagen');
         dbUpdates.image_url = uploadResult.url;
@@ -230,9 +230,9 @@ export const useWardrobeStore = create<WardrobeState>((set, get) => ({
       if (updates.originalImageUrl !== undefined && isDataUrl(updates.originalImageUrl)) {
         const uploadResult = await uploadImage(updates.originalImageUrl, BUCKETS.CLOTHING, {
           folder: `${userId}/originals`,
-          maxWidth: 1200,
-          maxHeight: 1200,
-          quality: 0.9
+          maxWidth: 2048,
+          maxHeight: 2048,
+          quality: 0.95
         });
         if (!uploadResult.error) dbUpdates.original_image_url = uploadResult.url;
       } else if (updates.originalImageUrl !== undefined) {
