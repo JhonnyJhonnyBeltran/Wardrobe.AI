@@ -1417,7 +1417,20 @@ En cada conversación, el backend alimenta a CloSy con:
   - Eliminados los cálculos de scroll artificiales que causaban saltos o bloqueos. Cada keyframe es una sección inmersiva a pantalla completa (`min-h-screen`) que fluye con scroll natural y fluido en móvil y ordenador.
   - Eliminado el contador numérico `01 / 05` y los botones de `Anterior / Siguiente` para una experiencia editorial limpia sin distracciones.
 - **Depuración Editorial y Eliminación de Iconos Innecesarios**:
-  - Eliminados iconos superfluos de verificación (`Check`), capas y decoraciones en las descripciones de moda, logrando un lenguaje visual sobrio, directo y de alto impacto estético.
+### 117. Landing Page de Pantalla Única Interactiva con Gestos de Rueda y Táctil (Septiembre 2026)
+- **Experiencia a Pantalla Fija 100vh (`app/(public)/page.tsx`)**:
+  - La landing page está construida como una vista fija a pantalla completa (`h-screen w-screen overflow-hidden fixed inset-0`) sin barra de desplazamiento vertical nativa.
+  - Al deslizar la rueda del ratón (`onWheel`), hacer swipe vertical en pantalla táctil (`onTouchStart` / `onTouchEnd`) o presionar las teclas de flechas/espacio, se produce una transición suave e interactiva entre los 5 keyframes gobernada por `AnimatePresence mode="wait"`.
+  - Sistema de bloqueo debounced (`isAnimatingRef.current` con delay de 650ms) para garantizar transiciones precisas e impedir saltos múltiples no deseados.
+- **Header y Elementos Flotantes**:
+  - **Header Superior Derecho**: Únicamente botones de acción directos (`Iniciar sesión`, `Registrarse` o `Mi Armario`), sin logotipos ni elementos sobrantes.
+  - **Keyframe 0 (Hero con Logo de Fondo)**: Logotipo grande de Klozet (`/landing/klozet-nombre-grande.png`) integrado en el fondo con opacidad sutil, titular impactante (*"Ama tu armario. Vístete mejor con lo que ya tienes"*), botón de llamada a la acción y prendas recortadas flotantes alrededor (`animate-float`).
+  - **Keyframe 1 (Digitalización)**: Tarjetas flotantes inclinadas estilo editorial (Star Jeans, Sudadera Scuffers, Zapatilla Golden Goose Glitter recortada).
+  - **Keyframe 2 (Lienzo Creativo)**: Showcase interactivo del moodboard con look activo.
+  - **Keyframe 3 (Inspiración y Outfits Reales)**: Cuadrícula con 4 modelos reales (chicos y chicas) y catálogo de calzado y prendas recortadas.
+  - **Keyframe 4 (Acceso Final y Enlaces Legales)**: Tarjeta de acceso directo y pie de página integrado con enlaces a Términos y Condiciones, Privacidad, Cookies y contacto.
+  - Puntos discretos de navegación en el lateral derecho para consultar progreso o saltar directamente entre fotogramas.
+
 
 
 
