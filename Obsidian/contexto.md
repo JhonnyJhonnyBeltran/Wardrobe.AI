@@ -1470,6 +1470,23 @@ En cada conversación, el backend alimenta a CloSy con:
   - Eliminada la propiedad `transform: scale` en `@keyframes klozet-pulse-glow` para que los botones con resplandor no boten ni cambien de tamaño.
   - Eliminada la clase `animate-bounce` en el icono de trofeo del tour guiado.
 
+### 120. Rediseño Total de Landing Page: Lienzo Inmersivo 100vh Free-Floating, Drop-Caps y Coreografía Visual (Septiembre 2026)
+- **Lienzo Inmersivo 100vh Free-Floating (`app/(public)/page.tsx`)**:
+  - Estructura construida como un lienzo espacial sin flujo DOM encajonado (`h-screen w-screen overflow-hidden relative fixed inset-0`).
+  - Capas multicapa con `z-index`:
+    - `z-0`: Fondo ambiental mutante y marca de agua `klozet-nombre-grande.png` como ancla visual.
+    - `z-10`: Elementos gráficos y prendas de moda en gravedad cero (Sudadera Scuffers, Star Denim, Golden Goose Glitter, Botas Cowboy, Studio Longsleeve) flotando libremente sin cajas ni contenedores rígidos.
+    - `z-20`: Tipografía maximalista monumental con drop-caps editoriales.
+    - `z-30`: Controles interactivos y llamadas a la acción directas.
+- **Maximalismo Tipográfico y Drop-Caps Editoriales**:
+  - Titulares monumentales con primera letra destacada en itálica serif y gradientes dinámicos (`text-[1.22em] italic font-serif`), creando un alto impacto visual estilo editorial de alta costura.
+  - Tipografía responsive adaptada a pantallas móviles de 360px a 430px y pantallas 4K (`text-4xl sm:text-6xl md:text-7xl lg:text-[7.2rem] xl:text-[8.5rem] leading-[0.85] tracking-tighter uppercase font-black`).
+- **Coreografía Visual (`stagger effect`) con Framer Motion**:
+  - `containerVariants` con `staggerChildren: 0.1` y `delayChildren: 0.05`.
+  - Los textos monumentales y los elementos gráficos secundarios entran en cascada coreografiada con curvas de aceleración elásticas suaves (`ease: [0.16, 1, 0.3, 1]`).
+- **Storytelling Visual Mutante**:
+  - El fondo y los elementos orbitan y mutan orgánicamente a través de los 5 fotogramas (El Problema $\rightarrow$ Digitalización $\rightarrow$ Kloe AI $\rightarrow$ Monta tu Fit $\rightarrow$ Acceso y Legal) manteniendo la narrativa enfocada en la moda y el estilo.
+
 
 
 
