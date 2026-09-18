@@ -1458,6 +1458,11 @@ En cada conversación, el backend alimenta a CloSy con:
 - **Pasarela de Suscripción Stripe & Modal Responsive**:
   - Modal `KloeProModal` y `PremiumModal` optimizado para móvil con altura máxima `max-h-[92vh] overflow-y-auto no-scrollbar` y precios unificados: **2,99 € / mes** y **24,99 € / año**.
   - Conexión directa a Stripe Checkout Sessions (`/api/stripe/checkout`) con soporte para Apple Pay, Google Pay y tarjetas.
+  - **Credenciales y Catálogo Oficial Live Stripe**:
+    - Clave Secreta en producción configurada y verificada: `sk_live_...PSi5`.
+    - Clave Publicable: `pk_live_...inGk8`.
+    - Producto Mensual (`prod_V7SZqUpMDpuqF9`) $\rightarrow$ Tarifa Activa `price_1U7DeHCt6LJbs620osDLmL2m` (2,99 € EUR/mes).
+    - Producto Anual (`prod_V7Sdh3avPIqeIw`) $\rightarrow$ Tarifa Activa `price_1U7DiWCt6LJbs620MmU8s5Vr` (24,99 € EUR/año).
 - **Purga Total en Eliminación de Cuenta (`/api/user/delete` y `/profile/settings`)**:
   - Eliminación completa de perfiles, usuarios legacy por ID y por email, prendas, outfits, posts, guardados, carpetas, likes, follows, notificaciones, mensajes directos, avatares y prendas en Storage, y baja en Supabase Auth (`auth.admin.deleteUser`).
   - En cliente, se ejecuta `localStorage.clear()` y `sessionStorage.clear()` antes de redirigir a `/auth`.
