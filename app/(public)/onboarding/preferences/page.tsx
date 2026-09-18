@@ -917,7 +917,7 @@ function PreferencesContent() {
                                                 setGender(option.value);
                                                 setTimeout(() => setStep(3), 220);
                                             }}
-                                            className={`relative w-full h-28 sm:h-36 rounded-2xl overflow-hidden text-left transition-all duration-200 group ${
+                                            className={`relative w-full h-24 sm:h-32 rounded-2xl overflow-hidden text-left transition-all duration-200 group cursor-pointer ${
                                                 isSelected
                                                     ? 'ring-3 ring-[var(--brand-pink)] scale-[0.99] shadow-lg'
                                                     : 'border border-[var(--border-color)] hover:border-[var(--brand-pink)]/50 active:scale-[0.98]'
@@ -931,9 +931,9 @@ function PreferencesContent() {
                                             />
                                             <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/55 to-black/25" />
 
-                                            <div className="absolute inset-0 p-5 sm:p-6 flex items-center justify-between z-10">
-                                                <div className="space-y-1">
-                                                    <span className="text-white text-xl sm:text-2xl font-bold tracking-wide block">
+                                            <div className="absolute inset-0 p-4 sm:p-6 flex items-center justify-between z-10">
+                                                <div className="space-y-0.5 sm:space-y-1">
+                                                    <span className="text-white text-lg sm:text-2xl font-bold tracking-wide block">
                                                         {option.label}
                                                     </span>
                                                     <span className="text-white/75 text-xs sm:text-sm block">
@@ -987,7 +987,7 @@ function PreferencesContent() {
                             </div>
 
                             {/* 34 Grid Items with dynamic gender-specific photography */}
-                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 pb-4">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-4 pb-4">
                                 {availableStyles.map((style, idx) => {
                                     const styleKey = style.slug || style.id;
                                     const isSelected = selectedStyles.includes(styleKey) || selectedStyles.includes(style.id);
@@ -998,7 +998,7 @@ function PreferencesContent() {
                                             key={styleKey}
                                             type="button"
                                             onClick={() => toggleStyle(styleKey)}
-                                            className={`relative aspect-[3/4] rounded-2xl overflow-hidden group focus:outline-none transition-all duration-200 text-left ${
+                                            className={`relative aspect-[3/4] rounded-2xl overflow-hidden group focus:outline-none transition-all duration-200 text-left cursor-pointer ${
                                                 isSelected
                                                     ? 'ring-3 ring-[var(--brand-pink)] scale-[0.98] shadow-md'
                                                     : 'border border-[var(--border-color)] hover:border-[var(--brand-pink)]/40 active:scale-[0.98]'
@@ -1038,7 +1038,7 @@ function PreferencesContent() {
                                             </div>
 
                                             {/* Name Label */}
-                                            <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-3.5 z-30">
+                                            <div className="absolute bottom-0 left-0 right-0 p-2.5 sm:p-3.5 z-30">
                                                 <span className="text-white text-xs sm:text-sm font-semibold tracking-wide block leading-snug line-clamp-2 drop-shadow-sm">
                                                     {style.name}
                                                 </span>
@@ -1069,7 +1069,7 @@ function PreferencesContent() {
                                 </p>
                             </div>
 
-                            <div className="grid gap-3 sm:gap-4 mt-1 pb-4">
+                            <div className="grid gap-2.5 sm:gap-4 mt-1 pb-4">
                                 {ACCESSORY_OPTIONS.map((option) => {
                                     const isSelected = selectedAccessory === option.id;
                                     const imageSrc = getAccessoryImage(option);
@@ -1079,7 +1079,7 @@ function PreferencesContent() {
                                             key={option.id}
                                             type="button"
                                             onClick={() => setSelectedAccessory(option.id)}
-                                            className={`relative w-full h-28 sm:h-32 rounded-2xl overflow-hidden text-left transition-all duration-200 group ${
+                                            className={`relative w-full h-24 sm:h-28 rounded-2xl overflow-hidden text-left transition-all duration-200 group cursor-pointer ${
                                                 isSelected
                                                     ? 'ring-3 ring-[var(--brand-pink)] scale-[0.99] shadow-lg'
                                                     : 'border border-[var(--border-color)] hover:border-[var(--brand-pink)]/50 active:scale-[0.98]'
@@ -1093,12 +1093,12 @@ function PreferencesContent() {
                                             />
                                             <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/30" />
 
-                                            <div className="absolute inset-0 p-5 sm:p-6 flex items-center justify-between z-10">
-                                                <div className="space-y-1 max-w-[80%]">
-                                                    <span className="text-white text-lg sm:text-xl font-bold tracking-wide block">
+                                            <div className="absolute inset-0 p-4 sm:p-5 flex items-center justify-between z-10">
+                                                <div className="space-y-0.5 sm:space-y-1 max-w-[80%]">
+                                                    <span className="text-white text-base sm:text-xl font-bold tracking-wide block">
                                                         {option.name}
                                                     </span>
-                                                    <span className="text-white/80 text-xs sm:text-sm block line-clamp-2">
+                                                    <span className="text-white/80 text-[11px] sm:text-sm block line-clamp-2">
                                                         {option.sublabel}
                                                     </span>
                                                 </div>

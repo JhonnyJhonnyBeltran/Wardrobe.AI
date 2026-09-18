@@ -86,7 +86,7 @@ interface Conversation {
   messages: ChatMessage[];
 }
 
-const STORAGE_KEY = 'kloe_conversations_v1';
+const getStorageKey = (userId?: string) => userId ? `kloe_conversations_${userId}` : null;
 const MAX_CONVERSATIONS = 5;
 const MAX_TRIAL_MESSAGES = 8;
 
@@ -357,11 +357,14 @@ export default function KloePage() {
 
   const persistConversations = async (updated: Conversation[]) => {
     setConversations(updated);
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    } catch {}
-
     if (user?.id) {
+      const userKey = getStorageKey(user.id);
+      if (userKey) {
+        try {
+          localStorage.setItem(userKey, JSON.stringify(updated));
+        } catch {}
+      }
+
       try {
         const { data: sessionData } = await supabase.auth.getSession();
         const token = sessionData?.session?.access_token;
@@ -441,71 +444,101 @@ export default function KloePage() {
 
   useBodyScrollLock(showWardrobeDrawer || showHistoryDrawer || showSavedDrawer);
 
-  // Load conversations from local storage on mount and sync with remote database
+  // Load conversations scoped strictly to current user ID
   useEffect(() => {
-    // 1. Instant local storage hydration
+    // 0. Purge legacy global unscoped keys to prevent cross-account leakage
     try {
-      const stored = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('klosy_conversations_v1');
-      if (stored) {
-        const parsed: Conversation[] = JSON.parse(stored);
-        if (parsed.length > 0) {
-          setConversations(parsed);
-          setActiveConversationId(parsed[0].id);
-          setMessages(parsed[0].messages || [INITIAL_MESSAGE]);
-        }
-      }
-    } catch (e) {
-      console.warn('[Kloe] Could not load stored conversations:', e);
+      localStorage.removeItem('kloe_conversations_v1');
+      localStorage.removeItem('klosy_conversations_v1');
+    } catch {}
+
+    if (!user?.id) {
+      setConversations([]);
+      setActiveConversationId('default');
+      setMessages([INITIAL_MESSAGE]);
+      return;
     }
 
-    // 2. Fetch and merge remote conversations from database
-    if (user?.id) {
-      const fetchRemoteConvs = async () => {
-        try {
-          const { data: sessionData } = await supabase.auth.getSession();
-          const token = sessionData?.session?.access_token;
-          const headers: Record<string, string> = {};
-          if (token) headers['Authorization'] = `Bearer ${token}`;
+    const userKey = getStorageKey(user.id);
+    let hasLoadedLocal = false;
 
-          const res = await fetch('/api/closy/conversations', { headers });
-          if (res.ok) {
-            const data = await res.json();
-            const remoteConvs: Conversation[] = data.conversations || [];
-            if (remoteConvs.length > 0) {
-              setConversations(prev => {
-                const map = new Map<string, Conversation>();
-                remoteConvs.forEach(c => map.set(c.id, c));
-                prev.forEach(c => {
-                  const remote = map.get(c.id);
-                  if (!remote || (c.updatedAt && c.updatedAt > (remote.updatedAt || 0))) {
-                    map.set(c.id, c);
-                  }
-                });
-                const merged = Array.from(map.values())
-                  .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))
-                  .slice(0, MAX_CONVERSATIONS);
-
-                try {
-                  localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
-                } catch {}
-
-                const currentActive = merged.find(c => c.id === activeConversationId) || merged[0];
-                if (currentActive) {
-                  setActiveConversationId(currentActive.id);
-                  setMessages(currentActive.messages || [INITIAL_MESSAGE]);
-                }
-
-                return merged;
-              });
-            }
+    // 1. Instant local storage hydration for THIS specific user
+    if (userKey) {
+      try {
+        const stored = localStorage.getItem(userKey);
+        if (stored) {
+          const parsed: Conversation[] = JSON.parse(stored);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setConversations(parsed);
+            setActiveConversationId(parsed[0].id);
+            setMessages(parsed[0].messages || [INITIAL_MESSAGE]);
+            hasLoadedLocal = true;
           }
-        } catch (err) {
-          console.warn('[Kloe] Error fetching remote conversations:', err);
         }
-      };
-
-      fetchRemoteConvs();
+      } catch (e) {
+        console.warn('[Kloe] Could not load stored conversations:', e);
+      }
     }
+
+    if (!hasLoadedLocal) {
+      setConversations([]);
+      setActiveConversationId('default');
+      setMessages([INITIAL_MESSAGE]);
+    }
+
+    // 2. Fetch and merge remote conversations from database for THIS authenticated user
+    const fetchRemoteConvs = async () => {
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const token = sessionData?.session?.access_token;
+        const headers: Record<string, string> = {};
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        const res = await fetch('/api/closy/conversations', { headers });
+        if (res.ok) {
+          const data = await res.json();
+          const remoteConvs: Conversation[] = data.conversations || [];
+          if (remoteConvs.length > 0) {
+            setConversations(prev => {
+              const map = new Map<string, Conversation>();
+              remoteConvs.forEach(c => map.set(c.id, c));
+              prev.forEach(c => {
+                const remote = map.get(c.id);
+                if (!remote || (c.updatedAt && c.updatedAt > (remote.updatedAt || 0))) {
+                  map.set(c.id, c);
+                }
+              });
+              const merged = Array.from(map.values())
+                .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))
+                .slice(0, MAX_CONVERSATIONS);
+
+              if (userKey) {
+                try {
+                  localStorage.setItem(userKey, JSON.stringify(merged));
+                } catch {}
+              }
+
+              const currentActive = merged.find(c => c.id === activeConversationId) || merged[0];
+              if (currentActive) {
+                setActiveConversationId(currentActive.id);
+                setMessages(currentActive.messages || [INITIAL_MESSAGE]);
+              }
+
+              return merged;
+            });
+          } else if (!hasLoadedLocal) {
+            // New user with 0 remote conversations
+            setConversations([]);
+            setActiveConversationId('default');
+            setMessages([INITIAL_MESSAGE]);
+          }
+        }
+      } catch (err) {
+        console.warn('[Kloe] Error fetching remote conversations:', err);
+      }
+    };
+
+    fetchRemoteConvs();
   }, [user?.id]);
 
   const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
@@ -899,13 +932,6 @@ export default function KloePage() {
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-
-          <div className="hidden lg:flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--background-secondary)] border border-[var(--border-color)] text-[11px] font-medium text-[var(--foreground-secondary)]">
-            <span className={`w-2 h-2 rounded-full ${remainingToday > 0 ? 'bg-emerald-500 shadow-xs shadow-emerald-500/50' : 'bg-amber-500'}`} />
-            <span>
-              {isPremium() ? 'Kloe Pro' : 'Free'} · <strong className="text-[var(--foreground)]">{remainingToday}/{maxDay}</strong> hoy
-            </span>
-          </div>
         </div>
 
         {/* Center Animated Logo */}
@@ -1533,9 +1559,7 @@ export default function KloePage() {
                         ? `Pregúntale a Kloe sobre estas ${attachedItems.length} prendas...`
                         : (attachedPost 
                           ? `Pregúntale a Kloe sobre este look guardado...` 
-                          : (!isPremium() 
-                            ? `Pregúntale a Kloe (${remainingToday}/${maxDay} consultas hoy)...` 
-                            : `Pregúntale a Kloe sobre tus prendas u outfits (${remainingToday}/${maxDay})...`)))))
+                          : `Pregúntale a Kloe...`))))
               }
               disabled={isTyping || !isInputUnlocked}
               className="flex-1 bg-transparent text-sm text-[var(--foreground)] outline-none placeholder:text-[var(--foreground-tertiary)] px-1"

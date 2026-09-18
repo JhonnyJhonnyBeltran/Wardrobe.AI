@@ -1487,6 +1487,23 @@ En cada conversación, el backend alimenta a CloSy con:
 - **Storytelling Visual Mutante**:
   - El fondo y los elementos orbitan y mutan orgánicamente a través de los 5 fotogramas (El Problema $\rightarrow$ Digitalización $\rightarrow$ Kloe AI $\rightarrow$ Monta tu Fit $\rightarrow$ Acceso y Legal) manteniendo la narrativa enfocada en la moda y el estilo.
 
+### 121. Aislamiento Estricto Multi-Cuenta en Kloe, Eliminación de Badges de Cuota, Tipografía Fluida y Micro-Animaciones (Septiembre 2026)
+- **Aislamiento Estricto de Mensajes de Kloe por ID de Usuario (`app/(app)/closet/kloe/page.tsx`)**:
+  - Implementado helper `getStorageKey(userId) => 'kloe_conversations_' + userId` que aísla de forma absoluta las conversaciones locales para cada cuenta independiente.
+  - Eliminadas las claves globales heredadas (`kloe_conversations_v1`, `klosy_conversations_v1`) para evitar que cuentas nuevas o diferentes usuarios en el mismo navegador carguen conversaciones previas.
+  - Al iniciar sesión con una cuenta nueva sin historial, la conversación inicia limpia desde cero con el mensaje de bienvenida oficial.
+- **Eliminación Total de Badges y Pills de Cuota ("Free · 8/8 hoy")**:
+  - Se eliminó la píldora informativa de la cabecera (`Free · 8/8 hoy` / `Kloe Pro · 35/35 hoy`) para eliminar cualquier sensación de interfaz artificial o "AI slop".
+  - Placeholder del input unificado y limpio: *"Pregúntale a Kloe..."*.
+  - Al agotarse los mensajes diarios, el input se bloquea de forma limpia y elegante mostrando el aviso informativo en la parte inferior.
+- **Depuración Maximalista sin Puntuación en Landing (`app/(public)/page.tsx`)**:
+  - Eliminados todos los puntos y signos ortográficos en los titulares monumentales (*"Armario Lleno"*, *"Nada que ponerte"*, *"Toda tu ropa"*, *"En un toque"*, *"Qué me pongo"*, *"Kloe te ayuda"*, *"Monta tu fit"*, *"Listo para hoy"*, *"Vístete mejor"*, *"Disfruta tu ropa"*), permitiendo una lectura fluida e impactante.
+- **Refinamiento de Micro-Animaciones y Eliminación de Rebotes en Botones (`components/Button.tsx`)**:
+  - Eliminadas las translaciones verticales agresivas (`y: -2`) y reemplazadas por micro-escalas fluidas (`whileHover={{ scale: 1.01 }}`, `whileTap={{ scale: 0.98 }}`).
+  - Reemplazado `animate-pulse-glow` por un resplandor ambiental estático de alta fidelidad `shadow-[0_4px_24px_rgba(255,45,120,0.35)]`.
+- **Ajuste Móvil de Cards e Iconos en Onboarding (`app/(public)/onboarding/preferences/page.tsx`)**:
+  - Alturas adaptadas a móviles compactos (`h-24 sm:h-32` para género y `h-24 sm:h-28` para accesorios), eliminando desbordamientos de pantalla y asegurando zonas táctiles ergonómicas (≥44px).
+
 
 
 

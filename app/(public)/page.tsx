@@ -241,10 +241,10 @@ export default function LandingPage() {
               {/* MONUMENTAL TYPOGRAPHY WITH EDITORIAL DROP-CAPS (Z-20) */}
               <motion.div variants={itemFadeUp} className="relative z-20 max-w-6xl mx-auto flex flex-col items-center">
                 <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-[7.2rem] xl:text-[8.5rem] font-black tracking-tighter uppercase leading-[0.85] text-[var(--foreground)]">
-                  <span className="text-[1.22em] italic font-serif text-[var(--brand-pink)] mr-0.5">A</span>rmario Lleno.
+                  <span className="text-[1.22em] italic font-serif text-[var(--brand-pink)] mr-0.5">A</span>rmario Lleno
                 </h1>
                 <h2 className="text-4xl sm:text-6xl md:text-7xl lg:text-[7.2rem] xl:text-[8.5rem] font-black tracking-tighter uppercase leading-[0.85] bg-gradient-to-r from-[var(--brand-pink)] via-pink-400 to-purple-500 bg-clip-text text-transparent mt-1 sm:mt-2">
-                  <span className="text-[1.22em] italic font-serif text-pink-400 mr-0.5">N</span>ada que ponerte.
+                  <span className="text-[1.22em] italic font-serif text-pink-400 mr-0.5">N</span>ada que ponerte
                 </h2>
               </motion.div>
 
@@ -253,7 +253,7 @@ export default function LandingPage() {
                 variants={itemFadeUp}
                 className="mt-4 sm:mt-6 text-sm sm:text-lg md:text-xl text-[var(--foreground-secondary)] max-w-sm sm:max-w-xl font-medium leading-snug z-20"
               >
-                Todas las mañanas el mismo lío frente al espejo. Klozet organiza tu ropa y te dice exactamente qué ponerte.
+                Todas las mañanas el mismo lío frente al espejo Klozet organiza tu ropa y te dice exactamente qué ponerte
               </motion.p>
 
               {/* Action Button */}
@@ -288,19 +288,19 @@ export default function LandingPage() {
                   variants={itemFadeUp}
                   className="text-4xl sm:text-6xl md:text-6xl lg:text-[6.5rem] font-black tracking-tighter uppercase leading-[0.85] text-[var(--foreground)]"
                 >
-                  <span className="text-[1.22em] italic font-serif text-[var(--brand-pink)] mr-0.5">T</span>oda tu ropa.
+                  <span className="text-[1.22em] italic font-serif text-[var(--brand-pink)] mr-0.5">T</span>oda tu ropa
                 </motion.h2>
                 <motion.h3 
                   variants={itemFadeUp}
                   className="text-4xl sm:text-6xl md:text-6xl lg:text-[6.5rem] font-black tracking-tighter uppercase leading-[0.85] text-[var(--brand-pink)] mt-1 sm:mt-2"
                 >
-                  <span className="text-[1.22em] italic font-serif text-purple-400 mr-0.5">E</span>n un toque.
+                  <span className="text-[1.22em] italic font-serif text-purple-400 mr-0.5">E</span>n un toque
                 </motion.h3>
                 <motion.p 
                   variants={itemFadeUp}
                   className="mt-4 sm:mt-6 text-sm sm:text-lg md:text-xl text-[var(--foreground-secondary)] leading-relaxed max-w-md mx-auto md:mx-0 font-medium"
                 >
-                  Saca una foto y el fondo desaparece al instante. Tu ropa real ordenada y lista para combinar.
+                  Saca una foto y el fondo desaparece al instante Tu ropa real ordenada y lista para combinar
                 </motion.p>
                 
                 {/* Micro Pill Feature */}
@@ -388,19 +388,19 @@ export default function LandingPage() {
                   variants={itemFadeUp}
                   className="text-4xl sm:text-6xl md:text-6xl lg:text-[6.5rem] font-black tracking-tighter uppercase leading-[0.85] text-[var(--foreground)]"
                 >
-                  <span className="text-[1.22em] italic font-serif text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-purple-400 mr-0.5">¿</span>Qué me pongo?
+                  <span className="text-[1.22em] italic font-serif text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-purple-400 mr-0.5">Q</span>ué me pongo
                 </motion.h2>
                 <motion.h3 
                   variants={itemFadeUp}
                   className="text-4xl sm:text-6xl md:text-6xl lg:text-[6.5rem] font-black tracking-tighter uppercase leading-[0.85] bg-gradient-to-r from-[var(--brand-pink)] via-pink-400 to-purple-500 bg-clip-text text-transparent mt-1 sm:mt-2"
                 >
-                  <span className="text-[1.22em] italic font-serif text-[var(--brand-pink)] mr-0.5">K</span>loe te ayuda.
+                  <span className="text-[1.22em] italic font-serif text-[var(--brand-pink)] mr-0.5">K</span>loe te ayuda
                 </motion.h3>
                 <motion.p 
                   variants={itemFadeUp}
                   className="mt-4 sm:mt-6 text-sm sm:text-lg md:text-xl text-[var(--foreground-secondary)] leading-relaxed max-w-md mx-auto md:mx-0 font-medium"
                 >
-                  Dile a dónde vas o cómo te sientes. Kloe mira tus fotos reales y te crea combinaciones perfectas al segundo.
+                  Dile a dónde vas o cómo te sientes Kloe mira tus fotos reales y te crea combinaciones perfectas al segundo
                 </motion.p>
                 
                 {/* Stylist Highlights List */}
@@ -471,19 +471,19 @@ export default function LandingPage() {
                   variants={itemFadeUp}
                   className="text-4xl sm:text-6xl md:text-6xl lg:text-[6.5rem] font-black tracking-tighter uppercase leading-[0.85] text-[var(--foreground)]"
                 >
-                  <span className="text-[1.22em] italic font-serif text-purple-400 mr-0.5">M</span>onta tu fit.
+                  <span className="text-[1.22em] italic font-serif text-purple-400 mr-0.5">M</span>onta tu fit
                 </motion.h2>
                 <motion.h3 
                   variants={itemFadeUp}
                   className="text-4xl sm:text-6xl md:text-6xl lg:text-[6.5rem] font-black tracking-tighter uppercase leading-[0.85] text-[var(--brand-pink)] mt-1 sm:mt-2"
                 >
-                  <span className="text-[1.22em] italic font-serif text-[var(--brand-pink)] mr-0.5">L</span>isto para hoy.
+                  <span className="text-[1.22em] italic font-serif text-[var(--brand-pink)] mr-0.5">L</span>isto para hoy
                 </motion.h3>
                 <motion.p 
                   variants={itemFadeUp}
                   className="mt-4 sm:mt-6 text-sm sm:text-lg md:text-xl text-[var(--foreground-secondary)] leading-relaxed max-w-md mx-auto md:mx-0 font-medium"
                 >
-                  Prueba combinaciones en el lienzo libre, guarda tus favoritas y sal de casa sabiendo qué ponerte.
+                  Prueba combinaciones en el lienzo libre guarda tus favoritas y sal de casa sabiendo qué ponerte
                 </motion.p>
                 
                 <motion.div variants={itemFadeUp} className="mt-4 flex items-center justify-center md:justify-start gap-2 text-xs sm:text-sm font-bold text-[var(--foreground-secondary)]">
@@ -562,9 +562,9 @@ export default function LandingPage() {
                   variants={itemFadeUp}
                   className="text-4xl sm:text-6xl md:text-7xl font-black text-[var(--foreground)] tracking-tighter uppercase leading-[0.88]"
                 >
-                  <span className="text-[1.22em] italic font-serif text-[var(--brand-pink)] mr-0.5">V</span>ístete mejor. <br />
+                  <span className="text-[1.22em] italic font-serif text-[var(--brand-pink)] mr-0.5">V</span>ístete mejor <br />
                   <span className="bg-gradient-to-r from-[var(--brand-pink)] to-purple-500 bg-clip-text text-transparent">
-                    <span className="text-[1.22em] italic font-serif text-pink-400 mr-0.5">D</span>isfruta tu ropa.
+                    <span className="text-[1.22em] italic font-serif text-pink-400 mr-0.5">D</span>isfruta tu ropa
                   </span>
                 </motion.h2>
                 
@@ -572,7 +572,7 @@ export default function LandingPage() {
                   variants={itemFadeUp}
                   className="mt-4 text-sm sm:text-lg text-[var(--foreground-secondary)] leading-relaxed max-w-md font-medium"
                 >
-                  Regístrate gratis en menos de un minuto y empieza a organizar tus outfits favoritos.
+                  Regístrate gratis en menos de un minuto y empieza a organizar tus outfits favoritos
                 </motion.p>
 
                 {/* Call to Action Buttons */}

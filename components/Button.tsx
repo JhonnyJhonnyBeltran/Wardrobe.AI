@@ -95,18 +95,18 @@ export default function Button({
 
   return (
     <motion.button
-      whileHover={!isDisabled ? { scale: 1.02, y: -2 } : {}}
+      whileHover={!isDisabled ? { scale: 1.01 } : {}}
       whileTap={!isDisabled ? { scale: 0.98 } : {}}
       transition={{
-        duration: 0.3,
-        ease: [0.4, 0, 0.2, 1],
+        duration: 0.2,
+        ease: [0.16, 1, 0.3, 1],
       }}
       className={`
         ${baseStyles}
         ${variants[variant]}
         ${sizes[size]}
         ${fullWidth ? 'w-full' : ''}
-        ${glow && variant === 'primary' ? 'animate-pulse-glow' : ''}
+        ${glow && variant === 'primary' ? 'shadow-[0_4px_24px_rgba(255,45,120,0.35)]' : ''}
         ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
         ${className}
       `.trim().replace(/\s+/g, ' ')}
