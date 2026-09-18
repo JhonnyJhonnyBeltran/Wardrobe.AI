@@ -13,7 +13,7 @@ import {
   Heart, Grid3x3, List, Search, Filter, Plus, Wand2, X, Shirt, Layers, Share2, Trash2, Check, CalendarDays, Sparkles
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { Button, Card, FloatingCreateButton, OutfitCard, ClothingItem, NotificationToastContainer, WardrobeSelectionModal, OutfitDetailModal, EmptyState, SkeletonCard } from '@/components';
+import { Button, Card, FloatingCreateButton, OutfitCard, ClothingItem, NotificationToastContainer, WardrobeSelectionModal, OutfitDetailModal, EmptyState, SkeletonCard, ProfileProgressBar } from '@/components';
 import AddItemModal from '@/components/AddItemModal';
 import ProductModal from '@/components/ProductModal';
 import KloeProModal from '@/components/KloeProModal';
@@ -659,7 +659,7 @@ export default function ClosetPage() {
           </div>
 
           {/* Organic Prompt Banner to consult Kloe */}
-          <Link href="/closet/kloe" className="block mb-5 cursor-pointer">
+          <Link href="/closet/kloe" className="block mb-2 cursor-pointer">
             <div className="bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-pink-500/10 border border-[var(--brand-pink)]/30 rounded-2xl p-3.5 flex items-center justify-between hover:border-[var(--brand-pink)]/60 transition-all shadow-xs group">
               <div className="flex items-center gap-3">
                 <div className="relative w-12 h-8 flex-shrink-0 flex items-center justify-center">
@@ -679,6 +679,9 @@ export default function ClosetPage() {
               </span>
             </div>
           </Link>
+
+          {/* Progress / Tutorial Bar (disappears permanently at 100%) */}
+          <ProfileProgressBar />
 
           {/* Profile-Style Tabs */}
           <div className="flex border-b border-[var(--border-color)]">

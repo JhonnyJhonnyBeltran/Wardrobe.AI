@@ -67,11 +67,12 @@ export default function ProfileProgressBar() {
 
   const totalPercent = Math.min(100, score);
 
+  // If 100% complete, do not render (disappears completely and never returns)
+  if (totalPercent >= 100) return null;
+
   // Dynamic status text matching the exact missing milestone
   let statusMessage = '';
-  if (totalPercent >= 100) {
-    statusMessage = '¡Armario al 100%! Tienes un estilazo impecable 🔥';
-  } else if (!hasStyle) {
+  if (!hasStyle) {
     statusMessage = `Nivel de estilo al ${totalPercent}% · Define tus vibes de moda`;
   } else if (!hasAvatar) {
     statusMessage = `Nivel de estilo al ${totalPercent}% · Sube tu mejor foto de perfil`;
@@ -88,9 +89,8 @@ export default function ProfileProgressBar() {
     statusMessage = `Nivel de estilo al ${totalPercent}% · Caza nuevas tendencias`;
   }
 
-  // If 100% complete and user doesn't want to expand, keep it subtle
   return (
-    <div className="w-full my-4">
+    <div className="w-full my-3">
       <div className="bg-[var(--card-bg)] border border-[var(--border-color)]/60 rounded-2xl p-4 shadow-sm transition-all hover:border-[var(--border-color)]">
         {/* Header with percentage & toggle */}
         <div className="flex items-center justify-between gap-3">

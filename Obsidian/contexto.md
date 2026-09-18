@@ -1531,6 +1531,14 @@ En cada conversación, el backend alimenta a CloSy con:
     3. Respuestas 100% personalizadas, razonadas y con marcas/tejidos concretos, eliminando listas genéricas prefabricadas.
   - Actualizado el motor heurístico de contingencia con soporte dinámico para invierno, verano y entretiempo masculino y femenino.
 
+### 122. Integración de la Barra de Nivel de Estilo en Armario (`/closet`) y Desaparición Definitiva al 100% (Septiembre 2026)
+- **Integración Contextual en Armario (`app/(app)/closet/page.tsx`)**:
+  - Insertado el componente `ProfileProgressBar` debajo del banner orgánico *"¿Qué me pongo hoy? Pídele a Kloe que te arme un look con tu ropa en segundos"*.
+  - Facilita a los nuevos usuarios avanzar en los hitos de la app (preferencias de estilo, avatar, subir 2 prendas, crear look en el lienzo, consultar a Kloe y publicar en comunidad) directamente desde la pantalla central del armario.
+- **Desaparición Definitiva y Automática al 100% (`components/Profile/ProfileProgressBar.tsx`)**:
+  - Implementada la condición `if (totalPercent >= 100) return null;`.
+  - Cuando el usuario completa todos los pasos y su nivel de estilo llega al 100% (`¡Armario al 100%! Tienes un estilazo impecable 🔥`), el componente se desmonta por completo y no vuelve a mostrarse en la interfaz, manteniendo una experiencia limpia y despejada para usuarios avanzados.
+
 
 
 

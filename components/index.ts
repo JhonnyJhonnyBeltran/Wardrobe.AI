@@ -47,3 +47,4 @@ export { default as KloeProModal } from './KloeProModal';
 export { default as AvatarModal } from './AvatarModal';
 export { default as PullToRefresh } from './PullToRefresh';
 export { default as LoadingSpinner } from './LoadingSpinner';
+export { default as ProfileProgressBar } from './Profile/ProfileProgressBar';
