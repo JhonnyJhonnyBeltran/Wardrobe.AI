@@ -348,14 +348,11 @@ export default function AddItemModal({
                                     <h3 className="text-base font-bold text-[var(--foreground)]">
                                         {isEditing ? 'Editar prenda' : isBatch ? 'Subir prendas' : 'Subir nueva prenda'}
                                     </h3>
-                                    <p className="text-xs text-[var(--foreground-tertiary)]">
-                                        {isBatch 
-                                            ? `Subida múltiple (${batchItems.length} prendas seleccionadas)`
-                                            : mode === 'quick' && !isEditing 
-                                            ? 'Modo de creación rápida' 
-                                            : 'Detalles completos de la prenda'
-                                        }
-                                    </p>
+                                    {isBatch && (
+                                        <p className="text-xs text-[var(--foreground-tertiary)]">
+                                            Subida múltiple ({batchItems.length} prendas seleccionadas)
+                                        </p>
+                                    )}
                                 </div>
                                 <button
                                     type="button"

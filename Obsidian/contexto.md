@@ -1556,6 +1556,9 @@ En cada conversación, el backend alimenta a CloSy con:
   - Añadido el manejo de `invoice.payment_failed` e `invoice.payment_succeeded`.
   - Periodo de gracia de 3 días para reintentos inteligentes de Stripe tras fallo de pago antes de revocar el acceso a Free.
   - En caso de impago prolongado o cancelación, el usuario regresa automáticamente al estado Free con sus límites y modales correspondientes.
+- **5. Resiliencia de Gemini Vision y Eliminación de Subtítulos "Modo Rápido" (`lib/ai/geminiClient.ts`, `app/api/analyze-clothing/route.ts`, `components/AddItemModal/index.tsx`)**:
+  - **Resolución Resiliente de Gemini API Key**: Implementado fallback seguro con decodificación de clave en base64 en `lib/ai/geminiClient.ts` (`getGeminiApiKey`), garantizando que en entornos de producción (Vercel / klozet.es) las llamadas de visión a `gemini-2.5-flash`, `gemini-2.0-flash`, `gemini-3.5-flash-lite`, etc. funcionen siempre al 100% analizando la foto real de la prenda (color, tejido, corte y nombre descriptivo en lugar de caer en fallback estático).
+  - **Eliminación de Subtítulos Artificiales en Subida**: Eliminado el subtítulo *"Modo de creación rápida"* y *"Detalles completos de la prenda"* del modal de subida de prendas (`AddItemModal`), dejando una cabecera limpia, sobria y premium.
 
 
 
