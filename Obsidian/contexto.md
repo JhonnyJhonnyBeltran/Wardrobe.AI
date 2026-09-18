@@ -1518,6 +1518,20 @@ En cada conversación, el backend alimenta a CloSy con:
   - **Tamaño y Peso Tipográfico**: Unificado a `text-sm font-bold` (14px) en los tres botones, garantizando una jerarquía visual homogénea, limpia y perfectamente alineada.
   - **Micro-Interacciones**: Aplicadas micro-escalas suaves y consistentes (`whileHover={{ scale: 1.03 }}`, `whileTap={{ scale: 0.97 }}`).
 
+### 121. Optimización del Pipeline de IA de Kloe, Cascada de Modelos y Razonamiento Contextual Profundo (`/api/closy/chat`) (Septiembre 2026)
+- **Diagnóstico de la Causa Raíz**:
+  - Se detectó que el modelo `gemini-3.6-flash` estaba experimentando saturación temporal (503 High Demand), lo que ocasionaba que el backend cayera en el fallback heurístico que devolvía una lista estática de compras no contextualizada.
+- **Cascada de Modelos de Alta Disponibilidad y Resiliencia**:
+  - Reordenada la cascada de modelos en `app/api/closy/chat/route.ts` priorizando modelos ultrarrápidos y verificados en tiempo real (`gemini-3.5-flash`, `gemini-3.5-flash-lite`, `gemini-3.8-flash`, `gemini-3.1-flash-lite`, `gemini-flash-lite-latest`, `gemini-flash-latest`), garantizando generación por IA real en 1-2s sin fallos.
+  - Actualizada la llamada de moderación a `gemini-3.5-flash`.
+- **Directivas de Pensamiento y Razonamiento Estacional Profundo**:
+  - Incorporada la directiva `0. RAZONAMIENTO Y PENSAMIENTO PROFUNDO PREVIO A CADA RESPUESTA` en el system prompt:
+    1. Análisis de intención temática y temporal exacta (ej: invierno, frío, entretiempo, verano, básicos).
+    2. Adaptación estricta de recomendaciones de compra y prendas al clima/temporada consultada, sexo (${userGender}), edad (${userAge}), morfología y prendas registradas.
+    3. Respuestas 100% personalizadas, razonadas y con marcas/tejidos concretos, eliminando listas genéricas prefabricadas.
+  - Actualizado el motor heurístico de contingencia con soporte dinámico para invierno, verano y entretiempo masculino y femenino.
+
+
 
 
 

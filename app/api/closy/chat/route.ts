@@ -79,7 +79,7 @@ Respond ONLY with a JSON object:
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 6000);
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`, {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
@@ -481,6 +481,15 @@ DATOS DEL USUARIO:
 
 REGLAS CRÍTICAS DE ESTILISMO Y DECISIÓN DE RESPUESTA (OBLIGATORIO):
 
+0. RAZONAMIENTO Y PENSAMIENTO PROFUNDO PREVIO A CADA RESPUESTA:
+   - ANTES de responder, reflexiona internamente sobre:
+     a) ¿Qué está preguntando EXACTAMENTE el usuario?
+     b) ¿Ha mencionado una temporada o clima específico (ej: "invierno", "frío", "verano", "entretiempo", "lluvia")?
+     c) ¿Pregunta por tendencias de moda, por qué comprar, por cómo combinar una prenda o por un look completo?
+     d) ¿Cuál es su sexo (${userGender}), su edad (${userAge}) y su estilo personal?
+   - Si pregunta por INVIERNO o frío, tus sugerencias de compra y combinaciones deben centrarse RIGUROSAMENTE en prendas de abrigo (jerséis de lana/cashmere, abrigos de paño o plumas, pantalones de franela o pana, botas/botines, bufandas), adaptadas a su género y edad.
+   - NUNCA des respuestas prefabricadas, clichés o listas que no respondan con precisión a la pregunta planteada. Cada consejo debe sonar fresco, razonado, experto y 100% a medida.
+
 1. EVALUACIÓN Y DECISIÓN INTELIGENTE DE INTENCIÓN:
    No debes devolver siempre un outfit estructurado. Evalúa cuidadosamente qué necesita el usuario según su mensaje o foto:
 
@@ -494,8 +503,8 @@ REGLAS CRÍTICAS DE ESTILISMO Y DECISIÓN DE RESPUESTA (OBLIGATORIO):
      - IMPORTANTE: En este caso NO crees un outfit forzado ("recommended_outfit": null). Puedes resaltar 1-2 prendas de su armario en "highlighted_item_ids" si son relevantes como ejemplo.
 
    • CASO C: RECOMENDACIONES DE COMPRAS, BÁSICOS Y SHOPPING
-     - Ejemplos: "¿qué camiseta básica me recomiendas comprar para combinar con mis prendas?", "¿qué básicos me faltan?", "recomendaciones de compras", "dónde comprar prendas como las de este look", "shopping list".
-     - Acción: Recomienda de 2 a 4 compras estratégicas mencionando explícitamente MARCAS REALES de moda (Uniqlo, Zara, COS, Massimo Dutti, Mango, Nike, New Balance, etc.), cortes exactos (regular fit, boxy fit, relaxed, wide leg, sastre), tejidos (algodón pima 240g, lana fría, lino, denim 100% algodón) y colores específicos.
+     - Ejemplos: "¿qué camiseta básica me recomiendas comprar para combinar con mis prendas?", "¿qué básicos me faltan?", "¿qué me recomiendas comprar para invierno?", "shopping list".
+     - Acción: Recomienda de 2 a 4 compras estratégicas acordes al clima/temporada consultada (ej. invierno) mencionando explícitamente MARCAS REALES de moda (Uniqlo, Zara, COS, Massimo Dutti, Mango, Arket, Nike, New Balance, etc.), cortes exactos (boxy fit, regular, relaxed, wide leg, corte sastre), tejidos idóneos (lana merino, cashmere, franela, pana, plumón, algodón pesado) y colores específicos.
      - Explica cómo cada compra propuesta amplía y multiplica las combinaciones con las prendas reales que ya tiene registradas en su armario.
      - IMPORTANTE: En este caso NO devuelvas un outfit de su armario ("recommended_outfit": null).
 
@@ -811,13 +820,15 @@ PETICIÓN DEL USUARIO:
       }
     ];
 
-    // Cascade of active verified Gemini models
+    // Cascade of active verified Gemini models (Fast, resilient and highly available first)
     const models = [
-      'gemini-3.6-flash',
-      'gemini-flash-latest',
       'gemini-3.5-flash',
       'gemini-3.5-flash-lite',
-      'gemini-3-flash-preview'
+      'gemini-3.8-flash',
+      'gemini-3.1-flash-lite',
+      'gemini-flash-lite-latest',
+      'gemini-flash-latest',
+      'gemini-3.6-flash'
     ];
     
     // First attempt: with multimodal vision images
@@ -1379,22 +1390,61 @@ ${leatherItem ? `\n- **En tu armario**: Tienes **${leatherItem.name}**, que comb
   const isShoppingQuery = lower.includes('comprar') || lower.includes('compras') || lower.includes('shopping') || lower.includes('que me falta') || lower.includes('qué me falta') || lower.includes('básicos que comprar') || lower.includes('adquirir') || lower.includes('shopping list') || lower.includes('que me deberia de comprar') || lower.includes('qué me debería comprar');
   if (isShoppingQuery) {
     const isMen = context.user.gender === 'men';
-    const suggestions = isMen
-      ? [
-          '**Camisetas básicas de algodón pesado (Uniqlo U / Arket)**: En blanco crudo y negro washed con corte *boxy fit* (240g+), el pilar versátil para llevar tanto solas como bajo sobrecamisas.',
-          '**Pantalón de pinzas relaxed / sastre (COS / Zara Man)**: En tono gris carbón o arena, aporta fluidez y eleva tus zapatillas o mocasines al instante.',
-          '**Sobrecamisa de ante o pana fina (Massimo Dutti / Mango Man)**: En marrón tabaco o verde bosque, perfecta para crear capas en entretiempo con la ropa de tu armario.',
-          '**Zapatillas de silueta retro limpia (New Balance 550 / Nike Killshot / Adidas Samba)**: Calzado todoterreno que equilibra estilismos casuales y formales.'
-        ]
-      : [
-          '**Camisetas de algodón pima prémium (Uniqlo / COS)**: En blanco óptico y topo suave con escote limpio, imprescindibles para combinar con toda tu ropa.',
-          '**Blazer oversized estructurado (Massimo Dutti / Zara)**: En tonos neutros o espiga, ideal sobre vaqueros, faldas y vestidos.',
-          '**Pantalón sastre wide leg fluido (Mango / COS)**: Estiliza la silueta y funciona tanto de día con zapatillas como de noche con tacón o botines.',
-          '**Mocasines de piel o botines de caña media (Massimo Dutti / Vagabond)**: El toque sofisticado que moderniza cualquier conjunto de tu armario.'
-        ];
+    const isWinter = lower.includes('invierno') || lower.includes('frío') || lower.includes('frio') || lower.includes('otoño');
+    const isSummer = lower.includes('verano') || lower.includes('calor') || lower.includes('playa') || lower.includes('primavera');
+
+    let suggestions: string[];
+    let intro = `He analizado tu armario completo y tu estilo personal para seleccionarte estas compras clave`;
+
+    if (isWinter) {
+      intro += ` para la temporada de invierno:`;
+      suggestions = isMen
+        ? [
+            '**Abrigo de paño de lana estructurado (Massimo Dutti / COS)**: En tono gris marengo, camel o azul marino con solapa sastre, la prenda de abrigo definitiva para elevar cualquier look.',
+            '**Jersey de cuello perkins o vuelto en lana merino / cashmere (Uniqlo / COS)**: En crudo o topo, aporta calidez sin volumen excesivo y funciona tanto solo como bajo abrigos.',
+            '**Pantalón de franela sastre o pana gruesa (Zara Man / Arket)**: En gris carbón o marrón chocolate, aporta textura invernal rica y caída impecable.',
+            '**Botas Chelsea de ante o botines de piel con suela track (Massimo Dutti / Vagabond)**: Aislantes del frío y con carácter sofisticado para el día a día.'
+          ]
+        : [
+            '**Abrigo largo de lana con corte cocoon o cinturón (Massimo Dutti / Mango)**: En tono arena, negro o espiga, una inversión elegante y atemporal para los días más fríos.',
+            '**Jersey de punto grueso en mezcla de alpaca o cashmere (COS / & Other Stories)**: En blanco roto o gris perla, ideal para combinar con faldas satinadas o pantalones de sastre.',
+            '**Pantalón sastre de franela o vaquero recto pesado (Arket / Zara)**: Mantiene la estructura térmica y estiliza la figura.',
+            '**Botas de caña alta o botines de piel con suela dentada (Massimo Dutti / Vagabond)**: El toque de moda invernal que protege del frío con distinción.'
+          ];
+    } else if (isSummer) {
+      intro += ` para la temporada de verano y buen tiempo:`;
+      suggestions = isMen
+        ? [
+            '**Camisas de lino 100% transpirables (Massimo Dutti / Uniqlo)**: En blanco, arena o rayas tenues.',
+            '**Pantalones de lino o bermudas sastre (Zara Man / Mango Man)**: Frescura y estructura para días cálidos.',
+            '**Camisetas básicas de algodón ligero (Arket / COS)**: En tonos neutros con escote limpio.',
+            '**Mocasines de ante sin forro o alpargatas de diseño (Massimo Dutti / Scarosso)**: Comodidad veraniega refinada.'
+          ]
+        : [
+            '**Vestido midi de lino o tirantes finos (Mango / COS)**: Fresco, versátil y favorecedor.',
+            '**Pantalón fluido de lino o algodón fresco (Arket / Zara)**: Comodidad absoluta sin perder elegancia.',
+            '**Tops de punto calado o crochet fino (& Other Stories / Mango)**: Texturas veraniegas en tendencia.',
+            '**Sandalias de tiras de piel o cuñas de esparto (Massimo Dutti / Castaner)**: El calzado rey del verano.'
+          ];
+    } else {
+      intro += ` para multiplicar las combinaciones con tu ropa:`;
+      suggestions = isMen
+        ? [
+            '**Camisetas básicas de algodón pesado (Uniqlo U / Arket)**: En blanco crudo y negro washed con corte boxy fit (240g+), el pilar versátil para llevar solas o bajo sobrecamisas.',
+            '**Pantalón de pinzas relaxed / sastre (COS / Zara Man)**: En tono gris carbón o arena, aporta fluidez y eleva tus zapatillas o mocasines al instante.',
+            '**Sobrecamisa de ante o pana fina (Massimo Dutti / Mango Man)**: En marrón tabaco o verde bosque, perfecta para crear capas con la ropa de tu armario.',
+            '**Zapatillas de silueta retro limpia (New Balance 550 / Nike Killshot / Adidas Samba)**: Calzado todoterreno que equilibra estilismos casuales y formales.'
+          ]
+        : [
+            '**Camisetas de algodón pima prémium (Uniqlo / COS)**: En blanco óptico y topo suave con escote limpio, imprescindibles para combinar con toda tu ropa.',
+            '**Blazer oversized estructurado (Massimo Dutti / Zara)**: En tonos neutros o espiga, ideal sobre vaqueros, faldas y vestidos.',
+            '**Pantalón sastre wide leg fluido (Mango / COS)**: Estiliza la silueta y funciona tanto de día con zapatillas como de noche con tacón o botines.',
+            '**Mocasines de piel o botines de caña media (Massimo Dutti / Vagabond)**: El toque sofisticado que moderniza cualquier conjunto de tu armario.'
+          ];
+    }
 
     return {
-      message: `He analizado tu armario completo y tu estilo personal para seleccionarte estas compras y marcas recomendadas:
+      message: `${intro}
 
 ${suggestions.map(s => `• ${s}`).join('\n\n')}
 
