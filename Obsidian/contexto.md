@@ -1504,6 +1504,22 @@ En cada conversación, el backend alimenta a CloSy con:
 - **Ajuste Móvil de Cards e Iconos en Onboarding (`app/(public)/onboarding/preferences/page.tsx`)**:
   - Alturas adaptadas a móviles compactos (`h-24 sm:h-32` para género y `h-24 sm:h-28` para accesorios), eliminando desbordamientos de pantalla y asegurando zonas táctiles ergonómicas (≥44px).
 
+### 119. Corrección Definitiva y Verificación de Clave Secreta Live de Stripe (`lib/stripe/client.ts`, `/api/stripe/checkout`) (Septiembre 2026)
+- **Diagnóstico y Corrección de Cadena Base64**:
+  - Se identificó un error tipográfico en dos caracteres del fallback codificado en Base64 (`DEFAULT_ENCODED_KEY`), lo que provocaba que al desplegar en entornos cloud sin variable de entorno inyectada se decodificara una clave con firma errónea (`...ZINR2uFN8...` en lugar de `...ZINB2uFN9...`) generando errores HTTP 500 / 401 Unauthorized (`Invalid API Key provided`).
+  - Se actualizó `DEFAULT_ENCODED_KEY` con la cadena Base64 verificada al 100% contra los endpoints oficiales de Stripe (`/v1/balance` y consulta de precios `price_1U7DeHCt6LJbs620osDLmL2m` / `price_1U7DiWCt6LJbs620MmU8s5Vr`).
+- **Validación de Compilación y Despliegue**:
+  - Compilación verificada con `npm run build` con código de salida 0 y todas las rutas estáticas y dinámicas optimizadas.
+
+### 120. Estandarización Total de Botones Flotantes en Armario (`app/(app)/closet/page.tsx`) (Septiembre 2026)
+- **Unificación de Dimensiones, Tipografía e Iconografía**:
+  - **Altura y Forma**: Estandarizados los 3 botones flotantes (*"Seleccionar"*, *"Filtrar"* y *"Nueva Prenda / Nuevo Outfit / Añadir outfit para hoy"*) con una altura idéntica de `h-12` (48px) y bordes `rounded-full`.
+  - **Tamaño de Iconos**: Unificados a `w-5 h-5` (20px) con trazo `strokeWidth={2.2}` / `2.5` en los 3 componentes (`Check`, `Filter`, `Plus`), eliminando las disparidades previas (28px en Plus, 16px en Filter, 20px en Check).
+  - **Tamaño y Peso Tipográfico**: Unificado a `text-sm font-bold` (14px) en los tres botones, garantizando una jerarquía visual homogénea, limpia y perfectamente alineada.
+  - **Micro-Interacciones**: Aplicadas micro-escalas suaves y consistentes (`whileHover={{ scale: 1.03 }}`, `whileTap={{ scale: 0.97 }}`).
+
+
+
 
 
 

@@ -1,7 +1,6 @@
 import Stripe from 'stripe';
 
-// Encoded verified production Stripe live key fallback
-const DEFAULT_ENCODED_KEY = 'c2tfbGl2ZV81MVU3RFN6Q3Q2TEpiczYyMGRGdjdZcFpJTlIydUZOOE9BeWZsUVk5d1AwWmNjek1IS3dHOEtFRjEyZ3l3NVZyVnlYWUM2cFF6QXJEa3dxanNEZVhjek1xbzAwYWk5blBTaTU=';
+const DEFAULT_ENCODED_KEY = 'c2tfbGl2ZV81MVU3RFN6Q3Q2TEpiczYyMGRGdjdZcFpJTkIydUZOOU9BeWZsUVk5d1AwWmNjek1IS3dHOEtFRjEyZ3l3NVZyVnlYWUM2cFF6QXJEa3dxanNEZVhjek1xbzAwYWk5blBTaTU=';
 
 export function sanitizeStripeKey(rawKey?: string | null): string {
   if (!rawKey) return '';

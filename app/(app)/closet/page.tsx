@@ -975,7 +975,9 @@ export default function ClosetPage() {
         } md:bottom-[42px]`}>
           {/* Desktop Select Button */}
           {activeTab !== 'calendar' && (
-            <button
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
               onClick={() => {
                 if (selectionMode) {
                   setSelectionMode(false);
@@ -984,30 +986,37 @@ export default function ClosetPage() {
                   setSelectionMode(true);
                 }
               }}
-              className="hidden md:flex items-center gap-2 bg-[var(--card-bg)] px-4 py-2.5 rounded-full shadow-lg font-medium text-[var(--foreground)] border border-[var(--border-color)] hover:bg-[var(--background-secondary)] transition-colors"
+              className={`h-12 px-4 md:px-5 rounded-full hidden md:flex items-center justify-center gap-2 border shadow-lg transition-all cursor-pointer ${
+                selectionMode
+                  ? 'bg-[var(--foreground)] text-[var(--background)] border-transparent'
+                  : 'bg-[var(--card-bg)] text-[var(--foreground)] border-[var(--border-color)] hover:border-[var(--brand-pink)]/50 hover:bg-[var(--background-secondary)]'
+              }`}
+              aria-label={selectionMode ? 'Cancelar selección' : 'Seleccionar prendas'}
             >
-              <Check className="w-5 h-5" />
-              {selectionMode ? 'Cancelar' : 'Seleccionar'}
-            </button>
+              <Check className="w-5 h-5 text-[var(--brand-pink)]" strokeWidth={2.2} />
+              <span className="text-sm font-bold whitespace-nowrap">
+                {selectionMode ? 'Cancelar' : 'Seleccionar'}
+              </span>
+            </motion.button>
           )}
 
           {/* Filter Button */}
           {activeTab !== 'calendar' && (
             <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
               onClick={() => setShowFilters(prev => !prev)}
-              className={`h-12 px-4 rounded-full flex items-center justify-center gap-2 border shadow-lg transition-all cursor-pointer ${
+              className={`h-12 px-4 md:px-5 rounded-full flex items-center justify-center gap-2 border shadow-lg transition-all cursor-pointer ${
                 activeFilterCount > 0
                   ? 'bg-[var(--foreground)] text-[var(--background)] border-transparent'
-                  : 'bg-[var(--card-bg)] text-[var(--foreground)] border-[var(--border-color)] hover:border-[var(--brand-pink)]/50'
+                  : 'bg-[var(--card-bg)] text-[var(--foreground)] border-[var(--border-color)] hover:border-[var(--brand-pink)]/50 hover:bg-[var(--background-secondary)]'
               }`}
               aria-label="Filtros"
             >
-              <Filter className="w-4 h-4 text-[var(--brand-pink)]" />
-              <span className="text-xs font-bold">Filtrar</span>
+              <Filter className="w-5 h-5 text-[var(--brand-pink)]" strokeWidth={2.2} />
+              <span className="text-sm font-bold whitespace-nowrap">Filtrar</span>
               {activeFilterCount > 0 && (
-                <span className="w-5 h-5 rounded-full bg-[var(--brand-pink)] text-white text-[10px] font-bold flex items-center justify-center">
+                <span className="w-5 h-5 rounded-full bg-[var(--brand-pink)] text-white text-[11px] font-bold flex items-center justify-center ml-0.5">
                   {activeFilterCount}
                 </span>
               )}
@@ -1023,8 +1032,8 @@ export default function ClosetPage() {
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0, opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
                 onClick={() => {
                   if (activeTab === 'items') {
                     setShowAddModal(true);
@@ -1036,10 +1045,11 @@ export default function ClosetPage() {
                     }
                   }
                 }}
-                className="h-14 min-w-[56px] px-0 md:px-6 rounded-full bg-[var(--brand-pink)] flex items-center justify-center text-white shadow-xl hover:shadow-[0_0_20px_rgba(236,72,153,0.5)] transition-all cursor-pointer group"
+                className="h-12 min-w-[48px] px-0 md:px-5 rounded-full bg-[var(--brand-pink)] flex items-center justify-center gap-2 text-white shadow-lg hover:shadow-[0_0_20px_rgba(236,72,153,0.4)] transition-all cursor-pointer group"
+                aria-label={activeTab === 'items' ? 'Nueva Prenda' : activeTab === 'outfits' ? 'Nuevo Outfit' : 'Añadir outfit para hoy'}
               >
-                <Plus className="w-7 h-7" />
-                <span className="hidden md:block font-bold whitespace-nowrap text-[15px] ml-1 pr-1">
+                <Plus className="w-5 h-5 flex-shrink-0" strokeWidth={2.5} />
+                <span className="hidden md:block text-sm font-bold whitespace-nowrap pr-0.5">
                   {activeTab === 'items' ? 'Nueva Prenda' : activeTab === 'outfits' ? 'Nuevo Outfit' : 'Añadir outfit para hoy'}
                 </span>
               </motion.button>
