@@ -6,6 +6,7 @@ import { getGeminiApiKey } from '@/lib/ai/geminiClient';
 export interface AnalyzeResponse {
   category: 'top' | 'shirt' | 'sweater' | 'hoodie' | 'jacket' | 'outerwear' | 'bottom' | 'shorts' | 'skirt' | 'dress' | 'shoes' | 'bag' | 'accessory' | 'other';
   name: string;
+  brand: string | null;
   color: string;
   colorHex: string;
   fabric: string;
@@ -67,6 +68,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         category: 'bottom',
         name: 'Prenda de armario',
+        brand: null,
         color: 'Negro',
         colorHex: '#121212',
         fabric: 'Algodón',
@@ -111,10 +113,15 @@ Analiza detenidamente la fotografía real de la prenda u objeto subido por el us
    - "accessory": Gorras, gorros, sombreros, cinturones, gafas de sol, relojes, bufandas, corbatas, joyas.
    - "other": ÚNICAMENTE para objetos que NO sean prendas de vestir ni calzado (ej: libros, cómics, figuras, libretas). ESTÁ PROHIBIDO clasificar una prenda o ropa como "other".
 
-3. DETECCIÓN CROMÁTICA Y DE DETALLES:
+3. DETECCIÓN DE MARCA, LOGOS Y ESTAMPADOS VISIBLES:
+   - "brand": Si en la prenda se observa un logotipo reconocible, texto de marca, bordado o etiqueta visible (ej: "Nike", "Adidas", "Zara", "Stussy", "Ralph Lauren", "Carhartt", "Gucci", "Uniqlo", "Pull&Bear", "Bershka", "Mango", "Massimo Dutti", "Vans", "Converse", "New Balance", "Supreme", "Levi's", "The North Face", "Jordan", "Lacoste", "Tommy Hilfiger", "Calvin Klein", "Puma", "Balenciaga", "Corteiz", "Scuffers", "Nude Project", "Esenzia", etc.), extrae el nombre exacto de la marca.
+   - Si NO hay ninguna marca visible o es una prenda genérica/básica sin logo evidente, pon null.
+   - PROHIBIDO bajo ninguna circunstancia poner "closet", "klozet", "armario" o nombres de la app como marca.
+
+4. DETECCIÓN CROMÁTICA Y DE DETALLES:
    - "color": Nombre en español del color predominante REAL de la prenda (ej: "Azul marino", "Azul denim", "Negro", "Blanco", "Gris", "Beige", "Verde militar", "Marrón", "Rojo", "Rosa", "Amarillo", "Naranja", "Morado", etc.).
    - "colorHex": Código hexadecimal representativo del color dominante (ej: Negro="#121212", Azul marino="#1E293B", Azul denim="#2563EB", Blanco="#FFFFFF", Beige="#D4C4B0", Gris="#6B7280", Verde oliva="#4D5D3B", etc.).
-   - "name": Nombre descriptivo de catálogo en español (ej: "Vaqueros Baggy Azul Claro", "Pantalón Cargo Negro", "Camiseta Gráfica Vintage", "Sudadera Oversize Gris", "Zapatillas Bajas Blancas").
+   - "name": Nombre descriptivo de catálogo en español (ej: "Vaqueros Baggy Azul Claro", "Pantalón Cargo Negro", "Camiseta Gráfica Vintage", "Sudadera Oversize Gris", "Zapatillas Bajas Blancas"). Si detectas una marca clara, puedes incluirla (ej: "Camiseta Esenzia Azul Marino", "Sudadera Nike Gris").
    - "fabric": Algodón | Denim | Cuero | Lana | Lino | Poliéster | Punto | Seda | Pana | Sintético.
    - "season": "spring" | "summer" | "autumn" | "winter" | "all-season".
 
@@ -123,6 +130,7 @@ Devuelve ÚNICAMENTE un JSON válido sin texto extra:
   "isInappropriate": false,
   "inappropriateReason": null,
   "category": "bottom",
+  "brand": "Nombre de la marca o null",
   "name": "Nombre descriptivo de la prenda",
   "color": "Color principal",
   "colorHex": "#hex",

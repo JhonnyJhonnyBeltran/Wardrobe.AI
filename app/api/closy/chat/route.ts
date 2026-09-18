@@ -286,11 +286,22 @@ export async function POST(request: NextRequest) {
     // 6. Index User Context (Clothes with Photos, Outfits, Profile Preferences, Liked Styles)
     const context = await buildUserStylingContext(supabase, user.id);
 
-    // 6. Call True AI Engine (Google Gemini 3.6 Flash / 3 Flash Preview with Direct Multimodal Vision Analysis)
-    // Normalize attached items (can be array or single item)
+    // 7. Normalize attached items (can be array or single item)
     const attachedItems: any[] = Array.isArray(body.attached_items) && body.attached_items.length > 0
       ? body.attached_items
       : (body.attached_item ? [body.attached_item] : []);
+
+    // 8. Premium Check: Attaching wardrobe garments or saved posts is exclusively a Kloe Pro feature
+    if (!isPremium && (attachedItems.length > 0 || body.attached_post)) {
+      return NextResponse.json(
+        {
+          error: 'Elegir prendas de tu armario como input o adjuntar looks guardados es una funcionalidad exclusiva de Kloe Pro',
+          message: 'Desbloquea Kloe Pro para poder elegir prendas de tu armario como input y adjuntar looks guardados.',
+          isPremiumRequired: true
+        },
+        { status: 403 }
+      );
+    }
 
     const geminiApiKey = getGeminiApiKey();
     let aiResult: any = null;

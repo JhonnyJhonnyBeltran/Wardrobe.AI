@@ -610,19 +610,34 @@ export default function KloePage() {
 
   const openWardrobe = () => {
     haptics.selection();
+    if (!isPremium()) {
+      setShowProModal(true);
+      toast.info('Elegir prendas de tu armario como input es una función de Kloe Pro');
+      return;
+    }
     setShowWardrobeDrawer(true);
     fetchWardrobe();
   };
 
   const openSaved = () => {
     haptics.selection();
+    if (!isPremium()) {
+      setShowProModal(true);
+      toast.info('Adjuntar looks y publicaciones guardadas es una función de Kloe Pro');
+      return;
+    }
     setShowSavedDrawer(true);
     fetchSavedPosts();
   };
 
-  // Toggle garment selection to attach multiple items to input
+  // Toggle garment selection to attach multiple items to input (Kloe Pro)
   const handleToggleWardrobeItem = (item: any) => {
     haptics.selection();
+    if (!isPremium()) {
+      setShowProModal(true);
+      toast.info('Elegir prendas de tu armario como input es una función de Kloe Pro');
+      return;
+    }
     setAttachedItems(prev => {
       const exists = prev.some(i => i.id === item.id);
       if (exists) {
@@ -643,9 +658,14 @@ export default function KloePage() {
     });
   };
 
-  // Select saved post to attach to input with deep outfit resolution
+  // Select saved post to attach to input with deep outfit resolution (Kloe Pro)
   const handleSelectSavedPost = async (post: any) => {
     haptics.selection();
+    if (!isPremium()) {
+      setShowProModal(true);
+      toast.info('Adjuntar looks guardados es una función de Kloe Pro');
+      return;
+    }
     if (attachedPost?.id === post.id) {
       setAttachedPost(null);
       setShowSavedDrawer(false);
@@ -750,11 +770,15 @@ export default function KloePage() {
     if (!text && attachedItems.length === 0 && !attachedPost && !attachedImage) return;
     if (isTyping) return;
 
-    haptics.tap();
-
     const currentAttachedItems = [...attachedItems];
     const currentAttachedPost = attachedPost;
     const currentAttachedImage = attachedImage;
+
+    if (!isPremium() && (currentAttachedItems.length > 0 || currentAttachedPost)) {
+      setShowProModal(true);
+      toast.info('Adjuntar prendas de tu armario o looks guardados es exclusivo de Kloe Pro');
+      return;
+    }
 
     let defaultPrompt = '';
     if (!text) {
@@ -1518,27 +1542,39 @@ export default function KloePage() {
               <button
                 type="button"
                 onClick={openWardrobe}
-                className="relative p-2 rounded-full text-gray-900 dark:text-white hover:text-[var(--brand-pink)] dark:hover:text-[var(--brand-pink)] transition-colors cursor-pointer"
-                title="Adjuntar prendas de tu armario"
+                className="relative p-2 rounded-full text-gray-900 dark:text-white hover:text-[var(--brand-pink)] dark:hover:text-[var(--brand-pink)] transition-colors cursor-pointer group"
+                title={isPremium() ? "Adjuntar prendas de tu armario" : "Elegir prendas de tu armario (Kloe Pro)"}
                 aria-label="Adjuntar prendas"
               >
                 <Shirt className="w-4 h-4" />
-                {attachedItems.length > 0 && (
-                  <span className="absolute top-0 right-0 w-4 h-4 rounded-full bg-[var(--brand-pink)] text-white text-[9px] font-bold flex items-center justify-center">
-                    {attachedItems.length}
+                {!isPremium() ? (
+                  <span className="absolute -top-1 -right-1 px-1 py-0.2 bg-gradient-to-r from-amber-500 to-orange-500 text-[8px] font-black text-white rounded-full leading-none shadow-xs">
+                    PRO
                   </span>
+                ) : (
+                  attachedItems.length > 0 && (
+                    <span className="absolute top-0 right-0 w-4 h-4 rounded-full bg-[var(--brand-pink)] text-white text-[9px] font-bold flex items-center justify-center">
+                      {attachedItems.length}
+                    </span>
+                  )
                 )}
               </button>
               <button
                 type="button"
                 onClick={openSaved}
-                className="relative p-2 rounded-full text-gray-900 dark:text-white hover:text-[var(--brand-pink)] dark:hover:text-[var(--brand-pink)] transition-colors cursor-pointer"
-                title="Adjuntar look guardado"
+                className="relative p-2 rounded-full text-gray-900 dark:text-white hover:text-[var(--brand-pink)] dark:hover:text-[var(--brand-pink)] transition-colors cursor-pointer group"
+                title={isPremium() ? "Adjuntar look guardado" : "Adjuntar look guardado (Kloe Pro)"}
                 aria-label="Adjuntar look guardado"
               >
                 <Bookmark className="w-4 h-4" />
-                {attachedPost && (
-                  <span className="absolute top-0 right-0 w-2 h-2 rounded-full bg-[var(--brand-pink)]" />
+                {!isPremium() ? (
+                  <span className="absolute -top-1 -right-1 px-1 py-0.2 bg-gradient-to-r from-amber-500 to-orange-500 text-[8px] font-black text-white rounded-full leading-none shadow-xs">
+                    PRO
+                  </span>
+                ) : (
+                  attachedPost && (
+                    <span className="absolute top-0 right-0 w-2 h-2 rounded-full bg-[var(--brand-pink)]" />
+                  )
                 )}
               </button>
             </div>

@@ -1562,6 +1562,10 @@ En cada conversación, el backend alimenta a CloSy con:
 - **6. Desacoplamiento de Carga e Inferencia de la GPU (Detached GPU Loading - `lib/imageProcessing/backgroundRemoval.ts`, `components/AddItemModal/components/ImageUploader.tsx`)**:
   - **Inferencia en CPU WASM Worker**: Configurado explícitamente `device: 'cpu'` y `proxyToWorker: true` en `@imgly/background-removal` (`lib/imageProcessing/backgroundRemoval.ts`). De este modo, la inferencia pesada de redes neuronales (ONNX) se ejecuta en un Web Worker en segundo plano usando WASM/SIMD sin monopolizar ni bloquear el contexto de GPU / WebGL.
   - **Animaciones de Carga 100% Fluidas (60fps)**: Al liberar la GPU de la carga de inferencia, la GPU del navegador se dedica exclusivamente al pipeline de renderizado y composición de la interfaz (`Loader2`, `will-change-transform`, `transform-gpu`, `[contain:paint]`), garantizando que el spinner y las animaciones de carga no se congelen ni sufran tirones mientras se procesa la prenda.
+- **7. Detección de Marca por IA en Subida Rápida y Funcionalidades Premium en Kloe Chat (`app/api/analyze-clothing/route.ts`, `components/AddItemModal/index.tsx`, `components/AddItemModal/components/BatchCarousel.tsx`, `app/(app)/closet/kloe/page.tsx`, `app/api/closy/chat/route.ts`)**:
+  - **Detección Automática de Marca y Logos**: Gemini Vision analiza logotipos, tipografías y marcas visibles en la foto (Nike, Adidas, Zara, Stussy, Scuffers, Esenzia, etc.) e inyecta la marca detectada en el formulario sin asignar jamás valores por defecto erróneos tipo "closet".
+  - **Marca Visible en Modo Rápido**: El selector y visualizador de marca está activo y editable tanto en modo rápido como completo (en subida individual y en carrusel múltiple).
+  - **Gating Kloe Pro para Prendas y Looks Guardados**: Elegir prendas del armario como input (`Shirt`) o adjuntar publicaciones guardadas (`Bookmark`) en el chat con Kloe queda protegido como funcionalidad exclusiva de Kloe Pro (con badge visual `PRO`, bloqueo preventivo en frontend que abre `KloeProModal` y validación 403 en servidor).
 
 
 

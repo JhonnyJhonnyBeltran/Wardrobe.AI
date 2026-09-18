@@ -371,6 +371,7 @@ export function useAddItemForm({
                 aiAnalysis: {
                     ...aiAnalysis,
                     name: detectedName,
+                    brand: (aiAnalysis?.brand && typeof aiAnalysis.brand === 'string' && aiAnalysis.brand.toLowerCase() !== 'closet' && aiAnalysis.brand.toLowerCase() !== 'klozet') ? aiAnalysis.brand.trim() : null,
                     category: detectedType,
                     color: matchedColor.name,
                     colorHex: matchedColor.hex,
@@ -476,6 +477,10 @@ export function useAddItemForm({
                             currentItem.formData.name !== DEFAULT_FORM_DATA.name && 
                             !currentItem.formData.name.startsWith('Prenda ');
 
+                        const detectedBrand = (result.aiAnalysis?.brand && typeof result.aiAnalysis.brand === 'string' && result.aiAnalysis.brand.toLowerCase() !== 'closet' && result.aiAnalysis.brand.toLowerCase() !== 'klozet')
+                            ? result.aiAnalysis.brand.trim()
+                            : '';
+
                         updated[i] = {
                             ...currentItem,
                             image: result.processedImage || currentItem.originalImage,
@@ -487,6 +492,7 @@ export function useAddItemForm({
                                 name: hasCustomName 
                                 ? currentItem.formData.name 
                                 : (result.detectedName || `Prenda ${i + 1}`),
+                                brand: detectedBrand || currentItem.formData.brand || '',
                                 type: result.detectedType || currentItem.formData.type || 'top',
                                 color: result.detectedColor || currentItem.formData.color || 'Negro',
                                 colorHex: result.detectedColorHex || currentItem.formData.colorHex || '#121212',
@@ -598,9 +604,14 @@ export function useAddItemForm({
                 detectedName = `${catName} ${matchedColor.name}`;
             }
 
+            const detectedBrand = (aiAnalysis?.brand && typeof aiAnalysis.brand === 'string' && aiAnalysis.brand.toLowerCase() !== 'closet' && aiAnalysis.brand.toLowerCase() !== 'klozet') 
+                ? aiAnalysis.brand.trim() 
+                : '';
+
             setFormData(prev => ({
                 ...prev,
                 name: detectedName,
+                brand: detectedBrand || prev.brand || '',
                 type: detectedType,
                 color: matchedColor.name,
                 colorHex: matchedColor.hex,
@@ -613,6 +624,7 @@ export function useAddItemForm({
                 formData: {
                     ...DEFAULT_FORM_DATA,
                     name: detectedName,
+                    brand: detectedBrand || '',
                     type: detectedType,
                     color: matchedColor.name,
                     colorHex: matchedColor.hex,

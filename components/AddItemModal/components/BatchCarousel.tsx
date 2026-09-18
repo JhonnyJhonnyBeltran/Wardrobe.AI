@@ -208,6 +208,15 @@ export const BatchCarousel = memo(function BatchCarousel({
                             options={categories}
                         />
 
+                        {/* Marca — always visible in quick mode & complete mode */}
+                        <DropdownWithCustom
+                            label="Marca"
+                            value={currentItem.formData.brand}
+                            onChange={(value) => onUpdateFormData(currentIndex, { brand: value })}
+                            options={brands}
+                            placeholder="Seleccionar marca (o detectada por IA)..."
+                        />
+
                         {/* Color Selector (Curated palette without color text label) */}
                         <div>
                             <label className="block text-xs font-bold text-[var(--foreground)] mb-1.5">
@@ -238,14 +247,6 @@ export const BatchCarousel = memo(function BatchCarousel({
                                 animate={{ opacity: 1, height: 'auto' }}
                                 className="space-y-3 pt-2"
                             >
-                                <DropdownWithCustom
-                                    label="Marca"
-                                    value={currentItem.formData.brand}
-                                    onChange={(value) => onUpdateFormData(currentIndex, { brand: value })}
-                                    options={brands}
-                                    placeholder="Seleccionar marca..."
-                                />
-
                                 <div className="grid grid-cols-2 gap-3">
                                     <DropdownWithCustom
                                         label="Talla"
