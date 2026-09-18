@@ -25,9 +25,9 @@ const ProcessingOverlay = memo(function ProcessingOverlay({
     message: string;
 }) {
     return (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2.5 bg-black/40 backdrop-blur-md z-10 transition-all duration-300 rounded-3xl p-4">
-            <Loader2 className="w-9 h-9 text-[var(--brand-pink)] animate-spin" />
-            <span className="text-xs text-white font-bold animate-pulse drop-shadow text-center">
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2.5 bg-black/40 backdrop-blur-md z-10 transition-all duration-300 rounded-3xl p-4 [contain:paint]">
+            <Loader2 className="w-9 h-9 text-[var(--brand-pink)] animate-spin transform-gpu will-change-transform" />
+            <span className="text-xs text-white font-bold animate-pulse drop-shadow text-center select-none">
                 {message}
             </span>
         </div>
@@ -46,9 +46,9 @@ const EmptyState = memo(function EmptyState({
 }) {
     if (isProcessing) {
         return (
-            <div className="flex flex-col items-center justify-center gap-3 p-6">
-                <Loader2 className="w-9 h-9 text-[var(--brand-pink)] animate-spin" />
-                <span className="text-xs text-[var(--brand-pink)] font-bold animate-pulse text-center">
+            <div className="flex flex-col items-center justify-center gap-3 p-6 [contain:paint]">
+                <Loader2 className="w-9 h-9 text-[var(--brand-pink)] animate-spin transform-gpu will-change-transform" />
+                <span className="text-xs text-[var(--brand-pink)] font-bold animate-pulse text-center select-none">
                     {processingMessage}
                 </span>
             </div>

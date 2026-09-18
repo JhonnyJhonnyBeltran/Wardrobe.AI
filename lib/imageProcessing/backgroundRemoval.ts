@@ -55,6 +55,7 @@ async function performBackgroundRemoval(
             model: 'isnet_fp16', // Always use best model
             publicPath: modelConfig.publicPath,
             debug: false,
+            device: 'cpu', // Detach loading & inference from GPU (runs via WASM in Web Worker, keeping GPU unblocked)
             // CRITICAL: Run in Web Worker to prevent UI blocking
             proxyToWorker: true,
             progress: (key: string, current: number, total: number) => {

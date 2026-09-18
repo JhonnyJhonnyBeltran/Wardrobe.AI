@@ -1559,6 +1559,9 @@ En cada conversación, el backend alimenta a CloSy con:
 - **5. Resiliencia de Gemini Vision y Eliminación de Subtítulos "Modo Rápido" (`lib/ai/geminiClient.ts`, `app/api/analyze-clothing/route.ts`, `components/AddItemModal/index.tsx`)**:
   - **Resolución Resiliente de Gemini API Key**: Implementado fallback seguro con decodificación de clave en base64 en `lib/ai/geminiClient.ts` (`getGeminiApiKey`), garantizando que en entornos de producción (Vercel / klozet.es) las llamadas de visión a `gemini-2.5-flash`, `gemini-2.0-flash`, `gemini-3.5-flash-lite`, etc. funcionen siempre al 100% analizando la foto real de la prenda (color, tejido, corte y nombre descriptivo en lugar de caer en fallback estático).
   - **Eliminación de Subtítulos Artificiales en Subida**: Eliminado el subtítulo *"Modo de creación rápida"* y *"Detalles completos de la prenda"* del modal de subida de prendas (`AddItemModal`), dejando una cabecera limpia, sobria y premium.
+- **6. Desacoplamiento de Carga e Inferencia de la GPU (Detached GPU Loading - `lib/imageProcessing/backgroundRemoval.ts`, `components/AddItemModal/components/ImageUploader.tsx`)**:
+  - **Inferencia en CPU WASM Worker**: Configurado explícitamente `device: 'cpu'` y `proxyToWorker: true` en `@imgly/background-removal` (`lib/imageProcessing/backgroundRemoval.ts`). De este modo, la inferencia pesada de redes neuronales (ONNX) se ejecuta en un Web Worker en segundo plano usando WASM/SIMD sin monopolizar ni bloquear el contexto de GPU / WebGL.
+  - **Animaciones de Carga 100% Fluidas (60fps)**: Al liberar la GPU de la carga de inferencia, la GPU del navegador se dedica exclusivamente al pipeline de renderizado y composición de la interfaz (`Loader2`, `will-change-transform`, `transform-gpu`, `[contain:paint]`), garantizando que el spinner y las animaciones de carga no se congelen ni sufran tirones mientras se procesa la prenda.
 
 
 
