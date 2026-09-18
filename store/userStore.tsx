@@ -115,7 +115,15 @@ export function UserProvider({ children }: { children: ReactNode }) {
         name?.toLowerCase().includes('ethan')
       );
 
-      const isPremiumFromDb = Boolean(
+      // Check grace period: 3 days past expiration for non-active statuses
+      const periodEndStr = profile?.subscription_period_end || legacyProfile?.subscription_period_end;
+      const periodEndMs = periodEndStr ? new Date(periodEndStr).getTime() : 0;
+      const isPastGrace = periodEndMs > 0 && (Date.now() - periodEndMs > 3 * 24 * 60 * 60 * 1000);
+
+      const status = (profile?.subscription_status || legacyProfile?.subscription_status || '').toLowerCase();
+      const isStatusExplicitlyInactive = status === 'canceled' || status === 'unpaid' || status === 'incomplete_expired' || (status === 'past_due' && isPastGrace);
+
+      const isPremiumFromDb = !isStatusExplicitlyInactive && Boolean(
         profile?.is_premium ||
         legacyProfile?.is_premium ||
         profile?.subscription_tier === 'premium' ||

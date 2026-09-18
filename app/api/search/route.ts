@@ -54,6 +54,52 @@ const CATEGORY_SYNONYMS: Record<string, string[]> = {
   ]
 };
 
+// Comprehensive fashion style families and kinship mappings (parentesco)
+const STYLE_FAMILIES_MAP: Record<string, string[]> = {
+  'glam': ['baddie-glam', 'noche-fiesta', 'y2k', 'chic-parisino', 'baddie'],
+  'baddie': ['baddie-glam', 'streetwear', 'y2k'],
+  'elegante': ['elegante-clasico', 'old-money', 'business-casual', 'chic-parisino', 'clean-look'],
+  'clasico': ['elegante-clasico', 'old-money', 'preppy', 'business-casual'],
+  'deportivo': ['deportivo-athleisure', 'gorpcore', 'skater-surf'],
+  'athleisure': ['deportivo-athleisure', 'casual-moderno', 'gorpcore'],
+  'streetwear': ['streetwear', 'techwear', 'y2k', 'skater-surf', 'cyberpunk', 'harajuku-j-fashion'],
+  'casual': ['casual-moderno', 'smart-casual', 'clean-look', 'normcore'],
+  'old money': ['old-money', 'elegante-clasico', 'preppy', 'quiet-luxury'],
+  'quiet luxury': ['old-money', 'minimalista', 'clean-look'],
+  'minimalista': ['minimalista', 'clean-look', 'normcore', 'old-money'],
+  'y2k': ['y2k', 'cyberpunk', 'baddie-glam', 'harajuku-j-fashion'],
+  'techwear': ['techwear', 'cyberpunk', 'gorpcore', 'streetwear'],
+  'vintage': ['vintage-retro', 'cottagecore', 'coastal-resort', 'western-cowboy', 'dark-academia'],
+  'retro': ['vintage-retro', 'y2k', 'rock-grunge'],
+  'rock': ['rock-grunge', 'gotico-alt', 'dark-academia'],
+  'grunge': ['rock-grunge', 'streetwear', 'gotico-alt'],
+  'gotico': ['gotico-alt', 'rock-grunge', 'dark-academia'],
+  'academia': ['dark-academia', 'light-academia', 'preppy'],
+  'dark academia': ['dark-academia', 'light-academia', 'gotico-alt'],
+  'light academia': ['light-academia', 'dark-academia', 'preppy'],
+  'preppy': ['preppy', 'old-money', 'elegante-clasico'],
+  'boho': ['boho-chic', 'cottagecore', 'coastal-resort'],
+  'cottagecore': ['cottagecore', 'boho-chic', 'soft-girl-soft-boy'],
+  'gorpcore': ['gorpcore', 'techwear', 'deportivo-athleisure'],
+  'skater': ['skater-surf', 'streetwear', 'rock-grunge'],
+  'clean look': ['clean-look', 'minimalista', 'casual-moderno'],
+  'normcore': ['normcore', 'casual-moderno', 'minimalista'],
+  'fiesta': ['noche-fiesta', 'baddie-glam', 'chic-parisino'],
+  'noche': ['noche-fiesta', 'baddie-glam', 'elegante-clasico'],
+  'smart casual': ['smart-casual', 'casual-moderno', 'business-casual'],
+  'business': ['business-casual', 'elegante-clasico', 'smart-casual'],
+  'workwear': ['workwear-americana', 'techwear', 'gorpcore'],
+  'coquette': ['coquette', 'soft-girl-soft-boy', 'cottagecore'],
+  'soft': ['soft-girl-soft-boy', 'coquette', 'light-academia'],
+  'k-fashion': ['k-fashion', 'harajuku-j-fashion', 'clean-look', 'streetwear'],
+  'harajuku': ['harajuku-j-fashion', 'k-fashion', 'cyberpunk', 'y2k'],
+  'cyberpunk': ['cyberpunk', 'techwear', 'y2k', 'streetwear'],
+  'western': ['western-cowboy', 'workwear-americana', 'boho-chic'],
+  'cowboy': ['western-cowboy', 'vintage-retro'],
+  'coastal': ['coastal-resort', 'old-money', 'clean-look'],
+  'parisino': ['chic-parisino', 'elegante-clasico', 'old-money']
+};
+
 function normalizeText(text: string): string {
   return (text || '')
     .toLowerCase()
@@ -108,6 +154,19 @@ export async function GET(request: NextRequest) {
       for (const word of words) {
         if (catKey === word || synList.some(s => normalizeText(s) === word || word.includes(normalizeText(s)))) {
           matchedCategories.add(catKey);
+        }
+      }
+    }
+
+    // 2.5 Identify Style Matches & Kinship (Parentesco de Estilos)
+    const matchedStyleSlugs = new Set<string>();
+    for (const [styleFamily, slugs] of Object.entries(STYLE_FAMILIES_MAP)) {
+      if (queryNorm === styleFamily || queryNorm.includes(styleFamily) || styleFamily.includes(queryNorm)) {
+        slugs.forEach(s => matchedStyleSlugs.add(s));
+      }
+      for (const word of words) {
+        if (word === styleFamily || styleFamily.includes(word)) {
+          slugs.forEach(s => matchedStyleSlugs.add(s));
         }
       }
     }
@@ -221,6 +280,13 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    // If we matched style kinship slugs, include them in the query filter
+    if (matchedStyleSlugs.size > 0) {
+      Array.from(matchedStyleSlugs).forEach(slug => {
+        postOrFilters.push(`style_ids.cs.{${slug}}`);
+      });
+    }
+
     // If we found matching outfits, include them in the query filter
     if (matchingOutfitIds.size > 0) {
       const outfitIdList = Array.from(matchingOutfitIds).slice(0, 100);
@@ -318,6 +384,19 @@ export async function GET(request: NextRequest) {
           if (cColor.includes(w)) score += 8;
         });
       });
+
+      // Score 4: Style Tag & Kinship Matches (Parentesco de Estilos)
+      if (item.style_ids && Array.isArray(item.style_ids)) {
+        item.style_ids.forEach((sId: string) => {
+          const sNorm = normalizeText(sId);
+          if (queryNorm === sNorm || sNorm.includes(queryNorm) || queryNorm.includes(sNorm)) {
+            score += 45;
+          }
+          if (matchedStyleSlugs.has(sId) || matchedStyleSlugs.has(sNorm)) {
+            score += 40;
+          }
+        });
+      }
 
       // Likes contribution
       const likesCount = item.likes?.[0]?.count || 0;

@@ -93,18 +93,22 @@ export const FreeDragCanvas = forwardRef<FreeDragCanvasRef, FreeDragCanvasProps>
             setSelectedId(null);
 
             // Wait for React to render the deselection (next tick)
-            await new Promise(resolve => setTimeout(resolve, 100));
+            await new Promise(resolve => setTimeout(resolve, 120));
 
             try {
                 const canvas = await html2canvas(containerRef.current, {
                     backgroundColor: '#ffffff',
-                    scale: 3, // Ultra-sharp 3x retina quality
+                    scale: 2.5, // Crisp 2.5x retina quality
                     useCORS: true,
-                    allowTaint: true,
+                    allowTaint: false,
                     logging: false,
-                    imageTimeout: 15000,
+                    imageTimeout: 12000,
                 });
-                return canvas.toDataURL('image/webp', 0.96);
+                try {
+                    return canvas.toDataURL('image/webp', 0.95);
+                } catch {
+                    return canvas.toDataURL('image/png');
+                }
             } catch (error) {
                 console.error('Canvas export failed:', error);
                 return null;

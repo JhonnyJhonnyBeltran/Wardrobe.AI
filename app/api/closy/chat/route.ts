@@ -78,8 +78,8 @@ Respond ONLY with a JSON object:
 }`;
 
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 6000);
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`, {
+    const timeout = setTimeout(() => controller.abort(), 5000);
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${apiKey}`, {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
@@ -822,13 +822,11 @@ PETICIÓN DEL USUARIO:
 
     // Cascade of active verified Gemini models (Fast, resilient and highly available first)
     const models = [
-      'gemini-3.5-flash',
       'gemini-3.5-flash-lite',
-      'gemini-3.8-flash',
-      'gemini-3.1-flash-lite',
-      'gemini-flash-lite-latest',
+      'gemini-3.5-flash',
+      'gemini-3.6-flash',
       'gemini-flash-latest',
-      'gemini-3.6-flash'
+      'gemini-3.1-flash-lite'
     ];
     
     // First attempt: with multimodal vision images

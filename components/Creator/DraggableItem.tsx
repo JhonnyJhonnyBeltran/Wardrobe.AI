@@ -5,6 +5,7 @@ import { motion, useDragControls, useMotionValue } from 'framer-motion';
 import { ClothingItem } from '@/types/clothing';
 import { X, RotateCw, Maximize2, Trash2, Move } from 'lucide-react';
 import Image from 'next/image';
+import { resolveImageUrl } from '@/lib/imageUtils';
 
 interface DraggableItemProps {
     item: ClothingItem;
@@ -103,10 +104,11 @@ export const DraggableItem = ({
                 <div className={`relative w-full h-full p-0`}>
                     {/* Image */}
                     <div className={`relative w-full h-full overflow-visible pointer-events-none`}>
-                    {item.imageUrl && (
+                    {(item.imageUrl || (item as any).image_url) && (
                         <img
-                            src={item.imageUrl}
+                            src={resolveImageUrl(item.imageUrl || (item as any).image_url)}
                             alt={item.name}
+                            crossOrigin="anonymous"
                             className="w-full h-auto object-contain drop-shadow-md pointer-events-none select-none"
                             draggable={false}
                         />

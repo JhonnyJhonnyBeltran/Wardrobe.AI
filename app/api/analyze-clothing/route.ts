@@ -75,13 +75,13 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Models verified active with vision generateContent support
+    // Models verified active with vision generateContent support (Fastest and highly available first)
     const models = [
+      'gemini-3.5-flash-lite',
+      'gemini-3.5-flash',
       'gemini-3.6-flash',
       'gemini-flash-latest',
-      'gemini-3.5-flash',
-      'gemini-3.5-flash-lite',
-      'gemini-3-flash-preview'
+      'gemini-3.1-flash-lite'
     ];
 
     const prompt = `Eres un experto clasificador visual de moda y prendas de vestir para la app Klozet.
@@ -124,13 +124,14 @@ Devuelve ÚNICAMENTE un JSON válido sin texto extra:
   "colorHex": "#hex",
   "fabric": "Tejido",
   "season": "all-season"
-}`;
+}
+`;
 
     for (const model of models) {
       try {
         const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
         const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 12000);
+        const timeout = setTimeout(() => controller.abort(), 7000);
 
         const response = await fetch(geminiUrl, {
           method: 'POST',

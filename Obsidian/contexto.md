@@ -1539,6 +1539,24 @@ En cada conversación, el backend alimenta a CloSy con:
   - Implementada la condición `if (totalPercent >= 100) return null;`.
   - Cuando el usuario completa todos los pasos y su nivel de estilo llega al 100% (`¡Armario al 100%! Tienes un estilazo impecable 🔥`), el componente se desmonta por completo y no vuelve a mostrarse en la interfaz, manteniendo una experiencia limpia y despejada para usuarios avanzados.
 
+### 123. Resiliencia de Outfits, Clasificación Instantánea IA Vision, Búsqueda de Estilos y Ciclo Stripe (Septiembre 2026)
+- **1. Resiliencia y Composición en Tarjetas de Outfits (`components/OutfitCard.tsx`, `components/Creator/*`)**:
+  - `OutfitCard` normaliza todas las URLs con `resolveImageUrl` y añade manejador `onError` en la imagen principal.
+  - Cuando la miniatura de un outfit no existe o falla su carga, el componente compone en tiempo real las prendas en una tarjeta blanca de lienzo usando sus coordenadas (`position_x`, `position_y`, escala y capas), eliminando cualquier icono de imagen rota.
+  - `DraggableItem` añade `crossOrigin="anonymous"` y `resolveImageUrl` para evitar el taint de CORS en canvas.
+- **2. Clasificación Instantánea y Conexión de IA Vision (`/api/analyze-clothing` y `/api/closy/chat`)**:
+  - Priorizados los modelos `gemini-3.5-flash-lite` y `gemini-3.5-flash`, logrando detección multimodal de tipo de prenda, nombre, color dominante y tejido en ~1 segundo al subir fotos.
+  - Optimizado el timeout de moderación de imágenes en Kloe Chat.
+- **3. Búsqueda por Estilos con Parentesco y Depuración de Sugerencias (`/api/search` y `app/(app)/search/page.tsx`)**:
+  - Implementado `STYLE_FAMILIES_MAP` con árboles de parentesco (ej: `glam` $\rightarrow$ `baddie-glam`, `noche-fiesta`, `y2k`; `elegante` $\rightarrow$ `elegante-clasico`, `old-money`, etc.).
+  - Búsqueda en Supabase mediante filtros `style_ids.cs.{slug}` y scoring de relevancia (+40 pts) por coincidencia de estilo.
+  - Depurado el selector de chips de búsqueda, filtrando automáticamente UUIDs y mapeando los 34 estilos a nombres limpios en español.
+- **4. Gestión de Reintentos de Cobro y Gracia de 3 Días en Stripe (`app/api/webhooks/stripe/route.ts` y `store/userStore.tsx`)**:
+  - Añadido el manejo de `invoice.payment_failed` e `invoice.payment_succeeded`.
+  - Periodo de gracia de 3 días para reintentos inteligentes de Stripe tras fallo de pago antes de revocar el acceso a Free.
+  - En caso de impago prolongado o cancelación, el usuario regresa automáticamente al estado Free con sus límites y modales correspondientes.
+
+
 
 
 

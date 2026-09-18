@@ -74,10 +74,17 @@ export async function POST(request: NextRequest) {
         const priceId = subscription.items?.data[0]?.price?.id;
         const interval = subscription.items?.data[0]?.price?.recurring?.interval;
         const plan = interval === 'year' ? 'yearly' : 'monthly';
-        const isActive = subscription.status === 'active' || subscription.status === 'trialing';
         const periodEnd = subscription.current_period_end
           ? new Date(subscription.current_period_end * 1000).toISOString()
           : null;
+
+        // Grace period check: 3 days after period end
+        const periodEndMs = subscription.current_period_end ? subscription.current_period_end * 1000 : 0;
+        const isWithin3DaysGrace = periodEndMs > 0 && (Date.now() - periodEndMs <= 3 * 24 * 60 * 60 * 1000);
+
+        const isActive = subscription.status === 'active' || 
+                         subscription.status === 'trialing' ||
+                         (subscription.status === 'past_due' && isWithin3DaysGrace);
 
         if (customerId) {
           await supabaseAdmin
@@ -92,7 +99,61 @@ export async function POST(request: NextRequest) {
             } as any)
             .eq('stripe_customer_id', customerId);
 
-          console.log(`[StripeWebhook] Subscription updated for customer ${customerId}: status=${subscription.status}, active=${isActive}`);
+          console.log(`[StripeWebhook] Subscription updated for customer ${customerId}: status=${subscription.status}, is_premium=${isActive}`);
+        }
+        break;
+      }
+
+      case 'invoice.payment_failed': {
+        const invoice: any = event.data.object;
+        const customerId = invoice.customer;
+        const subscriptionId = invoice.subscription;
+        const attemptCount = invoice.attempt_count || 1;
+
+        if (customerId) {
+          // Check if subscription has exceeded the 3-day grace period
+          let shouldRevoke = attemptCount >= 3;
+          if (invoice.lines?.data?.[0]?.period?.end) {
+            const periodEndMs = invoice.lines.data[0].period.end * 1000;
+            if (Date.now() - periodEndMs > 3 * 24 * 60 * 60 * 1000) {
+              shouldRevoke = true;
+            }
+          }
+
+          await supabaseAdmin
+            .from('profiles')
+            .update({
+              is_premium: !shouldRevoke,
+              subscription_tier: shouldRevoke ? 'free' : 'premium',
+              subscription_status: 'past_due',
+            } as any)
+            .eq('stripe_customer_id', customerId);
+
+          console.log(`[StripeWebhook] Payment failed for customer ${customerId} (attempt #${attemptCount}). Revoked=${shouldRevoke}`);
+        }
+        break;
+      }
+
+      case 'invoice.payment_succeeded':
+      case 'invoice.paid': {
+        const invoice: any = event.data.object;
+        const customerId = invoice.customer;
+        const periodEnd = invoice.lines?.data?.[0]?.period?.end
+          ? new Date(invoice.lines.data[0].period.end * 1000).toISOString()
+          : null;
+
+        if (customerId && invoice.subscription) {
+          await supabaseAdmin
+            .from('profiles')
+            .update({
+              is_premium: true,
+              subscription_tier: 'premium',
+              subscription_status: 'active',
+              subscription_period_end: periodEnd
+            } as any)
+            .eq('stripe_customer_id', customerId);
+
+          console.log(`[StripeWebhook] Payment succeeded for customer ${customerId}. Restored Premium active until ${periodEnd}`);
         }
         break;
       }

@@ -5,10 +5,11 @@
  * Updated to use real Outfit type from DB
  */
 
-import React, { memo } from 'react';
+import React, { memo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Lock, Sparkles, Briefcase, Heart, Zap, Flower2, PartyPopper, Circle, Snowflake, ShoppingBag, Layers, Globe, Edit2, Trash2, Send } from 'lucide-react';
 import type { Outfit } from '@/types/outfit';
+import { resolveImageUrl } from '@/lib/imageUtils';
 
 interface OutfitCardProps {
     outfit: Outfit;
@@ -44,22 +45,26 @@ const styleConfig: Record<string, { icon: React.ReactNode; gradient: string }> =
 };
 
 const OutfitCard = ({ outfit, isLocked = false, onClick, onEdit, onDelete, onShare, onToggleFavorite, onToggleVisibility, index = 0 }: OutfitCardProps) => {
+    const [imageError, setImageError] = useState(false);
     const styleKey = outfit.occasion || outfit.style || 'everyday';
     const config = styleConfig[styleKey] || { icon: <Layers className="w-3 h-3" />, gradient: 'from-pink-400 to-rose-500' };
 
     // Check if any item has images - handle both imageUrl and image_url field names
     const outfitAny = outfit as any;
-    const hasImages = outfitAny.items?.some((item: any) => item.imageUrl || item.image_url) ?? false;
     const hasShopLinks = outfitAny.items?.some((item: any) => item.sourceUrl || item.buyLink) ?? false;
 
     // Get the outfit preview image - handle both field names
-    const outfitPreviewImage = outfitAny.imageUrl || outfitAny.image_url;
+    const rawPreviewImage = outfitAny.imageUrl || outfitAny.image_url;
+    const outfitPreviewImage = rawPreviewImage ? resolveImageUrl(rawPreviewImage) : null;
 
-    // Get item image - handle both field names
-    const getItemImage = (item: any) => item.imageUrl || item.image_url;
+    // Get item image - handle both field names and resolve storage paths
+    const getItemImage = (item: any) => {
+        const raw = item.imageUrl || item.image_url || item.original_image_url || item.original_image;
+        return raw ? resolveImageUrl(raw) : null;
+    };
 
-    // Date formatting
-    const dateDisplay = outfit.date || new Date(outfit.createdAt).toLocaleDateString();
+    const items = outfit.items || [];
+    const hasPositionedItems = items.some((it: any) => typeof it.position_x === 'number');
 
     return (
         <motion.div
@@ -77,51 +82,94 @@ const OutfitCard = ({ outfit, isLocked = false, onClick, onEdit, onDelete, onSha
             <div onClick={!isLocked && onClick ? () => onClick(outfit) : undefined} className="cursor-pointer">
                 {/* Outfit Preview */}
                 <div
-                    className={`relative w-full aspect-[4/5] bg-[var(--background-secondary)] overflow-hidden ${isLocked ? 'blur-sm' : ''
+                    className={`relative w-full aspect-[4/5] bg-white dark:bg-[#151518] overflow-hidden ${isLocked ? 'blur-sm' : ''
                         }`}
                 >
-                    {outfitPreviewImage ? (
+                    {outfitPreviewImage && !imageError ? (
                         <img
                             src={outfitPreviewImage}
                             alt={outfit.name}
                             className="w-full h-full object-cover dark:mix-blend-normal"
                             loading="lazy"
+                            onError={() => setImageError(true)}
                         />
+                    ) : hasPositionedItems && items.length > 0 ? (
+                        /* Live Canvas Composition with exact positions */
+                        <div className="relative w-full h-full overflow-hidden p-2">
+                            {items.map((item: any, i: number) => {
+                                const imgSrc = getItemImage(item);
+                                const posX = typeof item.position_x === 'number' ? item.position_x : 50;
+                                const posY = typeof item.position_y === 'number' ? item.position_y : 50;
+                                const itemScale = typeof item.scale === 'number' ? item.scale : 1;
+                                const itemZ = item.layer_order || (i + 1);
+
+                                return (
+                                    <div
+                                        key={item.id || i}
+                                        style={{
+                                            position: 'absolute',
+                                            left: `${posX}%`,
+                                            top: `${posY}%`,
+                                            transform: `translate(-50%, -50%) scale(${itemScale * 0.9})`,
+                                            zIndex: itemZ,
+                                            width: '38%',
+                                            maxWidth: '120px'
+                                        }}
+                                        className="flex items-center justify-center pointer-events-none select-none"
+                                    >
+                                        {imgSrc ? (
+                                            <img
+                                                src={imgSrc}
+                                                alt={item.name || 'Prenda'}
+                                                className="w-full h-auto object-contain drop-shadow-md pointer-events-none"
+                                                loading="lazy"
+                                                onError={(e) => {
+                                                    const target = e.target as HTMLImageElement;
+                                                    target.style.display = 'none';
+                                                }}
+                                            />
+                                        ) : (
+                                            <div
+                                                className="w-10 h-10 rounded-lg shadow-xs"
+                                                style={{ backgroundColor: item.color_hex || item.color || '#ccc' }}
+                                            />
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
                     ) : (
-                        /* Items Grid - With Images (Fallback) */
-                        <div className="grid grid-cols-2 gap-[1px] flex-1 bg-[var(--border-color)]">
-                            {(outfit.items || []).slice(0, 4).map((item: any, i: number) => (
-                                <motion.div
-                                    key={item.id || i}
-                                    className="relative bg-[var(--card-bg)] aspect-square overflow-hidden"
-                                >
-                                    {getItemImage(item) ? (
-                                        <img
-                                            src={getItemImage(item)}
-                                            alt={item.name}
-                                            className="w-full h-full object-cover"
-                                            loading="lazy"
-                                            onError={(e) => {
-                                                // Fallback to color div
-                                                const target = e.target as HTMLImageElement;
-                                                target.style.display = 'none';
-                                                if (target.parentElement) {
-                                                    target.parentElement.style.backgroundColor = item.color_hex || item.color || '#ccc';
-                                                }
-                                            }}
-                                        />
-                                    ) : (
+                        /* Balanced Grid Composition (Fallback for legacy outfits without coordinates) */
+                        <div className="relative w-full h-full flex flex-col items-center justify-center p-3 gap-2">
+                            <div className="w-full h-full grid grid-cols-2 gap-2 place-items-center">
+                                {items.slice(0, 4).map((item: any, i: number) => {
+                                    const imgSrc = getItemImage(item);
+                                    return (
                                         <div
-                                            className="w-full h-full"
-                                            style={{ backgroundColor: item.color_hex || item.color || '#ccc' }}
-                                        />
-                                    )}
-                                </motion.div>
-                            ))}
-                            {/* Placeholder if less than 4 items */}
-                            {Array.from({ length: Math.max(0, 4 - (outfit.items?.length || 0)) }).map((_, i) => (
-                                <div key={`placeholder-${i}`} className="bg-[var(--background-secondary)] rounded-xl opacity-50 aspect-square" />
-                            ))}
+                                            key={item.id || i}
+                                            className="relative w-full h-full flex items-center justify-center overflow-hidden"
+                                        >
+                                            {imgSrc ? (
+                                                <img
+                                                    src={imgSrc}
+                                                    alt={item.name}
+                                                    className="w-full h-full object-contain drop-shadow-sm"
+                                                    loading="lazy"
+                                                    onError={(e) => {
+                                                        const target = e.target as HTMLImageElement;
+                                                        target.style.display = 'none';
+                                                    }}
+                                                />
+                                            ) : (
+                                                <div
+                                                    className="w-10 h-10 rounded-lg"
+                                                    style={{ backgroundColor: item.color_hex || item.color || '#e5e7eb' }}
+                                                />
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            </div>
                         </div>
                     )}
                 </div>

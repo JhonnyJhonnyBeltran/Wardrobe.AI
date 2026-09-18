@@ -609,18 +609,24 @@ export default function SearchPage() {
   }, [loadMoreUsers, loadMorePosts, usersHasMore, postsHasMore, usersLoadingMore, postsLoadingMore, loading, usersLoadError, postsLoadError]);
 
   // Dynamic Recommendation Chips based on:
-  // 1. User's latest search history (recent searches)
-  // 2. User's preferred styles & style recommendations from profile
+  // 1. User's latest search history (recent searches, excluding UUIDs/raw IDs)
+  // 2. User's preferred styles & style recommendations from profile (clean labels)
   // 3. Trending fashion tags & categories
   const recommendationChips = useMemo(() => {
     const chips: { text: string; isHistory?: boolean; isPreferred?: boolean }[] = [];
     const seen = new Set<string>();
+    const isUuid = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str.trim());
 
-    // 1. Add recent search history first (up to 4 terms)
+    // 1. Add recent search history first (up to 4 valid terms, skipping UUIDs and garbage)
     if (Array.isArray(history)) {
-      history.slice(0, 4).forEach(term => {
+      history.slice(0, 8).forEach(term => {
         const trimmed = term.trim();
-        if (trimmed && !seen.has(trimmed.toLowerCase())) {
+        if (
+          trimmed &&
+          trimmed.length >= 2 &&
+          !isUuid(trimmed) &&
+          !seen.has(trimmed.toLowerCase())
+        ) {
           seen.add(trimmed.toLowerCase());
           chips.push({ text: trimmed, isHistory: true });
         }
@@ -629,26 +635,49 @@ export default function SearchPage() {
 
     // 2. Add recommendations based on user's preferred styles from profile
     const styleNamesMap: Record<string, string> = {
+      'baddie-glam': 'Glam',
+      'elegante-clasico': 'Elegante',
+      'deportivo-athleisure': 'Deportivo',
+      'casual-moderno': 'Casual',
       'streetwear': 'Streetwear',
       'old-money': 'Old Money',
-      'casual-moderno': 'Casual',
       'minimalista': 'Minimalista',
-      'vintage-retro': 'Vintage',
-      'clean-look': 'Clean Look',
-      'techwear': 'Techwear',
+      'boho-chic': 'Boho',
       'y2k': 'Y2K',
-      'dark-academia': 'Dark Academia',
+      'business-casual': 'Business Casual',
+      'rock-grunge': 'Rock',
+      'preppy': 'Preppy',
+      'vintage-retro': 'Vintage',
       'cottagecore': 'Cottagecore',
+      'gotico-alt': 'Gótico',
+      'techwear': 'Techwear',
+      'dark-academia': 'Dark Academia',
+      'light-academia': 'Light Academia',
+      'skater-surf': 'Skater',
+      'clean-look': 'Clean Look',
+      'normcore': 'Normcore',
+      'chic-parisino': 'Chic Parisino',
+      'coastal-resort': 'Coastal',
+      'western-cowboy': 'Western',
+      'k-fashion': 'K-Fashion',
+      'harajuku-j-fashion': 'Harajuku',
+      'workwear-americana': 'Workwear',
+      'coquette': 'Coquette',
+      'soft-girl-soft-boy': 'Soft',
       'gorpcore': 'Gorpcore',
-      'party-noche': 'Fiesta'
+      'noche-fiesta': 'Fiesta',
+      'smart-casual': 'Smart Casual',
+      'cyberpunk': 'Cyberpunk'
     };
 
     if (Array.isArray(user?.preferredStyles)) {
-      user.preferredStyles.slice(0, 3).forEach(styleKey => {
-        const name = styleNamesMap[styleKey] || styleKey;
-        if (name && !seen.has(name.toLowerCase())) {
-          seen.add(name.toLowerCase());
-          chips.push({ text: name, isPreferred: true });
+      user.preferredStyles.slice(0, 4).forEach(styleKey => {
+        if (!isUuid(styleKey)) {
+          const name = styleNamesMap[styleKey] || styleKey.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+          if (name && !seen.has(name.toLowerCase())) {
+            seen.add(name.toLowerCase());
+            chips.push({ text: name, isPreferred: true });
+          }
         }
       });
     }
