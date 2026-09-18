@@ -325,12 +325,35 @@ export default function KloePage() {
   const [attachedPost, setAttachedPost] = useState<AttachedPost | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
   const [showProModal, setShowProModal] = useState(false);
-  const [trialUsed, setTrialUsed] = useState<number>(0);
+  const [quotaInfo, setQuotaInfo] = useState<{
+    isPremium: boolean;
+    dailyLimit: number;
+    usedToday: number;
+    remainingDay: number;
+    limitReached: boolean;
+  } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const trialRemaining = Math.max(0, MAX_TRIAL_MESSAGES - trialUsed);
-  const isInputUnlocked = isPremium() || trialRemaining > 0;
+  const fetchQuota = async () => {
+    try {
+      const res = await fetch('/api/closy/chat');
+      if (res.ok) {
+        const data = await res.json();
+        setQuotaInfo(data);
+      }
+    } catch (err) {
+      console.warn('[Kloe] Error fetching quota status:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchQuota();
+  }, [user?.id]);
+
+  const maxDay = quotaInfo?.dailyLimit ?? (isPremium() ? 35 : 8);
+  const remainingToday = quotaInfo?.remainingDay ?? maxDay;
+  const isInputUnlocked = quotaInfo ? quotaInfo.remainingDay > 0 : true;
 
   const persistConversations = async (updated: Conversation[]) => {
     setConversations(updated);
@@ -680,9 +703,13 @@ export default function KloePage() {
 
   // Send message handler
   const handleSend = async (customMessage?: string) => {
-    if (!isPremium() && trialRemaining <= 0) {
-      setShowProModal(true);
-      toast.info('Has completado tus 8 mensajes de prueba gratuita con Kloe');
+    if (quotaInfo && quotaInfo.remainingDay <= 0) {
+      if (!isPremium()) {
+        setShowProModal(true);
+        toast.info('Has completado tus 8 mensajes gratuitos de hoy');
+      } else {
+        toast.info('Has alcanzado tus 35 mensajes diarios. Se recarga a las 00:00.');
+      }
       return;
     }
 
@@ -757,14 +784,19 @@ export default function KloePage() {
           setMessages(prev => prev.filter(m => m.id !== userMsg.id));
           return;
         }
-        if (res.status === 402 || data.isTrialExpired) {
-          setTrialUsed(MAX_TRIAL_MESSAGES);
-          setShowProModal(true);
-          toast.info('Has completado tus 8 mensajes de prueba gratuita con Kloe');
-          return;
-        }
         if (res.status === 429) {
-          const limitMsg = data.message || 'Has agotado tus 30 mensajes diarios con Kloe. Tu límite se restablecerá mañana a las 00:00 para que puedas seguir creando looks increíbles.';
+          setQuotaInfo(prev => ({
+            isPremium: data.isPremium ?? isPremium(),
+            dailyLimit: data.dailyLimit ?? (isPremium() ? 35 : 8),
+            usedToday: data.usedToday ?? (isPremium() ? 35 : 8),
+            remainingDay: 0,
+            limitReached: true
+          }));
+
+          const limitMsg = data.message || (isPremium()
+            ? 'Has alcanzado tus 35 consultas diarias con Kloe. Tu límite se restablecerá hoy a las 00:00 (hora peninsular).'
+            : 'Has completado tus 8 mensajes gratuitos de hoy. Tu límite se restablecerá hoy a las 00:00 (hora peninsular) o desbloquea Kloe Pro para 35 consultas diarias.');
+
           const botMsg: ChatMessage = {
             id: `kloe_${Date.now()}`,
             role: 'assistant',
@@ -772,14 +804,20 @@ export default function KloePage() {
             timestamp: new Date()
           };
           setMessages(prev => [...prev, botMsg]);
-          toast.info('Límite de 30 consultas diarias alcanzado');
+          toast.info('Límite de consultas diarias alcanzado');
           return;
         }
         throw new Error(data.error || 'Error en la respuesta');
       }
 
-      if (data.trialUsed !== undefined) {
-        setTrialUsed(data.trialUsed);
+      if (typeof data.remainingDay === 'number') {
+        setQuotaInfo({
+          isPremium: data.isPremium ?? isPremium(),
+          dailyLimit: data.dailyLimit ?? (isPremium() ? 35 : 8),
+          usedToday: data.usedToday ?? 1,
+          remainingDay: data.remainingDay,
+          limitReached: data.remainingDay <= 0
+        });
       }
 
       const botMsg: ChatMessage = {
@@ -851,15 +889,24 @@ export default function KloePage() {
       
       {/* DESKTOP HEADER (Fixed top from sidebar edge, centered 10s animated logo, back button to /closet) */}
       <header className="hidden md:flex fixed top-0 md:left-[72px] left-0 right-0 z-30 h-16 bg-[var(--background)]/85 backdrop-blur-xl border-b border-[var(--border-color)]/50 px-8 items-center justify-between">
-        {/* Back button to /closet */}
-        <button
-          onClick={() => router.push('/closet')}
-          className="p-2 -ml-2 rounded-full text-[var(--foreground)] hover:text-[var(--brand-pink)] hover:bg-[var(--background-secondary)] transition-colors cursor-pointer"
-          title="Volver a Armario"
-          aria-label="Volver a Armario"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
+        {/* Left: Back button to /closet & Quota badge */}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => router.push('/closet')}
+            className="p-2 -ml-2 rounded-full text-[var(--foreground)] hover:text-[var(--brand-pink)] hover:bg-[var(--background-secondary)] transition-colors cursor-pointer"
+            title="Volver a Armario"
+            aria-label="Volver a Armario"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+
+          <div className="hidden lg:flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--background-secondary)] border border-[var(--border-color)] text-[11px] font-medium text-[var(--foreground-secondary)]">
+            <span className={`w-2 h-2 rounded-full ${remainingToday > 0 ? 'bg-emerald-500 shadow-xs shadow-emerald-500/50' : 'bg-amber-500'}`} />
+            <span>
+              {isPremium() ? 'Kloe Pro' : 'Free'} · <strong className="text-[var(--foreground)]">{remainingToday}/{maxDay}</strong> hoy
+            </span>
+          </div>
+        </div>
 
         {/* Center Animated Logo */}
         <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center pointer-events-none">
@@ -997,7 +1044,7 @@ export default function KloePage() {
 
         
         {/* Free Tier Upgrade Banner - Only shown when limit has been reached */}
-        {!isPremium() && trialRemaining <= 0 && (
+        {!isPremium() && remainingToday <= 0 && (
           <motion.div 
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -1007,7 +1054,7 @@ export default function KloePage() {
               <Crown className="w-5 h-5 text-[var(--brand-pink)] flex-shrink-0" />
               <div className="min-w-0">
                 <p className="text-xs text-[var(--foreground-secondary)] leading-relaxed">
-                  Has completado tus <strong className="text-[var(--brand-pink)]">8 mensajes de prueba gratuita</strong>. Pasa a Premium para estilismo ilimitado.
+                  Has completado tus <strong className="text-[var(--brand-pink)]">8 mensajes gratuitos de hoy</strong>. Pásate a Pro para disfrutar de 35 mensajes diarios.
                 </p>
                 <div className="w-full max-w-[200px] h-1.5 bg-black/10 dark:bg-white/10 rounded-full mt-1.5 overflow-hidden">
                   <div 
@@ -1021,7 +1068,7 @@ export default function KloePage() {
               onClick={() => setShowProModal(true)}
               className="text-xs font-bold px-3.5 py-2 bg-[var(--brand-pink)] text-white rounded-xl hover:opacity-90 transition-opacity flex-shrink-0 shadow-sm cursor-pointer self-start sm:self-auto"
             >
-              Subir a Kloe Pro (2,99 €)
+              Kloe Pro (2,99 €)
             </button>
           </motion.div>
         )}
@@ -1487,17 +1534,17 @@ export default function KloePage() {
                         : (attachedPost 
                           ? `Pregúntale a Kloe sobre este look guardado...` 
                           : (!isPremium() 
-                            ? `Pregúntale a Kloe (${trialRemaining} mensaje${trialRemaining === 1 ? '' : 's'} gratis)...` 
-                            : `Pregúntale a Kloe sobre tus prendas u outfits...`)))))
+                            ? `Pregúntale a Kloe (${remainingToday}/${maxDay} consultas hoy)...` 
+                            : `Pregúntale a Kloe sobre tus prendas u outfits (${remainingToday}/${maxDay})...`)))))
               }
-              disabled={isTyping}
+              disabled={isTyping || !isInputUnlocked}
               className="flex-1 bg-transparent text-sm text-[var(--foreground)] outline-none placeholder:text-[var(--foreground-tertiary)] px-1"
             />
             <button
               type="submit"
-              disabled={(!inputMessage.trim() && attachedItems.length === 0 && !attachedPost && !attachedImage) || isTyping}
+              disabled={(!inputMessage.trim() && attachedItems.length === 0 && !attachedPost && !attachedImage) || isTyping || !isInputUnlocked}
               className={`p-2.5 rounded-full transition-all shrink-0 ${
-                (inputMessage.trim() || attachedItems.length > 0 || attachedPost || attachedImage) && !isTyping
+                (inputMessage.trim() || attachedItems.length > 0 || attachedPost || attachedImage) && !isTyping && isInputUnlocked
                   ? 'bg-[var(--brand-pink)] text-white hover:scale-105 shadow-md shadow-[var(--brand-pink)]/25 cursor-pointer'
                   : 'text-[var(--foreground-tertiary)] opacity-40 cursor-not-allowed'
               }`}
@@ -1512,16 +1559,25 @@ export default function KloePage() {
               <div className="w-8 h-8 rounded-full bg-[var(--brand-pink)] text-white flex items-center justify-center flex-shrink-0 shadow-xs">
                 <Crown className="w-4 h-4" />
               </div>
-              <p className="text-xs text-[var(--foreground)] font-semibold truncate">
-                Has completado tus 8 mensajes de prueba. Pasa a <strong className="text-[var(--brand-pink)]">Kloe Pro</strong>
-              </p>
+              <div className="min-w-0">
+                <p className="text-xs text-[var(--foreground)] font-semibold truncate">
+                  {isPremium()
+                    ? 'Has completado tus 35 mensajes diarios.'
+                    : 'Has completado tus 8 mensajes diarios gratuitos.'}
+                </p>
+                <p className="text-[10px] text-[var(--foreground-secondary)] truncate">
+                  Se recargan automáticamente hoy a las 00:00 (hora peninsular).
+                </p>
+              </div>
             </div>
-            <button
-              onClick={() => setShowProModal(true)}
-              className="px-4 py-2 bg-[var(--brand-pink)] hover:bg-[#ff3377] text-white font-bold text-xs rounded-2xl shadow-sm transition-all flex-shrink-0 cursor-pointer"
-            >
-              Subir a Pro (2,99 €)
-            </button>
+            {!isPremium() && (
+              <button
+                onClick={() => setShowProModal(true)}
+                className="px-3.5 py-2 bg-[var(--brand-pink)] hover:bg-[#ff3377] text-white font-bold text-xs rounded-2xl shadow-sm transition-all flex-shrink-0 cursor-pointer"
+              >
+                Kloe Pro (2,99 €)
+              </button>
+            )}
           </div>
         )}
       </div>

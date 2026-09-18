@@ -383,7 +383,7 @@ export default function GuidedTourModal() {
             className="fixed bottom-[calc(80px+env(safe-area-inset-bottom,0px))] md:bottom-8 left-1/2 -translate-x-1/2 z-[7000] w-[92vw] max-w-md bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-2xl shadow-2xl p-4 flex items-center gap-3.5 border border-emerald-400/40"
           >
             <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center shrink-0">
-              <Trophy className="w-5 h-5 text-amber-300 animate-bounce" />
+              <Trophy className="w-5 h-5 text-amber-300" />
             </div>
             <div className="flex-1 min-w-0">
               <h4 className="text-sm font-bold leading-tight">{celebrationTitle}</h4>

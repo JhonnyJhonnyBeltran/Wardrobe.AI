@@ -133,14 +133,17 @@ export default function SettingsPage() {
                 throw new Error(errData.error || 'Error al eliminar la cuenta');
             }
             
-            // Clean local cache
+            // Clean local cache thoroughly
             if (typeof window !== 'undefined') {
-                localStorage.removeItem('wardrobe_user_profile');
-                localStorage.removeItem('last_viewed_activity');
-                localStorage.removeItem('search_history');
+                try {
+                    localStorage.clear();
+                    sessionStorage.clear();
+                } catch (e) {
+                    console.warn('Error clearing storage:', e);
+                }
             }
             await signOut();
-            router.push('/auth');
+            window.location.href = '/auth';
         } catch (error: any) {
             console.error('Error deleting account:', error);
             setDeleteError(error?.message || 'Hubo un error al eliminar tu cuenta.');

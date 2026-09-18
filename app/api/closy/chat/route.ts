@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { checkRateLimit, checkIpRateLimit } from '@/lib/closy/rateLimiter';
+import { checkRateLimit, checkIpRateLimit, getUserQuotaStatus } from '@/lib/closy/rateLimiter';
 import { buildUserStylingContext } from '@/lib/closy/contextIndexer';
 import { getFastCourtesyResponse } from '@/lib/closy/fastResponses';
 import { resolveImageUrl } from '@/lib/imageUtils';
@@ -234,10 +234,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 4. Check Subscription & Free Trial Message Limit
+    // 4. Check Subscription
     const { data: userProfile } = await supabase
       .from('profiles')
-      .select('id, is_premium, subscription_tier, subscription_status, kloe_trial_messages_used, notification_preferences, username, full_name')
+      .select('id, is_premium, subscription_tier, subscription_status, username, full_name')
       .eq('id', user.id)
       .maybeSingle();
 
@@ -253,38 +253,23 @@ export async function POST(request: NextRequest) {
       userProfile?.subscription_status === 'active'
     );
 
-    const MAX_FREE_TRIAL_MESSAGES = 8;
-    const currentTrialUsed = Number(
-      userProfile?.kloe_trial_messages_used ??
-      (userProfile?.notification_preferences as any)?.kloe_trial_messages_used ??
-      0
-    );
-
-    if (!isPremium && currentTrialUsed >= MAX_FREE_TRIAL_MESSAGES) {
-      return NextResponse.json(
-        { 
-          error: 'Has completado tus 8 mensajes de prueba gratuita con Kloe',
-          message: '¡Has completado tus 8 mensajes de prueba gratuita con Kloe! Desbloquea Klozet Premium para seguir disfrutando de estilismo ilimitado 24/7.',
-          limitReached: true,
-          isTrialExpired: true,
-          trialUsed: currentTrialUsed,
-          trialMax: MAX_FREE_TRIAL_MESSAGES
-        },
-        { status: 402 }
-      );
-    }
-
-    // 5. Apply Per-User Daily Rate Limiting (Strict 30 messages/day for cost & quality control)
+    // 5. Apply Per-User Daily Rate Limiting (Free: 8 daily, Premium: 35 daily, reset at 00:00 Madrid)
     const estimatedTokens = Math.ceil(userPrompt.length / 4) + 600;
-    const rateLimit = checkRateLimit(user.id, estimatedTokens);
+    const rateLimit = checkRateLimit(user.id, isPremium, estimatedTokens);
     
     if (!rateLimit.allowed) {
       return NextResponse.json(
         { 
-          error: rateLimit.reason || 'Has alcanzado el límite de 30 consultas diarias',
-          message: rateLimit.reason || 'Has agotado tus 30 mensajes diarios con Kloe. Tu límite se restablecerá mañana a las 00:00 para que puedas seguir creando looks increíbles.',
+          error: rateLimit.reason || 'Has alcanzado el límite de consultas diarias',
+          message: rateLimit.reason || (isPremium 
+            ? 'Has agotado tus 35 consultas diarias con Kloe. Tu límite se restablecerá a las 00:00 (hora peninsular).' 
+            : 'Has agotado tus 8 consultas gratuitas de hoy con Kloe. Tu límite se restablecerá a las 00:00 (hora peninsular) o desbloquea Kloe Pro para 35 consultas diarias.'),
           limitReached: true,
           isDailyLimit: rateLimit.isDailyLimit,
+          isPremium,
+          dailyLimit: rateLimit.dailyLimit,
+          usedToday: rateLimit.usedToday,
+          remainingDay: 0,
           retryAfter: rateLimit.retryAfterSeconds 
         },
         { 
@@ -377,27 +362,6 @@ export async function POST(request: NextRequest) {
         .filter(Boolean);
     }
 
-    // 7. Increment trial message count if user is not premium
-    let nextTrialUsed = currentTrialUsed;
-    if (!isPremium) {
-      nextTrialUsed = currentTrialUsed + 1;
-      try {
-        const currentPrefs = (userProfile?.notification_preferences as any) || {};
-        await supabase
-          .from('profiles')
-          .update({
-            kloe_trial_messages_used: nextTrialUsed,
-            notification_preferences: {
-              ...currentPrefs,
-              kloe_trial_messages_used: nextTrialUsed
-            }
-          } as any)
-          .eq('id', user.id);
-      } catch (err) {
-        console.warn('[KlosyChat] Could not update trial counter in profiles:', err);
-      }
-    }
-
     return NextResponse.json({
       message: aiResult.message || 'Aquí tienes mi recomendación de estilo para ti.',
       recommended_outfit: resolvedOutfit,
@@ -408,12 +372,14 @@ export async function POST(request: NextRequest) {
         'Arma un look formal'
       ],
       isPremium,
-      trialUsed: nextTrialUsed,
-      trialMax: MAX_FREE_TRIAL_MESSAGES,
-      trialRemaining: isPremium ? 9999 : Math.max(0, MAX_FREE_TRIAL_MESSAGES - nextTrialUsed),
+      dailyLimit: rateLimit.dailyLimit,
+      usedToday: rateLimit.usedToday,
+      remainingDay: rateLimit.remainingDay,
       rate_limit: {
         remaining_minute: rateLimit.remainingMinute,
-        remaining_day: rateLimit.remainingDay
+        remaining_day: rateLimit.remainingDay,
+        daily_limit: rateLimit.dailyLimit,
+        used_today: rateLimit.usedToday
       }
     }, {
       headers: {
@@ -430,6 +396,52 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+/**
+ * GET Handler: Returns current quota usage and status for Kloe AI
+ */
+export async function GET() {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
+    }
+
+    const { data: userProfile } = await supabase
+      .from('profiles')
+      .select('id, is_premium, subscription_tier, subscription_status, username, full_name')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    const isEthan = Boolean(
+      user.email?.toLowerCase().includes('ethan') ||
+      userProfile?.username?.toLowerCase() === 'ethan' ||
+      userProfile?.full_name?.toLowerCase().includes('ethan')
+    );
+
+    const isPremium = isEthan || Boolean(
+      userProfile?.is_premium ||
+      userProfile?.subscription_tier === 'premium' ||
+      userProfile?.subscription_status === 'active'
+    );
+
+    const { getUserQuotaStatus } = await import('@/lib/closy/rateLimiter');
+    const quota = getUserQuotaStatus(user.id, isPremium);
+
+    return NextResponse.json({
+      isPremium,
+      dailyLimit: quota.dailyLimit,
+      usedToday: quota.usedToday,
+      remainingDay: quota.remainingDay,
+      limitReached: quota.remainingDay <= 0
+    });
+  } catch (err: any) {
+    return NextResponse.json({ error: err?.message || 'Error checking quota' }, { status: 500 });
+  }
+}
+
 
 /**
  * Invokes Google Gemini with Multimodal Image Recognition & Fast Fallback Cascade

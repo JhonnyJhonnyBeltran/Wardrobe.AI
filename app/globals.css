@@ -242,12 +242,12 @@ html {
 
 @keyframes klozet-pulse-glow {
   0%, 100% {
-    opacity: 0.4;
-    transform: scale(0.95) translateZ(0);
+    opacity: 0.5;
+    filter: drop-shadow(0 0 4px rgba(255, 102, 196, 0.3));
   }
   50% {
     opacity: 1;
-    transform: scale(1.05) translateZ(0);
+    filter: drop-shadow(0 0 12px rgba(255, 102, 196, 0.8));
   }
 }
 

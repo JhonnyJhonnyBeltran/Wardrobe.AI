@@ -91,17 +91,17 @@ export default function KloeProModal({ isOpen, onClose, redirectBackToCloset = f
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-          className="relative w-full max-w-md bg-[var(--card-bg)] border border-[var(--brand-pink)]/40 rounded-3xl p-6 shadow-2xl overflow-hidden z-10"
+          className="relative w-full max-w-md max-h-[92vh] overflow-y-auto no-scrollbar bg-[var(--card-bg)] border border-[var(--brand-pink)]/40 rounded-3xl p-4 sm:p-6 shadow-2xl z-10"
         >
           {/* Background Ambient Glow */}
           <div className="absolute -top-24 -right-24 w-48 h-48 bg-[var(--brand-pink)]/20 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-purple-500/15 rounded-full blur-3xl pointer-events-none" />
 
           {/* Top Actions: Close button */}
-          <div className="flex items-center justify-end mb-2">
+          <div className="flex items-center justify-end mb-1">
             <button
               onClick={handleDismiss}
-              className="p-1.5 rounded-full hover:bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:text-[var(--foreground)] transition-colors"
+              className="p-1.5 rounded-full hover:bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:text-[var(--foreground)] transition-colors cursor-pointer"
               aria-label="Cerrar"
             >
               <X className="w-5 h-5" />
@@ -109,8 +109,8 @@ export default function KloeProModal({ isOpen, onClose, redirectBackToCloset = f
           </div>
 
           {/* Header */}
-          <div className="flex flex-col items-center text-center mt-1 mb-5">
-            <div className="relative w-24 h-14 mb-2.5">
+          <div className="flex flex-col items-center text-center mt-0.5 mb-4">
+            <div className="relative w-20 sm:w-24 h-12 sm:h-14 mb-2">
               <Image
                 src="/kloe-logo-large.png"
                 alt="Klozet Premium"

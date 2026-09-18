@@ -1442,6 +1442,29 @@ En cada conversación, el backend alimenta a CloSy con:
   - **Keyframe 3 (El Fit y la Semana)**: *"MONTA TU FIT. LISTO PARA HOY."* - Galería lookbook con 4 modelos reales y tira de prendas/calzado recortados.
   - **Keyframe 4 (Acceso y Cierre)**: *"VÍSTETE MEJOR. DISFRUTA TU ROPA."* - Tarjeta de acceso directo y enlaces legales integrados.
 
+### 119. Sistema de Cuotas Diarias Kloe, Modal de Filtros Centrado, Purga de Cuenta y Normalización Visual (Septiembre 2026)
+- **Cuotas Diarias de Kloe con Reset a las 00:00 (Hora Peninsular / Europe/Madrid)**:
+  - Cuentas Free: **8 mensajes al día**. Cuentas Premium: **35 mensajes al día**.
+  - Rate limiter en backend (`lib/closy/rateLimiter.ts` y `app/api/closy/chat/route.ts`) con función `getMadridDayKey()` para calcular estrictamente la fecha en huso horario `Europe/Madrid`.
+  - Endpoint `GET /api/closy/chat` que informa en tiempo real de la cuota restante (`remainingDay`, `dailyLimit`, `usedToday`, `isPremium`).
+  - Al agotar los mensajes diarios, el input se bloquea con aviso informativo amigable (*"Has completado tus 8 mensajes diarios gratuitos. Se recargan automáticamente hoy a las 00:00 (hora peninsular)"* y botón a Kloe Pro por 2,99 €/mes).
+  - **Acceso Irrestricto a Funcionalidades**: El bloqueo del input **no impide** leer el historial anterior, abrir prendas recomendadas, ver detalles ni pulsar el botón *"Montar y editar en el lienzo"* para llevar outfits a `/create`.
+  - Protección estricta en servidor con código 429 ante intentos de bypass o llamadas directas no autorizadas.
+- **Acceso Directo a Kloe desde Armario (`/closet`)**:
+  - Tanto el botón *"Crear con IA"* como el banner orgánico abren directamente `/closet/kloe` para todos los usuarios (Free y Pro), permitiendo a las cuentas gratuitas disfrutar de sus 8 mensajes diarios antes de sugerir el upgrade.
+- **Modal de Filtros Centrado en Armario (`/closet`)**:
+  - Rediseñado el sistema de filtros: se abre como modal centrado en pantalla con fondo `backdrop-blur-sm`, selector de categorías con pills táctiles, interruptor de favoritos y botón de acción con recuento dinámico de resultados.
+  - Al abrir el modal de filtros (`showFilters === true`), el botón flotante `+` de añadir prenda/outfit se oculta suavemente mediante `<AnimatePresence>` para evitar solapamientos visuales.
+- **Pasarela de Suscripción Stripe & Modal Responsive**:
+  - Modal `KloeProModal` y `PremiumModal` optimizado para móvil con altura máxima `max-h-[92vh] overflow-y-auto no-scrollbar` y precios unificados: **2,99 € / mes** y **24,99 € / año**.
+  - Conexión directa a Stripe Checkout Sessions (`/api/stripe/checkout`) con soporte para Apple Pay, Google Pay y tarjetas.
+- **Purga Total en Eliminación de Cuenta (`/api/user/delete` y `/profile/settings`)**:
+  - Eliminación completa de perfiles, usuarios legacy por ID y por email, prendas, outfits, posts, guardados, carpetas, likes, follows, notificaciones, mensajes directos, avatares y prendas en Storage, y baja en Supabase Auth (`auth.admin.deleteUser`).
+  - En cliente, se ejecuta `localStorage.clear()` y `sessionStorage.clear()` antes de redirigir a `/auth`.
+- **Eliminación de Efectos de Rebote en Botones (`globals.css` y `GuidedTourModal.tsx`)**:
+  - Eliminada la propiedad `transform: scale` en `@keyframes klozet-pulse-glow` para que los botones con resplandor no boten ni cambien de tamaño.
+  - Eliminada la clase `animate-bounce` en el icono de trofeo del tour guiado.
+
 
 
 

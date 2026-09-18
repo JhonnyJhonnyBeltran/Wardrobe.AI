@@ -140,10 +140,11 @@ export async function POST(req: NextRequest) {
         await supabaseAdmin.from('clothing_items').delete().eq('user_id', userId);
 
         // 11. Delete Profile & Legacy DB Entries
-        await Promise.all([
-            supabaseAdmin.from('profiles').delete().eq('id', userId),
-            supabaseAdmin.from('users').delete().eq('id', userId).maybeSingle()
-        ]);
+        await supabaseAdmin.from('profiles').delete().eq('id', userId);
+        await supabaseAdmin.from('users').delete().eq('id', userId);
+        if (callerUser?.email) {
+            await supabaseAdmin.from('users').delete().eq('email', callerUser.email);
+        }
 
         // 12. Clean Storage files (best effort)
         try {

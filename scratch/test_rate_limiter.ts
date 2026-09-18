@@ -19,7 +19,7 @@ function runRateLimiterTests() {
   let burstBlocked = false;
   let burstBlockedAt = 0;
   for (let i = 0; i < 10; i++) {
-    const res = checkRateLimit(testUser, 100);
+    const res = checkRateLimit(testUser, false, 100);
     if (!res.allowed) {
       burstBlocked = true;
       burstBlockedAt = i + 1;
@@ -33,7 +33,7 @@ function runRateLimiterTests() {
   const testDailyUser = 'user_test_daily_456';
   let dailyBlocked = false;
   for (let i = 0; i < 45; i++) {
-    const res = checkRateLimit(testDailyUser, 1500);
+    const res = checkRateLimit(testDailyUser, false, 1500);
     if (!res.allowed && res.isDailyLimit) {
       dailyBlocked = true;
       console.log(`Daily limit triggered with in-character message: "${res.reason}"`);

@@ -644,58 +644,41 @@ export default function ClosetPage() {
                 Crear Outfit
               </motion.button>
             </Link>
-            {isPremium() ? (
-              <Link href="/closet/kloe" className="flex-1">
-                <motion.button 
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="w-full py-3 px-4 rounded-xl bg-[var(--background-secondary)] text-[var(--foreground)] font-semibold flex items-center justify-center gap-2 border border-[var(--border-color)] relative overflow-hidden group hover:border-[var(--brand-pink)]/50 transition-all shadow-xs cursor-pointer"
-                >
-                  <div className="relative w-8 h-5 flex-shrink-0 flex items-center justify-center">
-                    <Image src="/kloe-logo-large.png" alt="Kloe" fill className="object-contain group-hover:scale-110 transition-transform" />
-                  </div>
-                  <span>Crear con IA</span>
-                </motion.button>
-              </Link>
-            ) : (
-              <div onClick={() => setShowKloeProModal(true)} className="flex-1">
-                <motion.button 
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="w-full py-3 px-4 rounded-xl bg-[var(--background-secondary)] text-[var(--foreground)] font-semibold flex items-center justify-center gap-2 border border-[var(--border-color)] relative overflow-hidden group hover:border-[var(--brand-pink)]/50 transition-all shadow-xs cursor-pointer"
-                >
-                  <div className="relative w-8 h-5 flex-shrink-0 flex items-center justify-center">
-                    <Image src="/kloe-logo-large.png" alt="Kloe" fill className="object-contain group-hover:scale-110 transition-transform" />
-                  </div>
-                  <span>Crear con IA</span>
-                </motion.button>
-              </div>
-            )}
+            <Link href="/closet/kloe" className="flex-1">
+              <motion.button 
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full py-3 px-4 rounded-xl bg-[var(--background-secondary)] text-[var(--foreground)] font-semibold flex items-center justify-center gap-2 border border-[var(--border-color)] relative overflow-hidden group hover:border-[var(--brand-pink)]/50 transition-all shadow-xs cursor-pointer"
+              >
+                <div className="relative w-8 h-5 flex-shrink-0 flex items-center justify-center">
+                  <Image src="/kloe-logo-large.png" alt="Kloe" fill className="object-contain group-hover:scale-110 transition-transform" />
+                </div>
+                <span>Crear con IA</span>
+              </motion.button>
+            </Link>
           </div>
 
-          {/* Organic Duolingo-Style Prompt Banner */}
-          {!isPremium() && (
-            <div onClick={() => setShowKloeProModal(true)} className="block mb-5 cursor-pointer">
-              <div className="bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-pink-500/10 border border-[var(--brand-pink)]/30 rounded-2xl p-3.5 flex items-center justify-between hover:border-[var(--brand-pink)]/60 transition-all shadow-xs group">
-                <div className="flex items-center gap-3">
-                  <div className="relative w-12 h-8 flex-shrink-0 flex items-center justify-center">
-                    <Image src="/kloe-logo-large.png" alt="Kloe" fill className="object-contain group-hover:scale-110 transition-transform" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-[var(--foreground)] flex items-center gap-1">
-                      ¿Qué me pongo hoy?
-                    </p>
-                    <p className="text-[11px] text-[var(--foreground-tertiary)]">
-                      Pídele a Kloe que te arme un look con tu ropa en segundos
-                    </p>
-                  </div>
+          {/* Organic Prompt Banner to consult Kloe */}
+          <Link href="/closet/kloe" className="block mb-5 cursor-pointer">
+            <div className="bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-pink-500/10 border border-[var(--brand-pink)]/30 rounded-2xl p-3.5 flex items-center justify-between hover:border-[var(--brand-pink)]/60 transition-all shadow-xs group">
+              <div className="flex items-center gap-3">
+                <div className="relative w-12 h-8 flex-shrink-0 flex items-center justify-center">
+                  <Image src="/kloe-logo-large.png" alt="Kloe" fill className="object-contain group-hover:scale-110 transition-transform" />
                 </div>
-                <span className="text-xs font-bold text-[var(--brand-pink)] flex items-center gap-1">
-                  Consultar <Sparkles className="w-3 h-3" />
-                </span>
+                <div>
+                  <p className="text-xs font-bold text-[var(--foreground)] flex items-center gap-1">
+                    ¿Qué me pongo hoy?
+                  </p>
+                  <p className="text-[11px] text-[var(--foreground-tertiary)]">
+                    Pídele a Kloe que te arme un look con tu ropa en segundos
+                  </p>
+                </div>
               </div>
+              <span className="text-xs font-bold text-[var(--brand-pink)] flex items-center gap-1">
+                Consultar <Sparkles className="w-3 h-3" />
+              </span>
             </div>
-          )}
+          </Link>
 
           {/* Profile-Style Tabs */}
           <div className="flex border-b border-[var(--border-color)]">
@@ -736,20 +719,7 @@ export default function ClosetPage() {
 
 
       {/* Main Content */}
-      {/* Filter Backdrop */}
-      <AnimatePresence>
-        {showFilters && (
-          <motion.div
-            key="filter-backdrop"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            onClick={() => setShowFilters(false)}
-            className="fixed inset-0 bg-black/20 backdrop-blur-[2px] z-[55]"
-          />
-        )}
-      </AnimatePresence>
+
 
 
 
@@ -1021,145 +991,195 @@ export default function ClosetPage() {
             </button>
           )}
 
-          {/* Filter Bubble */}
+          {/* Filter Button */}
           {activeTab !== 'calendar' && (
-            <BubbleToggle
-              isOpen={showFilters}
-              onToggle={() => setShowFilters(prev => !prev)}
-              icon={Filter}
-              activeCount={activeFilterCount}
-              ariaLabel="Filtros"
-              origin="bottom right"
-              label="Filtrar"
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setShowFilters(prev => !prev)}
+              className={`h-12 px-4 rounded-full flex items-center justify-center gap-2 border shadow-lg transition-all cursor-pointer ${
+                activeFilterCount > 0
+                  ? 'bg-[var(--foreground)] text-[var(--background)] border-transparent'
+                  : 'bg-[var(--card-bg)] text-[var(--foreground)] border-[var(--border-color)] hover:border-[var(--brand-pink)]/50'
+              }`}
+              aria-label="Filtros"
             >
-              <div className="w-[calc(100vw-3rem)] max-w-sm bg-[var(--card-bg)] rounded-3xl border border-[var(--border-color)] shadow-2xl p-4 max-h-[70vh] overflow-auto">
-                {/* Header */}
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <span className="text-base font-bold text-[var(--foreground)]">Filtros</span>
-                    {activeFilterCount > 0 && (
-                      <button
-                        onClick={() => {
-                          setSearchQuery('');
-                          setSelectedCategories(new Set());
-                          setShowFavoritesOnly(false);
-                        }}
-                        className="text-xs font-semibold text-[var(--brand-pink)] hover:underline"
-                      >
-                        Borrar filtros
-                      </button>
-                    )}
-                  </div>
-                  <motion.button
-                    whileHover={{ scale: 1.1, rotate: 90 }}
-                    whileTap={{ scale: 0.9 }}
+              <Filter className="w-4 h-4 text-[var(--brand-pink)]" />
+              <span className="text-xs font-bold">Filtrar</span>
+              {activeFilterCount > 0 && (
+                <span className="w-5 h-5 rounded-full bg-[var(--brand-pink)] text-white text-[10px] font-bold flex items-center justify-center">
+                  {activeFilterCount}
+                </span>
+              )}
+            </motion.button>
+          )}
+
+          {/* Action Button: Nueva Prenda / Nuevo Outfit / Añadir outfit para hoy (Oculto al abrir filtros) */}
+          <AnimatePresence>
+            {!showFilters && (
+              <motion.button
+                key="fab-add-btn"
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => {
+                  if (activeTab === 'items') {
+                    setShowAddModal(true);
+                  } else if (activeTab === 'outfits') {
+                    router.push('/create');
+                  } else if (activeTab === 'calendar') {
+                    if (typeof window !== 'undefined') {
+                      window.dispatchEvent(new CustomEvent('klozet:calendar_add_today'));
+                    }
+                  }
+                }}
+                className="h-14 min-w-[56px] px-0 md:px-6 rounded-full bg-[var(--brand-pink)] flex items-center justify-center text-white shadow-xl hover:shadow-[0_0_20px_rgba(236,72,153,0.5)] transition-all cursor-pointer group"
+              >
+                <Plus className="w-7 h-7" />
+                <span className="hidden md:block font-bold whitespace-nowrap text-[15px] ml-1 pr-1">
+                  {activeTab === 'items' ? 'Nueva Prenda' : activeTab === 'outfits' ? 'Nuevo Outfit' : 'Añadir outfit para hoy'}
+                </span>
+              </motion.button>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
+
+      {/* Centered Filter Modal */}
+      <AnimatePresence>
+        {showFilters && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowFilters(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+            />
+
+            {/* Modal Card */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+              className="relative w-full max-w-md bg-[var(--card-bg)] border border-[var(--border-color)] rounded-3xl p-5 sm:p-6 shadow-2xl max-h-[85vh] overflow-y-auto no-scrollbar z-10"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between pb-3 border-b border-[var(--border-color)] mb-4">
+                <div className="flex items-center gap-2.5">
+                  <Filter className="w-5 h-5 text-[var(--brand-pink)]" />
+                  <h3 className="font-bold text-base text-[var(--foreground)]">Filtros de Armario</h3>
+                </div>
+                <div className="flex items-center gap-2">
+                  {activeFilterCount > 0 && (
+                    <button
+                      onClick={() => {
+                        setSearchQuery('');
+                        setSelectedCategories(new Set());
+                        setShowFavoritesOnly(false);
+                      }}
+                      className="text-xs font-semibold text-[var(--brand-pink)] hover:underline cursor-pointer"
+                    >
+                      Limpiar todo
+                    </button>
+                  )}
+                  <button
                     onClick={() => setShowFilters(false)}
-                    className="w-9 h-9 rounded-full bg-[var(--background-secondary)] flex items-center justify-center text-[var(--foreground-secondary)] hover:bg-[var(--foreground)] hover:text-[var(--background)] transition-colors"
+                    className="p-1.5 rounded-full hover:bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:text-[var(--foreground)] transition-colors cursor-pointer"
                     aria-label="Cerrar filtros"
                   >
                     <X className="w-5 h-5" />
-                  </motion.button>
+                  </button>
                 </div>
+              </div>
 
-                {/* Search */}
-                <div className="relative mb-3">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--foreground-tertiary)]" />
-                  <input
-                    type="text"
-                    placeholder={`Buscar ${activeTab === 'items' ? 'prendas' : 'outfits'}...`}
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-[var(--background-secondary)] border border-transparent focus:border-[var(--foreground-tertiary)] rounded-xl py-2.5 pl-9 pr-10 text-sm outline-none"
-                  />
-                  {searchQuery && (
-                    <button
-                      onClick={() => setSearchQuery('')}
-                      className="absolute right-3 top-1/2 -translate-y-1/2"
-                    >
-                      <X className="w-4 h-4 text-[var(--foreground-tertiary)]" />
-                    </button>
-                  )}
-                </div>
+              {/* Search */}
+              <div className="relative mb-4">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--foreground-tertiary)]" />
+                <input
+                  type="text"
+                  placeholder={`Buscar ${activeTab === 'items' ? 'prendas' : 'outfits'}...`}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-[var(--background-secondary)] border border-[var(--border-color)] focus:border-[var(--brand-pink)] rounded-2xl py-2.5 pl-10 pr-10 text-xs sm:text-sm outline-none text-[var(--foreground)]"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[var(--foreground-tertiary)] hover:text-[var(--foreground)] cursor-pointer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
 
-                {/* Categories (Only for Items tab) */}
-                {activeTab === 'items' && (
-                  <>
-                    <p className="text-xs font-semibold text-[var(--foreground-tertiary)] uppercase tracking-wider mb-3 pl-1">Categoría</p>
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {categories.map((category) => (
-                        <button
-                          key={category}
-                          onClick={() => toggleCategory(category)}
-                          className={`px-4 py-2 rounded-full text-sm font-medium capitalize whitespace-nowrap transition-all duration-200 ${selectedCategories.has(category)
-                            ? 'bg-[var(--foreground)] text-[var(--background)]'
-                            : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)]'
-                            }`}
-                        >
-                          {selectedCategories.has(category) && (
-                            <span className="mr-1">✓</span>
-                          )}
-                          {t.itemTypes?.[category as keyof typeof t.itemTypes] || category}
-                        </button>
-                      ))}
-                    </div>
-
+              {/* Categories (Only for Items tab) */}
+              {activeTab === 'items' && (
+                <div className="mb-4">
+                  <div className="flex items-center justify-between mb-2.5">
+                    <p className="text-xs font-bold text-[var(--foreground-secondary)] uppercase tracking-wider">
+                      Categoría
+                    </p>
                     {selectedCategories.size > 0 && (
                       <button
                         onClick={() => setSelectedCategories(new Set())}
-                        className="text-xs text-[var(--brand-pink)] font-semibold mb-3 pl-1 hover:underline flex items-center gap-1"
+                        className="text-[11px] text-[var(--brand-pink)] font-semibold hover:underline cursor-pointer"
                       >
-                        <X className="w-3 h-3" />
-                        Limpiar categorías
+                        Restablecer
                       </button>
                     )}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {categories.map((category) => (
+                      <button
+                        key={category}
+                        onClick={() => toggleCategory(category)}
+                        className={`px-3.5 py-1.5 rounded-full text-xs font-medium capitalize whitespace-nowrap transition-all duration-200 cursor-pointer ${
+                          selectedCategories.has(category)
+                            ? 'bg-[var(--brand-pink)] text-white shadow-xs font-bold'
+                            : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:border-[var(--brand-pink)]/40 border border-[var(--border-color)]'
+                        }`}
+                      >
+                        {selectedCategories.has(category) && <span className="mr-1">✓</span>}
+                        {t.itemTypes?.[category as keyof typeof t.itemTypes] || category}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-                    {/* Divider */}
-                    <div className="h-px bg-[var(--border-color)] mb-4" />
-                  </>
-                )}
-
-                {/* Favorites Toggle */}
+              {/* Favorites Toggle */}
+              <div className="mb-5">
                 <button
                   onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition-all duration-200 ${showFavoritesOnly
-                    ? 'bg-[var(--foreground)] text-[var(--background)]'
-                    : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)]'
-                    }`}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl border transition-all duration-200 cursor-pointer ${
+                    showFavoritesOnly
+                      ? 'bg-[var(--brand-pink)]/10 border-[var(--brand-pink)] text-[var(--brand-pink)] font-bold'
+                      : 'bg-[var(--background-secondary)] border-[var(--border-color)] text-[var(--foreground-secondary)] hover:text-[var(--foreground)]'
+                  }`}
                 >
-                  <Heart className={`w-5 h-5 ${showFavoritesOnly ? 'fill-current' : ''}`} />
-                  <span className="text-sm font-semibold">Solo favoritos</span>
-                  {showFavoritesOnly && (
-                    <span className="ml-auto">✓</span>
-                  )}
+                  <Heart className={`w-5 h-5 ${showFavoritesOnly ? 'fill-current text-[var(--brand-pink)]' : ''}`} />
+                  <span className="text-xs sm:text-sm font-semibold">Solo prendas favoritas</span>
+                  {showFavoritesOnly && <span className="ml-auto font-bold text-xs">✓ Activo</span>}
                 </button>
               </div>
-            </BubbleToggle>
-          )}
 
-          {/* Action Button: Nueva Prenda / Nuevo Outfit / Añadir outfit para hoy */}
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => {
-              if (activeTab === 'items') {
-                setShowAddModal(true);
-              } else if (activeTab === 'outfits') {
-                router.push('/create');
-              } else if (activeTab === 'calendar') {
-                if (typeof window !== 'undefined') {
-                  window.dispatchEvent(new CustomEvent('klozet:calendar_add_today'));
-                }
-              }
-            }}
-            className="h-14 min-w-[56px] px-0 md:px-6 rounded-full bg-[var(--brand-pink)] flex items-center justify-center text-white shadow-xl hover:shadow-[0_0_20px_rgba(236,72,153,0.5)] transition-all cursor-pointer group"
-          >
-            <Plus className="w-7 h-7" />
-            <span className="hidden md:block font-bold whitespace-nowrap text-[15px] ml-1 pr-1">
-              {activeTab === 'items' ? 'Nueva Prenda' : activeTab === 'outfits' ? 'Nuevo Outfit' : 'Añadir outfit para hoy'}
-            </span>
-          </motion.button>
-        </div>
-      )}
+              {/* Apply CTA Button */}
+              <button
+                onClick={() => setShowFilters(false)}
+                className="w-full py-3 rounded-2xl bg-[var(--brand-pink)] hover:bg-[#ff3377] text-white font-bold text-xs sm:text-sm shadow-md transition-all cursor-pointer"
+              >
+                Ver {filteredContent.length} {activeTab === 'items' ? 'prenda' : 'outfit'}{filteredContent.length === 1 ? '' : 's'}
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
       {/* Share/Post Modal */}
       <AnimatePresence>
         {shareOutfit && (
