@@ -1551,6 +1551,7 @@ En cada conversación, el backend alimenta a CloSy con:
   - Implementado `STYLE_FAMILIES_MAP` con árboles de parentesco (ej: `glam` $\rightarrow$ `baddie-glam`, `noche-fiesta`, `y2k`; `elegante` $\rightarrow$ `elegante-clasico`, `old-money`, etc.).
   - Búsqueda en Supabase mediante filtros `style_ids.cs.{slug}` y scoring de relevancia (+40 pts) por coincidencia de estilo.
   - Depurado el selector de chips de búsqueda, filtrando automáticamente UUIDs y mapeando los 34 estilos a nombres limpios en español.
+  - **Eliminación de Contadores Artificiales / AI Slop**: Se eliminó la etiqueta de cabecera *"X publicaciones encontradas"* para mantener una cuadrícula visual inmersiva y limpia estilo Instagram/Pinterest.
 - **4. Gestión de Reintentos de Cobro y Gracia de 3 Días en Stripe (`app/api/webhooks/stripe/route.ts` y `store/userStore.tsx`)**:
   - Añadido el manejo de `invoice.payment_failed` e `invoice.payment_succeeded`.
   - Periodo de gracia de 3 días para reintentos inteligentes de Stripe tras fallo de pago antes de revocar el acceso a Free.

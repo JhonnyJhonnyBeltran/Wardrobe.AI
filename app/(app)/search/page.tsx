@@ -844,11 +844,6 @@ export default function SearchPage() {
             {/* POST RESULTS */}
             {query && results.length > 0 && (
               <div className="w-full">
-                <div className="flex items-center justify-between mb-3 px-1">
-                  <span className="text-xs font-medium text-[var(--foreground-secondary)]">
-                    {results.length} {results.length === 1 ? 'publicación' : 'publicaciones'} encontradas
-                  </span>
-                </div>
                 <div className="masonry-grid">
                   {results.map(post => (
                     <div key={post.id} className="break-inside-avoid mb-4 sm:mb-6">
