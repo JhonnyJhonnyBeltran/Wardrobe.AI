@@ -1577,7 +1577,17 @@ En cada conversación, el backend alimenta a CloSy con:
 - **11. Carrusel Nativo con CSS Scroll Snap y Transición Fluida en Detalle de Post (`app/(app)/post/[id]/page.tsx`, `lib/haptic.ts`)**:
   - **Deslizamiento Suave en Tiempo Real 1:1 (CSS Scroll Snap)**: Se implementó un contenedor con `overflow-x-auto snap-x snap-mandatory no-scrollbar overscroll-x-contain` y `snap-center snap-always` para las diapositivas. Al arrastrar con el dedo en móvil, el carrusel sigue exactamente la posición del dedo en tiempo real (60fps/120fps nativos con aceleración GPU) y encaja con inercia física perfecta sin congelarse ni dar saltos.
   - **Navegación Sincronizada y Sin Errores de Vibración**: Los botones de flecha y puntos de navegación utilizan `goToSlide` con `scrollTo({ behavior: 'smooth' })`. Se suprimió la llamada a `navigator.vibrate` en gestos de deslizamiento y se blindó `triggerHaptic` en `lib/haptic.ts` con bloque `try ... catch`, eliminando la advertencia de intervención de Chrome.
-  - **Eliminación Total de Rebotes al Deslizar**: La prenda del look interactivo mantiene `isActive={false}` en el carrusel de publicaciones, garantizando una transición impecable y limpia de foto a outfit.
+  - **12. Rediseño de Tarjetas de Anuncios Patrocinados Nativos en Feed y Búsqueda (`components/Feed/SponsoredAdCard.tsx`)**:
+  - **Paridad Visual y Dimensional Absoluta con `PostCard`**:
+    - Se eliminaron las estructuras rígidas desalineadas (`min-h-[300px]`, `aspect-[3/4]`, badges artificiales de "Patrocinado", "Archived", textos promocionales largos de IA y botones tipo "Ver colección").
+    - La tarjeta adopta la misma carcasa (`motion.div` con `whileHover={{ scale: 1.025 }}`, `whileTap={{ scale: 0.97 }}`, bordes `rounded-[22px]`, sombras suaves e imagen `720x900` con `aspect-[4/5]`), integrándose de forma idéntica e imperceptible al flujo de publicaciones comunitarias.
+  - **Experiencia Limpia en Móvil y Micro-Overlay en Escritorio**:
+    - **En Móvil**: Imagen editorial limpia al 100%, sin texto ni elementos invasivos sobre la foto, exactamente igual que los posts de usuarios.
+    - **En Escritorio**: Al hacer hover sobre la tarjeta, aparece un gradiente sutil inferior con el nombre de la marca (ej: *Scuffers, Nude Project, Stüssy, Nike, Zara, COS, Carhartt WIP*), la etiqueta en texto pequeño *"anuncio"* inmediatamente debajo del nombre y el icono circular de enlace externo (`ExternalLink`). Sin descripciones, textos ni botones innecesarios.
+  - **Adaptación Contextual de Estilos y Cookies de Usuario**:
+    - Selección dinámica basada en los estilos favoritos del usuario (`user.preferredStyles`), intereses registrados en `localStorage` (`klozet_style_interest` y clics en estilos) y género (`user.gender`), seleccionando automáticamente la foto editorial masculina o femenina correspondiente para máxima afinidad.
+  - **Ruta de Monetización y Conexión de Cuentas**:
+    - La tarjeta está lista para monetización mediante redes de afiliación de moda (Awin, CJ Affiliate, Impact.com) y patrocinios directos con marcas de moda urbana (Scuffers, Nude Project), con soporte para eventos de conversión de Meta Pixel (`SponsoredAdClick`).
 
 
 
