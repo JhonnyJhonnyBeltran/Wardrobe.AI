@@ -707,9 +707,9 @@ export default function SearchPage() {
   }, [history, user?.preferredStyles]);
 
   return (
-    <div className="min-h-[100dvh] w-full max-w-[100vw] overflow-x-hidden bg-[var(--background)] pb-24">
-      {/* Suspended Fixed Search Bar (Clean floating pill, no fake header border or shadow) */}
-      <div className="sticky top-0 z-30 w-full pt-3 pb-2 px-3 sm:px-4 md:px-6 bg-[var(--background)]/80 backdrop-blur-md">
+    <div className="min-h-[100dvh] w-full bg-[var(--background)] pb-24">
+      {/* Suspended Fixed Search Bar (Clean floating pill, genuinely fixed, no fake header border or shadow) */}
+      <div className="fixed top-0 left-0 right-0 md:left-[72px] z-30 pt-3 pb-2 px-3 sm:px-4 md:px-6 bg-[var(--background)]/85 backdrop-blur-md">
         <div className="w-full max-w-3xl mx-auto">
           {/* Search Bar */}
           <div className="relative w-full rounded-full bg-[var(--card-bg)] border border-[var(--border-color)] shadow-sm overflow-hidden transition-all duration-300 focus-within:shadow-md focus-within:border-[var(--brand-pink)]">
@@ -739,7 +739,7 @@ export default function SearchPage() {
       </div>
 
       {/* Search Content with inline Pull-to-Refresh above results */}
-      <PullToRefresh onRefresh={handleRefresh}>
+      <PullToRefresh onRefresh={handleRefresh} className="pt-[70px] sm:pt-[74px] md:pt-[78px]">
         <div className="w-full max-w-7xl mx-auto px-3 md:px-6 pt-2 pb-6 flex flex-col gap-6 min-w-0">
           {/* Horizontally Scrollable Dynamic Recommendation Chips (Scrolls with page, NOT sticky) */}
           <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1 px-0.5">
