@@ -140,6 +140,7 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
                                         className="w-full h-full"
                                         isMobileSticker={true}
                                         selectedItemId={selectedItemForDetail?.id}
+                                        isActive={isOpen}
                                     />
                                 </div>
                             </div>

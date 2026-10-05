@@ -727,6 +727,7 @@ export default function PostDetailPage() {
                                             onItemClick={(item) => setSelectedItem(item)}
                                             className="w-full h-full absolute inset-0"
                                             isMobileSticker={true}
+                                            isActive={activeSlide === idx}
                                         />
                                     </div>
                                 )}

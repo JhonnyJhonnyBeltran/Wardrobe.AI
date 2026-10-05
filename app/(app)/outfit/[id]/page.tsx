@@ -271,6 +271,7 @@ export default function OutfitDetailPage() {
             onItemClick={handleItemSelect}
             className="w-full h-full absolute inset-0"
             isMobileSticker={true}
+            isActive={!loading && !!outfit}
           />
         </div>
 
