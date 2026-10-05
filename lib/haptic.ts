@@ -24,13 +24,14 @@ const hapticPatterns: Record<HapticType, number[]> = {
 
 export function triggerHaptic(type: HapticType = 'light'): void {
   // Check if device supports vibration
-  if (typeof navigator !== 'undefined' && navigator.vibrate) {
-    const pattern = hapticPatterns[type];
-    navigator.vibrate(pattern);
+  try {
+    if (typeof navigator !== 'undefined' && 'vibrate' in navigator && typeof navigator.vibrate === 'function') {
+      const pattern = hapticPatterns[type];
+      navigator.vibrate(pattern);
+    }
+  } catch {
+    // Gracefully ignore browser intervention or unactivated vibration calls
   }
-  
-  // Fallback: Visual feedback could be added here
-  // For now, we rely on CSS animations as visual fallback
 }
 
 // Convenience functions for common actions

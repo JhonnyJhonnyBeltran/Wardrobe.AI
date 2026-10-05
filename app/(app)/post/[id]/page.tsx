@@ -112,8 +112,7 @@ export default function PostDetailPage() {
     useBodyScrollLock(!!selectedItem);
 
     const commentInputRef = useRef<HTMLInputElement>(null);
-    const touchStartXRef = useRef<number | null>(null);
-    const touchStartYRef = useRef<number | null>(null);
+    const carouselScrollRef = useRef<HTMLDivElement>(null);
 
     // Fetch Post Data
     useEffect(() => {
@@ -376,6 +375,26 @@ export default function PostDetailPage() {
 
     const slides = getSlides();
     const currentSlide = slides[activeSlide] || slides[0];
+
+    const goToSlide = useCallback((idx: number) => {
+        setActiveSlide(idx);
+        if (carouselScrollRef.current) {
+            const width = carouselScrollRef.current.clientWidth;
+            carouselScrollRef.current.scrollTo({
+                left: idx * width,
+                behavior: 'smooth'
+            });
+        }
+    }, []);
+
+    const handleCarouselScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+        const el = e.currentTarget;
+        if (!el || el.clientWidth === 0) return;
+        const slideIndex = Math.round(el.scrollLeft / el.clientWidth);
+        if (slideIndex !== activeSlide && slideIndex >= 0 && slideIndex < slides.length) {
+            setActiveSlide(slideIndex);
+        }
+    }, [activeSlide, slides.length]);
     
     // Normalize author data
     const authorRaw = post?.profiles || post?.user || post?.author;
@@ -666,38 +685,13 @@ export default function PostDetailPage() {
             {/* Main Content Area - Full width with left image area and right details column docked to the right edge */}
             <div className="flex flex-col md:flex-row w-full flex-1 md:h-screen overflow-hidden">
 
-                {/* IMAGE CAROUSEL - Smooth sliding track identical to Instagram with real-time drag */}
+                {/* IMAGE CAROUSEL - Native smooth scroll snap track */}
                 <div 
                     className="relative w-full h-auto md:flex-1 md:h-screen bg-[var(--background)] md:bg-[var(--background-secondary)]/30 flex-shrink-0 overflow-hidden flex items-center justify-center select-none"
                     onDoubleClick={() => {
                         if (!isLiked) toggleLike();
                         setShowHeartAnim(true);
                         setTimeout(() => setShowHeartAnim(false), 1000);
-                        haptics.selection();
-                    }}
-                    onTouchStart={slides.length > 1 ? (e) => {
-                        touchStartXRef.current = e.touches[0].clientX;
-                        touchStartYRef.current = e.touches[0].clientY;
-                    } : undefined}
-                    onTouchEnd={slides.length > 1 ? (e) => {
-                        if (touchStartXRef.current === null || touchStartYRef.current === null) return;
-                        const diffX = touchStartXRef.current - e.changedTouches[0].clientX;
-                        const diffY = touchStartYRef.current - e.changedTouches[0].clientY;
-                        if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 40) {
-                            if (diffX > 0 && activeSlide < slides.length - 1) {
-                                setActiveSlide(prev => Math.min(slides.length - 1, prev + 1));
-                                haptics.selection();
-                            } else if (diffX < 0 && activeSlide > 0) {
-                                setActiveSlide(prev => Math.max(0, prev - 1));
-                                haptics.selection();
-                            }
-                        }
-                        touchStartXRef.current = null;
-                        touchStartYRef.current = null;
-                    } : undefined}
-                    onTouchCancel={() => {
-                        touchStartXRef.current = null;
-                        touchStartYRef.current = null;
                     }}
                 >
                     {/* Heart double-click animation */}
@@ -715,15 +709,17 @@ export default function PostDetailPage() {
                         )}
                     </AnimatePresence>
 
-                    {/* Sliding track: both slides pre-rendered side-by-side with fluid CSS transition */}
+                    {/* Sliding track: native CSS scroll snap with real-time 1:1 smooth swipe */}
                     <div 
-                        className="flex w-full h-auto md:h-full transition-transform duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] will-change-transform items-center"
-                        style={{ transform: `translateX(-${activeSlide * 100}%)` }}
+                        ref={carouselScrollRef}
+                        onScroll={handleCarouselScroll}
+                        className="flex w-full h-auto md:h-full overflow-x-auto snap-x snap-mandatory no-scrollbar items-center select-none overscroll-x-contain"
+                        style={{ WebkitOverflowScrolling: 'touch' }}
                     >
                         {slides.map((slide, idx) => (
                             <div
                                 key={idx}
-                                className="w-full h-auto md:h-full flex-shrink-0 flex items-center justify-center relative select-none"
+                                className="w-full h-auto md:h-full flex-shrink-0 snap-center snap-always flex items-center justify-center relative select-none"
                             >
                                 {slide.type === 'photo' ? (
                                     <Image
@@ -758,8 +754,8 @@ export default function PostDetailPage() {
                             {/* Left Arrow: Only appears when activeSlide > 0 */}
                             {activeSlide > 0 && (
                                 <button
-                                    onClick={(e) => { e.stopPropagation(); setActiveSlide(prev => Math.max(0, prev - 1)); }}
-                                    className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 text-white/90 hover:text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)] z-30 transition-all duration-200 hover:scale-125 active:scale-95 p-2 focus:outline-none"
+                                    onClick={(e) => { e.stopPropagation(); goToSlide(Math.max(0, activeSlide - 1)); }}
+                                    className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 text-white/90 hover:text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)] z-30 transition-all duration-200 hover:scale-125 active:scale-95 p-2 focus:outline-none cursor-pointer"
                                     aria-label="Anterior"
                                 >
                                     <ChevronLeft className="w-10 h-10 drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]" strokeWidth={2.5} />
@@ -769,8 +765,8 @@ export default function PostDetailPage() {
                             {/* Right Arrow: Only appears when activeSlide < slides.length - 1 */}
                             {activeSlide < slides.length - 1 && (
                                 <button
-                                    onClick={(e) => { e.stopPropagation(); setActiveSlide(prev => Math.min(slides.length - 1, prev + 1)); }}
-                                    className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 text-white/90 hover:text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)] z-30 transition-all duration-200 hover:scale-125 active:scale-95 p-2 focus:outline-none"
+                                    onClick={(e) => { e.stopPropagation(); goToSlide(Math.min(slides.length - 1, activeSlide + 1)); }}
+                                    className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 text-white/90 hover:text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)] z-30 transition-all duration-200 hover:scale-125 active:scale-95 p-2 focus:outline-none cursor-pointer"
                                     aria-label="Siguiente"
                                 >
                                     <ChevronRight className="w-10 h-10 drop-shadow-[0_2px_10px_rgba(0,0,0,0.9)]" strokeWidth={2.5} />
@@ -782,8 +778,8 @@ export default function PostDetailPage() {
                                 {slides.map((_, idx) => (
                                     <button
                                         key={idx}
-                                        onClick={(e) => { e.stopPropagation(); setActiveSlide(idx); }}
-                                        className={`rounded-full transition-all duration-200 drop-shadow-[0_1px_3px_rgba(0,0,0,0.7)] ${
+                                        onClick={(e) => { e.stopPropagation(); goToSlide(idx); }}
+                                        className={`rounded-full transition-all duration-200 drop-shadow-[0_1px_3px_rgba(0,0,0,0.7)] cursor-pointer ${
                                             activeSlide === idx 
                                                 ? 'w-2 h-2 bg-[var(--brand-pink,#FF66C4)] scale-110' 
                                                 : 'w-1.5 h-1.5 bg-white/70 hover:bg-white'
@@ -896,7 +892,7 @@ export default function PostDetailPage() {
                         <button 
                             onClick={() => {
                                 if (activeSlide !== 0) {
-                                    setActiveSlide(0);
+                                    goToSlide(0);
                                 }
                                 if (window.innerWidth < 768) {
                                     setShowMobileComments(true);
