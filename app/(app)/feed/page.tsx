@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Fragment } from 'react';
 import { Plus, PlusSquare, Send } from 'lucide-react';
 import PostCard from '@/components/Feed/PostCard';
 import PremiumAdCard from '@/components/Feed/PremiumAdCard';
@@ -408,26 +408,30 @@ export default function FeedPage() {
               <div className="grid grid-cols-2 gap-2.5 md:hidden items-start">
                 <div className="flex flex-col gap-2.5">
                   {posts.filter((_, i) => i % 2 === 0).map((post, index) => (
-                    <div key={post.id} className="w-full">
-                      <PostCard post={post} />
+                    <Fragment key={post.id}>
+                      <div className="w-full">
+                        <PostCard post={post} />
+                      </div>
                       {(index + 1) % 5 === 0 && (
-                        <div className="mt-2.5">
+                        <div key={`ad-col0-${index}`} className="w-full">
                           <SponsoredAdCard index={index} />
                         </div>
                       )}
-                    </div>
+                    </Fragment>
                   ))}
                 </div>
                 <div className="flex flex-col gap-2.5">
                   {posts.filter((_, i) => i % 2 === 1).map((post, index) => (
-                    <div key={post.id} className="w-full">
-                      <PostCard post={post} />
+                    <Fragment key={post.id}>
+                      <div className="w-full">
+                        <PostCard post={post} />
+                      </div>
                       {(index + 1) % 6 === 0 && (
-                        <div className="mt-2.5">
+                        <div key={`ad-col1-${index}`} className="w-full">
                           <SponsoredAdCard index={index + 2} />
                         </div>
                       )}
-                    </div>
+                    </Fragment>
                   ))}
                 </div>
               </div>
@@ -435,14 +439,16 @@ export default function FeedPage() {
               {/* Desktop Masonry Grid */}
               <div className="hidden md:block masonry-grid">
                 {posts.map((post, index) => (
-                  <div key={post.id} className="break-inside-avoid mb-6">
-                    <PostCard post={post} />
+                  <Fragment key={post.id}>
+                    <div className="break-inside-avoid mb-6">
+                      <PostCard post={post} />
+                    </div>
                     {(index + 1) % 8 === 0 && (
                       <div key={`sponsored-ad-${index}`} className="break-inside-avoid mb-6">
                         <SponsoredAdCard index={index} />
                       </div>
                     )}
-                  </div>
+                  </Fragment>
                 ))}
               </div>
             </>

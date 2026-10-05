@@ -1587,8 +1587,10 @@ En cada conversación, el backend alimenta a CloSy con:
   - **Adaptación Contextual de Estilos y Cookies de Usuario**:
     - Selección dinámica basada en los estilos favoritos del usuario (`user.preferredStyles`), intereses registrados en `localStorage` (`klozet_style_interest` y clics en estilos) y género (`user.gender`), seleccionando automáticamente la foto editorial masculina o femenina correspondiente para máxima afinidad.
   - **Ruta de Monetización y Conexión de Cuentas**:
-    - La tarjeta está lista para monetización mediante redes de afiliación de moda (Awin, CJ Affiliate, Impact.com) y patrocinios directos con marcas de moda urbana (Scuffers, Nude Project), con soporte para eventos de conversión de Meta Pixel (`SponsoredAdClick`).
-
+  - **Corrección de Spacing y Desacoplamiento en Grid Masonry y Móvil (`feed/page.tsx`, `search/page.tsx`)**:
+    - Se eliminó el anidamiento erróneo donde `SponsoredAdCard` se renderizaba dentro del mismo `div.break-inside-avoid` del post, lo cual creaba bloques dobles de 800px+ que no podían dividirse entre columnas, dejando grandes huecos vacíos al final de las columnas.
+    - Ahora cada tarjeta de anuncio es un elemento hermano independiente (`Fragment`) en la cuadrícula masonry y en las columnas móviles, con su propio `break-inside-avoid mb-6` o `w-full`, permitiendo un equilibrado perfecto de alturas y espaciado homogéneo idéntico al de cualquier post.
+    - `SponsoredAdCard` utiliza `w-full aspect-[4/5]` con `Image fill object-cover` y fotos editoriales verticales verificadas para garantizar proporciones exactas e invariables.
 
 
 

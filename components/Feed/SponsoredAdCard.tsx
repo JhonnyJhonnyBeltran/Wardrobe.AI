@@ -37,15 +37,15 @@ const FASHION_SPONSORS: FashionSponsor[] = [
     brand: 'Stüssy',
     styles: ['streetwear', 'skater-surf', 'workwear-americana', 'vintage-retro'],
     maleImage: '/styles/men/skater-surf.jpg',
-    femaleImage: '/styles/women/skater-surf.jpg',
+    femaleImage: '/styles/women/streetwear.jpg',
     targetUrl: 'https://www.stussy.com',
   },
   {
     id: 'nike',
     brand: 'Nike',
     styles: ['deportivo-athleisure', 'streetwear', 'gorpcore-outdoor'],
-    maleImage: '/styles/men/deportivo-athleisure.jpg',
-    femaleImage: '/styles/women/deportivo-athleisure.jpg',
+    maleImage: '/styles/men/casual-moderno.jpg',
+    femaleImage: '/styles/women/gorpcore-outdoor.jpg',
     targetUrl: 'https://www.nike.com/es',
   },
   {
@@ -61,15 +61,15 @@ const FASHION_SPONSORS: FashionSponsor[] = [
     brand: 'Zara',
     styles: ['old-money', 'elegante-clasico', 'chic-parisino', 'casual-moderno'],
     maleImage: '/styles/men/old-money.jpg',
-    femaleImage: '/styles/women/chic-parisino.jpg',
+    femaleImage: '/styles/women/elegante-clasico.jpg',
     targetUrl: 'https://www.zara.com/es',
   },
   {
     id: 'carhartt',
     brand: 'Carhartt WIP',
     styles: ['workwear-americana', 'skater-surf', 'gorpcore-outdoor', 'streetwear'],
-    maleImage: '/styles/men/workwear-americana.jpg',
-    femaleImage: '/styles/women/workwear-americana.jpg',
+    maleImage: '/styles/men/dark-academia.jpg',
+    femaleImage: '/styles/women/rock-grunge.jpg',
     targetUrl: 'https://www.carhartt-wip.com/es',
   },
   {
@@ -84,7 +84,7 @@ const FASHION_SPONSORS: FashionSponsor[] = [
     id: 'salomon',
     brand: 'Salomon',
     styles: ['gorpcore-outdoor', 'techwear', 'deportivo-athleisure'],
-    maleImage: '/styles/men/gorpcore-outdoor.jpg',
+    maleImage: '/styles/men/k-fashion.jpg',
     femaleImage: '/styles/women/gorpcore-outdoor.jpg',
     targetUrl: 'https://www.salomon.com/es-es',
   },
@@ -92,7 +92,7 @@ const FASHION_SPONSORS: FashionSponsor[] = [
     id: 'zalando',
     brand: 'Zalando',
     styles: ['casual-moderno', 'minimalista', 'clean-look', 'smart-casual'],
-    maleImage: '/styles/men/minimalista.jpg',
+    maleImage: '/styles/men/chic-parisino.jpg',
     femaleImage: '/styles/women/minimalista.jpg',
     targetUrl: 'https://www.zalando.es',
   },
@@ -100,16 +100,16 @@ const FASHION_SPONSORS: FashionSponsor[] = [
     id: 'massimo-dutti',
     brand: 'Massimo Dutti',
     styles: ['old-money', 'elegante-clasico', 'business-casual', 'smart-casual'],
-    maleImage: '/styles/men/elegante-clasico.jpg',
-    femaleImage: '/styles/women/elegante-clasico.jpg',
+    maleImage: '/styles/men/old-money.jpg',
+    femaleImage: '/styles/women/old-money.jpg',
     targetUrl: 'https://www.massimodutti.com/es',
   },
   {
     id: 'arket',
     brand: 'Arket',
     styles: ['clean-look', 'minimalista', 'normcore', 'casual-moderno'],
-    maleImage: '/styles/men/normcore.jpg',
-    femaleImage: '/styles/women/normcore.jpg',
+    maleImage: '/styles/men/clean-look.jpg',
+    femaleImage: '/styles/women/clean-look.jpg',
     targetUrl: 'https://www.arket.com',
   }
 ];
@@ -217,9 +217,9 @@ export default function SponsoredAdCard({
         whileHover={{ scale: 1.025, transition: { duration: 0.2 } }}
         whileTap={{ scale: 0.97 }}
         transition={{ type: "spring", stiffness: 420, damping: 28 }}
-        className={`w-full h-full relative z-10 apple-tap-feedback ${className}`}
+        className={`w-full relative z-10 apple-tap-feedback ${className}`}
       >
-        <div className="group relative rounded-[22px] overflow-hidden bg-[var(--card-bg)] shadow-[0_4px_20px_-2px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_32px_-4px_rgba(0,0,0,0.08)] border border-black/[0.04] dark:border-white/[0.06] transition-all duration-300 w-full min-h-[340px] flex items-center justify-center">
+        <div className="group relative rounded-[22px] overflow-hidden bg-[var(--card-bg)] shadow-[0_4px_20px_-2px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_32px_-4px_rgba(0,0,0,0.08)] border border-black/[0.04] dark:border-white/[0.06] transition-all duration-300 w-full aspect-[4/5] flex items-center justify-center">
           <ins
             className="adsbygoogle"
             style={{ display: 'block', width: '100%', height: '100%' }}
@@ -238,20 +238,19 @@ export default function SponsoredAdCard({
       whileHover={{ scale: 1.025, transition: { duration: 0.2 } }}
       whileTap={{ scale: 0.97 }}
       transition={{ type: "spring", stiffness: 420, damping: 28 }}
-      className={`w-full h-full relative z-10 apple-tap-feedback ${className}`}
+      className={`w-full relative z-10 apple-tap-feedback ${className}`}
       onClick={handleClick}
     >
-      <div className="group relative rounded-[22px] overflow-hidden bg-[var(--card-bg)] shadow-[0_4px_20px_-2px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_32px_-4px_rgba(0,0,0,0.08)] border border-black/[0.04] dark:border-white/[0.06] transition-all duration-300 cursor-pointer h-full w-full">
-        <div className="relative w-full h-full flex flex-col pointer-events-none">
+      <div className="group relative rounded-[22px] overflow-hidden bg-[var(--card-bg)] shadow-[0_4px_20px_-2px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_32px_-4px_rgba(0,0,0,0.08)] border border-black/[0.04] dark:border-white/[0.06] transition-all duration-300 cursor-pointer w-full">
+        <div className="relative w-full aspect-[4/5] overflow-hidden pointer-events-none bg-[var(--background-secondary)]">
           {/* Fashion Outfit Photograph matching PostCard aspect ratio & resolution */}
           <Image
             src={imageUrl}
             alt={`Look patrocinado de ${sponsor.brand}`}
-            width={720}
-            height={900}
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             quality={90}
             className="w-full h-full object-cover transform-gpu"
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           />
 
           {/* Desktop Hover Vignette Gradient Overlay */}
