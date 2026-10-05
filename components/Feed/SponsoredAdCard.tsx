@@ -122,14 +122,27 @@ interface SponsoredAdCardProps {
 
 export default function SponsoredAdCard({
   index = 0,
+  adSlotId,
   className = ''
 }: SponsoredAdCardProps) {
   const { user } = useUser();
   const [mounted, setMounted] = useState(false);
 
+  const googleAdsClient = process.env.NEXT_PUBLIC_GOOGLE_ADS_CLIENT_ID || 'ca-pub-4628313000953034';
+  const googleAdSlot = adSlotId || process.env.NEXT_PUBLIC_GOOGLE_ADS_IN_FEED_SLOT;
+  const googleLayoutKey = process.env.NEXT_PUBLIC_GOOGLE_ADS_LAYOUT_KEY;
+
   useEffect(() => {
     setMounted(true);
-  }, []);
+    if (googleAdSlot && typeof window !== 'undefined') {
+      try {
+        const win = window as any;
+        (win.adsbygoogle = win.adsbygoogle || []).push({});
+      } catch (e) {
+        console.warn('[GoogleAdSense] In-feed init error:', e);
+      }
+    }
+  }, [googleAdSlot]);
 
   // Determine user gender preference
   const isFemale = useMemo(() => {
@@ -197,6 +210,28 @@ export default function SponsoredAdCard({
       window.open(sponsor.targetUrl, '_blank', 'noopener,noreferrer');
     }
   };
+
+  if (googleAdSlot) {
+    return (
+      <motion.div
+        whileHover={{ scale: 1.025, transition: { duration: 0.2 } }}
+        whileTap={{ scale: 0.97 }}
+        transition={{ type: "spring", stiffness: 420, damping: 28 }}
+        className={`w-full h-full relative z-10 apple-tap-feedback ${className}`}
+      >
+        <div className="group relative rounded-[22px] overflow-hidden bg-[var(--card-bg)] shadow-[0_4px_20px_-2px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_32px_-4px_rgba(0,0,0,0.08)] border border-black/[0.04] dark:border-white/[0.06] transition-all duration-300 w-full min-h-[340px] flex items-center justify-center">
+          <ins
+            className="adsbygoogle"
+            style={{ display: 'block', width: '100%', height: '100%' }}
+            data-ad-client={googleAdsClient}
+            data-ad-slot={googleAdSlot}
+            data-ad-format="fluid"
+            {...(googleLayoutKey ? { 'data-ad-layout-key': googleLayoutKey } : {})}
+          />
+        </div>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div
