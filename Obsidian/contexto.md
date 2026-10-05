@@ -1570,7 +1570,9 @@ En cada conversación, el backend alimenta a CloSy con:
   - **Física de Spring y Elevación**: Cada prenda se eleva temporalmente en su capa (`zIndex: 999`), escala a `1.10` con física spring elástica (`stiffness: 420, damping: 18`) y activa su halo/sombra de pegatina de forma fluida durante 320ms antes de regresar a su estado original y dar paso a la siguiente prenda.
 - **9. Optimización de Cabeceras en Detalle de Post (`/post/[id]`) y Detalle de Outfit (`/profile/[id]/outfit/[outfitId]` & `/outfit/[id]`)**:
   - **Detalle de Post sin Header (`/post/[id]`)**: Se eliminó la barra de cabecera superior de 64px (`apple-glass-bar`) que contenía la flecha atrás. Se reemplazó por un botón de cerrar en forma de cruz (`X`) situado inmediatamente a la derecha del nombre del usuario (en móvil en la barra superior del autor y en escritorio en la cabecera de la columna derecha), permitiendo que en escritorio el layout ocupe el 100% de la altura de la pantalla (`md:h-screen`).
-  - **Cabecera de Outfit a Ancho Completo (`/profile/[id]/outfit/[outfitId]` & `/outfit/[id]`)**: Se eliminó la restricción `max-w-7xl mx-auto` de la cabecera de outfit para que abarque el ancho completo (`w-full px-4 md:px-6`), llegando exactamente hasta el navbar lateral sin dejar márgenes blancos vacíos.
+- **10. Barra de Búsqueda Suspendida / Flotante y Sugerencias Scrolleables (`/search`)**:
+  - **Barra de Búsqueda Flotante sin Cabecera Artificial**: La barra de búsqueda se mantiene suspendida arriba (`sticky top-0 z-30`) con un diseño de píldora flotante y fondo translúcido (`backdrop-blur-md`), eliminando cualquier borde inferior (`border-b`) y sombra perimetral de contenedor que creara efecto de cabecera rígida.
+  - **Recomendaciones en Flujo Scrolleable**: Las sugerencias y chips dinámicos se trasladaron fuera del bloque fijo, integrándose dentro del contenedor scrolleable a ancho completo (`max-w-7xl mx-auto`). Al deslizar hacia abajo tanto en móvil como en escritorio, las sugerencias se desplazan hacia arriba de forma natural y los posts pasan limpiamente por debajo de la barra de búsqueda suspendida.
 
 
 

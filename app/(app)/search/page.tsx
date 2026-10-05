@@ -708,9 +708,9 @@ export default function SearchPage() {
 
   return (
     <div className="min-h-[100dvh] w-full max-w-[100vw] overflow-x-hidden bg-[var(--background)] pb-24">
-      {/* Sticky Header with Search Bar and Dynamic Recommendation Chips */}
-      <div className="sticky top-0 z-30 bg-[var(--background)]/90 backdrop-blur-xl border-b border-[var(--border-color)]/30 pb-3 pt-3 px-3 sm:px-4 md:px-6 shadow-sm">
-        <div className="max-w-2xl mx-auto flex flex-col gap-2.5">
+      {/* Suspended Fixed Search Bar (Clean floating pill, no fake header border or shadow) */}
+      <div className="sticky top-0 z-30 w-full pt-3 pb-2 px-3 sm:px-4 md:px-6 bg-[var(--background)]/80 backdrop-blur-md">
+        <div className="w-full max-w-3xl mx-auto">
           {/* Search Bar */}
           <div className="relative w-full rounded-full bg-[var(--card-bg)] border border-[var(--border-color)] shadow-sm overflow-hidden transition-all duration-300 focus-within:shadow-md focus-within:border-[var(--brand-pink)]">
             <SearchIcon className="absolute left-4 sm:left-5 top-1/2 -translate-y-1/2 w-4 sm:w-5 h-4 sm:h-5 text-[var(--foreground-secondary)]" />
@@ -735,9 +735,14 @@ export default function SearchPage() {
               </button>
             )}
           </div>
+        </div>
+      </div>
 
-          {/* Horizontally Scrollable Dynamic Recommendation Chips */}
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 px-0.5">
+      {/* Search Content with inline Pull-to-Refresh above results */}
+      <PullToRefresh onRefresh={handleRefresh}>
+        <div className="w-full max-w-7xl mx-auto px-3 md:px-6 pt-2 pb-6 flex flex-col gap-6 min-w-0">
+          {/* Horizontally Scrollable Dynamic Recommendation Chips (Scrolls with page, NOT sticky) */}
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1 px-0.5">
             {recommendationChips.map((chip) => {
               const isSelected = query.toLowerCase() === chip.text.toLowerCase();
               return (
@@ -768,12 +773,6 @@ export default function SearchPage() {
               );
             })}
           </div>
-        </div>
-      </div>
-
-      {/* Search Content with inline Pull-to-Refresh above results */}
-      <PullToRefresh onRefresh={handleRefresh}>
-        <div className="w-full max-w-7xl mx-auto px-3 md:px-6 pt-4 sm:pt-6 pb-6 flex flex-col gap-6 min-w-0">
         {loading ? (
           query ? (
             <SkeletonUserList count={6} />
