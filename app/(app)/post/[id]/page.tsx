@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { ArrowLeft, Heart, MessageCircle, Bookmark, Share2, MoreHorizontal, MoreVertical, X, Send, ChevronLeft, ChevronRight, Edit2, Trash2 } from 'lucide-react';
+import { Heart, MessageCircle, Bookmark, Share2, MoreHorizontal, MoreVertical, X, Send, ChevronLeft, ChevronRight, Edit2, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';
 import { useUser } from '@/store/userStore';
@@ -574,87 +574,100 @@ export default function PostDetailPage() {
 
     return (
         <div className="min-h-screen w-full overflow-x-hidden bg-[var(--background)] flex flex-col">
-            {/* HEADER - Apple Glass Bar spanning full width, back button vertically centered at middle height */}
-            <header className="sticky top-0 z-50 w-full apple-glass-bar border-b border-[var(--border-color)]/50 pt-safe">
-                <div className="h-16 w-full flex items-center justify-between px-4 md:px-6">
-                    {/* Left: Back Button - Vertically centered in the 64px header */}
-                    <button 
-                        onClick={handleBack} 
-                        className="touch-target-44 text-[var(--foreground)] hover:text-[var(--brand-pink)] transition-colors active:scale-90 flex items-center justify-center -ml-1 md:ml-0 rounded-full hover:bg-[var(--background-secondary)]/50"
-                        aria-label="Volver"
-                    >
-                        <ArrowLeft className="w-6 h-6 transition-colors" />
-                    </button>
-
-                    {/* Center: Username & Profile Photo - Mobile Only (md:hidden) */}
-                    <Link href={`/profile/${authorIdentifier}`} className="flex md:hidden items-center gap-2 flex-1 ml-2 select-none">
+            {/* MOBILE AUTHOR BAR (Replaces separate top header) */}
+            <div className="flex md:hidden items-center justify-between px-4 py-3 border-b border-[var(--border-color)]/50 bg-[var(--background)]/90 backdrop-blur-md sticky top-0 z-40 pt-safe">
+                <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                    <Link href={`/profile/${authorIdentifier}`} className="flex-shrink-0">
                         <Avatar src={author.avatar_url || null} alt={author.username || 'Usuario'} size="sm" />
-                        <span className="font-semibold text-[15px] text-[var(--foreground)] truncate">@{author.username || 'usuario'}</span>
                     </Link>
+                    <div className="flex items-center gap-2 min-w-0 flex-wrap">
+                        <Link 
+                            href={`/profile/${authorIdentifier}`} 
+                            className="font-bold text-[14px] text-[var(--foreground)] hover:text-[var(--brand-pink)] transition-colors truncate"
+                        >
+                            @{author.username || 'usuario'}
+                        </Link>
 
-                    {/* Right: Actions - Mobile Only (md:hidden) */}
-                    <div className="flex md:hidden items-center gap-1 relative">
-                        {/* Follow button (if not own post) */}
-                        {/* @ts-ignore */}
-                        {user?.id !== post.user_id ? (
-                            <button onClick={toggleFollow} className={`px-4 py-1.5 rounded-full font-bold text-xs transition-all active:scale-95 ${isFollowing ? 'bg-[var(--background-secondary)] text-[var(--foreground)]' : 'bg-[var(--brand-pink)] text-white hover:bg-[var(--brand-pink-dark)]'}`}>
+                        {/* Follow button */}
+                        {user?.id !== post.user_id && (
+                            <button 
+                                onClick={toggleFollow} 
+                                className={`px-3 py-1 rounded-full font-bold text-xs transition-all active:scale-95 ${
+                                    isFollowing 
+                                        ? 'bg-[var(--background-secondary)] text-[var(--foreground)] border border-[var(--border-color)]' 
+                                        : 'bg-[var(--brand-pink)] text-white hover:bg-[var(--brand-pink-dark)]'
+                                }`}
+                            >
                                 {isFollowing ? 'Siguiendo' : 'Seguir'}
                             </button>
-                        ) : (
-                            <div className="relative">
-                                <button 
-                                    onClick={() => setShowOptions(!showOptions)}
-                                    className="touch-target-44 text-[var(--foreground)] hover:text-[var(--brand-pink)] transition-colors active:scale-90 flex items-center justify-center"
-                                    aria-label="Opciones de publicación"
-                                >
-                                    <MoreVertical className="w-6 h-6" />
-                                </button>
-                                
-                                <AnimatePresence>
-                                    {showOptions && (
-                                        <>
-                                            {/* Backdrop to close menu */}
-                                            <div 
-                                                className="fixed inset-0 z-40" 
-                                                onClick={() => setShowOptions(false)}
-                                            />
-                                            <motion.div
-                                                initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                                                animate={{ opacity: 1, scale: 1, y: 0 }}
-                                                exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                                                className="absolute right-0 mt-2 w-48 bg-[var(--card-bg)] rounded-2xl shadow-xl border border-[var(--border-color)] py-2 z-50 overflow-hidden"
-                                            >
-                                                <button
-                                                    onClick={handleEditPost}
-                                                    className="w-full px-4 py-3 flex items-center gap-3 text-sm font-semibold text-[var(--foreground)] hover:bg-[var(--background-secondary)] transition-colors"
-                                                >
-                                                    <Edit2 className="w-4 h-4" />
-                                                    Editar publicación
-                                                </button>
-                                                <button
-                                                    onClick={handleDeletePost}
-                                                    disabled={deleting}
-                                                    className="w-full px-4 py-3 flex items-center gap-3 text-sm font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50"
-                                                >
-                                                    <Trash2 className="w-4 h-4" />
-                                                    {deleting ? 'Borrando...' : 'Borrar publicación'}
-                                                </button>
-                                            </motion.div>
-                                        </>
-                                    )}
-                                </AnimatePresence>
-                            </div>
                         )}
                     </div>
                 </div>
-            </header>
+
+                {/* Right side: Options (if owner) + Close X Button */}
+                <div className="flex items-center gap-1 flex-shrink-0">
+                    {user?.id === post.user_id && (
+                        <div className="relative">
+                            <button 
+                                onClick={() => setShowOptions(!showOptions)}
+                                className="p-2 rounded-full text-[var(--foreground)] hover:text-[var(--brand-pink)] transition-colors active:scale-90 flex items-center justify-center"
+                                aria-label="Opciones de publicación"
+                            >
+                                <MoreVertical className="w-5 h-5" />
+                            </button>
+                            
+                            <AnimatePresence>
+                                {showOptions && (
+                                    <>
+                                        <div 
+                                            className="fixed inset-0 z-40" 
+                                            onClick={() => setShowOptions(false)}
+                                        />
+                                        <motion.div
+                                            initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                                            exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                                            className="absolute right-0 mt-2 w-48 bg-[var(--card-bg)] rounded-2xl shadow-xl border border-[var(--border-color)] py-2 z-50 overflow-hidden"
+                                        >
+                                            <button
+                                                onClick={handleEditPost}
+                                                className="w-full px-4 py-3 flex items-center gap-3 text-sm font-semibold text-[var(--foreground)] hover:bg-[var(--background-secondary)] transition-colors"
+                                            >
+                                                <Edit2 className="w-4 h-4" />
+                                                Editar publicación
+                                            </button>
+                                            <button
+                                                onClick={handleDeletePost}
+                                                disabled={deleting}
+                                                className="w-full px-4 py-3 flex items-center gap-3 text-sm font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                                {deleting ? 'Borrando...' : 'Borrar publicación'}
+                                            </button>
+                                        </motion.div>
+                                    </>
+                                )}
+                            </AnimatePresence>
+                        </div>
+                    )}
+
+                    {/* Close Button X to the right of username */}
+                    <button
+                        onClick={handleBack}
+                        className="p-2 -mr-1 rounded-full text-[var(--foreground)] hover:text-[var(--brand-pink)] hover:bg-[var(--background-secondary)]/50 transition-colors active:scale-90 flex items-center justify-center cursor-pointer"
+                        aria-label="Cerrar"
+                    >
+                        <X className="w-5 h-5" />
+                    </button>
+                </div>
+            </div>
 
             {/* Main Content Area - Full width with left image area and right details column docked to the right edge */}
-            <div className="flex flex-col md:flex-row w-full flex-1 md:h-[calc(100vh-64px)] overflow-hidden">
+            <div className="flex flex-col md:flex-row w-full flex-1 md:h-screen overflow-hidden">
 
                 {/* IMAGE CAROUSEL - Smooth sliding track identical to Instagram with real-time drag */}
                 <div 
-                    className="relative w-full h-auto md:flex-1 md:h-[calc(100vh-64px)] bg-[var(--background)] md:bg-[var(--background-secondary)]/30 flex-shrink-0 overflow-hidden flex items-center justify-center select-none"
+                    className="relative w-full h-auto md:flex-1 md:h-screen bg-[var(--background)] md:bg-[var(--background-secondary)]/30 flex-shrink-0 overflow-hidden flex items-center justify-center select-none"
                     onDoubleClick={() => {
                         if (!isLiked) toggleLike();
                         setShowHeartAnim(true);
@@ -716,12 +729,12 @@ export default function PostDetailPage() {
                                         height={1400}
                                         quality={95}
                                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
-                                        className="w-full h-auto md:w-auto md:h-full max-h-[85vh] md:max-h-[calc(100vh-64px)] object-contain pointer-events-none transform-gpu"
+                                        className="w-full h-auto md:w-auto md:h-full max-h-[85vh] md:max-h-screen object-contain pointer-events-none transform-gpu"
                                         priority
                                         draggable={false}
                                     />
                                 ) : (
-                                    <div className="w-full aspect-[3/4] md:w-auto md:h-full md:aspect-[3/4] max-h-[85vh] md:max-h-[calc(100vh-64px)] relative bg-[#f8f9fa] dark:bg-[#111]">
+                                    <div className="w-full aspect-[3/4] md:w-auto md:h-full md:aspect-[3/4] max-h-[85vh] md:max-h-screen relative bg-[#f8f9fa] dark:bg-[#111]">
                                         <InteractiveOutfitViewer 
                                             outfit={slide.outfit} 
                                             onItemClick={(item) => setSelectedItem(item)}
@@ -780,7 +793,7 @@ export default function PostDetailPage() {
                 </div>
 
             {/* RIGHT COLUMN: Actions, Details, Comments (Docked tightly to the right edge) */}
-            <div className="flex flex-col w-full min-w-0 md:w-[440px] lg:w-[480px] xl:w-[520px] md:h-[calc(100vh-64px)] bg-[var(--background)] overflow-x-hidden pb-[72px] md:pb-0 border-l border-[var(--border-color)]/50 flex-shrink-0">
+            <div className="flex flex-col w-full min-w-0 md:w-[440px] lg:w-[480px] xl:w-[520px] md:h-screen bg-[var(--background)] overflow-x-hidden pb-[72px] md:pb-0 border-l border-[var(--border-color)]/50 flex-shrink-0">
                 
                 {/* DESKTOP AUTHOR HEADER */}
                 <div className="hidden md:flex items-center justify-between px-4 py-3.5 border-b border-[var(--border-color)]/50 flex-shrink-0 bg-[var(--background)]">
@@ -812,51 +825,62 @@ export default function PostDetailPage() {
                         </div>
                     </div>
 
-                    {/* Owner Options */}
-                    {user?.id === post.user_id && (
-                        <div className="relative">
-                            <button 
-                                onClick={() => setShowOptions(!showOptions)}
-                                className="touch-target-44 text-[var(--foreground)] hover:text-[var(--brand-pink)] transition-colors active:scale-90 flex items-center justify-center"
-                                aria-label="Opciones de publicación"
-                            >
-                                <MoreVertical className="w-5 h-5" />
-                            </button>
-                            
-                            <AnimatePresence>
-                                {showOptions && (
-                                    <>
-                                        <div 
-                                            className="fixed inset-0 z-40" 
-                                            onClick={() => setShowOptions(false)}
-                                        />
-                                        <motion.div
-                                            initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                                            exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                                            className="absolute right-0 mt-2 w-48 bg-[var(--card-bg)] rounded-2xl shadow-xl border border-[var(--border-color)] py-2 z-50 overflow-hidden"
-                                        >
-                                            <button
-                                                onClick={handleEditPost}
-                                                className="w-full px-4 py-3 flex items-center gap-3 text-sm font-semibold text-[var(--foreground)] hover:bg-[var(--background-secondary)] transition-colors"
+                    {/* Right side: Owner Options + Close X Button */}
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                        {user?.id === post.user_id && (
+                            <div className="relative">
+                                <button 
+                                    onClick={() => setShowOptions(!showOptions)}
+                                    className="p-2 rounded-full text-[var(--foreground)] hover:text-[var(--brand-pink)] hover:bg-[var(--background-secondary)]/50 transition-colors active:scale-90 flex items-center justify-center cursor-pointer"
+                                    aria-label="Opciones de publicación"
+                                >
+                                    <MoreVertical className="w-5 h-5" />
+                                </button>
+                                
+                                <AnimatePresence>
+                                    {showOptions && (
+                                        <>
+                                            <div 
+                                                className="fixed inset-0 z-40" 
+                                                onClick={() => setShowOptions(false)}
+                                            />
+                                            <motion.div
+                                                initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                                exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                                                className="absolute right-0 mt-2 w-48 bg-[var(--card-bg)] rounded-2xl shadow-xl border border-[var(--border-color)] py-2 z-50 overflow-hidden"
                                             >
-                                                <Edit2 className="w-4 h-4" />
-                                                Editar publicación
-                                            </button>
-                                            <button
-                                                onClick={handleDeletePost}
-                                                disabled={deleting}
-                                                className="w-full px-4 py-3 flex items-center gap-3 text-sm font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                                {deleting ? 'Borrando...' : 'Borrar publicación'}
-                                            </button>
-                                        </motion.div>
-                                    </>
-                                )}
-                            </AnimatePresence>
-                        </div>
-                    )}
+                                                <button
+                                                    onClick={handleEditPost}
+                                                    className="w-full px-4 py-3 flex items-center gap-3 text-sm font-semibold text-[var(--foreground)] hover:bg-[var(--background-secondary)] transition-colors"
+                                                >
+                                                    <Edit2 className="w-4 h-4" />
+                                                    Editar publicación
+                                                </button>
+                                                <button
+                                                    onClick={handleDeletePost}
+                                                    disabled={deleting}
+                                                    className="w-full px-4 py-3 flex items-center gap-3 text-sm font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                    {deleting ? 'Borrando...' : 'Borrar publicación'}
+                                                </button>
+                                            </motion.div>
+                                        </>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+                        )}
+
+                        {/* Close button X */}
+                        <button
+                            onClick={handleBack}
+                            className="p-2 -mr-1 rounded-full text-[var(--foreground)] hover:text-[var(--brand-pink)] hover:bg-[var(--background-secondary)]/60 transition-colors active:scale-90 flex items-center justify-center cursor-pointer"
+                            aria-label="Cerrar"
+                        >
+                            <X className="w-5 h-5" />
+                        </button>
+                    </div>
                 </div>
 
                 {/* ACTION BAR - Below image on mobile / Below author on desktop */}

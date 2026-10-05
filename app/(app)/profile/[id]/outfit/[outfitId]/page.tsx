@@ -241,7 +241,7 @@ export default function ProfileOutfitDetailPage() {
   return (
     <div className="min-h-screen bg-[var(--background)] flex flex-col">
       {/* STICKY HEADER with Back Button & Creator Profile */}
-      <header className="sticky top-0 z-50 w-full bg-[var(--background)]/85 backdrop-blur-xl border-b border-[var(--border-color)]/50 pt-safe h-16 flex items-center justify-between px-4 max-w-7xl mx-auto">
+      <header className="sticky top-0 z-50 w-full bg-[var(--background)]/85 backdrop-blur-xl border-b border-[var(--border-color)]/50 pt-safe h-16 flex items-center justify-between px-4 md:px-6">
         <div className="flex items-center gap-3 min-w-0">
           <button
             onClick={() => window.history.length > 2 ? router.back() : router.push(backUrl)}
