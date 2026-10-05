@@ -708,11 +708,11 @@ export default function SearchPage() {
 
   return (
     <div className="min-h-[100dvh] w-full bg-[var(--background)] pb-24">
-      {/* Suspended Fixed Search Bar (Clean floating pill, genuinely fixed, no fake header border or shadow) */}
-      <div className="fixed top-0 left-0 right-0 md:left-[72px] z-30 pt-3 pb-2 px-3 sm:px-4 md:px-6 bg-[var(--background)]/85 backdrop-blur-md">
-        <div className="w-full max-w-3xl mx-auto">
+      {/* Suspended Fixed Search Bar (Only the floating pill is fixed, NO background strip/header) */}
+      <div className="fixed top-0 left-0 right-0 md:left-[72px] z-30 pt-3 pb-2 px-3 sm:px-4 md:px-6 pointer-events-none">
+        <div className="w-full max-w-3xl mx-auto pointer-events-auto">
           {/* Search Bar */}
-          <div className="relative w-full rounded-full bg-[var(--card-bg)] border border-[var(--border-color)] shadow-sm overflow-hidden transition-all duration-300 focus-within:shadow-md focus-within:border-[var(--brand-pink)]">
+          <div className="relative w-full rounded-full bg-[var(--card-bg)]/95 backdrop-blur-xl border border-[var(--border-color)] shadow-md overflow-hidden transition-all duration-300 focus-within:shadow-lg focus-within:border-[var(--brand-pink)]">
             <SearchIcon className="absolute left-4 sm:left-5 top-1/2 -translate-y-1/2 w-4 sm:w-5 h-4 sm:h-5 text-[var(--foreground-secondary)]" />
             <input
               type="text"
