@@ -111,35 +111,47 @@ export default function LandingPage() {
       onWheel={handleWheel}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
-      className="h-screen w-screen overflow-hidden bg-[var(--background)] text-[var(--foreground)] selection:bg-[var(--brand-pink)] selection:text-white flex flex-col justify-between fixed inset-0 select-none antialiased"
+      className="h-[100dvh] min-h-[100dvh] w-screen overflow-hidden bg-[var(--background)] text-[var(--foreground)] selection:bg-[var(--brand-pink)] selection:text-white flex flex-col justify-between fixed inset-0 select-none antialiased"
     >
-      {/* 1. TOP RIGHT MINIMAL AUTH BUTTONS */}
-      <header className="fixed top-0 right-0 z-50 p-4 sm:p-6 flex items-center gap-3">
-        {user ? (
-          <Link 
-            href="/closet" 
-            className="px-5 py-2.5 rounded-full text-xs sm:text-sm font-black bg-[var(--brand-pink)] text-white hover:bg-[var(--brand-pink-dark)] transition-all shadow-lg shadow-[var(--brand-pink)]/25 active:scale-95 flex items-center gap-1.5"
-          >
-            <span>Mi Armario</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
-        ) : (
-          <>
+      {/* 1. TOP BAR WITH LOGO AND AUTH BUTTONS */}
+      <header className="fixed top-0 left-0 right-0 z-50 px-4 sm:px-8 py-3.5 sm:py-5 flex items-center justify-between pointer-events-none">
+        <div className="pointer-events-auto flex items-center gap-2">
+          <Image 
+            src="/landing/klozet-nombre-grande.png" 
+            alt="Klozet" 
+            width={110} 
+            height={34} 
+            className="h-6 sm:h-8 w-auto object-contain" 
+            priority
+          />
+        </div>
+        <div className="pointer-events-auto flex items-center gap-2 sm:gap-3">
+          {user ? (
             <Link 
-              href="/auth" 
-              className="px-4 py-2 rounded-full text-xs sm:text-sm font-bold text-[var(--foreground-secondary)] hover:text-[var(--foreground)] bg-[var(--card-bg)]/80 backdrop-blur-md border border-[var(--border-color)]/70 transition-all active:scale-95 shadow-xs"
+              href="/closet" 
+              className="px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-black bg-[var(--brand-pink)] text-white hover:bg-[var(--brand-pink-dark)] transition-all shadow-lg shadow-[var(--brand-pink)]/25 active:scale-95 flex items-center gap-1.5"
             >
-              Iniciar sesión
-            </Link>
-            <Link 
-              href="/auth" 
-              className="px-5 py-2.5 rounded-full text-xs sm:text-sm font-black bg-[var(--brand-pink)] text-white hover:bg-[var(--brand-pink-dark)] transition-all shadow-md shadow-[var(--brand-pink)]/20 active:scale-95 flex items-center gap-1"
-            >
-              <span>Registrarse</span>
+              <span>Mi Armario</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
-          </>
-        )}
+          ) : (
+            <>
+              <Link 
+                href="/auth" 
+                className="px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-bold text-[var(--foreground-secondary)] hover:text-[var(--foreground)] bg-[var(--card-bg)]/80 backdrop-blur-md border border-[var(--border-color)]/70 transition-all active:scale-95 shadow-xs"
+              >
+                Iniciar sesión
+              </Link>
+              <Link 
+                href="/auth" 
+                className="px-4 sm:px-5 py-1.5 sm:py-2.5 rounded-full text-xs sm:text-sm font-black bg-[var(--brand-pink)] text-white hover:bg-[var(--brand-pink-dark)] transition-all shadow-md shadow-[var(--brand-pink)]/20 active:scale-95 flex items-center gap-1"
+              >
+                <span>Registrarse</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </>
+          )}
+        </div>
       </header>
 
       {/* 2. ATMOSPHERIC BACKDROP LIGHTING (MUTATING ACROSS KEYFRAMES) */}
@@ -170,6 +182,7 @@ export default function LandingPage() {
         <AnimatePresence mode="wait">
           
           {/* ======================================================== */}
+          {/* ======================================================== */}
           {/* KEYFRAME 0: MAXIMALISMO EDITORIAL - EL PROBLEMA */}
           {/* ======================================================== */}
           {currentFrame === 0 && (
@@ -186,7 +199,7 @@ export default function LandingPage() {
               {/* Top Left: Sudadera Scuffers */}
               <motion.div 
                 variants={itemFloatIn(-60, -40, -12)}
-                className="absolute left-3 sm:left-10 lg:left-24 top-16 sm:top-20 w-28 sm:w-44 lg:w-56 pointer-events-none drop-shadow-2xl z-10"
+                className="absolute left-2 sm:left-10 lg:left-24 top-20 sm:top-20 w-22 sm:w-44 lg:w-56 pointer-events-none drop-shadow-2xl z-10 opacity-70 sm:opacity-100"
               >
                 <Image 
                   src="/landing/sudadera-scuffers-cutout.png" 
@@ -201,7 +214,7 @@ export default function LandingPage() {
               {/* Bottom Left: Top Vichy en Tarjeta de Cristal */}
               <motion.div 
                 variants={itemFloatIn(-50, 60, -8)}
-                className="absolute left-3 sm:left-12 lg:left-28 bottom-16 sm:bottom-20 w-24 sm:w-36 lg:w-48 aspect-[3/4] rounded-3xl overflow-hidden border-2 border-white/20 shadow-2xl -rotate-8 hover:rotate-0 transition-transform duration-500 z-10"
+                className="hidden sm:block absolute left-3 sm:left-12 lg:left-28 bottom-16 sm:bottom-20 w-24 sm:w-36 lg:w-48 aspect-[3/4] rounded-3xl overflow-hidden border-2 border-white/20 shadow-2xl -rotate-8 hover:rotate-0 transition-transform duration-500 z-10"
               >
                 <Image 
                   src="/landing/top-vichy.jpg" 
@@ -218,7 +231,7 @@ export default function LandingPage() {
               {/* Top Right: Chaleco Punto Zara */}
               <motion.div 
                 variants={itemFloatIn(60, -40, 12)}
-                className="absolute right-3 sm:right-10 lg:right-24 top-16 sm:top-20 w-24 sm:w-36 lg:w-48 aspect-[3/4] rounded-3xl overflow-hidden border-2 border-white/20 shadow-2xl rotate-12 hover:rotate-0 transition-transform duration-500 z-10"
+                className="hidden sm:block absolute right-3 sm:right-10 lg:right-24 top-16 sm:top-20 w-24 sm:w-36 lg:w-48 aspect-[3/4] rounded-3xl overflow-hidden border-2 border-white/20 shadow-2xl rotate-12 hover:rotate-0 transition-transform duration-500 z-10"
               >
                 <Image 
                   src="/landing/zara-chaleco.jpg" 
@@ -235,7 +248,7 @@ export default function LandingPage() {
               {/* Bottom Right: Golden Goose Glitter */}
               <motion.div 
                 variants={itemFloatIn(50, 60, -10)}
-                className="absolute right-4 sm:right-14 lg:right-28 bottom-16 sm:bottom-20 w-28 sm:w-40 lg:w-52 pointer-events-none drop-shadow-2xl z-10"
+                className="absolute right-2 sm:right-14 lg:right-28 bottom-20 sm:bottom-20 w-24 sm:w-40 lg:w-52 pointer-events-none drop-shadow-2xl z-10 opacity-70 sm:opacity-100"
               >
                 <Image 
                   src="/landing/golden-goose.png" 
@@ -249,10 +262,10 @@ export default function LandingPage() {
 
               {/* MONUMENTAL TYPOGRAPHY WITH EDITORIAL DROP-CAPS (Z-20) */}
               <motion.div variants={itemFadeUp} className="relative z-20 max-w-6xl mx-auto flex flex-col items-center">
-                <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-[7.2rem] xl:text-[8.5rem] font-black tracking-tighter uppercase leading-[0.85] text-[var(--foreground)]">
+                <h1 className="text-3xl sm:text-6xl md:text-7xl lg:text-[7.2rem] xl:text-[8.5rem] font-black tracking-tighter uppercase leading-[0.88] text-[var(--foreground)]">
                   <span className="text-[1.22em] italic font-serif text-[var(--brand-pink)] mr-0.5">A</span>rmario Lleno
                 </h1>
-                <h2 className="text-4xl sm:text-6xl md:text-7xl lg:text-[7.2rem] xl:text-[8.5rem] font-black tracking-tighter uppercase leading-[0.85] bg-gradient-to-r from-[var(--brand-pink)] via-pink-400 to-purple-500 bg-clip-text text-transparent mt-1 sm:mt-2">
+                <h2 className="text-3xl sm:text-6xl md:text-7xl lg:text-[7.2rem] xl:text-[8.5rem] font-black tracking-tighter uppercase leading-[0.88] bg-gradient-to-r from-[var(--brand-pink)] via-pink-400 to-purple-500 bg-clip-text text-transparent mt-1 sm:mt-2">
                   <span className="text-[1.22em] italic font-serif text-pink-400 mr-0.5">N</span>ada que ponerte
                 </h2>
               </motion.div>
@@ -260,19 +273,19 @@ export default function LandingPage() {
               {/* Punchy Narrative Text */}
               <motion.p 
                 variants={itemFadeUp}
-                className="mt-4 sm:mt-6 text-sm sm:text-lg md:text-xl text-[var(--foreground-secondary)] max-w-sm sm:max-w-xl font-medium leading-snug z-20"
+                className="mt-3 sm:mt-6 text-xs sm:text-lg md:text-xl text-[var(--foreground-secondary)] max-w-xs sm:max-w-xl font-medium leading-snug z-20"
               >
                 Todas las mañanas el mismo lío frente al espejo. Klozet organiza tu ropa y te dice exactamente qué ponerte.
               </motion.p>
 
               {/* Action Button */}
-              <motion.div variants={itemFadeUp} className="mt-6 sm:mt-8 z-30">
+              <motion.div variants={itemFadeUp} className="mt-5 sm:mt-8 z-30">
                 <Link
                   href={user ? "/closet" : "/auth"}
-                  className="px-8 sm:px-10 py-3.5 sm:py-4 rounded-full font-black text-sm sm:text-base bg-[var(--brand-pink)] text-white hover:bg-[var(--brand-pink-dark)] transition-all shadow-xl shadow-[var(--brand-pink)]/30 active:scale-95 inline-flex items-center gap-2 group"
+                  className="px-7 sm:px-10 py-3 sm:py-4 rounded-full font-black text-xs sm:text-base bg-[var(--brand-pink)] text-white hover:bg-[var(--brand-pink-dark)] transition-all shadow-xl shadow-[var(--brand-pink)]/30 active:scale-95 inline-flex items-center gap-2 group"
                 >
                   <span>{user ? "Ir a mi armario" : "Empezar gratis"}</span>
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </motion.div>
             </motion.div>
@@ -289,50 +302,50 @@ export default function LandingPage() {
               initial="hidden"
               animate="visible"
               exit="exit"
-              className="absolute inset-0 w-full h-full flex flex-col md:flex-row items-center justify-between px-6 sm:px-12 lg:px-24 z-10"
+              className="absolute inset-0 w-full h-full flex flex-col md:flex-row items-center justify-center md:justify-between px-4 sm:px-8 md:px-12 lg:px-24 z-10 gap-6 sm:gap-8 md:gap-12 pt-16 sm:pt-20 md:pt-0 pb-6 sm:pb-8 md:pb-0"
             >
               {/* Left Column: Monumental Headline with Drop-Caps */}
-              <div className="w-full md:w-1/2 text-center md:text-left flex flex-col justify-center z-20 pt-16 md:pt-0">
+              <div className="w-full md:w-1/2 text-center md:text-left flex flex-col justify-center z-20">
                 <motion.h2 
                   variants={itemFadeUp}
-                  className="text-4xl sm:text-6xl md:text-6xl lg:text-[6.5rem] font-black tracking-tighter uppercase leading-[0.85] text-[var(--foreground)]"
+                  className="text-3xl sm:text-5xl md:text-6xl lg:text-[6.5rem] font-black tracking-tighter uppercase leading-[0.88] text-[var(--foreground)]"
                 >
                   <span className="text-[1.22em] italic font-serif text-[var(--brand-pink)] mr-0.5">T</span>oda tu ropa
                 </motion.h2>
                 <motion.h3 
                   variants={itemFadeUp}
-                  className="text-4xl sm:text-6xl md:text-6xl lg:text-[6.5rem] font-black tracking-tighter uppercase leading-[0.85] text-[var(--brand-pink)] mt-1 sm:mt-2"
+                  className="text-3xl sm:text-5xl md:text-6xl lg:text-[6.5rem] font-black tracking-tighter uppercase leading-[0.88] text-[var(--brand-pink)] mt-1 sm:mt-2"
                 >
                   <span className="text-[1.22em] italic font-serif text-purple-400 mr-0.5">E</span>n un toque
                 </motion.h3>
                 <motion.p 
                   variants={itemFadeUp}
-                  className="mt-4 sm:mt-6 text-sm sm:text-lg md:text-xl text-[var(--foreground-secondary)] leading-relaxed max-w-md mx-auto md:mx-0 font-medium"
+                  className="mt-3 sm:mt-5 text-xs sm:text-base md:text-xl text-[var(--foreground-secondary)] leading-relaxed max-w-sm sm:max-w-md mx-auto md:mx-0 font-medium"
                 >
                   Saca una foto y el fondo desaparece al instante. Tu ropa real ordenada y lista para combinar.
                 </motion.p>
                 
                 {/* Micro Pill Feature */}
-                <motion.div variants={itemFadeUp} className="mt-4 flex flex-col sm:flex-row items-center justify-center md:justify-start gap-2.5 text-xs sm:text-sm font-bold text-[var(--foreground-secondary)]">
-                  <div className="flex items-center gap-1.5">
-                    <Sparkles className="w-4 h-4 text-[var(--brand-pink)]" />
-                    <span>Recorte automático con IA</span>
+                <motion.div variants={itemFadeUp} className="mt-3 sm:mt-4 flex flex-row items-center justify-center md:justify-start gap-2 sm:gap-2.5 text-[11px] sm:text-sm font-bold text-[var(--foreground-secondary)]">
+                  <div className="flex items-center gap-1 sm:gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[var(--brand-pink)]" />
+                    <span>Recorte con IA</span>
                   </div>
-                  <span className="hidden sm:inline text-[var(--border-color)]">•</span>
-                  <div className="flex items-center gap-1.5">
-                    <Wand2 className="w-4 h-4 text-purple-400" />
-                    <span>Categorización y color en 1s</span>
+                  <span className="text-[var(--border-color)]">•</span>
+                  <div className="flex items-center gap-1 sm:gap-1.5">
+                    <Wand2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-400" />
+                    <span>Categorización en 1s</span>
                   </div>
                 </motion.div>
               </div>
 
-              {/* Right: Free-Floating Pieces in Dynamic Orbit (Showcasing real digitized fashion) */}
-              <div className="w-full md:w-1/2 h-[340px] sm:h-[480px] relative flex items-center justify-center z-10 pb-12 md:pb-0">
+              {/* Right: Dynamic Orbit Cluster (Showcasing real digitized fashion) */}
+              <div className="w-full md:w-1/2 h-[220px] sm:h-[280px] md:h-[480px] relative flex items-center justify-center z-10 max-w-[340px] sm:max-w-[420px] md:max-w-none">
                 
                 {/* Piece 1: Top Vichy Floating Left */}
                 <motion.div 
-                  variants={itemFloatIn(-70, -20, -12)}
-                  className="absolute left-2 sm:left-6 top-6 sm:top-10 w-28 sm:w-40 lg:w-44 aspect-[3/4] rounded-3xl overflow-hidden border-2 border-white/20 shadow-2xl -rotate-12 hover:rotate-0 transition-transform duration-500 z-10"
+                  variants={itemFloatIn(-40, -10, -10)}
+                  className="absolute left-2 sm:left-4 md:left-6 top-1 sm:top-4 md:top-10 w-20 sm:w-32 md:w-40 lg:w-44 aspect-[3/4] rounded-2xl sm:rounded-3xl overflow-hidden border border-white/20 sm:border-2 shadow-xl sm:shadow-2xl -rotate-10 hover:rotate-0 transition-transform duration-500 z-10"
                 >
                   <Image 
                     src="/landing/top-vichy.jpg" 
@@ -340,33 +353,33 @@ export default function LandingPage() {
                     fill 
                     className="object-cover" 
                   />
-                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-[var(--card-bg)]/95 backdrop-blur-md border border-[var(--border-color)]/80 text-[10px] sm:text-xs font-black text-[var(--foreground)] whitespace-nowrap shadow-md">
+                  <div className="absolute -bottom-1.5 sm:-bottom-2 left-1/2 -translate-x-1/2 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full bg-[var(--card-bg)]/95 backdrop-blur-md border border-[var(--border-color)]/80 text-[8px] sm:text-xs font-black text-[var(--foreground)] whitespace-nowrap shadow-md">
                     Top Vichy
                   </div>
                 </motion.div>
 
                 {/* Piece 2: Scuffers Hoodie Hero Floating Center */}
                 <motion.div 
-                  variants={itemFloatIn(0, -20, 3)}
-                  className="relative z-20 w-44 sm:w-60 lg:w-68 drop-shadow-[0_30px_50px_rgba(255,45,120,0.35)]"
+                  variants={itemFloatIn(0, -10, 2)}
+                  className="relative z-20 w-36 sm:w-48 md:w-60 lg:w-68 drop-shadow-[0_20px_40px_rgba(255,45,120,0.35)]"
                 >
                   <Image 
                     src="/landing/sudadera-scuffers-cutout.png" 
                     alt="Sudadera Scuffers" 
                     width={320} 
                     height={320} 
-                    className="w-full h-auto object-contain rotate-3 hover:rotate-0 transition-transform duration-500" 
+                    className="w-full h-auto object-contain rotate-2 hover:rotate-0 transition-transform duration-500" 
                   />
-                  <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-[var(--card-bg)]/95 backdrop-blur-xl border border-[var(--border-color)] text-xs font-black text-[var(--foreground)] whitespace-nowrap shadow-xl flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-[var(--brand-pink)]" />
+                  <div className="absolute -bottom-2 sm:-bottom-3 left-1/2 -translate-x-1/2 px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-full bg-[var(--card-bg)]/95 backdrop-blur-xl border border-[var(--border-color)] text-[10px] sm:text-xs font-black text-[var(--foreground)] whitespace-nowrap shadow-xl flex items-center gap-1 sm:gap-1.5">
+                    <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-[var(--brand-pink)]" />
                     <span>Scuffers Orange Hoodie</span>
                   </div>
                 </motion.div>
 
-                {/* Piece 3: Chaleco Zara Floating Bottom Left */}
+                {/* Piece 3: Chaleco Zara Floating Right / Bottom */}
                 <motion.div 
-                  variants={itemFloatIn(-40, 60, 6)}
-                  className="absolute left-6 sm:left-14 bottom-2 sm:bottom-6 w-26 sm:w-36 lg:w-40 aspect-[3/4] rounded-3xl overflow-hidden border-2 border-white/20 shadow-2xl rotate-6 hover:rotate-0 transition-transform duration-500 z-10"
+                  variants={itemFloatIn(40, -10, 10)}
+                  className="absolute right-2 sm:right-4 md:right-auto md:left-14 top-1 sm:top-4 md:top-auto md:bottom-6 w-20 sm:w-30 md:w-36 lg:w-40 aspect-[3/4] rounded-2xl sm:rounded-3xl overflow-hidden border border-white/20 sm:border-2 shadow-xl sm:shadow-2xl rotate-10 md:rotate-6 hover:rotate-0 transition-transform duration-500 z-10"
                 >
                   <Image 
                     src="/landing/zara-chaleco.jpg" 
@@ -374,15 +387,15 @@ export default function LandingPage() {
                     fill 
                     className="object-cover" 
                   />
-                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-[var(--card-bg)]/95 backdrop-blur-md border border-[var(--border-color)]/80 text-[10px] sm:text-xs font-black text-[var(--foreground)] whitespace-nowrap shadow-md">
+                  <div className="absolute -bottom-1.5 sm:-bottom-2 left-1/2 -translate-x-1/2 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full bg-[var(--card-bg)]/95 backdrop-blur-md border border-[var(--border-color)]/80 text-[8px] sm:text-xs font-black text-[var(--foreground)] whitespace-nowrap shadow-md">
                     Chaleco Zara
                   </div>
                 </motion.div>
 
-                {/* Piece 4: Golden Goose Sneaker Floating Right */}
+                {/* Piece 4: Golden Goose Sneaker (Desktop / Tablet only) */}
                 <motion.div 
                   variants={itemFloatIn(70, 40, 14)}
-                  className="absolute right-2 sm:right-6 bottom-4 sm:bottom-10 w-36 sm:w-52 lg:w-56 pointer-events-none drop-shadow-[0_25px_40px_rgba(0,0,0,0.35)] z-20"
+                  className="hidden md:block absolute right-2 sm:right-6 bottom-4 sm:bottom-10 w-36 sm:w-52 lg:w-56 pointer-events-none drop-shadow-[0_25px_40px_rgba(0,0,0,0.35)] z-20"
                 >
                   <Image 
                     src="/landing/golden-goose.png" 
@@ -402,6 +415,7 @@ export default function LandingPage() {
 
 
           {/* ======================================================== */}
+          {/* ======================================================== */}
           {/* KEYFRAME 2: PROTAGONISMO TOTAL DE KLOE (ESTILISTA IA) */}
           {/* ======================================================== */}
           {currentFrame === 2 && (
@@ -411,57 +425,58 @@ export default function LandingPage() {
               initial="hidden"
               animate="visible"
               exit="exit"
-              className="absolute inset-0 w-full h-full flex flex-col md:flex-row items-center justify-between px-6 sm:px-12 lg:px-24 z-10"
+              className="absolute inset-0 w-full h-full flex flex-col md:flex-row items-center justify-center md:justify-between px-4 sm:px-8 md:px-12 lg:px-24 z-10 gap-6 sm:gap-8 md:gap-12 pt-16 sm:pt-20 md:pt-0 pb-6 sm:pb-8 md:pb-0"
             >
               {/* Left Column: Monumental Narrative with Drop-Caps */}
-              <div className="w-full md:w-1/2 text-center md:text-left flex flex-col justify-center z-20 pt-16 md:pt-0">
+              <div className="w-full md:w-1/2 text-center md:text-left flex flex-col justify-center z-20">
                 <motion.h2 
                   variants={itemFadeUp}
-                  className="text-4xl sm:text-6xl md:text-6xl lg:text-[6.5rem] font-black tracking-tighter uppercase leading-[0.85] text-[var(--foreground)]"
+                  className="text-3xl sm:text-5xl md:text-6xl lg:text-[6.5rem] font-black tracking-tighter uppercase leading-[0.88] text-[var(--foreground)]"
                 >
                   <span className="text-[1.22em] italic font-serif text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-purple-400 mr-0.5">Q</span>ué me pongo
                 </motion.h2>
                 <motion.h3 
                   variants={itemFadeUp}
-                  className="text-4xl sm:text-6xl md:text-6xl lg:text-[6.5rem] font-black tracking-tighter uppercase leading-[0.85] bg-gradient-to-r from-[var(--brand-pink)] via-pink-400 to-purple-500 bg-clip-text text-transparent mt-1 sm:mt-2"
+                  className="text-3xl sm:text-5xl md:text-6xl lg:text-[6.5rem] font-black tracking-tighter uppercase leading-[0.88] bg-gradient-to-r from-[var(--brand-pink)] via-pink-400 to-purple-500 bg-clip-text text-transparent mt-1 sm:mt-2"
                 >
                   <span className="text-[1.22em] italic font-serif text-[var(--brand-pink)] mr-0.5">K</span>loe te ayuda
                 </motion.h3>
                 <motion.p 
                   variants={itemFadeUp}
-                  className="mt-4 sm:mt-6 text-sm sm:text-lg md:text-xl text-[var(--foreground-secondary)] leading-relaxed max-w-md mx-auto md:mx-0 font-medium"
+                  className="mt-3 sm:mt-5 text-xs sm:text-base md:text-xl text-[var(--foreground-secondary)] leading-relaxed max-w-sm sm:max-w-md mx-auto md:mx-0 font-medium"
                 >
                   Dile a dónde vas o cómo te sientes. Kloe mira tus fotos reales y te crea combinaciones perfectas al segundo.
                 </motion.p>
                 
                 {/* Stylist Highlights List */}
-                <motion.div variants={itemFadeUp} className="mt-5 flex flex-col sm:flex-row items-center justify-center md:justify-start gap-3 text-xs sm:text-sm font-semibold text-[var(--foreground-secondary)]">
-                  <div className="flex items-center gap-1.5">
-                    <CheckCircle2 className="w-4 h-4 text-[var(--brand-pink)]" />
+                <motion.div variants={itemFadeUp} className="mt-3 sm:mt-4 flex flex-row items-center justify-center md:justify-start gap-2.5 sm:gap-3 text-[11px] sm:text-sm font-semibold text-[var(--foreground-secondary)]">
+                  <div className="flex items-center gap-1 sm:gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[var(--brand-pink)]" />
                     <span>Revisa tu ropa real</span>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <CheckCircle2 className="w-4 h-4 text-purple-400" />
+                  <span className="text-[var(--border-color)]">•</span>
+                  <div className="flex items-center gap-1 sm:gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-400" />
                     <span>Equilibrio cromático</span>
                   </div>
                 </motion.div>
               </div>
 
               {/* Right Column: Kloe Hero Character in Atmospheric Orbital Space */}
-              <div className="w-full md:w-1/2 h-[340px] sm:h-[480px] relative flex items-center justify-center z-10 pb-12 md:pb-0">
+              <div className="w-full md:w-1/2 h-[220px] sm:h-[300px] md:h-[480px] relative flex items-center justify-center z-10 max-w-[340px] sm:max-w-[420px] md:max-w-none">
                 
                 {/* Pulsing Atmospheric Aura */}
-                <div className="absolute w-[280px] sm:w-[440px] h-[280px] sm:h-[440px] rounded-full bg-gradient-to-tr from-[var(--brand-pink)]/40 via-purple-500/30 to-transparent blur-3xl animate-pulse pointer-events-none" />
+                <div className="absolute w-[200px] sm:w-[320px] md:w-[440px] h-[200px] sm:h-[320px] md:h-[440px] rounded-full bg-gradient-to-tr from-[var(--brand-pink)]/40 via-purple-500/30 to-transparent blur-2xl sm:blur-3xl animate-pulse pointer-events-none" />
                 
                 {/* Delicate Orbital Ring */}
-                <div className="absolute w-[320px] sm:w-[480px] h-[320px] sm:h-[480px] rounded-full border border-[var(--brand-pink)]/25 animate-[spin_24s_linear_infinite] pointer-events-none" />
+                <div className="absolute w-[240px] sm:w-[360px] md:w-[480px] h-[240px] sm:h-[360px] md:h-[480px] rounded-full border border-[var(--brand-pink)]/25 animate-[spin_24s_linear_infinite] pointer-events-none" />
 
                 {/* Floating Kloe Mascot */}
                 <motion.div 
                   variants={itemFloatIn(0, 0, 0)}
-                  animate={{ y: [0, -14, 0] }}
+                  animate={{ y: [0, -10, 0] }}
                   transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                  className="relative z-10 w-[240px] sm:w-[380px] lg:w-[420px] flex items-center justify-center p-2 drop-shadow-[0_25px_50px_rgba(255,45,120,0.45)]"
+                  className="relative z-10 w-[170px] sm:w-[260px] md:w-[380px] lg:w-[420px] flex items-center justify-center p-2 drop-shadow-[0_20px_40px_rgba(255,45,120,0.45)]"
                 >
                   <Image 
                     src="/landing/kloe-grande-landing.png" 
@@ -473,8 +488,8 @@ export default function LandingPage() {
                   />
                   
                   {/* Floating Action Pill */}
-                  <div className="absolute -bottom-2 sm:-bottom-4 left-1/2 -translate-x-1/2 px-5 py-2.5 rounded-full bg-[var(--card-bg)]/95 backdrop-blur-xl border border-[var(--border-color)] shadow-2xl flex items-center gap-2 text-xs sm:text-sm font-black text-[var(--foreground)] whitespace-nowrap">
-                    <Sparkles className="w-4 h-4 text-[var(--brand-pink)]" />
+                  <div className="absolute -bottom-2 sm:-bottom-3 left-1/2 -translate-x-1/2 px-3 sm:px-5 py-1.5 sm:py-2 rounded-full bg-[var(--card-bg)]/95 backdrop-blur-xl border border-[var(--border-color)] shadow-xl flex items-center gap-1.5 text-[11px] sm:text-sm font-black text-[var(--foreground)] whitespace-nowrap">
+                    <Sparkles className="w-3.5 h-3.5 text-[var(--brand-pink)]" />
                     <span>Look armado en 3 segundos</span>
                   </div>
                 </motion.div>
@@ -494,42 +509,42 @@ export default function LandingPage() {
               initial="hidden"
               animate="visible"
               exit="exit"
-              className="absolute inset-0 w-full h-full flex flex-col md:flex-row items-center justify-between px-6 sm:px-12 lg:px-24 z-10"
+              className="absolute inset-0 w-full h-full flex flex-col md:flex-row items-center justify-center md:justify-between px-4 sm:px-8 md:px-12 lg:px-24 z-10 gap-6 sm:gap-8 md:gap-12 pt-16 sm:pt-20 md:pt-0 pb-6 sm:pb-8 md:pb-0"
             >
               {/* Left Column: Monumental Headline */}
-              <div className="w-full md:w-1/2 text-center md:text-left flex flex-col justify-center z-20 pt-16 md:pt-0">
+              <div className="w-full md:w-1/2 text-center md:text-left flex flex-col justify-center z-20">
                 <motion.h2 
                   variants={itemFadeUp}
-                  className="text-4xl sm:text-6xl md:text-6xl lg:text-[6.5rem] font-black tracking-tighter uppercase leading-[0.85] text-[var(--foreground)]"
+                  className="text-3xl sm:text-5xl md:text-6xl lg:text-[6.5rem] font-black tracking-tighter uppercase leading-[0.88] text-[var(--foreground)]"
                 >
                   <span className="text-[1.22em] italic font-serif text-purple-400 mr-0.5">M</span>onta tu fit
                 </motion.h2>
                 <motion.h3 
                   variants={itemFadeUp}
-                  className="text-4xl sm:text-6xl md:text-6xl lg:text-[6.5rem] font-black tracking-tighter uppercase leading-[0.85] text-[var(--brand-pink)] mt-1 sm:mt-2"
+                  className="text-3xl sm:text-5xl md:text-6xl lg:text-[6.5rem] font-black tracking-tighter uppercase leading-[0.88] text-[var(--brand-pink)] mt-1 sm:mt-2"
                 >
                   <span className="text-[1.22em] italic font-serif text-[var(--brand-pink)] mr-0.5">L</span>isto para hoy
                 </motion.h3>
                 <motion.p 
                   variants={itemFadeUp}
-                  className="mt-4 sm:mt-6 text-sm sm:text-lg md:text-xl text-[var(--foreground-secondary)] leading-relaxed max-w-md mx-auto md:mx-0 font-medium"
+                  className="mt-3 sm:mt-5 text-xs sm:text-base md:text-xl text-[var(--foreground-secondary)] leading-relaxed max-w-sm sm:max-w-md mx-auto md:mx-0 font-medium"
                 >
                   Prueba combinaciones en el lienzo libre, guarda tus favoritas y sal de casa sabiendo qué ponerte.
                 </motion.p>
                 
-                <motion.div variants={itemFadeUp} className="mt-4 flex items-center justify-center md:justify-start gap-2 text-xs sm:text-sm font-bold text-[var(--foreground-secondary)]">
-                  <Layers className="w-4 h-4 text-purple-400" />
+                <motion.div variants={itemFadeUp} className="mt-3 sm:mt-4 flex items-center justify-center md:justify-start gap-1.5 sm:gap-2 text-[11px] sm:text-sm font-bold text-[var(--foreground-secondary)]">
+                  <Layers className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-400" />
                   <span>Crea looks completos de pies a cabeza</span>
                 </motion.div>
               </div>
 
               {/* Right Column: Dynamic Editorial Asymmetric Moodboard (Canvas Collage + Real Looks) */}
-              <div className="w-full md:w-1/2 h-[340px] sm:h-[480px] relative flex items-center justify-center z-10 pb-12 md:pb-0">
+              <div className="w-full md:w-1/2 h-[230px] sm:h-[300px] md:h-[480px] relative flex items-center justify-center z-10 max-w-[340px] sm:max-w-[480px] md:max-w-none">
                 
                 {/* Model 1: Chica Total Look Blanco (Floating Left) */}
                 <motion.div 
-                  variants={itemFloatIn(-75, -20, -7)}
-                  className="absolute left-1 sm:left-4 top-2 sm:top-6 w-28 sm:w-40 lg:w-44 aspect-[3/4] rounded-3xl overflow-hidden border-2 border-white/25 shadow-2xl -rotate-6 hover:rotate-0 transition-transform duration-500 z-10"
+                  variants={itemFloatIn(-50, -10, -8)}
+                  className="absolute left-2 sm:left-4 md:left-6 top-1 sm:top-4 md:top-6 w-20 sm:w-32 md:w-40 lg:w-44 aspect-[3/4] rounded-2xl sm:rounded-3xl overflow-hidden border border-white/20 sm:border-2 shadow-xl sm:shadow-2xl -rotate-8 hover:rotate-0 transition-transform duration-500 z-10 opacity-75 sm:opacity-90 md:opacity-100"
                 >
                   <Image 
                     src="/landing/outfits/chica-blanco-total-look.jpg" 
@@ -537,7 +552,7 @@ export default function LandingPage() {
                     fill 
                     className="object-cover" 
                   />
-                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-[var(--card-bg)]/90 backdrop-blur-md border border-[var(--border-color)] text-[9px] sm:text-[10px] font-black text-[var(--foreground)] whitespace-nowrap shadow-md">
+                  <div className="absolute -bottom-1.5 sm:-bottom-2 left-1/2 -translate-x-1/2 px-2 sm:px-2.5 py-0.5 rounded-full bg-[var(--card-bg)]/90 backdrop-blur-md border border-[var(--border-color)] text-[8px] sm:text-[10px] font-black text-[var(--foreground)] whitespace-nowrap shadow-md">
                     Look Real
                   </div>
                 </motion.div>
@@ -545,7 +560,7 @@ export default function LandingPage() {
                 {/* Centerpiece: Hero Canvas Collage (Rayas + Miu Miu + Golden Goose) */}
                 <motion.div 
                   variants={itemFloatIn(0, -10, 0)}
-                  className="relative z-20 w-44 sm:w-60 lg:w-64 aspect-[3/4] rounded-[26px] overflow-hidden border-2 border-white/40 shadow-[0_30px_60px_rgba(0,0,0,0.35)]"
+                  className="relative z-20 w-36 sm:w-50 md:w-60 lg:w-64 aspect-[3/4] rounded-2xl md:rounded-[26px] overflow-hidden border-2 border-white/40 shadow-[0_20px_45px_rgba(0,0,0,0.35)]"
                 >
                   <Image 
                     src="/landing/outfits/outfit-rayas-miumiu.jpg" 
@@ -553,16 +568,16 @@ export default function LandingPage() {
                     fill 
                     className="object-cover" 
                   />
-                  <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 px-3.5 py-1 rounded-full bg-[var(--card-bg)]/95 backdrop-blur-xl border border-[var(--border-color)] text-[11px] font-black text-[var(--foreground)] whitespace-nowrap shadow-xl flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-[var(--brand-pink)]" />
-                    <span>Lienzo · Miu Miu & Byredo</span>
+                  <div className="absolute -bottom-2 sm:-bottom-3 left-1/2 -translate-x-1/2 px-2.5 sm:px-3.5 py-1 rounded-full bg-[var(--card-bg)]/95 backdrop-blur-xl border border-[var(--border-color)] text-[9px] sm:text-[11px] font-black text-[var(--foreground)] whitespace-nowrap shadow-xl flex items-center gap-1 sm:gap-1.5">
+                    <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[var(--brand-pink)]" />
+                    <span>Lienzo · Miu Miu</span>
                   </div>
                 </motion.div>
 
                 {/* Model 2: Chica Brown Top & Flared Jeans (Floating Right) */}
                 <motion.div 
-                  variants={itemFloatIn(75, 40, 9)}
-                  className="absolute right-1 sm:right-4 bottom-2 sm:bottom-6 w-28 sm:w-40 lg:w-44 aspect-[3/4] rounded-3xl overflow-hidden border-2 border-white/25 shadow-2xl rotate-8 hover:rotate-0 transition-transform duration-500 z-10"
+                  variants={itemFloatIn(50, 10, 8)}
+                  className="absolute right-2 sm:right-4 md:right-6 bottom-1 sm:bottom-4 md:bottom-6 w-20 sm:w-32 md:w-40 lg:w-44 aspect-[3/4] rounded-2xl sm:rounded-3xl overflow-hidden border border-white/20 sm:border-2 shadow-xl sm:shadow-2xl rotate-8 hover:rotate-0 transition-transform duration-500 z-10 opacity-75 sm:opacity-90 md:opacity-100"
                 >
                   <Image 
                     src="/landing/outfits/chica-brown-top-jeans.jpg" 
@@ -570,8 +585,8 @@ export default function LandingPage() {
                     fill 
                     className="object-cover" 
                   />
-                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-[var(--card-bg)]/90 backdrop-blur-md border border-[var(--border-color)] text-[9px] sm:text-[10px] font-black text-[var(--brand-pink)] whitespace-nowrap shadow-md">
-                    Inspo Comunidad
+                  <div className="absolute -bottom-1.5 sm:-bottom-2 left-1/2 -translate-x-1/2 px-2 sm:px-2.5 py-0.5 rounded-full bg-[var(--card-bg)]/90 backdrop-blur-md border border-[var(--border-color)] text-[8px] sm:text-[10px] font-black text-[var(--brand-pink)] whitespace-nowrap shadow-md">
+                    Inspo
                   </div>
                 </motion.div>
 
@@ -590,7 +605,7 @@ export default function LandingPage() {
               initial="hidden"
               animate="visible"
               exit="exit"
-              className="absolute inset-0 w-full h-full flex flex-col justify-between items-center text-center px-4 sm:px-6 py-6 z-10"
+              className="absolute inset-0 w-full h-full flex flex-col justify-between items-center text-center px-4 sm:px-6 pt-16 sm:pt-20 pb-4 sm:pb-6 z-10"
             >
               {/* Left Flanking Look (Streetwear Chico) - Visible on larger screens */}
               <motion.div
@@ -627,20 +642,20 @@ export default function LandingPage() {
               <div className="my-auto w-full max-w-3xl flex flex-col items-center relative z-20">
                 
                 {/* Brand Logo in Foreground */}
-                <motion.div variants={itemFadeUp} className="mb-4">
+                <motion.div variants={itemFadeUp} className="mb-2 sm:mb-4">
                   <Image 
                     src="/landing/klozet-nombre-grande.png" 
                     alt="Klozet" 
                     width={220} 
                     height={75} 
-                    className="h-10 sm:h-14 w-auto object-contain mx-auto drop-shadow-md" 
+                    className="h-8 sm:h-14 w-auto object-contain mx-auto drop-shadow-md" 
                   />
                 </motion.div>
 
                 {/* Colossal Closing Headline */}
                 <motion.h2 
                   variants={itemFadeUp}
-                  className="text-4xl sm:text-6xl md:text-7xl font-black text-[var(--foreground)] tracking-tighter uppercase leading-[0.88]"
+                  className="text-3xl sm:text-5xl md:text-7xl font-black text-[var(--foreground)] tracking-tighter uppercase leading-[0.88]"
                 >
                   <span className="text-[1.22em] italic font-serif text-[var(--brand-pink)] mr-0.5">V</span>ístete mejor <br />
                   <span className="bg-gradient-to-r from-[var(--brand-pink)] to-purple-500 bg-clip-text text-transparent">
@@ -650,16 +665,16 @@ export default function LandingPage() {
                 
                 <motion.p 
                   variants={itemFadeUp}
-                  className="mt-4 text-sm sm:text-lg text-[var(--foreground-secondary)] leading-relaxed max-w-md font-medium"
+                  className="mt-3 sm:mt-4 text-xs sm:text-lg text-[var(--foreground-secondary)] leading-relaxed max-w-xs sm:max-w-md font-medium"
                 >
                   Regístrate gratis en menos de un minuto y empieza a organizar tus outfits favoritos.
                 </motion.p>
 
                 {/* Call to Action Buttons */}
-                <motion.div variants={itemFadeUp} className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3 w-full sm:w-auto z-30">
+                <motion.div variants={itemFadeUp} className="mt-5 sm:mt-8 flex flex-col sm:flex-row items-center justify-center gap-2.5 sm:gap-3 w-full sm:w-auto z-30">
                   <Link
                     href="/auth"
-                    className="w-full sm:w-auto px-10 py-4 rounded-full font-black text-sm sm:text-base bg-[var(--brand-pink)] text-white hover:bg-[var(--brand-pink-dark)] transition-all shadow-xl shadow-[var(--brand-pink)]/30 active:scale-95 inline-flex items-center justify-center gap-2 group"
+                    className="w-full sm:w-auto px-8 sm:px-10 py-3.5 sm:py-4 rounded-full font-black text-xs sm:text-base bg-[var(--brand-pink)] text-white hover:bg-[var(--brand-pink-dark)] transition-all shadow-xl shadow-[var(--brand-pink)]/30 active:scale-95 inline-flex items-center justify-center gap-2 group"
                   >
                     <span>Entrar a Klozet gratis</span>
                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -668,7 +683,7 @@ export default function LandingPage() {
                   {user && (
                     <Link
                       href="/closet"
-                      className="w-full sm:w-auto px-8 py-4 rounded-full font-bold text-sm sm:text-base bg-[var(--background-secondary)] hover:bg-[var(--card-bg)] border border-[var(--border-color)] text-[var(--foreground)] transition-all active:scale-95 inline-flex items-center justify-center"
+                      className="w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 rounded-full font-bold text-xs sm:text-base bg-[var(--background-secondary)] hover:bg-[var(--card-bg)] border border-[var(--border-color)] text-[var(--foreground)] transition-all active:scale-95 inline-flex items-center justify-center"
                     >
                       Ir a mi armario
                     </Link>
@@ -679,20 +694,20 @@ export default function LandingPage() {
               {/* Integrated Legal Footer at the Very Bottom */}
               <motion.div 
                 variants={itemFadeUp}
-                className="w-full pt-4 border-t border-[var(--border-color)]/40 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-[var(--foreground-secondary)] font-semibold max-w-5xl mx-auto relative z-20"
+                className="w-full pt-3 sm:pt-4 border-t border-[var(--border-color)]/40 flex flex-col sm:flex-row items-center justify-between gap-1.5 sm:gap-2 text-[10px] sm:text-xs text-[var(--foreground-secondary)] font-semibold max-w-5xl mx-auto relative z-20"
               >
-                <p className="text-[10px] sm:text-[11px] text-[var(--foreground-tertiary)]">
+                <p className="text-[9px] sm:text-[11px] text-[var(--foreground-tertiary)]">
                   © {new Date().getFullYear()} Klozet. Todos los derechos reservados.
                 </p>
                 
-                <div className="flex flex-wrap items-center justify-center gap-3 text-[11px] sm:text-[12px]">
+                <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-[10px] sm:text-[12px]">
                   <Link href="/terms" className="hover:text-[var(--brand-pink)] transition-colors inline-flex items-center gap-1">
-                    <FileText className="w-3.5 h-3.5" />
-                    <span>Términos y Condiciones</span>
+                    <FileText className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                    <span>Términos</span>
                   </Link>
                   <span className="text-[var(--border-color)]">•</span>
                   <Link href="/privacy" className="hover:text-[var(--brand-pink)] transition-colors inline-flex items-center gap-1">
-                    <ShieldCheck className="w-3.5 h-3.5" />
+                    <ShieldCheck className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                     <span>Privacidad</span>
                   </Link>
                   <span className="text-[var(--border-color)]">•</span>
@@ -712,7 +727,7 @@ export default function LandingPage() {
       </main>
 
       {/* 5. DISCREET FLOATING STEP DOTS (RIGHT SIDE) */}
-      <nav aria-label="Progreso de página" className="fixed right-3 sm:right-6 top-1/2 -translate-y-1/2 z-40 flex flex-col gap-2 p-1.5 rounded-full bg-[var(--card-bg)]/60 backdrop-blur-md border border-[var(--border-color)]/40 shadow-xs">
+      <nav aria-label="Progreso de página" className="fixed right-2 sm:right-6 top-1/2 -translate-y-1/2 z-40 flex flex-col gap-2 p-1.5 rounded-full bg-[var(--card-bg)]/60 backdrop-blur-md border border-[var(--border-color)]/40 shadow-xs">
         {Array.from({ length: totalFrames }).map((_, idx) => (
           <button
             key={idx}

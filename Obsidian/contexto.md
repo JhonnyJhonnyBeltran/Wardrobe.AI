@@ -1618,6 +1618,26 @@ En cada conversación, el backend alimenta a CloSy con:
   - Compatible al 100% con navegación por teclado (`Flechas / Espacio`), rueda del ratón (`wheel`) y gestos táctiles de deslizamiento vertical (`touch swipe`).
   - Compilación verificada con `npm run build` con 0 errores en las 58 rutas de la aplicación.
 
+### 125. Corrección de Diseño Responsivo y Optimización Móvil en Landing Page (`app/(public)/page.tsx`) (Octubre 2026)
+- **Diagnóstico del Problema en Dispositivos Móviles**:
+  - En la vista móvil, el contenedor vertical con `justify-between` separaba en exceso el bloque de texto y el escaparate visual, empujando las prendas al fondo de la pantalla donde se solapaban de forma desordenada y quedaban parcialmente cortadas por la barra de navegación del navegador (`h-screen` vs `100dvh`).
+  - En el Keyframe 1 (Digitalización de Prendas), las 4 prendas intentaban encajar en un área reducida generando colisiones entre tarjetas y badges.
+- **Ajustes y Soluciones Implementadas**:
+  - **Altura Dinámica Adaptativa (`100dvh`)**: Reemplazado `h-screen` por `h-[100dvh] min-h-[100dvh]`, adaptando el lienzo en tiempo real a las barras dinámicas de Safari iOS y Chrome Android sin recortar contenido inferior.
+  - **Barra Superior Equilibrada**: Inclusión del logo tipográfico de Klozet a la izquierda y botones de acción a la derecha (`Mi Armario` o `Iniciar sesión / Registrarse`) con `pointer-events-auto`, mejorando la jerarquía de cabecera.
+  - **Centrado y Espaciado Armónico en Móvil**:
+    - Se reemplazó `justify-between` por `justify-center gap-6 sm:gap-8 md:justify-between pt-16 sm:pt-20 md:pt-0 pb-6 sm:pb-8 md:pb-0`, eliminando el vacío central y agrupando texto y elementos visuales con márgenes equilibrados.
+  - **Escaparate Dinámico por Clúster en Keyframe 1**:
+    - En móvil, se estructura un trío visual con la sudadera naranja Scuffers en el centro (`w-36`), flanqueada simétricamente por el Top Vichy a la izquierda (`w-20`, -10°) y el Chaleco de Zara a la derecha (`w-20`, +10°), con las zapatillas Golden Goose reservadas para pantallas medianas/grandes (`hidden md:block`), garantizando 0 solapamientos y 0 desbordamientos.
+  - **Escalado Responsivo en Keyframes 2, 3 y 4**:
+    - Kloe se ajusta a `w-[170px]` en móvil y `w-[380px]` en escritorio, con orbe y aura contenidos.
+    - El moodboard del Keyframe 3 adapta el lienzo de Miu Miu (`w-36`) con sutiles vistas previas de los dos looks comunitarios detrás (`w-20`), fanning out sin cubrir los textos ni las etiquetas.
+    - En Keyframe 4, el titular, espaciado de botones y footer legal se ajustan ergonómicamente para caber perfectamente en pantallas móviles compactas sin scroll ni solapamientos.
+  - **Puntos de Navegación**: Posicionados a `right-2 sm:right-6` para no interferir con las imágenes en pantallas estrechas.
+- **Validación**:
+  - Compilación verificada con `npm run build` con código 0 y 58/58 rutas optimizadas.
+
+
 
 
 
