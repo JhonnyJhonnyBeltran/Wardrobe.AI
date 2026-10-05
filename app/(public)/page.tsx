@@ -183,7 +183,7 @@ export default function LandingPage() {
           
           {/* ======================================================== */}
           {/* ======================================================== */}
-          {/* KEYFRAME 0: MAXIMALISMO EDITORIAL - EL PROBLEMA */}
+          {/* KEYFRAME 0: ARMARIO LLENO - NADA QUE PONERTE */}
           {/* ======================================================== */}
           {currentFrame === 0 && (
             <motion.div
@@ -192,80 +192,14 @@ export default function LandingPage() {
               initial="hidden"
               animate="visible"
               exit="exit"
-              className="absolute inset-0 w-full h-full flex flex-col items-center justify-center text-center px-4 sm:px-6 z-10"
+              className="absolute inset-0 w-full h-full flex flex-col items-center justify-center text-center px-4 sm:px-8 z-10 gap-3 sm:gap-6 pt-16 sm:pt-20 pb-6 sm:pb-8 max-w-4xl mx-auto"
             >
-              {/* Layered Floating Pieces in Gravity-Free Space (Z-10) */}
-              
-              {/* Top Left: Sudadera Scuffers */}
-              <motion.div 
-                variants={itemFloatIn(-60, -40, -12)}
-                className="absolute left-2 sm:left-10 lg:left-24 top-20 sm:top-20 w-22 sm:w-44 lg:w-56 pointer-events-none drop-shadow-2xl z-10 opacity-70 sm:opacity-100"
-              >
-                <Image 
-                  src="/landing/sudadera-scuffers-cutout.png" 
-                  alt="Sudadera Scuffers" 
-                  width={280} 
-                  height={280} 
-                  className="w-full h-auto object-contain -rotate-12 transition-transform duration-500 hover:rotate-0" 
-                  priority 
-                />
-              </motion.div>
-
-              {/* Bottom Left: Top Vichy en Tarjeta de Cristal */}
-              <motion.div 
-                variants={itemFloatIn(-50, 60, -8)}
-                className="hidden sm:block absolute left-3 sm:left-12 lg:left-28 bottom-16 sm:bottom-20 w-24 sm:w-36 lg:w-48 aspect-[3/4] rounded-3xl overflow-hidden border-2 border-white/20 shadow-2xl -rotate-8 hover:rotate-0 transition-transform duration-500 z-10"
-              >
-                <Image 
-                  src="/landing/top-vichy.jpg" 
-                  alt="Top Vichy" 
-                  fill
-                  className="object-cover" 
-                  priority 
-                />
-                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-[var(--card-bg)]/90 backdrop-blur-md border border-[var(--border-color)]/80 text-[9px] sm:text-[10px] font-black text-[var(--foreground)] whitespace-nowrap shadow-md">
-                  Top Vichy
-                </div>
-              </motion.div>
-
-              {/* Top Right: Chaleco Punto Zara */}
-              <motion.div 
-                variants={itemFloatIn(60, -40, 12)}
-                className="hidden sm:block absolute right-3 sm:right-10 lg:right-24 top-16 sm:top-20 w-24 sm:w-36 lg:w-48 aspect-[3/4] rounded-3xl overflow-hidden border-2 border-white/20 shadow-2xl rotate-12 hover:rotate-0 transition-transform duration-500 z-10"
-              >
-                <Image 
-                  src="/landing/zara-chaleco.jpg" 
-                  alt="Chaleco Zara" 
-                  fill
-                  className="object-cover" 
-                  priority 
-                />
-                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-[var(--card-bg)]/90 backdrop-blur-md border border-[var(--border-color)]/80 text-[9px] sm:text-[10px] font-black text-[var(--foreground)] whitespace-nowrap shadow-md">
-                  Chaleco Zara
-                </div>
-              </motion.div>
-
-              {/* Bottom Right: Golden Goose Glitter */}
-              <motion.div 
-                variants={itemFloatIn(50, 60, -10)}
-                className="absolute right-2 sm:right-14 lg:right-28 bottom-20 sm:bottom-20 w-24 sm:w-40 lg:w-52 pointer-events-none drop-shadow-2xl z-10 opacity-70 sm:opacity-100"
-              >
-                <Image 
-                  src="/landing/golden-goose.png" 
-                  alt="Golden Goose" 
-                  width={240} 
-                  height={150} 
-                  className="w-full h-auto object-contain -rotate-10 transition-transform duration-500 hover:rotate-0" 
-                  priority 
-                />
-              </motion.div>
-
-              {/* MONUMENTAL TYPOGRAPHY WITH EDITORIAL DROP-CAPS (Z-20) */}
-              <motion.div variants={itemFadeUp} className="relative z-20 max-w-6xl mx-auto flex flex-col items-center">
-                <h1 className="text-3xl sm:text-6xl md:text-7xl lg:text-[7.2rem] xl:text-[8.5rem] font-black tracking-tighter uppercase leading-[0.88] text-[var(--foreground)]">
+              {/* MONUMENTAL TYPOGRAPHY */}
+              <motion.div variants={itemFadeUp} className="flex flex-col items-center">
+                <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-[6.5rem] font-black tracking-tighter uppercase leading-[0.88] text-[var(--foreground)]">
                   <span className="text-[1.22em] italic font-serif text-[var(--brand-pink)] mr-0.5">A</span>rmario Lleno
                 </h1>
-                <h2 className="text-3xl sm:text-6xl md:text-7xl lg:text-[7.2rem] xl:text-[8.5rem] font-black tracking-tighter uppercase leading-[0.88] bg-gradient-to-r from-[var(--brand-pink)] via-pink-400 to-purple-500 bg-clip-text text-transparent mt-1 sm:mt-2">
+                <h2 className="text-3xl sm:text-5xl md:text-6xl lg:text-[6.5rem] font-black tracking-tighter uppercase leading-[0.88] bg-gradient-to-r from-[var(--brand-pink)] via-pink-400 to-purple-500 bg-clip-text text-transparent mt-1">
                   <span className="text-[1.22em] italic font-serif text-pink-400 mr-0.5">N</span>ada que ponerte
                 </h2>
               </motion.div>
@@ -273,16 +207,86 @@ export default function LandingPage() {
               {/* Punchy Narrative Text */}
               <motion.p 
                 variants={itemFadeUp}
-                className="mt-3 sm:mt-6 text-xs sm:text-lg md:text-xl text-[var(--foreground-secondary)] max-w-xs sm:max-w-xl font-medium leading-snug z-20"
+                className="text-xs sm:text-base md:text-lg text-[var(--foreground-secondary)] max-w-xs sm:max-w-lg font-medium leading-snug"
               >
                 Todas las mañanas el mismo lío frente al espejo. Klozet organiza tu ropa y te dice exactamente qué ponerte.
               </motion.p>
 
+              {/* Central Fashion Wardrobe Cluster (Tactile & Visual - fills the screen gorgeously) */}
+              <motion.div 
+                variants={itemFadeUp}
+                className="w-full max-w-[340px] sm:max-w-[480px] h-[210px] sm:h-[270px] relative flex items-center justify-center my-1 sm:my-2"
+              >
+                {/* Left: Chaleco Zara in glass card */}
+                <motion.div 
+                  variants={itemFloatIn(-35, 10, -8)}
+                  className="absolute left-2 sm:left-6 top-3 sm:top-4 w-22 sm:w-34 aspect-[3/4] rounded-2xl sm:rounded-3xl overflow-hidden border border-white/25 sm:border-2 shadow-xl -rotate-8 z-10"
+                >
+                  <Image 
+                    src="/landing/zara-chaleco.jpg" 
+                    alt="Chaleco Zara" 
+                    fill 
+                    className="object-cover" 
+                    priority 
+                  />
+                  <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-[var(--card-bg)]/90 backdrop-blur-md border border-[var(--border-color)] text-[8px] sm:text-[10px] font-black text-[var(--foreground)] whitespace-nowrap shadow-md">
+                    Chaleco Zara
+                  </div>
+                </motion.div>
+
+                {/* Center Hero: Sudadera Scuffers Cutout */}
+                <motion.div 
+                  variants={itemFloatIn(0, -10, 2)}
+                  className="relative z-20 w-36 sm:w-52 drop-shadow-[0_20px_40px_rgba(255,45,120,0.35)]"
+                >
+                  <Image 
+                    src="/landing/sudadera-scuffers-cutout.png" 
+                    alt="Sudadera Scuffers" 
+                    width={320} 
+                    height={320} 
+                    className="w-full h-auto object-contain rotate-2 hover:rotate-0 transition-transform duration-500" 
+                    priority 
+                  />
+                </motion.div>
+
+                {/* Right: Top Vichy in glass card */}
+                <motion.div 
+                  variants={itemFloatIn(35, 10, 8)}
+                  className="absolute right-2 sm:right-6 top-3 sm:top-4 w-22 sm:w-34 aspect-[3/4] rounded-2xl sm:rounded-3xl overflow-hidden border border-white/25 sm:border-2 shadow-xl rotate-8 z-10"
+                >
+                  <Image 
+                    src="/landing/top-vichy.jpg" 
+                    alt="Top Vichy" 
+                    fill 
+                    className="object-cover" 
+                    priority 
+                  />
+                  <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-[var(--card-bg)]/90 backdrop-blur-md border border-[var(--border-color)] text-[8px] sm:text-[10px] font-black text-[var(--foreground)] whitespace-nowrap shadow-md">
+                    Top Vichy
+                  </div>
+                </motion.div>
+
+                {/* Bottom: Golden Goose Glitter Sneaker */}
+                <motion.div 
+                  variants={itemFloatIn(10, 30, -5)}
+                  className="absolute bottom-0 right-6 sm:right-16 w-28 sm:w-44 pointer-events-none drop-shadow-xl z-30"
+                >
+                  <Image 
+                    src="/landing/golden-goose.png" 
+                    alt="Golden Goose" 
+                    width={240} 
+                    height={150} 
+                    className="w-full h-auto object-contain -rotate-6" 
+                    priority 
+                  />
+                </motion.div>
+              </motion.div>
+
               {/* Action Button */}
-              <motion.div variants={itemFadeUp} className="mt-5 sm:mt-8 z-30">
+              <motion.div variants={itemFadeUp} className="z-30">
                 <Link
                   href={user ? "/closet" : "/auth"}
-                  className="px-7 sm:px-10 py-3 sm:py-4 rounded-full font-black text-xs sm:text-base bg-[var(--brand-pink)] text-white hover:bg-[var(--brand-pink-dark)] transition-all shadow-xl shadow-[var(--brand-pink)]/30 active:scale-95 inline-flex items-center gap-2 group"
+                  className="px-8 sm:px-10 py-3.5 sm:py-4 rounded-full font-black text-xs sm:text-base bg-[var(--brand-pink)] text-white hover:bg-[var(--brand-pink-dark)] transition-all shadow-xl shadow-[var(--brand-pink)]/30 active:scale-95 inline-flex items-center gap-2 group"
                 >
                   <span>{user ? "Ir a mi armario" : "Empezar gratis"}</span>
                   <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
@@ -392,20 +396,20 @@ export default function LandingPage() {
                   </div>
                 </motion.div>
 
-                {/* Piece 4: Golden Goose Sneaker (Desktop / Tablet only) */}
+                {/* Piece 4: Golden Goose Sneaker */}
                 <motion.div 
-                  variants={itemFloatIn(70, 40, 14)}
-                  className="hidden md:block absolute right-2 sm:right-6 bottom-4 sm:bottom-10 w-36 sm:w-52 lg:w-56 pointer-events-none drop-shadow-[0_25px_40px_rgba(0,0,0,0.35)] z-20"
+                  variants={itemFloatIn(20, 25, 8)}
+                  className="absolute -bottom-2 right-4 sm:right-6 md:bottom-4 md:right-6 w-26 sm:w-36 md:w-52 lg:w-56 pointer-events-none drop-shadow-[0_20px_35px_rgba(0,0,0,0.35)] z-20"
                 >
                   <Image 
                     src="/landing/golden-goose.png" 
                     alt="Golden Goose" 
                     width={260} 
                     height={150} 
-                    className="w-full h-auto object-contain rotate-14" 
+                    className="w-full h-auto object-contain rotate-8 sm:rotate-14" 
                   />
-                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-[var(--card-bg)]/90 backdrop-blur-md border border-[var(--border-color)]/80 text-[10px] sm:text-xs font-black text-[var(--brand-pink)] whitespace-nowrap shadow-md">
-                    Golden Goose Glitter
+                  <div className="absolute -bottom-1.5 sm:-bottom-2 left-1/2 -translate-x-1/2 px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full bg-[var(--card-bg)]/90 backdrop-blur-md border border-[var(--border-color)]/80 text-[8px] sm:text-xs font-black text-[var(--brand-pink)] whitespace-nowrap shadow-md">
+                    Golden Goose
                   </div>
                 </motion.div>
 
@@ -414,7 +418,6 @@ export default function LandingPage() {
           )}
 
 
-          {/* ======================================================== */}
           {/* ======================================================== */}
           {/* KEYFRAME 2: PROTAGONISMO TOTAL DE KLOE (ESTILISTA IA) */}
           {/* ======================================================== */}
@@ -609,8 +612,8 @@ export default function LandingPage() {
             >
               {/* Left Flanking Look (Streetwear Chico) - Visible on larger screens */}
               <motion.div
-                variants={itemFloatIn(-80, 0, -8)}
-                className="hidden lg:block absolute left-8 xl:left-20 top-1/2 -translate-y-1/2 w-44 xl:w-52 aspect-[3/4] rounded-3xl overflow-hidden border-2 border-white/20 shadow-2xl -rotate-6 pointer-events-none hover:rotate-0 transition-transform duration-500 z-10 opacity-90"
+                variants={itemFloatIn(-60, 0, -6)}
+                className="hidden sm:block absolute left-4 lg:left-8 xl:left-20 top-1/2 -translate-y-1/2 w-32 md:w-44 xl:w-52 aspect-[3/4] rounded-2xl md:rounded-3xl overflow-hidden border border-white/20 sm:border-2 shadow-2xl -rotate-6 pointer-events-none hover:rotate-0 transition-transform duration-500 z-10 opacity-80 sm:opacity-90"
               >
                 <Image 
                   src="/landing/outfits/chico-denim-sneakers-street.jpg" 
@@ -625,8 +628,8 @@ export default function LandingPage() {
 
               {/* Right Flanking Look (Chaleco Cartier Look) - Visible on larger screens */}
               <motion.div
-                variants={itemFloatIn(80, 0, 8)}
-                className="hidden lg:block absolute right-8 xl:right-20 top-1/2 -translate-y-1/2 w-44 xl:w-52 aspect-[3/4] rounded-3xl overflow-hidden border-2 border-white/20 shadow-2xl rotate-6 pointer-events-none hover:rotate-0 transition-transform duration-500 z-10 opacity-90"
+                variants={itemFloatIn(60, 0, 6)}
+                className="hidden sm:block absolute right-4 lg:right-8 xl:right-20 top-1/2 -translate-y-1/2 w-32 md:w-44 xl:w-52 aspect-[3/4] rounded-2xl md:rounded-3xl overflow-hidden border border-white/20 sm:border-2 shadow-2xl rotate-6 pointer-events-none hover:rotate-0 transition-transform duration-500 z-10 opacity-80 sm:opacity-90"
               >
                 <Image 
                   src="/landing/outfits/outfit-chaleco-cartier.jpg" 
@@ -639,7 +642,7 @@ export default function LandingPage() {
                 </div>
               </motion.div>
 
-              <div className="my-auto w-full max-w-3xl flex flex-col items-center relative z-20">
+              <div className="my-auto w-full max-w-xl flex flex-col items-center relative z-20">
                 
                 {/* Brand Logo in Foreground */}
                 <motion.div variants={itemFadeUp} className="mb-2 sm:mb-4">
@@ -648,14 +651,14 @@ export default function LandingPage() {
                     alt="Klozet" 
                     width={220} 
                     height={75} 
-                    className="h-8 sm:h-14 w-auto object-contain mx-auto drop-shadow-md" 
+                    className="h-8 sm:h-12 w-auto object-contain mx-auto drop-shadow-md" 
                   />
                 </motion.div>
 
                 {/* Colossal Closing Headline */}
                 <motion.h2 
                   variants={itemFadeUp}
-                  className="text-3xl sm:text-5xl md:text-7xl font-black text-[var(--foreground)] tracking-tighter uppercase leading-[0.88]"
+                  className="text-3xl sm:text-5xl md:text-6xl font-black text-[var(--foreground)] tracking-tighter uppercase leading-[0.88]"
                 >
                   <span className="text-[1.22em] italic font-serif text-[var(--brand-pink)] mr-0.5">V</span>ístete mejor <br />
                   <span className="bg-gradient-to-r from-[var(--brand-pink)] to-purple-500 bg-clip-text text-transparent">
@@ -665,13 +668,33 @@ export default function LandingPage() {
                 
                 <motion.p 
                   variants={itemFadeUp}
-                  className="mt-3 sm:mt-4 text-xs sm:text-lg text-[var(--foreground-secondary)] leading-relaxed max-w-xs sm:max-w-md font-medium"
+                  className="mt-3 sm:mt-4 text-xs sm:text-base text-[var(--foreground-secondary)] leading-relaxed max-w-xs sm:max-w-md font-medium"
                 >
                   Regístrate gratis en menos de un minuto y empieza a organizar tus outfits favoritos.
                 </motion.p>
 
+                {/* Mobile Preview Cards for Community (Visible on mobile screens!) */}
+                <motion.div variants={itemFadeUp} className="flex sm:hidden items-center justify-center gap-3 my-3">
+                  <div className="w-20 aspect-[3/4] rounded-xl overflow-hidden border border-white/20 shadow-md -rotate-3 relative">
+                    <Image 
+                      src="/landing/outfits/chico-denim-sneakers-street.jpg" 
+                      alt="Streetwear Chico" 
+                      fill 
+                      className="object-cover" 
+                    />
+                  </div>
+                  <div className="w-20 aspect-[3/4] rounded-xl overflow-hidden border border-white/20 shadow-md rotate-3 relative">
+                    <Image 
+                      src="/landing/outfits/outfit-chaleco-cartier.jpg" 
+                      alt="Look Chaleco Cartier" 
+                      fill 
+                      className="object-cover" 
+                    />
+                  </div>
+                </motion.div>
+
                 {/* Call to Action Buttons */}
-                <motion.div variants={itemFadeUp} className="mt-5 sm:mt-8 flex flex-col sm:flex-row items-center justify-center gap-2.5 sm:gap-3 w-full sm:w-auto z-30">
+                <motion.div variants={itemFadeUp} className="mt-3 sm:mt-6 flex flex-col sm:flex-row items-center justify-center gap-2.5 sm:gap-3 w-full sm:w-auto z-30">
                   <Link
                     href="/auth"
                     className="w-full sm:w-auto px-8 sm:px-10 py-3.5 sm:py-4 rounded-full font-black text-xs sm:text-base bg-[var(--brand-pink)] text-white hover:bg-[var(--brand-pink-dark)] transition-all shadow-xl shadow-[var(--brand-pink)]/30 active:scale-95 inline-flex items-center justify-center gap-2 group"
@@ -725,22 +748,6 @@ export default function LandingPage() {
 
         </AnimatePresence>
       </main>
-
-      {/* 5. DISCREET FLOATING STEP DOTS (RIGHT SIDE) */}
-      <nav aria-label="Progreso de página" className="fixed right-2 sm:right-6 top-1/2 -translate-y-1/2 z-40 flex flex-col gap-2 p-1.5 rounded-full bg-[var(--card-bg)]/60 backdrop-blur-md border border-[var(--border-color)]/40 shadow-xs">
-        {Array.from({ length: totalFrames }).map((_, idx) => (
-          <button
-            key={idx}
-            onClick={() => goToFrame(idx)}
-            aria-label={`Ir al fotograma ${idx + 1}`}
-            className={`w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full transition-all cursor-pointer ${
-              currentFrame === idx 
-                ? 'bg-[var(--brand-pink)] scale-125 shadow-xs' 
-                : 'bg-[var(--foreground-tertiary)]/40 hover:bg-[var(--foreground-secondary)]'
-            }`}
-          />
-        ))}
-      </nav>
     </div>
   );
 }

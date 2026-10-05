@@ -1637,6 +1637,24 @@ En cada conversación, el backend alimenta a CloSy con:
 - **Validación**:
   - Compilación verificada con `npm run build` con código 0 y 58/58 rutas optimizadas.
 
+### 126. Eliminación Definitiva de Puntos de Navegación y Clúster Editorial Central en Landing Page (`app/(public)/page.tsx`) (Octubre 2026)
+- **Eliminación Total del Componente de Puntos de Navegación (`<nav aria-label="Progreso de página">`)**:
+  - Se suprimió por completo el contenedor de botones circulares flotantes en el lateral derecho de la pantalla (`nav.fixed.right-2`), permitiendo una experiencia limpia de pantalla completa sin distracciones ni solapamientos con las tarjetas fotográficas.
+- **Rediseño del Keyframe 0 (Armario Lleno / Nada que ponerte)**:
+  - Se eliminó la dispersión diagonal de elementos en las 4 esquinas extremas del viewport que dejaba un 70% de espacio vacío en blanco en pantallas móviles.
+  - Implementado un **clúster editorial central cohesionado y táctil** ubicado entre el titular y el botón de acción:
+    - Prenda central: Sudadera naranja Scuffers (`w-36 sm:w-52`) con resplandor magenta.
+    - Prenda izquierda: Chaleco de punto Zara (`w-22 sm:w-34`, -8°) en tarjeta de cristal con micro-borde translúcido y badge.
+    - Prenda derecha: Top vichy en blanco y negro (`w-22 sm:w-34`, +8°) en tarjeta de cristal y badge.
+    - Calzado inferior: Zapatillas Golden Goose glitter (`w-28 sm:w-44`, -6°) asomando sutilmente en la base del clúster.
+  - El resultado es una composición de moda equilibrada y con presencia visual sólida en teléfonos móviles sin huecos vacíos ni elementos descolgados.
+- **Optimización Integral de Keyframes 1 a 4**:
+  - En Keyframe 1, se integró el calzado Golden Goose de forma armónica junto a las 3 prendas digitalizadas con sus etiquetas correspondientes.
+  - En Keyframe 4, se añadieron las dos tarjetas fotográficas comunitarias en vista móvil (`w-20` en abanico) y en los laterales en escritorio, completando la composición junto al footer legal unificado.
+- **Validación**:
+  - Compilación verificada con `npm run build` con código 0 y 58/58 rutas optimizadas.
+
+
 
 
 
