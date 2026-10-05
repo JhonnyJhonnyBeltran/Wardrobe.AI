@@ -1592,6 +1592,33 @@ En cada conversación, el backend alimenta a CloSy con:
     - Ahora cada tarjeta de anuncio es un elemento hermano independiente (`Fragment`) en la cuadrícula masonry y en las columnas móviles, con su propio `break-inside-avoid mb-6` o `w-full`, permitiendo un equilibrado perfecto de alturas y espaciado homogéneo idéntico al de cualquier post.
     - `SponsoredAdCard` utiliza `w-full aspect-[4/5]` con `Image fill object-cover` y fotos editoriales verticales verificadas para garantizar proporciones exactas e invariables.
 
+### 124. Elevación Editorial y Reestructuración Visual de la Landing Page con 7 Nuevos Activos de Moda (`app/(public)/page.tsx`) (Octubre 2026)
+- **Recuperación e Integración de los 7 Activos de Moda**:
+  - Se localizaron y procesaron los archivos fotográficos (incluyendo los 2 pendientes ubicados en la carpeta local de Descargas del sistema), optimizándolos y renombrándolos con nomenclatura limpia bajo `public/landing/`:
+    1. `top-vichy.jpg`: Top corsetero vichy en blanco y negro (prenda digitalizada sin fondo).
+    2. `zara-chaleco.jpg`: Chaleco de punto azul marino con botones dorados de Zara (prenda de armario digitalizada).
+    3. `outfit-rayas-miumiu.jpg`: Composición de lienzo flatlay (jersey de rayas, bolso Miu Miu, perfume Byredo y Golden Goose).
+    4. `outfit-chaleco-cartier.jpg`: Look editorial de noche con chaleco sastre, bolso negro acolchado y reloj estilo Cartier.
+    5. `chica-blanco-total-look.jpg`: Fotografía editorial de street style con look blanco total y gafas de sol en ciudad.
+    6. `chica-brown-top-jeans.jpg`: Look urbano contemporáneo con top marrón chocolate, vaqueros anchos y bolso marrón.
+    7. `chico-denim-sneakers-street.jpg`: Look masculino urbano en calle empedrada con chaqueta denim, cargo y zapatillas con estrella.
+- **Narrativa Editorial por Fotogramas (Keyframes 0 a 4)**:
+  - **Keyframe 0 (El Problema · Armario Lleno / Nada que ponerte)**:
+    - Espacio con gravedad cero donde flotan de forma armónica prendas reales de armario en tarjetas de cristal con borde translúcido (`top-vichy.jpg` a la izquierda y `zara-chaleco.jpg` a la derecha), equilibradas con la sudadera naranja Scuffers y las Golden Goose glitter.
+  - **Keyframe 1 (Digitalización de Prendas · Toda tu ropa / En un toque)**:
+    - Escaparate dinámico de prendas del armario virtual con etiquetas de producto (`Top Vichy`, `Chaleco Zara`, `Scuffers Orange Hoodie`, `Golden Goose Glitter`), comunicando la tecnología de eliminación automática de fondo e indexación en 1 toque.
+  - **Keyframe 2 (Estilista IA · Qué me pongo / Kloe te ayuda)**:
+    - Protagonismo absoluto de la mascota oficial Kloe sobre un halo volumétrico difuminado y anillo orbital, con la píldora flotante *"Look armado en 3 segundos"*.
+  - **Keyframe 3 (Monta tu fit · Listo para hoy)**:
+    - Moodboard asimétrico de inspiración y creación: en el centro se sitúa el collage interactivo de lienzo (`outfit-rayas-miumiu.jpg`), flanqueado a la izquierda por el look real en blanco (`chica-blanco-total-look.jpg`) y a la derecha por el look urbano casual (`chica-brown-top-jeans.jpg`).
+  - **Keyframe 4 (Acceso Final · Vístete mejor / Disfruta tu ropa)**:
+    - Titular monumental de cierre con acceso directo a `/auth` y `/closet`, escoltado en pantallas de escritorio por dos tarjetas laterales flotantes de comunidad (`chico-denim-sneakers-street.jpg` y `outfit-chaleco-cartier.jpg`) junto con el footer legal unificado (Términos, Privacidad, Cookies y Soporte).
+- **Consistencia Visual, Micro-Interacciones y Responsividad**:
+  - Contenedores con proporción áurea vertical `aspect-[3/4]`, esquinas curvadas de alta costura (`rounded-3xl` y `rounded-[26px]`), sombras volumétricas profundas y micro-rotaciones reactivas al hover.
+  - Compatible al 100% con navegación por teclado (`Flechas / Espacio`), rueda del ratón (`wheel`) y gestos táctiles de deslizamiento vertical (`touch swipe`).
+  - Compilación verificada con `npm run build` con 0 errores en las 58 rutas de la aplicación.
+
+
 
 
 

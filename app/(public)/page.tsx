@@ -133,7 +133,7 @@ export default function LandingPage() {
             </Link>
             <Link 
               href="/auth" 
-              className="px-5 py-2 rounded-full text-xs sm:text-sm font-black bg-[var(--brand-pink)] text-white hover:bg-[var(--brand-pink-dark)] transition-all shadow-md shadow-[var(--brand-pink)]/20 active:scale-95 flex items-center gap-1"
+              className="px-5 py-2.5 rounded-full text-xs sm:text-sm font-black bg-[var(--brand-pink)] text-white hover:bg-[var(--brand-pink-dark)] transition-all shadow-md shadow-[var(--brand-pink)]/20 active:scale-95 flex items-center gap-1"
             >
               <span>Registrarse</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -182,6 +182,8 @@ export default function LandingPage() {
               className="absolute inset-0 w-full h-full flex flex-col items-center justify-center text-center px-4 sm:px-6 z-10"
             >
               {/* Layered Floating Pieces in Gravity-Free Space (Z-10) */}
+              
+              {/* Top Left: Sudadera Scuffers */}
               <motion.div 
                 variants={itemFloatIn(-60, -40, -12)}
                 className="absolute left-3 sm:left-10 lg:left-24 top-16 sm:top-20 w-28 sm:w-44 lg:w-56 pointer-events-none drop-shadow-2xl z-10"
@@ -196,43 +198,50 @@ export default function LandingPage() {
                 />
               </motion.div>
 
+              {/* Bottom Left: Top Vichy en Tarjeta de Cristal */}
               <motion.div 
-                variants={itemFloatIn(-50, 60, 8)}
-                className="absolute left-4 sm:left-14 lg:left-28 bottom-16 sm:bottom-20 w-24 sm:w-36 lg:w-48 pointer-events-none drop-shadow-2xl z-10"
+                variants={itemFloatIn(-50, 60, -8)}
+                className="absolute left-3 sm:left-12 lg:left-28 bottom-16 sm:bottom-20 w-24 sm:w-36 lg:w-48 aspect-[3/4] rounded-3xl overflow-hidden border-2 border-white/20 shadow-2xl -rotate-8 hover:rotate-0 transition-transform duration-500 z-10"
               >
                 <Image 
-                  src="/landing/pantalon-blanco.png" 
-                  alt="Pantalón Blanco" 
-                  width={220} 
-                  height={280} 
-                  className="w-full h-auto object-contain rotate-8 transition-transform duration-500 hover:rotate-0" 
+                  src="/landing/top-vichy.jpg" 
+                  alt="Top Vichy" 
+                  fill
+                  className="object-cover" 
                   priority 
                 />
+                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-[var(--card-bg)]/90 backdrop-blur-md border border-[var(--border-color)]/80 text-[9px] sm:text-[10px] font-black text-[var(--foreground)] whitespace-nowrap shadow-md">
+                  Top Vichy
+                </div>
               </motion.div>
 
+              {/* Top Right: Chaleco Punto Zara */}
               <motion.div 
-                variants={itemFloatIn(60, -40, 14)}
-                className="absolute right-3 sm:right-10 lg:right-24 top-16 sm:top-20 w-28 sm:w-44 lg:w-56 pointer-events-none drop-shadow-2xl z-10"
+                variants={itemFloatIn(60, -40, 12)}
+                className="absolute right-3 sm:right-10 lg:right-24 top-16 sm:top-20 w-24 sm:w-36 lg:w-48 aspect-[3/4] rounded-3xl overflow-hidden border-2 border-white/20 shadow-2xl rotate-12 hover:rotate-0 transition-transform duration-500 z-10"
               >
                 <Image 
-                  src="/landing/studio-longsleeve.png" 
-                  alt="Studio Longsleeve" 
-                  width={280} 
-                  height={280} 
-                  className="w-full h-auto object-contain rotate-14 transition-transform duration-500 hover:rotate-0" 
+                  src="/landing/zara-chaleco.jpg" 
+                  alt="Chaleco Zara" 
+                  fill
+                  className="object-cover" 
                   priority 
                 />
+                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-[var(--card-bg)]/90 backdrop-blur-md border border-[var(--border-color)]/80 text-[9px] sm:text-[10px] font-black text-[var(--foreground)] whitespace-nowrap shadow-md">
+                  Chaleco Zara
+                </div>
               </motion.div>
 
+              {/* Bottom Right: Golden Goose Glitter */}
               <motion.div 
                 variants={itemFloatIn(50, 60, -10)}
-                className="absolute right-4 sm:right-14 lg:right-28 bottom-16 sm:bottom-20 w-24 sm:w-36 lg:w-48 pointer-events-none drop-shadow-2xl z-10"
+                className="absolute right-4 sm:right-14 lg:right-28 bottom-16 sm:bottom-20 w-28 sm:w-40 lg:w-52 pointer-events-none drop-shadow-2xl z-10"
               >
                 <Image 
-                  src="/landing/botas-cowboy.png" 
-                  alt="Botas Cowboy" 
-                  width={220} 
-                  height={280} 
+                  src="/landing/golden-goose.png" 
+                  alt="Golden Goose" 
+                  width={240} 
+                  height={150} 
                   className="w-full h-auto object-contain -rotate-10 transition-transform duration-500 hover:rotate-0" 
                   priority 
                 />
@@ -253,7 +262,7 @@ export default function LandingPage() {
                 variants={itemFadeUp}
                 className="mt-4 sm:mt-6 text-sm sm:text-lg md:text-xl text-[var(--foreground-secondary)] max-w-sm sm:max-w-xl font-medium leading-snug z-20"
               >
-                Todas las mañanas el mismo lío frente al espejo Klozet organiza tu ropa y te dice exactamente qué ponerte
+                Todas las mañanas el mismo lío frente al espejo. Klozet organiza tu ropa y te dice exactamente qué ponerte.
               </motion.p>
 
               {/* Action Button */}
@@ -300,40 +309,46 @@ export default function LandingPage() {
                   variants={itemFadeUp}
                   className="mt-4 sm:mt-6 text-sm sm:text-lg md:text-xl text-[var(--foreground-secondary)] leading-relaxed max-w-md mx-auto md:mx-0 font-medium"
                 >
-                  Saca una foto y el fondo desaparece al instante Tu ropa real ordenada y lista para combinar
+                  Saca una foto y el fondo desaparece al instante. Tu ropa real ordenada y lista para combinar.
                 </motion.p>
                 
                 {/* Micro Pill Feature */}
-                <motion.div variants={itemFadeUp} className="mt-4 flex items-center justify-center md:justify-start gap-2 text-xs sm:text-sm font-bold text-[var(--foreground-secondary)]">
-                  <Sparkles className="w-4 h-4 text-[var(--brand-pink)]" />
-                  <span>Recorte automático con inteligencia artificial</span>
+                <motion.div variants={itemFadeUp} className="mt-4 flex flex-col sm:flex-row items-center justify-center md:justify-start gap-2.5 text-xs sm:text-sm font-bold text-[var(--foreground-secondary)]">
+                  <div className="flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4 text-[var(--brand-pink)]" />
+                    <span>Recorte automático con IA</span>
+                  </div>
+                  <span className="hidden sm:inline text-[var(--border-color)]">•</span>
+                  <div className="flex items-center gap-1.5">
+                    <Wand2 className="w-4 h-4 text-purple-400" />
+                    <span>Categorización y color en 1s</span>
+                  </div>
                 </motion.div>
               </div>
 
-              {/* Right: Free-Floating Pieces in Dynamic Orbit (NO rigid boxes) */}
+              {/* Right: Free-Floating Pieces in Dynamic Orbit (Showcasing real digitized fashion) */}
               <div className="w-full md:w-1/2 h-[340px] sm:h-[480px] relative flex items-center justify-center z-10 pb-12 md:pb-0">
                 
-                {/* Piece 1: Star Denim Floating Left */}
+                {/* Piece 1: Top Vichy Floating Left */}
                 <motion.div 
-                  variants={itemFloatIn(-70, 20, -14)}
-                  className="absolute left-2 sm:left-8 top-6 sm:top-12 w-32 sm:w-48 lg:w-56 pointer-events-none drop-shadow-[0_25px_40px_rgba(0,0,0,0.35)]"
+                  variants={itemFloatIn(-70, -20, -12)}
+                  className="absolute left-2 sm:left-6 top-6 sm:top-10 w-28 sm:w-40 lg:w-44 aspect-[3/4] rounded-3xl overflow-hidden border-2 border-white/20 shadow-2xl -rotate-12 hover:rotate-0 transition-transform duration-500 z-10"
                 >
                   <Image 
-                    src="/landing/jeans-stars.png" 
-                    alt="Star Denim" 
-                    width={240} 
-                    height={280} 
-                    className="w-full h-auto object-contain -rotate-12" 
+                    src="/landing/top-vichy.jpg" 
+                    alt="Top Vichy" 
+                    fill 
+                    className="object-cover" 
                   />
-                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-[var(--card-bg)]/90 backdrop-blur-md border border-[var(--border-color)]/80 text-[10px] sm:text-xs font-black text-[var(--foreground)] whitespace-nowrap shadow-md">
-                    Star Denim
+                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-[var(--card-bg)]/95 backdrop-blur-md border border-[var(--border-color)]/80 text-[10px] sm:text-xs font-black text-[var(--foreground)] whitespace-nowrap shadow-md">
+                    Top Vichy
                   </div>
                 </motion.div>
 
                 {/* Piece 2: Scuffers Hoodie Hero Floating Center */}
                 <motion.div 
-                  variants={itemFloatIn(0, -30, 4)}
-                  className="relative z-20 w-44 sm:w-64 lg:w-72 drop-shadow-[0_30px_50px_rgba(255,45,120,0.3)]"
+                  variants={itemFloatIn(0, -20, 3)}
+                  className="relative z-20 w-44 sm:w-60 lg:w-68 drop-shadow-[0_30px_50px_rgba(255,45,120,0.35)]"
                 >
                   <Image 
                     src="/landing/sudadera-scuffers-cutout.png" 
@@ -348,10 +363,26 @@ export default function LandingPage() {
                   </div>
                 </motion.div>
 
-                {/* Piece 3: Golden Goose Sneaker Floating Right */}
+                {/* Piece 3: Chaleco Zara Floating Bottom Left */}
                 <motion.div 
-                  variants={itemFloatIn(70, 40, 16)}
-                  className="absolute right-2 sm:right-6 bottom-4 sm:bottom-10 w-36 sm:w-52 lg:w-60 pointer-events-none drop-shadow-[0_25px_40px_rgba(0,0,0,0.35)]"
+                  variants={itemFloatIn(-40, 60, 6)}
+                  className="absolute left-6 sm:left-14 bottom-2 sm:bottom-6 w-26 sm:w-36 lg:w-40 aspect-[3/4] rounded-3xl overflow-hidden border-2 border-white/20 shadow-2xl rotate-6 hover:rotate-0 transition-transform duration-500 z-10"
+                >
+                  <Image 
+                    src="/landing/zara-chaleco.jpg" 
+                    alt="Chaleco Zara" 
+                    fill 
+                    className="object-cover" 
+                  />
+                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-[var(--card-bg)]/95 backdrop-blur-md border border-[var(--border-color)]/80 text-[10px] sm:text-xs font-black text-[var(--foreground)] whitespace-nowrap shadow-md">
+                    Chaleco Zara
+                  </div>
+                </motion.div>
+
+                {/* Piece 4: Golden Goose Sneaker Floating Right */}
+                <motion.div 
+                  variants={itemFloatIn(70, 40, 14)}
+                  className="absolute right-2 sm:right-6 bottom-4 sm:bottom-10 w-36 sm:w-52 lg:w-56 pointer-events-none drop-shadow-[0_25px_40px_rgba(0,0,0,0.35)] z-20"
                 >
                   <Image 
                     src="/landing/golden-goose.png" 
@@ -400,14 +431,14 @@ export default function LandingPage() {
                   variants={itemFadeUp}
                   className="mt-4 sm:mt-6 text-sm sm:text-lg md:text-xl text-[var(--foreground-secondary)] leading-relaxed max-w-md mx-auto md:mx-0 font-medium"
                 >
-                  Dile a dónde vas o cómo te sientes Kloe mira tus fotos reales y te crea combinaciones perfectas al segundo
+                  Dile a dónde vas o cómo te sientes. Kloe mira tus fotos reales y te crea combinaciones perfectas al segundo.
                 </motion.p>
                 
                 {/* Stylist Highlights List */}
                 <motion.div variants={itemFadeUp} className="mt-5 flex flex-col sm:flex-row items-center justify-center md:justify-start gap-3 text-xs sm:text-sm font-semibold text-[var(--foreground-secondary)]">
                   <div className="flex items-center gap-1.5">
                     <CheckCircle2 className="w-4 h-4 text-[var(--brand-pink)]" />
-                    <span>Revisa tu armario real</span>
+                    <span>Revisa tu ropa real</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <CheckCircle2 className="w-4 h-4 text-purple-400" />
@@ -483,7 +514,7 @@ export default function LandingPage() {
                   variants={itemFadeUp}
                   className="mt-4 sm:mt-6 text-sm sm:text-lg md:text-xl text-[var(--foreground-secondary)] leading-relaxed max-w-md mx-auto md:mx-0 font-medium"
                 >
-                  Prueba combinaciones en el lienzo libre guarda tus favoritas y sal de casa sabiendo qué ponerte
+                  Prueba combinaciones en el lienzo libre, guarda tus favoritas y sal de casa sabiendo qué ponerte.
                 </motion.p>
                 
                 <motion.div variants={itemFadeUp} className="mt-4 flex items-center justify-center md:justify-start gap-2 text-xs sm:text-sm font-bold text-[var(--foreground-secondary)]">
@@ -492,39 +523,56 @@ export default function LandingPage() {
                 </motion.div>
               </div>
 
-              {/* Right Column: Dynamic Editorial Asymmetric Moodboard (Free-floating) */}
+              {/* Right Column: Dynamic Editorial Asymmetric Moodboard (Canvas Collage + Real Looks) */}
               <div className="w-full md:w-1/2 h-[340px] sm:h-[480px] relative flex items-center justify-center z-10 pb-12 md:pb-0">
                 
-                {/* Model 1: Chica Cookies Denim */}
+                {/* Model 1: Chica Total Look Blanco (Floating Left) */}
                 <motion.div 
-                  variants={itemFloatIn(-80, -40, -6)}
-                  className="absolute left-2 sm:left-6 top-4 sm:top-8 w-28 sm:w-40 lg:w-44 aspect-[3/4] rounded-3xl overflow-hidden border-2 border-white/20 shadow-2xl rotate-[-6deg] hover:rotate-0 transition-transform duration-500"
+                  variants={itemFloatIn(-75, -20, -7)}
+                  className="absolute left-1 sm:left-4 top-2 sm:top-6 w-28 sm:w-40 lg:w-44 aspect-[3/4] rounded-3xl overflow-hidden border-2 border-white/25 shadow-2xl -rotate-6 hover:rotate-0 transition-transform duration-500 z-10"
                 >
-                  <Image src="/landing/outfits/chica-cookies-denim.jpg" alt="Fit Cookies" fill className="object-cover" />
+                  <Image 
+                    src="/landing/outfits/chica-blanco-total-look.jpg" 
+                    alt="Look Total White" 
+                    fill 
+                    className="object-cover" 
+                  />
+                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-[var(--card-bg)]/90 backdrop-blur-md border border-[var(--border-color)] text-[9px] sm:text-[10px] font-black text-[var(--foreground)] whitespace-nowrap shadow-md">
+                    Look Real
+                  </div>
                 </motion.div>
 
-                {/* Model 2: Chico Henley Pleated */}
+                {/* Centerpiece: Hero Canvas Collage (Rayas + Miu Miu + Golden Goose) */}
                 <motion.div 
-                  variants={itemFloatIn(60, -30, 8)}
-                  className="absolute right-4 sm:right-10 top-2 sm:top-6 w-28 sm:w-40 lg:w-44 aspect-[3/4] rounded-3xl overflow-hidden border-2 border-white/20 shadow-2xl rotate-[8deg] hover:rotate-0 transition-transform duration-500"
+                  variants={itemFloatIn(0, -10, 0)}
+                  className="relative z-20 w-44 sm:w-60 lg:w-64 aspect-[3/4] rounded-[26px] overflow-hidden border-2 border-white/40 shadow-[0_30px_60px_rgba(0,0,0,0.35)]"
                 >
-                  <Image src="/landing/outfits/chico-henley-pleated.jpg" alt="Fit Henley" fill className="object-cover" />
+                  <Image 
+                    src="/landing/outfits/outfit-rayas-miumiu.jpg" 
+                    alt="Outfit Lienzo Miu Miu" 
+                    fill 
+                    className="object-cover" 
+                  />
+                  <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 px-3.5 py-1 rounded-full bg-[var(--card-bg)]/95 backdrop-blur-xl border border-[var(--border-color)] text-[11px] font-black text-[var(--foreground)] whitespace-nowrap shadow-xl flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-[var(--brand-pink)]" />
+                    <span>Lienzo · Miu Miu & Byredo</span>
+                  </div>
                 </motion.div>
 
-                {/* Model 3: Chica Leopard Scarf */}
+                {/* Model 2: Chica Brown Top & Flared Jeans (Floating Right) */}
                 <motion.div 
-                  variants={itemFloatIn(-40, 60, 4)}
-                  className="absolute left-10 sm:left-20 bottom-4 sm:bottom-8 w-26 sm:w-36 lg:w-40 aspect-[3/4] rounded-3xl overflow-hidden border-2 border-white/20 shadow-2xl rotate-[4deg] hover:rotate-0 transition-transform duration-500 z-10"
+                  variants={itemFloatIn(75, 40, 9)}
+                  className="absolute right-1 sm:right-4 bottom-2 sm:bottom-6 w-28 sm:w-40 lg:w-44 aspect-[3/4] rounded-3xl overflow-hidden border-2 border-white/25 shadow-2xl rotate-8 hover:rotate-0 transition-transform duration-500 z-10"
                 >
-                  <Image src="/landing/outfits/chica-leopard-scarf.jpg" alt="Fit Leopard" fill className="object-cover" />
-                </motion.div>
-
-                {/* Floating Onitsuka Sneaker Accent */}
-                <motion.div 
-                  variants={itemFloatIn(70, 70, -12)}
-                  className="absolute right-6 sm:right-14 bottom-6 sm:bottom-10 w-28 sm:w-36 lg:w-40 pointer-events-none drop-shadow-2xl z-20"
-                >
-                  <Image src="/landing/onitsuka-tiger.png" alt="Onitsuka Tiger" width={180} height={100} className="w-full h-auto object-contain -rotate-12" />
+                  <Image 
+                    src="/landing/outfits/chica-brown-top-jeans.jpg" 
+                    alt="Look Streetwear" 
+                    fill 
+                    className="object-cover" 
+                  />
+                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-[var(--card-bg)]/90 backdrop-blur-md border border-[var(--border-color)] text-[9px] sm:text-[10px] font-black text-[var(--brand-pink)] whitespace-nowrap shadow-md">
+                    Inspo Comunidad
+                  </div>
                 </motion.div>
 
               </div>
@@ -544,7 +592,39 @@ export default function LandingPage() {
               exit="exit"
               className="absolute inset-0 w-full h-full flex flex-col justify-between items-center text-center px-4 sm:px-6 py-6 z-10"
             >
-              <div className="my-auto w-full max-w-3xl flex flex-col items-center">
+              {/* Left Flanking Look (Streetwear Chico) - Visible on larger screens */}
+              <motion.div
+                variants={itemFloatIn(-80, 0, -8)}
+                className="hidden lg:block absolute left-8 xl:left-20 top-1/2 -translate-y-1/2 w-44 xl:w-52 aspect-[3/4] rounded-3xl overflow-hidden border-2 border-white/20 shadow-2xl -rotate-6 pointer-events-none hover:rotate-0 transition-transform duration-500 z-10 opacity-90"
+              >
+                <Image 
+                  src="/landing/outfits/chico-denim-sneakers-street.jpg" 
+                  alt="Streetwear Chico" 
+                  fill 
+                  className="object-cover" 
+                />
+                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-[var(--card-bg)]/90 backdrop-blur-md border border-[var(--border-color)] text-[10px] font-black text-[var(--foreground)] whitespace-nowrap shadow-md">
+                  @alex · Denim & Stars
+                </div>
+              </motion.div>
+
+              {/* Right Flanking Look (Chaleco Cartier Look) - Visible on larger screens */}
+              <motion.div
+                variants={itemFloatIn(80, 0, 8)}
+                className="hidden lg:block absolute right-8 xl:right-20 top-1/2 -translate-y-1/2 w-44 xl:w-52 aspect-[3/4] rounded-3xl overflow-hidden border-2 border-white/20 shadow-2xl rotate-6 pointer-events-none hover:rotate-0 transition-transform duration-500 z-10 opacity-90"
+              >
+                <Image 
+                  src="/landing/outfits/outfit-chaleco-cartier.jpg" 
+                  alt="Look Chaleco Cartier" 
+                  fill 
+                  className="object-cover" 
+                />
+                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-[var(--card-bg)]/90 backdrop-blur-md border border-[var(--border-color)] text-[10px] font-black text-[var(--brand-pink)] whitespace-nowrap shadow-md">
+                  Look Elegante · Kloe
+                </div>
+              </motion.div>
+
+              <div className="my-auto w-full max-w-3xl flex flex-col items-center relative z-20">
                 
                 {/* Brand Logo in Foreground */}
                 <motion.div variants={itemFadeUp} className="mb-4">
@@ -572,7 +652,7 @@ export default function LandingPage() {
                   variants={itemFadeUp}
                   className="mt-4 text-sm sm:text-lg text-[var(--foreground-secondary)] leading-relaxed max-w-md font-medium"
                 >
-                  Regístrate gratis en menos de un minuto y empieza a organizar tus outfits favoritos
+                  Regístrate gratis en menos de un minuto y empieza a organizar tus outfits favoritos.
                 </motion.p>
 
                 {/* Call to Action Buttons */}
@@ -599,7 +679,7 @@ export default function LandingPage() {
               {/* Integrated Legal Footer at the Very Bottom */}
               <motion.div 
                 variants={itemFadeUp}
-                className="w-full pt-4 border-t border-[var(--border-color)]/40 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-[var(--foreground-secondary)] font-semibold max-w-5xl mx-auto"
+                className="w-full pt-4 border-t border-[var(--border-color)]/40 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-[var(--foreground-secondary)] font-semibold max-w-5xl mx-auto relative z-20"
               >
                 <p className="text-[10px] sm:text-[11px] text-[var(--foreground-tertiary)]">
                   © {new Date().getFullYear()} Klozet. Todos los derechos reservados.
