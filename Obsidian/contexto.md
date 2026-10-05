@@ -1574,6 +1574,10 @@ En cada conversación, el backend alimenta a CloSy con:
   - **Píldora Flotante Exclusiva en `fixed`**: Se eliminó completamente la franja de fondo fija (`bg-[var(--background)]/85 backdrop-blur-md`) que cubría de extremo a extremo la parte superior de la cuadrícula de publicaciones. Ahora el contenedor es completamente transparente y cuenta con `pointer-events-none`, mientras que únicamente la cápsula de búsqueda (`pointer-events-auto`) flota suspendida en `fixed top-0` con sus propios bordes redondeados `rounded-full`, sombra `shadow-md` y fondo limpio `bg-[var(--card-bg)]/95 backdrop-blur-xl`.
   - **Interacción y Visibilidad Completa de Posts**: Las publicaciones y fotos del feed son visibles al 100% hasta el borde superior de la pantalla en los laterales de la barra, y los elementos adyacentes a la cápsula reciben clics normalmente sin ningún bloqueo de capa.
   - **Compensación de Padding Superior en `PullToRefresh`**: Se mantiene `className="pt-[70px] sm:pt-[74px] md:pt-[78px]"` para que las sugerencias iniciales queden despejadas bajo la cápsula y el gesto de pull-to-refresh sea fluido.
+- **11. Transición Fluida de Carrusel en Detalle de Post (`app/(app)/post/[id]/page.tsx`, `components/InteractiveOutfitViewer.tsx`)**:
+  - **Eliminación de Animaciones Bouncing en el Carrusel**: Se desactivó la animación automática de rebote secuencial de prendas en el carrusel de publicaciones (`isActive={false}` en `InteractiveOutfitViewer`), eliminando cualquier movimiento parásito o rebote inesperado al deslizar de la foto al look.
+  - **Transición Fluida CSS y Gesto Táctil Direccional**: Se reemplazó el contenedor con resorte elástico (`spring` / `dragConstraints`) por una transición CSS ultra-fluida acelerada por hardware (`transition-transform duration-300 ease-[cubic-bezier(0.25,1,0.5,1)]`) y detección de swipe táctil que discrimina movimientos horizontales (`Math.abs(diffX) > Math.abs(diffY)`), asegurando que el pase entre foto y outfit sea completamente suave, natural e instantáneo.
+
 
 
 

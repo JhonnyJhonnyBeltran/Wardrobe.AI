@@ -21,7 +21,7 @@ const InteractiveOutfitViewer = ({
     isMobileSticker = false, 
     selectedItemId, 
     disableInteraction = false,
-    isActive = true 
+    isActive = false 
 }: InteractiveOutfitViewerProps) => {
     const [hoveredItemId, setHoveredItemId] = useState<string | null>(null);
     const [bouncingIndex, setBouncingIndex] = useState<number | null>(null);

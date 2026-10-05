@@ -113,6 +113,7 @@ export default function PostDetailPage() {
 
     const commentInputRef = useRef<HTMLInputElement>(null);
     const touchStartXRef = useRef<number | null>(null);
+    const touchStartYRef = useRef<number | null>(null);
 
     // Fetch Post Data
     useEffect(() => {
@@ -674,6 +675,30 @@ export default function PostDetailPage() {
                         setTimeout(() => setShowHeartAnim(false), 1000);
                         haptics.selection();
                     }}
+                    onTouchStart={slides.length > 1 ? (e) => {
+                        touchStartXRef.current = e.touches[0].clientX;
+                        touchStartYRef.current = e.touches[0].clientY;
+                    } : undefined}
+                    onTouchEnd={slides.length > 1 ? (e) => {
+                        if (touchStartXRef.current === null || touchStartYRef.current === null) return;
+                        const diffX = touchStartXRef.current - e.changedTouches[0].clientX;
+                        const diffY = touchStartYRef.current - e.changedTouches[0].clientY;
+                        if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 40) {
+                            if (diffX > 0 && activeSlide < slides.length - 1) {
+                                setActiveSlide(prev => Math.min(slides.length - 1, prev + 1));
+                                haptics.selection();
+                            } else if (diffX < 0 && activeSlide > 0) {
+                                setActiveSlide(prev => Math.max(0, prev - 1));
+                                haptics.selection();
+                            }
+                        }
+                        touchStartXRef.current = null;
+                        touchStartYRef.current = null;
+                    } : undefined}
+                    onTouchCancel={() => {
+                        touchStartXRef.current = null;
+                        touchStartYRef.current = null;
+                    }}
                 >
                     {/* Heart double-click animation */}
                     <AnimatePresence>
@@ -690,31 +715,10 @@ export default function PostDetailPage() {
                         )}
                     </AnimatePresence>
 
-                    {/* Sliding track: both slides pre-rendered side-by-side with Framer Motion spring sliding */}
-                    <motion.div 
-                        className="flex w-full h-auto md:h-full will-change-transform cursor-grab active:cursor-grabbing items-center"
-                        style={{ touchAction: 'pan-y' }}
-                        animate={{ x: `-${activeSlide * 100}%` }}
-                        transition={{
-                            type: "spring",
-                            stiffness: 280,
-                            damping: 30,
-                            mass: 0.8
-                        }}
-                        drag={isMobile ? "x" : false}
-                        dragConstraints={{ left: 0, right: 0 }}
-                        dragElastic={0.3}
-                        onDragEnd={isMobile ? (_, { offset, velocity }) => {
-                            const swipe = offset.x;
-                            const speed = velocity.x;
-                            if ((swipe < -35 || speed < -350) && activeSlide < slides.length - 1) {
-                                setActiveSlide(prev => Math.min(slides.length - 1, prev + 1));
-                                haptics.selection();
-                            } else if ((swipe > 35 || speed > 350) && activeSlide > 0) {
-                                setActiveSlide(prev => Math.max(0, prev - 1));
-                                haptics.selection();
-                            }
-                        } : undefined}
+                    {/* Sliding track: both slides pre-rendered side-by-side with fluid CSS transition */}
+                    <div 
+                        className="flex w-full h-auto md:h-full transition-transform duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] will-change-transform items-center"
+                        style={{ transform: `translateX(-${activeSlide * 100}%)` }}
                     >
                         {slides.map((slide, idx) => (
                             <div
@@ -740,13 +744,13 @@ export default function PostDetailPage() {
                                             onItemClick={(item) => setSelectedItem(item)}
                                             className="w-full h-full absolute inset-0"
                                             isMobileSticker={true}
-                                            isActive={activeSlide === idx}
+                                            isActive={false}
                                         />
                                     </div>
                                 )}
                             </div>
                         ))}
-                    </motion.div>
+                    </div>
 
                     {/* Navigation Arrows (Conditional & Shaded without solid background) & Dots Indicator */}
                     {slides.length > 1 && (
