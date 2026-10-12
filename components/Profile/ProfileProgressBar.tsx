@@ -1,23 +1,33 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Check, ChevronDown, ChevronUp, Plus, Camera, Layers, Bot, Share2, HelpCircle } from 'lucide-react';
 import { useUser } from '@/store/userStore';
 import { useWardrobeStore } from '@/store/wardrobeStore';
 import { useProfileStore } from '@/store/profileStore';
 import { useTourStore } from '@/store/tourStore';
+import { supabase } from '@/lib/supabase/client';
 import Link from 'next/link';
 
 export default function ProfileProgressBar() {
   const { user } = useUser();
   const { items } = useWardrobeStore();
   const { profileStats, posts } = useProfileStore();
-  const { openTour, completedSteps } = useTourStore();
+  const { openTour, completedSteps, markStepComplete, completeTour } = useTourStore();
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // Check if Kloe has been used from user-scoped client & server sources
-  const hasKloeFromStorage = React.useMemo(() => {
+  const isEthan = useMemo(() => {
+    if (!user) return false;
+    return Boolean(
+      user.email?.toLowerCase().includes('ethan') ||
+      user.username?.toLowerCase() === 'ethan' ||
+      (user as any)?.isEthanUser
+    );
+  }, [user]);
+
+  // Check if Kloe has been used from local storage
+  const hasKloeFromStorage = useMemo(() => {
     if (typeof window === 'undefined' || !user?.id) return false;
     try {
       const raw = localStorage.getItem(`kloe_conversations_${user.id}`);
@@ -36,26 +46,149 @@ export default function ProfileProgressBar() {
   const hasKloeFromProfile = Boolean(
     (user as any)?.notification_preferences?.kloe_conversations?.length > 0 ||
     ((user as any)?.kloe_trial_messages_used && (user as any).kloe_trial_messages_used > 0) ||
-    ((user as any)?.trial_messages_used && (user as any).trial_messages_used > 0)
+    ((user as any)?.trial_messages_used && (user as any).trial_messages_used > 0) ||
+    ((user?.kloeTrialMessagesUsed ?? 0) > 0)
   );
 
-  const hasKloe = completedSteps.includes('talk_to_kloe') || hasKloeFromStorage || hasKloeFromProfile;
-
-  // Auto-sync Kloe step if detected for this user
-  React.useEffect(() => {
-    if (user?.id && hasKloe && !completedSteps.includes('talk_to_kloe')) {
-      useTourStore.getState().markStepComplete('talk_to_kloe', undefined, false);
+  // Cached & live milestone flags backed by database queries
+  const [realMilestones, setRealMilestones] = useState<{
+    hasOutfit: boolean;
+    hasPost: boolean;
+    hasKloe: boolean;
+  }>(() => {
+    if (typeof window === 'undefined' || !user?.id) {
+      return { hasOutfit: false, hasPost: false, hasKloe: false };
     }
-  }, [user?.id, hasKloe, completedSteps]);
+    if (isEthan) {
+      return { hasOutfit: true, hasPost: true, hasKloe: true };
+    }
+    try {
+      const raw = localStorage.getItem(`klozet_user_milestones_${user.id}`);
+      if (raw) return JSON.parse(raw);
+    } catch {}
+    return { hasOutfit: false, hasPost: false, hasKloe: false };
+  });
+
+  // Query Supabase for real account data (outfits, posts, kloe conversations)
+  useEffect(() => {
+    if (!user?.id) return;
+
+    if (isEthan) {
+      setRealMilestones({ hasOutfit: true, hasPost: true, hasKloe: true });
+      try {
+        localStorage.setItem(`klozet_user_milestones_${user.id}`, JSON.stringify({ hasOutfit: true, hasPost: true, hasKloe: true }));
+      } catch {}
+      return;
+    }
+
+    // If already marked as completed in localStorage, skip DB overhead
+    if (typeof window !== 'undefined' && localStorage.getItem(`klozet_tour_completed_${user.id}`) === 'true') {
+      setRealMilestones({ hasOutfit: true, hasPost: true, hasKloe: true });
+      return;
+    }
+
+    let isMounted = true;
+    const fetchRealData = async () => {
+      try {
+        const [outfitsRes, postsRes, profileRes] = await Promise.all([
+          supabase.from('outfits').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+          supabase.from('posts').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+          supabase.from('profiles').select('notification_preferences, kloe_trial_messages_used').eq('id', user.id).maybeSingle()
+        ]);
+
+        if (!isMounted) return;
+
+        const outfitOk = (outfitsRes.count ?? 0) > 0;
+        const postOk = (postsRes.count ?? 0) > 0;
+        const notifs = (profileRes.data as any)?.notification_preferences;
+        const kloeOk = (profileRes.data?.kloe_trial_messages_used ?? 0) > 0 ||
+          Boolean(Array.isArray(notifs?.kloe_conversations) && notifs.kloe_conversations.length > 0) ||
+          hasKloeFromStorage ||
+          hasKloeFromProfile;
+
+        setRealMilestones(prev => {
+          const next = {
+            hasOutfit: prev.hasOutfit || outfitOk,
+            hasPost: prev.hasPost || postOk,
+            hasKloe: prev.hasKloe || kloeOk
+          };
+          try {
+            localStorage.setItem(`klozet_user_milestones_${user.id}`, JSON.stringify(next));
+          } catch {}
+          return next;
+        });
+      } catch (err) {
+        console.warn('[ProfileProgressBar] Error fetching milestone counts:', err);
+      }
+    };
+
+    fetchRealData();
+    return () => { isMounted = false; };
+  }, [user?.id, isEthan, hasKloeFromStorage, hasKloeFromProfile]);
+
+  // Calculate completeness breakdown (100% clean sum)
+  const hasStyle = Boolean(
+    isEthan ||
+    user?.styleCompleted ||
+    (user?.preferredStyles && user.preferredStyles.length > 0) ||
+    user?.age ||
+    user?.gender
+  );
+  const hasAvatar = Boolean(isEthan || (user?.avatar && !user.avatar.includes('placeholder')));
+  const has2Items = Boolean(isEthan || items.length >= 2);
+  const hasOutfit = Boolean(
+    isEthan ||
+    realMilestones.hasOutfit ||
+    completedSteps.includes('create_outfit') ||
+    profileStats.posts > 0
+  );
+  const hasKloe = Boolean(
+    isEthan ||
+    realMilestones.hasKloe ||
+    completedSteps.includes('talk_to_kloe') ||
+    hasKloeFromStorage ||
+    hasKloeFromProfile
+  );
+  const hasPost = Boolean(
+    isEthan ||
+    realMilestones.hasPost ||
+    completedSteps.includes('create_post') ||
+    posts.length > 0 ||
+    profileStats.posts > 0
+  );
+
+  // Sync to tourStore automatically
+  useEffect(() => {
+    if (!user?.id) return;
+    const store = useTourStore.getState();
+    if (hasStyle && !completedSteps.includes('style_preferences')) {
+      store.markStepComplete('style_preferences', undefined, false);
+    }
+    if (hasAvatar && !completedSteps.includes('avatar')) {
+      store.markStepComplete('avatar', undefined, false);
+    }
+    if (has2Items && !completedSteps.includes('upload_clothes')) {
+      store.markStepComplete('upload_clothes', undefined, false);
+    }
+    if (hasOutfit && !completedSteps.includes('create_outfit')) {
+      store.markStepComplete('create_outfit', undefined, false);
+    }
+    if (hasKloe && !completedSteps.includes('talk_to_kloe')) {
+      store.markStepComplete('talk_to_kloe', undefined, false);
+    }
+    if (hasPost && !completedSteps.includes('create_post')) {
+      store.markStepComplete('create_post', undefined, false);
+    }
+  }, [user?.id, hasStyle, hasAvatar, has2Items, hasOutfit, hasKloe, hasPost, completedSteps]);
 
   if (!user) return null;
 
-  // Calculate completeness breakdown (100% clean sum)
-  const hasStyle = Boolean(user.styleCompleted || (user.preferredStyles && user.preferredStyles.length > 0));
-  const hasAvatar = Boolean(user.avatar && !user.avatar.includes('placeholder'));
-  const has2Items = items.length >= 2;
-  const hasOutfit = completedSteps.includes('create_outfit') || (profileStats.posts > 0);
-  const hasPost = (posts.length > 0) || (profileStats.posts > 0);
+  // Check if account has already permanently completed the tutorial
+  if (typeof window !== 'undefined' && user?.id) {
+    if (localStorage.getItem(`klozet_tour_completed_${user.id}`) === 'true') {
+      return null;
+    }
+  }
 
   let score = 0;
   if (hasStyle) score += 20;
@@ -67,8 +200,14 @@ export default function ProfileProgressBar() {
 
   const totalPercent = Math.min(100, score);
 
-  // If 100% complete, do not render (disappears completely and never returns)
-  if (totalPercent >= 100) return null;
+  // If 100% complete, mark completed forever and do not render (disappears completely and never returns)
+  if (totalPercent >= 100) {
+    if (typeof window !== 'undefined' && user?.id) {
+      localStorage.setItem(`klozet_tour_completed_${user.id}`, 'true');
+      completeTour(user.id);
+    }
+    return null;
+  }
 
   // Dynamic status text matching the exact missing milestone
   let statusMessage = '';
@@ -116,14 +255,14 @@ export default function ProfileProgressBar() {
           <div className="flex items-center gap-1.5 shrink-0">
             <button
               onClick={() => openTour()}
-              className="text-xs text-[var(--foreground-tertiary)] hover:text-[var(--brand-pink)] p-1.5 rounded-lg hover:bg-[var(--background-secondary)] transition-colors"
+              className="text-xs text-[var(--foreground-tertiary)] hover:text-[var(--brand-pink)] p-1.5 rounded-lg hover:bg-[var(--background-secondary)] transition-colors cursor-pointer"
               title="Abrir ruta de estilo"
             >
               <HelpCircle className="w-4 h-4" />
             </button>
             <button
               onClick={() => setIsExpanded(!isExpanded)}
-              className="p-1.5 rounded-lg hover:bg-[var(--background-secondary)] text-[var(--foreground-secondary)] transition-colors"
+              className="p-1.5 rounded-lg hover:bg-[var(--background-secondary)] text-[var(--foreground-secondary)] transition-colors cursor-pointer"
               aria-label={isExpanded ? 'Ocultar detalles' : 'Ver detalles'}
             >
               {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -131,13 +270,13 @@ export default function ProfileProgressBar() {
           </div>
         </div>
 
-        {/* Progress Bar Track */}
+        {/* Progress Bar Track: Solid Brand Color (NO gradient) */}
         <div className="w-full h-2 bg-[var(--background-secondary)] rounded-full overflow-hidden mt-3">
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${totalPercent}%` }}
             transition={{ duration: 0.6, ease: 'easeOut' }}
-            className="h-full rounded-full bg-gradient-to-r from-[var(--brand-pink)] to-purple-500 shadow-[0_0_12px_rgba(236,72,153,0.35)]"
+            className="h-full rounded-full bg-[var(--brand-pink)] shadow-[0_0_10px_rgba(255,45,120,0.3)]"
           />
         </div>
 

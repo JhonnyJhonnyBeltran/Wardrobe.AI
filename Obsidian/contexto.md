@@ -1652,7 +1652,32 @@ En cada conversación, el backend alimenta a CloSy con:
   - En Keyframe 1, se integró el calzado Golden Goose de forma armónica junto a las 3 prendas digitalizadas con sus etiquetas correspondientes.
   - En Keyframe 4, se añadieron las dos tarjetas fotográficas comunitarias en vista móvil (`w-20` en abanico) y en los laterales en escritorio, completando la composición junto al footer legal unificado.
 - **Validación**:
-  - Compilación verificada con `npm run build` con código 0 y 58/58 rutas optimizadas.
+  
+### 127. Seguimiento Real del Estado de Cuenta, Unificación 1:1 de la Ruta de Estilo, Color Sólido y Desactivación Definitiva (`components/Profile/ProfileProgressBar.tsx`, `components/GuidedTour/GuidedTourModal.tsx`, `store/tourStore.ts`) (Octubre 2026)
+- **Diagnóstico de la Discrepancia Previa**:
+  - Se detectó que el widget de progreso (`ProfileProgressBar`) comprobaba de forma superficial banderas en memoria (`completedSteps` y `profileStats.posts`) en lugar de consultar la base de datos real en Supabase (`outfits` y `posts`), provocando que cuentas que ya habían creado outfits y publicaciones aparecieran ancladas en un 60%.
+  - El modal de ayuda (`GuidedTourModal`) mantenía una lista de hitos totalmente desacoplada de la barra (mostraba "Organiza tu semana" y "Entrena tu algoritmo", omitiendo "Foto de perfil" y "Estilo y preferencias"), con un contador confuso ("5/6") que indicaba el índice del paso activo y no el progreso real.
+- **Seguimiento Real del Estado en Base de Datos**:
+  - Implementadas consultas directas y ligeras a Supabase (`head: true, count: 'exact'`) para verificar en tiempo real si el usuario cuenta con outfits en `public.outfits` y publicaciones en `public.posts`.
+  - Detección multimodal de interacción con Kloe mediante `kloe_trial_messages_used`, conversaciones remotas en `profiles.notification_preferences`, almacenamiento local y condición de cuenta administradora/vitalicia de Ethan.
+  - Caché instantánea (0ms) en `localStorage` (`klozet_user_milestones_${user.id}`) para eliminar cualquier parpadeo en visitas sucesivas.
+- **Unificación Absoluta 1:1 de los 6 Hitos de Estilo**:
+  - Sincronizados de forma idéntica en el card y en el modal los 6 pasos canónicos con sus pesos correspondientes:
+    1. *Estilo y preferencias seleccionadas* (20%) $\rightarrow$ `/onboarding/preferences`
+    2. *Foto de perfil personalizada* (15%) $\rightarrow$ `/profile/edit`
+    3. *Añadir al menos 2 prendas al armario* (25%) $\rightarrow$ `/closet?action=new-item`
+    4. *Crear un outfit en el lienzo* (15%) $\rightarrow$ `/create`
+    5. *Consultar asesoría y estilo con Kloe* (10%) $\rightarrow$ `/closet/kloe`
+    6. *Publicar un look en la comunidad* (15%) $\rightarrow$ `/create-post`
+  - En el modal de ayuda, los 6 botones y la barra de progreso reflejan con total fidelidad el porcentaje real (ej: 60% / 100%) y el estado completado (check verde) o pendiente (círculo) de cada hito.
+- **Color Sólido de Aplicación Sin Degradado**:
+  - Reemplazado el degradado anterior (`bg-gradient-to-r from-[var(--brand-pink)] to-purple-500`) por el color rosa corporativo sólido de la aplicación (`bg-[var(--brand-pink)]`) tanto en la barra de progreso como en los acentos visuales.
+- **Desactivación Definitiva y Prevención Total de Re-activación**:
+  - Cuando una cuenta alcanza el 100% de nivel de estilo o ya ha completado todos los requisitos (como la cuenta de Ethan), el componente `ProfileProgressBar` retorna `null` y se desmonta inmediatamente.
+  - Se persiste `klozet_tour_completed_${user.id} = 'true'` en `localStorage` y en el estado global `isCompleted = true, isDismissed = true, hasStartedTour = false`, garantizando que ni el tutorial modal, ni la píldora flotante, ni los parámetros `?startTour=true` vuelvan a activarse jamás en esa cuenta.
+- **Validación de Compilación**:
+  - Compilación verificada con `npm run build` con código de salida 0 y las 58 rutas optimizadas.
+
 
 
 

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Sparkles, 
@@ -14,41 +14,40 @@ import {
   Bot, 
   Share2, 
   Search, 
-  UploadCloud, 
-  ShoppingBag, 
+  Plus, 
   Sun, 
   CheckCircle2, 
   Trophy 
 } from 'lucide-react';
-import { useTourStore, TOUR_STEPS, TourStepId } from '@/store/tourStore';
+import { useTourStore, TOUR_STEPS, TourStepId, calculateTourProgress } from '@/store/tourStore';
 import { useWardrobeStore } from '@/store/wardrobeStore';
 import { useUser } from '@/store/userStore';
-import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 const STEP_ICONS: Record<TourStepId, React.ElementType> = {
-  upload_clothes: Camera,
+  style_preferences: Sparkles,
+  avatar: Camera,
+  upload_clothes: Plus,
   create_outfit: Layers,
-  schedule_outfit: Calendar,
   talk_to_kloe: Bot,
   create_post: Share2,
+  schedule_outfit: Calendar,
   explore_like: Search
 };
 
 export default function GuidedTourModal() {
   const router = useRouter();
-  const pathname = usePathname();
   const searchParams = useSearchParams();
   const { user } = useUser();
   const { items } = useWardrobeStore();
 
   const {
-    currentUserId,
     isOpen,
     hasStartedTour,
     currentStepIndex,
     completedSteps,
     isDismissed,
+    isCompleted,
     showCelebration,
     celebrationTitle,
     celebrationMessage,
@@ -72,13 +71,24 @@ export default function GuidedTourModal() {
     }
   }, [user?.id, initUserTour]);
 
+  const totalPercent = calculateTourProgress(completedSteps);
+  const completedCount = completedSteps.filter(id => TOUR_STEPS.some(s => s.id === id)).length;
+  const isTourCompleted = Boolean(
+    isCompleted || 
+    completedCount >= TOUR_STEPS.length || 
+    totalPercent >= 100 ||
+    (typeof window !== 'undefined' && user?.id && localStorage.getItem(`klozet_tour_completed_${user.id}`) === 'true')
+  );
+
   // Auto-start tour when redirected from onboarding with ?startTour=true
   useEffect(() => {
     if (!user?.id) return;
     const isStartTourParam = searchParams.get('startTour') === 'true';
 
     if (isStartTourParam) {
-      startNewUserTour(user.id);
+      if (!isTourCompleted && !isDismissed) {
+        startNewUserTour(user.id);
+      }
       // Clean query parameter from URL so it doesn't re-trigger on refresh/navigation
       try {
         const url = new URL(window.location.href);
@@ -88,18 +98,16 @@ export default function GuidedTourModal() {
         console.warn('Could not clean startTour query param:', e);
       }
     }
-  }, [searchParams, user?.id, startNewUserTour]);
+  }, [searchParams, user?.id, startNewUserTour, isTourCompleted, isDismissed]);
 
-  // Auto-detect completed real actions (Only pop celebration if actively on tour)
+  // Auto-detect completed clothes action
   useEffect(() => {
     if (!user) return;
-
-    // Check items count for upload_clothes (>= 2 items)
     if (items.length >= 2 && !completedSteps.includes('upload_clothes')) {
-      const isActivelyOnTour = hasStartedTour && !isDismissed;
-      markStepComplete('upload_clothes', '¡Has subido tus primeras prendas al armario!', isActivelyOnTour);
+      const isActivelyOnTour = hasStartedTour && !isDismissed && !isTourCompleted;
+      markStepComplete('upload_clothes', '¡Has subido tus 2 primeras prendas al armario!', isActivelyOnTour);
     }
-  }, [items.length, user, completedSteps, hasStartedTour, isDismissed, markStepComplete]);
+  }, [items.length, user, completedSteps, hasStartedTour, isDismissed, isTourCompleted, markStepComplete]);
 
   // Auto-hide celebration after 4 seconds
   useEffect(() => {
@@ -114,8 +122,7 @@ export default function GuidedTourModal() {
   const currentStep = TOUR_STEPS[currentStepIndex] || TOUR_STEPS[0];
   const StepIcon = currentStep ? (STEP_ICONS[currentStep.id] || Sparkles) : Sparkles;
   const isCurrentCompleted = currentStep ? completedSteps.includes(currentStep.id) : false;
-  const progressPercent = Math.round(((completedSteps.length) / TOUR_STEPS.length) * 100);
-  const isTourActive = hasStartedTour && !isDismissed && completedSteps.length < TOUR_STEPS.length;
+  const isTourActive = hasStartedTour && !isDismissed && !isTourCompleted;
 
   const handleAction = () => {
     if (!currentStep) return;
@@ -159,15 +166,20 @@ export default function GuidedTourModal() {
               {/* Top Header */}
               <div className="p-5 sm:p-6 pb-4 border-b border-[var(--border-color)]/40 flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-full bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] flex items-center justify-center font-bold text-xs">
+                  <div className="w-8 h-8 rounded-full bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] flex items-center justify-center font-bold text-xs shrink-0">
                     {currentStepIndex + 1}/{TOUR_STEPS.length}
                   </div>
                   <div>
-                    <span className="text-xs font-bold uppercase tracking-wider text-[var(--brand-pink)]">
-                      Tu Ruta de Estilo
-                    </span>
-                    <h3 className="text-sm font-semibold text-[var(--foreground)] leading-tight">
-                      {currentStep.subtitle}
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold uppercase tracking-wider text-[var(--brand-pink)]">
+                        Tu Ruta de Estilo
+                      </span>
+                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[var(--brand-pink)]/10 text-[var(--brand-pink)]">
+                        {totalPercent}%
+                      </span>
+                    </div>
+                    <h3 className="text-sm font-semibold text-[var(--foreground)] leading-tight mt-0.5">
+                      {completedCount} de {TOUR_STEPS.length} completados · {currentStep.subtitle}
                     </h3>
                   </div>
                 </div>
@@ -175,15 +187,15 @@ export default function GuidedTourModal() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={dismissTour}
-                    className="text-xs text-[var(--foreground-tertiary)] hover:text-red-500 px-2 py-1 rounded-lg hover:bg-[var(--background-secondary)] transition-colors font-medium"
+                    className="text-xs text-[var(--foreground-tertiary)] hover:text-red-500 px-2 py-1 rounded-lg hover:bg-[var(--background-secondary)] transition-colors font-medium cursor-pointer"
                     title="Saltar y cerrar el tour definitivamente"
                   >
                     Saltar
                   </button>
                   <button
                     onClick={closeTour}
-                    className="p-1.5 rounded-full hover:bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:text-[var(--foreground)] transition-colors"
-                    aria-label="Minimizar"
+                    className="p-1.5 rounded-full hover:bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:text-[var(--foreground)] transition-colors cursor-pointer"
+                    aria-label="Cerrar"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -201,7 +213,8 @@ export default function GuidedTourModal() {
                       <button
                         key={s.id}
                         onClick={() => goToStep(idx)}
-                        className="flex-1 h-1.5 rounded-full transition-all duration-300 relative group overflow-hidden"
+                        className="flex-1 h-1.5 rounded-full transition-all duration-300 relative group overflow-hidden cursor-pointer"
+                        title={`${s.shortTitle} (${isDone ? 'Completado' : 'Pendiente'})`}
                       >
                         <div
                           className={`h-full w-full rounded-full transition-all ${
@@ -246,7 +259,7 @@ export default function GuidedTourModal() {
                   </div>
                 </div>
 
-                {/* Special Photographic Advice Box for Step 1 (upload_clothes) */}
+                {/* Special Photographic Advice Box for Step 3 (upload_clothes) */}
                 {currentStep.id === 'upload_clothes' && currentStep.tips && (
                   <div className="bg-[var(--background-secondary)] border border-[var(--border-color)] rounded-2xl p-4 sm:p-5 space-y-3">
                     <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[var(--foreground)]">
@@ -276,7 +289,7 @@ export default function GuidedTourModal() {
                   </div>
                 )}
 
-                {/* Quick overview of all steps checklist */}
+                {/* Quick overview of all 6 steps checklist matching ProfileProgressBar */}
                 <div className="grid grid-cols-2 gap-2 pt-1">
                   {TOUR_STEPS.map((s, idx) => {
                     const isDone = completedSteps.includes(s.id);
@@ -286,9 +299,9 @@ export default function GuidedTourModal() {
                       <button
                         key={s.id}
                         onClick={() => goToStep(idx)}
-                        className={`flex items-center gap-2 p-2.5 rounded-xl border text-left transition-all ${
+                        className={`flex items-center gap-2 p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
                           isCur
-                            ? 'bg-[var(--brand-pink)]/10 border-[var(--brand-pink)] text-[var(--foreground)]'
+                            ? 'bg-[var(--brand-pink)]/10 border-[var(--brand-pink)] text-[var(--foreground)] ring-1 ring-[var(--brand-pink)]/40'
                             : isDone
                             ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
                             : 'bg-[var(--background-secondary)]/40 border-[var(--border-color)]/40 text-[var(--foreground-tertiary)] hover:border-[var(--border-color)]'
@@ -312,7 +325,7 @@ export default function GuidedTourModal() {
                   type="button"
                   onClick={prevStep}
                   disabled={currentStepIndex === 0}
-                  className="p-3 rounded-xl bg-[var(--background-secondary)] hover:bg-[var(--border-color)] disabled:opacity-30 disabled:cursor-not-allowed text-[var(--foreground)] transition-colors shrink-0"
+                  className="p-3 rounded-xl bg-[var(--background-secondary)] hover:bg-[var(--border-color)] disabled:opacity-30 disabled:cursor-not-allowed text-[var(--foreground)] transition-colors shrink-0 cursor-pointer"
                   aria-label="Paso anterior"
                 >
                   <ChevronLeft className="w-5 h-5" />
@@ -321,7 +334,7 @@ export default function GuidedTourModal() {
                 <button
                   type="button"
                   onClick={handleAction}
-                  className="flex-1 py-3 px-5 rounded-xl bg-[var(--brand-pink)] text-white font-semibold text-sm hover:opacity-90 active:scale-98 transition-all shadow-lg shadow-[var(--brand-pink)]/25 flex items-center justify-center gap-2"
+                  className="flex-1 py-3 px-5 rounded-xl bg-[var(--brand-pink)] text-white font-semibold text-sm hover:opacity-90 active:scale-98 transition-all shadow-lg shadow-[var(--brand-pink)]/25 flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <span>{currentStep.actionText}</span>
                   <ChevronRight className="w-4 h-4" />
@@ -331,7 +344,7 @@ export default function GuidedTourModal() {
                   type="button"
                   onClick={nextStep}
                   disabled={currentStepIndex === TOUR_STEPS.length - 1}
-                  className="p-3 rounded-xl bg-[var(--background-secondary)] hover:bg-[var(--border-color)] disabled:opacity-30 disabled:cursor-not-allowed text-[var(--foreground)] transition-colors shrink-0"
+                  className="p-3 rounded-xl bg-[var(--background-secondary)] hover:bg-[var(--border-color)] disabled:opacity-30 disabled:cursor-not-allowed text-[var(--foreground)] transition-colors shrink-0 cursor-pointer"
                   aria-label="Siguiente paso"
                 >
                   <ChevronRight className="w-5 h-5" />
@@ -353,14 +366,14 @@ export default function GuidedTourModal() {
           >
             <button
               onClick={openTour}
-              className="flex items-center gap-3 px-4 py-2.5 rounded-full bg-[var(--card-bg)]/95 backdrop-blur-xl border border-[var(--brand-pink)]/40 shadow-xl shadow-[var(--brand-pink)]/15 hover:border-[var(--brand-pink)] transition-all group active:scale-95"
+              className="flex items-center gap-3 px-4 py-2.5 rounded-full bg-[var(--card-bg)]/95 backdrop-blur-xl border border-[var(--brand-pink)]/40 shadow-xl shadow-[var(--brand-pink)]/15 hover:border-[var(--brand-pink)] transition-all group active:scale-95 cursor-pointer"
             >
               <div className="w-7 h-7 rounded-full bg-[var(--brand-pink)] text-white flex items-center justify-center font-bold text-xs shrink-0">
                 {currentStepIndex + 1}/{TOUR_STEPS.length}
               </div>
               <div className="text-left">
                 <span className="text-[10px] uppercase tracking-wider font-bold text-[var(--brand-pink)] block leading-tight">
-                  Tu ruta de estilo
+                  Tu ruta de estilo ({totalPercent}%)
                 </span>
                 <span className="text-xs font-semibold text-[var(--foreground)] block leading-tight truncate max-w-[150px] sm:max-w-[200px]">
                   {currentStep.shortTitle}
@@ -391,13 +404,13 @@ export default function GuidedTourModal() {
             </div>
             <button
               onClick={handleCelebrationContinue}
-              className="px-3 py-1.5 rounded-lg bg-white text-emerald-700 font-bold text-xs hover:bg-emerald-50 transition-colors shrink-0"
+              className="px-3 py-1.5 rounded-lg bg-white text-emerald-700 font-bold text-xs hover:bg-emerald-50 transition-colors shrink-0 cursor-pointer"
             >
               Continuar
             </button>
             <button
               onClick={hideCelebration}
-              className="p-1 text-white/70 hover:text-white rounded-lg hover:bg-white/10"
+              className="p-1 text-white/70 hover:text-white rounded-lg hover:bg-white/10 cursor-pointer"
               aria-label="Cerrar aviso"
             >
               <X className="w-4 h-4" />

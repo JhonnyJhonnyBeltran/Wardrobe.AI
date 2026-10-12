@@ -645,7 +645,8 @@ function PreferencesContent() {
 
             // Redirect logic:
             // If editing preferences (from profile settings or existing profile), NEVER trigger the tour!
-            if (isEditing || isFromSettings || isEditModeQuery || user.styleCompleted) {
+            const isTourCompleted = typeof window !== 'undefined' && user?.id && localStorage.getItem(`klozet_tour_completed_${user.id}`) === 'true';
+            if (isEditing || isFromSettings || isEditModeQuery || user.styleCompleted || isTourCompleted) {
                 if (isFromSettings) {
                     router.push('/profile/settings');
                 } else {

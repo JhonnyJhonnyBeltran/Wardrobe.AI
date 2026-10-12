@@ -1,6 +1,14 @@
 import { create } from 'zustand';
 
-export type TourStepId = 'upload_clothes' | 'create_outfit' | 'schedule_outfit' | 'talk_to_kloe' | 'create_post' | 'explore_like';
+export type TourStepId = 
+  | 'style_preferences' 
+  | 'avatar' 
+  | 'upload_clothes' 
+  | 'create_outfit' 
+  | 'talk_to_kloe' 
+  | 'create_post'
+  | 'schedule_outfit' 
+  | 'explore_like';
 
 export interface TourStep {
   id: TourStepId;
@@ -13,16 +21,39 @@ export interface TourStep {
   tipTitle?: string;
   tips?: string[];
   badge: string;
+  weight: number;
 }
 
 export const TOUR_STEPS: TourStep[] = [
   {
+    id: 'style_preferences',
+    title: 'Estilo y preferencias seleccionadas',
+    shortTitle: 'Tus estilos',
+    subtitle: 'Define tus gustos y vibes de moda',
+    description: 'Configura tu edad, silueta y catálogo de estilos favoritos para que el feed y Kloe se adapten a tu estilo personal.',
+    actionText: 'Personalizar estilos',
+    actionUrl: '/onboarding/preferences',
+    badge: 'Paso 1 de 6',
+    weight: 20
+  },
+  {
+    id: 'avatar',
+    title: 'Foto de perfil personalizada',
+    shortTitle: 'Foto de perfil',
+    subtitle: 'Tu identidad en la comunidad',
+    description: 'Sube una foto de perfil para que otros creadores y estilistas reconozcan tus looks y publicaciones.',
+    actionText: 'Añadir foto de perfil',
+    actionUrl: '/profile/edit',
+    badge: 'Paso 2 de 6',
+    weight: 15
+  },
+  {
     id: 'upload_clothes',
-    title: 'Sube tus primeras 2 prendas',
+    title: 'Añadir al menos 2 prendas al armario',
     shortTitle: 'Sube 2 prendas',
     subtitle: 'Digitaliza tu ropa en segundos',
-    description: 'Haz foto a tus prendas favoritas o sube capturas de webs (Zara, Nike, ASOS). El fondo se elimina automáticamente.',
-    actionText: 'Subir mi primera prenda',
+    description: 'Haz foto a tus prendas o sube capturas de webs (Zara, Nike, ASOS). El fondo se elimina automáticamente.',
+    actionText: 'Subir prendas al armario',
     actionUrl: '/closet?action=new-item',
     tipTitle: 'Trucos para fotos nivel catálogo',
     tips: [
@@ -30,59 +61,53 @@ export const TOUR_STEPS: TourStep[] = [
       'Fondo liso y plano: Extiende la prenda sobre la cama o cuélgala en una percha contra una pared neutra.',
       'O fotos de tiendas: Sube capturas de tus marcas favoritas y la app limpiará el fondo al instante.'
     ],
-    badge: 'Paso 1 de 6'
+    badge: 'Paso 3 de 6',
+    weight: 25
   },
   {
     id: 'create_outfit',
-    title: 'Monta tu primer look en el lienzo',
+    title: 'Crear un outfit en el lienzo',
     shortTitle: 'Crea tu look',
     subtitle: 'Tu canvas libre para armar fits',
     description: 'Combina tus prendas en el lienzo interactivo: muévelas, rótalas y ajusta proporciones como un estilista profesional.',
-    actionText: 'Montar mi primer look',
+    actionText: 'Montar look en el lienzo',
     actionUrl: '/create',
-    badge: 'Paso 2 de 6'
-  },
-  {
-    id: 'schedule_outfit',
-    title: 'Guarda tu outfit en el calendario',
-    shortTitle: 'Organiza tu semana',
-    subtitle: 'Despiértate sabiendo qué ponerte',
-    description: 'Asigna tu fit para hoy, mañana o el finde. Cero dramas pensando qué ponerte con prisas.',
-    actionText: 'Ver mi calendario de looks',
-    actionUrl: '/closet?tab=calendar',
-    badge: 'Paso 3 de 6'
+    badge: 'Paso 4 de 6',
+    weight: 15
   },
   {
     id: 'talk_to_kloe',
-    title: 'Pídele estilismo a Kloe',
+    title: 'Consultar asesoría y estilo con Kloe',
     shortTitle: 'Habla con Kloe',
     subtitle: 'Tu estilista personal 24/7',
-    description: 'Pregúntale cómo combinar cualquier prenda de tu armario para salir de fiesta, ir a clase o una cita.',
+    description: 'Pídele a Kloe que te arme un look con tu ropa o cómo combinar cualquier prenda de tu armario para salir de fiesta, diario o una ocasión especial.',
     actionText: 'Probar asesoría con Kloe',
     actionUrl: '/closet/kloe',
-    badge: 'Paso 4 de 6'
+    badge: 'Paso 5 de 6',
+    weight: 10
   },
   {
     id: 'create_post',
-    title: 'Sube tu outfit a la comunidad',
+    title: 'Publicar un look en la comunidad',
     shortTitle: 'Comparte tu look',
     subtitle: 'Inspira y conecta con tu vibe',
-    description: 'Publica tu look en el feed social, etiqueta tus prendas y recibe el feedback de la comunidad de moda.',
+    description: 'Publica tu outfit en el feed social, etiqueta tus prendas y recibe el feedback e inspiración de la comunidad.',
     actionText: 'Compartir publicación',
     actionUrl: '/create-post',
-    badge: 'Paso 5 de 6'
-  },
-  {
-    id: 'explore_like',
-    title: 'Caza inspiración y da Like',
-    shortTitle: 'Entrena tu algoritmo',
-    subtitle: 'Descubre tendencias afines a ti',
-    description: 'Busca marcas o prendas (como "Scuffers", "Zapatos" o "Sudaderas") y da like a los looks que más te molen.',
-    actionText: 'Explorar tendencias',
-    actionUrl: '/search',
-    badge: 'Paso 6 de 6'
+    badge: 'Paso 6 de 6',
+    weight: 15
   }
 ];
+
+export function calculateTourProgress(completedSteps: TourStepId[]): number {
+  let score = 0;
+  for (const step of TOUR_STEPS) {
+    if (completedSteps.includes(step.id)) {
+      score += step.weight;
+    }
+  }
+  return Math.min(100, score);
+}
 
 interface TourState {
   currentUserId: string | null;
@@ -91,6 +116,7 @@ interface TourState {
   currentStepIndex: number;
   completedSteps: TourStepId[];
   isDismissed: boolean;
+  isCompleted: boolean;
   showCelebration: boolean;
   celebrationTitle: string;
   celebrationMessage: string;
@@ -102,6 +128,7 @@ interface TourState {
   openTour: () => void;
   closeTour: () => void;
   dismissTour: () => void;
+  completeTour: (userId?: string | null) => void;
   nextStep: () => void;
   prevStep: () => void;
   goToStep: (index: number) => void;
@@ -121,20 +148,29 @@ const loadUserState = (userId: string | null) => {
       hasStartedTour: false,
       currentStepIndex: 0,
       completedSteps: [] as TourStepId[],
-      isDismissed: false
+      isDismissed: false,
+      isCompleted: false
     };
   }
+
+  const isCompletedKey = `klozet_tour_completed_${userId}`;
+  const isCompletedFlag = localStorage.getItem(isCompletedKey) === 'true';
 
   try {
     const raw = localStorage.getItem(getStorageKey(userId));
     if (raw) {
       const parsed = JSON.parse(raw);
+      const isDismissed = Boolean(parsed.isDismissed || isCompletedFlag);
+      const isCompleted = Boolean(parsed.isCompleted || isCompletedFlag);
+      const loadedCompleted = Array.isArray(parsed.completedSteps) ? parsed.completedSteps : [];
+
       return {
-        isOpen: Boolean(parsed.isOpen),
-        hasStartedTour: Boolean(parsed.hasStartedTour),
+        isOpen: Boolean(parsed.isOpen && !isDismissed && !isCompleted),
+        hasStartedTour: Boolean(parsed.hasStartedTour && !isDismissed && !isCompleted),
         currentStepIndex: typeof parsed.currentStepIndex === 'number' ? parsed.currentStepIndex : 0,
-        completedSteps: Array.isArray(parsed.completedSteps) ? parsed.completedSteps : [],
-        isDismissed: typeof parsed.isDismissed === 'boolean' ? parsed.isDismissed : false
+        completedSteps: isCompleted ? TOUR_STEPS.map(s => s.id) : loadedCompleted,
+        isDismissed,
+        isCompleted
       };
     }
   } catch (e) {
@@ -145,15 +181,26 @@ const loadUserState = (userId: string | null) => {
     isOpen: false,
     hasStartedTour: false,
     currentStepIndex: 0,
-    completedSteps: [] as TourStepId[],
-    isDismissed: false
+    completedSteps: isCompletedFlag ? TOUR_STEPS.map(s => s.id) : [],
+    isDismissed: isCompletedFlag,
+    isCompleted: isCompletedFlag
   };
 };
 
-const persistUserState = (userId: string | null, state: { isOpen: boolean; hasStartedTour: boolean; currentStepIndex: number; completedSteps: TourStepId[]; isDismissed: boolean }) => {
+const persistUserState = (userId: string | null, state: { 
+  isOpen: boolean; 
+  hasStartedTour: boolean; 
+  currentStepIndex: number; 
+  completedSteps: TourStepId[]; 
+  isDismissed: boolean;
+  isCompleted?: boolean;
+}) => {
   if (typeof window === 'undefined' || !userId) return;
   try {
     localStorage.setItem(getStorageKey(userId), JSON.stringify(state));
+    if (state.isCompleted) {
+      localStorage.setItem(`klozet_tour_completed_${userId}`, 'true');
+    }
   } catch (e) {
     console.warn('Could not persist tour state:', e);
   }
@@ -166,6 +213,7 @@ export const useTourStore = create<TourState>((set, get) => ({
   currentStepIndex: 0,
   completedSteps: [],
   isDismissed: false,
+  isCompleted: false,
   showCelebration: false,
   celebrationTitle: '¡Bien hecho!',
   celebrationMessage: 'Has completado una micro-acción de estilo.',
@@ -183,17 +231,23 @@ export const useTourStore = create<TourState>((set, get) => ({
       hasStartedTour: userState.hasStartedTour,
       currentStepIndex: userState.currentStepIndex,
       completedSteps: userState.completedSteps,
-      isDismissed: userState.isDismissed
+      isDismissed: userState.isDismissed,
+      isCompleted: userState.isCompleted
     });
   },
 
   startNewUserTour: (userId: string) => {
+    if (typeof window !== 'undefined' && localStorage.getItem(`klozet_tour_completed_${userId}`) === 'true') {
+      // Completed account: NEVER re-activate tutorial
+      return;
+    }
     const newState = {
       isOpen: true,
       hasStartedTour: true,
       currentStepIndex: 0,
       completedSteps: [],
-      isDismissed: false
+      isDismissed: false,
+      isCompleted: false
     };
     set({
       currentUserId: userId,
@@ -203,14 +257,23 @@ export const useTourStore = create<TourState>((set, get) => ({
   },
 
   openTour: () => {
-    set({ isOpen: true, hasStartedTour: true, isDismissed: false });
+    const { currentStepIndex, completedSteps, isCompleted } = get();
+    // Auto-focus first incomplete step if possible
+    let targetIndex = currentStepIndex;
+    const firstPending = TOUR_STEPS.findIndex(s => !completedSteps.includes(s.id));
+    if (firstPending !== -1 && !completedSteps.includes(TOUR_STEPS[currentStepIndex]?.id)) {
+      targetIndex = firstPending;
+    }
+
+    set({ isOpen: true, hasStartedTour: true, currentStepIndex: targetIndex });
     const current = get();
     persistUserState(current.currentUserId, {
       isOpen: true,
       hasStartedTour: true,
-      currentStepIndex: current.currentStepIndex,
+      currentStepIndex: targetIndex,
       completedSteps: current.completedSteps,
-      isDismissed: false
+      isDismissed: false,
+      isCompleted
     });
   },
 
@@ -222,7 +285,8 @@ export const useTourStore = create<TourState>((set, get) => ({
       hasStartedTour: current.hasStartedTour,
       currentStepIndex: current.currentStepIndex,
       completedSteps: current.completedSteps,
-      isDismissed: current.isDismissed
+      isDismissed: current.isDismissed,
+      isCompleted: current.isCompleted
     });
   },
 
@@ -234,8 +298,30 @@ export const useTourStore = create<TourState>((set, get) => ({
       hasStartedTour: false,
       currentStepIndex: current.currentStepIndex,
       completedSteps: current.completedSteps,
-      isDismissed: true
+      isDismissed: true,
+      isCompleted: current.isCompleted
     });
+  },
+
+  completeTour: (userId?: string | null) => {
+    const uid = userId || get().currentUserId;
+    if (typeof window !== 'undefined' && uid) {
+      localStorage.setItem(`klozet_tour_completed_${uid}`, 'true');
+    }
+    const allSteps = TOUR_STEPS.map(s => s.id);
+    const completedState = {
+      isOpen: false,
+      hasStartedTour: false,
+      currentStepIndex: 0,
+      completedSteps: allSteps,
+      isDismissed: true,
+      isCompleted: true,
+      showCelebration: false
+    };
+    set(completedState);
+    if (uid) {
+      persistUserState(uid, completedState);
+    }
   },
 
   nextStep: () => {
@@ -248,7 +334,8 @@ export const useTourStore = create<TourState>((set, get) => ({
       hasStartedTour: current.hasStartedTour,
       currentStepIndex: nextIdx,
       completedSteps: current.completedSteps,
-      isDismissed: current.isDismissed
+      isDismissed: current.isDismissed,
+      isCompleted: current.isCompleted
     });
   },
 
@@ -262,25 +349,27 @@ export const useTourStore = create<TourState>((set, get) => ({
       hasStartedTour: current.hasStartedTour,
       currentStepIndex: prevIdx,
       completedSteps: current.completedSteps,
-      isDismissed: current.isDismissed
+      isDismissed: current.isDismissed,
+      isCompleted: current.isCompleted
     });
   },
 
   goToStep: (index: number) => {
     const clamped = Math.max(0, Math.min(TOUR_STEPS.length - 1, index));
-    set({ currentStepIndex: clamped, isOpen: true, hasStartedTour: true, isDismissed: false });
+    set({ currentStepIndex: clamped, isOpen: true });
     const current = get();
     persistUserState(current.currentUserId, {
       isOpen: true,
-      hasStartedTour: true,
+      hasStartedTour: current.hasStartedTour,
       currentStepIndex: clamped,
       completedSteps: current.completedSteps,
-      isDismissed: false
+      isDismissed: current.isDismissed,
+      isCompleted: current.isCompleted
     });
   },
 
   markStepComplete: (stepId: TourStepId, customMessage?: string, shouldCelebrate: boolean = true) => {
-    const { completedSteps, hasStartedTour, isDismissed, currentStepIndex, currentUserId } = get();
+    const { completedSteps, hasStartedTour, isDismissed, isCompleted, currentStepIndex, currentUserId } = get();
     const alreadyDone = completedSteps.includes(stepId);
     const nextCompleted = alreadyDone ? completedSteps : [...completedSteps, stepId];
     
@@ -291,7 +380,11 @@ export const useTourStore = create<TourState>((set, get) => ({
       ? 'Ya has completado esta acción con éxito.' 
       : '¡Genial! Tu armario y perfil han ganado nivel.');
 
-    const canCelebrate = shouldCelebrate && hasStartedTour && !isDismissed;
+    const canCelebrate = shouldCelebrate && hasStartedTour && !isDismissed && !isCompleted;
+
+    // Check if all steps reached
+    const progress = calculateTourProgress(nextCompleted);
+    const isNowAllDone = progress >= 100 || TOUR_STEPS.every(s => nextCompleted.includes(s.id));
 
     // Determine next step index (find first uncompleted step)
     let nextStepIdx = currentStepIndex;
@@ -302,34 +395,44 @@ export const useTourStore = create<TourState>((set, get) => ({
 
     const nextStepObj = TOUR_STEPS[nextStepIdx];
 
-    set({
+    const nextState = {
       completedSteps: nextCompleted,
       currentStepIndex: nextStepIdx,
+      isCompleted: isNowAllDone,
+      isDismissed: isNowAllDone ? true : isDismissed,
+      hasStartedTour: isNowAllDone ? false : hasStartedTour,
       showCelebration: canCelebrate,
       ...(canCelebrate ? { 
         celebrationTitle: title, 
         celebrationMessage: msg,
         celebrationNextUrl: nextStepObj?.actionUrl
       } : {})
-    });
+    };
+
+    set(nextState);
 
     persistUserState(currentUserId, {
-      isOpen: get().isOpen,
-      hasStartedTour: hasStartedTour,
+      isOpen: isNowAllDone ? false : get().isOpen,
+      hasStartedTour: isNowAllDone ? false : hasStartedTour,
       currentStepIndex: nextStepIdx,
       completedSteps: nextCompleted,
-      isDismissed: isDismissed
+      isDismissed: isNowAllDone ? true : isDismissed,
+      isCompleted: isNowAllDone
     });
   },
 
   resetTour: () => {
     const { currentUserId } = get();
+    if (typeof window !== 'undefined' && currentUserId) {
+      localStorage.removeItem(`klozet_tour_completed_${currentUserId}`);
+    }
     const newState = {
       isOpen: true,
       hasStartedTour: true,
       currentStepIndex: 0,
       completedSteps: [],
-      isDismissed: false
+      isDismissed: false,
+      isCompleted: false
     };
     set(newState);
     persistUserState(currentUserId, newState);
@@ -339,4 +442,3 @@ export const useTourStore = create<TourState>((set, get) => ({
     set({ showCelebration: false });
   }
 }));
-
