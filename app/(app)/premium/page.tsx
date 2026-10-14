@@ -140,11 +140,11 @@ export default function PremiumPage() {
                         }`}
                     >
                         <div className="absolute -top-2.5 right-3 bg-[var(--brand-pink)] text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
-                            Ahorra 37%
+                            Ahorra 30%
                         </div>
                         <div className="text-xs font-semibold text-[var(--foreground-secondary)] mb-1">Plan Anual</div>
-                        <div className="text-2xl font-extrabold text-[var(--foreground)]">29,99 €</div>
-                        <div className="text-[11px] text-[var(--foreground-tertiary)] mt-0.5">~2,49 €/mes facturado al año</div>
+                        <div className="text-2xl font-extrabold text-[var(--foreground)]">24,99 €</div>
+                        <div className="text-[11px] text-[var(--foreground-tertiary)] mt-0.5">~2,08 €/mes facturado al año</div>
                     </div>
 
                     {/* Monthly Plan */}
@@ -157,7 +157,7 @@ export default function PremiumPage() {
                         }`}
                     >
                         <div className="text-xs font-semibold text-[var(--foreground-secondary)] mb-1">Plan Mensual</div>
-                        <div className="text-2xl font-extrabold text-[var(--foreground)]">3,99 €</div>
+                        <div className="text-2xl font-extrabold text-[var(--foreground)]">2,99 €</div>
                         <div className="text-[11px] text-[var(--foreground-tertiary)] mt-0.5">Facturado mensualmente</div>
                     </div>
                 </motion.div>

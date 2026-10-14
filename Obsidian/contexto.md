@@ -1697,6 +1697,25 @@ En cada conversación, el backend alimenta a CloSy con:
 - **Validación de Compilación**:
   - Verificada la compilación con `npm run build` con código 0 y las 58 rutas optimizadas.
 
+### 129. Rediseño Ergonómico de Modales de Pago en Móvil (Apple HIG Bottom Sheet) y Resolución de ads.txt en AdSense (`components/KloeProModal.tsx`, `app/ads.txt/route.ts`, `middleware.ts`, `app/(app)/premium/page.tsx`) (Octubre 2026)
+- **1. Rediseño del Modal de Pago en Dispositivos Móviles (`components/KloeProModal.tsx`)**:
+  - **Formato Bottom Sheet Nativo**: En pantallas móviles, el modal se ancla a la parte inferior de la pantalla (`items-end sm:items-center p-0 sm:p-4`) con esquinas superiores curvadas (`rounded-t-[32px] sm:rounded-3xl`) y barra de agarre estilo iOS (`grabber handle bar`), emulando la experiencia de compra in-app nativa de Apple.
+  - **Márgenes Seguros (Safe Area Insets)**: Incorporado `pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]`, asegurando que los botones y textos no queden tapados por la barra de inicio de los iPhone.
+  - **Tarjetas Táctiles de Planes con Radio Checks**:
+    - Plan Anual: Badge destacado `-30% DTO`, precio claro `24,99 € /año` y cálculo `~2,08 € / mes`.
+    - Plan Mensual: `2,99 € /mes` y `Cancela cuando quieras`.
+    - Indicador de selección circular con check en rosa corporativo y micro-escala al toque (`active:scale-[0.98]`).
+  - **Lista Compacta de Ventajas**: Rediseñada en formato estilizado de una sola línea con checks rosas, evitando que el botón CTA quede desplazado fuera de la vista en teléfonos pequeños.
+  - **Navegación Fluida en Checkout Embebido**: Botón *"Elegir otro plan"* con zona táctil de 44px (`touch-target-44`) para regresar fácilmente a la selección sin cerrar el modal.
+- **2. Corrección del Archivo ads.txt para Google AdSense (`app/ads.txt/route.ts`, `middleware.ts`)**:
+  - **Diagnóstico**: En el panel de Google AdSense el estado del sitio figuraba como *"Preparando"* y el archivo `ads.txt` como *"No se encuentra"*.
+  - **Solución**: Creada ruta dedicada en el servidor `app/ads.txt/route.ts` que sirve el registro verificado `google.com, pub-4628313000953034, DIRECT, f08c47fec0942fa0` con cabeceras `text/plain; charset=utf-8` y caché CDN, y añadido a las exclusiones del `middleware.ts` para que los rastreadores de Google accedan de forma inmediata en 0ms.
+- **3. Sincronización de Precios en `/premium` (`app/(app)/premium/page.tsx`)**:
+  - Actualizados los precios en la página independiente de 29,99 € / 3,99 € a los precios oficiales reales de Stripe: **24,99 € / año** y **2,99 € / mes**.
+- **Validación**:
+  - Compilación verificada con `npm run build` con código 0 y 59/59 rutas optimizadas.
+
+
 
 
 
