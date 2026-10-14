@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Lock, Eye, EyeOff, User, AtSign, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, User, AtSign, CheckCircle, XCircle, Loader2, ArrowLeft } from 'lucide-react';
 import { Button, LogoExtended } from '@/components';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useSocial } from '@/lib/hooks/useSocial';
@@ -305,35 +305,72 @@ export default function AuthPage() {
                 <div className="absolute inset-0 bg-radial from-transparent via-black/5 dark:via-black/30 to-black/10 dark:to-black/80" />
             </div>
 
+            {/* Return to Landing Link */}
+            <Link
+                href="/"
+                className="fixed top-3 left-3 sm:top-6 sm:left-6 z-50 px-3 sm:px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold bg-white/80 dark:bg-[#121216]/80 backdrop-blur-md border border-gray-200/70 dark:border-white/10 text-gray-700 dark:text-gray-200 hover:text-[var(--brand-pink)] dark:hover:text-[var(--brand-pink)] transition-all shadow-xs flex items-center gap-1.5 active:scale-95"
+            >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Inicio</span>
+            </Link>
+
             {/* Glassmorphic Auth Card Container with Gradient Border */}
             <motion.div
-                initial={{ opacity: 0, y: 30, scale: 0.98 }}
+                initial={{ opacity: 0, y: 20, scale: 0.98 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                className="relative z-10 w-full max-w-[420px] p-[1px] rounded-[28px] sm:rounded-[36px] bg-gradient-to-b from-gray-200 via-gray-100 to-[var(--brand-pink)]/30 dark:from-white/20 dark:via-white/5 dark:to-[var(--brand-pink)]/25 shadow-2xl dark:shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)]"
+                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                className="relative z-10 w-full max-w-[390px] sm:max-w-[420px] p-[1px] rounded-[24px] sm:rounded-[36px] bg-gradient-to-b from-gray-200 via-gray-100 to-[var(--brand-pink)]/30 dark:from-white/20 dark:via-white/5 dark:to-[var(--brand-pink)]/25 shadow-2xl dark:shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] my-auto"
             >
-                <div className="w-full bg-white/95 dark:bg-[#0d0d12]/90 backdrop-blur-3xl rounded-[27px] sm:rounded-[35px] p-5 sm:p-8 md:p-9 border border-gray-100 dark:border-white/5 overflow-hidden">
-                    <div className="flex justify-center mb-4 sm:mb-6 relative">
-                        <div className="absolute inset-0 bg-[var(--brand-pink)]/15 dark:bg-[var(--brand-pink)]/20 rounded-full blur-2xl -z-10 scale-75" />
+                <div className="w-full bg-white/95 dark:bg-[#0d0d12]/90 backdrop-blur-3xl rounded-[23px] sm:rounded-[35px] p-4 sm:p-8 md:p-9 border border-gray-100 dark:border-white/5 overflow-hidden">
+                    <div className="flex justify-center mb-2.5 sm:mb-4 relative">
+                        <div className="absolute inset-0 bg-[var(--brand-pink)]/15 dark:bg-[var(--brand-pink)]/20 rounded-full blur-xl -z-10 scale-75" />
                         {/* Light Mode Logo (Black Logo on White Background) */}
                         <Image 
                             src="/klozet-logo.png" 
                             alt="Klozet Logo" 
-                            width={140} 
-                            height={140} 
-                            className="dark:hidden block w-28 sm:w-36 h-auto object-contain drop-shadow-md" 
+                            width={130} 
+                            height={130} 
+                            className="dark:hidden block w-24 sm:w-34 h-auto object-contain drop-shadow-md" 
                             priority
                         />
                         {/* Dark Mode Logo (White Logo on Dark Background) */}
                         <Image 
                             src="/klozet-logo-dark.png" 
                             alt="Klozet Logo Dark" 
-                            width={140} 
-                            height={140} 
-                            className="hidden dark:block w-28 sm:w-36 h-auto object-contain drop-shadow-xl" 
+                            width={130} 
+                            height={130} 
+                            className="hidden dark:block w-24 sm:w-34 h-auto object-contain drop-shadow-xl" 
                             priority
                         />
                     </div>
+
+                    {/* Segmented Switcher for Login / Signup */}
+                    {!isResetPassword && (
+                        <div className="flex p-1 rounded-xl sm:rounded-2xl bg-gray-100 dark:bg-[#16161c] border border-gray-200/60 dark:border-white/5 mb-3 sm:mb-4">
+                            <button
+                                type="button"
+                                onClick={() => setIsLogin(true)}
+                                className={`flex-1 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
+                                    isLogin
+                                        ? 'bg-white dark:bg-[#22222a] text-gray-900 dark:text-white shadow-xs'
+                                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                                }`}
+                            >
+                                Iniciar sesión
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setIsLogin(false)}
+                                className={`flex-1 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
+                                    !isLogin
+                                        ? 'bg-white dark:bg-[#22222a] text-gray-900 dark:text-white shadow-xs'
+                                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                                }`}
+                            >
+                                Registrarse
+                            </button>
+                        </div>
+                    )}
 
                     <AnimatePresence mode="wait">
                         {isResetPassword ? (
@@ -369,31 +406,31 @@ export default function AuthPage() {
                                             Introduce tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.
                                         </p>
                                         <div className="relative group">
-                                            <Mail className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-[var(--foreground-tertiary)] group-focus-within:text-[var(--foreground)] transition-colors" />
+                                            <Mail className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-5 sm:h-5 text-[var(--foreground-tertiary)] group-focus-within:text-[var(--foreground)] transition-colors" />
                                             <input
                                                 type="email"
                                                 value={resetEmail}
                                                 onChange={(e) => setResetEmail(e.target.value)}
                                                 placeholder="Correo electrónico"
                                                 required
-                                                className="w-full pl-10 sm:pl-12 pr-4 h-11 sm:h-12 text-sm rounded-xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:border-[var(--foreground-tertiary)] transition-all"
+                                                className="w-full pl-8.5 sm:pl-12 pr-4 h-10 sm:h-12 text-xs sm:text-sm rounded-xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:border-[var(--foreground-tertiary)] transition-all"
                                             />
                                         </div>
                                         
                                         <Button
                                             type="submit"
                                             disabled={loading}
-                                            className="w-full h-11 sm:h-12 text-base sm:text-lg font-semibold rounded-xl bg-[var(--brand-pink)] hover:bg-[var(--brand-pink-dark)] text-white shadow-lg shadow-[var(--brand-pink)]/20 disabled:opacity-60"
+                                            className="w-full h-10 sm:h-12 text-sm sm:text-base font-semibold rounded-xl bg-[var(--brand-pink)] hover:bg-[var(--brand-pink-dark)] text-white shadow-lg shadow-[var(--brand-pink)]/20 disabled:opacity-60"
                                             glow
                                         >
-                                            {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Enviar enlace'}
+                                            {loading ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Enviar enlace'}
                                         </Button>
 
-                                        <div className="mt-5 sm:mt-6 text-center pt-1 sm:pt-2">
+                                        <div className="mt-3 sm:mt-6 text-center pt-1">
                                             <button
                                                 type="button"
                                                 onClick={() => setIsResetPassword(false)}
-                                                className="text-xs sm:text-sm font-bold text-[var(--foreground)] hover:text-[var(--brand-pink)] transition-colors min-h-[44px] flex items-center justify-center mx-auto"
+                                                className="text-xs sm:text-sm font-bold text-[var(--foreground)] hover:text-[var(--brand-pink)] transition-colors min-h-[36px] flex items-center justify-center mx-auto"
                                             >
                                                 Volver atrás
                                             </button>
@@ -409,16 +446,16 @@ export default function AuthPage() {
                                 exit={{ opacity: 0, x: isLogin ? 20 : -20 }}
                                 transition={{ duration: 0.3 }}
                             >
-                                <h2 className="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white text-center mb-4 sm:mb-6 tracking-tight">
+                                <h2 className="text-base sm:text-2xl font-extrabold text-gray-900 dark:text-white text-center mb-2.5 sm:mb-5 tracking-tight">
                                     {isLogin ? 'Bienvenido de nuevo' : 'Únete a KLOZET'}
                                 </h2>
 
-                                <form onSubmit={handleEmailAuth} className="space-y-3 sm:space-y-3.5">
+                                <form onSubmit={handleEmailAuth} className="space-y-2 sm:space-y-3.5">
                                     {!isLogin && (
                                         <>
                                             {/* Nombre completo */}
                                             <div className="relative group">
-                                                <User className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400 dark:text-gray-500 group-focus-within:text-gray-900 dark:group-focus-within:text-white transition-colors" />
+                                                <User className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-5 sm:h-5 text-gray-400 dark:text-gray-500 group-focus-within:text-gray-900 dark:group-focus-within:text-white transition-colors" />
                                                 <input
                                                     type="text"
                                                     value={fullName}
@@ -427,13 +464,13 @@ export default function AuthPage() {
                                                     aria-label="Nombre completo"
                                                     autoComplete="name"
                                                     required
-                                                    className="w-full pl-10 sm:pl-12 pr-4 h-11 sm:h-12 text-sm rounded-xl bg-gray-50 dark:bg-[#16161c] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-pink)] focus:border-gray-400 dark:focus:border-white/30 transition-all"
+                                                    className="w-full pl-8.5 sm:pl-12 pr-3.5 h-10 sm:h-12 text-xs sm:text-sm rounded-xl bg-gray-50 dark:bg-[#16161c] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-pink)] focus:border-gray-400 dark:focus:border-white/30 transition-all"
                                                 />
                                             </div>
 
                                             {/* Nombre de usuario */}
                                             <div className="relative group">
-                                                <AtSign className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400 dark:text-gray-500 group-focus-within:text-gray-900 dark:group-focus-within:text-white transition-colors" />
+                                                <AtSign className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-5 sm:h-5 text-gray-400 dark:text-gray-500 group-focus-within:text-gray-900 dark:group-focus-within:text-white transition-colors" />
                                                 <input
                                                     type="text"
                                                     value={username}
@@ -443,12 +480,12 @@ export default function AuthPage() {
                                                     autoComplete="username"
                                                     required
                                                     minLength={3}
-                                                    className="w-full pl-10 sm:pl-12 pr-10 h-11 sm:h-12 text-sm rounded-xl bg-gray-50 dark:bg-[#16161c] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-pink)] focus:border-gray-400 dark:focus:border-white/30 transition-all"
+                                                    className="w-full pl-8.5 sm:pl-12 pr-9 h-10 sm:h-12 text-xs sm:text-sm rounded-xl bg-gray-50 dark:bg-[#16161c] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-pink)] focus:border-gray-400 dark:focus:border-white/30 transition-all"
                                                 />
-                                                <div className="absolute right-3.5 sm:right-4 top-1/2 -translate-y-1/2">
-                                                    {isCheckingUsername && <Loader2 className="w-4 h-4 animate-spin text-gray-400" />}
-                                                    {!isCheckingUsername && isUsernameAvailable === true && <CheckCircle className="w-4 h-4 text-green-500" />}
-                                                    {!isCheckingUsername && isUsernameAvailable === false && <XCircle className="w-4 h-4 text-red-500" />}
+                                                <div className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2">
+                                                    {isCheckingUsername && <Loader2 className="w-3.5 h-3.5 animate-spin text-gray-400" />}
+                                                    {!isCheckingUsername && isUsernameAvailable === true && <CheckCircle className="w-3.5 h-3.5 text-green-500" />}
+                                                    {!isCheckingUsername && isUsernameAvailable === false && <XCircle className="w-3.5 h-3.5 text-red-500" />}
                                                 </div>
                                             </div>
                                         </>
@@ -457,8 +494,8 @@ export default function AuthPage() {
                                     {/* Email / usuario */}
                                     <div className="relative group">
                                         {isLogin
-                                            ? <User className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400 dark:text-gray-500 group-focus-within:text-gray-900 dark:group-focus-within:text-white transition-colors" />
-                                            : <Mail className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400 dark:text-gray-500 group-focus-within:text-gray-900 dark:group-focus-within:text-white transition-colors" />
+                                            ? <User className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-5 sm:h-5 text-gray-400 dark:text-gray-500 group-focus-within:text-gray-900 dark:group-focus-within:text-white transition-colors" />
+                                            : <Mail className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-5 sm:h-5 text-gray-400 dark:text-gray-500 group-focus-within:text-gray-900 dark:group-focus-within:text-white transition-colors" />
                                         }
                                         <input
                                             type={isLogin ? 'text' : 'email'}
@@ -468,20 +505,20 @@ export default function AuthPage() {
                                             aria-label={isLogin ? 'Email o nombre de usuario' : 'Correo electrónico'}
                                             autoComplete={isLogin ? 'username' : 'email'}
                                             required
-                                            className="w-full pl-10 sm:pl-12 pr-10 h-11 sm:h-12 text-sm rounded-xl bg-gray-50 dark:bg-[#16161c] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-pink)] focus:border-gray-400 dark:focus:border-white/30 transition-all"
+                                            className="w-full pl-8.5 sm:pl-12 pr-9 h-10 sm:h-12 text-xs sm:text-sm rounded-xl bg-gray-50 dark:bg-[#16161c] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-pink)] focus:border-gray-400 dark:focus:border-white/30 transition-all"
                                         />
                                         {!isLogin && (
-                                            <div className="absolute right-3.5 sm:right-4 top-1/2 -translate-y-1/2">
-                                                {isCheckingEmail && <Loader2 className="w-4 h-4 animate-spin text-gray-400" />}
-                                                {!isCheckingEmail && isEmailAvailable === true && <CheckCircle className="w-4 h-4 text-green-500" />}
-                                                {!isCheckingEmail && isEmailAvailable === false && <XCircle className="w-4 h-4 text-red-500" />}
+                                            <div className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2">
+                                                {isCheckingEmail && <Loader2 className="w-3.5 h-3.5 animate-spin text-gray-400" />}
+                                                {!isCheckingEmail && isEmailAvailable === true && <CheckCircle className="w-3.5 h-3.5 text-green-500" />}
+                                                {!isCheckingEmail && isEmailAvailable === false && <XCircle className="w-3.5 h-3.5 text-red-500" />}
                                             </div>
                                         )}
                                     </div>
 
                                     {/* Contraseña */}
                                     <div className="relative group">
-                                        <Lock className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400 dark:text-gray-500 group-focus-within:text-gray-900 dark:group-focus-within:text-white transition-colors" />
+                                        <Lock className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-5 sm:h-5 text-gray-400 dark:text-gray-500 group-focus-within:text-gray-900 dark:group-focus-within:text-white transition-colors" />
                                         <input
                                             type={showPassword ? 'text' : 'password'}
                                             value={password}
@@ -490,15 +527,15 @@ export default function AuthPage() {
                                             aria-label="Contraseña"
                                             autoComplete={isLogin ? 'current-password' : 'new-password'}
                                             required
-                                            className="w-full pl-10 sm:pl-12 pr-11 h-11 sm:h-12 text-sm rounded-xl bg-gray-50 dark:bg-[#16161c] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-pink)] focus:border-gray-400 dark:focus:border-white/30 transition-all"
+                                            className="w-full pl-8.5 sm:pl-12 pr-9 h-10 sm:h-12 text-xs sm:text-sm rounded-xl bg-gray-50 dark:bg-[#16161c] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-pink)] focus:border-gray-400 dark:focus:border-white/30 transition-all"
                                         />
                                         <button
                                             type="button"
                                             onClick={() => setShowPassword(!showPassword)}
                                             aria-label={showPassword ? 'Ocultar contraseña' : 'Ver contraseña'}
-                                            className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors p-1.5 rounded-lg focus-visible:ring-2 focus-visible:ring-[var(--brand-pink)]"
+                                            className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors p-1.5 rounded-lg focus-visible:ring-2 focus-visible:ring-[var(--brand-pink)]"
                                         >
-                                            {showPassword ? <EyeOff className="w-4 h-4 sm:w-5 sm:h-5" /> : <Eye className="w-4 h-4 sm:w-5 sm:h-5" />}
+                                            {showPassword ? <EyeOff className="w-3.5 h-3.5 sm:w-5 sm:h-5" /> : <Eye className="w-3.5 h-3.5 sm:w-5 sm:h-5" />}
                                         </button>
                                     </div>
 
@@ -507,7 +544,7 @@ export default function AuthPage() {
                                             <button
                                                 type="button"
                                                 onClick={() => setIsResetPassword(true)}
-                                                className="text-xs font-semibold text-gray-500 dark:text-gray-400 hover:text-[var(--brand-pink)] transition-colors focus-visible:ring-2 focus-visible:ring-[var(--brand-pink)] rounded py-1"
+                                                className="text-[11px] sm:text-xs font-semibold text-gray-500 dark:text-gray-400 hover:text-[var(--brand-pink)] transition-colors focus-visible:ring-2 focus-visible:ring-[var(--brand-pink)] rounded py-0.5"
                                             >
                                                 ¿Olvidaste tu contraseña?
                                             </button>
@@ -517,28 +554,28 @@ export default function AuthPage() {
                                     <Button
                                         type="submit"
                                         disabled={loading}
-                                        className="w-full h-11 sm:h-12 text-base sm:text-lg font-semibold rounded-xl bg-[var(--brand-pink)] hover:bg-[var(--brand-pink-dark)] text-white shadow-lg shadow-[var(--brand-pink)]/20 disabled:opacity-60 transition-transform active:scale-[0.99]"
+                                        className="w-full h-10 sm:h-12 text-sm sm:text-base font-semibold rounded-xl bg-[var(--brand-pink)] hover:bg-[var(--brand-pink-dark)] text-white shadow-lg shadow-[var(--brand-pink)]/20 disabled:opacity-60 transition-transform active:scale-[0.99]"
                                         glow
                                     >
-                                        {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : (isLogin ? 'Entrar' : 'Registrarse')}
+                                        {loading ? <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin mx-auto" /> : (isLogin ? 'Entrar' : 'Registrarse')}
                                     </Button>
                                 </form>
 
-                                <div className="mt-4 sm:mt-5 flex items-center justify-between">
+                                <div className="mt-3 sm:mt-5 flex items-center justify-between">
                                     <span className="w-1/5 border-b border-gray-200 dark:border-white/10"></span>
-                                    <span className="text-[11px] sm:text-xs text-center text-gray-500 dark:text-gray-400 uppercase tracking-wider font-medium">o continuar con</span>
+                                    <span className="text-[10px] sm:text-xs text-center text-gray-500 dark:text-gray-400 uppercase tracking-wider font-medium">o continuar con</span>
                                     <span className="w-1/5 border-b border-gray-200 dark:border-white/10"></span>
                                 </div>
 
-                                <div className="mt-3.5 sm:mt-4 flex flex-col sm:flex-row gap-2.5 sm:gap-3">
+                                <div className="mt-2.5 sm:mt-4 flex flex-col sm:flex-row gap-2 sm:gap-3">
                                     <button
                                         type="button"
                                         onClick={handleGoogleLogin}
                                         disabled={loading}
                                         aria-label="Continuar con Google"
-                                        className="w-full flex items-center justify-center gap-2.5 sm:gap-3 h-11 sm:h-12 rounded-xl bg-gray-50 hover:bg-gray-100 dark:bg-[#16161c] dark:hover:bg-[#1f1f26] text-gray-800 dark:text-gray-100 text-sm sm:text-base font-semibold transition-colors disabled:opacity-60 border border-gray-200 dark:border-white/10 shadow-sm focus-visible:ring-2 focus-visible:ring-[var(--brand-pink)]"
+                                        className="w-full flex items-center justify-center gap-2 sm:gap-3 h-10 sm:h-12 rounded-xl bg-gray-50 hover:bg-gray-100 dark:bg-[#16161c] dark:hover:bg-[#1f1f26] text-gray-800 dark:text-gray-100 text-xs sm:text-base font-semibold transition-colors disabled:opacity-60 border border-gray-200 dark:border-white/10 shadow-sm focus-visible:ring-2 focus-visible:ring-[var(--brand-pink)]"
                                     >
-                                        <svg viewBox="0 0 24 24" className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 sm:w-5 sm:h-5 shrink-0" aria-hidden="true">
                                             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
                                             <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
                                             <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
@@ -548,18 +585,18 @@ export default function AuthPage() {
                                     </button>
                                 </div>
 
-                                <div className="mt-4 sm:mt-6 text-center pt-1">
-                                    <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                                <div className="mt-3 sm:mt-6 text-center pt-0.5">
+                                    <p className="text-[11px] sm:text-sm text-gray-600 dark:text-gray-400">
                                         {isLogin ? '¿No tienes cuenta? ' : '¿Ya tienes cuenta? '}
                                         <button
                                             type="button"
                                             onClick={() => setIsLogin(!isLogin)}
-                                            className="font-bold text-gray-900 dark:text-white hover:text-[var(--brand-pink)] transition-colors ml-1 focus-visible:ring-2 focus-visible:ring-[var(--brand-pink)] rounded py-1"
+                                            className="font-bold text-gray-900 dark:text-white hover:text-[var(--brand-pink)] transition-colors ml-1 focus-visible:ring-2 focus-visible:ring-[var(--brand-pink)] rounded py-0.5"
                                         >
                                             {isLogin ? 'Regístrate' : 'Inicia Sesión'}
                                         </button>
                                     </p>
-                                    <p className="text-[10px] sm:text-[11px] text-gray-500 dark:text-gray-400 mt-2.5 sm:mt-4 max-w-xs mx-auto leading-relaxed">
+                                    <p className="text-[9px] sm:text-[11px] text-gray-500 dark:text-gray-400 mt-2 sm:mt-4 max-w-xs mx-auto leading-relaxed">
                                         Al continuar, aceptas nuestros <br className="sm:hidden" />
                                         <Link href="/terms" className="underline hover:text-gray-800 dark:hover:text-gray-200 transition-colors">Términos</Link>, <Link href="/privacy" className="underline hover:text-gray-800 dark:hover:text-gray-200 transition-colors">Privacidad</Link> y <Link href="/cookies" className="underline hover:text-gray-800 dark:hover:text-gray-200 transition-colors">Cookies</Link>.
                                     </p>

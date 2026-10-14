@@ -1777,6 +1777,30 @@ En cada conversación, el backend alimenta a CloSy con:
   2. Preservar íntegro todo el código, modelos de datos de Supabase, tipos TypeScript y rutas Next.js.
   3. Evitar volcar archivos completos innecesariamente; utilizar modificaciones quirúrgicas.
 
+---
+
+## 132. Auditoría Integral de Estilo, Landing Page Responsiva y Refactor de Login (2026-10-14)
+
+### Diagnóstico Inicial y Problemas Resueltos:
+1. **Página de Landing (`app/(public)/page.tsx`):**
+   - **Rotura en Móvil:** La altura forzada en `h-[100dvh] overflow-hidden` junto a padding excesivo en cada keyframe provocaba que en pantallas móviles estándar (Safari iOS, Chrome Android con barras de navegación activas de 520px-580px) los titulares gigantes, los clusters de prendas y los botones de acción quedaran desbordados por debajo del pliegue de la pantalla sin posibilidad de scroll ni acceso a los botones primarios ni al pie legal.
+   - **Navegación:** Se había eliminado la botonera flotante vertical lateral por solicitud expresa del usuario ("quitalo"). En su lugar, se implementó un indicador de progreso superior minimalista de 5 segmentos horizontales (`h-1 sm:h-1.5 rounded-full`) en el header, y un botón sutil flotante en la parte inferior para saltar al siguiente fotograma.
+   - **Scroll Seguro y Contención:** Cada uno de los 5 fotogramas (`Frame 0` a `Frame 4`) se reestructuró con `overflow-y-auto overflow-x-hidden no-scrollbar` y centrado elástico con `my-auto`. Los clusters de imágenes de prendas recortadas (Scuffers, Golden Goose, Zara, Vichy, Kloe) se escalaron proporcionalmente en móvil (`max-w-[280px]` y alturas controladas de 160-180px), garantizando que todo el contenido quepa sin recortar botones.
+   - **Fotograma 4 y Footer:** El pie legal integrado y las tarjetas de preview se compactaron para convivir armoniosamente con los botones de llamada a la acción ("Entrar a Klozet gratis").
+
+2. **Página de Autenticación / Login (`app/(public)/auth/page.tsx`):**
+   - **Tamaño Excesivo en Móvil:** La tarjeta de autenticación ocupaba más del 100% de la altura en teléfonos debido a paddings elevados (`p-8 md:p-9`), alturas de input de 48px y márgenes verticales sobredimensionados.
+   - **Solución Ergonómica:**
+     - Botón de regreso a la landing (`Inicio` con flecha) en la esquina superior izquierda con backdrop blur.
+     - Switcher segmentado ultra-fino `[ Iniciar sesión | Registrarse ]` con microinteracción táctil.
+     - Reducción quirúrgica de paddings a `p-4 sm:p-8` e inputs a `h-10 sm:h-12` con iconos de 14px en móvil.
+     - Tipografía y espaciado vertical compactado para eliminar la necesidad de scroll vertical en el formulario de inicio de sesión y registro.
+
+3. **Verificación de Estilo y Compilación:**
+   - Auditoría de contraste, legibilidad y estándares anti-slop aplicada con éxito.
+   - Compilación completa de producción (`npm run build`) validada con 59 rutas estáticas y dinámicas compiladas en 0 errores.
+
+
 
 
 
