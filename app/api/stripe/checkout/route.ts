@@ -71,7 +71,43 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Create Stripe Checkout Session (Supports Apple Pay, Google Pay, Card, Link)
+    const isEmbedded = body.embedded === true;
+
+    if (isEmbedded) {
+      // In-Modal Embedded Checkout (Supports 1-click Apple Pay, Google Pay, Link & Card directly inside modal)
+      const session = await stripe.checkout.sessions.create({
+        mode: 'subscription',
+        ui_mode: 'embedded_page',
+        customer: customerId || undefined,
+        customer_email: customerId ? undefined : user.email,
+        client_reference_id: user.id,
+        line_items: [
+          {
+            price: priceId,
+            quantity: 1
+          }
+        ],
+        metadata: {
+          supabase_user_id: user.id,
+          plan
+        },
+        subscription_data: {
+          metadata: {
+            supabase_user_id: user.id,
+            plan
+          }
+        },
+        allow_promotion_codes: true,
+        return_url: `${origin}/closet/kloe?session_id={CHECKOUT_SESSION_ID}&subscribed=success`
+      });
+
+      return NextResponse.json({ 
+        clientSecret: session.client_secret,
+        sessionId: session.id 
+      });
+    }
+
+    // Fallback: Hosted Checkout Session (external redirect)
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       customer: customerId || undefined,

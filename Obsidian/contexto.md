@@ -1678,6 +1678,26 @@ En cada conversación, el backend alimenta a CloSy con:
 - **Validación de Compilación**:
   - Compilación verificada con `npm run build` con código de salida 0 y las 58 rutas optimizadas.
 
+### 128. Pasarela de Pago In-Modal Directa con Apple Pay y Google Pay (Stripe Embedded Checkout) (`components/KloeProModal.tsx`, `app/api/stripe/checkout/route.ts`, `lib/stripe/stripeClientPromise.ts`) (Octubre 2026)
+- **Diagnóstico de la Experiencia Previa**:
+  - El modal de suscripción a Klozet Pro redirigía externamente a la página web completa de Stripe (`checkout.stripe.com`), sacando al usuario de la aplicación e interrumpiendo el flujo nativo.
+- **Integración de Pago Embebido 1-Click (In-Modal Checkout)**:
+  - Instaladas las librerías oficiales de cliente `@stripe/stripe-js` y `@stripe/react-stripe-js`.
+  - Creado el módulo singleton de cliente seguro `lib/stripe/stripeClientPromise.ts` con fallback de clave publicable live.
+  - Actualizado el endpoint `app/api/stripe/checkout/route.ts` con modo `ui_mode: 'embedded_page'`, devolviendo el `clientSecret` para sesiones de suscripción directa sin redirección externa.
+  - Rediseñado el flujo de `KloeProModal.tsx` con dos vistas fluidas:
+    1. *Vista de Planes*: Elección entre Plan Anual (24,99 €/año) y Mensual (2,99 €/mes) con desglose de ventajas.
+    2. *Vista de Pago Directo*: Renderiza `EmbeddedCheckoutProvider` y `EmbeddedCheckout` dentro del propio modal.
+- **Experiencia Nativa Apple Pay y Google Pay**:
+  - En dispositivos Apple (iPhone / iPad / Mac con Safari), el botón negro nativo de **Apple Pay** se ubica prioritario en la parte superior; al pulsarlo, el sistema operativo despliega la lámina nativa de Face ID / doble toque sin salir de la app.
+  - En dispositivos Android / Chrome, se despliega la hoja nativa de **Google Pay**.
+  - También incluye soporte para Link de Stripe y formulario de tarjeta de débito/crédito con cifrado SSL.
+- **Archivo de Asociación de Dominio Apple Pay**:
+  - Descargado e integrado el archivo oficial `apple-developer-merchantid-domain-association` en `public/.well-known/`, listo para la verificación del dominio `klozet.es` en el panel de Stripe.
+- **Validación de Compilación**:
+  - Verificada la compilación con `npm run build` con código 0 y las 58 rutas optimizadas.
+
+
 
 
 

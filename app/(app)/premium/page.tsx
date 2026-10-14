@@ -55,7 +55,7 @@ export default function PremiumPage() {
             const res = await fetch('/api/stripe/checkout', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ plan: selectedPlan })
+                body: JSON.stringify({ plan: selectedPlan, embedded: false })
             });
 
             const data = await res.json();
