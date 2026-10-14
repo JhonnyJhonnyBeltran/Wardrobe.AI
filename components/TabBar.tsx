@@ -1,46 +1,38 @@
 'use client';
 
 /**
- * TabBar - Mobile Navigation (Instagram-like Minimal)
- * Con sistema de notificaciones de mensajes modular
+ * TabBar - Floating Apple-Style Glass Mobile Navigation
+ * Flotante, completamente redondeada (rounded-full) con blur glass Apple
+ * e iconos delineados con contorno (sin rellenos planos).
  */
 
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, Search, Heart, UserRound, Mail } from 'lucide-react';
+import { Home, Search, Heart, UserRound } from 'lucide-react';
 import { useUiStore } from '@/store/uiStore';
 import { useMessageStore, selectTotalUnread, selectBadgeVisible } from '@/store/messageStore';
 import { useRealtimeStore, selectUnreadCount } from '@/store/realtimeStore';
 
-// Assuming /klozet-logo-dark.png is a suitable mask (solid shape)
 const LOGO_MASK_URL = '/klozet-logo-dark.png';
 
 interface TabItem {
   href: string;
-  labelKey: 'home' | 'closet' | 'create' | 'social' | 'profile' | 'search' | 'messages' | 'notifications' | 'kloe';
+  labelKey: 'home' | 'closet' | 'create' | 'social' | 'profile' | 'search' | 'messages' | 'notifications';
   icon: React.ReactNode;
   isLogoMark?: boolean;
 }
 
-// Icono personalizado para estado activo de perfil (Relleno sólido)
-const UserFilledIcon = ({ className }: { className?: string }) => (
-  <svg viewBox="0 0 24 24" fill="currentColor" className={className} xmlns="http://www.w3.org/2000/svg">
-    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-  </svg>
-);
-
 export default function TabBar() {
   const pathname = usePathname();
-  const { requestsCount, isTabBarHidden: storeTabBarHidden, isCreateMenuOpen } = useUiStore();
+  const { isTabBarHidden: storeTabBarHidden, isCreateMenuOpen } = useUiStore();
 
-  // Message notifications from new store
   const messageUnreadCount = useMessageStore(selectTotalUnread);
   const messageBadgeVisible = useMessageStore(selectBadgeVisible);
   const notificationUnreadCount = useRealtimeStore(selectUnreadCount);
 
-  // Hide TabBar on deep flows (Contexto §3): Chat, Editor de Outfit, Configuración
+  // Hide TabBar on deep flows: Messages, Outfit Canvas, Profile Settings
   const hideTabBar =
     storeTabBarHidden ||
     isCreateMenuOpen ||
@@ -53,28 +45,28 @@ export default function TabBar() {
     { href: '/feed', labelKey: 'home', icon: <Home /> },
     { href: '/search', labelKey: 'search', icon: <Search /> },
     { href: '/closet', labelKey: 'closet', icon: null, isLogoMark: true },
-    { href: '/notifications', labelKey: 'notifications', icon: <Heart /> }, // Heart icon for Notifications/Activity
+    { href: '/notifications', labelKey: 'notifications', icon: <Heart /> },
     { href: '/profile', labelKey: 'profile', icon: <UserRound /> },
   ];
 
-  // Helper to get badge count for each tab
   const getBadgeCount = (labelKey: string): number => {
-    if (labelKey === 'search') return 0; // Explicitly 0 for search
-    // Messages uses the new store with badge visibility logic
+    if (labelKey === 'search') return 0;
     if (labelKey === 'messages') return messageBadgeVisible ? messageUnreadCount : 0;
-    // Notifications logic (Heart Icon)
     if (labelKey === 'notifications') return notificationUnreadCount;
     return 0;
   };
 
-  // Check if we should show a badge at all
   const hasBadge = (labelKey: string): boolean => {
     return getBadgeCount(labelKey) > 0 && labelKey !== 'search';
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 md:hidden z-40 pb-safe bg-[var(--background)]/80 backdrop-blur-xl border-t border-[var(--border-color)]/50 will-change-transform isolate">
-      <div className="relative flex justify-between items-center h-[72px] px-2">
+    <nav 
+      aria-label="Navegación principal"
+      className="fixed bottom-3.5 sm:bottom-5 left-3.5 right-3.5 max-w-md mx-auto md:hidden z-40 will-change-transform isolate pointer-events-none"
+    >
+      {/* Floating Apple Glass Capsule */}
+      <div className="relative flex justify-between items-center h-[62px] px-2 sm:px-3 rounded-full bg-white/80 dark:bg-[#121216]/85 backdrop-blur-2xl border border-white/50 dark:border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_14px_40px_rgba(0,0,0,0.55)] pointer-events-auto">
         {tabs.map((tab) => {
           const isActive = pathname === tab.href || (tab.href !== '/feed' && pathname.startsWith(tab.href + '/'));
           const badgeCount = getBadgeCount(tab.labelKey);
@@ -85,13 +77,13 @@ export default function TabBar() {
               href={tab.href}
               className="flex-1 flex justify-center items-center h-full group touch-manipulation"
             >
-              <div className="relative flex items-center justify-center p-2">
+              <div className="relative flex flex-col items-center justify-center p-1.5">
                 {tab.isLogoMark ? (
-                  // Center Logo - Masked for dynamic painting
+                  // Center Klozet Brand Icon
                   <motion.div
-                    whileTap={{ scale: 0.9 }}
+                    whileTap={{ scale: 0.88 }}
                     className={`
-                      w-[32px] h-[32px] transition-colors duration-200
+                      w-[28px] h-[28px] transition-colors duration-200
                       ${isActive ? 'bg-[var(--brand-pink)]' : 'bg-[var(--foreground)]'}
                     `}
                     style={{
@@ -106,19 +98,17 @@ export default function TabBar() {
                     }}
                   />
                 ) : (
-                  // Standard Icons
+                  // Outlined Contour Icons (Preserving internal lines and geometry)
                   <motion.div
-                    whileTap={{ scale: 0.9 }}
-                    className={`relative transition-colors duration-200 ${isActive
-                      ? 'text-[var(--brand-pink)]'
-                      : 'text-[var(--foreground)]'
-                      }`}
+                    whileTap={{ scale: 0.88 }}
+                    className={`relative transition-colors duration-200 ${
+                      isActive ? 'text-[var(--brand-pink)]' : 'text-[var(--foreground)]'
+                    }`}
                   >
-                    {/* Icon */}
                     {React.cloneElement(tab.icon as React.ReactElement<any>, {
-                      strokeWidth: isActive ? 2.5 : 1.8,
-                      fill: (isActive && ['notifications', 'home'].includes(tab.labelKey)) ? 'currentColor' : 'none',
-                      className: `w-[28px] h-[28px]`
+                      strokeWidth: isActive ? 2.3 : 1.8,
+                      fill: 'none',
+                      className: 'w-[26px] h-[26px]'
                     })}
 
                     {/* Notification Badge */}
@@ -128,13 +118,22 @@ export default function TabBar() {
                           initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
                           exit={{ scale: 0 }}
-                          className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-[var(--brand-pink)] text-white text-[10px] font-bold rounded-full border-2 border-[var(--background)] shadow-sm pointer-events-none"
+                          className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 flex items-center justify-center bg-[var(--brand-pink)] text-white text-[9px] font-black rounded-full border-2 border-white dark:border-[#121216] shadow-xs pointer-events-none"
                         >
-                          {getBadgeCount(tab.labelKey) > 99 ? '+99' : getBadgeCount(tab.labelKey)}
+                          {badgeCount > 99 ? '+99' : badgeCount}
                         </motion.div>
                       )}
                     </AnimatePresence>
                   </motion.div>
+                )}
+
+                {/* Subtle Active Indicator Dot */}
+                {isActive && (
+                  <motion.span 
+                    layoutId="activeTabDot"
+                    className="absolute -bottom-1 w-1 h-1 rounded-full bg-[var(--brand-pink)]"
+                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                  />
                 )}
               </div>
             </Link>

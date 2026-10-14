@@ -364,23 +364,21 @@ export default function FeedPage() {
           <button
             onClick={toggleCreateMenu}
             aria-label="Crear publicación"
-            className="w-9 h-9 flex items-center justify-center rounded-full bg-[var(--card-bg)]/80 backdrop-blur-md border border-[var(--border-color)]/70 text-[var(--foreground)] hover:text-[var(--brand-pink)] transition-all shadow-xs active:scale-95 cursor-pointer"
+            className="touch-target-44 text-[var(--foreground)] hover:text-[var(--brand-pink)] transition-colors active:scale-90 flex items-center justify-center cursor-pointer"
           >
-            <Plus className="w-4.5 h-4.5" strokeWidth={2.5} />
+            <Plus className="w-6 h-6" strokeWidth={1.9} />
           </button>
 
-          <div className="absolute left-1/2 -translate-x-1/2 flex items-center select-none">
-            <h1 className="text-base font-extrabold tracking-tight text-[var(--foreground)]">
-              Para ti
-            </h1>
-          </div>
+          <h1 className="text-lg font-bold tracking-tight text-[var(--foreground)] absolute left-1/2 -translate-x-1/2 select-none">
+            Para ti
+          </h1>
 
           <div className="flex items-center gap-1">
             <Link href="/messages" aria-label="Mensajes directos">
-              <button className="w-9 h-9 flex items-center justify-center rounded-full bg-[var(--card-bg)]/80 backdrop-blur-md border border-[var(--border-color)]/70 text-[var(--foreground)] hover:text-[var(--brand-pink)] transition-all shadow-xs active:scale-95 relative cursor-pointer">
-                <Send className="w-4 h-4 -rotate-12 translate-x-0.5" />
+              <button className="touch-target-44 text-[var(--foreground)] hover:text-[var(--brand-pink)] transition-colors active:scale-90 relative flex items-center justify-center cursor-pointer">
+                <Send className="w-5.5 h-5.5" strokeWidth={1.9} />
                 {messageBadgeVisible && messageUnreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[17px] h-[17px] px-1 flex items-center justify-center bg-[var(--brand-pink)] text-white text-[9px] font-black rounded-full border-2 border-[var(--background)] shadow-xs">
+                  <span className="absolute top-1.5 right-1.5 min-w-[17px] h-[17px] px-1 flex items-center justify-center bg-[var(--brand-pink)] text-white text-[9px] font-black rounded-full border-2 border-[var(--background)] shadow-xs">
                     {messageUnreadCount > 99 ? '+99' : messageUnreadCount}
                   </span>
                 )}

@@ -1824,6 +1824,23 @@ En cada conversación, el backend alimenta a CloSy con:
    - **Erradicación de Clichés de IA:** Eliminado texto redundante tipo "estilista de moda personal con IA" en favor de la voz de marca "estilista de moda Kloe", respetando las reglas de `taste-skill`.
    - **Consistencia de Tarifas:** Sincronizado el texto del botón principal de checkout (`24,99 €/año` y `2,99 €/mes`), corrigiendo discrepancia con las tarjetas de precios.
 
+---
+
+## 134. Rediseño Flotante Apple Glass de Navbar Móvil y Depuración de Iconografía (2026-10-14)
+
+### Puntos Implementados:
+1. **Navbar Flotante Apple Glass (`components/TabBar.tsx`):**
+   - **Formato Cápsula Redondeada:** Sustituido el navbar fijado de ancho completo que tocaba el borde inferior por un dock flotante redondeado (`rounded-full`) centrado (`max-w-md mx-auto fixed bottom-3.5 sm:bottom-5 left-3.5 right-3.5`).
+   - **Estilo Glass Apple:** Acabado translúcido con `backdrop-blur-2xl bg-white/80 dark:bg-[#121216]/85`, bordes sutiles con luz perimetral y sombras de elevación espacial (`shadow-[0_8px_32px_rgba(0,0,0,0.12)]`).
+   - **Mantenimiento de Clearance:** Se preserva el espacio de scroll en `AppLayout.tsx` (`pb-28`) para evitar solapamiento con el dock.
+
+2. **Iconografía con Contorno Geométrico:**
+   - **Fin de Iconos Plana/Silueta Sólida:** Eliminado `fill: 'currentColor'` que convertía iconos como `Home` o `Heart` en manchas sólidas sin líneas internas legibles.
+   - **Líneas de Contorno Definidas:** Todos los iconos conservan su geometría interna abierta con `fill: 'none'`. En estado activo se resalta con el color de marca (`var(--brand-pink)`) y `strokeWidth={2.3}` (en reposo `1.8`), más un micro-indicador puntual animado.
+
+3. **Cabecera del Feed Móvil (`app/(app)/feed/page.tsx`):**
+   - **Eliminación de Cajas de Botón:** Suprimidas las cajas circulares con borde en los botones de cabecera (`+` crear publicación y avión de mensajes directos), restableciendo iconos limpios y minimalistas con área táctil óptima de 44px (`touch-target-44`).
+
 
 
 
