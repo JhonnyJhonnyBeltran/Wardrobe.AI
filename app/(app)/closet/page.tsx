@@ -632,30 +632,31 @@ export default function ClosetPage() {
       <header className="sticky top-0 z-40 bg-[var(--background)]/95 backdrop-blur-md pb-2 supports-[ios]:pt-safe-top">
         <div className="max-w-7xl mx-auto px-4 pt-4 space-y-4">
 
-          {/* Top Actions: Create & AI */}
-          <div className="bg-[var(--card-bg)] p-2 rounded-2xl flex items-center gap-2">
+          {/* Top Actions: Create Outfit & Add Garment */}
+          <div className="bg-[var(--card-bg)] p-1.5 sm:p-2 rounded-2xl flex items-center gap-2 border border-[var(--border-color)]/60 shadow-xs">
             <Link href="/create" className="flex-1">
               <motion.button 
-                whileHover={{ scale: 1.02 }}
+                whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.98 }}
-                className="w-full py-3 px-4 rounded-xl bg-[var(--foreground)] text-[var(--background)] font-bold flex items-center justify-center gap-2 shadow-md hover:opacity-90 transition-opacity"
+                className="w-full py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl bg-[var(--foreground)] text-[var(--background)] font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 shadow-sm hover:opacity-90 transition-opacity cursor-pointer"
               >
-                <Plus className="w-5 h-5" />
-                Crear Outfit
+                <Plus className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--brand-pink)]" strokeWidth={2.5} />
+                <span>Crear Outfit</span>
               </motion.button>
             </Link>
-            <Link href="/closet/kloe" className="flex-1">
-              <motion.button 
-                whileHover={{ scale: 1.02 }}
+            <button 
+              onClick={() => setShowAddModal(true)}
+              className="flex-1"
+            >
+              <motion.div 
+                whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.98 }}
-                className="w-full py-3 px-4 rounded-xl bg-[var(--background-secondary)] text-[var(--foreground)] font-semibold flex items-center justify-center gap-2 border border-[var(--border-color)] relative overflow-hidden group hover:border-[var(--brand-pink)]/50 transition-all shadow-xs cursor-pointer"
+                className="w-full py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl bg-[var(--background-secondary)] text-[var(--foreground)] font-semibold text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 border border-[var(--border-color)] hover:border-[var(--brand-pink)]/50 transition-all shadow-xs cursor-pointer"
               >
-                <div className="relative w-8 h-5 flex-shrink-0 flex items-center justify-center">
-                  <Image src="/kloe-logo-large.png" alt="Kloe" fill className="object-contain group-hover:scale-110 transition-transform" />
-                </div>
-                <span>Crear con IA</span>
-              </motion.button>
-            </Link>
+                <Shirt className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--brand-pink)]" />
+                <span>Subir Prenda</span>
+              </motion.div>
+            </button>
           </div>
 
           {/* Organic Prompt Banner to consult Kloe */}

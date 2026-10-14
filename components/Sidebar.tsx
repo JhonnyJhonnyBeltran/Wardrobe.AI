@@ -130,11 +130,12 @@ export default function Sidebar() {
                         />
                       ) : (
                         <>
-                          {/* Clone element to apply specific styling logic matching Mobile TabBar */}
-                          {React.cloneElement(item.icon as React.ReactElement<any>, {
-                            strokeWidth: isActive ? (['profile', 'home'].includes(item.labelKey) ? 3.5 : 3) : 2,
-                            className: `w-[30px] h-[30px] ${(item.icon as any).props.className || ''}`
-                          })}
+                      {/* Clone element to apply specific styling logic matching Mobile TabBar */}
+                      {React.cloneElement(item.icon as React.ReactElement<any>, {
+                        strokeWidth: isActive ? 2.5 : 1.8,
+                        fill: (isActive && ['notifications', 'home'].includes(item.labelKey)) ? 'currentColor' : 'none',
+                        className: `w-[28px] h-[28px] ${(item.icon as any).props.className || ''}`
+                      })}
 
                           {badgeCount > 0 && item.labelKey !== 'search' && (
                             <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1.5 flex items-center justify-center bg-[var(--brand-pink)] text-white text-[10px] font-bold rounded-full border-2 border-[var(--background)]">

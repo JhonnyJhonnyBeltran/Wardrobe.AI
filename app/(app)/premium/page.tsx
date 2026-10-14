@@ -119,7 +119,7 @@ export default function PremiumPage() {
                     </h1>
 
                     <p className="text-base text-[var(--foreground-secondary)] max-w-md mx-auto">
-                        Tu estilista de moda personal con IA para lucir impecable en cualquier ocasión
+                        Tu estilista de moda Kloe para lucir impecable en cualquier ocasión
                     </p>
                 </motion.div>
 
@@ -209,7 +209,7 @@ export default function PremiumPage() {
                             <>
                                 <Sparkles className="w-5 h-5" />
                                 <span>
-                                    Desbloquear Klozet Premium ({selectedPlan === 'yearly' ? '29,99 €/año' : '3,99 €/mes'})
+                                    Desbloquear Klozet Premium ({selectedPlan === 'yearly' ? '24,99 €/año' : '2,99 €/mes'})
                                 </span>
                             </>
                         )}

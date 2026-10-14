@@ -1800,6 +1800,31 @@ En cada conversación, el backend alimenta a CloSy con:
    - Auditoría de contraste, legibilidad y estándares anti-slop aplicada con éxito.
    - Compilación completa de producción (`npm run build`) validada con 59 rutas estáticas y dinámicas compiladas en 0 errores.
 
+---
+
+## 133. Auditoría y Refactor Global de Estilo, Consistencia Visual y Anti-Slop (2026-10-14)
+
+### Puntos Optimizados en la Aplicación:
+1. **Navegación Móvil y Escritorio (`components/TabBar.tsx` & `components/Sidebar.tsx`):**
+   - **Corrección de Estado Activo:** Corregido el bug de relleno donde la pestaña de notificaciones (`Heart`) no se rellenaba al estar activa debido a una comprobación incorrecta contra `messages`. Ahora se rellena de forma sólida con `var(--brand-pink)`.
+   - **Grosor de Trazo Refinado:** Reducido el strokeWidth de iconos de `3.5` a un elegante `2.5` en activo y `1.8` en reposo, erradicando el aspecto tosco y alineándolo con los estándares Apple HIG de alta costura.
+
+2. **Cabecera del Armario (`app/(app)/closet/page.tsx`):**
+   - **Eliminación de Redundancia:** Anteriormente existía un botón "Crear con IA" que conducía a `/closet/kloe` y justo debajo un banner grande que también conducía a `/closet/kloe`.
+   - **Arquitectura de Acciones Clarificada:**
+     - Botón 1: `+ Crear Outfit` (Lienzo interactivo `/create`).
+     - Botón 2: `+ Subir Prenda` (Apertura inmediata del modal para digitalizar ropa).
+     - Banner Central: Consulta de estilismo con Kloe ("¿Qué me pongo hoy?").
+
+3. **Feed Social y Patrocinios (`app/(app)/feed/page.tsx` & `components/Feed/SponsoredAdCard.tsx`):**
+   - **Cabecera Móvil:** Botones laterales de creación y mensajes estilizados en cápsulas circulares de cristal con backdrop blur y microinteracción háptica.
+   - **Tarjetas de Patrocinio:** En móvil antes aparecían fotos sin ningún identificador ni texto. Se implementó un badge translúcido inferior con la marca (`Scuffers`, `Zara`, `Nike`, etc.) y etiqueta `PATROCINADO` con icono de enlace externo, integrándose armónicamente como contenido editorial.
+
+4. **Página Premium y Modal de Kloe Pro (`app/(app)/premium/page.tsx` & `components/KloeProModal.tsx`):**
+   - **Erradicación de Clichés de IA:** Eliminado texto redundante tipo "estilista de moda personal con IA" en favor de la voz de marca "estilista de moda Kloe", respetando las reglas de `taste-skill`.
+   - **Consistencia de Tarifas:** Sincronizado el texto del botón principal de checkout (`24,99 €/año` y `2,99 €/mes`), corrigiendo discrepancia con las tarjetas de precios.
+
+
 
 
 

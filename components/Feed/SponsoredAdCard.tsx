@@ -253,21 +253,22 @@ export default function SponsoredAdCard({
             className="w-full h-full object-cover transform-gpu"
           />
 
-          {/* Desktop Hover Vignette Gradient Overlay */}
-          <div className="hidden md:block absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          {/* Bottom Gradient Vignette */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300" />
 
-          {/* Desktop Hover Only: Brand Name, small "anuncio" underneath, and External Link Icon */}
-          <div className="absolute bottom-3 left-3 right-3 hidden md:flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-            <div className="flex flex-col">
-              <span className="text-xs font-semibold text-white truncate max-w-[130px] drop-shadow-md">
+          {/* Brand Badge & Sponsored Indicator (Visible on both mobile and desktop) */}
+          <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between pointer-events-none z-10">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/65 backdrop-blur-md border border-white/15 text-white shadow-md">
+              <span className="text-[11px] font-bold tracking-tight truncate max-w-[95px] sm:max-w-[130px]">
                 {sponsor.brand}
               </span>
-              <span className="text-[10px] text-white/70 font-medium tracking-wide drop-shadow-sm -mt-0.5">
-                anuncio
+              <span className="w-1 h-1 rounded-full bg-white/40" />
+              <span className="text-[9px] text-white/75 font-semibold uppercase tracking-wider">
+                Patrocinado
               </span>
             </div>
-            <div className="w-7 h-7 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white border border-white/25 shadow-sm group-hover:scale-105 transition-transform">
-              <ExternalLink className="w-3.5 h-3.5" />
+            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-black/55 backdrop-blur-md flex items-center justify-center text-white border border-white/15 shadow-md group-hover:scale-105 transition-transform">
+              <ExternalLink className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
             </div>
           </div>
         </div>

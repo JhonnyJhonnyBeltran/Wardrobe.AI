@@ -166,7 +166,7 @@ export default function KloeProModal({ isOpen, onClose, redirectBackToCloset = f
                   Desbloquea <span className="text-[var(--brand-pink)]">Klozet Pro</span>
                 </h3>
                 <p className="text-xs text-[var(--foreground-secondary)] mt-1.5 max-w-xs leading-relaxed font-medium">
-                  Estilismo ilimitado con IA, análisis de tus fotos reales y recomendaciones de looks de pies a cabeza.
+                  Estilismo ilimitado con Kloe, análisis de tus fotos reales y recomendaciones de looks de pies a cabeza.
                 </p>
               </div>
 

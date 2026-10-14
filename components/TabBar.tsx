@@ -116,10 +116,9 @@ export default function TabBar() {
                   >
                     {/* Icon */}
                     {React.cloneElement(tab.icon as React.ReactElement<any>, {
-                      strokeWidth: isActive ? (['profile', 'home'].includes(tab.labelKey) ? 3.5 : 3) : 2, // Extra bold for profile/home
-                      // Only fill Heart (messages), keep others outlined
-                      fill: (isActive && tab.labelKey === 'messages') ? 'currentColor' : 'none',
-                      className: `w-[30px] h-[30px]`
+                      strokeWidth: isActive ? 2.5 : 1.8,
+                      fill: (isActive && ['notifications', 'home'].includes(tab.labelKey)) ? 'currentColor' : 'none',
+                      className: `w-[28px] h-[28px]`
                     })}
 
                     {/* Notification Badge */}
