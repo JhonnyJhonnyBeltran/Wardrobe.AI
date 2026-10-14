@@ -14,7 +14,7 @@ import { Card, Button } from '@/components';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTheme } from '@/store/themeStore';
-// import { useLanguage } from '@/store/languageStore';
+import { useLanguageStore, SUPPORTED_LANGUAGES } from '@/store/languageStore';
 import { useTranslation } from '@/lib/i18n';
 import type { Language } from '@/lib/i18n/translations';
 import {
@@ -40,7 +40,7 @@ export default function SettingsPage() {
     const { signOut } = useAuth();
     const router = useRouter();
     const { theme, setTheme } = useTheme();
-    // const { language, setLanguage } = useLanguage();
+    const { language, setLanguage } = useLanguageStore();
     const { t } = useTranslation();
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [deleteInput, setDeleteInput] = useState('');
@@ -343,23 +343,36 @@ export default function SettingsPage() {
 
                             {/* Idioma */}
                             <div>
-                                <div className="text-sm font-medium text-[var(--foreground)] mb-2 flex items-center gap-2">
-                                    <Globe className="w-4 h-4" />
+                                <div className="text-sm font-medium text-[var(--foreground)] mb-2.5 flex items-center gap-2">
+                                    <Globe className="w-4 h-4 text-[var(--brand-pink)]" />
                                     {t.profile.language}
                                 </div>
-                                <div className="flex gap-2">
-                                    <button
-                                        // Non-functional as requested
-                                        className={'flex-1 px-4 py-3 rounded-xl text-sm font-medium transition-all bg-[var(--brand-pink)] text-white'}
-                                    >
-                                        🇪🇸 Español
-                                    </button>
-                                    <button
-                                        // Non-functional as requested
-                                        className={'flex-1 px-4 py-3 rounded-xl text-sm font-medium transition-all bg-[var(--background-secondary)] text-[var(--foreground-secondary)] opacity-50 cursor-not-allowed'}
-                                    >
-                                        🇬🇧 English (Soon)
-                                    </button>
+                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                    {SUPPORTED_LANGUAGES.map((lang) => {
+                                        const isSelected = language === lang.code;
+                                        return (
+                                            <button
+                                                key={lang.code}
+                                                type="button"
+                                                onClick={() => {
+                                                    setLanguage(lang.code, user?.id);
+                                                    toast.success(`${lang.flag} ${lang.nativeName}`);
+                                                }}
+                                                className={`min-h-[44px] px-3 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center justify-between gap-2 border cursor-pointer active:scale-[0.98] ${isSelected
+                                                    ? 'bg-[var(--brand-pink)] text-white border-[var(--brand-pink)] shadow-md shadow-[var(--brand-pink)]/20'
+                                                    : 'bg-[var(--background-secondary)] text-[var(--foreground)] border-[var(--border-color)] hover:bg-[var(--background-tertiary)]'
+                                                    }`}
+                                            >
+                                                <span className="flex items-center gap-2">
+                                                    <span className="text-base" role="img" aria-label={lang.name}>{lang.flag}</span>
+                                                    <span>{lang.nativeName}</span>
+                                                </span>
+                                                {isSelected && (
+                                                    <span className="w-2 h-2 rounded-full bg-white shadow-xs shrink-0" />
+                                                )}
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             </div>
                         </div>

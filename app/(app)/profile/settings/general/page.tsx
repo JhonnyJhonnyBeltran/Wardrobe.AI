@@ -11,19 +11,16 @@ import { ArrowLeft, Moon, Sun, Globe, Smartphone, Trash2 } from 'lucide-react';
 import { Card, Button } from '@/components';
 import { useRouter } from 'next/navigation';
 import { useTheme } from '@/store/themeStore';
+import { useLanguageStore, SUPPORTED_LANGUAGES } from '@/store/languageStore';
+import { useUser } from '@/store/userStore';
+import { toast } from 'sonner';
 
 export default function GeneralSettingsPage() {
   const router = useRouter();
   const { theme, setTheme } = useTheme();
-  const [language, setLanguage] = useState('es');
+  const { user } = useUser();
+  const { language, setLanguage } = useLanguageStore();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-
-  const languages = [
-    { code: 'es', label: 'Español' },
-    { code: 'en', label: 'English' },
-    { code: 'fr', label: 'Français' },
-    { code: 'pt', label: 'Português' },
-  ];
 
   const handleDeleteAccount = () => {
     // TODO: Implementar eliminación de cuenta
@@ -122,19 +119,32 @@ export default function GeneralSettingsPage() {
                 </div>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              {languages.map((lang) => (
-                <button
-                  key={lang.code}
-                  onClick={() => setLanguage(lang.code)}
-                  className={`px-4 py-3 rounded-xl text-sm font-medium transition-all ${language === lang.code
-                    ? 'bg-[var(--brand-pink)] text-white'
-                    : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:bg-[var(--background-tertiary)]'
-                    }`}
-                >
-                  {lang.label}
-                </button>
-              ))}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+              {SUPPORTED_LANGUAGES.map((lang) => {
+                const isSelected = language === lang.code;
+                return (
+                  <button
+                    key={lang.code}
+                    type="button"
+                    onClick={() => {
+                      setLanguage(lang.code, user?.id);
+                      toast.success(`${lang.flag} ${lang.nativeName}`);
+                    }}
+                    className={`min-h-[44px] px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center justify-between gap-2 border cursor-pointer active:scale-[0.98] ${isSelected
+                      ? 'bg-[var(--brand-pink)] text-white border-[var(--brand-pink)] shadow-md shadow-[var(--brand-pink)]/20'
+                      : 'bg-[var(--background-secondary)] text-[var(--foreground)] border-[var(--border-color)] hover:bg-[var(--background-tertiary)]'
+                      }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <span className="text-base" role="img" aria-label={lang.name}>{lang.flag}</span>
+                      <span>{lang.nativeName}</span>
+                    </span>
+                    {isSelected && (
+                      <span className="w-2 h-2 rounded-full bg-white shadow-xs shrink-0" />
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </Card>
         </motion.div>

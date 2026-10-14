@@ -65,6 +65,26 @@ export async function GET(request: NextRequest) {
   // Check if profile is complete
   const { data: { user } } = await supabase.auth.getUser();
   if (user) {
+    // Detect and set Google OAuth language / locale if not manually customized
+    const existingLangCookie = cookieStore.get('klozet_language')?.value;
+    const googleLocale = user.user_metadata?.locale || user.user_metadata?.preferred_locale;
+    if (!existingLangCookie && googleLocale) {
+      const cleanLocale = String(googleLocale).toLowerCase().split(/[-_]/)[0];
+      const valid = ['es', 'en', 'fr', 'de', 'it', 'pt'];
+      const targetLang = valid.includes(cleanLocale) ? cleanLocale : 'es';
+      response.cookies.set('klozet_language', targetLang, {
+        path: '/',
+        maxAge: 60 * 60 * 24 * 365,
+        sameSite: 'lax',
+      });
+      // Non-blocking profile update
+      supabase
+        .from('profiles')
+        .update({ language: targetLang })
+        .eq('id', user.id)
+        .then(() => {});
+    }
+
     const { data: profile } = await supabase
       .from('profiles')
       .select('style_completed, username')

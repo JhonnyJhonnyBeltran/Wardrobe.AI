@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import { UserProfile, SubscriptionTier, UserPreferences } from '@/types';
 import { supabase } from '@/lib/supabase/client';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
+import { useLanguageStore } from './languageStore';
 
 interface UserState {
   user: UserProfile | null;
@@ -42,6 +43,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       try {
+        useLanguageStore.getState().initLanguage();
         const cachedUser = localStorage.getItem('wardrobe_user_profile');
         if (cachedUser) {
           const parsed = JSON.parse(cachedUser);
@@ -174,7 +176,19 @@ export function UserProvider({ children }: { children: ReactNode }) {
           ...(styleSource.notification_preferences || styleSource.notification_settings || {})
         },
         kloeTrialMessagesUsed: styleSource.kloe_trial_messages_used ?? styleSource.notification_preferences?.kloe_trial_messages_used ?? 0,
+        language: styleSource.language || undefined,
       }));
+
+      // Synchronize Language from profile or Google OAuth locale
+      if (typeof window !== 'undefined') {
+        const userLang = styleSource.language;
+        const googleLocale = authUser.user_metadata?.locale || authUser.user_metadata?.preferred_locale;
+        if (userLang) {
+          useLanguageStore.getState().setLanguage(userLang, authUser.id);
+        } else if (googleLocale) {
+          useLanguageStore.getState().detectAndSetFromGoogle(googleLocale, authUser.id);
+        }
+      }
 
       // Synchronize Cookie Consent to guarantee single-prompt experience
       if (typeof window !== 'undefined') {

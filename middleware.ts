@@ -47,6 +47,21 @@ export async function middleware(request: NextRequest) {
     console.warn('[Middleware] Auth check timed out or failed, proceeding anyway.');
   }
 
+  // Internationalization: Detect Accept-Language header if no cookie set yet
+  if (!request.cookies.has('klozet_language')) {
+    const acceptLang = request.headers.get('accept-language');
+    if (acceptLang) {
+      const preferred = acceptLang.split(',')[0].split(';')[0].trim().toLowerCase().split(/[-_]/)[0];
+      const valid = ['es', 'en', 'fr', 'de', 'it', 'pt'];
+      const initialLang = valid.includes(preferred) ? preferred : 'es';
+      response.cookies.set('klozet_language', initialLang, {
+        path: '/',
+        maxAge: 60 * 60 * 24 * 365,
+        sameSite: 'lax',
+      });
+    }
+  }
+
   return response;
 }
 

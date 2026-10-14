@@ -1731,6 +1731,52 @@ En cada conversación, el backend alimenta a CloSy con:
 - **Validación**:
   - Compilación de producción con `npm run build` completada con éxito (código 0, 59/59 rutas estáticas y dinámicas verificadas).
 
+### 131. Sistema Multi-Idioma (i18n), Detección por Cuenta de Google / Servidor y Selector en Ajustes (`store/languageStore.ts`, `lib/i18n/*`, `middleware.ts`, `app/(app)/profile/settings/*`, `sql/add_profile_language.sql`) (Octubre 2026)
+- **1. Arquitectura de Detección de Idioma**:
+  - **Cascada de Prioridad (Estándar de la Industria - Netflix, Spotify, Airbnb)**:
+    1. **Preferencia Manual en Ajustes** (`localStorage` + cookie `klozet_language` + `profiles.language` en Supabase): Prioridad absoluta (#1). Si el usuario selecciona un idioma manualmente, se respeta siempre.
+    2. **Cuenta de Google (OAuth OpenID Connect)**: Cuando el usuario entra con Google, Google devuelve en `user.user_metadata.locale` el idioma y país configurado en su cuenta de Google (ej. `es`, `en-US`, `fr`, `de`, `it`, `pt`). Si el usuario no tenía preferencia manual, se sincroniza automáticamente este idioma.
+    3. **Cabecera HTTP del Servidor (`Accept-Language`)**: `middleware.ts` intercepta la cabecera del navegador/dispositivo antes de hidratar y pre-establece la cookie `klozet_language`.
+    4. **Navegador del Cliente (`navigator.language`)**: Fallback automático en cliente.
+    5. **Idioma por Defecto**: Español (`es`).
+- **2. Soporte de 6 Idiomas Principales**:
+  - 🇪🇸 **Español (`es`)**
+  - 🇬🇧 **English (`en`)**
+  - 🇫🇷 **Français (`fr`)**
+  - 🇩🇪 **Deutsch (`de`)**
+  - 🇮🇹 **Italiano (`it`)**
+  - 🇵🇹 **Português (`pt`)**
+  - Diccionarios completos integrados en `lib/i18n/translations.ts` para navegación, armario, prendas, perfil, creación, social, mensajes, quiz de estilo, privacidad, premium y colores.
+- **3. Store Global Reactivo (`store/languageStore.ts` y `lib/i18n/useTranslation.ts`)**:
+  - Store Zustand con persistencia en `localStorage` y cookies para SSR.
+  - El hook `useTranslation()` se actualiza de forma reactiva instantánea al cambiar de idioma en cualquier pantalla sin necesidad de recargar la página.
+- **4. Selector Ergonómico en Ajustes (`app/(app)/profile/settings/page.tsx` y `/general/page.tsx`)**:
+  - Reemplazados los botones estáticos de prueba por una cuadrícula táctil interactiva (`grid grid-cols-2 sm:grid-cols-3`) conforme a Apple HIG (zona táctil ≥44px, bandera, nombre nativo, punto indicador blanco activo, feedback toast y micro-escala táctil).
+- **5. Base de Datos**:
+  - Creado script `sql/add_profile_language.sql` (`ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS language TEXT DEFAULT 'es'`).
+- **Validación**:
+  - Compilación de producción con `npm run build` completada con éxito (código 0, 59/59 rutas verificadas).
+
+---
+
+## Integración de Skills Obligatorias: Impeccable y Taste-Skill (Agregado 2026-10-14)
+- **Ubicación:** `.agents/skills/impeccable` y `.agents/skills/taste-skill`.
+- **Propósito:** Blindar la experiencia y estética de Klozet contra diseños genéricos, manteniendo el listón de una marca de moda digital de alta gama.
+- **Directrices de Aplicación:**
+  1. **Impeccable:** Estándar obligatorio para jerarquía visual, espaciado rítmico, microinteracciones, tipografía, accesibilidad, y manejo exhaustivo de estados (loading, empty states, error) siguiendo `craft-floor.md`.
+  2. **Taste-Skill:** Prohibición absoluta de "AI slop" o plantillas genéricas. Se exige una dirección de arte intencional con fotografías editoriales auténticas, tipografía con estilo, y armonía cromática premium.
+  3. **Verificación:** Antes de cerrar tareas de UI, validar los acabados mediante revisiones heuristicas de calidad y compilación limpia con `npm run build`.
+
+---
+
+## Modo de Eficiencia de Tokens: Caveman (Agregado 2026-10-14)
+- **Ubicación:** `.agents/skills/caveman`.
+- **Propósito:** Maximizar la velocidad de respuesta y minimizar consumo de tokens ("why many token when few do trick").
+- **Directrices de Aplicación:**
+  1. Respuestas directas sin cortesías ni rodeos ("Answer first").
+  2. Preservar íntegro todo el código, modelos de datos de Supabase, tipos TypeScript y rutas Next.js.
+  3. Evitar volcar archivos completos innecesariamente; utilizar modificaciones quirúrgicas.
+
 
 
 

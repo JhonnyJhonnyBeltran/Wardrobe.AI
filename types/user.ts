@@ -31,6 +31,7 @@ export interface UserProfile {
   visualStylePreferences?: string[]; // IDs of selected images from visual quiz
   styleCompleted?: boolean; // Has completed the style questionnaire
   isPrivate?: boolean; // Profile privacy
+  language?: 'es' | 'en' | 'fr' | 'de' | 'it' | 'pt'; // User UI language
   notificationSettings?: { push: boolean; email: boolean } | any;
   kloeTrialMessagesUsed?: number; // Count of free trial messages used with Kloe (out of 8)
 }
