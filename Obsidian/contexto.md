@@ -1715,6 +1715,22 @@ En cada conversación, el backend alimenta a CloSy con:
 - **Validación**:
   - Compilación verificada con `npm run build` con código 0 y 59/59 rutas optimizadas.
 
+### 130. Optimización Ergonómica y Compactación del Modal / Tarjeta de Login en Móvil (`app/(public)/auth/page.tsx`) (Octubre 2026)
+- **Diagnóstico**:
+  - En dispositivos móviles, la tarjeta de autenticación de `/auth` consumía un espacio vertical y horizontal desproporcionado (`p-8 md:p-10` consumía 64px de ancho útil, el logo se renderizaba a 160px con margen de 32px, y los espaciados de los formularios provocaban scroll innecesario y una sensación pesada en pantallas de smartphone).
+- **Mejoras Implementadas**:
+  - **Padding y Esquinas Ergonómicas**: Ajustado el padding interno de la tarjeta a `p-5 sm:p-8 md:p-9` y esquinas con radio adaptativo `rounded-[28px] sm:rounded-[36px]`, otorgando más amplitud útil al contenido y mejor proporción.
+  - **Escala de Logo Inteligente**: Redimensionado el logotipo de KLOZET en móvil a `w-28 sm:w-36 h-auto` y margen inferior reducido de `mb-8` a `mb-4 sm:mb-6`, reduciendo más de 90px de espacio vertical sobrante sin perder presencia de marca.
+  - **Tipografía y Jerarquía Compacta**:
+    - Título principal ajustado a `text-xl sm:text-2xl` con márgenes compactos `mb-4 sm:mb-6`.
+    - Spacing de formulario ajustado a `space-y-3 sm:space-y-3.5`.
+    - Altura de inputs y botones de acción principal y Google optimizada a `h-11 sm:h-12` (44px móvil Apple HIG / 48px desktop).
+    - Ajustado el tamaño del separador social a `mt-4 sm:mt-5` y enlaces legales a `text-[10px] sm:text-[11px]`.
+  - **Pantallas Secundarias (Reset Password & Email Confirmation)**:
+    - Aplicado el mismo diseño compacto a la pantalla de recuperación de contraseña y a la pantalla de espera de confirmación de email (`emailConfirmPending`), garantizando cohesión y visualización sin scroll en cualquier smartphone.
+- **Validación**:
+  - Compilación de producción con `npm run build` completada con éxito (código 0, 59/59 rutas estáticas y dinámicas verificadas).
+
 
 
 
