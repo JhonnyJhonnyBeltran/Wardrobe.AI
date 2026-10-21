@@ -2148,3 +2148,34 @@ Documento maestro archivado en: [`Obsidian/estrategia_blindaje.md`](./estrategia
 3. **Validación y Despliegue**:
    - Verificado con `agent-browser` en entorno local en `http://localhost:3005/`.
    - `npm run build` ejecutado exitosamente con 0 errores (70/70 rutas).
+
+
+---
+
+## 144. Landing Deck Interactivo (Erradicación de AI Slop & Animaciones Frame-by-Frame)
+
+1. **Erradicación Total de AI Slop**:
+   - Eliminados todos los badges genéricos ("Capítulo 01...", pastillas artificiales centradas).
+   - Fondos vacíos reemplazados por una composición viva y con profundidad: prendas flotantes dinámicas en tiempo real (sudadera Scuffers, zapatillas Onitsuka Tiger, camisa Zara, botas cowboy).
+
+2. **Slider Interactivo Real (GPU-Accelerated Slide Deck)**:
+   - Desplazamiento fluido sin cortes con `transform: translate3d(0, -${currentSlide * 100}%, 0)` y curva cinemática `cubic-bezier(0.16, 1, 0.3, 1)`.
+   - Navegación reactiva mediante rueda de ratón con debounce, gestos táctiles (swipe vertical), teclado (`ArrowDown`, `ArrowUp`) y barra de progreso flotante.
+   - En cada diapositiva, las prendas, etiquetas y diálogos de Kloe entran y flotan con animaciones continuas frame-by-frame.
+
+3. **Storytelling Juvenil y Auténtico**:
+   - Voz directa, callejera y cercana para jóvenes amantes de la moda y streetwear:
+     - *"Tu armario no es un almacén. Es tu archivo personal."*
+     - *"El drama de las 8:00 AM: Ropa invisible. Cajones a rebosar y siempre la misma camiseta."*
+     - *"Foto rápida. Fondo fuera. Tus prendas en HD sin recortes cutres."*
+     - *"Prueba el fit en la pantalla. Cero desorden."*
+     - *"Kloe sabe de moda. Y mira tu ropa real."*
+     - *"Valida el fit. Directo a Stories en formato 9:16."*
+
+4. **Pie de Página y Cumplimiento Legal Moderno (Slide 07)**:
+   - Pantalla final de alta conversión con acceso directo a registro e inicio de sesión.
+   - Pie de página minimalista moderno con las políticas de privacidad, términos de servicio, política de cookies y soporte directo (`soporte@klozet.es`).
+
+5. **Validación y Despliegue**:
+   - Verificado con `agent-browser` en `http://localhost:3007/` con capturas de pantalla de alta fidelidad.
+   - `npm run build` ejecutado exitosamente con 0 errores (70/70 rutas).
