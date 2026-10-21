@@ -127,6 +127,10 @@ export default function LandingPage() {
             />
           </Link>
           <nav className="hidden lg:flex items-center gap-3.5 text-xs font-semibold text-[var(--foreground-secondary)]">
+            <Link href="/trends" className="text-[var(--brand-pink)] hover:opacity-80 transition-opacity">
+              Tendencias & Editorial
+            </Link>
+            <span className="text-[var(--border-color)]">•</span>
             <Link href="/about" className="hover:text-[var(--brand-pink)] transition-colors">
               Sobre Nosotros
             </Link>
@@ -747,6 +751,37 @@ export default function LandingPage() {
                     </Link>
                   )}
                 </motion.div>
+
+                {/* Editorial Trends Showcase */}
+                <motion.div variants={itemFadeUp} className="w-full max-w-4xl mx-auto my-4 sm:my-6 p-4 sm:p-6 rounded-3xl bg-[var(--card-bg)]/80 backdrop-blur-md border border-[var(--border-color)] text-left shadow-sm z-20">
+                  <div className="flex items-center justify-between mb-3 pb-2 border-b border-[var(--border-color)]/60">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-[var(--brand-pink)]" />
+                      <h4 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-[var(--foreground)]">Revista Editorial & Guías de Estilo</h4>
+                    </div>
+                    <Link href="/trends" className="text-xs font-bold text-[var(--brand-pink)] hover:underline flex items-center gap-1">
+                      <span>Ver todas las guías</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </Link>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <Link href="/trends/armario-capsula-2026" className="p-3 rounded-2xl bg-[var(--background-secondary)]/70 hover:border-[var(--brand-pink)]/40 border border-transparent transition-all group flex flex-col justify-between">
+                      <p className="text-[10px] font-bold text-[var(--brand-pink)] uppercase tracking-wider">Armario Cápsula</p>
+                      <h5 className="text-xs font-bold leading-snug my-1 text-[var(--foreground)] group-hover:text-[var(--brand-pink)] transition-colors line-clamp-2">Elegancia Atemporal con 25 Prendas Clave</h5>
+                      <span className="text-[10px] text-[var(--foreground-tertiary)] mt-1">7 min de lectura</span>
+                    </Link>
+                    <Link href="/trends/quiet-luxury-streetwear" className="p-3 rounded-2xl bg-[var(--background-secondary)]/70 hover:border-[var(--brand-pink)]/40 border border-transparent transition-all group flex flex-col justify-between">
+                      <p className="text-[10px] font-bold text-[var(--brand-pink)] uppercase tracking-wider">Streetwear & Lujo</p>
+                      <h5 className="text-xs font-bold leading-snug my-1 text-[var(--foreground)] group-hover:text-[var(--brand-pink)] transition-colors line-clamp-2">La Fusión Urbana que Domina 2026</h5>
+                      <span className="text-[10px] text-[var(--foreground-tertiary)] mt-1">6 min de lectura</span>
+                    </Link>
+                    <Link href="/trends/teoria-del-color-moda" className="p-3 rounded-2xl bg-[var(--background-secondary)]/70 hover:border-[var(--brand-pink)]/40 border border-transparent transition-all group flex flex-col justify-between">
+                      <p className="text-[10px] font-bold text-[var(--brand-pink)] uppercase tracking-wider">Colorimetría</p>
+                      <h5 className="text-xs font-bold leading-snug my-1 text-[var(--foreground)] group-hover:text-[var(--brand-pink)] transition-colors line-clamp-2">Cómo Dominar Contrastes y Armonías</h5>
+                      <span className="text-[10px] text-[var(--foreground-tertiary)] mt-1">6 min de lectura</span>
+                    </Link>
+                  </div>
+                </motion.div>
               </div>
 
               {/* Integrated Legal Footer at the Very Bottom */}
@@ -759,6 +794,10 @@ export default function LandingPage() {
                 </p>
                 
                 <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-[9px] sm:text-[11px]">
+                  <Link href="/trends" className="text-[var(--brand-pink)] font-semibold hover:opacity-80 transition-opacity">
+                    Tendencias
+                  </Link>
+                  <span className="text-[var(--border-color)]">•</span>
                   <Link href="/about" className="hover:text-[var(--brand-pink)] transition-colors">
                     Sobre Nosotros
                   </Link>
@@ -796,6 +835,8 @@ export default function LandingPage() {
       {currentFrame < totalFrames - 1 && (
         <div className="fixed bottom-2.5 sm:bottom-4 left-0 right-0 z-40 px-3 sm:px-6 flex items-center justify-between pointer-events-none">
           <nav className="pointer-events-auto hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-white/70 dark:bg-[#121216]/70 backdrop-blur-md border border-gray-200/60 dark:border-white/10 text-[10px] font-medium text-[var(--foreground-tertiary)] shadow-xs">
+            <Link href="/trends" className="text-[var(--brand-pink)] font-semibold hover:opacity-80 transition-opacity">Tendencias</Link>
+            <span>•</span>
             <Link href="/about" className="hover:text-[var(--foreground)] transition-colors">Sobre Nosotros</Link>
             <span>•</span>
             <Link href="/contact" className="hover:text-[var(--foreground)] transition-colors">Contacto</Link>
@@ -822,7 +863,7 @@ export default function LandingPage() {
 
       {/* 5. CRAWLABLE SEMANTIC HTML CONTENT FOR SEARCH ENGINES & GOOGLE ADSENSE */}
       <section 
-        className="sr-only" 
+        className="w-full max-w-4xl mx-auto px-4 py-8 text-xs text-[var(--foreground-secondary)] border-t border-[var(--border-color)]/40 mt-8 hidden" 
         aria-label="Información detallada, características de moda y legal de Klozet"
       >
         <h2>Klozet — Red Social de Moda, Armario Virtual Inteligente y Estilismo con IA</h2>

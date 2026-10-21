@@ -1976,6 +1976,32 @@ Documento maestro archivado en: [`Obsidian/estrategia_blindaje.md`](./estrategia
 - **Pilar 4: Modelo de Negocio de Afiliados (Shop the Look)**:
   - Campos de enlace de afiliado (`affiliate_url`, `brand_domain`, `price`, `shop_url`) para monetización por comisiones comerciales.
 
+---
+
+## 139. Resolución de Políticas de Google AdSense y Hub Editorial de Moda (/trends)
+
+### Diagnóstico de Rechazo por Google AdSense:
+1. **"Anuncios servidos por Google en pantallas sin contenido del editor"**:
+   - Google prohíbe anuncios en pantallas de creación/edición (`/create`, `/create-post`), herramientas interactivas (`/closet`, `/closet/kloe`), alertas/mensajes (`/messages`, `/notifications`) y autenticación (`/auth`, `/login`, `/onboarding`).
+   - Al estar cargado globalmente en `layout.tsx`, los *Anuncios Automáticos* de AdSense se intentaban renderizar en dichas rutas prohibidas.
+2. **"Contenido de poco valor (Thin Content)"**:
+   - Klozet es una aplicación rica en cliente, pero AdSense exige volumen sustancial de contenido textual indexable, original y de calidad editorial que justifique monetización publicitaria.
+
+### Soluciones Implementadas:
+1. **Router Guard Condicional de AdSense (`components/AdSenseScript.tsx`)**:
+   - Filtra dinámicamente mediante `usePathname()`.
+   - Bloquea 100% de la ejecución del SDK de AdSense en rutas prohibidas o privadas.
+   - Solo inyecta el script oficial (`ca-pub-4628313000953034`) en rutas públicas con contenido editorial verificado (`/`, `/trends`, `/trends/*`, `/about`, `/contact`, `/terms`, `/privacy`, `/cookies`, `/feed`, `/post/*`).
+2. **Hub Editorial de Moda y Guías de Estilo (`/trends` y `/trends/[slug]`)**:
+   - `lib/trends/articlesData.ts`: 5 artículos exhaustivos (>1.100 palabras c/u) de moda atemporal, armario cápsula, teoría del color, calzado y moda circular.
+   - `app/(public)/trends/page.tsx`: Cuadrícula editorial de tendencias con diseño *quiet luxury*.
+   - `app/(public)/trends/[slug]/page.tsx`: Renderizado estático SSG con `generateStaticParams`, marcado semántico Schema.org `Article` (JSON-LD), migas de pan y ranuras de anuncios in-article rodeadas de texto sustancial.
+3. **Optimización de Landing Page e Indexación**:
+   - Sección de tendencias integrada en el fotograma 4 de la landing con enlaces editoriales directos.
+   - Eliminadas clases `sr-only` que podían ser interpretadas como cloaking por los algoritmos de calidad de Google.
+   - `app/sitemap.ts` y `app/robots.ts` actualizados para habilitar el rastreo de Googlebot y `Mediapartners-Google` en todas las páginas de `/trends`.
+
+
 
 
 

@@ -1,7 +1,15 @@
 import { MetadataRoute } from 'next';
+import { ARTICLES_DATA } from '@/lib/trends/articlesData';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://klozet.es';
+
+  const articlesRoutes: MetadataRoute.Sitemap = ARTICLES_DATA.map((article) => ({
+    url: `${baseUrl}/trends/${article.slug}`,
+    lastModified: new Date(article.publishedAt),
+    changeFrequency: 'weekly',
+    priority: 0.8,
+  }));
 
   const staticRoutes: MetadataRoute.Sitemap = [
     {
@@ -9,6 +17,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(),
       changeFrequency: 'daily',
       priority: 1.0,
+    },
+    {
+      url: `${baseUrl}/trends`,
+      lastModified: new Date(),
+      changeFrequency: 'daily',
+      priority: 0.9,
     },
     {
       url: `${baseUrl}/auth`,
@@ -78,5 +92,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   ];
 
-  return staticRoutes;
+  return [...staticRoutes, ...articlesRoutes];
 }
