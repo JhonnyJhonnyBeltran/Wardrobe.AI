@@ -1,5 +1,9 @@
 # Wardrobe.AI (Klozet) - Reglas de Proyecto y Diseño
 
+## ⚠️ Manual de Marca Irrebatible (prioridad máxima)
+
+Antes de cualquier UI: leer `Obsidian/brand_kit.md` y `.agents/rules/klozet-brand.md`. Concepto: **"un juguete dentro de un iPhone"** — logo bubble rosa con ojos + interfaz Apple blanca/negra translúcida. Rosa `#FF66C4` ≤10%, logo siempre PNG oficial, Inter 400–700, todo en pastilla/redondeado, vidrio `.apple-glass-bar`. Prohibido: degradados, morado, `font-black`, MAYÚSCULAS monumentales, serif, badges de IA, "quiet luxury". Las skills de abajo se aplican DENTRO de esta identidad, nunca para sustituirla.
+
 ## Estándares Obligatorios de Frontend y UI (Impeccable & Taste-Skill)
 
 En este proyecto (Klozet), todo desarrollo, componente o pantalla debe seguir estrictamente las directrices de las skills configuradas en `.agents/skills/`:

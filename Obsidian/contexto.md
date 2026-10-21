@@ -2078,3 +2078,12 @@ Documento maestro archivado en: [`Obsidian/estrategia_blindaje.md`](./estrategia
 
 
 
+
+---
+
+## 141. Manual de Marca Irrebatible (Brand Kit) — Fuente suprema de verdad visual
+
+- Documento: [brand_kit.md](./brand_kit.md). Regla de agente: `.agents/rules/klozet-brand.md`. Referenciado en `GEMINI.md` con prioridad máxima.
+- Extraído de la app real (`globals.css`, logos, componentes de `app/(app)`), no de la landing.
+- Concepto: **"un juguete dentro de un iPhone"**: marca bubble rosa con ojos y brillos blancos; interfaz Apple blanca/negra con vidrio translúcido.
+- Corrección: el rediseño de la sección 140 (estética "quiet luxury", zinc, serif cursiva, wordmark escrito con fuente) contradice este manual y debe rehacerse conforme a `brand_kit.md`.
