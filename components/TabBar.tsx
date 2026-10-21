@@ -2,20 +2,20 @@
 
 /**
  * TabBar - Floating Apple-Style Glass Mobile Navigation
- * Flotante, completamente redondeada (rounded-full) con blur glass Apple
- * e iconos delineados con contorno (sin rellenos planos).
+ * Interfaz nativa Apple iOS: cápsula flotante con vidrio translúcido (.apple-glass-bar),
+ * respuesta elástica al toque con rebote físico y el logo oficial de Klozet.
  */
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Home, Search, Heart, UserRound } from 'lucide-react';
 import { useUiStore } from '@/store/uiStore';
 import { useMessageStore, selectTotalUnread, selectBadgeVisible } from '@/store/messageStore';
 import { useRealtimeStore, selectUnreadCount } from '@/store/realtimeStore';
-
-const LOGO_MASK_URL = '/klozet-logo-dark.png';
+import { triggerHaptic } from '@/lib/haptic';
 
 interface TabItem {
   href: string;
@@ -63,10 +63,10 @@ export default function TabBar() {
   return (
     <nav 
       aria-label="Navegación principal"
-      className="fixed bottom-3.5 sm:bottom-5 left-3.5 right-3.5 max-w-md mx-auto md:hidden z-40 will-change-transform isolate pointer-events-none"
+      className="fixed bottom-3.5 sm:bottom-5 left-4 right-4 max-w-sm mx-auto md:hidden z-40 will-change-transform isolate pointer-events-none pb-[env(safe-area-inset-bottom)]"
     >
       {/* Floating Apple Glass Capsule */}
-      <div className="relative flex justify-between items-center h-[62px] px-2 sm:px-3 rounded-full bg-white/80 dark:bg-[#121216]/85 backdrop-blur-2xl border border-white/50 dark:border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_14px_40px_rgba(0,0,0,0.55)] pointer-events-auto">
+      <div className="relative flex justify-between items-center h-[58px] px-2 rounded-full bg-white/80 dark:bg-[#111113]/85 backdrop-blur-2xl border border-black/[0.06] dark:border-white/[0.08] shadow-[0_8px_30px_rgba(0,0,0,0.08)] dark:shadow-[0_12px_36px_rgba(0,0,0,0.45)] pointer-events-auto">
         {tabs.map((tab) => {
           const isActive = pathname === tab.href || (tab.href !== '/feed' && pathname.startsWith(tab.href + '/'));
           const badgeCount = getBadgeCount(tab.labelKey);
@@ -75,67 +75,81 @@ export default function TabBar() {
             <Link
               key={tab.href}
               href={tab.href}
+              onClick={() => {
+                try {
+                  triggerHaptic('light');
+                } catch {}
+              }}
               className="flex-1 flex justify-center items-center h-full group touch-manipulation"
             >
-              <div className="relative flex flex-col items-center justify-center p-1.5">
+              <motion.div 
+                whileTap={{ scale: 0.82 }}
+                transition={{ type: 'spring', stiffness: 500, damping: 22, mass: 0.8 }}
+                className="relative flex flex-col items-center justify-center p-1.5"
+              >
                 {tab.isLogoMark ? (
-                  // Center Klozet Brand Icon
-                  <motion.div
-                    whileTap={{ scale: 0.88 }}
-                    className={`
-                      w-[28px] h-[28px] transition-colors duration-200
-                      ${isActive ? 'bg-[var(--brand-pink)]' : 'bg-[var(--foreground)]'}
-                    `}
-                    style={{
-                      maskImage: `url(${LOGO_MASK_URL})`,
-                      WebkitMaskImage: `url(${LOGO_MASK_URL})`,
-                      maskSize: 'contain',
-                      WebkitMaskSize: 'contain',
-                      maskRepeat: 'no-repeat',
-                      WebkitMaskRepeat: 'no-repeat',
-                      maskPosition: 'center',
-                      WebkitMaskPosition: 'center',
-                    }}
-                  />
+                  // Center Klozet Official Mascot Icon
+                  <div className="relative w-[28px] h-[28px] flex items-center justify-center">
+                    <Image
+                      src="/klozet-logo.png"
+                      alt="Armario"
+                      width={28}
+                      height={28}
+                      priority
+                      className={`object-contain transition-transform duration-200 dark:hidden ${
+                        isActive ? 'scale-110 drop-shadow-[0_2px_8px_rgba(255,102,196,0.45)]' : 'opacity-70 hover:opacity-100'
+                      }`}
+                    />
+                    <Image
+                      src="/klozet-logo-dark.png"
+                      alt="Armario"
+                      width={28}
+                      height={28}
+                      priority
+                      className={`object-contain transition-transform duration-200 hidden dark:block ${
+                        isActive ? 'scale-110 drop-shadow-[0_2px_8px_rgba(255,102,196,0.45)]' : 'opacity-70 hover:opacity-100'
+                      }`}
+                    />
+                  </div>
                 ) : (
-                  // Outlined Contour Icons (Preserving internal lines and geometry)
-                  <motion.div
-                    whileTap={{ scale: 0.88 }}
+                  // Native Outlined Apple Contour Icons
+                  <div
                     className={`relative transition-colors duration-200 ${
-                      isActive ? 'text-[var(--brand-pink)]' : 'text-[var(--foreground)]'
+                      isActive ? 'text-[var(--brand-pink)]' : 'text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-zinc-100'
                     }`}
                   >
                     {React.cloneElement(tab.icon as React.ReactElement<any>, {
                       strokeWidth: isActive ? 2.3 : 1.8,
                       fill: 'none',
-                      className: 'w-[26px] h-[26px]'
+                      className: 'w-[24px] h-[24px]'
                     })}
 
-                    {/* Notification Badge */}
+                    {/* Notification Badge with Spring Pop */}
                     <AnimatePresence>
                       {hasBadge(tab.labelKey) && (
                         <motion.div
                           initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
+                          animate={{ scale: [0, 1.25, 1] }}
                           exit={{ scale: 0 }}
-                          className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 flex items-center justify-center bg-[var(--brand-pink)] text-white text-[9px] font-black rounded-full border-2 border-white dark:border-[#121216] shadow-xs pointer-events-none"
+                          transition={{ type: 'spring', stiffness: 550, damping: 20 }}
+                          className="absolute -top-1.5 -right-1.5 min-w-[16px] h-[16px] px-1 flex items-center justify-center bg-[var(--brand-pink)] text-white text-[9px] font-bold rounded-full border-2 border-white dark:border-[#111113] shadow-xs pointer-events-none"
                         >
                           {badgeCount > 99 ? '+99' : badgeCount}
                         </motion.div>
                       )}
                     </AnimatePresence>
-                  </motion.div>
+                  </div>
                 )}
 
                 {/* Subtle Active Indicator Dot */}
                 {isActive && (
                   <motion.span 
                     layoutId="activeTabDot"
-                    className="absolute -bottom-1 w-1 h-1 rounded-full bg-[var(--brand-pink)]"
-                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                    className="absolute -bottom-1.5 w-1.5 h-1.5 rounded-full bg-[var(--brand-pink)] shadow-[0_0_8px_rgba(255,102,196,0.6)]"
+                    transition={{ type: 'spring', stiffness: 500, damping: 28 }}
                   />
                 )}
-              </div>
+              </motion.div>
             </Link>
           );
         })}

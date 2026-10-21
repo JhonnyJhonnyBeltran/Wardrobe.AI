@@ -12,26 +12,16 @@ export default function PublicFooter() {
           
           {/* Brand Column */}
           <div className="md:col-span-2 space-y-4">
-            <Link href="/" className="inline-flex items-center gap-2.5">
-              <div className="relative w-8 h-8 shrink-0">
+            <Link href="/" className="inline-flex items-center gap-2 group">
+              <div className="relative h-8 w-28 shrink-0">
                 <Image 
-                  src="/klozet-logo.png" 
+                  src="/landing/klozet-nombre-grande.png" 
                   alt="Klozet" 
                   fill 
-                  sizes="32px"
-                  className="object-contain dark:hidden" 
-                />
-                <Image 
-                  src="/klozet-logo-dark.png" 
-                  alt="Klozet" 
-                  fill 
-                  sizes="32px"
-                  className="object-contain hidden dark:block" 
+                  sizes="112px"
+                  className="object-contain object-left" 
                 />
               </div>
-              <span className="text-xl font-bold tracking-[0.2em] uppercase text-zinc-950 dark:text-zinc-50 font-sans">
-                Klozet
-              </span>
             </Link>
             <p className="text-sm text-zinc-500 dark:text-zinc-400 max-w-sm leading-relaxed">
               La red social de moda y armario virtual. Digitaliza tus prendas reales, descubre combinaciones inteligentes y conecta con una comunidad que viste con intención.

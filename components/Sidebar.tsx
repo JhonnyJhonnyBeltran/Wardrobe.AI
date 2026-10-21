@@ -1,6 +1,7 @@
 // ... imports
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Home, Search, Send, UserRound, Crown, Heart } from 'lucide-react';
@@ -115,19 +116,29 @@ export default function Sidebar() {
                     <div className="relative flex items-center justify-center">
                       {item.isLogoMark ? (
                         <motion.div
-                          whileTap={{ scale: 0.9 }}
-                          className={`w-[27px] h-[27px] transition-colors duration-200 ${isActive ? 'bg-[var(--brand-pink)]' : 'bg-[var(--foreground)]'}`}
-                          style={{
-                            maskImage: `url(/klozet-logo-dark.png)`,
-                            WebkitMaskImage: `url(/klozet-logo-dark.png)`,
-                            maskSize: 'contain',
-                            WebkitMaskSize: 'contain',
-                            maskRepeat: 'no-repeat',
-                            WebkitMaskRepeat: 'no-repeat',
-                            maskPosition: 'center',
-                            WebkitMaskPosition: 'center',
-                          }}
-                        />
+                          whileTap={{ scale: 0.84 }}
+                          transition={{ type: 'spring', stiffness: 500, damping: 22 }}
+                          className="relative w-[28px] h-[28px] flex items-center justify-center"
+                        >
+                          <Image
+                            src="/klozet-logo.png"
+                            alt="Armario"
+                            width={28}
+                            height={28}
+                            className={`object-contain transition-transform duration-200 dark:hidden ${
+                              isActive ? 'scale-110 drop-shadow-[0_2px_8px_rgba(255,102,196,0.45)]' : 'opacity-70 hover:opacity-100'
+                            }`}
+                          />
+                          <Image
+                            src="/klozet-logo-dark.png"
+                            alt="Armario"
+                            width={28}
+                            height={28}
+                            className={`object-contain transition-transform duration-200 hidden dark:block ${
+                              isActive ? 'scale-110 drop-shadow-[0_2px_8px_rgba(255,102,196,0.45)]' : 'opacity-70 hover:opacity-100'
+                            }`}
+                          />
+                        </motion.div>
                       ) : (
                         <>
                       {/* Clone element to apply specific styling logic matching Mobile TabBar */}

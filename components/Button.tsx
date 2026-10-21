@@ -95,11 +95,13 @@ export default function Button({
 
   return (
     <motion.button
-      whileHover={!isDisabled ? { scale: 1.01 } : {}}
-      whileTap={!isDisabled ? { scale: 0.98 } : {}}
+      whileHover={!isDisabled ? { scale: 1.025 } : {}}
+      whileTap={!isDisabled ? { scale: 0.94 } : {}}
       transition={{
-        duration: 0.2,
-        ease: [0.16, 1, 0.3, 1],
+        type: 'spring',
+        stiffness: 500,
+        damping: 24,
+        mass: 0.8,
       }}
       className={`
         ${baseStyles}

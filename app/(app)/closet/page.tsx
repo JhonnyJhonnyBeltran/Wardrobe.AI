@@ -632,13 +632,14 @@ export default function ClosetPage() {
       <header className="sticky top-0 z-40 bg-[var(--background)]/95 backdrop-blur-md pb-2 supports-[ios]:pt-safe-top">
         <div className="max-w-7xl mx-auto px-4 pt-4 space-y-4">
 
-          {/* Top Actions: Create Outfit & Add Garment */}
-          <div className="bg-[var(--card-bg)] p-1.5 sm:p-2 rounded-2xl flex items-center gap-2 border border-[var(--border-color)]/60 shadow-xs">
+          {/* Top Actions: Create Outfit & Add Garment with Apple Spring Bounce */}
+          <div className="bg-[var(--card-bg)]/90 backdrop-blur-xl p-1.5 sm:p-2 rounded-2xl flex items-center gap-2 border border-black/[0.06] dark:border-white/[0.08] shadow-xs">
             <Link href="/create" className="flex-1">
               <motion.button 
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl bg-[var(--foreground)] text-[var(--background)] font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 shadow-sm hover:opacity-90 transition-opacity cursor-pointer"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.94 }}
+                transition={{ type: 'spring', stiffness: 500, damping: 24 }}
+                className="w-full py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl bg-[var(--foreground)] text-[var(--background)] font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 shadow-sm hover:opacity-95 transition-opacity cursor-pointer"
               >
                 <Plus className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--brand-pink)]" strokeWidth={2.5} />
                 <span>Crear Outfit</span>
@@ -649,9 +650,10 @@ export default function ClosetPage() {
               className="flex-1"
             >
               <motion.div 
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl bg-[var(--background-secondary)] text-[var(--foreground)] font-semibold text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 border border-[var(--border-color)] hover:border-[var(--brand-pink)]/50 transition-all shadow-xs cursor-pointer"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.94 }}
+                transition={{ type: 'spring', stiffness: 500, damping: 24 }}
+                className="w-full py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl bg-[var(--background-secondary)] text-[var(--foreground)] font-semibold text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 border border-[var(--border-color)] hover:border-[var(--brand-pink)]/40 transition-all shadow-xs cursor-pointer"
               >
                 <Shirt className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--brand-pink)]" />
                 <span>Subir Prenda</span>
@@ -659,12 +661,17 @@ export default function ClosetPage() {
             </button>
           </div>
 
-          {/* Organic Prompt Banner to consult Kloe */}
+          {/* Organic Prompt Banner to consult Kloe - Apple Card Style */}
           <Link href="/closet/kloe" className="block mb-2 cursor-pointer">
-            <div className="bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-pink-500/10 border border-[var(--brand-pink)]/30 rounded-2xl p-3.5 flex items-center justify-between hover:border-[var(--brand-pink)]/60 transition-all shadow-xs group">
+            <motion.div 
+              whileHover={{ scale: 1.015 }}
+              whileTap={{ scale: 0.96 }}
+              transition={{ type: 'spring', stiffness: 500, damping: 24 }}
+              className="bg-[var(--card-bg)]/90 backdrop-blur-xl border border-black/[0.06] dark:border-white/[0.08] hover:border-[var(--brand-pink)]/40 rounded-2xl p-3.5 flex items-center justify-between transition-all shadow-xs group"
+            >
               <div className="flex items-center gap-3">
                 <div className="relative w-12 h-8 flex-shrink-0 flex items-center justify-center">
-                  <Image src="/kloe-logo-large.png" alt="Kloe" fill className="object-contain group-hover:scale-110 transition-transform" />
+                  <Image src="/kloe-logo-large.png" alt="Kloe" fill className="object-contain group-hover:scale-105 transition-transform" />
                 </div>
                 <div>
                   <p className="text-xs font-bold text-[var(--foreground)] flex items-center gap-1">
@@ -675,10 +682,10 @@ export default function ClosetPage() {
                   </p>
                 </div>
               </div>
-              <span className="text-xs font-bold text-[var(--brand-pink)] flex items-center gap-1">
-                Consultar <Sparkles className="w-3 h-3" />
+              <span className="text-xs font-semibold text-[var(--brand-pink)] flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
+                Consultar &rarr;
               </span>
-            </div>
+            </motion.div>
           </Link>
 
           {/* Progress / Tutorial Bar (disappears permanently at 100%) */}

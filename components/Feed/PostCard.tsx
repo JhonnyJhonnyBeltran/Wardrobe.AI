@@ -189,7 +189,7 @@ export default function PostCard({
                             <span className="text-xs font-medium text-[var(--foreground-secondary)]">{post.author.name}</span>
                         </div>
                     )}
-                    <p className="text-[var(--foreground)] font-serif text-lg leading-relaxed line-clamp-4">
+                    <p className="text-[var(--foreground)] font-sans font-medium text-base leading-relaxed line-clamp-4">
                         {post.title || post.description}
                     </p>
                     {!hideLikeButton && (
@@ -249,7 +249,13 @@ export default function PostCard({
                                 </div>
                                 {!hideLikeButton && (
                                     <div className="flex items-center gap-1 text-white text-xs drop-shadow-md">
-                                        <Heart className={cn("w-4 h-4 transition-colors", isLikedState ? "fill-[var(--brand-pink)] text-[var(--brand-pink)]" : "text-white")} />
+                                        <motion.div
+                                            key={isLikedState ? 'liked' : 'unliked'}
+                                            animate={isLikedState ? { scale: [1, 1.38, 0.92, 1.05, 1] } : { scale: 1 }}
+                                            transition={{ type: 'spring', stiffness: 550, damping: 20 }}
+                                        >
+                                            <Heart className={cn("w-4 h-4 transition-colors", isLikedState ? "fill-[var(--brand-pink)] text-[var(--brand-pink)]" : "text-white")} />
+                                        </motion.div>
                                     </div>
                                 )}
                             </div>
@@ -266,13 +272,21 @@ export default function PostCard({
                                     transition={{ duration: 0.15 }}
                                     className="absolute top-3 right-3 hidden md:block z-[40]"
                                 >
-                                    <button
+                                    <motion.button
+                                        whileTap={{ scale: 0.85 }}
+                                        whileHover={{ scale: 1.08 }}
+                                        transition={{ type: 'spring', stiffness: 500, damping: 22 }}
                                         onClick={toggleQuickSave}
                                         aria-label={isSavedState ? "Eliminar publicación de guardados" : "Guardar publicación"}
-                                        className="touch-target-44 bg-[var(--card-bg)]/90 backdrop-blur-md border border-[var(--border-color)]/60 rounded-full hover:scale-105 active:scale-95 transition-all shadow-sm focus-visible:ring-2 focus-visible:ring-[var(--brand-pink)]"
+                                        className="touch-target-44 bg-[var(--card-bg)]/90 backdrop-blur-md border border-[var(--border-color)]/60 rounded-full shadow-sm focus-visible:ring-2 focus-visible:ring-[var(--brand-pink)] cursor-pointer"
                                     >
-                                        <Bookmark className={cn("w-4.5 h-4.5", isSavedState ? "fill-[var(--brand-pink)] text-[var(--brand-pink)]" : "text-[var(--foreground)]")} />
-                                    </button>
+                                        <motion.div
+                                            animate={isSavedState ? { scale: [1, 1.35, 0.92, 1] } : { scale: 1 }}
+                                            transition={{ type: 'spring', stiffness: 500, damping: 20 }}
+                                        >
+                                            <Bookmark className={cn("w-4.5 h-4.5", isSavedState ? "fill-[var(--brand-pink)] text-[var(--brand-pink)]" : "text-[var(--foreground)]")} />
+                                        </motion.div>
+                                    </motion.button>
                                 </motion.div>
                             )}
                         </AnimatePresence>

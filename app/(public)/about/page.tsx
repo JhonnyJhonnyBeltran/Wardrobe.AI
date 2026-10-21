@@ -41,7 +41,7 @@ export default function AboutPage() {
             <p className="text-xs font-semibold uppercase tracking-wider text-zinc-300">
               Manifiesto de Marca
             </p>
-            <p className="text-lg sm:text-2xl font-serif italic font-normal mt-1 leading-snug">
+            <p className="text-lg sm:text-2xl font-semibold text-white mt-1 leading-snug">
               &ldquo;El estilo verdadero no consiste en acumular prendas, sino en darles propósito y valor a través de combinaciones creativas.&rdquo;
             </p>
           </div>

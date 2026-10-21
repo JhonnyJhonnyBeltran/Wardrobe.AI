@@ -178,15 +178,23 @@ const OutfitCard = ({ outfit, isLocked = false, onClick, onEdit, onDelete, onSha
             {/* Right Overlay Actions - Always visible */}
             <div className="absolute top-3 right-3 flex flex-col items-center gap-2 z-20">
                 {onToggleFavorite && !isLocked && (
-                    <button
+                    <motion.button
+                        whileTap={{ scale: 0.8 }}
+                        whileHover={{ scale: 1.15 }}
+                        transition={{ type: 'spring', stiffness: 500, damping: 20 }}
                         onClick={(e) => {
                             e.stopPropagation();
                             onToggleFavorite(outfit, outfit.favorite ?? false);
                         }}
-                        className="p-1 focus:outline-none"
+                        className="p-1.5 focus:outline-none cursor-pointer"
                     >
-                        <Heart className={`w-5 h-5 transition-colors duration-300 ${outfit.favorite ? 'fill-[var(--brand-pink)] text-[var(--brand-pink)]' : 'fill-[#d1d5db] text-[#d1d5db] hover:fill-gray-400 hover:text-gray-400'}`} />
-                    </button>
+                        <motion.div
+                            animate={outfit.favorite ? { scale: [1, 1.35, 0.92, 1] } : { scale: 1 }}
+                            transition={{ type: 'spring', stiffness: 500, damping: 20 }}
+                        >
+                            <Heart className={`w-5 h-5 transition-colors duration-200 ${outfit.favorite ? 'fill-[var(--brand-pink)] text-[var(--brand-pink)]' : 'fill-none text-zinc-400 hover:text-zinc-600'}`} />
+                        </motion.div>
+                    </motion.button>
                 )}
                 {!outfit.is_public && (
                     <div className="p-1" title="Outfit privado">
