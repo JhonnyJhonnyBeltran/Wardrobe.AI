@@ -2087,3 +2087,29 @@ Documento maestro archivado en: [`Obsidian/estrategia_blindaje.md`](./estrategia
 - Extraído de la app real (`globals.css`, logos, componentes de `app/(app)`), no de la landing.
 - Concepto: **"un juguete dentro de un iPhone"**: marca bubble rosa con ojos y brillos blancos; interfaz Apple blanca/negra con vidrio translúcido.
 - Corrección: el rediseño de la sección 140 (estética "quiet luxury", zinc, serif cursiva, wordmark escrito con fuente) contradice este manual y debe rehacerse conforme a `brand_kit.md`.
+
+
+---
+
+## 142. Pulido de Navbar Móvil y Animaciones de Rebote Apple (Spring Physics)
+
+1. **Rebote y Físicas Apple (`app/globals.css`, `components/Button.tsx`)**:
+   - Actualizado `.apple-tap-feedback` con curva de rebote de retorno elástico `cubic-bezier(0.34, 1.56, 0.64, 1)`.
+   - Incorporado `@keyframes apple-bounce-pop` para likes (corazones) y guardados (marcadores).
+   - `Button.tsx` actualizado con físicas de muelle Framer Motion (`type: 'spring', stiffness: 500, damping: 24, mass: 0.8`), reduciendo a `scale: 0.94` al pulsar y rebotando al soltar con retroalimentación háptica.
+
+2. **Navbar Móvil Apple HIG (`components/TabBar.tsx`)**:
+   - Cápsula flotante translúcida `.apple-glass-bar` (`backdrop-blur-2xl`, borde hairline sutil, `pb-[env(safe-area-inset-bottom)]`).
+   - Sustituido el recorte ciego por máscara CSS del logo central por el renderizado directo de los PNGs oficiales (`/klozet-logo.png` en modo claro y `/klozet-logo-dark.png` en modo oscuro), preservando ojos, letras de burbuja y brillo.
+   - Puntos activos e indicadores animados con transición elástica (`layoutId="activeTabDot"`).
+   - Efecto rebote en cada tab al toque (`whileTap={{ scale: 0.82 }}`).
+
+3. **Reconstrucción de Landing y Header Público (`app/(public)/page.tsx`, `components/public/PublicHeader.tsx`, `PublicFooter.tsx`)**:
+   - Erradicado cualquier rastro de "Quiet Luxury", "Old Money" y fuentes serif.
+   - Restablecida la identidad genuina de Klozet: "Un juguete dentro de un iPhone" (logo bubble oficial `/landing/klozet-nombre-grande.png`, sub-marca Kloe con su personaje, lienzo interactivo con prendas reales: Scuffers, Zara, Onitsuka, botas).
+   - Botones de acción en pastilla rosa `#FF66C4` con rebote físico y respuesta háptica.
+   - Contenido denso y de alto valor para cumplimiento y AdSense (FAQ, guías editoriales, características detalladas).
+
+4. **Validación**:
+   - `npm run build` ejecutado exitosamente con 0 errores (70/70 rutas compiladas).
+   - Commit y push completados en rama `main` (`ab58526`).
