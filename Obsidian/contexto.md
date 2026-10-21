@@ -2291,3 +2291,15 @@ Documento maestro archivado en: [`Obsidian/estrategia_blindaje.md`](./estrategia
 4. **Validación**:
    - `npm run build` completado sin errores (70/70 rutas compiladas).
    - Verificado con `agent-browser` en resoluciones móvil (390x844) y desktop.
+
+
+---
+
+## 149. Eliminación de la Píldora de Navegación de la Landing (2026-10-21)
+
+1. **Landing Page (`app/(public)/page.tsx`)**:
+   - Eliminada completamente la cápsula/píldora con los indicadores de progreso (`<nav aria-label="Progreso de diapositivas">`).
+   - El header superior queda ultra-limpio: solo el logo a la izquierda y los botones de acceso/registro a la derecha (ambos desaparecen en el último frame).
+2. **Validación**:
+   - `npm run build` completado con éxito (0 errores).
+   - Verificado con `agent-browser` en móvil y desktop.

@@ -130,8 +130,8 @@ export default function LandingPage() {
     >
       {/* 1. TOP BAR WITH LOGO AND AUTH BUTTONS */}
       <header className="fixed top-0 left-0 right-0 z-50 px-4 sm:px-8 py-3 sm:py-5 flex items-center justify-between pointer-events-none">
-        {/* Left: Brand Logo */}
-        <div className="pointer-events-auto flex items-center gap-2">
+        {/* Left: Brand Logo (Se oculta en el último frame junto a los botones) */}
+        <div className={`pointer-events-auto flex items-center gap-2 transition-opacity duration-300 ${currentFrame === 4 ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
           <Link href="/" className="inline-block transition-transform active:scale-95">
             <Image 
               src="/landing/klozet-nombre-grande.png" 
@@ -143,25 +143,6 @@ export default function LandingPage() {
             />
           </Link>
         </div>
-
-        {/* Center: Minimalist 5-Segment Progress Indicator */}
-        <nav 
-          aria-label="Progreso de diapositivas"
-          className="pointer-events-auto flex items-center gap-1.5 sm:gap-2 px-3 py-1.5 rounded-full bg-zinc-100/80 dark:bg-zinc-900/80 backdrop-blur-xl border border-black/[0.06] dark:border-white/[0.08] shadow-xs"
-        >
-          {Array.from({ length: totalFrames }).map((_, idx) => (
-            <button
-              key={idx}
-              onClick={() => goToFrame(idx)}
-              aria-label={`Ir al fotograma ${idx + 1}`}
-              className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
-                currentFrame === idx
-                  ? 'w-7 sm:w-9 bg-[var(--brand-pink,#FF66C4)] shadow-xs'
-                  : 'w-2 sm:w-3 bg-zinc-300 dark:bg-zinc-700 hover:bg-zinc-400 dark:hover:bg-zinc-500'
-              }`}
-            />
-          ))}
-        </nav>
 
         {/* Right: Auth Buttons (Hidden gracefully on the final frame where big CTAs live) */}
         <div className={`pointer-events-auto flex items-center gap-1.5 sm:gap-3 transition-opacity duration-300 ${currentFrame === 4 ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
