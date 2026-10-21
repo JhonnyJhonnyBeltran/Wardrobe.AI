@@ -1950,6 +1950,33 @@ Implementación de analítica web oficial de Vercel, monitorización de Core Web
    - Comprueba si el servidor Next.js ya está corriendo en el puerto 3000; si no lo está, lo levanta automáticamente en segundo plano con `npm run dev`.
    - Abre el navegador predeterminado directamente en `http://localhost:3000/admin/insights`.
 
+---
+
+## 138. Plan Estratégico y Técnico de Blindaje del Proyecto (Octubre 2026)
+
+Documento maestro archivado en: [`Obsidian/estrategia_blindaje.md`](./estrategia_blindaje.md)
+
+### Diagnóstico de Fragilidad:
+1. **Riesgo de Quiebra por Costes de IA**: Modelo multimodal de Gemini en peticiones gratuitas sin límite persistente en BBDD y sin caché de visión.
+2. **Límites de Infraestructura (Vercel & Supabase)**: Ancho de banda y almacenamiento saturados por imágenes raw de alta resolución sin compresión agresiva previa.
+3. **Fricción en Onboarding y Cold Start del Feed**: Fricción de digitalización manual y falta de incentivo social inicial.
+
+### Los 4 Pilares de Ejecución:
+- **Pilar 1: Blindaje de Infraestructura y Costes**:
+  - Cuotas de IA persistentes en PostgreSQL/Supabase (anti-reinicio por contenedores serverless efímeros de Vercel).
+  - Límite estricto de uso gratuito aplicado tanto en Kloe Chat como en `/api/analyze-clothing`.
+  - Caché de IA Multimodal con SHA-256 de imágenes para reutilizar análisis con coste $0 de Gemini.
+  - Compresión previa en navegador del cliente (máx 800px, <80KB) antes de emitir llamadas a la API.
+- **Pilar 2: Viralidad y Herramienta de Creadores**:
+  - Motor de exportación nativo a Instagram Stories (9:16 y 4:5) con `html2canvas`.
+  - Marca de agua elegante ("Curated on Klozet" / `@klozet.es`).
+- **Pilar 3: Kloe Asistente Accionable**:
+  - Contexto multimodal (prendas del armario y posts del feed).
+  - CTAs interactivos en respuestas ("Guardar en armario", "Publicar en feed").
+- **Pilar 4: Modelo de Negocio de Afiliados (Shop the Look)**:
+  - Campos de enlace de afiliado (`affiliate_url`, `brand_domain`, `price`, `shop_url`) para monetización por comisiones comerciales.
+
+
 
 
 

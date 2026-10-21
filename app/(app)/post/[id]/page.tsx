@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Heart, MessageCircle, Bookmark, Share2, MoreHorizontal, MoreVertical, X, Send, ChevronLeft, ChevronRight, Edit2, Trash2 } from 'lucide-react';
+import { Heart, MessageCircle, Bookmark, Share2, Instagram, MoreHorizontal, MoreVertical, X, Send, ChevronLeft, ChevronRight, Edit2, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';
 import { useUser } from '@/store/userStore';
@@ -15,7 +15,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import InteractiveOutfitViewer from '@/components/InteractiveOutfitViewer';
 import ProductModal from '@/components/ProductModal';
 import { ClothingItem } from '@/components/ClothingItem';
-import { SkeletonPostDetail } from '@/components';
+import { SkeletonPostDetail, ExportStoryModal } from '@/components';
 import { haptics } from '@/lib/haptic';
 import { useFeedStore } from '@/store/feedStore';
 import { useSearchStore } from '@/store/searchStore';
@@ -45,6 +45,7 @@ export default function PostDetailPage() {
     const [loading, setLoading] = useState(true);
     const [activeSlide, setActiveSlide] = useState(0);
     const [isMobile, setIsMobile] = useState(false);
+    const [showExportModal, setShowExportModal] = useState(false);
 
     // Initial like state from likeManager or store caches
     const initialLiked = (() => {
@@ -910,6 +911,14 @@ export default function PostDetailPage() {
                         <button onClick={handleShare} className="flex items-center gap-1.5 hover:opacity-70 transition-opacity">
                             <Share2 className="w-6 h-6 text-gray-900 dark:text-white" strokeWidth={2.5} />
                         </button>
+                        <button 
+                            onClick={() => setShowExportModal(true)} 
+                            className="flex items-center gap-1.5 hover:opacity-70 transition-opacity text-pink-500 hover:text-pink-600"
+                            title="Exportar a Instagram Stories"
+                            aria-label="Exportar a Instagram Stories"
+                        >
+                            <Instagram className="w-6 h-6" strokeWidth={2.2} />
+                        </button>
                     </div>
                     <button onClick={toggleSave} className="p-2 -mr-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
                         <Bookmark className={`w-7 h-7 transition-colors duration-200 ${isSaved ? 'fill-[var(--brand-pink)] text-[var(--brand-pink)]' : 'text-gray-900 dark:text-white'}`} strokeWidth={isSaved ? 2 : 2.5} />
@@ -1125,6 +1134,20 @@ export default function PostDetailPage() {
                     reference: selectedItem.reference
                 } as any) : null}
             />
+
+            {/* Creator Story / Post Export for Instagram */}
+            {post && (
+                <ExportStoryModal
+                    isOpen={showExportModal}
+                    onClose={() => setShowExportModal(false)}
+                    title={post.title || post.caption || 'Look Klozet'}
+                    coverImageUrl={post.imageUrl || post.image_url}
+                    items={post.outfit?.items || []}
+                    authorName={post.user?.full_name || post.user?.username || 'Klozet Creator'}
+                    authorHandle={post.user?.username || 'klozet'}
+                    authorAvatarUrl={post.user?.avatar_url}
+                />
+            )}
         </div>
     );
 }

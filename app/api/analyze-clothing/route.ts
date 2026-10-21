@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'crypto';
 import { createClient } from '@/lib/supabase/server';
-import { checkIpRateLimit } from '@/lib/closy/rateLimiter';
+import { checkIpRateLimit, getMadridDayKey } from '@/lib/closy/rateLimiter';
 import { getGeminiApiKey } from '@/lib/ai/geminiClient';
+
+// In-memory hot cache for instant sub-millisecond responses on serverless instances
+const memoryImageCache = new Map<string, { data: AnalyzeResponse; timestamp: number }>();
+const MEMORY_CACHE_TTL = 1000 * 60 * 60 * 24; // 24 hours
 
 export interface AnalyzeResponse {
   category: 'top' | 'shirt' | 'sweater' | 'hoodie' | 'jacket' | 'outerwear' | 'bottom' | 'shorts' | 'skirt' | 'dress' | 'shoes' | 'bag' | 'accessory' | 'other';
@@ -17,7 +22,7 @@ export interface AnalyzeResponse {
 
 export async function POST(request: NextRequest) {
   try {
-    // 1. IP Rate Limiting protection
+    // 1. IP Rate Limiting protection (anti-scraping)
     const forwarded = request.headers.get('x-forwarded-for');
     const clientIp = forwarded ? forwarded.split(',')[0].trim() : '127.0.0.1';
     
@@ -46,12 +51,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Se requiere una imagen en base64' }, { status: 400 });
     }
 
-    // Protect against massive payloads (max 12MB base64 string)
-    if (imageBase64.length > 12 * 1024 * 1024) {
-      return NextResponse.json({ error: 'La imagen supera el tamaño máximo permitido' }, { status: 400 });
+    // Protect against massive payloads (max 4MB base64 string after client compression)
+    if (imageBase64.length > 4 * 1024 * 1024) {
+      return NextResponse.json({ error: 'La imagen supera el tamaño máximo permitido (4MB)' }, { status: 400 });
     }
-
-    const apiKey = getGeminiApiKey();
 
     // Clean base64 data and normalize MIME type
     const cleanBase64 = imageBase64.replace(/^data:image\/[a-zA-Z0-9+.-]+;base64,/, '');
@@ -64,6 +67,86 @@ export async function POST(request: NextRequest) {
     else if (rawMime.includes('webp')) mimeType = 'image/webp';
     else if (rawMime.includes('gif')) mimeType = 'image/gif';
 
+    // 3. ZERO-COST CACHE: Calculate SHA-256 fingerprint of the image
+    const imageHash = crypto.createHash('sha256').update(cleanBase64).digest('hex');
+
+    // A) Fast Memory Cache Check
+    const memoryCached = memoryImageCache.get(imageHash);
+    if (memoryCached && Date.now() - memoryCached.timestamp < MEMORY_CACHE_TTL) {
+      return NextResponse.json(memoryCached.data, {
+        headers: { 'X-Cache': 'HIT-MEMORY', 'X-Cache-Hash': imageHash }
+      });
+    }
+
+    // B) Supabase Persistent Cache Check (across all users & sessions)
+    try {
+      const { data: dbCached } = await (supabase
+        .from('ai_image_cache' as any)
+        .select('*')
+        .eq('image_hash', imageHash)
+        .maybeSingle() as any);
+
+      if (dbCached && dbCached.raw_analysis) {
+        memoryImageCache.set(imageHash, { data: dbCached.raw_analysis, timestamp: Date.now() });
+        
+        // Asynchronously update hit count and last accessed timestamp
+        (supabase
+          .from('ai_image_cache' as any)
+          .update({
+            hits_count: (dbCached.hits_count || 1) + 1,
+            last_accessed_at: new Date().toISOString()
+          })
+          .eq('image_hash', imageHash) as any)
+          .then(() => {})
+          .catch(() => {});
+
+        return NextResponse.json(dbCached.raw_analysis, {
+          headers: { 'X-Cache': 'HIT-DATABASE', 'X-Cache-Hash': imageHash }
+        });
+      }
+    } catch (cacheErr) {
+      // Non-fatal if table not yet created
+      console.warn('[AnalyzeClothing] Cache lookup non-fatal error:', cacheErr);
+    }
+
+    // 4. CHECK USER SUBSCRIPTION & PERSISTENT DAILY QUOTA (Anti-Bleeding)
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id, is_premium, subscription_tier, subscription_status, username, full_name, ai_daily_usage_date, ai_daily_usage_count, ai_lifetime_items_analyzed')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    const isEthan = Boolean(
+      user.email?.toLowerCase().includes('ethan') ||
+      profile?.username?.toLowerCase() === 'ethan' ||
+      profile?.full_name?.toLowerCase().includes('ethan')
+    );
+
+    const isPremium = isEthan || Boolean(
+      profile?.is_premium ||
+      profile?.subscription_tier === 'premium' ||
+      profile?.subscription_status === 'active'
+    );
+
+    const todayKey = getMadridDayKey();
+    const userUsageDate = (profile as any)?.ai_daily_usage_date;
+    const userDailyCount = (userUsageDate === todayKey) ? ((profile as any)?.ai_daily_usage_count || 0) : 0;
+    const FREE_DAILY_ITEM_LIMIT = 5;
+
+    if (!isPremium && userDailyCount >= FREE_DAILY_ITEM_LIMIT) {
+      return NextResponse.json(
+        {
+          error: 'Has alcanzado el límite gratuito diario de análisis de prendas (5 prendas/día). Tu cuota se reinicia a las 00:00 (hora peninsular) o desbloquea Klozet Pro para análisis ilimitados.',
+          limitReached: true,
+          dailyLimit: FREE_DAILY_ITEM_LIMIT,
+          usedToday: userDailyCount,
+          isPremium: false
+        },
+        { status: 429 }
+      );
+    }
+
+    const apiKey = getGeminiApiKey();
     if (!apiKey) {
       return NextResponse.json({
         category: 'bottom',
@@ -187,7 +270,50 @@ Devuelve ÚNICAMENTE un JSON válido sin texto extra:
             }
             const parsed: AnalyzeResponse = JSON.parse(cleaned);
             if (parsed && parsed.category) {
-              return NextResponse.json(parsed);
+              // 5. CACHE WRITE & USER QUOTA INCREMENT
+              memoryImageCache.set(imageHash, { data: parsed, timestamp: Date.now() });
+
+              // Asynchronously persist to Supabase cache table
+              (supabase
+                .from('ai_image_cache' as any)
+                .upsert({
+                  image_hash: imageHash,
+                  category: parsed.category,
+                  name: parsed.name,
+                  brand: parsed.brand,
+                  color: parsed.color,
+                  color_hex: parsed.colorHex,
+                  fabric: parsed.fabric,
+                  season: parsed.season,
+                  is_inappropriate: parsed.isInappropriate,
+                  raw_analysis: parsed,
+                  hits_count: 1,
+                  created_at: new Date().toISOString(),
+                  last_accessed_at: new Date().toISOString()
+                }) as any)
+                .then(() => {})
+                .catch((e: any) => console.warn('[AnalyzeClothing] Cache upsert warning:', e));
+
+              // Update persistent daily quota count for user
+              (supabase
+                .from('profiles')
+                .update({
+                  ai_daily_usage_date: todayKey,
+                  ai_daily_usage_count: userDailyCount + 1,
+                  ai_lifetime_items_analyzed: (((profile as any)?.ai_lifetime_items_analyzed || 0) + 1)
+                } as any)
+                .eq('id', user.id) as any)
+                .then(() => {})
+                .catch((e: any) => console.warn('[AnalyzeClothing] Quota update warning:', e));
+
+              return NextResponse.json(parsed, {
+                headers: {
+                  'X-Cache': 'MISS',
+                  'X-Cache-Hash': imageHash,
+                  'X-Daily-Used': String(userDailyCount + 1),
+                  'X-Daily-Limit': isPremium ? 'unlimited' : String(FREE_DAILY_ITEM_LIMIT)
+                }
+              });
             }
           }
         } else {

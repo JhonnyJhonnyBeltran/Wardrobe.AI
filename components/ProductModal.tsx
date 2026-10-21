@@ -79,7 +79,7 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
     if (!displayItem) return null;
 
     // Get the store link from either buyLink or sourceUrl
-    const storeLink = displayItem.buyLink || displayItem.sourceUrl;
+    const storeLink = (displayItem as any).affiliate_url || (displayItem as any).affiliateUrl || displayItem.buyLink || displayItem.sourceUrl;
     const rawType = displayItem.type || (displayItem as any).category || (displayItem as any).clothing_type || '';
     const displayType = formatGarmentType(rawType);
 

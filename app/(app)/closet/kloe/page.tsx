@@ -19,7 +19,9 @@ import {
   Bookmark,
   User,
   Camera,
-  AlertCircle
+  AlertCircle,
+  Instagram,
+  Share2
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -28,6 +30,7 @@ import { useUser } from '@/store/userStore';
 import { useTourStore } from '@/store/tourStore';
 import { supabase } from '@/lib/supabase/client';
 import { toast } from 'sonner';
+import ExportStoryModal from '@/components/ExportStoryModal';
 import { haptics } from '@/lib/haptic';
 import ProductModal from '@/components/ProductModal';
 import KloeProModal from '@/components/KloeProModal';
@@ -148,6 +151,7 @@ function GarmentThumbnail({
           </p>
         </div>
       )}
+
     </div>
   );
 }
@@ -324,6 +328,37 @@ export default function KloePage() {
   const [attachedItems, setAttachedItems] = useState<AttachedItem[]>([]);
   const [attachedPost, setAttachedPost] = useState<AttachedPost | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
+  const [savingOutfitKey, setSavingOutfitKey] = useState<string | null>(null);
+  const [savedOutfitKeys, setSavedOutfitKeys] = useState<Set<string>>(new Set());
+  const [exportModalOutfit, setExportModalOutfit] = useState<any | null>(null);
+
+  const handleSaveOutfitToCloset = async (outfit: any) => {
+    if (!outfit || !outfit.items || outfit.items.length === 0) return;
+    const outfitKey = (outfit.name || '') + outfit.items.map((i: any) => i.id).join('');
+    setSavingOutfitKey(outfitKey);
+    try {
+      const res = await fetch('/api/closy/save-outfit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: outfit.name || 'Look Kloe',
+          occasion: outfit.occasion,
+          items: outfit.items
+        })
+      });
+      if (res.ok) {
+        setSavedOutfitKeys(prev => new Set(prev).add(outfitKey));
+        toast.success('¡Outfit guardado en tu armario!');
+      } else {
+        toast.error('No se pudo guardar el outfit');
+      }
+    } catch (err) {
+      console.error('[KloeChat] Error saving outfit:', err);
+      toast.error('Error al guardar el look');
+    } finally {
+      setSavingOutfitKey(null);
+    }
+  };
   const [showProModal, setShowProModal] = useState(false);
   const [quotaInfo, setQuotaInfo] = useState<{
     isPremium: boolean;
@@ -1274,14 +1309,57 @@ export default function KloePage() {
                     ))}
                   </div>
 
-                  {/* Direct Canvas Action Button */}
-                  <div className="flex flex-col gap-2 pt-1">
+                  {/* Direct Action Buttons: Save, Post, Export to IG, Edit Canvas */}
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    {/* 1. Guardar en Armario */}
+                    <button
+                      onClick={() => handleSaveOutfitToCloset(msg.recommended_outfit)}
+                      disabled={savingOutfitKey === ((msg.recommended_outfit.name || '') + msg.recommended_outfit.items.map((i: any) => i.id).join(''))}
+                      className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-[var(--background-secondary)] hover:bg-[var(--foreground)] hover:text-[var(--background)] text-[var(--foreground)] text-xs font-semibold border border-[var(--border-color)] transition-all active:scale-[0.98] disabled:opacity-50"
+                    >
+                      {savedOutfitKeys.has((msg.recommended_outfit.name || '') + msg.recommended_outfit.items.map((i: any) => i.id).join('')) ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-emerald-500" />
+                          <span className="truncate text-emerald-600 dark:text-emerald-400 font-bold">En Armario</span>
+                        </>
+                      ) : savingOutfitKey === ((msg.recommended_outfit.name || '') + msg.recommended_outfit.items.map((i: any) => i.id).join('')) ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          <span className="truncate">Guardando...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Bookmark className="w-3.5 h-3.5" />
+                          <span className="truncate">Guardar look</span>
+                        </>
+                      )}
+                    </button>
+
+                    {/* 2. Publicar en el Feed */}
+                    <Link
+                      href={`/create-post?itemIds=${(msg.recommended_outfit.items || []).map((i: any) => i.id).join(',')}&title=${encodeURIComponent(msg.recommended_outfit.name || 'Look Kloe')}`}
+                      className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-[var(--background-secondary)] hover:bg-[var(--foreground)] hover:text-[var(--background)] text-[var(--foreground)] text-xs font-semibold border border-[var(--border-color)] transition-all active:scale-[0.98]"
+                    >
+                      <Share2 className="w-3.5 h-3.5" />
+                      <span className="truncate">Publicar look</span>
+                    </Link>
+
+                    {/* 3. Exportar a Instagram Story */}
+                    <button
+                      onClick={() => setExportModalOutfit(msg.recommended_outfit)}
+                      className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-gradient-to-r from-pink-500/10 to-purple-500/10 hover:from-pink-500/20 hover:to-purple-500/20 text-pink-600 dark:text-pink-400 text-xs font-semibold border border-pink-500/30 transition-all active:scale-[0.98]"
+                    >
+                      <Instagram className="w-3.5 h-3.5" />
+                      <span className="truncate">Story IG</span>
+                    </button>
+
+                    {/* 4. Editar en el Lienzo */}
                     <Link
                       href={`/create?itemIds=${(msg.recommended_outfit.items || []).map((i: any) => i.id).join(',')}&name=${encodeURIComponent(msg.recommended_outfit.name || 'Look Kloe')}&occasion=${encodeURIComponent(msg.recommended_outfit.occasion || '')}&fromKloe=true`}
-                      className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[var(--brand-pink)] hover:opacity-90 text-white text-xs font-semibold shadow-sm transition-all active:scale-[0.98]"
+                      className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-[var(--brand-pink)] hover:opacity-90 text-white text-xs font-semibold shadow-xs transition-all active:scale-[0.98]"
                     >
-                      <Layers className="w-4 h-4" />
-                      Montar y editar en el lienzo
+                      <Layers className="w-3.5 h-3.5" />
+                      <span className="truncate">Lienzo</span>
                     </Link>
                   </div>
                 </motion.div>
@@ -1946,6 +2024,17 @@ export default function KloePage() {
           toast.success('¡Fotos de tu perfil físico guardadas con éxito! Kloe personalizará todas tus recomendaciones a tus facciones.');
         }}
       />
+
+      {/* Creator Instagram Export Modal */}
+      {exportModalOutfit && (
+        <ExportStoryModal
+          isOpen={!!exportModalOutfit}
+          onClose={() => setExportModalOutfit(null)}
+          title={exportModalOutfit.name || 'Look Kloe'}
+          items={exportModalOutfit.items || []}
+          occasion={exportModalOutfit.occasion}
+        />
+      )}
     </div>
   );
 }

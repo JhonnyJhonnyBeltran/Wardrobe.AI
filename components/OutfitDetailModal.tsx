@@ -5,6 +5,7 @@ import {
     X, 
     Heart, 
     Share2, 
+    Instagram, 
     Briefcase, 
     PartyPopper, 
     Zap, 
@@ -32,6 +33,7 @@ import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { Outfit } from '@/types/outfit';
 import { createPortal } from 'react-dom';
 import InteractiveOutfitViewer from './InteractiveOutfitViewer';
+import ExportStoryModal from './ExportStoryModal';
 
 interface OutfitDetailModalProps {
     isOpen: boolean;
@@ -63,6 +65,7 @@ const styleConfig: Record<string, { icon: React.ReactNode; label: string }> = {
 export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleFavorite, onItemClick, onToggleVisibility }: OutfitDetailModalProps) {
     useBodyScrollLock(isOpen);
     const [selectedItemForDetail, setSelectedItemForDetail] = useState<any | null>(null);
+    const [showExportModal, setShowExportModal] = useState(false);
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
@@ -180,6 +183,17 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
                                                     <span className="text-center">Editar</span>
                                                 </motion.button>
                                             </Link>
+
+                                            <motion.button
+                                                whileHover={{ scale: 1.04 }}
+                                                whileTap={{ scale: 0.96 }}
+                                                onClick={() => setShowExportModal(true)}
+                                                className="flex items-center justify-center gap-1.5 py-3.5 px-3.5 rounded-xl font-bold transition-all duration-300 bg-pink-500/10 text-pink-600 dark:text-pink-400 border border-pink-500/25 hover:bg-pink-500/20 h-[52px]"
+                                                title="Exportar a Instagram Stories"
+                                            >
+                                                <Instagram className="w-5 h-5" />
+                                                <span className="text-xs">Story</span>
+                                            </motion.button>
 
                                             {onToggleVisibility && !(outfit.posts && outfit.posts.length > 0) && (
                                                 <motion.button

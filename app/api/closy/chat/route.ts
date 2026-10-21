@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { checkRateLimit, checkIpRateLimit, getUserQuotaStatus } from '@/lib/closy/rateLimiter';
+import { checkRateLimit, checkIpRateLimit, getUserQuotaStatus, getMadridDayKey } from '@/lib/closy/rateLimiter';
 import { buildUserStylingContext } from '@/lib/closy/contextIndexer';
 import { getFastCourtesyResponse } from '@/lib/closy/fastResponses';
 import { resolveImageUrl } from '@/lib/imageUtils';
@@ -237,7 +237,7 @@ export async function POST(request: NextRequest) {
     // 4. Check Subscription
     const { data: userProfile } = await supabase
       .from('profiles')
-      .select('id, is_premium, subscription_tier, subscription_status, username, full_name')
+      .select('id, is_premium, subscription_tier, subscription_status, username, full_name, ai_daily_usage_date, ai_daily_usage_count, ai_lifetime_chats')
       .eq('id', user.id)
       .maybeSingle();
 
@@ -253,23 +253,59 @@ export async function POST(request: NextRequest) {
       userProfile?.subscription_status === 'active'
     );
 
-    // 5. Apply Per-User Daily Rate Limiting (Free: 8 daily, Premium: 35 daily, reset at 00:00 Madrid)
+    // 5. Apply Persistent Database + Memory Rate Limiting (Free: 8 daily, Premium: 35 daily, reset 00:00 Madrid)
+    const todayKey = getMadridDayKey();
+    const dbDailyCount = ((userProfile as any)?.ai_daily_usage_date === todayKey)
+      ? Number((userProfile as any)?.ai_daily_usage_count || 0)
+      : 0;
+
+    const FREE_CHAT_LIMIT = 8;
+    const PREMIUM_CHAT_LIMIT = 35;
+    const activeLimit = isPremium ? PREMIUM_CHAT_LIMIT : FREE_CHAT_LIMIT;
+
+    if (dbDailyCount >= activeLimit) {
+      return NextResponse.json(
+        { 
+          error: isPremium 
+            ? 'Has agotado tus 35 consultas diarias con Kloe. Tu límite se restablecerá a las 00:00 (hora peninsular).' 
+            : 'Has agotado tus 8 consultas gratuitas de hoy con Kloe. Tu límite se restablecerá a las 00:00 (hora peninsular) o desbloquea Kloe Pro para 35 consultas diarias.',
+          message: isPremium 
+            ? 'Has agotado tus 35 consultas diarias con Kloe. Tu límite se restablecerá a las 00:00 (hora peninsular).' 
+            : 'Has agotado tus 8 consultas gratuitas de hoy con Kloe. Tu límite se restablecerá a las 00:00 (hora peninsular) o desbloquea Kloe Pro para 35 consultas diarias.',
+          limitReached: true,
+          isDailyLimit: true,
+          isPremium,
+          dailyLimit: activeLimit,
+          usedToday: dbDailyCount,
+          remainingDay: 0,
+          retryAfter: 3600 
+        },
+        { 
+          status: 429,
+          headers: {
+            'Retry-After': '3600',
+            'X-RateLimit-Remaining-Day': '0'
+          }
+        }
+      );
+    }
+
     const estimatedTokens = Math.ceil(userPrompt.length / 4) + 600;
     const rateLimit = checkRateLimit(user.id, isPremium, estimatedTokens);
     
     if (!rateLimit.allowed) {
       return NextResponse.json(
         { 
-          error: rateLimit.reason || 'Has alcanzado el límite de consultas diarias',
+          error: rateLimit.reason || 'Has alcanzado el límite de consultas',
           message: rateLimit.reason || (isPremium 
-            ? 'Has agotado tus 35 consultas diarias con Kloe. Tu límite se restablecerá a las 00:00 (hora peninsular).' 
-            : 'Has agotado tus 8 consultas gratuitas de hoy con Kloe. Tu límite se restablecerá a las 00:00 (hora peninsular) o desbloquea Kloe Pro para 35 consultas diarias.'),
+            ? 'Has agotado tus consultas diarias con Kloe. Tu límite se restablecerá a las 00:00 (hora peninsular).' 
+            : 'Has agotado tus consultas gratuitas de hoy con Kloe. Tu límite se restablecerá a las 00:00 (hora peninsular) o desbloquea Kloe Pro.'),
           limitReached: true,
           isDailyLimit: rateLimit.isDailyLimit,
           isPremium,
           dailyLimit: rateLimit.dailyLimit,
-          usedToday: rateLimit.usedToday,
-          remainingDay: 0,
+          usedToday: Math.max(rateLimit.usedToday, dbDailyCount),
+          remainingDay: Math.max(0, activeLimit - dbDailyCount),
           retryAfter: rateLimit.retryAfterSeconds 
         },
         { 
@@ -277,7 +313,7 @@ export async function POST(request: NextRequest) {
           headers: {
             'Retry-After': String(rateLimit.retryAfterSeconds || 60),
             'X-RateLimit-Remaining-Minute': String(rateLimit.remainingMinute),
-            'X-RateLimit-Remaining-Day': String(rateLimit.remainingDay)
+            'X-RateLimit-Remaining-Day': String(Math.max(0, activeLimit - dbDailyCount))
           }
         }
       );
@@ -373,6 +409,18 @@ export async function POST(request: NextRequest) {
         .filter(Boolean);
     }
 
+    // Asynchronously increment persistent usage count in Supabase profile
+    (supabase
+      .from('profiles')
+      .update({
+        ai_daily_usage_date: todayKey,
+        ai_daily_usage_count: dbDailyCount + 1,
+        ai_lifetime_chats: (((userProfile as any)?.ai_lifetime_chats || 0) + 1)
+      } as any)
+      .eq('id', user.id) as any)
+      .then(() => {})
+      .catch((e: any) => console.warn('[ChatRoute] Persistent quota update error:', e));
+
     return NextResponse.json({
       message: aiResult.message || 'Aquí tienes mi recomendación de estilo para ti.',
       recommended_outfit: resolvedOutfit,
@@ -383,19 +431,19 @@ export async function POST(request: NextRequest) {
         'Arma un look formal'
       ],
       isPremium,
-      dailyLimit: rateLimit.dailyLimit,
-      usedToday: rateLimit.usedToday,
-      remainingDay: rateLimit.remainingDay,
+      dailyLimit: activeLimit,
+      usedToday: dbDailyCount + 1,
+      remainingDay: Math.max(0, activeLimit - (dbDailyCount + 1)),
       rate_limit: {
         remaining_minute: rateLimit.remainingMinute,
-        remaining_day: rateLimit.remainingDay,
-        daily_limit: rateLimit.dailyLimit,
-        used_today: rateLimit.usedToday
+        remaining_day: Math.max(0, activeLimit - (dbDailyCount + 1)),
+        daily_limit: activeLimit,
+        used_today: dbDailyCount + 1
       }
     }, {
       headers: {
         'X-RateLimit-Remaining-Minute': String(rateLimit.remainingMinute),
-        'X-RateLimit-Remaining-Day': String(rateLimit.remainingDay)
+        'X-RateLimit-Remaining-Day': String(Math.max(0, activeLimit - (dbDailyCount + 1)))
       }
     });
 
