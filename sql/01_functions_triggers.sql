@@ -205,8 +205,9 @@ CREATE TRIGGER on_follow_added
   AFTER INSERT ON public.follows
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_follow();
 
--- 6. VISTA DE MONITOREO DE SUSCRIPCIONES
-CREATE OR REPLACE VIEW public.v_user_subscriptions AS
+-- 6. VISTA DE MONITOREO DE SUSCRIPCIONES (Asegurada contra auth_users_exposed)
+CREATE OR REPLACE VIEW public.v_user_subscriptions 
+WITH (security_invoker = true) AS
 SELECT 
   id AS user_id,
   username,
@@ -220,3 +221,8 @@ SELECT
   created_at
 FROM public.profiles
 WHERE is_premium = true OR subscription_tier = 'premium';
+
+-- Revocar permisos de PostgREST para roles públicos/anónimos
+REVOKE ALL ON public.v_user_subscriptions FROM PUBLIC, anon, authenticated;
+-- Conceder acceso exclusivo para backend y administración
+GRANT SELECT ON public.v_user_subscriptions TO service_role, postgres;

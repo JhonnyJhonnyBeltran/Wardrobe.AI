@@ -1885,6 +1885,72 @@ Resolución del rechazo de Google AdSense (*"tu sitio web no está listo para mo
 8. **Sitemap Dinámico (`app/sitemap.ts`):**
    - Rutas `/about` y `/contact` incorporadas con periodicidad mensual y prioridad 0.7.
 
+---
+
+## 136. Resolución Definitiva de Alertas de Seguridad de Supabase (2026-10-21)
+
+### Contexto y Diagnóstico:
+Resolución de las dos alertas críticas reportadas por el Supabase Security Advisor / Database Linter para el proyecto `zitsnkacbmkeqnkjasbr`:
+1. `rls_disabled_in_public`: Tablas en esquema público sin Row-Level Security activado (`follow_requests`, `push_subscriptions`, `saved_posts`, `style_options`, `users`, etc.).
+2. `auth_users_exposed`: Vistas en esquema público que acceden o dependen de `auth.users` expuestas vía PostgREST a roles `anon` y `authenticated` con comportamiento por defecto `SECURITY DEFINER`.
+
+### Modificaciones e Implementaciones:
+1. **Script SQL Maestro (`sql/fix_supabase_security_advisors.sql`):**
+   - **Activación Dinámica de RLS:** Bloque PL/pgSQL que itera sobre todas las tablas de `pg_tables` con `schemaname = 'public'` habilitando RLS de forma automática e idempotente.
+   - **Políticas RLS Específicas:**
+     - `follow_requests`: Aislamiento estricto de solicitudes donde `auth.uid() = follower_id OR auth.uid() = following_id` (compatible con esquemas `requester_id`/`target_id`).
+     - `push_subscriptions`: Aislamiento estricto de tokens push por usuario (`auth.uid() = user_id`).
+     - `saved_posts` y `saves`: Acceso exclusivo al creador (`auth.uid() = user_id`).
+     - `save_folders` y `save_folder_items`: Validación relacional contra las carpetas del usuario autenticado.
+     - `style_options`: Lectura pública (`USING (true)`), mutación reservada a `service_role`.
+     - `users` (legacy): Lectura de perfiles públicos, modificaciones exclusivas para `auth.uid() = id`.
+     - `user_feedback`: Inserción para usuarios autenticados, lectura para `service_role`.
+     - Validación preventiva de todas las tablas núcleo de la app (`profiles`, `posts`, `clothing_items`, `outfits`, etc.).
+   - **Blindaje contra `auth_users_exposed`:**
+     - `public.v_user_subscriptions` configurada con `WITH (security_invoker = true)` sobre `public.profiles`.
+     - `REVOKE ALL ON public.v_user_subscriptions FROM anon, authenticated, PUBLIC;` y concesión exclusiva a `service_role`.
+     - Bloque PL/pgSQL dinámico que rastrea dependencias de `auth.users` en `pg_rewrite` / `pg_depend` para cualquier vista pública y revoca automáticamente privilegios de API externa a `anon` y `authenticated`.
+   - **Recarga de PostgREST:** Notificación `NOTIFY pgrst, 'reload schema'` para refresco en tiempo real.
+2. **Actualización de Triggers y Vistas (`sql/01_functions_triggers.sql`):**
+   - Sincronizada la definición de `v_user_subscriptions` con `WITH (security_invoker = true)` y permisos restringidos para prevenir regresiones en migraciones.
+3. **Guía de Documentación y Auditoría (`sql/README_SECURITY_FIXES.md`):**
+   - Documentación exhaustiva paso a paso para ejecución en 1 clic en el SQL Editor de Supabase y consultas de verificación inmediata.
+
+---
+
+## 137. Integración de Vercel Analytics, Speed Insights, Dashboard Local de Feedbacks y Acceso Directo (2026-10-21)
+
+### Contexto:
+Implementación de analítica web oficial de Vercel, monitorización de Core Web Vitals, sistema de captura de sugerencias/bugs por parte de los usuarios en la app móvil y creación de un panel de control local accesible en 1 clic desde el Escritorio de Windows.
+
+### Modificaciones e Implementaciones:
+1. **Paquetes Oficiales de Vercel (`package.json`):**
+   - Instalados `@vercel/analytics` y `@vercel/speed-insights`.
+   - Inyectados `<Analytics />` y `<SpeedInsights />` en [`app/layout.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/app/layout.tsx) para monitorización automática sin bloqueo de hilo.
+
+2. **Captura de Feedback en la App (`components/FeedbackModal.tsx` & `/profile/settings`):**
+   - En [`app/(app)/profile/settings/page.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/app/%28app%29/profile/settings/page.tsx), se añadió la sección "Soporte y Ayuda" con el botón "Reportar un problema o sugerencia".
+   - [`components/FeedbackModal.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/components/FeedbackModal.tsx) implementado siguiendo Apple HIG:
+     - 4 categorías: Error / Bug (`bug`), Sugerencia / Idea (`feature`), IA y Kloe (`ai`), Otro (`other`).
+     - Metadatos de diagnóstico capturados automáticamente (URL actual, User-Agent, resolución de pantalla, tamaño de ventana).
+     - Validación táctil, estados visuales de carga y animación de confirmación.
+
+3. **API de Ingesta y Persistencia Dual (`app/api/feedback/route.ts`):**
+   - Endpoint resiliente: intenta guardar en la tabla `user_feedback` de Supabase; si no existe o la BD está offline, persiste automáticamente en `data/local_feedback.json`.
+   - Métodos `POST` (crear reporte), `GET` (listar reportes para el dashboard), `PATCH` (actualizar estado a `resolved`, `investigating` o `closed`).
+
+4. **Dashboard Local de Insights y Feedback (`app/(app)/admin/insights/page.tsx`):**
+   - Accesible en `/admin/insights`.
+   - Pestaña de Feedbacks con filtros por categoría, búsqueda por texto, métricas de resolución y gestión de estado en vivo.
+   - Pestaña de Core Web Vitals con guías de LCP, FID, CLS, INP y enlaces directos al panel de Vercel.
+   - Indicador de estado del sistema (Supabase, Vercel, Modo Desarrollo).
+
+5. **Acceso Directo en Escritorio de 1 Clic (`C:\Users\EthanCurro\Desktop\Klozet Dashboard.bat`):**
+   - Archivo batch creado directamente en el escritorio del usuario (con copia en [`scripts/open-dashboard.bat`](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/scripts/open-dashboard.bat)).
+   - Comprueba si el servidor Next.js ya está corriendo en el puerto 3000; si no lo está, lo levanta automáticamente en segundo plano con `npm run dev`.
+   - Abre el navegador predeterminado directamente en `http://localhost:3000/admin/insights`.
+
+
 
 
 

@@ -33,6 +33,8 @@ import {
     Sparkles
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { ChevronRight, HelpCircle } from 'lucide-react';
+import FeedbackModal from '@/components/FeedbackModal';
 import { useNotificationSettingsStore } from '@/store/notificationSettingsStore';
 
 export default function SettingsPage() {
@@ -43,6 +45,7 @@ export default function SettingsPage() {
     const { language, setLanguage } = useLanguageStore();
     const { t } = useTranslation();
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [showFeedbackModal, setShowFeedbackModal] = useState(false);
     const [deleteInput, setDeleteInput] = useState('');
     const [isDeleting, setIsDeleting] = useState(false);
     const [showStyleForm, setShowStyleForm] = useState(false);
@@ -548,6 +551,31 @@ export default function SettingsPage() {
                     </motion.div>
                 )}
 
+                {/* SOPORTE Y REPORTES */}
+                <motion.div variants={itemVariants} className="mb-6">
+                    <h2 className="text-sm font-semibold text-[var(--foreground-secondary)] uppercase tracking-wider mb-4">
+                        Soporte y Ayuda
+                    </h2>
+                    <Card className="overflow-hidden">
+                        <button
+                            type="button"
+                            onClick={() => setShowFeedbackModal(true)}
+                            className="w-full flex items-center gap-4 p-4 cursor-pointer hover:bg-[var(--background-secondary)] transition-colors text-left"
+                        >
+                            <div className="w-10 h-10 rounded-xl bg-[var(--brand-pink)]/10 flex items-center justify-center shrink-0">
+                                <HelpCircle className="w-5 h-5 text-[var(--brand-pink)]" />
+                            </div>
+                            <div className="flex-1">
+                                <div className="font-medium text-[var(--foreground)]">Reportar un problema o sugerencia</div>
+                                <div className="text-xs text-[var(--foreground-tertiary)]">
+                                    Envía comentarios o avisa de cualquier fallo directamente al equipo
+                                </div>
+                            </div>
+                            <ChevronRight className="w-4 h-4 text-[var(--foreground-tertiary)] shrink-0" />
+                        </button>
+                    </Card>
+                </motion.div>
+
                 {/* CUENTA */}
                 <motion.div variants={itemVariants} className="mb-6">
                     <h2 className="text-sm font-semibold text-[var(--foreground-secondary)] uppercase tracking-wider mb-4">
@@ -628,6 +656,8 @@ export default function SettingsPage() {
                     )}
                 </AnimatePresence>
 
+
+
                 {/* Password Modal */}
                 <AnimatePresence>
                     {showPasswordModal && (
@@ -703,6 +733,8 @@ export default function SettingsPage() {
                     )}
                 </AnimatePresence>
 
+
+
                 {/* Delete Confirmation Modal */}
                 <AnimatePresence>
                     {showDeleteConfirm && (
@@ -763,6 +795,14 @@ export default function SettingsPage() {
                         </motion.div>
                     )}
                 </AnimatePresence>
+
+
+
+                                {/* Feedback & Bug Report Modal */}
+                <FeedbackModal 
+                    isOpen={showFeedbackModal} 
+                    onClose={() => setShowFeedbackModal(false)} 
+                />
 
                 {/* Version & Legal Footer */}
                 <motion.div variants={itemVariants} className="text-center mt-8 pb-4">

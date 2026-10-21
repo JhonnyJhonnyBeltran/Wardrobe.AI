@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
 import RootLayoutClient from "./RootLayoutClient";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
@@ -214,6 +216,8 @@ export default function RootLayout({
       </head>
       <body className={`${inter.variable} ${outfit.variable} antialiased bg-[var(--background)] text-[var(--foreground)]`}>
         <RootLayoutClient>{children}</RootLayoutClient>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );

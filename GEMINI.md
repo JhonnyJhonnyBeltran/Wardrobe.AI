@@ -13,7 +13,11 @@ En este proyecto (Klozet), todo desarrollo, componente o pantalla debe seguir es
    - Tolerancia cero a clichés de IA ("AI slop"): sin badges o pastillas innecesarias tipo "IA personal", sin tres tarjetas repetitivas, sin gradientes borrosos ni sombras blandas desmesuradas.
    - Enfoque editorial y de moda: tipografía con identidad, fotografía de alta calidad y paletas coherentes con la identidad de Klozet.
 
-3. **Flujo de Trabajo:**
+3. **`apple-design`**:
+   - Directrices Apple Human Interface Guidelines (HIG) para experiencia premium de app móvil.
+   - Microinteracciones naturales, áreas de toque de 44x44pt mínimo, tipografía cuidada, materiales de vidrio translúcido y transiciones sin fricción.
+
+4. **Flujo de Trabajo:**
    - Consultar siempre `./Obsidian/contexto.md` antes de cualquier modificación.
    - Probar que compila correctamente (`npm run build`) antes de cualquier commit.
    - Realizar commits descriptivos tras validación exitosa.
