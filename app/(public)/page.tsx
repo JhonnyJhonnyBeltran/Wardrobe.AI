@@ -222,12 +222,12 @@ export default function InteractiveSlideLanding() {
 
   const scanItems = [
     {
-      name: 'Sudadera Scuffers Beige',
+      name: 'Sudadera Scuffers Sunset',
       brand: 'Scuffers Co.',
       img: '/landing/sudadera-scuffers-cutout.png',
       tag: 'Streetwear',
       cut: 'Boxy Fit / Oversized',
-      color: 'Beige Arena (#E4DBCF)',
+      color: 'Sunset Orange (#FF5226)',
       prec: '99.8%'
     },
     {
@@ -331,53 +331,54 @@ export default function InteractiveSlideLanding() {
         </button>
       )}
 
-      {/* 3. Barra Flotante Inferior de Navegación Rápida */}
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 pointer-events-auto w-[92vw] max-w-sm">
-        <div className="flex items-center justify-between px-4 py-2.5 rounded-full bg-white/90 backdrop-blur-2xl border border-zinc-200/80 shadow-[0_10px_35px_rgba(0,0,0,0.08)]">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-mono font-bold text-[var(--brand-pink)]">
-              {SLIDES[currentSlide].number}
-            </span>
-            <span className="text-zinc-400">/</span>
-            <span className="text-xs font-mono text-zinc-500">
-              0{totalSlides}
-            </span>
-            <span className="text-xs font-medium text-zinc-700 ml-1 truncate max-w-[120px] sm:max-w-none">
-              {SLIDES[currentSlide].tag}
-            </span>
-          </div>
+      {/* 3. Barra Flotante Inferior de Navegación Rápida (Se oculta en el último slider) */}
+      <AnimatePresence>
+        {!isLastSlide && (
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.25 }}
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 pointer-events-auto w-[92vw] max-w-sm"
+          >
+            <div className="flex items-center justify-between px-4 py-2.5 rounded-full bg-white/90 backdrop-blur-2xl border border-zinc-200/80 shadow-[0_10px_35px_rgba(0,0,0,0.08)]">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-mono font-bold text-[var(--brand-pink)]">
+                  {SLIDES[currentSlide].number}
+                </span>
+                <span className="text-zinc-400">/</span>
+                <span className="text-xs font-mono text-zinc-500">
+                  0{totalSlides}
+                </span>
+                <span className="text-xs font-medium text-zinc-700 ml-1 truncate max-w-[120px] sm:max-w-none">
+                  {SLIDES[currentSlide].tag}
+                </span>
+              </div>
 
-          <div className="flex items-center gap-1.5">
-            {currentSlide > 0 && (
-              <button
-                onClick={prevSlide}
-                className="p-1.5 rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-700 cursor-pointer transition-colors active:scale-95"
-                aria-label="Anterior"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-            )}
+              <div className="flex items-center gap-1.5">
+                {currentSlide > 0 && (
+                  <button
+                    onClick={prevSlide}
+                    className="p-1.5 rounded-full bg-zinc-100 hover:bg-zinc-200 text-zinc-700 cursor-pointer transition-colors active:scale-95"
+                    aria-label="Anterior"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                )}
 
-            {currentSlide < totalSlides - 1 ? (
-              <button
-                onClick={nextSlide}
-                className="px-4 py-1.5 rounded-full bg-zinc-950 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm hover:bg-zinc-800 transition-colors active:scale-95"
-                aria-label="Siguiente"
-              >
-                <span>Deslizar</span>
-                <ChevronRight className="w-3.5 h-3.5" />
-              </button>
-            ) : (
-              <Link href="/auth">
-                <div className="px-4 py-1.5 rounded-full bg-[var(--brand-pink)] text-white font-bold text-xs flex items-center gap-1.5 shadow-sm cursor-pointer active:scale-95">
-                  <span>Registrarse</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </div>
-              </Link>
-            )}
-          </div>
-        </div>
-      </div>
+                <button
+                  onClick={nextSlide}
+                  className="px-4 py-1.5 rounded-full bg-zinc-950 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm hover:bg-zinc-800 transition-colors active:scale-95"
+                  aria-label="Siguiente"
+                >
+                  <span>Deslizar</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* =================================================================== */}
       {/* 4. SLIDER TRACK HORIZONTAL SILKY (60FPS GPU TRANSLATE-X) */}
@@ -390,7 +391,7 @@ export default function InteractiveSlideLanding() {
         {/* ----------------------------------------------------------------- */}
         {/* SLIDE 01: EL ARCHIVO // LOOKBOOK REAL (FRAME-BY-FRAME) */}
         {/* ----------------------------------------------------------------- */}
-        <section className="w-full h-[100dvh] min-w-full shrink-0 flex items-center justify-center px-4 sm:px-8 lg:px-16 pt-24 pb-20 relative overflow-hidden bg-white">
+        <section className="w-full h-[100dvh] min-w-full shrink-0 flex items-center justify-center px-4 sm:px-8 lg:px-16 pt-20 pb-24 relative overflow-hidden bg-white">
           <div className="max-w-6xl w-full grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
             
             {/* Texto Editorial */}
@@ -495,15 +496,15 @@ export default function InteractiveSlideLanding() {
                   <motion.div
                     key={`shoes-${currentSlide === 0}`}
                     initial={{ opacity: 0, y: 25, rotate: 6 }}
-                    animate={currentSlide === 0 ? { opacity: 1, y: -8, rotate: 4 } : { opacity: 0 }}
+                    animate={currentSlide === 0 ? { opacity: 1, y: -10, rotate: 3 } : { opacity: 0 }}
                     transition={{ delay: 0.45, duration: 0.5, type: 'spring', stiffness: 360, damping: 24 }}
-                    className="relative w-28 sm:w-36 aspect-video z-30 -mt-8 drop-shadow-[0_12px_24px_rgba(0,0,0,0.12)]"
+                    className="relative w-32 sm:w-40 aspect-video z-30 -mt-10 drop-shadow-[0_12px_24px_rgba(0,0,0,0.12)]"
                   >
                     <Image 
                       src="/landing/onitsuka-tiger.png" 
                       alt="Onitsuka Tiger Mexico 66" 
                       fill 
-                      sizes="(max-width: 640px) 112px, 144px"
+                      sizes="(max-width: 640px) 128px, 160px"
                       className="object-contain" 
                     />
                   </motion.div>
@@ -516,7 +517,7 @@ export default function InteractiveSlideLanding() {
                     transition={{ delay: 0.55, type: 'spring', stiffness: 400, damping: 20 }}
                     className="absolute top-2 left-2 z-30 px-2.5 py-1 rounded-xl bg-zinc-950 text-white font-bold text-[11px] shadow-lg"
                   >
-                    Scuffers Co. · Beige
+                    Scuffers Co. · Sunset
                   </motion.div>
 
                   {/* Sticker 2: Onitsuka Sneaker */}
@@ -549,7 +550,7 @@ export default function InteractiveSlideLanding() {
         {/* ----------------------------------------------------------------- */}
         {/* SLIDE 02: EL DRAMA REAL // LA SILLA VS EL ARMARIO DIGITAL */}
         {/* ----------------------------------------------------------------- */}
-        <section className="w-full h-[100dvh] min-w-full shrink-0 flex items-center justify-center px-4 sm:px-8 lg:px-16 pt-24 pb-20 relative overflow-hidden bg-white">
+        <section className="w-full h-[100dvh] min-w-full shrink-0 flex items-center justify-center px-4 sm:px-8 lg:px-16 pt-20 pb-24 relative overflow-hidden bg-white">
           <div className="max-w-6xl w-full grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
             
             {/* Texto */}
@@ -599,41 +600,48 @@ export default function InteractiveSlideLanding() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={currentSlide === 1 ? { opacity: 1, y: 0 } : { opacity: 0 }}
                 transition={{ delay: 0.15, duration: 0.5 }}
-                className="rounded-3xl bg-rose-50/60 border border-rose-200/70 p-5 flex flex-col justify-between relative overflow-hidden"
+                className="rounded-3xl bg-rose-50/60 border border-rose-200/70 p-5 flex flex-col justify-between relative overflow-hidden min-h-[310px]"
               >
-                <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center justify-between mb-2">
                   <span className="text-[11px] font-mono text-rose-700 bg-rose-100 px-2.5 py-1 rounded-full border border-rose-200 font-semibold">
                     08:15 AM · Caos
                   </span>
                   <span className="text-xs text-zinc-600 font-medium">La Silla</span>
                 </div>
 
-                {/* Montaña de ropa desordenada */}
-                <div className="relative h-48 flex items-center justify-center">
+                {/* Montaña de ropa desordenada realista */}
+                <div className="relative h-44 flex items-center justify-center">
                   <motion.div 
                     animate={{ rotate: [-6, -4, -6] }}
                     transition={{ repeat: Infinity, duration: 4 }}
-                    className="absolute w-28 h-28 opacity-90 drop-shadow-md"
+                    className="absolute w-24 h-24 top-2 left-3 opacity-90 drop-shadow-md"
                   >
                     <Image src="/landing/sudadera-scuffers-cutout.png" alt="Sudadera" fill className="object-contain" />
                   </motion.div>
                   <motion.div 
-                    animate={{ rotate: [12, 10, 12] }}
+                    animate={{ rotate: [14, 11, 14] }}
                     transition={{ repeat: Infinity, duration: 3.5 }}
-                    className="absolute w-28 h-28 top-4 right-2 opacity-85 drop-shadow-md"
+                    className="absolute w-24 h-24 top-1 right-2 opacity-85 drop-shadow-md"
                   >
                     <Image src="/landing/camisa-zara-cutout.png" alt="Camisa" fill className="object-contain" />
                   </motion.div>
                   <motion.div 
-                    animate={{ rotate: [-14, -12, -14] }}
+                    animate={{ rotate: [-12, -9, -12] }}
+                    transition={{ repeat: Infinity, duration: 4.5 }}
+                    className="absolute w-24 h-24 bottom-2 left-5 opacity-90 drop-shadow-md"
+                  >
+                    <Image src="/landing/jeans-stars.png" alt="Jeans Caos" fill className="object-contain" />
+                  </motion.div>
+                  <motion.div 
+                    animate={{ rotate: [8, 5, 8] }}
                     transition={{ repeat: Infinity, duration: 5 }}
-                    className="absolute w-28 h-28 bottom-1 left-2 opacity-80 drop-shadow-md"
+                    className="absolute w-22 h-22 bottom-1 right-3 opacity-85 drop-shadow-md"
                   >
                     <Image src="/landing/botas-cowboy.png" alt="Botas" fill className="object-contain" />
                   </motion.div>
                 </div>
 
-                <div className="pt-3 border-t border-rose-200 text-xs text-zinc-600">
+                <div className="pt-2.5 border-t border-rose-200 text-xs text-zinc-600">
                   <span className="text-rose-700 font-semibold">8 prendas arrugadas</span>
                   <p className="text-[11px] text-zinc-500 mt-0.5">Media hora perdida antes de salir</p>
                 </div>
@@ -645,9 +653,9 @@ export default function InteractiveSlideLanding() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={currentSlide === 1 ? { opacity: 1, y: 0 } : { opacity: 0 }}
                 transition={{ delay: 0.3, duration: 0.5 }}
-                className="rounded-3xl bg-white border border-zinc-200 p-5 flex flex-col justify-between relative shadow-lg"
+                className="rounded-3xl bg-white border border-zinc-200 p-5 flex flex-col justify-between relative shadow-lg min-h-[310px]"
               >
-                <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center justify-between mb-2">
                   <span className="text-[11px] font-mono text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200 font-semibold">
                     Tu Armario Klozet
                   </span>
@@ -655,7 +663,7 @@ export default function InteractiveSlideLanding() {
                 </div>
 
                 {/* Cuadrícula organizada 2x2 */}
-                <div className="grid grid-cols-2 gap-2 h-48 items-center">
+                <div className="grid grid-cols-2 gap-2 h-44 items-center">
                   <div className="relative aspect-square rounded-xl bg-zinc-50 p-2 flex items-center justify-center border border-zinc-100">
                     <Image src="/landing/sudadera-scuffers-cutout.png" alt="Prenda 1" fill className="object-contain p-1" />
                     <span className="absolute bottom-1 right-1 text-[9px] font-mono bg-white/90 px-1 rounded text-zinc-700 border border-zinc-200">Scuffers</span>
@@ -674,7 +682,7 @@ export default function InteractiveSlideLanding() {
                   </div>
                 </div>
 
-                <div className="pt-3 border-t border-zinc-200 text-xs text-zinc-700">
+                <div className="pt-2.5 border-t border-zinc-200 text-xs text-zinc-700">
                   <span className="text-emerald-700 font-semibold">12 outfits posibles</span>
                   <p className="text-[11px] text-zinc-500 mt-0.5">Listo en 10 segundos</p>
                 </div>
@@ -689,7 +697,7 @@ export default function InteractiveSlideLanding() {
         {/* ----------------------------------------------------------------- */}
         {/* SLIDE 03: ESCÁNER HD // ESTUDIO DE PRENDAS INTERACTIVO */}
         {/* ----------------------------------------------------------------- */}
-        <section className="w-full h-[100dvh] min-w-full shrink-0 flex items-center justify-center px-4 sm:px-8 lg:px-16 pt-24 pb-20 relative overflow-hidden bg-white">
+        <section className="w-full h-[100dvh] min-w-full shrink-0 flex items-center justify-center px-4 sm:px-8 lg:px-16 pt-20 pb-24 relative overflow-hidden bg-white">
           <div className="max-w-6xl w-full grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
             
             {/* Texto y Selector Interactivo */}
@@ -700,7 +708,7 @@ export default function InteractiveSlideLanding() {
               transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
               className="lg:col-span-6 flex flex-col items-start"
             >
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-100 border border-zinc-200 mb-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-100 border border-zinc-200 mb-3">
                 <Scan className="w-3.5 h-3.5 text-[var(--brand-pink)]" />
                 <span className="text-xs font-mono tracking-wider text-zinc-700">03 // ESCÁNER HD</span>
               </div>
@@ -709,16 +717,16 @@ export default function InteractiveSlideLanding() {
                 Foto en la percha y recorte limpio al segundo.
               </h2>
               
-              <p className="text-xl sm:text-2xl font-semibold text-[var(--brand-pink)] mb-4">
+              <p className="text-xl sm:text-2xl font-semibold text-[var(--brand-pink)] mb-3">
                 Cero fondos cutres en tu pantalla.
               </p>
 
-              <p className="text-sm sm:text-base text-zinc-600 leading-relaxed max-w-xl mb-6">
+              <p className="text-sm sm:text-base text-zinc-600 leading-relaxed max-w-xl mb-5">
                 Tírale una foto con el móvil colgada en la puerta de tu cuarto. La app aísla la prenda automáticamente, limpia las sombras y la guarda en calidad estudio lista para montar en cualquier outfit.
               </p>
 
               {/* Selector de prenda a escanear */}
-              <div className="w-full max-w-md">
+              <div className="w-full max-w-md mb-6 lg:mb-0">
                 <span className="text-xs font-mono text-zinc-500 mb-2 block font-semibold">TOCA PARA PROBAR EL ESCÁNER:</span>
                 <div className="grid grid-cols-2 gap-2">
                   {scanItems.map((item, idx) => {
@@ -745,10 +753,16 @@ export default function InteractiveSlideLanding() {
               </div>
             </motion.div>
 
-            {/* Cabina de Escaneo Activa con Láser */}
+            {/* Cabina de Escaneo Activa con Láser (Apple Studio Viewfinder) */}
             <div className="lg:col-span-6 flex justify-center items-center">
-              <div className="relative w-full max-w-md aspect-[4/5] rounded-3xl bg-zinc-950 text-white border border-zinc-800 p-6 flex flex-col justify-between overflow-hidden shadow-2xl">
+              <div className="relative w-full max-w-md aspect-[4/5] rounded-3xl bg-zinc-900/95 text-white border border-zinc-800/80 p-5 sm:p-6 flex flex-col justify-between overflow-hidden shadow-2xl backdrop-blur-xl">
                 
+                {/* Viewfinder corner brackets */}
+                <div className="absolute top-4 left-4 w-3.5 h-3.5 border-t-2 border-l-2 border-white/40 pointer-events-none z-30" />
+                <div className="absolute top-4 right-4 w-3.5 h-3.5 border-t-2 border-r-2 border-white/40 pointer-events-none z-30" />
+                <div className="absolute bottom-4 left-4 w-3.5 h-3.5 border-b-2 border-l-2 border-white/40 pointer-events-none z-30" />
+                <div className="absolute bottom-4 right-4 w-3.5 h-3.5 border-b-2 border-r-2 border-white/40 pointer-events-none z-30" />
+
                 {/* Header de la cabina */}
                 <div className="flex items-center justify-between z-20">
                   <div className="flex items-center gap-2">
@@ -761,13 +775,13 @@ export default function InteractiveSlideLanding() {
                 </div>
 
                 {/* Prenda con rayo láser animado */}
-                <div className="relative flex-1 flex items-center justify-center my-4 overflow-hidden rounded-2xl bg-black/40 border border-white/[0.08]">
+                <div className="relative flex-1 flex items-center justify-center my-3 overflow-hidden rounded-2xl bg-black/50 border border-white/[0.08]">
                   
                   {/* Láser de barrido */}
                   <motion.div
                     animate={{ top: ['0%', '95%', '0%'] }}
                     transition={{ repeat: Infinity, duration: 2.8, ease: 'easeInOut' }}
-                    className="absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[var(--brand-pink)] to-transparent z-30 shadow-[0_0_15px_rgba(255,102,196,0.9)]"
+                    className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[var(--brand-pink)] to-transparent z-30 shadow-[0_0_15px_rgba(255,102,196,0.9)]"
                   />
 
                   {/* Prenda actual en exhibición */}
@@ -778,7 +792,7 @@ export default function InteractiveSlideLanding() {
                       animate={{ opacity: 1, scale: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.85, y: -10 }}
                       transition={{ duration: 0.35, type: 'spring', stiffness: 350, damping: 25 }}
-                      className="relative w-52 sm:w-60 aspect-square drop-shadow-[0_20px_35px_rgba(0,0,0,0.9)]"
+                      className="relative w-48 sm:w-56 aspect-square drop-shadow-[0_20px_35px_rgba(0,0,0,0.9)]"
                     >
                       <Image 
                         src={scanItems[activeScanItem].img} 
@@ -790,7 +804,7 @@ export default function InteractiveSlideLanding() {
                   </AnimatePresence>
 
                   {/* Metadatos detectados superpuestos */}
-                  <div className="absolute bottom-3 left-3 right-3 flex justify-between items-center z-20 text-[11px] font-mono bg-black/70 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10">
+                  <div className="absolute bottom-2.5 left-2.5 right-2.5 flex justify-between items-center z-20 text-[11px] font-mono bg-black/80 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10">
                     <span className="text-zinc-300">{scanItems[activeScanItem].brand}</span>
                     <span className="text-[var(--brand-pink)] font-semibold">{scanItems[activeScanItem].tag}</span>
                   </div>
@@ -818,7 +832,7 @@ export default function InteractiveSlideLanding() {
         {/* ----------------------------------------------------------------- */}
         {/* SLIDE 04: EL LIENZO // OUTFIT CANVAS INTERACTIVO */}
         {/* ----------------------------------------------------------------- */}
-        <section className="w-full h-[100dvh] min-w-full shrink-0 flex items-center justify-center px-4 sm:px-8 lg:px-16 pt-24 pb-20 relative overflow-hidden bg-white">
+        <section className="w-full h-[100dvh] min-w-full shrink-0 flex items-center justify-center px-4 sm:px-8 lg:px-16 pt-20 pb-24 relative overflow-hidden bg-white">
           <div className="max-w-6xl w-full grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
             
             {/* Texto y Toggle de Outfits */}
@@ -829,7 +843,7 @@ export default function InteractiveSlideLanding() {
               transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
               className="lg:col-span-6 flex flex-col items-start"
             >
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 border border-sky-200/80 mb-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-sky-50 border border-sky-200/80 mb-3">
                 <Layers className="w-3.5 h-3.5 text-sky-600" />
                 <span className="text-xs font-mono tracking-wider text-sky-900">04 // EL LIENZO</span>
               </div>
@@ -838,16 +852,16 @@ export default function InteractiveSlideLanding() {
                 Monta el fit en pantalla antes de desordenar el cuarto.
               </h2>
               
-              <p className="text-xl sm:text-2xl font-semibold text-[var(--brand-pink)] mb-4">
+              <p className="text-xl sm:text-2xl font-semibold text-[var(--brand-pink)] mb-3">
                 Arrastra, prueba siluetas y mira si pega.
               </p>
 
-              <p className="text-sm sm:text-base text-zinc-600 leading-relaxed max-w-xl mb-6">
+              <p className="text-sm sm:text-base text-zinc-600 leading-relaxed max-w-xl mb-5">
                 ¿Esa sudadera pega con denim ancho o con pantalón de vestir? En vez de sudar cambiándote tres veces, compones el fit en el canvas, ajustas capas y ves cómo queda antes de sacar una sola percha.
               </p>
 
               {/* Botones de Estilos */}
-              <div className="flex items-center gap-2 p-1.5 rounded-full bg-zinc-100 border border-zinc-200">
+              <div className="flex items-center gap-2 p-1.5 rounded-full bg-zinc-100 border border-zinc-200 mb-6 lg:mb-0">
                 <button
                   onClick={() => {
                     try { triggerHaptic('light'); } catch {}
@@ -911,9 +925,14 @@ export default function InteractiveSlideLanding() {
                         <div className="relative w-32 sm:w-40 aspect-[3/4] z-10 -mt-12 drop-shadow-md">
                           <Image src="/landing/jeans-stars.png" alt="Bottom Street" fill className="object-contain" />
                         </div>
-                        {/* Footwear: Onitsuka */}
-                        <div className="relative w-28 sm:w-36 aspect-video z-30 -mt-8 drop-shadow-md">
-                          <Image src="/landing/onitsuka-tiger.png" alt="Shoes Street" fill className="object-contain" />
+                        {/* Footwear: Onitsuka Sneaker Pair */}
+                        <div className="relative flex items-center justify-center gap-3 z-30 -mt-8">
+                          <div className="relative w-22 sm:w-26 aspect-video drop-shadow-md rotate-[-4deg]">
+                            <Image src="/landing/onitsuka-tiger.png" alt="Shoe Left" fill className="object-contain" />
+                          </div>
+                          <div className="relative w-22 sm:w-26 aspect-video drop-shadow-md rotate-[4deg] -scale-x-100">
+                            <Image src="/landing/onitsuka-tiger.png" alt="Shoe Right" fill className="object-contain" />
+                          </div>
                         </div>
                       </motion.div>
                     ) : (
@@ -933,9 +952,14 @@ export default function InteractiveSlideLanding() {
                         <div className="relative w-32 sm:w-40 aspect-[3/4] z-10 -mt-12 drop-shadow-md">
                           <Image src="/landing/pantalon-blanco.png" alt="Bottom Smart" fill className="object-contain" />
                         </div>
-                        {/* Footwear: Cowboy Boots */}
-                        <div className="relative w-28 sm:w-36 aspect-square z-30 -mt-8 drop-shadow-md">
-                          <Image src="/landing/botas-cowboy.png" alt="Shoes Smart" fill className="object-contain" />
+                        {/* Footwear: Cowboy Boots Pair */}
+                        <div className="relative flex items-center justify-center gap-4 z-30 -mt-8">
+                          <div className="relative w-18 sm:w-22 aspect-[3/4] drop-shadow-md rotate-[-3deg]">
+                            <Image src="/landing/botas-cowboy.png" alt="Boot Left" fill className="object-contain" />
+                          </div>
+                          <div className="relative w-18 sm:w-22 aspect-[3/4] drop-shadow-md rotate-[3deg] -scale-x-100">
+                            <Image src="/landing/botas-cowboy.png" alt="Boot Right" fill className="object-contain" />
+                          </div>
                         </div>
                       </motion.div>
                     )}
@@ -963,7 +987,7 @@ export default function InteractiveSlideLanding() {
         {/* ----------------------------------------------------------------- */}
         {/* SLIDE 05: KLOE IA // ESTILISTA CONVERSACIONAL REAL */}
         {/* ----------------------------------------------------------------- */}
-        <section className="w-full h-[100dvh] min-w-full shrink-0 flex items-center justify-center px-4 sm:px-8 lg:px-16 pt-24 pb-20 relative overflow-hidden bg-white">
+        <section className="w-full h-[100dvh] min-w-full shrink-0 flex items-center justify-center px-4 sm:px-8 lg:px-16 pt-20 pb-24 relative overflow-hidden bg-white">
           <div className="max-w-6xl w-full grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
             
             {/* Texto */}
@@ -988,7 +1012,7 @@ export default function InteractiveSlideLanding() {
               </p>
 
               <p className="text-sm sm:text-base text-zinc-600 leading-relaxed max-w-xl mb-6">
-                Dile a qué plan vas y qué tiempo hace: <span className="italic text-zinc-900 font-medium">"tengo cena en Chueca y hace rasca"</span> o <span className="italic text-zinc-900 font-medium">"voy a la uni en plan chill"</span>. Kloe te compone un outfit completo usando únicamente lo que ya tienes colgado. Sin gastar un euro.
+                Dile a qué plan vas y qué tiempo hace: <span className="italic text-zinc-900 font-medium">"tengo cena con amigos y hace fresco"</span> o <span className="italic text-zinc-900 font-medium">"voy a clase en plan chill"</span>. Kloe te compone un outfit completo usando únicamente lo que ya tienes colgado. Sin gastar un euro.
               </p>
 
               <Link href="/auth">
@@ -1004,7 +1028,7 @@ export default function InteractiveSlideLanding() {
 
             {/* Chat Bubble Interactivo con Kloe */}
             <div className="lg:col-span-6 flex justify-center items-center">
-              <div className="relative w-full max-w-md rounded-3xl bg-zinc-50 border border-zinc-200/90 p-6 flex flex-col gap-4 shadow-lg">
+              <div className="relative w-full max-w-md rounded-3xl bg-zinc-50 border border-zinc-200/90 p-5 sm:p-6 flex flex-col gap-3.5 shadow-lg">
                 
                 {/* Header Kloe con Wordmark Oficial */}
                 <div className="flex items-center justify-between pb-3 border-b border-zinc-200">
@@ -1033,7 +1057,7 @@ export default function InteractiveSlideLanding() {
                   transition={{ delay: 0.15 }}
                   className="self-end max-w-[85%] rounded-2xl rounded-tr-sm bg-zinc-200 text-zinc-900 px-4 py-2.5 text-xs leading-relaxed font-medium"
                 >
-                  Kloe, tengo cena en Madrid centro a las 21:00h, unos 14°C. Quiero ir arreglado pero sin parecer que voy a una boda.
+                  Kloe, tengo cena en el centro a las 21:00h, unos 18°C. Quiero ir arreglado pero sin parecer que voy a una boda.
                 </motion.div>
 
                 {/* Respuesta de Kloe */}
@@ -1077,7 +1101,7 @@ export default function InteractiveSlideLanding() {
         {/* ----------------------------------------------------------------- */}
         {/* SLIDE 06: COMUNIDAD & STORIES // 9:16 INTERACTIVO */}
         {/* ----------------------------------------------------------------- */}
-        <section className="w-full h-[100dvh] min-w-full shrink-0 flex items-center justify-center px-4 sm:px-8 lg:px-16 pt-24 pb-20 relative overflow-hidden bg-white">
+        <section className="w-full h-[100dvh] min-w-full shrink-0 flex items-center justify-center px-4 sm:px-8 lg:px-16 pt-20 pb-24 relative overflow-hidden bg-white">
           <div className="max-w-6xl w-full grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
             
             {/* Texto */}
@@ -1088,7 +1112,7 @@ export default function InteractiveSlideLanding() {
               transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
               className="lg:col-span-6 flex flex-col items-start"
             >
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-pink-50 border border-pink-200 mb-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-pink-50 border border-pink-200 mb-3">
                 <Instagram className="w-3.5 h-3.5 text-pink-500" />
                 <span className="text-xs font-mono tracking-wider text-pink-900">06 // SOCIAL & STORIES</span>
               </div>
@@ -1097,11 +1121,11 @@ export default function InteractiveSlideLanding() {
                 Pilla ideas de la peña y saca tu fit a Stories.
               </h2>
               
-              <p className="text-xl sm:text-2xl font-semibold text-[var(--brand-pink)] mb-4">
+              <p className="text-xl sm:text-2xl font-semibold text-[var(--brand-pink)] mb-3">
                 De tu armario a Instagram en 9:16.
               </p>
 
-              <p className="text-sm sm:text-base text-zinc-600 leading-relaxed max-w-xl mb-6">
+              <p className="text-sm sm:text-base text-zinc-600 leading-relaxed max-w-xl mb-5">
                 Descubre cómo combina la comunidad las prendas que tú también tienes, guarda combinaciones en carpetas privadas y exporta tu fit del día a Instagram Stories en formato 9:16 con un solo toque.
               </p>
 
@@ -1121,15 +1145,18 @@ export default function InteractiveSlideLanding() {
               </div>
             </motion.div>
 
-            {/* Mockup Móvil 9:16 de Instagram Story */}
+            {/* Mockup Móvil 9:16 de Instagram Story (Estilo Apple iPhone) */}
             <div className="lg:col-span-6 flex justify-center items-center">
               <motion.div
                 key={`story-${currentSlide === 5}`}
                 initial={{ opacity: 0, scale: 0.92, rotate: 2 }}
                 animate={currentSlide === 5 ? { opacity: 1, scale: 1, rotate: 0 } : { opacity: 0 }}
                 transition={{ duration: 0.5, type: 'spring', stiffness: 320, damping: 24 }}
-                className="relative w-64 sm:w-72 aspect-[9/16] rounded-[36px] border-4 border-zinc-900 bg-zinc-950 p-3 shadow-2xl overflow-hidden flex flex-col justify-between"
+                className="relative w-60 sm:w-68 max-h-[66vh] aspect-[9/16] rounded-[38px] border-4 border-zinc-900 bg-zinc-950 p-3 shadow-2xl overflow-hidden flex flex-col justify-between ring-1 ring-zinc-700/50"
               >
+                {/* Dynamic Island */}
+                <div className="absolute top-2.5 left-1/2 -translate-x-1/2 z-30 w-16 h-3.5 bg-black rounded-full" />
+
                 {/* Imagen del Post a Sangre */}
                 <div className="absolute inset-0 z-0">
                   <Image 
@@ -1142,23 +1169,23 @@ export default function InteractiveSlideLanding() {
                 </div>
 
                 {/* Barra de Progreso Story Superior */}
-                <div className="relative z-10 flex items-center gap-1 pt-1">
+                <div className="relative z-10 flex items-center gap-1 pt-3.5">
                   <div className="h-1 flex-1 bg-white rounded-full" />
                   <div className="h-1 flex-1 bg-white/40 rounded-full" />
                   <div className="h-1 flex-1 bg-white/40 rounded-full" />
                 </div>
 
                 {/* Usuario y Ubicación */}
-                <div className="relative z-10 flex items-center justify-between pt-2">
+                <div className="relative z-10 flex items-center justify-between pt-1.5">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-[var(--brand-pink)] p-0.5 border border-white">
-                      <div className="w-full h-full rounded-full bg-zinc-900 flex items-center justify-center text-[11px] font-bold text-white">
+                    <div className="w-7 h-7 rounded-full bg-[var(--brand-pink)] p-0.5 border border-white">
+                      <div className="w-full h-full rounded-full bg-zinc-900 flex items-center justify-center text-[10px] font-bold text-white">
                         C
                       </div>
                     </div>
                     <div>
                       <span className="text-xs font-bold text-white block leading-tight">carlos_m</span>
-                      <span className="text-[10px] text-zinc-300">Madrid · Hace 2h</span>
+                      <span className="text-[10px] text-zinc-300">Sevilla · Hace 2h</span>
                     </div>
                   </div>
                   <span className="text-[10px] font-mono bg-black/50 backdrop-blur-md px-2 py-0.5 rounded-full border border-white/20 text-white">
@@ -1177,15 +1204,15 @@ export default function InteractiveSlideLanding() {
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between pt-2">
+                  <div className="flex items-center justify-between pt-1">
                     <button 
                       onClick={handleToggleLike}
-                      className="flex items-center gap-1.5 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full text-xs text-white border border-white/20 active:scale-95 cursor-pointer"
+                      className="flex items-center gap-1.5 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-xs text-white border border-white/20 active:scale-95 cursor-pointer"
                     >
                       <Heart className={`w-3.5 h-3.5 ${likedStory ? 'fill-[var(--brand-pink)] text-[var(--brand-pink)]' : ''}`} />
                       <span>{likeCount}</span>
                     </button>
-                    <span className="text-[11px] text-white/90 font-medium bg-black/60 backdrop-blur-md px-2.5 py-1.5 rounded-full border border-white/20">
+                    <span className="text-[11px] text-white/90 font-medium bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/20">
                       Compartir
                     </span>
                   </div>
@@ -1201,26 +1228,26 @@ export default function InteractiveSlideLanding() {
         {/* ----------------------------------------------------------------- */}
         {/* SLIDE 07: PRUEBA KLOZET // ACCESOS Y FOOTER LEGAL COMPLETO */}
         {/* ----------------------------------------------------------------- */}
-        <section className="w-full h-[100dvh] min-w-full shrink-0 flex flex-col justify-between px-4 sm:px-8 lg:px-16 pt-16 pb-20 relative overflow-y-auto allow-wheel-scroll bg-white">
+        <section className="w-full h-[100dvh] min-w-full shrink-0 flex flex-col justify-center px-4 sm:px-8 lg:px-16 pt-8 pb-10 relative overflow-y-auto allow-wheel-scroll bg-white">
           
-          <div className="max-w-5xl w-full mx-auto my-auto py-8">
+          <div className="max-w-4xl w-full mx-auto my-auto flex flex-col justify-center">
             {/* CTA Principal de Prueba Klozet con los dos botones */}
-            <div className="rounded-3xl bg-zinc-50 border border-zinc-200/90 p-8 sm:p-12 text-center max-w-2xl mx-auto shadow-sm relative overflow-hidden mb-12">
+            <div className="rounded-3xl bg-zinc-50 border border-zinc-200/90 p-6 sm:p-8 text-center max-w-xl mx-auto shadow-xs relative overflow-hidden mb-6 sm:mb-8">
               
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-pink-50 border border-pink-200 mb-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-pink-50 border border-pink-200 mb-3">
                 <Sparkles className="w-3.5 h-3.5 text-[var(--brand-pink)]" />
                 <span className="text-xs font-mono tracking-wider text-[var(--brand-pink-dark)] font-semibold">07 // PRUEBA KLOZET</span>
               </div>
 
-              <h2 className="text-3xl sm:text-5xl font-bold tracking-tight text-zinc-950 mb-3">
+              <h2 className="text-2xl sm:text-4xl font-bold tracking-tight text-zinc-950 mb-2">
                 Prueba Klozet gratis.
               </h2>
               
-              <p className="text-xl sm:text-2xl font-semibold text-[var(--brand-pink)] mb-4">
+              <p className="text-lg sm:text-xl font-semibold text-[var(--brand-pink)] mb-3">
                 Empieza a vestir con intención.
               </p>
 
-              <p className="text-sm sm:text-base text-zinc-600 max-w-lg mx-auto mb-8 leading-relaxed">
+              <p className="text-xs sm:text-sm text-zinc-600 max-w-md mx-auto mb-6 leading-relaxed">
                 Sube tus primeras 5 prendas de confianza y deja de perder media hora cada mañana frente al armario. Tu ropa ya es buena, solo necesitas verla bien.
               </p>
 
@@ -1229,7 +1256,7 @@ export default function InteractiveSlideLanding() {
                 <Link href="/auth" className="w-full sm:w-auto">
                   <motion.button 
                     whileTap={{ scale: 0.96 }}
-                    className="w-full sm:w-auto px-8 py-3.5 rounded-full bg-[var(--brand-pink)] hover:bg-[var(--brand-pink-dark)] text-white font-bold text-sm flex items-center justify-center gap-2 shadow-[0_6px_20px_rgba(255,102,196,0.35)] cursor-pointer transition-colors"
+                    className="w-full sm:w-auto px-7 py-3 rounded-full bg-[var(--brand-pink)] hover:bg-[var(--brand-pink-dark)] text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-[0_6px_20px_rgba(255,102,196,0.35)] cursor-pointer transition-colors"
                   >
                     <span>Registrarse gratis</span>
                     <ArrowRight className="w-4 h-4" />
@@ -1237,13 +1264,13 @@ export default function InteractiveSlideLanding() {
                 </Link>
 
                 <Link href="/auth" className="w-full sm:w-auto">
-                  <button className="w-full sm:w-auto px-7 py-3.5 rounded-full bg-zinc-950 hover:bg-zinc-800 text-white font-bold text-sm cursor-pointer transition-colors">
+                  <button className="w-full sm:w-auto px-6 py-3 rounded-full bg-zinc-950 hover:bg-zinc-800 text-white font-bold text-xs sm:text-sm cursor-pointer transition-colors">
                     Iniciar sesión
                   </button>
                 </Link>
               </div>
 
-              <div className="flex flex-wrap items-center justify-center gap-6 mt-8 text-xs font-mono text-zinc-500">
+              <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 mt-6 text-[11px] font-mono text-zinc-500">
                 <span className="flex items-center gap-1.5">
                   <Check className="w-3.5 h-3.5 text-emerald-600" />
                   100% Gratuito
@@ -1260,11 +1287,11 @@ export default function InteractiveSlideLanding() {
             </div>
 
             {/* Grid del Footer Moderno con Acceso a Sobre Nosotros, Tendencias y Políticas Legales */}
-            <div className="pt-8 border-t border-zinc-200 grid grid-cols-2 md:grid-cols-4 gap-8 text-xs">
+            <div className="pt-6 border-t border-zinc-200 grid grid-cols-2 md:grid-cols-4 gap-6 text-xs">
               
               {/* Columna 1: Marca Klozet */}
               <div className="col-span-2 md:col-span-1">
-                <div className="relative w-28 h-8 mb-3">
+                <div className="relative w-24 h-7 mb-2">
                   <Image 
                     src="/landing/klozet-nombre-grande.png" 
                     alt="Klozet" 
@@ -1272,20 +1299,20 @@ export default function InteractiveSlideLanding() {
                     className="object-contain object-left" 
                   />
                 </div>
-                <p className="text-zinc-600 leading-relaxed mb-3">
+                <p className="text-zinc-600 leading-relaxed mb-2 text-[11px]">
                   Tu armario inteligente y red social de moda. Creado con pasión en Sevilla.
                 </p>
-                <span className="text-zinc-400 font-mono text-[11px]">
+                <span className="text-zinc-400 font-mono text-[10px]">
                   © 2026 Klozet. Todos los derechos reservados.
                 </span>
               </div>
 
               {/* Columna 2: Navegación & Sobre Nosotros */}
               <div>
-                <span className="font-bold text-zinc-950 uppercase tracking-wider text-[11px] font-mono block mb-3">
+                <span className="font-bold text-zinc-950 uppercase tracking-wider text-[10px] font-mono block mb-2">
                   Explorar
                 </span>
-                <ul className="space-y-2 text-zinc-600">
+                <ul className="space-y-1.5 text-zinc-600 text-[11px]">
                   <li><Link href="/about" className="hover:text-black font-medium transition-colors">Sobre Nosotros</Link></li>
                   <li><Link href="/trends" className="hover:text-black font-medium transition-colors">Tendencias & Guías</Link></li>
                   <li><Link href="/contact" className="hover:text-black font-medium transition-colors">Contacto</Link></li>
@@ -1295,10 +1322,10 @@ export default function InteractiveSlideLanding() {
 
               {/* Columna 3: Políticas Legales */}
               <div>
-                <span className="font-bold text-zinc-950 uppercase tracking-wider text-[11px] font-mono block mb-3">
+                <span className="font-bold text-zinc-950 uppercase tracking-wider text-[10px] font-mono block mb-2">
                   Legal & Privacidad
                 </span>
-                <ul className="space-y-2 text-zinc-600">
+                <ul className="space-y-1.5 text-zinc-600 text-[11px]">
                   <li><Link href="/privacy" className="hover:text-black font-medium transition-colors">Política de Privacidad</Link></li>
                   <li><Link href="/terms" className="hover:text-black font-medium transition-colors">Términos y Condiciones</Link></li>
                   <li><Link href="/cookies" className="hover:text-black font-medium transition-colors">Política de Cookies</Link></li>
@@ -1308,19 +1335,19 @@ export default function InteractiveSlideLanding() {
 
               {/* Columna 4: Soporte */}
               <div>
-                <span className="font-bold text-zinc-950 uppercase tracking-wider text-[11px] font-mono block mb-3">
+                <span className="font-bold text-zinc-950 uppercase tracking-wider text-[10px] font-mono block mb-2">
                   Soporte Directo
                 </span>
-                <p className="text-zinc-600 leading-relaxed mb-2">
+                <p className="text-zinc-600 leading-relaxed mb-1.5 text-[11px]">
                   ¿Dudas o necesitas ayuda con tu armario?
                 </p>
                 <a 
                   href="mailto:soporte@klozet.es" 
-                  className="text-[var(--brand-pink)] hover:underline font-mono text-xs block mb-2 font-semibold"
+                  className="text-[var(--brand-pink)] hover:underline font-mono text-[11px] block mb-2 font-semibold"
                 >
                   soporte@klozet.es
                 </a>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[10px] font-mono border border-emerald-200">
+                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[9px] font-mono border border-emerald-200">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                   Sistemas Operativos
                 </span>

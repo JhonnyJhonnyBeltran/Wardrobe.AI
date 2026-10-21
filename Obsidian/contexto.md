@@ -2238,3 +2238,31 @@ Documento maestro archivado en: [`Obsidian/estrategia_blindaje.md`](./estrategia
 5. **Validación y Despliegue**:
    - `npm run build` ejecutado exitosamente con 0 errores (70/70 rutas compiladas).
    - Verificado con `agent-browser` en Slide 1 y Slide 7.
+
+---
+
+## 147. Perfeccionamiento Editorial y Art Direction (Taste-Skill) en Todas las Pantallas y TabBar Apple (2026-10-21)
+
+1. **Auditoría UI/UX Integral con Subagente Especialista (`design-taste-frontend`)**:
+   - Auditoría visual pantalla por pantalla de las 7 diapositivas de la landing page con capturas de alta definición y evaluación HIG / anti-slop.
+   - Resueltos todos los problemas de solapamiento vertical, proporciones anatómicas e incongruencias de activos.
+
+2. **Perfeccionamiento de Cada Pantalla de la Landing (`app/(public)/page.tsx`)**:
+   - **Slide 01 (El Archivo):** Ajustada la escala y posición de las zapatillas Onitsuka para conectar armónicamente con la pernera de los vaqueros. Etiqueta corregida a *"Scuffers Co. · Sunset"*.
+   - **Slide 02 (El Drama Real):** Recreación realista del caos de "La Silla" con 4 prendas amontonadas y rotadas (sudadera, camisa, vaqueros con estrellas y botas cowboy) frente al armario ordenado 2x2, corrigiendo el corte del texto inferior.
+   - **Slide 03 (Escáner HD):** Transformada la cabina de escaneo en un visor de cámara Apple Studio (`bg-zinc-900/95` con esquinas en cruceta/viewfinder L, haz de láser rosa animado y metadatos técnicos en badges precisos con color real *Sunset Orange #FF5226*).
+   - **Slide 04 (El Lienzo):** Resuelta la anomalía anatómica ("unibota"): ahora ambos looks (*Streetwear Chill* y *Smart Night*) presentan pares de calzado anatómicamente simétricos (par de zapatillas Onitsuka y par de botas cowboy) alineados bajo cada pernera.
+   - **Slide 05 (Kloe IA):** Eliminadas todas las referencias erróneas a Madrid/Chueca; copy adaptado a contexto universal y cercano (*"cena en el centro a las 21:00h, unos 18°C"*).
+   - **Slide 06 (Social & Stories):** Integrado Dynamic Island y acabado biselado iPhone al mockup 9:16; ubicación corregida a *Sevilla · Hace 2h*.
+   - **Slide 07 (Prueba Klozet & Footer Legal):**
+     - Ocultación automática total tanto del header superior como de la píldora flotante inferior (`!isLastSlide`).
+     - Tarjeta de llamada a la acción (*"Registrarse gratis"* e *"Iniciar sesión"*) y pie de página de 4 columnas (*Sobre Nosotros, Tendencias, Contacto, Privacidad, Términos, Cookies, Aviso Legal, Soporte*) visibles en un solo vistazo sin solapamientos.
+
+3. **Navegación Móvil Apple TabBar (`components/TabBar.tsx`)**:
+   - Icono central de Klozet con `brightness-0` (100% negro sólido puro).
+   - Sustituido el brillo rosa y el punto inferior por un círculo glassmorphic sutil (`layoutId="activeTabGlassCircle"` con `backdrop-blur-xl`, borde translúcido y animación física spring).
+   - Iconos activos e inactivos en elegante escala monocromática (`text-black dark:text-white` y `text-zinc-500`).
+
+4. **Validación Técnica**:
+   - Compilación completa exitosa con `npm run build` (0 errores en 70 rutas).
+   - Inspección visual verificada con `agent-browser`.

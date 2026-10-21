@@ -83,12 +83,21 @@ export default function TabBar() {
               className="flex-1 flex justify-center items-center h-full group touch-manipulation"
             >
               <motion.div 
-                whileTap={{ scale: 0.82 }}
+                whileTap={{ scale: 0.85 }}
                 transition={{ type: 'spring', stiffness: 500, damping: 22, mass: 0.8 }}
-                className="relative flex flex-col items-center justify-center p-1.5"
+                className="relative flex flex-col items-center justify-center p-2 rounded-full"
               >
+                {/* Círculo Glassmorphic alrededor de la pantalla activa (reemplaza el brillo y punto rosa) */}
+                {isActive && (
+                  <motion.div
+                    layoutId="activeTabGlassCircle"
+                    className="absolute inset-0 -m-1 rounded-full bg-black/[0.07] dark:bg-white/[0.14] backdrop-blur-xl border border-black/[0.08] dark:border-white/[0.16] shadow-xs -z-10"
+                    transition={{ type: 'spring', stiffness: 450, damping: 28 }}
+                  />
+                )}
+
                 {tab.isLogoMark ? (
-                  // Center Klozet Official Mascot Icon
+                  // Center Klozet Official Icon - Entero en negro
                   <div className="relative w-[28px] h-[28px] flex items-center justify-center">
                     <Image
                       src="/klozet-logo.png"
@@ -96,32 +105,22 @@ export default function TabBar() {
                       width={28}
                       height={28}
                       priority
-                      className={`object-contain transition-transform duration-200 dark:hidden ${
-                        isActive ? 'scale-110 drop-shadow-[0_2px_8px_rgba(255,102,196,0.45)]' : 'opacity-70 hover:opacity-100'
-                      }`}
-                    />
-                    <Image
-                      src="/klozet-logo-dark.png"
-                      alt="Armario"
-                      width={28}
-                      height={28}
-                      priority
-                      className={`object-contain transition-transform duration-200 hidden dark:block ${
-                        isActive ? 'scale-110 drop-shadow-[0_2px_8px_rgba(255,102,196,0.45)]' : 'opacity-70 hover:opacity-100'
+                      className={`object-contain transition-transform duration-200 brightness-0 ${
+                        isActive ? 'scale-105 opacity-100' : 'opacity-60 group-hover:opacity-100'
                       }`}
                     />
                   </div>
                 ) : (
-                  // Native Outlined Apple Contour Icons
+                  // Native Outlined Apple Contour Icons - Sin cambio de color rosa, sobrio en negro/zinc
                   <div
                     className={`relative transition-colors duration-200 ${
-                      isActive ? 'text-[var(--brand-pink)]' : 'text-zinc-600 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-zinc-100'
+                      isActive ? 'text-black dark:text-white' : 'text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-zinc-100'
                     }`}
                   >
                     {React.cloneElement(tab.icon as React.ReactElement<any>, {
-                      strokeWidth: isActive ? 2.3 : 1.8,
+                      strokeWidth: isActive ? 2.2 : 1.8,
                       fill: 'none',
-                      className: 'w-[24px] h-[24px]'
+                      className: 'w-[23px] h-[23px]'
                     })}
 
                     {/* Notification Badge with Spring Pop */}
@@ -132,22 +131,13 @@ export default function TabBar() {
                           animate={{ scale: [0, 1.25, 1] }}
                           exit={{ scale: 0 }}
                           transition={{ type: 'spring', stiffness: 550, damping: 20 }}
-                          className="absolute -top-1.5 -right-1.5 min-w-[16px] h-[16px] px-1 flex items-center justify-center bg-[var(--brand-pink)] text-white text-[9px] font-bold rounded-full border-2 border-white dark:border-[#111113] shadow-xs pointer-events-none"
+                          className="absolute -top-1.5 -right-1.5 min-w-[16px] h-[16px] px-1 flex items-center justify-center bg-black dark:bg-white text-white dark:text-black text-[9px] font-bold rounded-full border-2 border-white dark:border-[#111113] shadow-xs pointer-events-none"
                         >
                           {badgeCount > 99 ? '+99' : badgeCount}
                         </motion.div>
                       )}
                     </AnimatePresence>
                   </div>
-                )}
-
-                {/* Subtle Active Indicator Dot */}
-                {isActive && (
-                  <motion.span 
-                    layoutId="activeTabDot"
-                    className="absolute -bottom-1.5 w-1.5 h-1.5 rounded-full bg-[var(--brand-pink)] shadow-[0_0_8px_rgba(255,102,196,0.6)]"
-                    transition={{ type: 'spring', stiffness: 500, damping: 28 }}
-                  />
                 )}
               </motion.div>
             </Link>
