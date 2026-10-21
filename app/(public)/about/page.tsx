@@ -53,7 +53,7 @@ export default function AboutPage() {
             Nuestra Historia
           </h2>
           <p>
-            Fundada en Madrid en 2026, Klozet nació de una observación cotidiana: la mayoría de las personas usamos apenas un 20% de las prendas que acumulamos en nuestros armarios. El resto queda sepultado en perchas y cajones, alimentando un ciclo constante de compras impulsivas que rara vez resuelve la incertidumbre matutina frente al espejo.
+            Klozet nació de una observación cotidiana: la mayoría de las personas usamos apenas un 20% de las prendas que acumulamos en nuestros armarios. El resto queda sepultado en perchas y cajones, alimentando un ciclo constante de compras impulsivas que rara vez resuelve la incertidumbre matutina frente al espejo.
           </p>
           <p>
             Decidimos construir una plataforma que combinara la cercanía de una red social de moda con la utilidad precisa de un armario digital. En Klozet, tu ropa real se convierte en un catálogo interactivo que puedes explorar, combinar y compartir con una comunidad que valora la autenticidad por encima del consumo desmedido.

@@ -111,7 +111,7 @@ export default function TermsPage() {
               7. Legislación Aplicable y Jurisdicción
             </h2>
             <p>
-              Las presentes Condiciones se rigen por la legislación común española. Para cualquier controversia derivada del uso del Servicio, ambas partes acuerdan someterse a la jurisdicción de los Juzgados y Tribunales de la ciudad de Madrid, salvo que la legislación de protección a los consumidores establezca imperativamente otro fuero.
+              Las presentes Condiciones se rigen por la legislación común española. Para cualquier controversia derivada del uso del Servicio, ambas partes acuerdan someterse a la jurisdicción de los Juzgados y Tribunales competentes conforme a la legislación española, salvo que la normativa de protección a consumidores establezca imperativamente otro fuero.
             </p>
           </section>
 

@@ -115,8 +115,8 @@ export default function ContactPage() {
                     <MapPin className="w-4 h-4 text-zinc-800 dark:text-zinc-200" />
                   </div>
                   <div>
-                    <p className="font-semibold text-zinc-900 dark:text-white">Sede Central</p>
-                    <p className="text-zinc-500">Madrid, España</p>
+                    <p className="font-semibold text-zinc-900 dark:text-white">Ubicación</p>
+                    <p className="text-zinc-500">España</p>
                   </div>
                 </div>
               </div>

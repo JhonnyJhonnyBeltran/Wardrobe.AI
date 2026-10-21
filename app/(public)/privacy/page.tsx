@@ -35,7 +35,7 @@ export default function PrivacyPage() {
               1. Responsable del Tratamiento
             </h2>
             <p>
-              El responsable del tratamiento de los datos recabados a través de la plataforma web y móvil Klozet (en adelante, &quot;Klozet&quot; o el &quot;Servicio&quot;) es el equipo titular de Klozet con sede en Madrid, España (correo de contacto: <a href="mailto:soporte@klozet.es" className="text-zinc-900 dark:text-white font-medium underline">soporte@klozet.es</a>).
+              El responsable del tratamiento de los datos recabados a través de la plataforma web y móvil Klozet (en adelante, &quot;Klozet&quot; o el &quot;Servicio&quot;) es el equipo titular de Klozet con sede en España (correo de contacto: <a href="mailto:soporte@klozet.es" className="text-zinc-900 dark:text-white font-medium underline">soporte@klozet.es</a>).
             </p>
           </section>
 
