@@ -2179,3 +2179,34 @@ Documento maestro archivado en: [`Obsidian/estrategia_blindaje.md`](./estrategia
 5. **Validación y Despliegue**:
    - Verificado con `agent-browser` en `http://localhost:3007/` con capturas de pantalla de alta fidelidad.
    - `npm run build` ejecutado exitosamente con 0 errores (70/70 rutas).
+
+
+---
+
+## 145. Carrusel Slider Horizontal de Moda & Animaciones Frame-by-Frame (2026-10-21)
+
+1. **Nuevo Slider Horizontal Interactivo (`app/(public)/page.tsx`)**:
+   - Reemplazado el scroll vertical bloqueante por un **verdadero slider horizontal interactivo** acelerado por GPU (`translate3d(-${currentSlide * 100}%, 0, 0)`).
+   - **Navegación múltiple e intuitiva**:
+     - **Scrubber Superior Apple Glass**: 7 pastillas de capítulos interactivos (`01 El Archivo`, `02 El Drama Real`, `03 Escáner HD`, `04 El Lienzo`, `05 Kloe IA`, `06 Social & Stories`, `07 Tu Turno`) con indicador activo y respuesta háptica.
+     - **Flechas de navegación laterales**: Botones circulares flotantes `<` y `>` para deslizar cómodamente en escritorio.
+     - **Barra flotante inferior de control**: Contador de diapositivas (`01 / 07`), nombre de sección y botón *"Deslizar >"* / *"Entrar"*.
+     - **Controles táctiles y teclado**: Gestos de deslizamiento horizontal (swipe), flechas izquierda/derecha y barra espaciadora. Rueda de ratón con debounce suave sin bloquear la navegación nativa.
+
+2. **Animaciones Frame-by-Frame Reales en Cada Diapositiva**:
+   - Al entrar en cada pestaña, los elementos aparecen secuencialmente en cascada con físicas spring elásticas (`framer-motion`):
+     - **Slide 01 (El Archivo):** Lookbook editorial central con prendas superpuestas en capas reales (Sudadera Scuffers Beige + Jeans Stars anchos + Onitsuka Tiger amarillas), stickers urbanos flotantes (`Scuffers Co.`, `Onitsuka Tiger · 66`, `OOTD 10/10`) y tarjeta de lookbook con bordes de cristal.
+     - **Slide 02 (El Drama Real):** Comparativa visual entre *"La Silla del Caos"* (prendas arrugadas amontonadas a las 08:15 AM) y *"Tu Armario Klozet"* (cuadrícula 2x2 organizada con metadatos de marcas y 12 outfits posibles).
+     - **Slide 03 (Escáner HD):** Cabina de inspección de estudio con haz de láser rosa animado en barrido continuo sobre prendas reales. Selector interactivo de 4 prendas para probar el escáner en vivo con etiquetas de precisión (99.8%), corte y paleta cromática.
+     - **Slide 04 (El Lienzo):** Canvas interactivo de outfits con selector dinámico entre *"Look 1: Streetwear Chill"* y *"Look 2: Smart Night"*, intercambiando prendas, siluetas y paleta de colores en tiempo real.
+     - **Slide 05 (Kloe IA):** Wordmark oficial bubble de Kloe con ojos, estado *"En línea"* y conversación realista con jerga juvenil de moda recomendando combinar prendas reales del armario sin postureo forzado.
+     - **Slide 06 (Social & Stories):** Mockup móvil 9:16 de Instagram Story con fotografía de outfit callejero real, etiquetas de creador, stickers urbanos (`FIT CHECK 🔥`, `KLOZET ARCHIVE`) y botón de Me gusta interactivo con contador en vivo.
+     - **Slide 07 (Tu Turno & Pie Legal):** Tarjeta de registro instantáneo y pie de página completo estilo Apple con las políticas legales obligatorias (Privacidad, Términos, Cookies, Aviso Legal), navegación del sitio y soporte (`soporte@klozet.es`).
+
+3. **Storytelling Juvenil Genuino (Cero AI Slop)**:
+   - Copy adaptado a la forma real en que habla la juventud y la cultura streetwear en España, erradicando cualquier jerga corporativa o artificial de IA.
+   - Respeto estricto del manual de marca de Klozet: "un juguete dentro de un iPhone", rosa `#FF66C4` ≤10%, logos oficiales PNG y tipografía Inter.
+
+4. **Validación**:
+   - `npm run build` ejecutado exitosamente con 0 errores (70/70 rutas compiladas).
+   - Verificado visualmente con capturas completas vía `agent-browser`.
