@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { ArrowLeft, Clock, Calendar, Share2, Sparkles, ArrowRight, Bookmark } from 'lucide-react';
 import { ARTICLES_DATA, Article } from '@/lib/trends/articlesData';
+import PublicHeader from '@/components/public/PublicHeader';
+import PublicFooter from '@/components/public/PublicFooter';
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -107,36 +109,8 @@ export default async function ArticleDetailPage({ params }: PageProps) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      {/* Top Header */}
-      <header className="sticky top-0 z-40 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-color)]/70 px-4 sm:px-8 py-3.5">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <Link
-            href="/trends"
-            className="flex items-center gap-2 text-xs font-bold text-[var(--foreground-secondary)] hover:text-[var(--brand-pink)] transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Volver a Tendencias</span>
-          </Link>
-
-          <Link href="/" className="hover:opacity-80 transition-opacity">
-            <Image
-              src="/landing/klozet-nombre-grande.png"
-              alt="Klozet"
-              width={100}
-              height={30}
-              className="h-6 w-auto object-contain"
-              priority
-            />
-          </Link>
-
-          <Link
-            href="/auth"
-            className="px-3.5 py-1.5 rounded-full text-xs font-bold bg-[var(--brand-pink)] text-white hover:opacity-95 transition-all"
-          >
-            Entrar
-          </Link>
-        </div>
-      </header>
+      {/* Unified Public Header */}
+      <PublicHeader />
 
       {/* Article Container */}
       <article className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-14">
@@ -325,20 +299,8 @@ export default async function ArticleDetailPage({ params }: PageProps) {
         </section>
       </article>
 
-      {/* Footer */}
-      <footer className="border-t border-[var(--border-color)]/70 py-10 px-4 sm:px-8 mt-16 text-xs text-[var(--foreground-secondary)]">
-        <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p>© {new Date().getFullYear()} Klozet. Todos los derechos reservados.</p>
-          <div className="flex items-center gap-4 flex-wrap">
-            <Link href="/" className="hover:text-[var(--foreground)]">Inicio</Link>
-            <Link href="/trends" className="hover:text-[var(--foreground)]">Tendencias</Link>
-            <Link href="/about" className="hover:text-[var(--foreground)]">Sobre Nosotros</Link>
-            <Link href="/contact" className="hover:text-[var(--foreground)]">Contacto</Link>
-            <Link href="/privacy" className="hover:text-[var(--foreground)]">Privacidad</Link>
-            <Link href="/terms" className="hover:text-[var(--foreground)]">Términos</Link>
-          </div>
-        </div>
-      </footer>
+      {/* Unified Public Footer */}
+      <PublicFooter />
     </div>
   );
 }

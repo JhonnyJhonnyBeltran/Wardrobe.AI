@@ -2001,6 +2001,45 @@ Documento maestro archivado en: [`Obsidian/estrategia_blindaje.md`](./estrategia
    - Eliminadas clases `sr-only` que podían ser interpretadas como cloaking por los algoritmos de calidad de Google.
    - `app/sitemap.ts` y `app/robots.ts` actualizados para habilitar el rastreo de Googlebot y `Mediapartners-Google` en todas las páginas de `/trends`.
 
+---
+
+## Integración de Skill Obligatoria: agent-browser y Regla de Revisión Web (Agregado 2026-10-21)
+- **Ubicación:** `.agents/skills/agent-browser`.
+- **Propósito:** Navegación, interacción, comprobación visual y auditoría en vivo de páginas web para Klozet.
+- **Directrices de Aplicación:**
+  1. Siempre que se solicite "revisa la pagina" o auditar una URL: usar `agent-browser` para navegar a la web e interactuar vía snapshots interactivos (`@eN`) y screenshots.
+  2. Si se requiere login o contraseñas para acceder: solicitarlas directamente al usuario, introducirlas y acceder para completar la revisión.
+  3. Comprobar layout, responsividad, renderizado de componentes y posibles errores visuales o funcionales.
+
+---
+
+## 140. Rediseño Editorial Integral de la Landing y Páginas Públicas (Anti-Slop, Quiet Luxury)
+
+### Diagnóstico de Problemas Detectados:
+1. **Clichés de IA ("AI Slop") y Recortes Defectuosos**:
+   - Titulares gigantes con gradientes estridentes fucsia/morado (`ARMARIO LLENO NADA QUE PONERTE`) y capitulares desentonadas.
+   - Imágenes con recorte automático defectuoso (ej. `golden-goose.png` con la suela inferior cortada plana y artefactos de ruido blanco).
+   - Fondo saturado con un logotipo globo/graffiti inflado en marca de agua.
+   - Secuestro de scroll (`wheel hijacking` con bloqueo forzado a 5 diapositivas `100dvh`).
+2. **Falta de Cohesión en Páginas Hijas**:
+   - Cabeceras y pies dispares entre `/about`, `/contact`, `/privacy`, `/terms`, `/cookies` y `/trends`.
+
+### Soluciones Implementadas:
+1. **Componentes Unificados de Navegación**:
+   - [`components/public/PublicHeader.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan's%20Project/Wardobre.ai/Wardrobe.AI/components/public/PublicHeader.tsx): Cabecera líquida translúcida (`backdrop-blur-xl`), navegación limpia, logotipo proporcional y menú móvil adaptable.
+   - [`components/public/PublicFooter.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan's%20Project/Wardobre.ai/Wardrobe.AI/components/public/PublicFooter.tsx): Pie de página editorial con secciones para Editorial, Empresa y Legal, cumpliendo estándares de alta costura digital.
+2. **Nueva Landing Page (`app/(public)/page.tsx`)**:
+   - Scroll vertical nativo y fluido (eliminado el secuestro de rueda).
+   - Hero editorial con moodboard asimétrico usando fotografía de moda real de alta resolución (`/landing/outfits/`).
+   - Manifiesto "¿Armario lleno, nada que ponerte?" enfocado en consumo consciente y estilismo inteligente.
+   - Muestra clara de funcionalidades: digitalización de prendas, estilismo guiado por Kloe y comunidad social OOTD.
+   - Enlace directo al hub editorial `/trends`.
+3. **Páginas Hijas Rediseñadas**:
+   - [`app/(public)/about/page.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan's%20Project/Wardobre.ai/Wardrobe.AI/app/(public)/about/page.tsx): Narrativa de marca en Madrid, 4 principios rectores y estándares HIG.
+   - [`app/(public)/contact/page.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan's%20Project/Wardobre.ai/Wardrobe.AI/app/(public)/contact/page.tsx): Canales oficiales (`soporte@klozet.es`, `contacto@klozet.es`), formulario validado y sección de preguntas frecuentes.
+   - [`app/(public)/privacy/page.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan's%20Project/Wardobre.ai/Wardrobe.AI/app/(public)/privacy/page.tsx), [`terms/page.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan's%20Project/Wardobre.ai/Wardrobe.AI/app/(public)/terms/page.tsx), [`cookies/page.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan's%20Project/Wardobre.ai/Wardrobe.AI/app/(public)/cookies/page.tsx): Diseño documental pulido, preservando íntegramente las cláusulas de Google AdSense y RGPD.
+   - [`app/(public)/trends/page.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan's%20Project/Wardobre.ai/Wardrobe.AI/app/(public)/trends/page.tsx) y [`trends/[slug]`](file:///c:/Users/EthanCurro/Desktop/Ethan's%20Project/Wardobre.ai/Wardrobe.AI/app/(public)/trends/[slug]/page.tsx): Actualizados con el encabezado y pie de página compartidos.
+
 
 
 

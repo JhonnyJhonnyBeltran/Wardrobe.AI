@@ -2,8 +2,10 @@ import React from 'react';
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowLeft, Clock, BookOpen, Sparkles, ArrowRight, Tag, ShieldCheck } from 'lucide-react';
+import { Clock, BookOpen, ArrowRight, Tag } from 'lucide-react';
 import { ARTICLES_DATA } from '@/lib/trends/articlesData';
+import PublicHeader from '@/components/public/PublicHeader';
+import PublicFooter from '@/components/public/PublicFooter';
 
 export const metadata: Metadata = {
   title: 'Revista de Moda, Tendencias & Guías de Estilo | Klozet Editorial',
@@ -35,50 +37,15 @@ export default function TrendsPage() {
 
   return (
     <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)] selection:bg-[var(--brand-pink)] selection:text-white">
-      {/* Top Header */}
-      <header className="sticky top-0 z-40 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-color)]/70 px-4 sm:px-8 py-3.5">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <Link href="/" className="hover:opacity-80 transition-opacity">
-              <Image
-                src="/landing/klozet-nombre-grande.png"
-                alt="Klozet"
-                width={110}
-                height={34}
-                className="h-6 sm:h-7 w-auto object-contain"
-                priority
-              />
-            </Link>
-            <nav className="hidden md:flex items-center gap-5 text-xs font-semibold uppercase tracking-wider text-[var(--foreground-secondary)]">
-              <Link href="/trends" className="text-[var(--brand-pink)]">
-                Tendencias
-              </Link>
-              <Link href="/about" className="hover:text-[var(--foreground)] transition-colors">
-                Sobre Nosotros
-              </Link>
-              <Link href="/contact" className="hover:text-[var(--foreground)] transition-colors">
-                Contacto
-              </Link>
-            </nav>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Link
-              href="/auth"
-              className="px-4 py-2 rounded-full text-xs sm:text-sm font-bold bg-[var(--brand-pink)] text-white hover:opacity-95 transition-all shadow-sm"
-            >
-              Entrar a Klozet
-            </Link>
-          </div>
-        </div>
-      </header>
+      {/* Unified Public Header */}
+      <PublicHeader />
 
       {/* Main Container */}
       <main className="max-w-6xl mx-auto px-4 sm:px-8 py-8 sm:py-14">
         {/* Editorial Hero Header */}
         <div className="text-center max-w-2xl mx-auto mb-12 sm:mb-16">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] text-xs font-bold tracking-wider uppercase mb-3">
-            <Sparkles className="w-3.5 h-3.5" />
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 text-xs font-semibold tracking-wider uppercase mb-3">
+            <span className="w-1.5 h-1.5 rounded-full bg-[var(--brand-pink,#ff2d78)]" />
             <span>Klozet Editorial</span>
           </div>
           <h1 className="text-3xl sm:text-5xl font-black tracking-tight leading-tight uppercase">
@@ -253,20 +220,8 @@ export default function TrendsPage() {
         </section>
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-[var(--border-color)]/70 py-10 px-4 sm:px-8 mt-16 text-xs text-[var(--foreground-secondary)]">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p>© {new Date().getFullYear()} Klozet. Todos los derechos reservados. Red social de moda y armario virtual.</p>
-          <div className="flex items-center gap-4 flex-wrap">
-            <Link href="/" className="hover:text-[var(--foreground)]">Inicio</Link>
-            <Link href="/about" className="hover:text-[var(--foreground)]">Sobre Nosotros</Link>
-            <Link href="/contact" className="hover:text-[var(--foreground)]">Contacto</Link>
-            <Link href="/privacy" className="hover:text-[var(--foreground)]">Privacidad</Link>
-            <Link href="/terms" className="hover:text-[var(--foreground)]">Términos</Link>
-            <Link href="/cookies" className="hover:text-[var(--foreground)]">Cookies</Link>
-          </div>
-        </div>
-      </footer>
+      {/* Unified Public Footer */}
+      <PublicFooter />
     </div>
   );
 }

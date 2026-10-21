@@ -1,336 +1,313 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { 
-    Mail, 
-    MessageSquare, 
-    Clock, 
-    MapPin, 
-    Send, 
-    CheckCircle2, 
-    HelpCircle, 
-    Sparkles, 
-    ShieldCheck, 
-    ArrowRight 
-} from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 import Link from 'next/link';
+import { Mail, MessageSquare, Clock, MapPin, Send, CheckCircle2, HelpCircle } from 'lucide-react';
+import PublicHeader from '@/components/public/PublicHeader';
+import PublicFooter from '@/components/public/PublicFooter';
 
 export default function ContactPage() {
-    const router = useRouter();
-    const [name, setName] = useState('');
-    const [email, setEmail] = useState('');
-    const [category, setCategory] = useState('soporte');
-    const [subject, setSubject] = useState('');
-    const [message, setMessage] = useState('');
-    const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
-    const [submitted, setSubmitted] = useState(false);
-    const [isSubmitting, setIsSubmitting] = useState(false);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [category, setCategory] = useState('soporte');
+  const [subject, setSubject] = useState('');
+  const [message, setMessage] = useState('');
+  const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!name || !email || !message || !acceptedPrivacy) return;
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name || !email || !message || !acceptedPrivacy) return;
 
-        setIsSubmitting(true);
-        // Simulate immediate delivery confirmation & mailto fallback
-        setTimeout(() => {
-            setIsSubmitting(false);
-            setSubmitted(true);
-        }, 600);
-    };
+    setIsSubmitting(true);
+    setTimeout(() => {
+      setIsSubmitting(false);
+      setSubmitted(true);
+    }, 500);
+  };
 
-    return (
-        <div className="relative min-h-screen bg-[var(--background)] overflow-x-hidden selection:bg-[var(--brand-pink)] selection:text-white">
-            {/* Main Content */}
-            <main className="relative z-10 max-w-4xl mx-auto px-4 py-10 md:py-16">
-                {/* Header Navigation */}
-                <div className="mb-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-[var(--border-color)]/40">
-                    <button 
-                        onClick={() => router.push('/')}
-                        className="inline-block hover:opacity-80 transition-opacity focus-visible:ring-2 focus-visible:ring-[var(--brand-pink)] rounded-lg p-1 self-start"
-                        title="Volver a Inicio"
-                        aria-label="Volver a Inicio"
-                    >
-                        <Image src="/klozet-logo.png" alt="Klozet" width={110} height={32} className="dark:hidden block object-contain" priority />
-                        <Image src="/klozet-logo-dark.png" alt="Klozet" width={110} height={32} className="hidden dark:block object-contain" priority />
-                    </button>
-                    <nav className="flex flex-wrap items-center gap-3 text-xs md:text-sm text-[var(--foreground-secondary)]">
-                        <Link href="/" className="hover:text-[var(--brand-pink)] transition-colors">
-                            Inicio
-                        </Link>
-                        <span>•</span>
-                        <Link href="/about" className="hover:text-[var(--brand-pink)] transition-colors">
-                            Sobre Nosotros
-                        </Link>
-                        <span>•</span>
-                        <Link href="/privacy" className="hover:text-[var(--brand-pink)] transition-colors">
-                            Privacidad
-                        </Link>
-                        <span>•</span>
-                        <Link href="/terms" className="hover:text-[var(--brand-pink)] transition-colors">
-                            Términos
-                        </Link>
-                        <span>•</span>
-                        <Link href="/cookies" className="hover:text-[var(--brand-pink)] transition-colors">
-                            Cookies
-                        </Link>
-                    </nav>
+  const faqs = [
+    {
+      q: '¿Cómo digitalizo una prenda en Klozet?',
+      a: 'Basta con tomar una foto de la prenda sobre una superficie neutra o colgada. Nuestro sistema aísla automáticamente la pieza, elimina el fondo y clasifica color, categoría y tejido en tu armario virtual.'
+    },
+    {
+      q: '¿Es Klozet gratuito?',
+      a: 'Sí. El registro, la subida de prendas y el feed social son gratuitos para todos los usuarios. Contamos con un plan Premium opcional para usuarios que desean recomendaciones ilimitadas de estilismo con Kloe y herramientas avanzadas de analítica de vestuario.'
+    },
+    {
+      q: '¿Mi armario es público o privado?',
+      a: 'Tú tienes el control total. Por defecto, tus prendas individuales permanecen en tu armario privado. Solo las combinaciones y outfits que decidas publicar en el feed serán visibles para la comunidad.'
+    },
+    {
+      q: '¿Cómo puedo sugerir una nueva función o reportar un error?',
+      a: 'Puedes utilizar este mismo formulario seleccionando la categoría "Sugerencia" o escribirnos directamente a soporte@klozet.es. También puedes usar el botón de reporte en los ajustes de tu perfil.'
+    }
+  ];
+
+  return (
+    <div className="min-h-screen bg-white dark:bg-[#09090b] text-zinc-900 dark:text-zinc-50 antialiased selection:bg-[var(--brand-pink,#ff2d78)] selection:text-white">
+      <PublicHeader />
+
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 space-y-16">
+        
+        {/* Header */}
+        <div className="text-center space-y-4 max-w-2xl mx-auto">
+          <p className="text-xs uppercase font-bold tracking-widest text-[var(--brand-pink,#ff2d78)]">
+            Contacto & Soporte
+          </p>
+          <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-zinc-950 dark:text-white leading-[1.1]">
+            ¿En qué podemos ayudarte?
+          </h1>
+          <p className="text-base sm:text-lg text-zinc-600 dark:text-zinc-400 font-normal leading-relaxed">
+            Respondemos a todas las consultas, dudas técnicas o propuestas de colaboración en menos de 24 horas laborables.
+          </p>
+        </div>
+
+        {/* Contact Grid: Info & Form */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-10 items-start">
+          
+          {/* Direct Channels (2 cols) */}
+          <div className="lg:col-span-2 space-y-6">
+            <div className="p-6 rounded-3xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200/80 dark:border-zinc-800/80 space-y-6">
+              <h2 className="text-lg font-bold text-zinc-950 dark:text-white">
+                Canales de Atención Directa
+              </h2>
+
+              <div className="space-y-4 text-xs sm:text-sm">
+                <div className="flex items-start gap-3.5">
+                  <div className="w-9 h-9 rounded-xl bg-zinc-200/70 dark:bg-zinc-800 flex items-center justify-center shrink-0">
+                    <Mail className="w-4 h-4 text-zinc-800 dark:text-zinc-200" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-zinc-900 dark:text-white">Soporte al Usuario</p>
+                    <a href="mailto:soporte@klozet.es" className="text-zinc-500 hover:text-[var(--brand-pink,#ff2d78)] transition-colors">
+                      soporte@klozet.es
+                    </a>
+                  </div>
                 </div>
 
-                <motion.div
-                    initial={{ opacity: 0, y: 16 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4 }}
-                >
-                    {/* Hero Title */}
-                    <div className="mb-12 text-center">
-                        <div className="w-16 h-16 rounded-3xl bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] flex items-center justify-center mx-auto mb-4 border border-[var(--brand-pink)]/20 shadow-lg shadow-[var(--brand-pink)]/5">
-                            <Mail className="w-8 h-8" />
-                        </div>
-                        <h1 className="text-3xl md:text-5xl font-extrabold text-[var(--foreground)] mb-3 tracking-tight">
-                            Contacto y Soporte
-                        </h1>
-                        <p className="text-[var(--foreground-secondary)] text-sm md:text-lg max-w-xl mx-auto leading-relaxed">
-                            ¿Tienes dudas, sugerencias o necesitas ayuda con tu armario? Nuestro equipo te responderá con atención personalizada.
-                        </p>
-                    </div>
+                <div className="flex items-start gap-3.5">
+                  <div className="w-9 h-9 rounded-xl bg-zinc-200/70 dark:bg-zinc-800 flex items-center justify-center shrink-0">
+                    <MessageSquare className="w-4 h-4 text-zinc-800 dark:text-zinc-200" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-zinc-900 dark:text-white">Prensa y Colaboraciones</p>
+                    <a href="mailto:contacto@klozet.es" className="text-zinc-500 hover:text-[var(--brand-pink,#ff2d78)] transition-colors">
+                      contacto@klozet.es
+                    </a>
+                  </div>
+                </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-                        {/* Company & Support Cards */}
-                        <div className="lg:col-span-5 space-y-4">
-                            <div className="bg-[var(--card-bg)]/70 backdrop-blur-xl border border-[var(--border-color)]/60 rounded-3xl p-6 sm:p-7 shadow-xl space-y-6">
-                                <h2 className="text-lg font-bold text-[var(--foreground)] tracking-tight flex items-center gap-2">
-                                    <Sparkles className="w-4 h-4 text-[var(--brand-pink)]" />
-                                    <span>Atención directa</span>
-                                </h2>
+                <div className="flex items-start gap-3.5">
+                  <div className="w-9 h-9 rounded-xl bg-zinc-200/70 dark:bg-zinc-800 flex items-center justify-center shrink-0">
+                    <Clock className="w-4 h-4 text-zinc-800 dark:text-zinc-200" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-zinc-900 dark:text-white">Horario Operativo</p>
+                    <p className="text-zinc-500">Lunes a Viernes • 9:00 a 19:00 CET</p>
+                  </div>
+                </div>
 
-                                <div className="space-y-4 text-xs md:text-sm">
-                                    <div className="flex items-start gap-3.5">
-                                        <div className="w-9 h-9 rounded-xl bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] flex items-center justify-center shrink-0 mt-0.5 border border-[var(--brand-pink)]/20">
-                                            <Mail className="w-4 h-4" />
-                                        </div>
-                                        <div>
-                                            <p className="font-semibold text-[var(--foreground)]">Soporte Técnico y General</p>
-                                            <a href="mailto:soporte@klozet.es" className="text-[var(--brand-pink)] hover:underline font-mono">
-                                                soporte@klozet.es
-                                            </a>
-                                            <p className="text-[var(--foreground-tertiary)] text-[11px] mt-0.5">Respuestas en menos de 24 horas laborables</p>
-                                        </div>
-                                    </div>
+                <div className="flex items-start gap-3.5">
+                  <div className="w-9 h-9 rounded-xl bg-zinc-200/70 dark:bg-zinc-800 flex items-center justify-center shrink-0">
+                    <MapPin className="w-4 h-4 text-zinc-800 dark:text-zinc-200" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-zinc-900 dark:text-white">Sede Central</p>
+                    <p className="text-zinc-500">Madrid, España</p>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-                                    <div className="flex items-start gap-3.5">
-                                        <div className="w-9 h-9 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center shrink-0 mt-0.5 border border-purple-500/20">
-                                            <MessageSquare className="w-4 h-4" />
-                                        </div>
-                                        <div>
-                                            <p className="font-semibold text-[var(--foreground)]">Alianzas, Prensa y Publicidad</p>
-                                            <a href="mailto:contacto@klozet.es" className="text-[var(--brand-pink)] hover:underline font-mono">
-                                                contacto@klozet.es
-                                            </a>
-                                            <p className="text-[var(--foreground-tertiary)] text-[11px] mt-0.5">Propuestas comerciales y medios</p>
-                                        </div>
-                                    </div>
+            <div className="p-5 rounded-2xl border border-zinc-200/70 dark:border-zinc-800/70 text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">
+              <p>
+                <strong>Protección de Datos:</strong> Los datos remitidos en este formulario son tratados exclusivamente con la finalidad de resolver tu consulta de acuerdo con nuestra{' '}
+                <Link href="/privacy" className="underline hover:text-zinc-900 dark:hover:text-white">
+                  Política de Privacidad
+                </Link>.
+              </p>
+            </div>
+          </div>
 
-                                    <div className="flex items-start gap-3.5">
-                                        <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0 mt-0.5 border border-emerald-500/20">
-                                            <ShieldCheck className="w-4 h-4" />
-                                        </div>
-                                        <div>
-                                            <p className="font-semibold text-[var(--foreground)]">Delegado de Privacidad (DPO)</p>
-                                            <a href="mailto:privacidad@klozet.es" className="text-[var(--brand-pink)] hover:underline font-mono">
-                                                privacidad@klozet.es
-                                            </a>
-                                            <p className="text-[var(--foreground-tertiary)] text-[11px] mt-0.5">Derechos RGPD y protección de datos</p>
-                                        </div>
-                                    </div>
-                                </div>
+          {/* Contact Form (3 cols) */}
+          <div className="lg:col-span-3 p-6 sm:p-8 rounded-3xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200/80 dark:border-zinc-800/80 shadow-xs">
+            {submitted ? (
+              <div className="text-center py-12 space-y-4">
+                <div className="w-14 h-14 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center mx-auto border border-emerald-500/20">
+                  <CheckCircle2 className="w-7 h-7" />
+                </div>
+                <h3 className="text-xl font-bold text-zinc-950 dark:text-white">
+                  Mensaje recibido con éxito
+                </h3>
+                <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto leading-relaxed">
+                  Gracias por contactar con Klozet. Nuestro equipo revisará tu mensaje y te responderá a <strong>{email}</strong> a la mayor brevedad.
+                </p>
+                <div className="pt-4">
+                  <button
+                    onClick={() => {
+                      setSubmitted(false);
+                      setName('');
+                      setEmail('');
+                      setSubject('');
+                      setMessage('');
+                    }}
+                    className="px-6 py-2 rounded-full text-xs font-semibold border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                  >
+                    Enviar otro mensaje
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-4 text-xs sm:text-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label htmlFor="contact-name" className="font-semibold text-zinc-800 dark:text-zinc-200 text-xs">
+                      Nombre completo *
+                    </label>
+                    <input
+                      id="contact-name"
+                      type="text"
+                      required
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Tu nombre"
+                      className="w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition-all text-xs sm:text-sm"
+                    />
+                  </div>
 
-                                <div className="pt-4 border-t border-[var(--border-color)]/50 space-y-2.5 text-xs text-[var(--foreground-secondary)]">
-                                    <div className="flex items-center gap-2">
-                                        <Clock className="w-3.5 h-3.5 text-[var(--foreground-tertiary)]" />
-                                        <span>Horario: Lunes a Viernes, 9:00 - 18:00 CET</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <MapPin className="w-3.5 h-3.5 text-[var(--foreground-tertiary)]" />
-                                        <span>Madrid, España (Unión Europea)</span>
-                                    </div>
-                                </div>
-                            </div>
+                  <div className="space-y-1.5">
+                    <label htmlFor="contact-email" className="font-semibold text-zinc-800 dark:text-zinc-200 text-xs">
+                      Correo electrónico *
+                    </label>
+                    <input
+                      id="contact-email"
+                      type="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="tu@email.com"
+                      className="w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition-all text-xs sm:text-sm"
+                    />
+                  </div>
+                </div>
 
-                            {/* Rapid Help Box */}
-                            <div className="bg-[var(--background-secondary)]/70 border border-[var(--border-color)]/60 rounded-3xl p-6 text-xs md:text-sm space-y-3">
-                                <h3 className="font-bold text-[var(--foreground)] flex items-center gap-2">
-                                    <HelpCircle className="w-4 h-4 text-[var(--brand-pink)]" />
-                                    <span>Preguntas Frecuentes</span>
-                                </h3>
-                                <div className="space-y-2.5 text-xs text-[var(--foreground-secondary)]">
-                                    <div>
-                                        <p className="font-semibold text-[var(--foreground)]">¿Cómo digitalizo mi ropa?</p>
-                                        <p className="text-[var(--foreground-tertiary)] mt-0.5">Sube una foto desde tu galería o cámara; el recorte automático de fondo se realiza en 1 segundo.</p>
-                                    </div>
-                                    <div>
-                                        <p className="font-semibold text-[var(--foreground)]">¿Es gratuito usar Klozet?</p>
-                                        <p className="text-[var(--foreground-tertiary)] mt-0.5">Sí, el plan básico incluye armario virtual, feed social de moda y consultas de estilismo.</p>
-                                    </div>
-                                    <div>
-                                        <p className="font-semibold text-[var(--foreground)]">¿Cómo cancelo una suscripción Pro?</p>
-                                        <p className="text-[var(--foreground-tertiary)] mt-0.5">Puedes gestionarla y cancelarla en cualquier momento desde Ajustes de Perfil sin penalizaciones.</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label htmlFor="contact-category" className="font-semibold text-zinc-800 dark:text-zinc-200 text-xs">
+                      Motivo de consulta
+                    </label>
+                    <select
+                      id="contact-category"
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 focus:outline-hidden focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition-all text-xs sm:text-sm"
+                    >
+                      <option value="soporte">Soporte Técnico / Problema en App</option>
+                      <option value="cuenta">Mi Cuenta / Inicio de Sesión</option>
+                      <option value="sugerencia">Sugerencia de Función</option>
+                      <option value="prensa">Prensa & Marcas de Moda</option>
+                      <option value="otro">Otro Asunto</option>
+                    </select>
+                  </div>
 
-                        {/* Interactive Contact Form */}
-                        <div className="lg:col-span-7">
-                            <div className="bg-[var(--card-bg)]/70 backdrop-blur-xl border border-[var(--border-color)]/60 rounded-3xl p-6 sm:p-9 md:p-10 shadow-xl">
-                                {submitted ? (
-                                    <div className="text-center py-10 space-y-4">
-                                        <div className="w-16 h-16 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 flex items-center justify-center mx-auto">
-                                            <CheckCircle2 className="w-8 h-8" />
-                                        </div>
-                                        <h3 className="text-xl md:text-2xl font-bold text-[var(--foreground)]">
-                                            ¡Mensaje enviado con éxito!
-                                        </h3>
-                                        <p className="text-sm text-[var(--foreground-secondary)] max-w-md mx-auto leading-relaxed">
-                                            Gracias por escribirnos, <strong>{name}</strong>. Hemos recibido tu consulta y nuestro equipo se pondrá en contacto contigo a través de <strong>{email}</strong> en un plazo inferior a 24 horas.
-                                        </p>
-                                        <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
-                                            <button
-                                                onClick={() => {
-                                                    setSubmitted(false);
-                                                    setMessage('');
-                                                    setSubject('');
-                                                }}
-                                                className="px-5 py-2.5 rounded-full text-xs md:text-sm font-semibold bg-[var(--background-secondary)] hover:bg-[var(--card-bg)] border border-[var(--border-color)] text-[var(--foreground)] transition-all"
-                                            >
-                                                Enviar otro mensaje
-                                            </button>
-                                            <Link
-                                                href="/"
-                                                className="px-5 py-2.5 rounded-full text-xs md:text-sm font-bold bg-[var(--brand-pink)] text-white hover:bg-[var(--brand-pink-dark)] transition-all shadow-md shadow-[var(--brand-pink)]/20"
-                                            >
-                                                Volver a la portada
-                                            </Link>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <form onSubmit={handleSubmit} className="space-y-5">
-                                        <div>
-                                            <h2 className="text-xl font-bold text-[var(--foreground)] tracking-tight">
-                                                Envíanos un mensaje
-                                            </h2>
-                                            <p className="text-xs md:text-sm text-[var(--foreground-secondary)] mt-1">
-                                                Rellena el formulario y te daremos respuesta lo antes posible.
-                                            </p>
-                                        </div>
+                  <div className="space-y-1.5">
+                    <label htmlFor="contact-subject" className="font-semibold text-zinc-800 dark:text-zinc-200 text-xs">
+                      Asunto *
+                    </label>
+                    <input
+                      id="contact-subject"
+                      type="text"
+                      required
+                      value={subject}
+                      onChange={(e) => setSubject(e.target.value)}
+                      placeholder="Breve resumen del motivo"
+                      className="w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition-all text-xs sm:text-sm"
+                    />
+                  </div>
+                </div>
 
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            <div className="space-y-1.5">
-                                                <label className="text-xs font-semibold text-[var(--foreground)]">
-                                                    Nombre completo <span className="text-[var(--brand-pink)]">*</span>
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    required
-                                                    value={name}
-                                                    onChange={(e) => setName(e.target.value)}
-                                                    placeholder="Tu nombre"
-                                                    className="w-full px-4 py-2.5 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-sm text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)]/40 transition-all"
-                                                />
-                                            </div>
+                <div className="space-y-1.5">
+                  <label htmlFor="contact-message" className="font-semibold text-zinc-800 dark:text-zinc-200 text-xs">
+                    Mensaje *
+                  </label>
+                  <textarea
+                    id="contact-message"
+                    required
+                    rows={5}
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    placeholder="Cuéntanos con detalle en qué podemos ayudarte..."
+                    className="w-full px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-hidden focus:ring-2 focus:ring-zinc-900 dark:focus:ring-zinc-100 transition-all text-xs sm:text-sm resize-none"
+                  />
+                </div>
 
-                                            <div className="space-y-1.5">
-                                                <label className="text-xs font-semibold text-[var(--foreground)]">
-                                                    Correo electrónico <span className="text-[var(--brand-pink)]">*</span>
-                                                </label>
-                                                <input
-                                                    type="email"
-                                                    required
-                                                    value={email}
-                                                    onChange={(e) => setEmail(e.target.value)}
-                                                    placeholder="tu@email.com"
-                                                    className="w-full px-4 py-2.5 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-sm text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)]/40 transition-all"
-                                                />
-                                            </div>
-                                        </div>
+                <div className="pt-1 flex items-start gap-2.5">
+                  <input
+                    id="contact-privacy"
+                    type="checkbox"
+                    required
+                    checked={acceptedPrivacy}
+                    onChange={(e) => setAcceptedPrivacy(e.target.checked)}
+                    className="mt-0.5 rounded border-zinc-300 dark:border-zinc-700 text-zinc-900 focus:ring-zinc-900 cursor-pointer"
+                  />
+                  <label htmlFor="contact-privacy" className="text-xs text-zinc-500 dark:text-zinc-400 select-none cursor-pointer">
+                    He leído y acepto la{' '}
+                    <Link href="/privacy" className="underline hover:text-zinc-900 dark:hover:text-white">
+                      Política de Privacidad
+                    </Link>{' '}
+                    y el tratamiento de mis datos de contacto para responder a esta consulta.
+                  </label>
+                </div>
 
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                            <div className="space-y-1.5">
-                                                <label className="text-xs font-semibold text-[var(--foreground)]">
-                                                    Motivo de consulta
-                                                </label>
-                                                <select
-                                                    value={category}
-                                                    onChange={(e) => setCategory(e.target.value)}
-                                                    className="w-full px-4 py-2.5 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)]/40 transition-all cursor-pointer"
-                                                >
-                                                    <option value="soporte">Soporte Técnico / Incidencias</option>
-                                                    <option value="suscripcion">Dudas de Cuenta y Suscripción</option>
-                                                    <option value="alianzas">Alianzas, Moda y Publicidad</option>
-                                                    <option value="privacidad">Privacidad y Protección de Datos</option>
-                                                    <option value="sugerencias">Ideas y Sugerencias de Estilo</option>
-                                                </select>
-                                            </div>
-
-                                            <div className="space-y-1.5">
-                                                <label className="text-xs font-semibold text-[var(--foreground)]">
-                                                    Asunto
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    value={subject}
-                                                    onChange={(e) => setSubject(e.target.value)}
-                                                    placeholder="Breve descripción"
-                                                    className="w-full px-4 py-2.5 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-sm text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)]/40 transition-all"
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-1.5">
-                                            <label className="text-xs font-semibold text-[var(--foreground)]">
-                                                Mensaje <span className="text-[var(--brand-pink)]">*</span>
-                                            </label>
-                                            <textarea
-                                                required
-                                                rows={5}
-                                                value={message}
-                                                onChange={(e) => setMessage(e.target.value)}
-                                                placeholder="Cuéntanos en detalle en qué podemos ayudarte..."
-                                                className="w-full px-4 py-3 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-sm text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)]/40 transition-all resize-none"
-                                            />
-                                        </div>
-
-                                        <div className="flex items-start gap-2.5 pt-1">
-                                            <input
-                                                type="checkbox"
-                                                id="privacy-checkbox"
-                                                required
-                                                checked={acceptedPrivacy}
-                                                onChange={(e) => setAcceptedPrivacy(e.target.checked)}
-                                                className="mt-1 w-4 h-4 rounded text-[var(--brand-pink)] focus:ring-[var(--brand-pink)]/40 border-[var(--border-color)] cursor-pointer"
-                                            />
-                                            <label htmlFor="privacy-checkbox" className="text-xs text-[var(--foreground-secondary)] leading-snug cursor-pointer select-none">
-                                                He leído y acepto la <Link href="/privacy" className="text-[var(--brand-pink)] underline hover:text-[var(--brand-pink-dark)]">Política de Privacidad</Link> de Klozet y autorizo el tratamiento de mis datos para responder a esta consulta.
-                                            </label>
-                                        </div>
-
-                                        <button
-                                            type="submit"
-                                            disabled={isSubmitting || !name || !email || !message || !acceptedPrivacy}
-                                            className="w-full sm:w-auto px-8 py-3.5 rounded-full font-bold text-sm bg-[var(--brand-pink)] text-white hover:bg-[var(--brand-pink-dark)] transition-all shadow-lg shadow-[var(--brand-pink)]/25 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-95"
-                                        >
-                                            <Send className="w-4 h-4" />
-                                            <span>{isSubmitting ? 'Enviando...' : 'Enviar consulta'}</span>
-                                        </button>
-                                    </form>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                </motion.div>
-            </main>
+                <div className="pt-2">
+                  <button
+                    type="submit"
+                    disabled={isSubmitting || !acceptedPrivacy}
+                    className="w-full py-3 rounded-full text-sm font-semibold bg-zinc-950 text-white dark:bg-white dark:text-zinc-950 hover:opacity-90 disabled:opacity-40 transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <span>{isSubmitting ? 'Enviando mensaje...' : 'Enviar consulta'}</span>
+                    <Send className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
         </div>
-    );
+
+        {/* FAQs Accordion / Grid */}
+        <section className="pt-12 border-t border-zinc-200 dark:border-zinc-800 space-y-8">
+          <div className="text-center max-w-xl mx-auto space-y-2">
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-950 dark:text-white">
+              Preguntas Frecuentes
+            </h2>
+            <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">
+              Respuestas rápidas a las dudas habituales de nuestra comunidad.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {faqs.map((faq, i) => (
+              <div 
+                key={i}
+                className="p-6 rounded-2xl bg-zinc-50 dark:bg-zinc-900/40 border border-zinc-200/70 dark:border-zinc-800/70 space-y-2"
+              >
+                <h3 className="font-bold text-sm text-zinc-900 dark:text-white">
+                  {faq.q}
+                </h3>
+                <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                  {faq.a}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+      </main>
+
+      <PublicFooter />
+    </div>
+  );
 }

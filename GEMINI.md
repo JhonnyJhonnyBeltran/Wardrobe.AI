@@ -27,3 +27,8 @@ En este proyecto (Klozet), todo desarrollo, componente o pantalla debe seguir es
 - Respuestas directas, concisas y sin ceremonias ("why many token when few do trick").
 - Carga técnica y código fuente 100% íntegros y exactos.
 - Edición quirúrgica (mostrar solo diffs/bloques relevantes).
+
+## Navegación y Revisión Web (agent-browser)
+- Skill configurada en `.agents/skills/agent-browser`.
+- Siempre que se pida "revisa la pagina" o auditar una URL: usar `agent-browser` para navegar e interactuar mediante snapshots (`@eN`) y screenshots.
+- Si se requieren credenciales para acceder a la web/sección privada: solicitarlas al usuario, introducirlas y acceder.
