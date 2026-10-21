@@ -288,8 +288,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
           // If there WAS a cached user, it means the token might be refreshing — don't kick
           // the user out. The middleware + Supabase client will handle real expired sessions.
           if (typeof window !== 'undefined' && !hadCachedUserRef.current) {
-            const publicRoutes = ['/login', '/', '/terms', '/privacy'];
-            const isPublicRoute = publicRoutes.includes(window.location.pathname) || window.location.pathname.startsWith('/auth') || window.location.pathname.startsWith('/onboarding');
+            const publicRoutes = ['/login', '/', '/terms', '/privacy', '/cookies', '/about', '/contact', '/contacto', '/trends'];
+            const isPublicRoute = publicRoutes.includes(window.location.pathname) || window.location.pathname.startsWith('/auth') || window.location.pathname.startsWith('/onboarding') || window.location.pathname.startsWith('/trends');
             if (!isPublicRoute) {
               router.push('/auth');
             }

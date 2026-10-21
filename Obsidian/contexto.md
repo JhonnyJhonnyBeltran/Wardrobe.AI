@@ -2266,3 +2266,28 @@ Documento maestro archivado en: [`Obsidian/estrategia_blindaje.md`](./estrategia
 4. **Validación Técnica**:
    - Compilación completa exitosa con `npm run build` (0 errores en 70 rutas).
    - Inspección visual verificada con `agent-browser`.
+
+
+---
+
+## 148. Restauración de Landing Fluida (`fc899bc`), Slide en TabBar y Desbloqueo Público (2026-10-21)
+
+1. **TabBar Móvil (`components/TabBar.tsx`)**:
+   - Implementada animación suave de deslizamiento glassmorphic (`layoutId="activeTabGlassCircle"` dentro de `<LayoutGroup id="mobileTabBar">` con resorte elástico Apple `stiffness: 380, damping: 28, mass: 0.7`).
+   - Color de iconos activos actualizado a rosa de marca Klozet (`text-[var(--brand-pink,#FF66C4)]`).
+   - Icono central de Klozet conservado en negro puro (`brightness-0`).
+
+2. **Landing Page Fluida y Anti-Rotura (`app/(public)/page.tsx`)**:
+   - Reconstruida tomando como referencia sólida la arquitectura del commit `fc899bc` con navegación fluida por rueda de ratón con debounce, gestos táctiles swipe y teclas de dirección.
+   - Resuelto por completo el problema de solapamiento en móvil: la pantalla se adapta con márgenes equilibrados (`pt-16 sm:pt-20 pb-12 sm:pb-8`) sin que el header ni el footer choquen con el contenido.
+   - Fondo blanco puro Apple (`bg-white dark:bg-[#0a0a0c]`), con sutiles auras de luz translúcida.
+   - Mejorados todos los activos visuales con recortes PNG de alta definición (`sudadera-scuffers-cutout.png`, `camisa-zara-cutout.png`, `jeans-stars.png`, `botas-cowboy.png`, `onitsuka-tiger.png`).
+   - Animación de barrido láser interactivo en el escaneo de prendas (Frame 1).
+   - En el Frame final (Frame 4), los botones del header superior se ocultan suavemente para dar protagonismo absoluto al CTA central y al footer legal accesible (`/about`, `/terms`, `/privacy`, `/cookies`, `/contact`).
+
+3. **Desbloqueo de Rutas Públicas en `store/userStore.tsx`**:
+   - Subsanado redirect involuntario a `/auth` al acceder a páginas públicas: añadidas explícitamente `/about`, `/contact`, `/contacto`, `/cookies` y `/trends` a la lista de `publicRoutes`.
+
+4. **Validación**:
+   - `npm run build` completado sin errores (70/70 rutas compiladas).
+   - Verificado con `agent-browser` en resoluciones móvil (390x844) y desktop.
