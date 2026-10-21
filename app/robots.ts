@@ -13,6 +13,9 @@ export default function robots(): MetadataRoute.Robots {
           '/login',
           '/feed',
           '/search',
+          '/about',
+          '/contact',
+          '/contacto',
           '/terms',
           '/privacy',
           '/cookies',
@@ -26,6 +29,14 @@ export default function robots(): MetadataRoute.Robots {
           '/messages/*',
           '/notifications/*'
         ]
+      },
+      {
+        userAgent: 'Mediapartners-Google',
+        allow: '/'
+      },
+      {
+        userAgent: 'Googlebot',
+        allow: '/'
       }
     ],
     sitemap: `${baseUrl}/sitemap.xml`

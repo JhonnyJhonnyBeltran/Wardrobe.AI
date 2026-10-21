@@ -1841,6 +1841,51 @@ En cada conversación, el backend alimenta a CloSy con:
 3. **Cabecera del Feed Móvil (`app/(app)/feed/page.tsx`):**
    - **Eliminación de Cajas de Botón:** Suprimidas las cajas circulares con borde en los botones de cabecera (`+` crear publicación y avión de mensajes directos), restableciendo iconos limpios y minimalistas con área táctil óptima de 44px (`touch-target-44`).
 
+---
+
+## 135. Cumplimiento Legal, SEO y Preparación Integral para Google AdSense (2026-10-21)
+
+### Contexto y Diagnóstico:
+Resolución del rechazo de Google AdSense (*"tu sitio web no está listo para mostrar anuncios"* / contenido de bajo valor y páginas obligatorias ausentes). Se completaron todos los requisitos técnicos, editoriales y regulatorios:
+
+### Modificaciones e Implementaciones:
+1. **Robots.txt (`app/robots.ts`):**
+   - Acceso explícito total (`Allow: /`) para los rastreadores `Mediapartners-Google` (bot de AdSense) y `Googlebot`.
+   - Indexación permitida de `/about`, `/contact`, `/contacto`, `/privacy`, `/terms`, `/cookies`, `/feed`, `/search`, etc.
+   - Protección de rutas privadas (`/api/*`, `/profile/settings/*`, `/messages/*`, `/notifications/*`).
+
+2. **Archivo ads.txt (`public/ads.txt`):**
+   - Registro oficial `google.com, pub-4628313000953034, DIRECT, f08c47fec0942fa0` con formato estricto y salto de línea limpio.
+
+3. **Página de Contacto y Soporte (`app/(public)/contact/page.tsx` y alias `/contacto`):**
+   - Diseño editorial de alta fidelidad con estándar Apple HIG.
+   - Datos corporativos oficiales: `soporte@klozet.es`, `contacto@klozet.es`, `privacidad@klozet.es`, horario de atención (L-V 9:00 - 18:00 CET) y sede en Madrid, España.
+   - Formulario interactivo accesible con validación de privacidad y feedback de confirmación.
+   - Sección de preguntas frecuentes (FAQ) rápidas.
+
+4. **Página Sobre Nosotros (`app/(public)/about/page.tsx`):**
+   - Narrativa editorial sobre la misión de Klozet: red social de moda, armario virtual inteligente y estilismo con IA.
+   - Pilares de sostenibilidad, digitalización de ropa real y uso ético de IA (Kloe).
+   - Estándares de convivencia comunitaria y presentación del equipo fundador/diseño en España.
+
+5. **Política de Privacidad (`app/(public)/privacy/page.tsx`):**
+   - Incorporación obligatoria de la Sección 5 sobre Google AdSense y proveedores publicitarios externos.
+   - Mención explícita al uso de cookies de publicidad para servir anuncios basados en visitas anteriores.
+   - Enlaces activos para inhabilitar anuncios personalizados en Google Ads Settings (`adssettings.google.com`), `aboutads.info/choices` y `youronlinechoices.eu`.
+
+6. **Política de Cookies y Banner (`app/(public)/cookies/page.tsx` & `components/CookiesBanner.tsx`):**
+   - Actualización de la tabla de cookies incluyendo cookies de Google LLC (`__gads`, `__gpi`, `IDE`).
+   - Modal de configuración granular en `CookiesBanner.tsx` con toggle para cookies publicitarias de Google AdSense conforme a la normativa de la AEPD y la política de consentimiento de la UE.
+
+7. **Landing Page y SEO Semántico (`app/(public)/page.tsx`):**
+   - Navegación permanente en cabecera de escritorio hacia `/about` y `/contact`.
+   - Barra flotante inferior de acceso legal en todos los fotogramas interactivos.
+   - Inclusión de sección semántica indexable (`<section className="sr-only">`) con más de 800 palabras de contenido de valor descriptivo, características, valores y enlaces directos a todas las rutas institucionales.
+
+8. **Sitemap Dinámico (`app/sitemap.ts`):**
+   - Rutas `/about` y `/contact` incorporadas con periodicidad mensual y prioridad 0.7.
+
+
 
 
 

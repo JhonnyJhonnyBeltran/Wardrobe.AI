@@ -115,15 +115,26 @@ export default function LandingPage() {
     >
       {/* 1. TOP BAR WITH LOGO AND AUTH BUTTONS */}
       <header className="fixed top-0 left-0 right-0 z-50 px-3.5 sm:px-8 py-3 sm:py-5 flex items-center justify-between pointer-events-none">
-        <div className="pointer-events-auto flex items-center gap-2">
-          <Image 
-            src="/landing/klozet-nombre-grande.png" 
-            alt="Klozet" 
-            width={110} 
-            height={34} 
-            className="h-5 sm:h-8 w-auto object-contain" 
-            priority
-          />
+        <div className="pointer-events-auto flex items-center gap-3 sm:gap-6">
+          <Link href="/" className="hover:opacity-90 transition-opacity flex items-center">
+            <Image 
+              src="/landing/klozet-nombre-grande.png" 
+              alt="Klozet" 
+              width={110} 
+              height={34} 
+              className="h-5 sm:h-8 w-auto object-contain" 
+              priority
+            />
+          </Link>
+          <nav className="hidden lg:flex items-center gap-3.5 text-xs font-semibold text-[var(--foreground-secondary)]">
+            <Link href="/about" className="hover:text-[var(--brand-pink)] transition-colors">
+              Sobre Nosotros
+            </Link>
+            <span className="text-[var(--border-color)]">•</span>
+            <Link href="/contact" className="hover:text-[var(--brand-pink)] transition-colors">
+              Contacto
+            </Link>
+          </nav>
         </div>
 
         {/* Minimalist 5-Segment Progress Indicator */}
@@ -748,6 +759,14 @@ export default function LandingPage() {
                 </p>
                 
                 <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-[9px] sm:text-[11px]">
+                  <Link href="/about" className="hover:text-[var(--brand-pink)] transition-colors">
+                    Sobre Nosotros
+                  </Link>
+                  <span className="text-[var(--border-color)]">•</span>
+                  <Link href="/contact" className="hover:text-[var(--brand-pink)] transition-colors">
+                    Contacto
+                  </Link>
+                  <span className="text-[var(--border-color)]">•</span>
                   <Link href="/terms" className="hover:text-[var(--brand-pink)] transition-colors inline-flex items-center gap-0.5">
                     <FileText className="w-3 h-3" />
                     <span>Términos</span>
@@ -773,17 +792,105 @@ export default function LandingPage() {
         </AnimatePresence>
       </main>
 
-      {/* Floating Next Slide Indicator (Subtle & Non-intrusive) */}
+      {/* Floating Next Slide Indicator & Quick Legal Access (Visible across slides for bots and users) */}
       {currentFrame < totalFrames - 1 && (
-        <button
-          onClick={nextFrame}
-          aria-label="Siguiente pantalla"
-          className="fixed bottom-2.5 sm:bottom-4 left-1/2 -translate-x-1/2 z-40 px-3 py-1 rounded-full bg-white/70 dark:bg-[#121216]/70 backdrop-blur-md border border-gray-200/60 dark:border-white/10 text-[10px] sm:text-xs font-semibold text-[var(--foreground-secondary)] hover:text-[var(--foreground)] transition-all flex items-center gap-1 shadow-xs active:scale-95 animate-pulse cursor-pointer pointer-events-auto"
-        >
-          <span>Desliza</span>
-          <ChevronDown className="w-3.5 h-3.5" />
-        </button>
+        <div className="fixed bottom-2.5 sm:bottom-4 left-0 right-0 z-40 px-3 sm:px-6 flex items-center justify-between pointer-events-none">
+          <nav className="pointer-events-auto hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-white/70 dark:bg-[#121216]/70 backdrop-blur-md border border-gray-200/60 dark:border-white/10 text-[10px] font-medium text-[var(--foreground-tertiary)] shadow-xs">
+            <Link href="/about" className="hover:text-[var(--foreground)] transition-colors">Sobre Nosotros</Link>
+            <span>•</span>
+            <Link href="/contact" className="hover:text-[var(--foreground)] transition-colors">Contacto</Link>
+            <span>•</span>
+            <Link href="/privacy" className="hover:text-[var(--foreground)] transition-colors">Privacidad</Link>
+            <span>•</span>
+            <Link href="/terms" className="hover:text-[var(--foreground)] transition-colors">Términos</Link>
+            <span>•</span>
+            <Link href="/cookies" className="hover:text-[var(--foreground)] transition-colors">Cookies</Link>
+          </nav>
+
+          <button
+            onClick={nextFrame}
+            aria-label="Siguiente pantalla"
+            className="pointer-events-auto mx-auto md:mx-0 px-3.5 py-1 rounded-full bg-white/70 dark:bg-[#121216]/70 backdrop-blur-md border border-gray-200/60 dark:border-white/10 text-[10px] sm:text-xs font-semibold text-[var(--foreground-secondary)] hover:text-[var(--foreground)] transition-all flex items-center gap-1 shadow-xs active:scale-95 animate-pulse cursor-pointer"
+          >
+            <span>Desliza</span>
+            <ChevronDown className="w-3.5 h-3.5" />
+          </button>
+
+          <div className="hidden md:block w-36 pointer-events-none" />
+        </div>
       )}
+
+      {/* 5. CRAWLABLE SEMANTIC HTML CONTENT FOR SEARCH ENGINES & GOOGLE ADSENSE */}
+      <section 
+        className="sr-only" 
+        aria-label="Información detallada, características de moda y legal de Klozet"
+      >
+        <h2>Klozet — Red Social de Moda, Armario Virtual Inteligente y Estilismo con IA</h2>
+        <p>
+          Klozet (klozet.es) es la plataforma líder en España para amantes de la moda, streetwear, 
+          tendencias contemporáneas y gestión de armario virtual. Te permite digitalizar tus prendas reales 
+          mediante recorte automático de fondo por visión computacional, organizar tus looks por categorías 
+          (partes superiores, pantalones, calzado, prendas de abrigo y accesorios) y recibir sugerencias 
+          de estilismo personalizadas con nuestra asesora Kloe.
+        </p>
+
+        <h3>Características Principales de Klozet</h3>
+        <ul>
+          <li>
+            <strong>Digitalización de ropa en 1 segundo:</strong> Sube fotos de tus prendas de marcas reales 
+            (Zara, Scuffers, Nike, Adidas, Miu Miu, Mango, Golden Goose) y la tecnología de IA elimina el fondo 
+            para componer un catálogo interactivo personal.
+          </li>
+          <li>
+            <strong>Lienzo interactivo de outfits (Canvas):</strong> Diseña, mueve y escala prendas en un 
+            espacio de composición libre para probar combinaciones antes de vestirte.
+          </li>
+          <li>
+            <strong>Kloe — Asesora y Estilista Personal con IA:</strong> Analiza las prendas de tu armario 
+            para crear outfits coherentes de pies a cabeza respetando la armonía de color, el corte de las prendas 
+            y el código de vestimenta para cualquier ocasión (casual, trabajo, cena formal o fiesta).
+          </li>
+          <li>
+            <strong>Calendario de planificación de looks:</strong> Asigna outfits a días concretos del mes 
+            para despertarte sabiendo exactamente qué ponerte.
+          </li>
+          <li>
+            <strong>Red social y comunidad de moda (OOTD):</strong> Descubre publicaciones de inspiración real 
+            estilo Pinterest y lookbook, sigue a creadores de tendencias, guarda ideas en carpetas temáticas y 
+            comparte tus looks diarios.
+          </li>
+          <li>
+            <strong>Catálogo de más de 30 estilos de moda:</strong> Streetwear, Casual Chic, Old Money, Quiet Luxury, 
+            Y2K, Vintage, Techwear, Dark Academia, Gorpcore y Minimalismo adaptados a cualquier género.
+          </li>
+        </ul>
+
+        <h3>Valores, Sostenibilidad y Filosofía</h3>
+        <p>
+          Fomentamos una relación más creativa y sostenible con tu ropa. Al tener tu armario organizado 
+          y visible en tu móvil, redescubres combinaciones que no recordabas, reduciendo el consumo compulsivo 
+          y maximizando el partido a tus prendas favoritas.
+        </p>
+
+        <h3>Navegación y Cumplimiento Legal</h3>
+        <p>
+          Klozet opera con estricto apego al Reglamento General de Protección de Datos (RGPD) de la Unión Europea, 
+          la Ley 34/2002 (LSSI-CE) y las directrices de la Agencia Española de Protección de Datos (AEPD). 
+          Puedes acceder a toda nuestra información institucional y legal en los siguientes enlaces:
+        </p>
+        <nav aria-label="Enlaces institucionales y legales">
+          <ul>
+            <li><Link href="/about">Sobre Nosotros y Nuestra Misión</Link></li>
+            <li><Link href="/contact">Contacto y Soporte Oficial (soporte@klozet.es)</Link></li>
+            <li><Link href="/privacy">Política de Privacidad y Cláusula de Google AdSense</Link></li>
+            <li><Link href="/terms">Términos y Condiciones de Uso</Link></li>
+            <li><Link href="/cookies">Política de Cookies y Preferencias de Publicidad</Link></li>
+            <li><Link href="/auth">Acceso e Inicio de Sesión en Klozet</Link></li>
+            <li><Link href="/feed">Feed de Moda y Publicaciones</Link></li>
+            <li><Link href="/search">Buscador y Explorador de Estilos</Link></li>
+          </ul>
+        </nav>
+      </section>
     </div>
   );
 }

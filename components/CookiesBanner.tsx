@@ -10,6 +10,7 @@ interface CookiePreferences {
     technical: boolean; // Always true
     preferences: boolean;
     analytics: boolean;
+    advertising: boolean;
     timestamp: string;
 }
 
@@ -25,6 +26,7 @@ export default function CookiesBanner() {
         technical: true,
         preferences: true,
         analytics: false,
+        advertising: false,
     });
 
     useEffect(() => {
@@ -42,7 +44,7 @@ export default function CookiesBanner() {
         }
     }, []);
 
-    const saveConsent = async (prefs: { technical: boolean; preferences: boolean; analytics: boolean }) => {
+    const saveConsent = async (prefs: { technical: boolean; preferences: boolean; analytics: boolean; advertising: boolean }) => {
         const payload: CookiePreferences = {
             ...prefs,
             technical: true, // Always required
@@ -87,11 +89,11 @@ export default function CookiesBanner() {
     };
 
     const handleAcceptAll = () => {
-        saveConsent({ technical: true, preferences: true, analytics: true });
+        saveConsent({ technical: true, preferences: true, analytics: true, advertising: true });
     };
 
     const handleRejectAll = () => {
-        saveConsent({ technical: true, preferences: false, analytics: false });
+        saveConsent({ technical: true, preferences: false, analytics: false, advertising: false });
     };
 
     const handleSaveCustom = () => {
@@ -124,7 +126,7 @@ export default function CookiesBanner() {
                                         Tu privacidad en Klozet
                                     </h3>
                                     <p className="text-xs md:text-sm text-gray-600 dark:text-gray-300 mt-1 leading-relaxed">
-                                        Utilizamos cookies técnicas para mantener tu sesión segura y cookies de personalización para recordar tus preferencias (tema oscuro/claro). Cumplimos con la normativa española de la AEPD y el RGPD.
+                                        Utilizamos cookies técnicas necesarias, de personalización y cookies publicitarias (Google AdSense) para garantizar el funcionamiento seguro y ofrecerte contenido relevante. Cumplimos con la normativa de la AEPD, el RGPD y las políticas de consentimiento de la UE.
                                     </p>
                                 </div>
                             </div>
@@ -297,6 +299,32 @@ export default function CookiesBanner() {
                                             checked={prefSettings.analytics}
                                             onChange={(e) => setPrefSettings(prev => ({ ...prev, analytics: e.target.checked }))}
                                             aria-label="Permitir cookies de métricas y rendimiento"
+                                            className="w-5 h-5 accent-[var(--brand-pink)] rounded cursor-pointer mt-1"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Advertising & Google AdSense Cookies */}
+                                <div className="p-4 rounded-2xl bg-gray-50 dark:bg-[#18181e] border border-gray-200/80 dark:border-white/5">
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div>
+                                            <div className="flex items-center gap-2">
+                                                <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
+                                                    Publicidad y Google AdSense
+                                                </h4>
+                                                <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-pink-500/10 text-[var(--brand-pink)]">
+                                                    Opcional
+                                                </span>
+                                            </div>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                                Permiten a Google y sus socios servir anuncios relevantes y no intrusivos basados en tus visitas a este u otros sitios web.
+                                            </p>
+                                        </div>
+                                        <input
+                                            type="checkbox"
+                                            checked={prefSettings.advertising}
+                                            onChange={(e) => setPrefSettings(prev => ({ ...prev, advertising: e.target.checked }))}
+                                            aria-label="Permitir cookies publicitarias de Google AdSense"
                                             className="w-5 h-5 accent-[var(--brand-pink)] rounded cursor-pointer mt-1"
                                         />
                                     </div>
