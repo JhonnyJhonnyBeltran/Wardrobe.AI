@@ -48,8 +48,8 @@ export default function TrendsPage() {
             <span className="w-1.5 h-1.5 rounded-full bg-[var(--brand-pink,#ff2d78)]" />
             <span>Klozet Editorial</span>
           </div>
-          <h1 className="text-3xl sm:text-5xl font-black tracking-tight leading-tight uppercase">
-            Tendencias, Estilo & Armario Inteligente
+          <h1 className="text-3xl sm:text-5xl font-bold tracking-tight leading-tight text-zinc-900 dark:text-zinc-50">
+            <span className="text-[1.2em] italic font-serif text-[var(--brand-pink,#FF66C4)] mr-0.5">T</span>endencias, Estilo & Armario
           </h1>
           <p className="mt-3.5 text-sm sm:text-base text-[var(--foreground-secondary)] leading-relaxed">
             Guías profundas de moda, análisis cromático y fórmulas de atuendos para vestir con intención, comprar con criterio y maximizar cada prenda.

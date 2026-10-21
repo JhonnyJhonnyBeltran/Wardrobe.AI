@@ -2303,3 +2303,31 @@ Documento maestro archivado en: [`Obsidian/estrategia_blindaje.md`](./estrategia
 2. **Validación**:
    - `npm run build` completado con éxito (0 errores).
    - Verificado con `agent-browser` en móvil y desktop.
+
+---
+
+## 150. Logo de Marca Completa en Auth, Eliminación AI Slop, Contacto Directo y Tipografía Editorial (2026-10-21)
+
+1. **Página de Autenticación (`app/(public)/auth/page.tsx`)**:
+   - Actualizado el logotipo en la cabecera tanto del formulario de login/registro como de la pantalla de confirmación por correo: sustituido el monograma circular por el imagotipo oficial con nombre completo en grande (`/landing/klozet-nombre-grande.png`).
+
+2. **Eliminación Radical de "AI Slop"**:
+   - Purgados de la landing page (`app/(public)/page.tsx`) y de sobre nosotros (`app/(public)/about/page.tsx`) todos los micro-badges clónicos y clichés ("Recorte automático", "Sin fondos ni sombras", "Digitalizada en 1s", etc.).
+   - La narrativa visual de la landing se sostiene en la fotografía de prendas reales con físicas orgánicas flotantes (spring physics), barrido láser y contrastes limpios.
+
+3. **Tipografía de Alto Impacto Editorial (Referencia Commit `fc899bc`)**:
+   - Creado estándar en `Obsidian/brand_kit.md` (sección 3.4) de titulares editoriales con capitular o inicial cursiva con serifa en rosa de marca (`<span className="text-[1.2em] italic font-serif text-[var(--brand-pink,#FF66C4)] mr-0.5">X</span>`) combinado con sans-serif bold / display tracking-tight.
+   - Aplicado transversalmente en todas las pantallas públicas:
+     - Landing (`/`): titulares de los 5 frames.
+     - Sobre Nosotros (`/about`): `Conócenos`.
+     - Contacto (`/contact`): `Contacto & Soporte`.
+     - Términos (`/terms`): `Términos y Condiciones`.
+     - Privacidad (`/privacy`): `Política de Privacidad`.
+     - Cookies (`/cookies`): `Política de Cookies`.
+     - Tendencias (`/trends`): `Tendencias, Estilo & Armario`.
+
+4. **Canal Centralizado de Contacto**:
+   - Actualizado el destino de recepción de consultas y soporte en toda la plataforma al correo corporativo: **`klozet.enterprise@gmail.com`** (enlaces directos, tarjetas de canal y redirección en el envío de formularios).
+
+5. **Validación**:
+   - `npm run build` verificado con éxito (0 errores de compilación y tipos en las 70 rutas).

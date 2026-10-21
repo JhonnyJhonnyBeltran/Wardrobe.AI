@@ -233,8 +233,8 @@ export default function AuthPage() {
                     className="relative z-10 w-full max-w-md bg-[var(--card-bg)] border border-[var(--border-color)] rounded-[28px] sm:rounded-[32px] shadow-2xl p-6 sm:p-10 text-center"
                 >
                     <div className="flex justify-center mb-4 sm:mb-6">
-                        <Image src="/klozet-logo.png" alt="Klozet Logo" width={70} height={70} className="dark:hidden block w-14 sm:w-20 h-auto object-contain drop-shadow-sm" />
-                        <Image src="/klozet-logo-dark.png" alt="Klozet Logo Dark" width={70} height={70} className="hidden dark:block w-14 sm:w-20 h-auto object-contain drop-shadow-sm" />
+                        <Image src="/landing/klozet-nombre-grande.png" alt="Klozet" width={180} height={56} className="w-32 sm:w-40 h-auto object-contain" priority />
+
                     </div>
                     <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-[var(--brand-pink)]/10 flex items-center justify-center mx-auto mb-3 sm:mb-4">
                         <Mail className="w-6 h-6 sm:w-8 sm:h-8 text-[var(--brand-pink)]" />
@@ -322,24 +322,14 @@ export default function AuthPage() {
                 className="relative z-10 w-full max-w-[390px] sm:max-w-[420px] p-[1px] rounded-[24px] sm:rounded-[36px] bg-gradient-to-b from-gray-200 via-gray-100 to-[var(--brand-pink)]/30 dark:from-white/20 dark:via-white/5 dark:to-[var(--brand-pink)]/25 shadow-2xl dark:shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] my-auto"
             >
                 <div className="w-full bg-white/95 dark:bg-[#0d0d12]/90 backdrop-blur-3xl rounded-[23px] sm:rounded-[35px] p-4 sm:p-8 md:p-9 border border-gray-100 dark:border-white/5 overflow-hidden">
-                    <div className="flex justify-center mb-2.5 sm:mb-4 relative">
+                    <div className="flex justify-center mb-3 sm:mb-5 relative">
                         <div className="absolute inset-0 bg-[var(--brand-pink)]/15 dark:bg-[var(--brand-pink)]/20 rounded-full blur-xl -z-10 scale-75" />
-                        {/* Light Mode Logo (Black Logo on White Background) */}
                         <Image 
-                            src="/klozet-logo.png" 
-                            alt="Klozet Logo" 
-                            width={130} 
-                            height={130} 
-                            className="dark:hidden block w-24 sm:w-34 h-auto object-contain drop-shadow-md" 
-                            priority
-                        />
-                        {/* Dark Mode Logo (White Logo on Dark Background) */}
-                        <Image 
-                            src="/klozet-logo-dark.png" 
-                            alt="Klozet Logo Dark" 
-                            width={130} 
-                            height={130} 
-                            className="hidden dark:block w-24 sm:w-34 h-auto object-contain drop-shadow-xl" 
+                            src="/landing/klozet-nombre-grande.png" 
+                            alt="Klozet" 
+                            width={220} 
+                            height={68} 
+                            className="block w-36 sm:w-44 h-auto object-contain" 
                             priority
                         />
                     </div>

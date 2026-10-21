@@ -19,8 +19,8 @@ export default function PrivacyPage() {
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
             <span>Cumplimiento RGPD & LOPDGDD</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-zinc-950 dark:text-white">
-            Política de Privacidad
+          <h1 className="text-3xl sm:text-5xl font-black tracking-tighter uppercase text-zinc-950 dark:text-white leading-[1.05]">
+            <span className="text-[1.2em] italic font-serif text-[var(--brand-pink,#FF66C4)] mr-0.5">P</span>olítica de Privacidad
           </h1>
           <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">
             Última actualización: 21 de octubre de 2026 • Versión 2.4
@@ -35,7 +35,7 @@ export default function PrivacyPage() {
               1. Responsable del Tratamiento
             </h2>
             <p>
-              El responsable del tratamiento de los datos recabados a través de la plataforma web y móvil Klozet (en adelante, &quot;Klozet&quot; o el &quot;Servicio&quot;) es el equipo titular de Klozet con sede en España (correo de contacto: <a href="mailto:soporte@klozet.es" className="text-zinc-900 dark:text-white font-medium underline">soporte@klozet.es</a>).
+              El responsable del tratamiento de los datos recabados a través de la plataforma web y móvil Klozet (en adelante, &quot;Klozet&quot; o el &quot;Servicio&quot;) es el equipo titular de Klozet con sede en España (correo de contacto: <a href="mailto:klozet.enterprise@gmail.com" className="text-zinc-900 dark:text-white font-medium underline">klozet.enterprise@gmail.com</a>).
             </p>
           </section>
 

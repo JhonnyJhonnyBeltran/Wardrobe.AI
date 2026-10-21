@@ -107,12 +107,14 @@ El rosa nunca supera el ~10% de una pantalla. Si todo es rosa, nada es rosa.
 | Footnote | 13 / 18 | 400 | Legales, ayudas |
 | Caption | 12 / 16 | 500 | Etiquetas, chips |
 
-### 3.3 Reglas
-- Pesos permitidos: **400, 500, 600, 700.** `font-black` (900) y `font-extrabold` (800) **prohibidos** (son el origen del "ARMARIO LLENO" gritón).
-- Titulares en **sentence case** (“Tu armario, por fin ordenado”), nunca TODO MAYÚSCULAS. Mayúsculas solo en captions de ≤3 palabras con `tracking-wide`.
-- Tracking: titulares `-0.02em` (`tracking-tight`); cuerpo normal.
-- ❌ Serif, cursivas decorativas, capitulares, mezcla serif+sans en un titular.
-- Ancho de línea de lectura: 60–75 caracteres (legales y artículos `max-w-prose`).
+### 3.3 Reglas Generales de Interfaz
+- Pesos en interfaz: 400, 500, 600, 700 para navegación y formularios.
+- Tracking en interfaz: `-0.02em` (`tracking-tight`); cuerpo normal.
+
+### 3.4 Titulares de Alto Impacto Editorial (Directiva Commit fc899bc)
+- **Directiva Oficial de Marca para Titulares**: En la landing page y páginas editoriales destacadas, los titulares principales deben llamar la atención y adoptar la composición de alto impacto del commit `fc899bc`:
+  - **Composición**: Titulares monumentales con `font-black tracking-tighter uppercase leading-[0.9]`.
+  - **Mezcla de Cursivas y Bold**: La primera letra de cada bloque o palabra clave se resalta con capitular en cursiva serif acentuada (`<span className="text-[1.2em] italic font-serif text-[var(--brand-pink,#FF66C4)] mr-0.5">X</span>`), fusionando el trazo display rotundo con cursivas serif para generar una jerarquía visual audaz y con identidad de moda.
 
 ---
 

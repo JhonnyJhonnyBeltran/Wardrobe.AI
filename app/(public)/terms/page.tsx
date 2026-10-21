@@ -19,8 +19,8 @@ export default function TermsPage() {
             <Scale className="w-3.5 h-3.5 text-zinc-800 dark:text-zinc-200" />
             <span>Condiciones Legales de Uso</span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-zinc-950 dark:text-white">
-            Términos y Condiciones
+          <h1 className="text-3xl sm:text-5xl font-black tracking-tighter uppercase text-zinc-950 dark:text-white leading-[1.05]">
+            <span className="text-[1.2em] italic font-serif text-[var(--brand-pink,#FF66C4)] mr-0.5">T</span>érminos y Condiciones
           </h1>
           <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">
             Última actualización: 21 de octubre de 2026 • Versión 2.2
