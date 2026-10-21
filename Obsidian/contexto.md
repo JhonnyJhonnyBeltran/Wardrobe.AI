@@ -2113,3 +2113,38 @@ Documento maestro archivado en: [`Obsidian/estrategia_blindaje.md`](./estrategia
 4. **Validación**:
    - `npm run build` ejecutado exitosamente con 0 errores (70/70 rutas compiladas).
    - Commit y push completados en rama `main` (`ab58526`).
+
+---
+
+## 143. Integración de la Suite Claude SEO (33 Skills y 20 Subagentes) (2026-10-21)
+- **Ubicación:** .agents/skills/seo* y ~/.claude/skills/seo*.
+- **Propósito:** Auditorías SEO de grado profesional, optimización para motores de IA (GEO / AI Overviews / Perplexity / ChatGPT), schema JSON-LD, sitemaps y calidad de contenido E-E-A-T para Klozet.
+- **Capacidades Principales:**
+  1. /seo audit: Auditoría completa del sitio web con subagentes especializados.
+  2. /seo geo y /seo agentic: Preparación para búsqueda asistida por IA y preparación agentic (llms.txt, WebMCP).
+  3. /seo schema: Generación y validación de esquemas JSON-LD (Product, Organization, FAQ, Article).
+  4. /seo technical: Rendimiento, Core Web Vitals (INP/LCP/CLS) e indexabilidad.
+
+
+---
+
+## 143. Landing Page en Slides Narrativos (Inspiración Landonorris.com)
+
+1. **Estructura y Storytelling en 7 Capítulos (`app/(public)/page.tsx`)**:
+   - Rediseño completo de la landing page pública en formato de slides de pantalla completa (`snap-y snap-mandatory`), emulando el dinamismo y ritmo visual de landonorris.com (OFF+BRAND), manteniendo intacta la identidad de Klozet ("un juguete dentro de un iPhone").
+   - **Slide 01 (El Inicio / Hook):** Wordmark oficial bubble `/landing/klozet-nombre-grande.png`, titular de impacto ("Tu armario real, por fin ordenado"), badges interactivos y botón primario rosa `#FF66C4` con físicas de muelle Apple.
+   - **Slide 02 (El Problema / The Chaos):** "El 80% de tu ropa es invisible". Comparativa visual interactiva de armario saturado vs. armario digitalizado y activo.
+   - **Slide 03 (Digitalización / The Scan):** Simulador de escáner en tiempo real con recorte automático de precisión (99.8%), marcas detectadas (Scuffers, Zara, Onitsuka, Vintage) y colorimetría sin fondos feos.
+   - **Slide 04 (El Lienzo / The Canvas):** "Combina en la pantalla, no sobre la cama". Selector interactivo de outfits (Street vs. Smart) con prendas reales.
+   - **Slide 05 (Kloe IA / The Personal Stylist):** Presentación del personaje oficial `/landing/kloe-grande-landing.png` con ojos y diálogo interactivo con sugerencias según ocasión, clima y regla 60/30/10.
+   - **Slide 06 (La Comunidad / The Circuit):** Cuadrícula social de outfits reales, botones Like con rebote spring y exportación a Instagram Stories (9:16).
+   - **Slide 07 (Comenzar & Políticas / The Finish Line):** Tarjeta de registro gratuito instantáneo integrada con pie de página moderno y minimalista conteniendo enlaces legales obligatorios (Privacidad, Términos, Cookies, Sobre Nosotros, Contacto) y soporte para cumplimiento AdSense/RGPD.
+
+2. **Navegación & Ergonomía**:
+   - Barra flotante inferior de progreso y salto de capítulo ("01 / El Inicio", "Siguiente").
+   - Rastreador vertical en escritorio con dots interactivos.
+   - Soporte para navegación con teclado (`ArrowDown`, `ArrowUp`, `PageDown`, `PageUp`) y gestos táctiles.
+
+3. **Validación y Despliegue**:
+   - Verificado con `agent-browser` en entorno local en `http://localhost:3005/`.
+   - `npm run build` ejecutado exitosamente con 0 errores (70/70 rutas).
