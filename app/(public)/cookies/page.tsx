@@ -19,7 +19,7 @@ export default function CookiesPage() {
             <Cookie className="w-3.5 h-3.5 text-zinc-800 dark:text-zinc-200" />
             <span>Guía de Cookies AEPD & LSSI-CE</span>
           </div>
-          <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-zinc-950 dark:text-white">
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-zinc-950 dark:text-white">
             Política de Cookies
           </h1>
           <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">

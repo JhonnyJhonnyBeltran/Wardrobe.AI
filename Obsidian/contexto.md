@@ -2210,3 +2210,31 @@ Documento maestro archivado en: [`Obsidian/estrategia_blindaje.md`](./estrategia
 4. **Validación**:
    - `npm run build` ejecutado exitosamente con 0 errores (70/70 rutas compiladas).
    - Verificado visualmente con capturas completas vía `agent-browser`.
+
+
+---
+
+## 146. Rediseño Minimalista Apple: Fondo Blanco, Cabecera Limpia y Eliminación de Píldora Scrubber (2026-10-21)
+
+1. **Fondo Blanco Limpio Apple (`app/(public)/page.tsx`)**:
+   - Fondo cambiado a blanco puro (`bg-white` / `#FFFFFF`) con tarjetas en tonos claros sutiles (`bg-zinc-50`, bordes `border-zinc-200/90` y sombras volumétricas suaves).
+   - Tipografía adaptada con alto contraste (`text-zinc-950 font-bold tracking-tight` y descripciones en `text-zinc-600`), aplicando estrictamente la fuente Inter y el manual de marca (`brand_kit.md`).
+
+2. **Eliminación Total de la Píldora de Navegación Scrubber**:
+   - Erradicada por completo la píldora superior con los capítulos que saturaba la pantalla.
+   - Navegación simplificada mediante flechas circulares flotantes (`<` y `>`), barra inferior de control y gestos de deslizamiento táctil/teclado.
+
+3. **Cabecera Minimalista Adaptativa (Slides 1 a 6 vs Slide 7)**:
+   - En las diapositivas 1 a 6, se eliminó el header tradicional y se dejó únicamente:
+     - El icono/logo oficial a la izquierda del todo (`/landing/klozet-nombre-grande.png`).
+     - Los dos botones de acción a la derecha: *"Iniciar sesión"* y *"Registrarse"* (pastilla rosa `#FF66C4`).
+   - **En el último slider ("07 // PRUEBA KLOZET")**:
+     - La cabecera superior se oculta automáticamente (`!isLastSlide`).
+     - El slider final actúa como la pantalla de aterrizaje y conversión de prueba, conteniendo en el centro los dos botones principales (*"Registrarse gratis"* y *"Iniciar sesión"*), junto con el pie de página completo de acceso a **Sobre Nosotros**, **Tendencias & Guías**, **Contacto** y todas las **Políticas Legales** (Privacidad, Términos, Cookies, Aviso Legal).
+
+4. **Homogeneización de Pantallas Legales e Informativas**:
+   - Actualizadas las páginas `/about`, `/contact`, `/privacy`, `/terms` y `/cookies` para cumplir con las directrices tipográficas de Inter (eliminado `font-extrabold`, pesos 400-700, sentence case) y fondo blanco limpio consistente.
+
+5. **Validación y Despliegue**:
+   - `npm run build` ejecutado exitosamente con 0 errores (70/70 rutas compiladas).
+   - Verificado con `agent-browser` en Slide 1 y Slide 7.

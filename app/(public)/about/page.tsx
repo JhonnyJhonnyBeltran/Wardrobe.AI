@@ -19,7 +19,7 @@ export default function AboutPage() {
           <p className="text-xs uppercase font-bold tracking-widest text-[var(--brand-pink,#ff2d78)]">
             Sobre Nosotros
           </p>
-          <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-zinc-950 dark:text-white leading-[1.1]">
+          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-zinc-950 dark:text-white leading-[1.1]">
             Reimaginando cómo nos vestimos cada día.
           </h1>
           <p className="text-base sm:text-lg text-zinc-600 dark:text-zinc-400 font-normal leading-relaxed">

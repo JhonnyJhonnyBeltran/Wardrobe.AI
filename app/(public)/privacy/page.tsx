@@ -19,7 +19,7 @@ export default function PrivacyPage() {
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
             <span>Cumplimiento RGPD & LOPDGDD</span>
           </div>
-          <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-zinc-950 dark:text-white">
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-zinc-950 dark:text-white">
             Política de Privacidad
           </h1>
           <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400">
