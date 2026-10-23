@@ -236,15 +236,40 @@ export default function LandingPage() {
                 {/* Central Floating Fashion Cluster with Organic Spring Motion */}
                 <motion.div 
                   variants={itemFadeUp}
-                  className="w-full max-w-[280px] sm:max-w-[420px] md:max-w-[480px] h-[170px] sm:h-[230px] md:h-[260px] relative flex items-center justify-center my-1 sm:my-2"
+                  className="w-full max-w-[300px] sm:max-w-[460px] md:max-w-[560px] lg:max-w-[620px] h-[175px] sm:h-[235px] md:h-[275px] relative flex items-center justify-center my-1 sm:my-2"
                 >
+                  {/* Flank Top-Left: Platform Stiletto (New) */}
+                  <motion.div 
+                    variants={itemFloatIn(-50, -18, -10)}
+                    animate={{ y: [0, -7, 0], rotate: [-10, -8, -10] }}
+                    transition={{ duration: 4.6, repeat: Infinity, ease: 'easeInOut', delay: 0.1 }}
+                    whileHover={{ scale: 1.1, rotate: -4 }}
+                    whileTap={{ scale: 0.94 }}
+                    onClick={() => triggerHaptic('light')}
+                    className="hidden sm:block absolute -left-2 sm:left-0 md:left-2 top-0 sm:top-1 w-14 sm:w-20 md:w-26 drop-shadow-md z-15 cursor-pointer"
+                  >
+                    <Image 
+                      src="/landing/tacon-plataforma.png" 
+                      alt="Tacón Plataforma" 
+                      width={180} 
+                      height={160} 
+                      className="w-full h-auto object-contain -rotate-10" 
+                      priority 
+                    />
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-white/90 dark:bg-zinc-800/90 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.08] text-[8px] sm:text-[9px] font-semibold text-zinc-800 dark:text-zinc-200 whitespace-nowrap shadow-xs">
+                      Platform Heel
+                    </div>
+                  </motion.div>
+
                   {/* Left: Camisa Zara Cutout */}
                   <motion.div 
                     variants={itemFloatIn(-35, 10, -8)}
                     animate={{ y: [0, 8, 0], rotate: [-8, -6, -8] }}
                     transition={{ duration: 4.8, repeat: Infinity, ease: 'easeInOut' }}
                     whileHover={{ scale: 1.08, rotate: -3 }}
-                    className="absolute left-1 sm:left-4 md:left-6 top-1 sm:top-3 w-18 sm:w-28 md:w-36 drop-shadow-md z-10 cursor-pointer"
+                    whileTap={{ scale: 0.94 }}
+                    onClick={() => triggerHaptic('light')}
+                    className="absolute left-2 sm:left-10 md:left-16 top-1 sm:top-3 w-16 sm:w-24 md:w-32 drop-shadow-md z-10 cursor-pointer"
                   >
                     <Image 
                       src="/landing/camisa-zara-cutout.png" 
@@ -265,7 +290,9 @@ export default function LandingPage() {
                     animate={{ y: [0, -10, 0], rotate: [2, 0, 2] }}
                     transition={{ duration: 4.2, repeat: Infinity, ease: 'easeInOut' }}
                     whileHover={{ scale: 1.07, rotate: 0 }}
-                    className="relative z-20 w-32 sm:w-46 md:w-56 drop-shadow-[0_16px_32px_rgba(255,102,196,0.3)] cursor-pointer"
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => triggerHaptic('light')}
+                    className="relative z-20 w-32 sm:w-44 md:w-52 drop-shadow-[0_16px_32px_rgba(255,102,196,0.3)] cursor-pointer"
                   >
                     <Image 
                       src="/landing/sudadera-scuffers-cutout.png" 
@@ -287,7 +314,9 @@ export default function LandingPage() {
                     animate={{ y: [0, 7, 0], rotate: [8, 10, 8] }}
                     transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
                     whileHover={{ scale: 1.08, rotate: 4 }}
-                    className="absolute right-1 sm:right-4 md:right-6 top-1 sm:top-3 w-16 sm:w-26 md:w-34 drop-shadow-md z-10 cursor-pointer"
+                    whileTap={{ scale: 0.94 }}
+                    onClick={() => triggerHaptic('light')}
+                    className="absolute right-2 sm:right-10 md:right-16 top-1 sm:top-3 w-16 sm:w-24 md:w-30 drop-shadow-md z-10 cursor-pointer"
                   >
                     <Image 
                       src="/landing/jeans-stars.png" 
@@ -302,12 +331,61 @@ export default function LandingPage() {
                     </div>
                   </motion.div>
 
+                  {/* Flank Top-Right: Reloj Lotus Chrono (New) */}
+                  <motion.div 
+                    variants={itemFloatIn(55, -18, 12)}
+                    animate={{ y: [0, -8, 0], rotate: [12, 10, 12] }}
+                    transition={{ duration: 4.4, repeat: Infinity, ease: 'easeInOut', delay: 0.2 }}
+                    whileHover={{ scale: 1.12, rotate: 6 }}
+                    whileTap={{ scale: 0.94 }}
+                    onClick={() => triggerHaptic('light')}
+                    className="hidden sm:block absolute -right-2 sm:right-0 md:right-2 top-0 sm:top-1 w-12 sm:w-16 md:w-22 drop-shadow-md z-25 cursor-pointer"
+                  >
+                    <Image 
+                      src="/landing/reloj-lotus.png" 
+                      alt="Reloj Lotus" 
+                      width={160} 
+                      height={240} 
+                      className="w-full h-auto object-contain rotate-12" 
+                      priority 
+                    />
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-white/90 dark:bg-zinc-800/90 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.08] text-[8px] sm:text-[9px] font-semibold text-zinc-800 dark:text-zinc-200 whitespace-nowrap shadow-xs">
+                      Lotus Chrono
+                    </div>
+                  </motion.div>
+
+                  {/* Flank Bottom-Left: Bolso Guess Monograma (New) */}
+                  <motion.div 
+                    variants={itemFloatIn(-45, 25, -10)}
+                    animate={{ y: [0, 8, 0], rotate: [-10, -7, -10] }}
+                    transition={{ duration: 4.7, repeat: Infinity, ease: 'easeInOut', delay: 0.25 }}
+                    whileHover={{ scale: 1.1, rotate: -5 }}
+                    whileTap={{ scale: 0.94 }}
+                    onClick={() => triggerHaptic('light')}
+                    className="hidden md:block absolute -left-4 bottom-0 w-16 sm:w-20 md:w-26 drop-shadow-md z-25 cursor-pointer"
+                  >
+                    <Image 
+                      src="/landing/bolso-guess.png" 
+                      alt="Bolso Guess" 
+                      width={200} 
+                      height={200} 
+                      className="w-full h-auto object-contain -rotate-10" 
+                      priority 
+                    />
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-white/90 dark:bg-zinc-800/90 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.08] text-[8px] sm:text-[9px] font-semibold text-zinc-800 dark:text-zinc-200 whitespace-nowrap shadow-xs">
+                      Guess Bag
+                    </div>
+                  </motion.div>
+
                   {/* Bottom: Onitsuka Tiger */}
                   <motion.div 
                     variants={itemFloatIn(10, 25, -6)}
                     animate={{ y: [0, -6, 0], rotate: [-6, -4, -6] }}
                     transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-                    className="absolute -bottom-2 right-2 sm:right-10 md:right-14 w-20 sm:w-32 md:w-44 pointer-events-none drop-shadow-lg z-30"
+                    whileHover={{ scale: 1.08, rotate: -2 }}
+                    whileTap={{ scale: 0.94 }}
+                    onClick={() => triggerHaptic('light')}
+                    className="absolute -bottom-2 right-2 sm:right-6 md:right-10 w-20 sm:w-28 md:w-38 drop-shadow-lg z-30 cursor-pointer"
                   >
                     <Image 
                       src="/landing/onitsuka-tiger.png" 
@@ -372,15 +450,39 @@ export default function LandingPage() {
                 </div>
 
                 {/* Right Column: Laser Scan Showcase with Spring Animation */}
-                <div className="w-full md:w-1/2 h-[190px] sm:h-[260px] md:h-[400px] relative flex items-center justify-center z-10 max-w-[280px] sm:max-w-[380px] md:max-w-none">
+                <div className="w-full md:w-1/2 h-[200px] sm:h-[280px] md:h-[400px] relative flex items-center justify-center z-10 max-w-[290px] sm:max-w-[400px] md:max-w-none">
                   
-                  {/* Left: Botas Cowboy */}
+                  {/* Top-Left: Cardigan Rayas Noon (New) */}
                   <motion.div 
-                    variants={itemFloatIn(-35, -8, -10)}
-                    animate={{ y: [0, -7, 0], rotate: [-10, -8, -10] }}
+                    variants={itemFloatIn(-40, -15, -8)}
+                    animate={{ y: [0, -7, 0], rotate: [-8, -6, -8] }}
+                    transition={{ duration: 4.6, repeat: Infinity, ease: 'easeInOut' }}
+                    whileHover={{ scale: 1.1, rotate: -4 }}
+                    whileTap={{ scale: 0.94 }}
+                    onClick={() => triggerHaptic('light')}
+                    className="absolute left-0 sm:left-2 md:left-4 top-0 sm:top-2 md:top-4 w-16 sm:w-24 md:w-34 drop-shadow-md z-15 cursor-pointer"
+                  >
+                    <Image 
+                      src="/landing/cardigan-rayas.png" 
+                      alt="Cardigan Rayas Noon" 
+                      width={200} 
+                      height={180} 
+                      className="w-full h-auto object-contain -rotate-8" 
+                    />
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-white/95 dark:bg-zinc-800/95 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.08] text-[8px] sm:text-[9px] font-semibold text-zinc-800 dark:text-zinc-200 whitespace-nowrap shadow-xs">
+                      Cardigan Noon
+                    </div>
+                  </motion.div>
+
+                  {/* Bottom-Left: Botas Cowboy */}
+                  <motion.div 
+                    variants={itemFloatIn(-30, 20, -10)}
+                    animate={{ y: [0, 6, 0], rotate: [-10, -8, -10] }}
                     transition={{ duration: 4.4, repeat: Infinity, ease: 'easeInOut' }}
                     whileHover={{ scale: 1.08, rotate: -6 }}
-                    className="absolute left-1 sm:left-4 md:left-6 top-1 sm:top-3 md:top-8 w-16 sm:w-26 md:w-36 drop-shadow-md z-10 cursor-pointer"
+                    whileTap={{ scale: 0.94 }}
+                    onClick={() => triggerHaptic('light')}
+                    className="hidden sm:block absolute left-1 sm:left-4 md:left-6 bottom-1 sm:bottom-3 md:bottom-6 w-14 sm:w-20 md:w-28 drop-shadow-md z-10 cursor-pointer"
                   >
                     <Image 
                       src="/landing/botas-cowboy.png" 
@@ -394,20 +496,24 @@ export default function LandingPage() {
                     </div>
                   </motion.div>
 
-                  {/* Center Hero: Sudadera Scuffers with Laser Scanner */}
+                  {/* Center Hero: Sudadera Yuxus with Laser Scanner (New Hero) */}
                   <motion.div 
                     variants={itemFloatIn(0, -6, 2)}
                     animate={{ y: [0, 8, 0], rotate: [2, 0, 2] }}
                     transition={{ duration: 4.2, repeat: Infinity, ease: 'easeInOut' }}
-                    className="relative z-20 w-32 sm:w-46 md:w-60 drop-shadow-[0_16px_32px_rgba(255,102,196,0.3)]"
+                    whileHover={{ scale: 1.07 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => triggerHaptic('light')}
+                    className="relative z-20 w-32 sm:w-46 md:w-58 drop-shadow-[0_16px_32px_rgba(255,102,196,0.3)] cursor-pointer"
                   >
                     <div className="relative overflow-hidden rounded-2xl p-1">
                       <Image 
-                        src="/landing/sudadera-scuffers-cutout.png" 
-                        alt="Sudadera Scuffers" 
+                        src="/landing/hoodie-yuxus.png" 
+                        alt="Sudadera Yuxus" 
                         width={320} 
                         height={320} 
                         className="w-full h-auto object-contain rotate-2" 
+                        priority
                       />
 
                       {/* Smooth Glowing Laser Sweep Line */}
@@ -417,41 +523,72 @@ export default function LandingPage() {
                         className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[var(--brand-pink,#FF66C4)] to-transparent shadow-[0_0_14px_var(--brand-pink,#FF66C4)] pointer-events-none"
                       />
                     </div>
-                  </motion.div>
-
-                  {/* Right: Jeans Stars */}
-                  <motion.div 
-                    variants={itemFloatIn(35, -8, 10)}
-                    animate={{ y: [0, -6, 0], rotate: [10, 8, 10] }}
-                    transition={{ duration: 4.8, repeat: Infinity, ease: 'easeInOut' }}
-                    whileHover={{ scale: 1.08, rotate: 6 }}
-                    className="absolute right-1 sm:right-4 md:right-auto md:left-12 top-1 sm:top-3 md:top-auto md:bottom-6 w-16 sm:w-26 md:w-34 drop-shadow-md z-10 cursor-pointer"
-                  >
-                    <Image 
-                      src="/landing/jeans-stars.png" 
-                      alt="Jeans Stars" 
-                      width={160} 
-                      height={240} 
-                      className="w-full h-auto object-contain rotate-10 md:rotate-6" 
-                    />
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-white/95 dark:bg-zinc-800/95 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.08] text-[8px] sm:text-[9px] font-semibold text-zinc-800 dark:text-zinc-200 whitespace-nowrap shadow-xs">
-                      Denim Flare
+                    <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white/95 dark:bg-zinc-800/95 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.08] text-[8px] sm:text-[10px] font-semibold text-zinc-900 dark:text-zinc-100 whitespace-nowrap shadow-sm flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[var(--brand-pink,#FF66C4)]" />
+                      <span>Yuxus Hoodie</span>
                     </div>
                   </motion.div>
 
-                  {/* Piece 4: Onitsuka Sneaker */}
+                  {/* Top-Right: Jeans Noon Strass (New) */}
                   <motion.div 
-                    variants={itemFloatIn(15, 20, 8)}
-                    animate={{ y: [0, 5, 0], rotate: [8, 6, 8] }}
+                    variants={itemFloatIn(40, -15, 10)}
+                    animate={{ y: [0, -6, 0], rotate: [10, 8, 10] }}
+                    transition={{ duration: 4.8, repeat: Infinity, ease: 'easeInOut' }}
+                    whileHover={{ scale: 1.08, rotate: 6 }}
+                    whileTap={{ scale: 0.94 }}
+                    onClick={() => triggerHaptic('light')}
+                    className="absolute right-0 sm:right-2 md:right-4 top-0 sm:top-2 md:top-4 w-16 sm:w-22 md:w-30 drop-shadow-md z-15 cursor-pointer"
+                  >
+                    <Image 
+                      src="/landing/jeans-noon-strass.png" 
+                      alt="Jeans Noon Strass" 
+                      width={160} 
+                      height={260} 
+                      className="w-full h-auto object-contain rotate-10" 
+                    />
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-white/95 dark:bg-zinc-800/95 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.08] text-[8px] sm:text-[9px] font-semibold text-zinc-800 dark:text-zinc-200 whitespace-nowrap shadow-xs">
+                      Noon Denim
+                    </div>
+                  </motion.div>
+
+                  {/* Bottom-Right: Bolso Michael Kors (New) */}
+                  <motion.div 
+                    variants={itemFloatIn(30, 20, -6)}
+                    animate={{ y: [0, 5, 0], rotate: [-6, -4, -6] }}
+                    transition={{ duration: 4.1, repeat: Infinity, ease: 'easeInOut' }}
+                    whileHover={{ scale: 1.1, rotate: -2 }}
+                    whileTap={{ scale: 0.94 }}
+                    onClick={() => triggerHaptic('light')}
+                    className="hidden sm:block absolute right-1 sm:right-4 md:right-6 bottom-1 sm:bottom-3 md:bottom-6 w-16 sm:w-20 md:w-26 drop-shadow-md z-15 cursor-pointer"
+                  >
+                    <Image 
+                      src="/landing/bolso-mk.png" 
+                      alt="Bolso Michael Kors" 
+                      width={180} 
+                      height={160} 
+                      className="w-full h-auto object-contain -rotate-6" 
+                    />
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-white/95 dark:bg-zinc-800/95 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.08] text-[8px] sm:text-[9px] font-semibold text-zinc-800 dark:text-zinc-200 whitespace-nowrap shadow-xs">
+                      Michael Kors
+                    </div>
+                  </motion.div>
+
+                  {/* Bottom: Onitsuka Sneaker */}
+                  <motion.div 
+                    variants={itemFloatIn(10, 25, 6)}
+                    animate={{ y: [0, 5, 0], rotate: [6, 4, 6] }}
                     transition={{ duration: 3.8, repeat: Infinity, ease: 'easeInOut' }}
-                    className="absolute -bottom-1 right-2 sm:right-5 md:bottom-3 md:right-5 w-20 sm:w-32 md:w-48 pointer-events-none drop-shadow-lg z-20"
+                    whileHover={{ scale: 1.08, rotate: 2 }}
+                    whileTap={{ scale: 0.94 }}
+                    onClick={() => triggerHaptic('light')}
+                    className="absolute -bottom-2 right-2 sm:right-6 md:right-10 w-18 sm:w-26 md:w-36 pointer-events-auto drop-shadow-lg z-25 cursor-pointer"
                   >
                     <Image 
                       src="/landing/onitsuka-tiger.png" 
                       alt="Onitsuka Tiger" 
-                      width={260} 
-                      height={150} 
-                      className="w-full h-auto object-contain rotate-8" 
+                      width={240} 
+                      height={140} 
+                      className="w-full h-auto object-contain rotate-6" 
                     />
                   </motion.div>
                 </div>
@@ -495,17 +632,108 @@ export default function LandingPage() {
                 </div>
 
                 {/* Right Column: Kloe Mascot & Interactive Apple Speech Bubbles */}
-                <div className="w-full md:w-1/2 h-[200px] sm:h-[280px] md:h-[420px] relative flex items-center justify-center z-10 max-w-[280px] sm:max-w-[380px] md:max-w-none">
+                <div className="w-full md:w-1/2 h-[210px] sm:h-[300px] md:h-[430px] relative flex items-center justify-center z-10 max-w-[290px] sm:max-w-[400px] md:max-w-none">
                   
                   {/* Floating Pulsing Aura */}
                   <div className="absolute w-[180px] sm:w-[260px] md:w-[360px] h-[180px] sm:h-[260px] md:h-[360px] rounded-full bg-gradient-to-tr from-[var(--brand-pink,#FF66C4)]/25 via-pink-300/15 to-transparent blur-2xl animate-pulse pointer-events-none" />
+
+                  {/* Top-Right Outfit Sticker: Hoodie Eme Studios (New) */}
+                  <motion.div 
+                    variants={itemFloatIn(45, -25, 8)}
+                    animate={{ y: [0, -8, 0], rotate: [8, 5, 8] }}
+                    transition={{ duration: 4.3, repeat: Infinity, ease: 'easeInOut', delay: 0.1 }}
+                    whileHover={{ scale: 1.1, rotate: 2 }}
+                    whileTap={{ scale: 0.94 }}
+                    onClick={() => triggerHaptic('light')}
+                    className="absolute -top-3 sm:top-1 right-0 sm:right-3 md:right-5 w-16 sm:w-24 md:w-32 drop-shadow-md z-15 cursor-pointer"
+                  >
+                    <Image 
+                      src="/landing/hoodie-eme-studios.png" 
+                      alt="Hoodie Eme Studios" 
+                      width={180} 
+                      height={190} 
+                      className="w-full h-auto object-contain rotate-8" 
+                    />
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-white/95 dark:bg-zinc-800/95 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.08] text-[8px] sm:text-[9px] font-semibold text-zinc-800 dark:text-zinc-200 whitespace-nowrap shadow-xs">
+                      Eme Studios
+                    </div>
+                  </motion.div>
+
+                  {/* Bottom-Left Outfit Sticker: Jeans Noon Strass (New) */}
+                  <motion.div 
+                    variants={itemFloatIn(-45, 25, -8)}
+                    animate={{ y: [0, 7, 0], rotate: [-8, -6, -8] }}
+                    transition={{ duration: 4.7, repeat: Infinity, ease: 'easeInOut', delay: 0.2 }}
+                    whileHover={{ scale: 1.1, rotate: -3 }}
+                    whileTap={{ scale: 0.94 }}
+                    onClick={() => triggerHaptic('light')}
+                    className="absolute -bottom-4 sm:-bottom-1 left-0 sm:left-2 md:left-4 w-14 sm:w-22 md:w-28 drop-shadow-md z-15 cursor-pointer"
+                  >
+                    <Image 
+                      src="/landing/jeans-noon-strass.png" 
+                      alt="Jeans Noon Strass" 
+                      width={160} 
+                      height={260} 
+                      className="w-full h-auto object-contain -rotate-8" 
+                    />
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-white/95 dark:bg-zinc-800/95 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.08] text-[8px] sm:text-[9px] font-semibold text-zinc-800 dark:text-zinc-200 whitespace-nowrap shadow-xs">
+                      Noon Strass
+                    </div>
+                  </motion.div>
+
+                  {/* Top-Left Accessory: Reloj Lotus Chrono (New) */}
+                  <motion.div 
+                    variants={itemFloatIn(-35, -20, 10)}
+                    animate={{ y: [0, -6, 0], rotate: [10, 7, 10] }}
+                    transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut', delay: 0.3 }}
+                    whileHover={{ scale: 1.12, rotate: 4 }}
+                    whileTap={{ scale: 0.94 }}
+                    onClick={() => triggerHaptic('light')}
+                    className="hidden sm:block absolute top-0 sm:top-2 left-2 sm:left-4 md:left-6 w-12 sm:w-16 md:w-22 drop-shadow-md z-15 cursor-pointer"
+                  >
+                    <Image 
+                      src="/landing/reloj-lotus.png" 
+                      alt="Reloj Lotus" 
+                      width={160} 
+                      height={240} 
+                      className="w-full h-auto object-contain rotate-10" 
+                    />
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-white/90 dark:bg-zinc-800/90 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.08] text-[8px] sm:text-[9px] font-semibold text-zinc-800 dark:text-zinc-200 whitespace-nowrap shadow-xs">
+                      Lotus Chrono
+                    </div>
+                  </motion.div>
+
+                  {/* Bottom-Right Accessory: Bolso Michael Kors (New) */}
+                  <motion.div 
+                    variants={itemFloatIn(40, 25, -6)}
+                    animate={{ y: [0, 6, 0], rotate: [-6, -4, -6] }}
+                    transition={{ duration: 4.2, repeat: Infinity, ease: 'easeInOut', delay: 0.15 }}
+                    whileHover={{ scale: 1.1, rotate: -2 }}
+                    whileTap={{ scale: 0.94 }}
+                    onClick={() => triggerHaptic('light')}
+                    className="hidden sm:block absolute -bottom-2 sm:bottom-1 right-2 sm:right-6 md:right-8 w-14 sm:w-20 md:w-26 drop-shadow-md z-15 cursor-pointer"
+                  >
+                    <Image 
+                      src="/landing/bolso-mk.png" 
+                      alt="Bolso Michael Kors" 
+                      width={180} 
+                      height={160} 
+                      className="w-full h-auto object-contain -rotate-6" 
+                    />
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-white/90 dark:bg-zinc-800/90 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.08] text-[8px] sm:text-[9px] font-semibold text-zinc-800 dark:text-zinc-200 whitespace-nowrap shadow-xs">
+                      Michael Kors
+                    </div>
+                  </motion.div>
 
                   {/* Kloe Mascot with Spring Float */}
                   <motion.div 
                     variants={itemFloatIn(0, 0, 0)}
                     animate={{ y: [0, -10, 0], rotate: [0, 2, -2, 0] }}
                     transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
-                    className="relative z-10 w-[120px] sm:w-[180px] md:w-[280px] flex items-center justify-center p-1 drop-shadow-[0_16px_36px_rgba(255,102,196,0.35)]"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => triggerHaptic('light')}
+                    className="relative z-10 w-[120px] sm:w-[170px] md:w-[260px] flex items-center justify-center p-1 drop-shadow-[0_16px_36px_rgba(255,102,196,0.35)] cursor-pointer"
                   >
                     <Image 
                       src="/landing/kloe-grande-landing.png" 
@@ -522,7 +750,7 @@ export default function LandingPage() {
                     variants={itemFloatIn(-30, -30, -4)}
                     animate={{ y: [0, -5, 0] }}
                     transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
-                    className="absolute -top-1 sm:top-4 left-0 sm:left-4 z-20 px-3.5 py-2 rounded-2xl rounded-bl-xs bg-white/95 dark:bg-zinc-800/95 backdrop-blur-xl border border-black/[0.08] dark:border-white/[0.08] shadow-md max-w-[170px] sm:max-w-[210px]"
+                    className="absolute -top-1 sm:top-6 left-0 sm:left-2 z-20 px-3.5 py-2 rounded-2xl rounded-bl-xs bg-white/95 dark:bg-zinc-800/95 backdrop-blur-xl border border-black/[0.08] dark:border-white/[0.08] shadow-md max-w-[170px] sm:max-w-[210px]"
                   >
                     <p className="text-[10px] sm:text-xs text-zinc-700 dark:text-zinc-200 font-medium">
                       &ldquo;¿Qué me pongo hoy para salir de chill?&rdquo;
@@ -534,14 +762,14 @@ export default function LandingPage() {
                     variants={itemFloatIn(30, 30, 4)}
                     animate={{ y: [0, 5, 0] }}
                     transition={{ duration: 3.8, repeat: Infinity, ease: 'easeInOut', delay: 0.2 }}
-                    className="absolute -bottom-2 sm:bottom-4 right-0 sm:right-4 z-20 px-3.5 py-2 rounded-2xl rounded-tr-xs bg-[var(--brand-pink,#FF66C4)] text-white shadow-md max-w-[180px] sm:max-w-[220px]"
+                    className="absolute -bottom-2 sm:bottom-6 right-0 sm:right-2 z-20 px-3.5 py-2 rounded-2xl rounded-tr-xs bg-[var(--brand-pink,#FF66C4)] text-white shadow-md max-w-[180px] sm:max-w-[220px]"
                   >
                     <div className="flex items-center gap-1 mb-0.5">
                       <Sparkles className="w-3 h-3 text-white" />
                       <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider">Kloe</span>
                     </div>
                     <p className="text-[10px] sm:text-xs text-white/95 font-medium leading-snug">
-                      Sudadera Scuffers + Denim Wide + Tiger sneakers. Cómodo y clavado.
+                      Hoodie Eme Studios + Jeans Noon Strass + Bolso MK. Cómodo y clavado.
                     </p>
                   </motion.div>
                 </div>
@@ -584,8 +812,8 @@ export default function LandingPage() {
                   </motion.p>
                 </div>
 
-                {/* Right Column: Editorial Moodboard Cluster with Tactile Hover */}
-                <div className="w-full md:w-1/2 h-[190px] sm:h-[260px] md:h-[420px] relative flex items-center justify-center z-10 max-w-[280px] sm:max-w-[420px] md:max-w-none">
+                {/* Right Column: Editorial Moodboard Cluster with Tactile Floating Stickers */}
+                <div className="w-full md:w-1/2 h-[200px] sm:h-[280px] md:h-[430px] relative flex items-center justify-center z-10 max-w-[290px] sm:max-w-[440px] md:max-w-none">
                   
                   {/* Left: Total White */}
                   <motion.div 
@@ -606,6 +834,28 @@ export default function LandingPage() {
                     </div>
                   </motion.div>
 
+                  {/* Canvas Floating Sticker 1: Cardigan Rayas Noon (New) */}
+                  <motion.div 
+                    variants={itemFloatIn(-30, -35, 12)}
+                    animate={{ y: [0, -7, 0], rotate: [12, 9, 12] }}
+                    transition={{ duration: 4.2, repeat: Infinity, ease: 'easeInOut', delay: 0.1 }}
+                    whileHover={{ scale: 1.15, rotate: 6 }}
+                    whileTap={{ scale: 0.93 }}
+                    onClick={() => triggerHaptic('light')}
+                    className="absolute -top-2 sm:top-0 left-0 sm:left-2 md:left-4 w-14 sm:w-22 md:w-28 drop-shadow-lg z-25 cursor-pointer"
+                  >
+                    <Image 
+                      src="/landing/cardigan-rayas.png" 
+                      alt="Cardigan Rayas" 
+                      width={180} 
+                      height={160} 
+                      className="w-full h-auto object-contain rotate-12" 
+                    />
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-white/95 dark:bg-zinc-800/95 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.08] text-[7px] sm:text-[9px] font-semibold text-zinc-800 dark:text-zinc-200 whitespace-nowrap shadow-xs">
+                      Cardigan
+                    </div>
+                  </motion.div>
+
                   {/* Centerpiece: Hero Canvas Collage */}
                   <motion.div 
                     variants={itemFloatIn(0, -6, 0)}
@@ -623,6 +873,50 @@ export default function LandingPage() {
                     <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2.5 py-0.5 sm:py-1 rounded-full bg-white/95 dark:bg-zinc-800/95 backdrop-blur-xl border border-black/[0.08] dark:border-white/[0.08] text-[8px] sm:text-[10px] font-semibold text-zinc-900 dark:text-zinc-100 whitespace-nowrap shadow-md flex items-center gap-1">
                       <Sparkles className="w-3 h-3 text-[var(--brand-pink,#FF66C4)]" />
                       <span>Lienzo de Hoy</span>
+                    </div>
+                  </motion.div>
+
+                  {/* Canvas Floating Sticker 2: Bolso Guess Monograma (New) */}
+                  <motion.div 
+                    variants={itemFloatIn(35, 30, -10)}
+                    animate={{ y: [0, 6, 0], rotate: [-10, -7, -10] }}
+                    transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut', delay: 0.2 }}
+                    whileHover={{ scale: 1.15, rotate: -4 }}
+                    whileTap={{ scale: 0.93 }}
+                    onClick={() => triggerHaptic('light')}
+                    className="absolute -bottom-3 sm:bottom-0 right-0 sm:right-2 md:right-4 w-14 sm:w-20 md:w-26 drop-shadow-lg z-25 cursor-pointer"
+                  >
+                    <Image 
+                      src="/landing/bolso-guess.png" 
+                      alt="Bolso Guess" 
+                      width={180} 
+                      height={180} 
+                      className="w-full h-auto object-contain -rotate-10" 
+                    />
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-white/95 dark:bg-zinc-800/95 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.08] text-[7px] sm:text-[9px] font-semibold text-zinc-800 dark:text-zinc-200 whitespace-nowrap shadow-xs">
+                      Guess Bag
+                    </div>
+                  </motion.div>
+
+                  {/* Canvas Floating Sticker 3: Tacón Plataforma (New) */}
+                  <motion.div 
+                    variants={itemFloatIn(-35, 30, 8)}
+                    animate={{ y: [0, 6, 0], rotate: [8, 5, 8] }}
+                    transition={{ duration: 4.8, repeat: Infinity, ease: 'easeInOut', delay: 0.25 }}
+                    whileHover={{ scale: 1.15, rotate: 3 }}
+                    whileTap={{ scale: 0.93 }}
+                    onClick={() => triggerHaptic('light')}
+                    className="hidden sm:block absolute -bottom-2 sm:bottom-1 left-2 sm:left-6 md:left-10 w-12 sm:w-18 md:w-24 drop-shadow-lg z-25 cursor-pointer"
+                  >
+                    <Image 
+                      src="/landing/tacon-plataforma.png" 
+                      alt="Tacón Plataforma" 
+                      width={160} 
+                      height={140} 
+                      className="w-full h-auto object-contain rotate-8" 
+                    />
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-white/95 dark:bg-zinc-800/95 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.08] text-[7px] sm:text-[9px] font-semibold text-zinc-800 dark:text-zinc-200 whitespace-nowrap shadow-xs">
+                      Stiletto
                     </div>
                   </motion.div>
 
@@ -666,7 +960,10 @@ export default function LandingPage() {
                 variants={itemFloatIn(-50, 0, -6)}
                 animate={{ y: [0, -7, 0], rotate: [-6, -4, -6] }}
                 transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-                className="hidden md:block absolute left-4 lg:left-8 xl:left-20 top-1/2 -translate-y-1/2 w-28 lg:w-40 xl:w-48 aspect-[3/4] rounded-2xl overflow-hidden border border-black/[0.08] dark:border-white/[0.08] shadow-xl -rotate-6 pointer-events-none z-10"
+                className="hidden md:block absolute left-4 lg:left-8 xl:left-20 top-1/2 -translate-y-1/2 w-28 lg:w-40 xl:w-48 aspect-[3/4] rounded-2xl overflow-hidden border border-black/[0.08] dark:border-white/[0.08] shadow-xl -rotate-6 pointer-events-auto cursor-pointer z-10"
+                whileHover={{ scale: 1.05, rotate: -3 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => triggerHaptic('light')}
               >
                 <Image 
                   src="/landing/outfits/chico-denim-sneakers-street.jpg" 
@@ -677,6 +974,17 @@ export default function LandingPage() {
                 <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white/95 dark:bg-zinc-800/95 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.08] text-[9px] font-semibold text-zinc-900 dark:text-zinc-100 whitespace-nowrap shadow-xs">
                   @comunidad • Denim
                 </div>
+
+                {/* Overlapping Yuxus Sticker Accent */}
+                <div className="absolute -top-3 -right-3 w-16 lg:w-20 drop-shadow-md z-20 pointer-events-none">
+                  <Image 
+                    src="/landing/hoodie-yuxus.png" 
+                    alt="Yuxus Hoodie" 
+                    width={120} 
+                    height={120} 
+                    className="w-full h-auto object-contain rotate-12" 
+                  />
+                </div>
               </motion.div>
 
               {/* Right Flanking Look (Visible on md+ screens) */}
@@ -684,7 +992,10 @@ export default function LandingPage() {
                 variants={itemFloatIn(50, 0, 6)}
                 animate={{ y: [0, 7, 0], rotate: [6, 8, 6] }}
                 transition={{ duration: 5.2, repeat: Infinity, ease: 'easeInOut' }}
-                className="hidden md:block absolute right-4 lg:right-8 xl:right-20 top-1/2 -translate-y-1/2 w-28 lg:w-40 xl:w-48 aspect-[3/4] rounded-2xl overflow-hidden border border-black/[0.08] dark:border-white/[0.08] shadow-xl rotate-6 pointer-events-none z-10"
+                className="hidden md:block absolute right-4 lg:right-8 xl:right-20 top-1/2 -translate-y-1/2 w-28 lg:w-40 xl:w-48 aspect-[3/4] rounded-2xl overflow-hidden border border-black/[0.08] dark:border-white/[0.08] shadow-xl rotate-6 pointer-events-auto cursor-pointer z-10"
+                whileHover={{ scale: 1.05, rotate: 3 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => triggerHaptic('light')}
               >
                 <Image 
                   src="/landing/outfits/outfit-chaleco-cartier.jpg" 
@@ -694,6 +1005,17 @@ export default function LandingPage() {
                 />
                 <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white/95 dark:bg-zinc-800/95 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.08] text-[9px] font-semibold text-[var(--brand-pink,#FF66C4)] whitespace-nowrap shadow-xs">
                   Elegante • Kloe
+                </div>
+
+                {/* Overlapping MK Bag Sticker Accent */}
+                <div className="absolute -top-2 -left-3 w-16 lg:w-20 drop-shadow-md z-20 pointer-events-none">
+                  <Image 
+                    src="/landing/bolso-mk.png" 
+                    alt="Bolso Michael Kors" 
+                    width={120} 
+                    height={110} 
+                    className="w-full h-auto object-contain -rotate-12" 
+                  />
                 </div>
               </motion.div>
 
@@ -729,9 +1051,14 @@ export default function LandingPage() {
                   Regístrate gratis en menos de un minuto y empieza a organizar tus outfits favoritos.
                 </motion.p>
 
-                {/* Mobile Preview Cards with Spring Hover */}
-                <motion.div variants={itemFadeUp} className="flex md:hidden items-center justify-center gap-2.5 my-3">
-                  <motion.div whileHover={{ scale: 1.08 }} className="w-16 sm:w-20 aspect-[3/4] rounded-xl overflow-hidden border border-black/[0.08] dark:border-white/[0.08] shadow-sm -rotate-3 relative">
+                {/* Mobile Preview Cards with Tactile Stickers */}
+                <motion.div variants={itemFadeUp} className="flex md:hidden items-center justify-center gap-2.5 my-3 relative">
+                  <motion.div 
+                    whileHover={{ scale: 1.08 }} 
+                    whileTap={{ scale: 0.94 }}
+                    onClick={() => triggerHaptic('light')}
+                    className="w-16 sm:w-20 aspect-[3/4] rounded-xl overflow-hidden border border-black/[0.08] dark:border-white/[0.08] shadow-sm -rotate-3 relative cursor-pointer"
+                  >
                     <Image 
                       src="/landing/outfits/chico-denim-sneakers-street.jpg" 
                       alt="Streetwear Chico" 
@@ -739,7 +1066,30 @@ export default function LandingPage() {
                       className="object-cover" 
                     />
                   </motion.div>
-                  <motion.div whileHover={{ scale: 1.08 }} className="w-16 sm:w-20 aspect-[3/4] rounded-xl overflow-hidden border border-black/[0.08] dark:border-white/[0.08] shadow-sm rotate-3 relative">
+
+                  {/* Center Floating Sticker between mobile cards */}
+                  <motion.div 
+                    animate={{ y: [0, -4, 0], rotate: [-6, 6, -6] }}
+                    transition={{ duration: 3.6, repeat: Infinity, ease: 'easeInOut' }}
+                    whileTap={{ scale: 0.92 }}
+                    onClick={() => triggerHaptic('light')}
+                    className="w-11 drop-shadow-md z-20 cursor-pointer"
+                  >
+                    <Image 
+                      src="/landing/bolso-guess.png" 
+                      alt="Bolso Guess" 
+                      width={80} 
+                      height={80} 
+                      className="w-full h-auto object-contain" 
+                    />
+                  </motion.div>
+
+                  <motion.div 
+                    whileHover={{ scale: 1.08 }} 
+                    whileTap={{ scale: 0.94 }}
+                    onClick={() => triggerHaptic('light')}
+                    className="w-16 sm:w-20 aspect-[3/4] rounded-xl overflow-hidden border border-black/[0.08] dark:border-white/[0.08] shadow-sm rotate-3 relative cursor-pointer"
+                  >
                     <Image 
                       src="/landing/outfits/outfit-chaleco-cartier.jpg" 
                       alt="Look Chaleco Cartier" 

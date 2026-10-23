@@ -2331,3 +2331,37 @@ Documento maestro archivado en: [`Obsidian/estrategia_blindaje.md`](./estrategia
 
 5. **Validación**:
    - `npm run build` verificado con éxito (0 errores de compilación y tipos en las 70 rutas).
+
+---
+
+## 151. Integración de Nuevos Stickers de Ropa en la Landing Page (2026-10-23)
+
+### Contexto:
+El usuario proporcionó 8 fotografías de prendas y accesorios de catálogo/estudio para enriquecer la experiencia visual e interactiva de la landing page.
+
+### Procesamiento de Imágenes (`scratch/process_stickers.py` -> `public/landing/`):
+Todas las imágenes fueron recortadas mediante IA (`rembg`) eliminando fondos uniformes de estudio, ajustadas con bounding box ceñido (+12px padding) y optimizadas como PNGs transparentes con alta fidelidad:
+1. `tacon-plataforma.png` (Tacón de aguja y plataforma charol negro).
+2. `jeans-noon-strass.png` (Vaquero denim con ondas de strass de Noon).
+3. `cardigan-rayas.png` (Chaqueta de punto a rayas horizontales de Noon).
+4. `hoodie-eme-studios.png` (Sudadera azul marino con capucha de Eme Studios).
+5. `hoodie-yuxus.png` (Sudadera negra oversized con gráfico de águila de Yuxus).
+6. `reloj-lotus.png` (Reloj cronógrafo de acero pulido de Lotus).
+7. `bolso-guess.png` (Bolso negro con monograma y herrajes metálicos de Guess).
+8. `bolso-mk.png` (Bolso estructurado en tonos beige/camel con monograma de Michael Kors).
+
+### Implementación en la Landing Page (`app/(public)/page.tsx`):
+1. **Frame 0 (Armario lleno, nada que ponerte):**
+   - Cluster de prendas expandido con el tacón de plataforma charol (`tacon-plataforma.png`), el reloj Lotus cronógrafo (`reloj-lotus.png`) y el bolso Guess (`bolso-guess.png`) junto a la sudadera Scuffers, camisa Zara, denim y zapatillas Tiger.
+2. **Frame 1 (Digitalización & escaneo en un toque):**
+   - Protagonismo hero a la sudadera gráfica Yuxus (`hoodie-yuxus.png`) con la línea láser brillante de escaneo continuo.
+   - Prendas flotantes en proceso de digitalización: chaqueta cardigan Noon (`cardigan-rayas.png`), vaquero Noon strass (`jeans-noon-strass.png`), bolso Michael Kors (`bolso-mk.png`) y botas cowboy.
+3. **Frame 2 (Qué me pongo - Kloe te ayuda):**
+   - Incorporados los stickers de la recomendación flotando alrededor de Kloe: hoodie Eme Studios (`hoodie-eme-studios.png`), denim Noon strass (`jeans-noon-strass.png`), bolso Michael Kors (`bolso-mk.png`) y reloj Lotus.
+   - Sincronizado el globo de diálogo de sugerencia de Kloe: *"Hoodie Eme Studios + Jeans Noon Strass + Bolso MK. Cómodo y clavado."*
+4. **Frame 3 (Monta tu fit - Lienzo libre):**
+   - Añadidos stickers táctiles que simulan la creación de looks en el canvas interactivo (`cardigan-rayas.png`, `bolso-guess.png`, `tacon-plataforma.png`).
+5. **Frame 4 (Acceso final):**
+   - Detalles de stickers de moda en superposición sobre las tarjetas editoriales desktop (`hoodie-yuxus.png`, `bolso-mk.png`) y la composición móvil.
+6. **Microinteracciones Hápticas:**
+   - Cada sticker cuenta con microinteracción táctil al toque (`triggerHaptic('light')`), elevación spring en hover (`scale: 1.1`) y compresión al pulsar (`scale: 0.94`), reforzando el concepto "un juguete dentro de un iPhone".
