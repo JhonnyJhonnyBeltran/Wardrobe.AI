@@ -2496,3 +2496,35 @@ A petición del usuario ("quita la burbuja de liquid glass no me gusta"), se ret
    - El logo central de Klozet preserva la trilogía cíclica cada 15 segundos (`klzt` -> `k` con ojos -> `klozet`) con las animaciones de zoom in / shrink to center (`NavbarKlozetLogo`).
 3. **Validación**:
    - `npm run build` completado con éxito (0 errores en las 70 rutas).
+
+
+---
+
+## 158. Rediseño Integral de Modal de Detalle de Outfit estilo Apple HIG (`components/OutfitDetailModal.tsx`) (2026-10-23)
+
+### Contexto:
+El modal de detalle de outfit presentaba problemas de jerarquía visual y maquetación:
+1. El lienzo consumía demasiado espacio en móvil (`min-h-[50vh]`), empujando el contenido fuera de la vista.
+2. Botones de acción descompensados (bloque sólido de rosa neón invasivo en "Publicar", botones apiñados que desbordaban y ocultaban acciones de eliminar/visibilidad).
+3. Botón de cierre agresivo (`bg-black/50`) invasivo sobre el lienzo.
+4. Desglose de prendas oculto en móvil (`hidden md:block`), impidiendo que el usuario viera o inspeccionara los artículos que componen el look.
+5. El modal de Instagram Story (`ExportStoryModal`) estaba importado pero no se renderizaba en el árbol de componentes.
+
+### Modificaciones e Implementaciones:
+1. **Cabecera y Cierre estilo iOS**:
+   - Incorporado drag handle superior para móvil (`w-10 h-1 rounded-full bg-zinc-300 dark:bg-zinc-700`).
+   - Botón de cierre circular en vidrio esmerilado translúcido (`bg-white/85 dark:bg-zinc-900/85 backdrop-blur-md border border-black/5 dark:border-white/10`) con microinteracción háptica.
+   - Botón directo de Favorito en cabecera sincronizado con `onToggleFavorite` (`Heart` activo en rosa `#FF66C4`).
+2. **Escenario y Staging Visual del Outfit**:
+   - Altura de lienzo balanceada en móvil (`h-[36vh] min-h-[220px] max-h-[300px]`) con iluminación de gradiente suave (`from-[#f9fafb] to-[#f3f4f6]` / `dark:from-[#131316] dark:to-[#0c0c0e]`).
+   - Píldora sutil flotante: *"Toca una prenda para ver detalles"*.
+3. **Jerarquía de Acciones Apple HIG**:
+   - **Fila Principal**: "Editar look" (cápsula dark de alto contraste) y "Publicar" (cápsula con acento sutil rosa al 10% según Brand Kit).
+   - **Fila de Herramientas**: "Story" (Instagram con apertura interactiva), "Visibilidad" (Público/Privado con candado/globo) y "Eliminar" (rojo tenue).
+4. **Desglose de Prendas Universal (Móvil y Escritorio)**:
+   - Cuadrícula compacta de 2 columnas (`grid grid-cols-2 gap-2`) accesible en móvil y PC.
+   - Cada prenda muestra miniatura centrada, nombre, marca y etiqueta de categoría, con apertura interactiva del modal/bottom sheet de prenda (`selectedItemForDetail`) y enlace directo a tienda web.
+5. **Story Export Activo**:
+   - Renderizado completo de `<ExportStoryModal>` con temas, formatos y descarga.
+6. **Validación**:
+   - `npm run build` verificado exitosamente (0 errores en las 70 rutas).

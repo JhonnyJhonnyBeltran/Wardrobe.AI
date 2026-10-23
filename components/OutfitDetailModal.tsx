@@ -1,10 +1,22 @@
+'use client';
+
+/**
+ * OutfitDetailModal - Apple-Crafted Outfit Detail View
+ * Diseñado según los estándares HIG y el manual de marca de Klozet:
+ * - Cabecera con drag handle iOS y botón de cierre en vidrio translúcido.
+ * - Staging interactivo de prendas con ambient stage lighting.
+ * - Botonera de acciones jerarquizada: Primaria "Editar en lienzo" (dark pill) + "Publicar" (pink accent),
+ *   más herramientas compactas de 1 toque (Story, Favorito, Visibilidad pública/privada y Eliminar).
+ * - Desglose táctil de prendas visible en móvil y escritorio con tarjetas squircle y apertura de detalle.
+ * - Soporte integrado y funcional para ExportStoryModal (Instagram Stories).
+ */
+
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
     X, 
     Heart, 
-    Share2, 
     Instagram,
     Send, 
     Briefcase, 
@@ -16,18 +28,18 @@ import {
     Sparkles, 
     Trash2, 
     Edit2, 
-    CalendarDays, 
-    Rocket, 
-    Info, 
     Eye, 
     Lock,
+    Globe,
     Coffee,
     Crown,
     Flame,
     Palmtree,
     Moon,
     Sun,
-    Tag
+    Tag,
+    ChevronRight,
+    ExternalLink
 } from 'lucide-react';
 import Link from 'next/link';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
@@ -35,13 +47,14 @@ import { Outfit } from '@/types/outfit';
 import { createPortal } from 'react-dom';
 import InteractiveOutfitViewer from './InteractiveOutfitViewer';
 import ExportStoryModal from './ExportStoryModal';
+import { triggerHaptic } from '@/lib/haptic';
 
 interface OutfitDetailModalProps {
     isOpen: boolean;
     onClose: () => void;
     outfit: Outfit;
     onDelete?: (id: string) => void;
-    onToggleFavorite?: (id: string, currentStatus: boolean) => void;
+    onToggleFavorite?: (outfit: Outfit, currentStatus: boolean) => void;
     onItemClick?: (item: any) => void;
     onToggleVisibility?: (outfit: Outfit) => void;
 }
@@ -63,7 +76,15 @@ const styleConfig: Record<string, { icon: React.ReactNode; label: string }> = {
     'summer': { icon: <Sun className="w-3.5 h-3.5" />, label: 'Verano' },
 };
 
-export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleFavorite, onItemClick, onToggleVisibility }: OutfitDetailModalProps) {
+export function OutfitDetailModal({ 
+    isOpen, 
+    onClose, 
+    outfit, 
+    onDelete, 
+    onToggleFavorite, 
+    onItemClick, 
+    onToggleVisibility 
+}: OutfitDetailModalProps) {
     useBodyScrollLock(isOpen);
     const [selectedItemForDetail, setSelectedItemForDetail] = useState<any | null>(null);
     const [showExportModal, setShowExportModal] = useState(false);
@@ -75,18 +96,25 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
 
     if (!isOpen || !outfit || !mounted) return null;
 
-    const styleKey = outfit.occasion || outfit.style || 'everyday';
-    const config = styleConfig[styleKey] || { icon: <Layers className="w-4 h-4" />, label: styleKey };
+    const styleKey = (outfit.occasion || outfit.style || 'everyday').toLowerCase();
+    const config = styleConfig[styleKey] || { icon: <Layers className="w-3.5 h-3.5" />, label: outfit.occasion || outfit.style || 'Estilo' };
 
     // @ts-ignore
     const items = outfit.items || outfit.outfit_items || [];
 
-    const getItemImage = (item: any) => item.imageUrl || item.image_url || item.clothing_items?.image_url;
-    const getItemName = (item: any) => item.name || item.clothing_items?.name;
-    const getItemBrand = (item: any) => item.brand || item.clothing_items?.brand;
+    const getItemImage = (item: any) => 
+        item.imageUrl || item.image_url || item.clothing_items?.image_url || item.clothing_item?.image_url;
+    const getItemName = (item: any) => 
+        item.name || item.clothing_items?.name || item.clothing_item?.name;
+    const getItemBrand = (item: any) => 
+        item.brand || item.clothing_items?.brand || item.clothing_item?.brand;
+    const getItemCategory = (item: any) => 
+        item.category || item.clothing_items?.category || item.clothing_item?.category;
+    const getItemColor = (item: any) => 
+        item.color_hex || item.colorHex || item.color || item.clothing_items?.color_hex || item.clothing_item?.color_hex;
 
     const handleItemClick = (clothing: any) => {
-        // Open the bottom sheet instead of navigating
+        triggerHaptic('light');
         setSelectedItemForDetail(clothing);
     };
 
@@ -104,39 +132,67 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        transition={{ duration: 0.3 }}
+                        transition={{ duration: 0.25 }}
                         onClick={onClose}
-                        className="fixed inset-0 bg-black/60 shadow-2xl backdrop-blur-sm z-[6015]"
+                        className="fixed inset-0 bg-black/60 backdrop-blur-md z-[6015]"
                     />
 
-                    {/* Modal Content Wrapper - Popup on Mobile, Split on Desktop */}
+                    {/* Modal Content Wrapper */}
                     <motion.div
                         key="outfit-wrapper"
-                        initial={{ opacity: 0, y: 100 }}
+                        initial={{ opacity: 0, y: 40 }}
                         animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 100 }}
+                        exit={{ opacity: 0, y: 40 }}
                         transition={{ 
                             type: 'spring',
                             damping: 28,
-                            stiffness: 300,
+                            stiffness: 340,
                         }}
-                        className="fixed inset-0 z-[6020] flex items-end md:items-center justify-center px-4 pb-[calc(var(--tabbar-height)+16px)] md:pb-0 md:p-6 pointer-events-none"
+                        className="fixed inset-0 z-[6020] flex items-end md:items-center justify-center px-3 sm:px-6 pb-[calc(var(--tabbar-height)+8px)] md:pb-0 pointer-events-none"
                     >
                         <motion.div
-                            className="w-full max-w-md md:max-w-[1200px] max-h-[calc(100dvh-var(--tabbar-height)-48px)] md:h-[85vh] bg-[var(--background)] rounded-3xl md:rounded-[32px] flex flex-col md:flex-row overflow-y-auto md:overflow-hidden custom-scrollbar shadow-2xl relative border border-[var(--border-color)] pointer-events-auto"
+                            className="w-full max-w-md md:max-w-[1040px] max-h-[calc(100dvh-var(--tabbar-height)-20px)] md:h-[84vh] bg-[var(--background)] rounded-[28px] md:rounded-[36px] flex flex-col md:flex-row overflow-hidden shadow-2xl relative border border-[var(--border-color)] pointer-events-auto"
                             onClick={(e) => e.stopPropagation()}
                         >
-                            {/* Close button - Top Right */}
-                            <button
-                                onClick={onClose}
-                                className="absolute top-3 md:top-4 right-3 md:right-4 z-50 p-1.5 md:p-2 bg-black/50 hover:bg-black/75 backdrop-blur-md rounded-full transition-colors text-white shadow-md cursor-pointer"
-                                aria-label="Cerrar modal"
-                            >
-                                <X className="w-4 h-4" />
-                            </button>
+                            {/* iOS Drag Handle (Mobile only) */}
+                            <div className="md:hidden pt-2.5 pb-1 flex justify-center w-full z-30 shrink-0">
+                                <div className="w-10 h-1 rounded-full bg-zinc-300 dark:bg-zinc-700" />
+                            </div>
 
-                            {/* Left Column (Desktop) / Top Half (Mobile) */}
-                            <div className="relative w-full min-h-[50vh] md:min-h-0 shrink-0 md:aspect-auto md:h-full md:w-[60%] md:flex-none bg-[#f8f9fa] dark:bg-[#111] z-0 flex flex-col items-stretch md:border-r border-b md:border-b-0 border-[var(--border-color)]">
+                            {/* Top Right Controls (Favorite + Close) */}
+                            <div className="absolute top-3 right-3 md:top-4 md:right-4 z-30 flex items-center gap-2">
+                                {onToggleFavorite && (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                          triggerHaptic('light');
+                                          onToggleFavorite(outfit, outfit.favorite ?? false);
+                                        }}
+                                        className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-white/85 dark:bg-zinc-900/85 backdrop-blur-md border border-black/5 dark:border-white/10 flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:text-[var(--brand-pink,#FF66C4)] transition-all shadow-xs cursor-pointer active:scale-90"
+                                        aria-label="Marcar como favorito"
+                                    >
+                                        <Heart
+                                            className={`w-4 h-4 transition-colors ${
+                                                outfit.favorite ? 'fill-[var(--brand-pink,#FF66C4)] text-[var(--brand-pink,#FF66C4)]' : 'fill-none'
+                                            }`}
+                                        />
+                                    </button>
+                                )}
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        triggerHaptic('light');
+                                        onClose();
+                                    }}
+                                    className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-white/85 dark:bg-zinc-900/85 backdrop-blur-md border border-black/5 dark:border-white/10 flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:text-black dark:hover:text-white transition-all shadow-xs cursor-pointer active:scale-90"
+                                    aria-label="Cerrar modal"
+                                >
+                                    <X className="w-4 h-4" />
+                                </button>
+                            </div>
+
+                            {/* Left Column (Desktop) / Top Canvas Stage (Mobile) */}
+                            <div className="relative w-full h-[36vh] min-h-[220px] max-h-[300px] md:min-h-0 md:max-h-none md:h-full md:w-[58%] shrink-0 bg-gradient-to-b from-[#f9fafb] to-[#f3f4f6] dark:from-[#131316] dark:to-[#0c0c0e] z-0 flex flex-col items-center justify-center md:border-r border-b md:border-b-0 border-[var(--border-color)] overflow-hidden">
                                 <div className="absolute inset-0 w-full h-full">
                                     <InteractiveOutfitViewer
                                         outfit={outfit}
@@ -147,141 +203,205 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
                                         isActive={isOpen}
                                     />
                                 </div>
-                            </div>
-
-                            {/* Right Column (Desktop) / Bottom Half (Mobile) */}
-                            <div className="relative z-10 w-full flex-none md:flex-1 md:h-auto flex flex-col pointer-events-auto bg-[var(--background)] md:overflow-y-auto md:custom-scrollbar">
-                                {/* Inner container */}
-                                <div className="w-full flex flex-col md:pb-10">
-                                    {/* Outfit Info */}
-                                    <div className="px-6 py-5">
-                                        <div className="flex flex-col gap-2 mb-4">
-                                            <h2 className="text-2xl font-bold text-[var(--foreground)] leading-tight">{outfit.name || 'Outfit sin título'}</h2>
-                                            {outfit.occasion && config && (
-                                                <div className="flex items-center">
-                                                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] border border-[var(--brand-pink)]/20">
-                                                        {config.icon}
-                                                        {config.label}
-                                                    </span>
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        {/* Action Buttons */}
-                                        <div className="flex gap-3 items-center">
-
-                                            <Link
-                                                href={`/create?outfitId=${outfit.id}`}
-                                                className="flex-1"
-                                                onClick={onClose}
-                                            >
-                                                <motion.button
-                                                    whileHover={{ scale: 1.02 }}
-                                                    whileTap={{ scale: 0.98 }}
-                                                    className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl font-medium transition-all duration-300 bg-[var(--background-secondary)]/90 backdrop-blur-md text-[var(--foreground)] border border-transparent hover:bg-[var(--foreground)] hover:text-[var(--background)] h-[52px]"
-                                                >
-                                                    <Edit2 className="w-5 h-5" />
-                                                    <span className="text-center">Editar</span>
-                                                </motion.button>
-                                            </Link>
-                                            <Link
-                                                href={`/create-post?outfitId=${outfit.id}`}
-                                                className="flex-1"
-                                                onClick={onClose}
-                                            >
-                                                <motion.button
-                                                    whileHover={{ scale: 1.02 }}
-                                                    whileTap={{ scale: 0.98 }}
-                                                    className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl font-medium transition-all duration-300 bg-[var(--brand-pink)] text-white hover:opacity-90 h-[52px] shadow-sm shadow-[var(--brand-pink)]/20"
-                                                >
-                                                    <Send className="w-5 h-5" />
-                                                    <span className="text-center">Publicar</span>
-                                                </motion.button>
-                                            </Link>
-
-                                            <motion.button
-                                                whileHover={{ scale: 1.04 }}
-                                                whileTap={{ scale: 0.96 }}
-                                                onClick={() => setShowExportModal(true)}
-                                                className="flex items-center justify-center gap-1.5 py-3.5 px-3.5 rounded-xl font-bold transition-all duration-300 bg-pink-500/10 text-pink-600 dark:text-pink-400 border border-pink-500/25 hover:bg-pink-500/20 h-[52px]"
-                                                title="Exportar a Instagram Stories"
-                                            >
-                                                <Instagram className="w-5 h-5" />
-                                                <span className="text-xs">Story</span>
-                                            </motion.button>
-
-                                            {onToggleVisibility && !(outfit.posts && outfit.posts.length > 0) && (
-                                                <motion.button
-                                                    whileHover={{ scale: 1.1 }}
-                                                    whileTap={{ scale: 0.8 }}
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        onToggleVisibility(outfit);
-                                                    }}
-                                                    className="p-3.5 rounded-xl bg-[var(--background-secondary)]/90 backdrop-blur-md text-[var(--foreground)] hover:bg-[var(--foreground)] hover:text-[var(--background)] transition-all duration-300 h-[52px] w-[52px] flex items-center justify-center relative"
-                                                    title={outfit.is_public ? "Hacer privado" : "Hacer público"}
-                                                >
-                                                    <AnimatePresence mode="wait">
-                                                        <motion.div
-                                                            key={outfit.is_public ? 'public' : 'private'}
-                                                            initial={{ scale: 0.5, opacity: 0, rotate: -90 }}
-                                                            animate={{ scale: 1, opacity: 1, rotate: 0 }}
-                                                            exit={{ scale: 0.5, opacity: 0, rotate: 90 }}
-                                                            transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                                                            className="absolute"
-                                                        >
-                                                            {outfit.is_public ? <Eye className="w-5 h-5" /> : <Lock className="w-5 h-5" />}
-                                                        </motion.div>
-                                                    </AnimatePresence>
-                                                </motion.button>
-                                            )}
-
-                                            {onDelete && (
-                                                <motion.button
-                                                    whileHover={{ scale: 1.02 }}
-                                                    whileTap={{ scale: 0.98 }}
-                                                    onClick={() => onDelete(outfit.id)}
-                                                    className="flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl font-medium transition-all duration-300 bg-red-500/10 backdrop-blur-md text-red-600 hover:bg-red-500/20 h-[52px]"
-                                                    title="Eliminar"
-                                                >
-                                                    <Trash2 className="w-5 h-5" />
-                                                </motion.button>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {/* 3. Items Breakdown (Desktop Only) */}
-                                    <div className="px-6 mt-4 hidden md:block">
-                                        <h3 className="font-bold text-lg text-[var(--foreground)] mb-4">Prendas de este look</h3>
-                                        <div className="grid grid-cols-2 gap-3">
-                                            {items.map((item: any) => {
-                                                const clothing = item.clothing_items || item.clothing_item || item;
-                                                const img = getItemImage(item);
-                                                if (!clothing || (!img && !clothing.name)) return null;
-
-                                                return (
-                                                    <div
-                                                        key={clothing.id}
-                                                        className="block group cursor-pointer"
-                                                        onClick={() => handleItemClick(clothing)}
-                                                    >
-                                                        <div className="aspect-square bg-[var(--background-secondary)] rounded-2xl overflow-hidden relative mb-2 flex items-center justify-center">
-                                                            {img ? (
-                                                                <Image src={img} alt={getItemName(item) || 'Ropa'} fill className="object-cover scale-[0.8] group-hover:scale-[0.85] transition-transform duration-300" />
-                                                            ) : (
-                                                                <div className="w-full h-full flex items-center justify-center text-4xl" style={{ backgroundColor: clothing.color_hex || clothing.color || '#ccc' }}>👕</div>
-                                                            )}
-                                                        </div>
-                                                        <p className="text-[13px] font-bold text-[var(--foreground)] truncate px-1">{getItemName(item)}</p>
-                                                        <p className="text-[11px] text-[var(--foreground-secondary)] px-1">{getItemBrand(item) || 'Sin marca'}</p>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    </div>
+                                <div className="absolute bottom-2.5 inset-x-0 flex justify-center pointer-events-none">
+                                    <span className="text-[10px] tracking-wider uppercase font-semibold text-zinc-400 dark:text-zinc-500 bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xs px-2.5 py-0.5 rounded-full border border-black/[0.04] dark:border-white/[0.06]">
+                                        Toca una prenda para ver detalles
+                                    </span>
                                 </div>
                             </div>
 
+                            {/* Right Column (Desktop) / Scrollable Bottom Half (Mobile) */}
+                            <div className="relative z-10 w-full flex-1 flex flex-col bg-[var(--background)] overflow-y-auto custom-scrollbar p-4 sm:p-5 md:p-6 gap-4">
+                                {/* 1. Title & Metadata */}
+                                <div className="flex flex-col gap-1.5">
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                        {outfit.occasion && config && (
+                                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-black/5 dark:border-white/5">
+                                                {config.icon}
+                                                {config.label}
+                                            </span>
+                                        )}
+                                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-black/5 dark:border-white/5">
+                                            <Layers className="w-3 h-3 text-[var(--brand-pink,#FF66C4)]" />
+                                            {items.length} {items.length === 1 ? 'prenda' : 'prendas'}
+                                        </span>
+                                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-black/5 dark:border-white/5">
+                                            {outfit.is_public ? (
+                                                <>
+                                                    <Globe className="w-3 h-3 text-[var(--brand-pink,#FF66C4)]" />
+                                                    Público
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Lock className="w-3 h-3 text-zinc-400" />
+                                                    Privado
+                                                </>
+                                            )}
+                                        </span>
+                                    </div>
+                                    <h2 className="text-xl md:text-2xl font-bold text-[var(--foreground)] tracking-tight leading-tight mt-1">
+                                        {outfit.name || 'Outfit sin título'}
+                                    </h2>
+                                </div>
+
+                                {/* 2. Action Hierarchy (Main CTAs + Tool Bar) */}
+                                <div className="flex flex-col gap-2 pt-0.5">
+                                    {/* Primary Row: Editar en lienzo + Publicar */}
+                                    <div className="flex items-center gap-2.5">
+                                        <Link
+                                            href={`/create?outfitId=${outfit.id}`}
+                                            className="flex-1"
+                                            onClick={onClose}
+                                        >
+                                            <button
+                                                type="button"
+                                                className="w-full h-11 px-4 rounded-2xl bg-[var(--foreground)] text-[var(--background)] font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 hover:opacity-90 active:scale-[0.98] transition-all shadow-xs cursor-pointer"
+                                            >
+                                                <Edit2 className="w-4 h-4 shrink-0" />
+                                                <span className="truncate">Editar look</span>
+                                            </button>
+                                        </Link>
+
+                                        <Link
+                                            href={`/create-post?outfitId=${outfit.id}`}
+                                            className="flex-1"
+                                            onClick={onClose}
+                                        >
+                                            <button
+                                                type="button"
+                                                className="w-full h-11 px-4 rounded-2xl bg-[var(--brand-pink,#FF66C4)]/10 text-[var(--brand-pink,#FF66C4)] border border-[var(--brand-pink,#FF66C4)]/20 hover:bg-[var(--brand-pink,#FF66C4)]/15 font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 active:scale-[0.98] transition-all shadow-xs cursor-pointer"
+                                            >
+                                                <Send className="w-4 h-4 shrink-0" />
+                                                <span className="truncate">Publicar</span>
+                                            </button>
+                                        </Link>
+                                    </div>
+
+                                    {/* Secondary Row: Story (Instagram) + Visibilidad + Eliminar */}
+                                    <div className="flex items-center gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                triggerHaptic('light');
+                                                setShowExportModal(true);
+                                            }}
+                                            className="flex-1 h-9 px-3 rounded-xl bg-zinc-100 dark:bg-zinc-850 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-200 border border-black/5 dark:border-white/5 font-semibold text-xs flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all cursor-pointer"
+                                            title="Exportar a Instagram Stories"
+                                        >
+                                            <Instagram className="w-3.5 h-3.5 text-pink-500 shrink-0" />
+                                            <span>Story</span>
+                                        </button>
+
+                                        {onToggleVisibility && !(outfit.posts && outfit.posts.length > 0) && (
+                                            <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    triggerHaptic('light');
+                                                    onToggleVisibility(outfit);
+                                                }}
+                                                className="h-9 px-3 rounded-xl bg-zinc-100 dark:bg-zinc-850 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-200 border border-black/5 dark:border-white/5 font-medium text-xs flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all cursor-pointer"
+                                                title={outfit.is_public ? 'Hacer privado' : 'Hacer público'}
+                                            >
+                                                {outfit.is_public ? (
+                                                    <>
+                                                        <Globe className="w-3.5 h-3.5 text-[var(--brand-pink,#FF66C4)] shrink-0" />
+                                                        <span className="hidden sm:inline">Público</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Lock className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                                                        <span className="hidden sm:inline">Privado</span>
+                                                    </>
+                                                )}
+                                            </button>
+                                        )}
+
+                                        {onDelete && (
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    triggerHaptic('medium');
+                                                    onDelete(outfit.id);
+                                                }}
+                                                className="h-9 px-3 rounded-xl bg-red-500/10 hover:bg-red-500/15 text-red-500 border border-red-500/20 font-medium text-xs flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all cursor-pointer"
+                                                title="Eliminar outfit"
+                                            >
+                                                <Trash2 className="w-3.5 h-3.5 shrink-0" />
+                                                <span className="hidden sm:inline">Eliminar</span>
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* 3. Garments Breakdown (Prendas de este look - Visible en Móvil y Desktop) */}
+                                <div className="flex flex-col gap-2.5 pt-1 pb-2">
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="font-bold text-sm text-[var(--foreground)] tracking-tight">
+                                            Prendas de este look
+                                        </h3>
+                                        <span className="text-[11px] text-zinc-400 dark:text-zinc-500">
+                                            {items.length} {items.length === 1 ? 'artículo' : 'artículos'}
+                                        </span>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-2">
+                                        {items.map((item: any, idx: number) => {
+                                            const clothing = item.clothing_items || item.clothing_item || item;
+                                            const img = getItemImage(item);
+                                            if (!clothing || (!img && !clothing.name)) return null;
+
+                                            const name = getItemName(item) || 'Prenda';
+                                            const brand = getItemBrand(item) || 'Sin marca';
+                                            const color = getItemColor(item);
+                                            const category = getItemCategory(item);
+
+                                            return (
+                                                <motion.div
+                                                    key={clothing.id || idx}
+                                                    whileHover={{ scale: 1.02 }}
+                                                    whileTap={{ scale: 0.98 }}
+                                                    onClick={() => handleItemClick(clothing)}
+                                                    className="flex items-center gap-2 p-2 rounded-2xl bg-zinc-50 dark:bg-zinc-900/60 border border-black/5 dark:border-white/5 hover:border-black/10 dark:hover:border-white/10 transition-all cursor-pointer group"
+                                                >
+                                                    <div className="w-11 h-11 rounded-xl bg-white dark:bg-zinc-800/80 p-1 flex items-center justify-center shrink-0 overflow-hidden relative shadow-2xs">
+                                                        {img ? (
+                                                            <Image
+                                                                src={img}
+                                                                alt={name}
+                                                                width={44}
+                                                                height={44}
+                                                                className="object-contain w-full h-full group-hover:scale-105 transition-transform duration-200"
+                                                            />
+                                                        ) : (
+                                                            <div
+                                                                className="w-full h-full rounded-lg"
+                                                                style={{ backgroundColor: color || '#ccc' }}
+                                                            />
+                                                        )}
+                                                    </div>
+
+                                                    <div className="flex flex-col min-w-0 flex-1">
+                                                        <p className="text-xs font-bold text-[var(--foreground)] truncate leading-tight group-hover:text-[var(--brand-pink,#FF66C4)] transition-colors">
+                                                            {name}
+                                                        </p>
+                                                        <p className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">
+                                                            {brand}
+                                                        </p>
+                                                        {category && (
+                                                            <span className="text-[9px] uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mt-0.5">
+                                                                {category}
+                                                            </span>
+                                                        )}
+                                                    </div>
+
+                                                    <ChevronRight className="w-3.5 h-3.5 text-zinc-400 group-hover:translate-x-0.5 transition-transform shrink-0 pr-0.5 opacity-60" />
+                                                </motion.div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            </div>
                         </motion.div>
                     </motion.div>
                     
@@ -295,7 +415,7 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
                                     animate={{ opacity: 1 }}
                                     exit={{ opacity: 0 }}
                                     onClick={handleCloseItemDetail}
-                                    className="fixed inset-0 bg-black/40 z-[6030]"
+                                    className="fixed inset-0 bg-black/50 z-[6030] backdrop-blur-xs"
                                 />
 
                                 {/* MOBILE: Bottom Sheet with Sticker Effect */}
@@ -304,108 +424,117 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
                                     animate={{ y: 0 }}
                                     exit={{ y: "100%" }}
                                     transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                                    className="fixed bottom-0 left-0 right-0 z-[6040] bg-white dark:bg-[#1a1a1a] rounded-t-[32px] p-6 pt-20 pb-10 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] flex flex-col items-center justify-between min-h-[45vh] md:hidden pointer-events-auto"
+                                    className="fixed bottom-0 left-0 right-0 z-[6040] bg-[var(--background)] rounded-t-[32px] p-6 pt-16 pb-8 shadow-[0_-10px_40px_rgba(0,0,0,0.15)] border-t border-[var(--border-color)] flex flex-col items-center justify-between min-h-[44vh] md:hidden pointer-events-auto"
                                     onClick={(e) => e.stopPropagation()}
                                 >
                                     <button 
+                                        type="button"
                                         onClick={handleCloseItemDetail}
-                                        className="absolute top-4 right-4 p-2 bg-gray-100 dark:bg-gray-800 rounded-full text-gray-500 dark:text-gray-400"
+                                        className="absolute top-4 right-4 p-2 bg-zinc-100 dark:bg-zinc-800 rounded-full text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white transition-colors cursor-pointer"
                                     >
                                         <X className="w-5 h-5" />
                                     </button>
 
-                                    <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-52 h-52 pointer-events-none">
-                                        <div className="w-full h-full relative" style={{ filter: 'drop-shadow(0 8px 16px rgba(0,0,0,0.15))' }}>
-                                            <Image src={selectedItemForDetail.imageUrl || selectedItemForDetail.image_url} alt={selectedItemForDetail.name || 'Prenda'} fill className="object-contain" />
+                                    <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-44 h-44 pointer-events-none">
+                                        <div className="w-full h-full relative" style={{ filter: 'drop-shadow(0 8px 16px rgba(0,0,0,0.18))' }}>
+                                            <Image 
+                                                src={selectedItemForDetail.imageUrl || selectedItemForDetail.image_url} 
+                                                alt={selectedItemForDetail.name || 'Prenda'} 
+                                                fill 
+                                                className="object-contain" 
+                                            />
                                         </div>
                                     </div>
 
                                     <div className="w-full text-center flex-1 flex flex-col justify-between mt-4">
                                         <div>
-                                            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{selectedItemForDetail.name || 'Nueva prenda'}</h3>
-                                            <p className="text-gray-500 dark:text-gray-400 mt-1 text-lg">{selectedItemForDetail.brand || 'Sin marca'}</p>
+                                            <h3 className="text-xl font-bold text-[var(--foreground)]">{selectedItemForDetail.name || 'Prenda'}</h3>
+                                            <p className="text-zinc-500 dark:text-zinc-400 mt-1 text-sm font-medium">{selectedItemForDetail.brand || 'Sin marca'}</p>
                                             
                                             {selectedItemForDetail.category && (
-                                                <p className="text-sm text-gray-400 uppercase tracking-wider mt-4 font-medium">{selectedItemForDetail.category}</p>
+                                                <p className="text-xs text-zinc-400 uppercase tracking-wider mt-3 font-semibold">{selectedItemForDetail.category}</p>
                                             )}
 
-                                            <div className="flex flex-wrap items-center justify-center gap-3 mt-5 mb-2">
+                                            <div className="flex flex-wrap items-center justify-center gap-2 mt-4 mb-2">
                                                 {(selectedItemForDetail.color || selectedItemForDetail.color_hex || selectedItemForDetail.colorHex) && (
-                                                    <div className="flex items-center gap-2 p-2 px-4 bg-gray-100 dark:bg-gray-800 rounded-full w-fit">
-                                                        <div className="w-4 h-4 rounded-full border border-gray-300 dark:border-gray-600 shadow-sm" style={{ backgroundColor: selectedItemForDetail.color_hex || selectedItemForDetail.colorHex || selectedItemForDetail.color || '#ccc' }} />
-                                                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300 capitalize">{selectedItemForDetail.color || selectedItemForDetail.colorHex || selectedItemForDetail.color_hex || 'Color'}</span>
+                                                    <div className="flex items-center gap-2 py-1.5 px-3 bg-zinc-100 dark:bg-zinc-800 rounded-full w-fit">
+                                                        <div className="w-3.5 h-3.5 rounded-full border border-zinc-300 dark:border-zinc-600 shadow-2xs" style={{ backgroundColor: selectedItemForDetail.color_hex || selectedItemForDetail.colorHex || selectedItemForDetail.color || '#ccc' }} />
+                                                        <span className="text-xs font-medium text-zinc-700 dark:text-zinc-300 capitalize">{selectedItemForDetail.color || selectedItemForDetail.colorHex || selectedItemForDetail.color_hex || 'Color'}</span>
                                                     </div>
                                                 )}
                                                 {selectedItemForDetail.size && (
-                                                    <div className="flex items-center gap-2 p-2 px-4 bg-gray-100 dark:bg-gray-800 rounded-full w-fit">
-                                                        <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Talla</span>
-                                                        <span className="text-sm font-bold text-gray-900 dark:text-white">{selectedItemForDetail.size}</span>
+                                                    <div className="flex items-center gap-1.5 py-1.5 px-3 bg-zinc-100 dark:bg-zinc-800 rounded-full w-fit">
+                                                        <span className="text-xs font-medium text-zinc-500">Talla:</span>
+                                                        <span className="text-xs font-bold text-[var(--foreground)]">{selectedItemForDetail.size}</span>
                                                     </div>
                                                 )}
                                             </div>
                                         </div>
                                         
                                         {(selectedItemForDetail.source_url || selectedItemForDetail.sourceUrl) && (
-                                            <div className="mt-8 w-full">
-                                                <a href={selectedItemForDetail.source_url || selectedItemForDetail.sourceUrl} target="_blank" rel="noopener noreferrer" className="block w-full bg-black dark:bg-white text-white dark:text-black font-bold py-4 rounded-3xl hover:opacity-90 transition-opacity text-center shadow-lg text-lg">
-                                                    Enlace a la web
+                                            <div className="mt-6 w-full">
+                                                <a 
+                                                    href={selectedItemForDetail.source_url || selectedItemForDetail.sourceUrl} 
+                                                    target="_blank" 
+                                                    rel="noopener noreferrer" 
+                                                    className="w-full bg-[var(--foreground)] text-[var(--background)] font-bold py-3.5 rounded-2xl hover:opacity-90 transition-opacity flex items-center justify-center gap-2 shadow-md text-sm"
+                                                >
+                                                    <span>Enlace a la tienda</span>
+                                                    <ExternalLink className="w-4 h-4" />
                                                 </a>
                                             </div>
                                         )}
                                     </div>
                                 </motion.div>
 
-                                {/* DESKTOP: Standard Centered Modal */}
+                                {/* DESKTOP: Centered Preview Modal */}
                                 <motion.div
                                     initial={{ opacity: 0, scale: 0.95, y: 10 }}
                                     animate={{ opacity: 1, scale: 1, y: 0 }}
                                     exit={{ opacity: 0, scale: 0.95, y: 10 }}
                                     transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                                    className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[6040] bg-white dark:bg-[#1a1a1a] rounded-3xl max-w-sm w-[90%] p-5 space-y-4 shadow-2xl pointer-events-auto hidden md:block"
+                                    className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[6040] bg-[var(--background)] rounded-3xl max-w-sm w-[90%] p-5 space-y-4 shadow-2xl border border-[var(--border-color)] pointer-events-auto hidden md:block"
                                     onClick={(e) => e.stopPropagation()}
                                 >
                                     <button
+                                        type="button"
                                         onClick={handleCloseItemDetail}
-                                        className="absolute top-3 right-3 p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors z-10"
+                                        className="absolute top-3 right-3 p-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-full transition-colors z-10 cursor-pointer"
                                     >
-                                        <X className="w-5 h-5 text-gray-900 dark:text-white" />
+                                        <X className="w-5 h-5 text-[var(--foreground)]" />
                                     </button>
 
-                                    <div className="relative w-full h-56 rounded-2xl overflow-hidden bg-gray-100 dark:bg-gray-800">
+                                    <div className="relative w-full h-56 rounded-2xl overflow-hidden bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
                                         {selectedItemForDetail.imageUrl || selectedItemForDetail.image_url ? (
-                                            <Image src={selectedItemForDetail.imageUrl || selectedItemForDetail.image_url} alt={selectedItemForDetail.name || 'Prenda'} fill className="object-contain p-4" />
+                                            <Image 
+                                                src={selectedItemForDetail.imageUrl || selectedItemForDetail.image_url} 
+                                                alt={selectedItemForDetail.name || 'Prenda'} 
+                                                fill 
+                                                className="object-contain p-4" 
+                                            />
                                         ) : (
                                             <div className="w-full h-full flex items-center justify-center text-6xl" style={{ backgroundColor: selectedItemForDetail.color_hex || selectedItemForDetail.color || '#ccc' }}>👕</div>
                                         )}
                                     </div>
 
                                     <div>
-                                        <h3 className="text-xl font-bold text-gray-900 dark:text-white">{selectedItemForDetail.name || 'Prenda'}</h3>
-                                        <p className="text-gray-500 dark:text-gray-400 font-medium mt-1">{selectedItemForDetail.brand || 'Sin marca'}</p>
+                                        <h3 className="text-xl font-bold text-[var(--foreground)]">{selectedItemForDetail.name || 'Prenda'}</h3>
+                                        <p className="text-zinc-500 dark:text-zinc-400 font-medium mt-1">{selectedItemForDetail.brand || 'Sin marca'}</p>
                                         {selectedItemForDetail.category && (
-                                            <p className="text-sm text-gray-400 uppercase tracking-wider mt-2">{selectedItemForDetail.category}</p>
+                                            <p className="text-xs text-zinc-400 uppercase tracking-wider mt-2 font-semibold">{selectedItemForDetail.category}</p>
                                         )}
 
-                                        <div className="flex flex-wrap items-center gap-2 mt-3 mb-6">
+                                        <div className="flex flex-wrap items-center gap-2 mt-3 mb-4">
                                             {(selectedItemForDetail.color || selectedItemForDetail.color_hex || selectedItemForDetail.colorHex) && (
-                                                <div className="flex items-center gap-2 p-2 px-3 bg-gray-100 dark:bg-gray-800 rounded-xl w-fit">
-                                                    <div className="w-3.5 h-3.5 rounded-full border border-gray-300 dark:border-gray-600" style={{ backgroundColor: selectedItemForDetail.color_hex || selectedItemForDetail.colorHex || selectedItemForDetail.color || '#ccc' }} />
-                                                    <span className="text-[13px] font-medium text-gray-600 dark:text-gray-300 capitalize">{selectedItemForDetail.color || selectedItemForDetail.colorHex || selectedItemForDetail.color_hex || 'Color'}</span>
+                                                <div className="flex items-center gap-2 py-1.5 px-3 bg-zinc-100 dark:bg-zinc-800 rounded-xl w-fit">
+                                                    <div className="w-3.5 h-3.5 rounded-full border border-zinc-300 dark:border-zinc-600" style={{ backgroundColor: selectedItemForDetail.color_hex || selectedItemForDetail.colorHex || selectedItemForDetail.color || '#ccc' }} />
+                                                    <span className="text-xs font-medium text-zinc-700 dark:text-zinc-300 capitalize">{selectedItemForDetail.color || selectedItemForDetail.colorHex || selectedItemForDetail.color_hex || 'Color'}</span>
                                                 </div>
                                             )}
                                             {selectedItemForDetail.size && (
-                                                <div className="flex items-center gap-2 p-2 px-3 bg-gray-100 dark:bg-gray-800 rounded-xl w-fit">
-                                                    <span className="text-[13px] font-medium text-gray-500 dark:text-gray-400">Talla:</span>
-                                                    <span className="text-[13px] font-semibold text-gray-900 dark:text-white">{selectedItemForDetail.size}</span>
-                                                </div>
-                                            )}
-                                            {(selectedItemForDetail.brand || selectedItemForDetail.fabric) && (
-                                                <div className="flex items-center gap-2 p-2 px-3 bg-gray-100 dark:bg-gray-800 rounded-xl w-fit">
-                                                    <span className="text-[13px] font-semibold text-gray-900 dark:text-white">
-                                                        {selectedItemForDetail.brand}
-                                                        {selectedItemForDetail.brand && selectedItemForDetail.fabric && ' • '}
-                                                        {selectedItemForDetail.fabric}
-                                                    </span>
+                                                <div className="flex items-center gap-1.5 py-1.5 px-3 bg-zinc-100 dark:bg-zinc-800 rounded-xl w-fit">
+                                                    <span className="text-xs font-medium text-zinc-500">Talla:</span>
+                                                    <span className="text-xs font-semibold text-[var(--foreground)]">{selectedItemForDetail.size}</span>
                                                 </div>
                                             )}
                                         </div>
@@ -415,9 +544,10 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
                                                 href={selectedItemForDetail.source_url || selectedItemForDetail.sourceUrl} 
                                                 target="_blank" 
                                                 rel="noopener noreferrer" 
-                                                className="block w-full bg-[var(--brand-pink)] text-white font-bold py-3.5 rounded-xl hover:opacity-90 transition-opacity text-center shadow-lg shadow-[var(--brand-pink)]/30"
+                                                className="w-full bg-[var(--foreground)] text-[var(--background)] font-bold py-3.5 rounded-xl hover:opacity-90 transition-opacity flex items-center justify-center gap-2 shadow-md text-sm mt-4"
                                             >
-                                                Enlace a la web
+                                                <span>Ver en la web</span>
+                                                <ExternalLink className="w-4 h-4" />
                                             </a>
                                         )}
                                     </div>
@@ -425,6 +555,26 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
                             </>
                         )}
                     </AnimatePresence>
+
+                    {/* Export Story Modal (Instagram Stories) */}
+                    <ExportStoryModal
+                        isOpen={showExportModal}
+                        onClose={() => setShowExportModal(false)}
+                        title={outfit.name || 'Outfit'}
+                        items={items.map((it: any) => {
+                            const c = it.clothing_items || it.clothing_item || it;
+                            return {
+                                id: c.id,
+                                name: getItemName(it) || 'Prenda',
+                                imageUrl: getItemImage(it) || '',
+                                brand: getItemBrand(it),
+                                category: getItemCategory(it),
+                            };
+                        })}
+                        coverImageUrl={(outfit as any).image_url || (outfit as any).imageUrl}
+                        occasion={config?.label}
+                        season={outfit.season}
+                    />
                 </>
             )}
         </AnimatePresence>,
