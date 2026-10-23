@@ -134,6 +134,9 @@ export default function NotificationList({ compact = false, onClose }: Notificat
 
         const realNotifications: Notification[] = [];
         let hadError = false;
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const thirtyDaysAgoISO = thirtyDaysAgo.toISOString();
 
         // Helper to get relative time safely
         const getTimeAgo = (dateString: string) => {
@@ -172,11 +175,12 @@ export default function NotificationList({ compact = false, onClose }: Notificat
         }
 
         try {
-            // 2. Fetch Follows (Sin límite arbitrario de 30 días)
+            // 2. Fetch Follows (Últimos 30 días)
             const { data: followsData, error: followsError } = await supabase
                 .from('follows')
                 .select('*, follower:follower_id(*)')
                 .eq('following_id', user.id)
+                .gte('created_at', thirtyDaysAgoISO)
                 .order('created_at', { ascending: false })
                 .range(from, to);
 
@@ -212,7 +216,7 @@ export default function NotificationList({ compact = false, onClose }: Notificat
 
             if (myPosts && myPosts.length > 0) {
                 const myPostIds = myPosts.map((p: any) => p.id);
-                // LIKES
+                // LIKES (Últimos 30 días)
                 const { data: likes, error: likesError } = await supabase
                     .from('likes')
                     .select(`
@@ -222,6 +226,7 @@ export default function NotificationList({ compact = false, onClose }: Notificat
            `)
                     .in('post_id', myPostIds)
                     .neq('user_id', user.id) // Avoid self-likes
+                    .gte('created_at', thirtyDaysAgoISO)
                     .order('created_at', { ascending: false })
                     .range(from, to);
 
@@ -248,7 +253,7 @@ export default function NotificationList({ compact = false, onClose }: Notificat
                     });
                 }
 
-                // COMMENTS
+                // COMMENTS (Últimos 30 días)
                 const { data: comments, error: commentsError } = await supabase
                     .from('comments' as any)
                     .select(`
@@ -258,6 +263,7 @@ export default function NotificationList({ compact = false, onClose }: Notificat
            `)
                     .in('post_id', myPostIds)
                     .neq('user_id', user.id) // Avoid self-comments
+                    .gte('created_at', thirtyDaysAgoISO)
                     .order('created_at', { ascending: false })
                     .range(from, to);
 
@@ -287,11 +293,12 @@ export default function NotificationList({ compact = false, onClose }: Notificat
                 }
             }
 
-            // 4. Fetch Direct Notifications (tabla notifications)
+            // 4. Fetch Direct Notifications (tabla notifications, últimos 30 días)
             const { data: dbNotifs, error: dbNotifsError } = await supabase
                 .from('notifications')
                 .select('*')
                 .eq('user_id', user.id)
+                .gte('created_at', thirtyDaysAgoISO)
                 .order('created_at', { ascending: false })
                 .range(from, to);
 
@@ -571,16 +578,37 @@ export default function NotificationList({ compact = false, onClose }: Notificat
 
     if (notifications.length === 0) {
         return (
-            <div className={`flex flex-col items-center justify-center text-center py-16 px-4 ${compact ? 'py-10' : 'py-20'}`}>
-                <div className="w-16 h-16 rounded-3xl bg-[var(--background-secondary)] border border-[var(--border-color)]/60 flex items-center justify-center mb-4 shadow-sm">
-                    <Heart className="w-7 h-7 text-[var(--brand-pink)]" strokeWidth={1.8} />
+            <div className={`flex flex-col items-center justify-center text-center ${compact ? 'py-12 px-4' : 'min-h-[55vh] py-16 px-6'} w-full`}>
+                <div className="relative mb-5">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-[26px] bg-[var(--background-secondary)] border border-[var(--border-color)] flex items-center justify-center shadow-xs">
+                        <Bell className="w-7 h-7 sm:w-8 sm:h-8 text-zinc-400 dark:text-zinc-500" strokeWidth={1.8} />
+                    </div>
+                    <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[var(--brand-pink,#FF66C4)] border-2 border-[var(--background)]" />
                 </div>
-                <h3 className="text-base font-bold text-[var(--foreground)] mb-1">
-                    Sin actividad todavía
+
+                <h3 className="text-base sm:text-lg font-bold text-[var(--foreground)] mb-1.5 tracking-tight">
+                    No tienes notificaciones
                 </h3>
-                <p className="text-xs sm:text-sm text-[var(--foreground-secondary)] max-w-xs leading-relaxed">
-                    Cuando otros usuarios te sigan, comenten o den me gusta a tus looks, aparecerán aquí.
+                <p className="text-xs sm:text-sm text-[var(--foreground-secondary)] max-w-sm leading-relaxed mb-6">
+                    No has tenido actividad en los últimos 30 días. Cuando alguien te siga, comente o dé me gusta a tus looks, aparecerá aquí.
                 </p>
+
+                <div className="flex flex-wrap items-center justify-center gap-2.5">
+                    <Link
+                        href="/feed"
+                        onClick={onClose}
+                        className="px-5 py-2.5 rounded-full bg-[var(--foreground)] text-[var(--background)] text-xs font-bold hover:opacity-90 transition-all shadow-xs cursor-pointer"
+                    >
+                        Explorar feed
+                    </Link>
+                    <Link
+                        href="/create"
+                        onClick={onClose}
+                        className="px-5 py-2.5 rounded-full bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] text-xs font-bold hover:bg-[var(--border-color)] transition-all cursor-pointer"
+                    >
+                        Crear look
+                    </Link>
+                </div>
             </div>
         );
     }

@@ -2604,3 +2604,23 @@ A petición del usuario ("En el navbar de ordenador quiero que tambien quites la
    - Retirado el envoltorio `<LayoutGroup id="desktopSidebarNav">`.
 2. **Estado Activo Sobrio**:
    - El icono activo pasa directamente a rosa de marca (`text-[var(--brand-pink,#FF66C4)]`) con trazo más grueso (`strokeWidth: 2.6`), sin fondos de pastilla o burbujas de cristal detrás.
+
+
+---
+
+## 163. Ventana de 30 Días y Pantalla Placeholder de Notificaciones (`components/Notifications/NotificationList.tsx`) (2026-10-23)
+
+### Contexto:
+A petición del usuario ("manten el limite de 30 dias pero añade una pantalla para cuando no tengas notificaciones que ponga como un placeholder"):
+1. Se preserva el límite de actividad reciente de los últimos 30 días (`.gte('created_at', thirtyDaysAgoISO)`).
+2. Se implementa una pantalla completa de placeholder/estado vacío cuando no hay actividad reciente en dicho periodo.
+
+### Modificaciones:
+1. **Límite de 30 Días Activo**:
+   - Reincorporado el filtro `.gte('created_at', thirtyDaysAgoISO)` en las consultas de seguidores (`follows`), me gustas (`likes`), comentarios (`comments`) y notificaciones directas (`notifications`).
+2. **Pantalla Placeholder Apple HIG / Klozet Brand Kit**:
+   - Tarjeta squircle centrada con icono `Bell` y acento sutil en punto rosa de marca (`#FF66C4`).
+   - Título claro: *"No tienes notificaciones"*.
+   - Texto informativo: *"No has tenido actividad en los últimos 30 días. Cuando alguien te siga, comente o dé me gusta a tus looks, aparecerá aquí."*
+   - Botones de acción rápida en pastilla: *"Explorar feed"* (enlace a `/feed`) y *"Crear look"* (enlace a `/create`).
+   - Totalmente responsivo para vista móvil completa (`/notifications`) y modal emergente de escritorio (`NotificationsPopover`).
