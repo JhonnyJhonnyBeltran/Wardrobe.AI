@@ -2475,3 +2475,24 @@ A petición del usuario:
    - Elevada la capa de selección múltiple a `z-30` para aislar el modo de selección en lote sin interferir con modales ni botones individuales.
 4. **Validación**:
    - Compilación exitosa con `npm run build` (0 errores en las 70 rutas).
+
+
+---
+
+## 157. Retirada de Burbuja Liquid Glass en Navegación Móvil (2026-10-23)
+
+### Contexto:
+A petición del usuario ("quita la burbuja de liquid glass no me gusta"), se retiró la burbuja reflectiva de cristal líquido, el halo de refracción cromática y el sistema de deformación/arrastre táctil en la barra de navegación móvil.
+
+### Modificaciones (`components/TabBar.tsx`):
+1. **Eliminación Total de la Lente / Burbuja Liquid Glass**:
+   - Purgados los elementos de pompa translúcida con halos cromáticos prismáticos (cyan/rosa/azul) y reflejos especulares de lente.
+   - Eliminado el efecto lupa continuo (`getTabMagnification`, `scale: 1.24x`, dilatación en alrededores y tracción óptica).
+   - Eliminados los gestos de captura de puntero táctil de arrastre (`handlePointerDown`, `handlePointerMove`, `handlePointerUp`, `dragVelocity`, `isDragging`).
+2. **Navegación Móvil Apple Fluida y Sobria**:
+   - Se mantiene la cápsula flotante de vidrio translúcido con desenfoque de fondo Apple (`backdrop-blur-2xl bg-white/85 dark:bg-[#111113]/85`).
+   - Los 5 iconos (Home, Search, Closet, Notifications, Profile) operan con navegación estándar por enlace y toque instantáneo sin fricción.
+   - Estado activo: el icono seleccionado pasa limpiamente a rosa de marca (`#FF66C4`) con mayor grosor de contorno (`strokeWidth: 2.6`). En reposo se mantienen en tono zinc/neutro (`strokeWidth: 1.8`).
+   - El logo central de Klozet preserva la trilogía cíclica cada 15 segundos (`klzt` -> `k` con ojos -> `klozet`) con las animaciones de zoom in / shrink to center (`NavbarKlozetLogo`).
+3. **Validación**:
+   - `npm run build` completado con éxito (0 errores en las 70 rutas).
