@@ -2716,3 +2716,30 @@ A petición expresa del usuario:
      - Botón principal de **Descargar HD** con estado animado de confirmación.
      - Botón de **Copiar link** que copia la URL pública `/post/[id]` al portapapeles con respuesta háptica (`hapticSuccess`) y cambio a checkmark verde *"¡Copiado!"*.
      - Botón de **Más opciones para compartir** que invoca el Web Share API nativo (`navigator.share`) para compartir archivo o enlace a Instagram Stories, WhatsApp, AirDrop, etc.
+
+
+---
+
+## 168. Correcciones en Modal de Compartir (`components/ExportStoryModal.tsx`) (2026-10-23)
+
+### Contexto:
+Ajustes solicitados tras la revisión del modal de compartir post:
+1. Eliminar el texto *"Sin marcas de agua ni Kloe"* de la barra de controles secundarios.
+2. Oscurecer completamente la barra de navegación lateral en escritorio (`Sidebar`, `z-[5001]`) y la barra inferior (`TabBar`, `z-[5000]`), que se mantenían visibles sobre el fondo del modal.
+3. Evitar que la imagen se corte verticalmente o requiera scroll interno para verse completa.
+4. Añadir modo de **fondo transparente** para el outfit, exportable como PNG con las prendas y los logos en las esquinas.
+
+### Modificaciones Realizadas:
+1. **Eliminación de Texto Subrayado**:
+   - Purgada la etiqueta *"Sin marcas de agua ni Kloe"*, manteniendo la barra de formatos despejada y limpia.
+2. **Oscurecimiento de Barras de Navegación (Portal y Z-Index)**:
+   - Envuelto el modal en `createPortal(..., document.body)` con `z-[100000]`.
+   - El backdrop (`bg-black/85 backdrop-blur-md`) ahora cubre toda la pantalla del navegador, oscureciendo y desenfocando la barra lateral (`Sidebar`) y la barra inferior (`TabBar`).
+   - Bloqueo de scroll en `document.body` mientras el modal está activo.
+3. **Visibilidad Completa sin Scroll**:
+   - Sustituido el `overflow-y-auto` del contenedor de previsualización por `overflow-hidden` y dimensionamiento responsivo basado en altura: `h-[min(48vh,420px)] aspect-[9/16] / aspect-[4/5] / aspect-square`.
+   - En *Foto limpia*, se utiliza `object-contain` sobre fondo oscuro para mostrar el 100% de la fotografía sin recorte ni barra de desplazamiento.
+4. **Fondo Transparente para Outfit**:
+   - Añadido el tema `transparent` como opción por defecto en *Outfit*, con botón dedicado *"PNG Transparente"*.
+   - Previsualización con patrón damero de transparencia (*checkerboard*) en la UI.
+   - En exportación (`html2canvas`), el fondo se genera como `backgroundColor: null`, produciendo un archivo PNG transparente con las prendas, el logo superior de Klozet y el logo inferior de la K.

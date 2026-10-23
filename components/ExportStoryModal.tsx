@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, 
@@ -52,7 +53,7 @@ export interface ExportStoryModalProps {
 }
 
 type AspectRatio = 'story' | 'feed' | 'square'; // story = 9:16, feed = 4:5, square = 1:1
-type ColorTheme = 'ivory' | 'noir' | 'rose';
+type ColorTheme = 'transparent' | 'ivory' | 'noir' | 'rose';
 
 export default function ExportStoryModal({
   isOpen,
@@ -72,10 +73,25 @@ export default function ExportStoryModal({
   initialMode,
 }: ExportStoryModalProps) {
   const cardRef = useRef<HTMLDivElement>(null);
-  
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      const prevOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = prevOverflow;
+      };
+    }
+  }, [isOpen]);
+
   // Normalize items & garments for collage
   const outfitItems = useMemo(() => {
-    // 1. Gather all potential sources
     let rawList: any[] = [];
 
     if (outfit?.outfit_items && Array.isArray(outfit.outfit_items) && outfit.outfit_items.length > 0) {
@@ -146,7 +162,7 @@ export default function ExportStoryModal({
   });
 
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>('story');
-  const [colorTheme, setColorTheme] = useState<ColorTheme>('ivory');
+  const [colorTheme, setColorTheme] = useState<ColorTheme>('transparent');
   const [isExporting, setIsExporting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
@@ -174,24 +190,23 @@ export default function ExportStoryModal({
 
   // Theme configurations for the outfit canvas
   const themeStyles = {
+    transparent: {
+      bg: 'bg-transparent',
+      textPrimary: 'text-zinc-900 dark:text-zinc-100',
+      textSecondary: 'text-zinc-500',
+    },
     ivory: {
       bg: 'bg-[#F9F9FB]',
-      cardBg: 'bg-white',
-      border: 'border-zinc-200/80',
       textPrimary: 'text-zinc-900',
       textSecondary: 'text-zinc-500',
     },
     noir: {
       bg: 'bg-[#0E0E12]',
-      cardBg: 'bg-[#18181D]',
-      border: 'border-white/10',
       textPrimary: 'text-zinc-100',
       textSecondary: 'text-zinc-400',
     },
     rose: {
       bg: 'bg-[#FFF2F6]',
-      cardBg: 'bg-white/95',
-      border: 'border-pink-200/70',
       textPrimary: 'text-pink-950',
       textSecondary: 'text-pink-700/80',
     },
@@ -248,11 +263,13 @@ export default function ExportStoryModal({
       // If OUTFIT mode (or photo canvas fallback): capture node with html2canvas
       if (!cardRef.current) throw new Error('Contenedor no disponible');
 
+      const isTransparent = exportMode === 'outfit' && colorTheme === 'transparent';
+
       const canvas = await html2canvas(cardRef.current, {
         scale: 2.5,
         useCORS: true,
         allowTaint: true,
-        backgroundColor: null,
+        backgroundColor: isTransparent ? null : undefined, // null produces transparent PNG
         logging: false,
         imageTimeout: 15000,
       });
@@ -263,7 +280,7 @@ export default function ExportStoryModal({
 
       if (!blob) throw new Error('No se pudo generar la imagen');
 
-      const fileName = `klozet-${exportMode}-${cleanBaseName}-${aspectRatio}.png`;
+      const fileName = `klozet-${exportMode}-${cleanBaseName}${isTransparent ? '-transparente' : ''}-${aspectRatio}.png`;
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -281,7 +298,7 @@ export default function ExportStoryModal({
     } finally {
       setIsExporting(false);
     }
-  }, [exportMode, coverImageUrl, cleanBaseName, aspectRatio, isExporting]);
+  }, [exportMode, coverImageUrl, cleanBaseName, colorTheme, aspectRatio, isExporting]);
 
   // 3. Native Share Action (iOS / Android / Strava style)
   const handleNativeShare = useCallback(async () => {
@@ -290,13 +307,13 @@ export default function ExportStoryModal({
     hapticLight();
 
     try {
-      // If web share API supports files and card is available, share the rendered image
       if (cardRef.current && typeof navigator !== 'undefined' && navigator.canShare) {
+        const isTransparent = exportMode === 'outfit' && colorTheme === 'transparent';
         const canvas = await html2canvas(cardRef.current, {
           scale: 2,
           useCORS: true,
           allowTaint: true,
-          backgroundColor: null,
+          backgroundColor: isTransparent ? null : undefined,
           logging: false,
         });
 
@@ -337,13 +354,14 @@ export default function ExportStoryModal({
     } finally {
       setIsExporting(false);
     }
-  }, [isExporting, exportMode, cleanBaseName, title, resolvedShareUrl, handleCopyLink]);
+  }, [isExporting, exportMode, colorTheme, cleanBaseName, title, resolvedShareUrl, handleCopyLink]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
-  return (
+  return createPortal(
     <AnimatePresence>
-      <div className="fixed inset-0 z-[120] flex items-center justify-center p-3 sm:p-5 bg-black/80 backdrop-blur-md overflow-y-auto">
+      {/* Root Portal Container with high z-index (100000) so desktop sidebar z-5001 and tabbar z-5000 are completely dimmed */}
+      <div className="fixed inset-0 z-[100000] flex items-center justify-center p-3 sm:p-5 bg-black/85 backdrop-blur-md overflow-hidden">
         {/* Backdrop dismiss */}
         <div className="fixed inset-0" onClick={onClose} />
 
@@ -352,7 +370,7 @@ export default function ExportStoryModal({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 16 }}
           transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-          className="relative z-10 w-full max-w-lg bg-[var(--card-bg)] text-[var(--foreground)] rounded-3xl border border-[var(--border-color)]/70 shadow-2xl overflow-hidden flex flex-col my-auto max-h-[92vh]"
+          className="relative z-10 w-full max-w-lg bg-[var(--card-bg)] text-[var(--foreground)] rounded-3xl border border-[var(--border-color)]/70 shadow-2xl overflow-hidden flex flex-col my-auto max-h-[95vh]"
         >
           {/* Header */}
           <div className="flex items-center justify-between px-5 py-3.5 border-b border-[var(--border-color)]/60 flex-shrink-0">
@@ -413,8 +431,8 @@ export default function ExportStoryModal({
             </div>
           </div>
 
-          {/* Secondary Controls: Format & Theme */}
-          <div className="px-5 py-2.5 bg-[var(--background)]/40 border-b border-[var(--border-color)]/30 flex items-center justify-between gap-3 text-xs flex-shrink-0">
+          {/* Secondary Controls: Format & Theme (Without any underlined text) */}
+          <div className="px-5 py-2 bg-[var(--background)]/40 border-b border-[var(--border-color)]/30 flex items-center justify-between gap-3 text-xs flex-shrink-0">
             {/* Format Selector */}
             <div className="flex items-center gap-1 bg-[var(--card-bg)] p-0.5 rounded-xl border border-[var(--border-color)]">
               <button
@@ -455,141 +473,166 @@ export default function ExportStoryModal({
               </button>
             </div>
 
-            {/* Theme Selector (only active for Outfit mode) */}
-            {exportMode === 'outfit' ? (
+            {/* Theme Selector (Transparent PNG + Color Themes) */}
+            {exportMode === 'outfit' && (
               <div className="flex items-center gap-1.5">
+                {/* Transparent Option Pill */}
                 <button
+                  type="button"
+                  onClick={() => { setColorTheme('transparent'); hapticLight(); }}
+                  className={`px-2 py-0.5 rounded-lg text-[10px] font-semibold border flex items-center gap-1 transition-all cursor-pointer ${
+                    colorTheme === 'transparent'
+                      ? 'bg-[var(--brand-pink)] text-white border-[var(--brand-pink)] shadow-xs'
+                      : 'bg-[var(--card-bg)] text-[var(--foreground-secondary)] border-[var(--border-color)] hover:text-[var(--foreground)]'
+                  }`}
+                  title="Fondo transparente (PNG)"
+                >
+                  <span className="w-2.5 h-2.5 rounded-sm border border-current bg-[radial-gradient(#888_1px,transparent_1px)] [background-size:3px_3px] inline-block" />
+                  <span>Transparente</span>
+                </button>
+
+                {/* Solid color swatches */}
+                <button
+                  type="button"
                   onClick={() => { setColorTheme('ivory'); hapticLight(); }}
                   className={`w-5 h-5 rounded-full bg-[#F9F9FB] border-2 transition-transform cursor-pointer ${
-                    colorTheme === 'ivory' ? 'border-[var(--brand-pink)] scale-110' : 'border-zinc-300'
+                    colorTheme === 'ivory' ? 'border-[var(--brand-pink)] scale-110 shadow-xs' : 'border-zinc-300'
                   }`}
                   title="Marfil Studio"
                 />
                 <button
+                  type="button"
                   onClick={() => { setColorTheme('noir'); hapticLight(); }}
                   className={`w-5 h-5 rounded-full bg-[#0E0E12] border-2 transition-transform cursor-pointer ${
-                    colorTheme === 'noir' ? 'border-[var(--brand-pink)] scale-110' : 'border-zinc-600'
+                    colorTheme === 'noir' ? 'border-[var(--brand-pink)] scale-110 shadow-xs' : 'border-zinc-600'
                   }`}
                   title="Obsidian Noir"
                 />
                 <button
+                  type="button"
                   onClick={() => { setColorTheme('rose'); hapticLight(); }}
                   className={`w-5 h-5 rounded-full bg-[#FFF2F6] border-2 transition-transform cursor-pointer ${
-                    colorTheme === 'rose' ? 'border-[var(--brand-pink)] scale-110' : 'border-pink-300'
+                    colorTheme === 'rose' ? 'border-[var(--brand-pink)] scale-110 shadow-xs' : 'border-pink-300'
                   }`}
                   title="Rose Klozet"
                 />
               </div>
-            ) : (
-              <span className="text-[11px] text-[var(--foreground-secondary)] font-medium">
-                Sin marcas de agua ni Kloe
-              </span>
             )}
           </div>
 
-          {/* Visual Preview Container */}
-          <div className="p-4 sm:p-5 flex items-center justify-center bg-[var(--background)]/30 overflow-y-auto max-h-[50vh]">
-            {/* The Exportable Canvas Card */}
-            <div
-              ref={cardRef}
-              className={`relative rounded-3xl shadow-xl overflow-hidden flex flex-col items-center justify-center transition-all duration-300 select-none ${
-                exportMode === 'photo' ? 'bg-black' : themeStyles.bg
-              } ${
-                aspectRatio === 'story'
-                  ? 'w-[260px] sm:w-[290px] aspect-[9/16]'
-                  : aspectRatio === 'feed'
-                  ? 'w-[260px] sm:w-[310px] aspect-[4/5]'
-                  : 'w-[260px] sm:w-[300px] aspect-square'
-              }`}
-            >
-              {/* VISTA 1: FOTO LIMPIA (Sin nada de Kloe, sin ninguna marca de agua) */}
-              {exportMode === 'photo' ? (
-                coverImageUrl ? (
-                  <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
-                    {/* Rendered pure photo without ANY overlays, watermarks, or Kloe */}
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={coverImageUrl}
-                      alt={title}
-                      crossOrigin="anonymous"
-                      className="w-full h-full object-cover select-none pointer-events-none"
-                    />
-                  </div>
+          {/* Visual Preview Container - Height-constrained so the entire image is 100% visible with zero scrolling */}
+          <div className="p-3 sm:p-4 flex items-center justify-center bg-[var(--background)]/30 overflow-hidden flex-1 min-h-0">
+            {/* Checkerboard outer wrapper for transparent mode preview */}
+            <div className={`relative flex items-center justify-center transition-all ${
+              colorTheme === 'transparent' && exportMode === 'outfit'
+                ? 'p-0.5 rounded-3xl bg-[repeating-conic-gradient(#e4e4e7_0%_25%,#ffffff_0%_50%)] [background-size:12px_12px] dark:bg-[repeating-conic-gradient(#27272a_0%_25%,#18181b_0%_50%)] shadow-xl'
+                : ''
+            }`}>
+              {/* The Exportable Canvas Card */}
+              <div
+                ref={cardRef}
+                className={`relative rounded-3xl overflow-hidden flex flex-col items-center justify-center transition-all duration-300 select-none ${
+                  exportMode === 'photo'
+                    ? 'bg-black shadow-xl'
+                    : colorTheme === 'transparent'
+                    ? 'bg-transparent'
+                    : `${themeStyles.bg} shadow-xl`
+                } ${
+                  aspectRatio === 'story'
+                    ? 'h-[min(48vh,420px)] aspect-[9/16]'
+                    : aspectRatio === 'feed'
+                    ? 'h-[min(48vh,420px)] aspect-[4/5]'
+                    : 'h-[min(44vh,370px)] aspect-square'
+                }`}
+              >
+                {/* VISTA 1: FOTO LIMPIA (Sin nada de Kloe, sin ninguna marca de agua, imagen completa sin recortar) */}
+                {exportMode === 'photo' ? (
+                  coverImageUrl ? (
+                    <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-black">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={coverImageUrl}
+                        alt={title}
+                        crossOrigin="anonymous"
+                        className="w-full h-full object-contain select-none pointer-events-none"
+                      />
+                    </div>
+                  ) : (
+                    <div className="p-6 text-center text-white/70 text-xs">
+                      No hay foto disponible para esta publicación
+                    </div>
+                  )
                 ) : (
-                  <div className="p-6 text-center text-white/70 text-xs">
-                    No hay foto disponible para esta publicación
-                  </div>
-                )
-              ) : (
-                /* VISTA 2: OUTFIT COLLAGE (Logo Klozet completo arriba a la izquierda + Logo K abajo a la derecha) */
-                <div className="relative w-full h-full flex flex-col justify-between p-4 overflow-hidden">
-                  {/* Top-Left: Full Klozet Bubble Logo */}
-                  <div className="absolute top-4 left-4 z-20 pointer-events-none">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src="/klozet-bubble-pink.png"
-                      alt="Klozet"
-                      crossOrigin="anonymous"
-                      className="h-6 sm:h-7 w-auto object-contain drop-shadow-sm select-none"
-                    />
-                  </div>
+                  /* VISTA 2: OUTFIT COLLAGE (Logo Klozet completo arriba a la izquierda + Logo K abajo a la derecha) */
+                  <div className="relative w-full h-full flex flex-col justify-between p-4 overflow-hidden">
+                    {/* Top-Left: Full Klozet Bubble Logo */}
+                    <div className="absolute top-4 left-4 z-20 pointer-events-none">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src="/klozet-bubble-pink.png"
+                        alt="Klozet"
+                        crossOrigin="anonymous"
+                        className="h-6 sm:h-7 w-auto object-contain drop-shadow-sm select-none"
+                      />
+                    </div>
 
-                  {/* Bottom-Right: K Bubble Logo */}
-                  <div className="absolute bottom-4 right-4 z-20 pointer-events-none">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src="/k-bubble-pink.png"
-                      alt="K"
-                      crossOrigin="anonymous"
-                      className="h-7 sm:h-8 w-auto object-contain drop-shadow-sm select-none"
-                    />
-                  </div>
+                    {/* Bottom-Right: K Bubble Logo */}
+                    <div className="absolute bottom-4 right-4 z-20 pointer-events-none">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src="/k-bubble-pink.png"
+                        alt="K"
+                        crossOrigin="anonymous"
+                        className="h-7 sm:h-8 w-auto object-contain drop-shadow-sm select-none"
+                      />
+                    </div>
 
-                  {/* Collage Canvas Body */}
-                  <div className="relative w-full h-full my-auto flex items-center justify-center">
-                    {outfitItems.length > 0 ? (
-                      outfitItems.map((item, idx) => (
-                        <div
-                          key={item.id || idx}
-                          className="absolute pointer-events-none"
-                          style={{
-                            left: `${item.computedX}%`,
-                            top: `${item.computedY}%`,
-                            transform: `translate(-50%, -50%) rotate(${item.computedRotation}deg)`,
-                            width: `${34 * Math.min(Math.max(item.computedScale, 0.65), 1.5)}%`,
-                            zIndex: item.computedZIndex,
-                          }}
-                        >
-                          <div className="relative w-full aspect-[3/4]">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                              src={item.img}
-                              alt={item.name}
-                              crossOrigin="anonymous"
-                              className="w-full h-full object-contain drop-shadow-[0_8px_18px_rgba(0,0,0,0.18)] select-none"
-                            />
+                    {/* Collage Canvas Body */}
+                    <div className="relative w-full h-full my-auto flex items-center justify-center">
+                      {outfitItems.length > 0 ? (
+                        outfitItems.map((item, idx) => (
+                          <div
+                            key={item.id || idx}
+                            className="absolute pointer-events-none"
+                            style={{
+                              left: `${item.computedX}%`,
+                              top: `${item.computedY}%`,
+                              transform: `translate(-50%, -50%) rotate(${item.computedRotation}deg)`,
+                              width: `${34 * Math.min(Math.max(item.computedScale, 0.65), 1.5)}%`,
+                              zIndex: item.computedZIndex,
+                            }}
+                          >
+                            <div className="relative w-full aspect-[3/4]">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={item.img}
+                                alt={item.name}
+                                crossOrigin="anonymous"
+                                className="w-full h-full object-contain drop-shadow-[0_8px_18px_rgba(0,0,0,0.18)] select-none"
+                              />
+                            </div>
                           </div>
+                        ))
+                      ) : outfit?.image_url || outfit?.imageUrl ? (
+                        <div className="relative w-full h-full flex items-center justify-center p-4">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={outfit.image_url || outfit.imageUrl}
+                            alt={title}
+                            crossOrigin="anonymous"
+                            className="max-w-full max-h-full object-contain drop-shadow-md select-none"
+                          />
                         </div>
-                      ))
-                    ) : outfit?.image_url || outfit?.imageUrl ? (
-                      <div className="relative w-full h-full flex items-center justify-center p-4">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={outfit.image_url || outfit.imageUrl}
-                          alt={title}
-                          crossOrigin="anonymous"
-                          className="max-w-full max-h-full object-contain drop-shadow-md select-none"
-                        />
-                      </div>
-                    ) : (
-                      <div className="text-center p-4">
-                        <Layers className="w-8 h-8 text-[var(--brand-pink)] mx-auto mb-2 opacity-60" />
-                        <p className={`text-xs ${themeStyles.textSecondary}`}>Sin prendas asociadas</p>
-                      </div>
-                    )}
+                      ) : (
+                        <div className="text-center p-4">
+                          <Layers className="w-8 h-8 text-[var(--brand-pink)] mx-auto mb-2 opacity-60" />
+                          <p className={`text-xs ${themeStyles.textSecondary}`}>Sin prendas asociadas</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
 
@@ -612,7 +655,13 @@ export default function ExportStoryModal({
                 ) : (
                   <>
                     <Download className="w-4 h-4" strokeWidth={2.2} />
-                    <span>{isExporting ? 'Generando...' : 'Descargar HD'}</span>
+                    <span>
+                      {isExporting 
+                        ? 'Generando...' 
+                        : (exportMode === 'outfit' && colorTheme === 'transparent')
+                        ? 'Descargar PNG Transparente'
+                        : 'Descargar HD'}
+                    </span>
                   </>
                 )}
               </button>
@@ -655,6 +704,7 @@ export default function ExportStoryModal({
           </div>
         </motion.div>
       </div>
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }
