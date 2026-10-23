@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Heart, MessageCircle, Bookmark, Share2, Instagram, MoreHorizontal, MoreVertical, X, Send, ChevronLeft, ChevronRight, Edit2, Trash2 } from 'lucide-react';
+import { Heart, MessageCircle, Bookmark, Share, MoreHorizontal, MoreVertical, X, Send, ChevronLeft, ChevronRight, Edit2, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';
 import { useUser } from '@/store/userStore';
@@ -908,16 +908,13 @@ export default function PostDetailPage() {
                             <MessageCircle className="w-6 h-6 text-gray-900 dark:text-white" strokeWidth={2.5} />
                             {comments.length > 0 && <span className="text-[15px] text-gray-900 dark:text-white">{comments.length}</span>}
                         </button>
-                        <button onClick={handleShare} className="flex items-center gap-1.5 hover:opacity-70 transition-opacity">
-                            <Share2 className="w-6 h-6 text-gray-900 dark:text-white" strokeWidth={2.5} />
-                        </button>
                         <button 
                             onClick={() => setShowExportModal(true)} 
-                            className="flex items-center gap-1.5 hover:opacity-70 transition-opacity text-pink-500 hover:text-pink-600"
-                            title="Exportar a Instagram Stories"
-                            aria-label="Exportar a Instagram Stories"
+                            className="flex items-center gap-1.5 hover:opacity-70 transition-opacity text-gray-900 dark:text-white cursor-pointer"
+                            title="Compartir publicación"
+                            aria-label="Compartir publicación"
                         >
-                            <Instagram className="w-6 h-6" strokeWidth={2.2} />
+                            <Share className="w-6 h-6 text-gray-900 dark:text-white" strokeWidth={2.2} />
                         </button>
                     </div>
                     <button onClick={toggleSave} className="p-2 -mr-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
@@ -1140,12 +1137,19 @@ export default function PostDetailPage() {
                 <ExportStoryModal
                     isOpen={showExportModal}
                     onClose={() => setShowExportModal(false)}
+                    postId={post.id}
                     title={post.title || post.caption || 'Look Klozet'}
-                    coverImageUrl={post.imageUrl || post.image_url}
+                    coverImageUrl={post.image_url || post.imageUrl}
+                    outfit={post?.outfits ? (Array.isArray(post.outfits) ? post.outfits[0] : post.outfits) : (post?.outfit || null)}
+                    garments={(post?.clothing_items && post.clothing_items.length > 0)
+                        ? post.clothing_items
+                        : (post?.garments && post.garments.length > 0)
+                        ? post.garments
+                        : []}
                     items={post.outfit?.items || []}
-                    authorName={post.user?.full_name || post.user?.username || 'Klozet Creator'}
-                    authorHandle={post.user?.username || 'klozet'}
-                    authorAvatarUrl={post.user?.avatar_url}
+                    authorName={author.full_name || author.username || 'Klozet Creator'}
+                    authorHandle={author.username || 'klozet'}
+                    authorAvatarUrl={author.avatar_url}
                 />
             )}
         </div>

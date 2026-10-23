@@ -2686,3 +2686,33 @@ A petición expresa del usuario:
    - Ahora aloja únicamente la mascota de Kloe en gran formato (`w-8 h-8 sm:w-9 sm:h-9`) con `object-contain` centrado en el botón.
 3. **Botón Crear Outfit**:
    - Reemplazado por icono `Plus` simple (`strokeWidth={2.5}`) tanto en cabecera como en la botonera flotante.
+
+
+---
+
+## 167. Rediseño del Compartir de Publicación (Estilo Strava / Transak) y Selector Foto Limpia vs Collage Outfit (`app/(app)/post/[id]/page.tsx` y `components/ExportStoryModal.tsx`) (2026-10-23)
+
+### Contexto:
+A petición expresa del usuario:
+1. En el detalle de publicación (`/post/[id]`), sustituir el botón anterior de compartir e Instagram por un único icono de saliente (flecha saliente de una bandeja al estilo iOS / Strava: `Share` de `lucide-react`).
+2. Al pulsar el botón, abrir un modal de exportación/compartición inspirado en la experiencia de Strava y Transak.
+3. Permitir alternar y descargar entre:
+   - **Foto limpia**: La fotografía real del post (`post.image_url`), 100% limpia sin avatar de Kloe, sin marcas de agua y sin textos superpuestos.
+   - **Outfit**: Un collage visual de las prendas del look, con el logo completo de Klozet (`/klozet-bubble-pink.png`) en la esquina superior izquierda y el logo de la K (`/k-bubble-pink.png`) en la esquina inferior derecha.
+4. Incluir un botón para **Copiar enlace** a la publicación con retroalimentación háptica y visual inmediata ("¡Enlace copiado!"), además de opciones para descarga en alta definición y compartición nativa.
+
+### Modificaciones Realizadas:
+1. **Barra de Acciones en Detalle de Post (`app/(app)/post/[id]/page.tsx`)**:
+   - Reemplazados los botones redundantes de `Share2` e `Instagram` por un único botón con el icono de saliente estándar de iOS / Strava (`Share` de `lucide-react`, `w-6 h-6`, `strokeWidth={2.2}`).
+   - Al pulsar, abre `<ExportStoryModal>` pasando `postId`, `coverImageUrl`, `outfit`, `garments` y metadatos del autor.
+2. **Modal de Compartición y Exportación (`components/ExportStoryModal.tsx`)**:
+   - **Selector Segmentado Foto vs Outfit**:
+     - *Foto limpia*: Renderiza la fotografía original del post a sangre/ajustada con esquinas redondeadas. Sin marcas de agua, sin Kloe, sin sellos. Al pulsar descargar, descarga directamente el archivo original en resolución completa.
+     - *Outfit*: Renderiza el collage de prendas del outfit (respetando posiciones del lienzo si existen o en disposición editorial armónica), incorporando el logo completo bubble de Klozet en la esquina superior izquierda y el logo bubble de la K en la esquina inferior derecha. Se exporta mediante `html2canvas` a escala retina 2.5x en PNG.
+   - **Controles de Relación de Aspecto y Temas**:
+     - Selector rápido: *Story (9:16)*, *Post (4:5)* y *Cuadrado (1:1)*.
+     - Temas de fondo para el lienzo de outfit: *Marfil Studio*, *Obsidian Noir* y *Rose Klozet*.
+   - **Acciones Estilo Strava / Transak**:
+     - Botón principal de **Descargar HD** con estado animado de confirmación.
+     - Botón de **Copiar link** que copia la URL pública `/post/[id]` al portapapeles con respuesta háptica (`hapticSuccess`) y cambio a checkmark verde *"¡Copiado!"*.
+     - Botón de **Más opciones para compartir** que invoca el Web Share API nativo (`navigator.share`) para compartir archivo o enlace a Instagram Stories, WhatsApp, AirDrop, etc.
