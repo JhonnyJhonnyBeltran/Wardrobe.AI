@@ -234,33 +234,6 @@ export default function ExportStoryModal({
     hapticLight();
 
     try {
-      // If PHOTO mode: Attempt to download direct clean high-res image
-      if (exportMode === 'photo' && coverImageUrl) {
-        try {
-          const res = await fetch(coverImageUrl, { mode: 'cors' });
-          if (res.ok) {
-            const blob = await res.blob();
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            const ext = blob.type === 'image/png' ? 'png' : 'jpg';
-            link.download = `klozet-${cleanBaseName}.${ext}`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
-
-            setIsSuccess(true);
-            hapticSuccess();
-            setTimeout(() => setIsSuccess(false), 2500);
-            return;
-          }
-        } catch (fetchErr) {
-          console.warn('[ExportStoryModal] Direct photo fetch failed, fallback to canvas render', fetchErr);
-        }
-      }
-
-      // If OUTFIT mode (or photo canvas fallback): capture node with html2canvas
       if (!cardRef.current) throw new Error('Contenedor no disponible');
 
       const isTransparent = exportMode === 'outfit' && colorTheme === 'transparent';
@@ -298,7 +271,7 @@ export default function ExportStoryModal({
     } finally {
       setIsExporting(false);
     }
-  }, [exportMode, coverImageUrl, cleanBaseName, colorTheme, aspectRatio, isExporting]);
+  }, [exportMode, cleanBaseName, colorTheme, aspectRatio, isExporting]);
 
   // 3. Native Share Action (iOS / Android / Strava style)
   const handleNativeShare = useCallback(async () => {
@@ -531,12 +504,12 @@ export default function ExportStoryModal({
               {/* The Exportable Canvas Card */}
               <div
                 ref={cardRef}
-                className={`relative rounded-3xl overflow-hidden flex flex-col items-center justify-center transition-all duration-300 select-none ${
+                className={`relative rounded-3xl overflow-hidden flex flex-col items-center justify-center transition-all duration-300 select-none shadow-xl ${
                   exportMode === 'photo'
-                    ? 'bg-black shadow-xl'
+                    ? ''
                     : colorTheme === 'transparent'
                     ? 'bg-transparent'
-                    : `${themeStyles.bg} shadow-xl`
+                    : themeStyles.bg
                 } ${
                   aspectRatio === 'story'
                     ? 'h-[min(48vh,420px)] aspect-[9/16]'
@@ -545,20 +518,20 @@ export default function ExportStoryModal({
                     : 'h-[min(44vh,370px)] aspect-square'
                 }`}
               >
-                {/* VISTA 1: FOTO LIMPIA (Sin nada de Kloe, sin ninguna marca de agua, imagen completa sin recortar) */}
+                {/* VISTA 1: FOTO LIMPIA (Expandida sin bordes negros, sin marcas de agua ni Kloe) */}
                 {exportMode === 'photo' ? (
                   coverImageUrl ? (
-                    <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-black">
+                    <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={coverImageUrl}
                         alt={title}
                         crossOrigin="anonymous"
-                        className="w-full h-full object-contain select-none pointer-events-none"
+                        className="w-full h-full object-cover select-none pointer-events-none"
                       />
                     </div>
                   ) : (
-                    <div className="p-6 text-center text-white/70 text-xs">
+                    <div className="p-6 text-center text-zinc-400 text-xs">
                       No hay foto disponible para esta publicación
                     </div>
                   )

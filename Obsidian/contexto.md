@@ -2743,3 +2743,23 @@ Ajustes solicitados tras la revisión del modal de compartir post:
    - Añadido el tema `transparent` como opción por defecto en *Outfit*, con botón dedicado *"PNG Transparente"*.
    - Previsualización con patrón damero de transparencia (*checkerboard*) en la UI.
    - En exportación (`html2canvas`), el fondo se genera como `backgroundColor: null`, produciendo un archivo PNG transparente con las prendas, el logo superior de Klozet y el logo inferior de la K.
+
+
+---
+
+## 169. Expansión Total de Foto sin Bordes Negros y Deslizamiento Fluido en Ordenador (`app/(app)/post/[id]/page.tsx` y `components/ExportStoryModal.tsx`) (2026-10-23)
+
+### Contexto:
+1. En el modal de compartir (`ExportStoryModal`), la fotografía en *"Foto limpia"* mostraba barras/bordes negros si el aspect ratio no coincidía exactamente. El usuario solicitó que la foto se expanda completamente a los bordes sin bandas negras.
+2. En la vista de publicación en ordenador (`/post/[id]`), al hacer clic en las flechas laterales (`ChevronLeft`/`ChevronRight`) o puntos para navegar entre imagen y outfit, no se producía una transición deslizante fluida (el scroll saltaba bruscamente debido al conflicto entre Chromium y `scroll-snap-type: x mandatory`).
+
+### Modificaciones Realizadas:
+1. **Foto Expandida sin Bordes Negros (`components/ExportStoryModal.tsx`)**:
+   - Eliminadas las clases de fondo negro (`bg-black`) de la tarjeta y del contenedor de la foto.
+   - Ajustada la imagen a `object-cover w-full h-full`. La fotografía ahora se expande cubriendo el 100% del área de la tarjeta en cualquier formato seleccionado (9:16, 4:5 o 1:1) sin barras negras.
+   - En exportación (`html2canvas`), la descarga genera la imagen con la fotografía expandida al formato elegido.
+2. **Deslizamiento Fluido en Ordenador (`app/(app)/post/[id]/page.tsx`)**:
+   - Implementada interpolación de desplazamiento suave con `requestAnimationFrame` y curva de aceleración `easeInOutCubic` (320ms).
+   - Inhabilitación temporal de `scrollSnapType` durante la animación programada (`style.scrollSnapType = 'none'`) para evitar que el navegador anule la interpolación, restableciéndola a `x mandatory` al concluir.
+   - Bandera `isAnimatingScrollRef` que silencia eventos de scroll redundantes durante la animación.
+   - El deslizamiento táctil nativo en móvil permanece intacto al 100%, mientras que en ordenador la navegación por botones ahora desliza con suavidad de 60 FPS.

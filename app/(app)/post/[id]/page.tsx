@@ -114,6 +114,7 @@ export default function PostDetailPage() {
 
     const commentInputRef = useRef<HTMLInputElement>(null);
     const carouselScrollRef = useRef<HTMLDivElement>(null);
+    const isAnimatingScrollRef = useRef(false);
 
     // Fetch Post Data
     useEffect(() => {
@@ -378,17 +379,56 @@ export default function PostDetailPage() {
     const currentSlide = slides[activeSlide] || slides[0];
 
     const goToSlide = useCallback((idx: number) => {
-        setActiveSlide(idx);
-        if (carouselScrollRef.current) {
-            const width = carouselScrollRef.current.clientWidth;
-            carouselScrollRef.current.scrollTo({
-                left: idx * width,
-                behavior: 'smooth'
-            });
+        const container = carouselScrollRef.current;
+        if (!container) {
+            setActiveSlide(idx);
+            return;
         }
+
+        const targetChild = container.children[idx] as HTMLElement | undefined;
+        const targetLeft = targetChild ? targetChild.offsetLeft : idx * container.clientWidth;
+        const startLeft = container.scrollLeft;
+
+        setActiveSlide(idx);
+
+        if (Math.abs(targetLeft - startLeft) < 2) {
+            return;
+        }
+
+        isAnimatingScrollRef.current = true;
+
+        // Temporarily disable scroll-snap during programmatic slide so it doesn't fight the animation
+        container.style.scrollSnapType = 'none';
+        container.style.scrollBehavior = 'auto';
+
+        const startTime = performance.now();
+        const duration = 320; // 320ms smooth sliding duration
+
+        const easeInOutCubic = (t: number) => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+        const animate = (currentTime: number) => {
+            const elapsed = currentTime - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const ease = easeInOutCubic(progress);
+
+            container.scrollLeft = startLeft + (targetLeft - startLeft) * ease;
+
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            } else {
+                container.scrollLeft = targetLeft;
+                // Re-enable native scroll snap
+                container.style.scrollSnapType = '';
+                container.style.scrollBehavior = '';
+                isAnimatingScrollRef.current = false;
+            }
+        };
+
+        requestAnimationFrame(animate);
     }, []);
 
     const handleCarouselScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+        if (isAnimatingScrollRef.current) return;
         const el = e.currentTarget;
         if (!el || el.clientWidth === 0) return;
         const slideIndex = Math.round(el.scrollLeft / el.clientWidth);
