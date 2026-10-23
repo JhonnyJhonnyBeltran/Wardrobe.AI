@@ -2447,3 +2447,31 @@ A petición del usuario:
      - Durante el arrastre táctil con el pulgar, la pompa se ensancha (scaleY: 1.10, scaleX: 1.08 + vel * 0.008) simulando la presión del dedo sobre la gota líquida.
      - En movimientos rápidos se aplica inclinación por inercia (skewX proporcional a la velocidad de arrastre).
    - **Respuesta Háptica 'Sináptica' de Precisión**: Ticks hápticos inmediatos (	riggerHaptic('light')) cada vez que la lente cruza el centro de un nuevo icono, y pulso de confirmación (	riggerHaptic('medium')) al soltar.
+
+
+---
+
+## 156. Corrección de Bug Crítico de Redirección Inesperada en Detalle de Outfit (/closet -> /create & /post) (2026-10-23)
+
+### Causa Raíz Diagnosticada:
+1. **Botones de acción invisibles pero interactivos en `components/OutfitCard.tsx`**:
+   - En la esquina superior izquierda de cada tarjeta de outfit (`top-2 left-2 z-10`), existía un contenedor con botones rápidos de acción (`onEdit`, `onShare`, `onToggleVisibility`, `onDelete`).
+   - El contenedor tenía la clase `opacity-0` pero **carecía de `pointer-events-none`** y el elemento raíz no tenía la clase `group`.
+   - Como resultado, los botones permanecían completamente invisibles pero con `pointer-events: auto` (por defecto en CSS) activos en la capa superior (`z-10`).
+2. **Desvío a `/create` y `/post` (`/create-post`)**:
+   - Al tocar o hacer clic en la mitad superior/izquierda de una tarjeta de outfit en `/closet`:
+     - El botón de Editar ejecutaba `onEdit(outfit)` -> `router.push('/create?outfitId=' + outfit.id)`, redirigiendo de forma errática al lienzo con las prendas de ese look cargadas.
+     - El botón de Publicar ejecutaba `onShare(outfit)` -> `router.push('/create-post?outfitId=' + outfit.id)`, redirigiendo a la pantalla de crear post.
+     - La variación entre `/create` y `/post` dependía de si el outfit ya estaba vinculado a publicaciones o no (`!(outfit.posts && outfit.posts.length > 0)` ocultaba o mostraba el selector de visibilidad, desplazando la posición de los botones en la cuadrícula vertical en móvil `flex-col`).
+
+### Solución Implementada:
+1. **`components/OutfitCard.tsx`**:
+   - Asignada la clase `group` y el evento `onClick` a nivel del contenedor raíz (`motion.div`) para garantizar que pulsar en cualquier punto de la tarjeta abra consistentemente el detalle (`onClick(outfit)` -> `setSelectedOutfit(outfit)`).
+   - Eliminados los botones de acción rápida en móvil (`hidden md:flex`) para evitar toques fantasma en pantallas táctiles donde no existe el estado hover.
+   - En escritorio (`hidden md:flex`), se blindó el overlay con `opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto`, impidiendo que los botones capturen clics si no hay un hover intencional con el cursor.
+2. **`components/OutfitDetailModal.tsx`**:
+   - Añadido botón explícito y visible **"Publicar"** (`/create-post?outfitId=${outfit.id}`) con icono `Send` junto al botón de **"Editar"** (`/create?outfitId=${outfit.id}`) para que el usuario pueda decidir con claridad y seguridad qué acción realizar desde dentro del modal.
+3. **`app/(app)/closet/page.tsx`**:
+   - Elevada la capa de selección múltiple a `z-30` para aislar el modo de selección en lote sin interferir con modales ni botones individuales.
+4. **Validación**:
+   - Compilación exitosa con `npm run build` (0 errores en las 70 rutas).

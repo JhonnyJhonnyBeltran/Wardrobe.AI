@@ -934,7 +934,7 @@ export default function ClosetPage() {
                       {/* Interceptor overlay during multi-select mode */}
                       {selectionMode && (
                         <div
-                          className="absolute inset-0 z-10 cursor-pointer"
+                          className="absolute inset-0 z-30 cursor-pointer"
                           onClick={() => toggleSelection(outfit.id)}
                         />
                       )}

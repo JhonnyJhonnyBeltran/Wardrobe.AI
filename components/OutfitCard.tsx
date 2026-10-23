@@ -75,11 +75,12 @@ const OutfitCard = ({ outfit, isLocked = false, onClick, onEdit, onDelete, onSha
                 scale: 1.03,
                 transition: { duration: 0.2 }
             } : {}}
-            className={`relative overflow-hidden rounded-[20px] bg-[var(--card-bg)] shadow-sm border border-[var(--border-color)] ${isLocked ? 'cursor-not-allowed' : 'cursor-pointer'
+            onClick={!isLocked && onClick ? () => onClick(outfit) : undefined}
+            className={`group relative overflow-hidden rounded-[20px] bg-[var(--card-bg)] shadow-sm border border-[var(--border-color)] select-none ${isLocked ? 'cursor-not-allowed' : 'cursor-pointer'
                 }`}
         >
             {/* Clickable Area */}
-            <div onClick={!isLocked && onClick ? () => onClick(outfit) : undefined} className="cursor-pointer">
+            <div className="cursor-pointer w-full">
                 {/* Outfit Preview */}
                 <div
                     className={`relative w-full aspect-[4/5] bg-white dark:bg-[#151518] overflow-hidden ${isLocked ? 'blur-sm' : ''
@@ -203,10 +204,10 @@ const OutfitCard = ({ outfit, isLocked = false, onClick, onEdit, onDelete, onSha
                 )}
             </div>
 
-            {/* Actions Overlay (Visible on Hover/Focus) */}
+            {/* Actions Overlay (Visible on Desktop Hover Only) */}
             {
                 !isLocked && (
-                    <div className="absolute top-2 left-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10 flex-col sm:flex-row">
+                    <div className="absolute top-2 left-2 hidden md:flex gap-2 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-200 z-10 flex-row">
                         {onToggleVisibility && !(outfit.posts && outfit.posts.length > 0) && (
                             <button
                                 onClick={(e) => {

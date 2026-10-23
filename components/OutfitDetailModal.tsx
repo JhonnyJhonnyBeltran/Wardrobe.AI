@@ -5,7 +5,8 @@ import {
     X, 
     Heart, 
     Share2, 
-    Instagram, 
+    Instagram,
+    Send, 
     Briefcase, 
     PartyPopper, 
     Zap, 
@@ -181,6 +182,20 @@ export function OutfitDetailModal({ isOpen, onClose, outfit, onDelete, onToggleF
                                                 >
                                                     <Edit2 className="w-5 h-5" />
                                                     <span className="text-center">Editar</span>
+                                                </motion.button>
+                                            </Link>
+                                            <Link
+                                                href={`/create-post?outfitId=${outfit.id}`}
+                                                className="flex-1"
+                                                onClick={onClose}
+                                            >
+                                                <motion.button
+                                                    whileHover={{ scale: 1.02 }}
+                                                    whileTap={{ scale: 0.98 }}
+                                                    className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl font-medium transition-all duration-300 bg-[var(--brand-pink)] text-white hover:opacity-90 h-[52px] shadow-sm shadow-[var(--brand-pink)]/20"
+                                                >
+                                                    <Send className="w-5 h-5" />
+                                                    <span className="text-center">Publicar</span>
                                                 </motion.button>
                                             </Link>
 
