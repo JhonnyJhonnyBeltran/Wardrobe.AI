@@ -2403,3 +2403,27 @@ A petición del usuario:
    - Sincronizada la misma experiencia: Home e iconos activos a rosa con trazo `2.6`.
    - Reemplazada la imagen estática por el logo reactivo animado `<NavbarKlozetLogo isActive={isActive} />`.
    - Añadida píldora de vidrio translúcido activa (`layoutId="desktopActiveGlassPill"`).
+
+---
+
+## 154. Pompa de Cristal Líquido Deslizable (Drag-to-Navigate), Deformación Elástica 'Squash & Stretch', Hápticos y Logo Bubbly Klozet con 'Shrink to Center' cada 15s (2026-10-23)
+
+### Contexto:
+A petición del usuario:
+1. **Logo reactivo oficial (NavbarKlozetLogo.tsx)**:
+   - Sustituido por los activos oficiales bubble suministrados: el monograma KLZT / Bubble K y el nuevo wordmark completo klozet con letras de pompa rosa y ojos en la 'k' ([public/klozet-bubble-pink.png](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/public/klozet-bubble-pink.png)).
+   - Intervalo de alternancia exacto: **cada 15 segundos**.
+   - Animación de transición solicitada: **shrink to center** (scale: 0 al centro al salir, y emergiendo desde el centro scale: 0 -> 1 con rebote elástico spring).
+   - En reposo se muestra en negro (o blanco en dark mode) y al activarse se tiñe de rosa de marca (#FF66C4).
+2. **Visibilidad garantizada de todos los iconos**:
+   - Los 5 iconos de navegación (Home, Search, Closet Mascot, Notifications, Profile) montados de forma permanente en z-10 relative con alto contraste y strokeWidth: 2.6 al activarse.
+   - El TabBar se eleva a z-[5000] para evitar cualquier oclusión por modales o drawers.
+3. **Deslizamiento táctil de la pompa de cristal (Drag-to-Navigate)**:
+   - El usuario puede arrastrar con el dedo la pompa de cristal a lo largo de la barra de navegación inferior.
+   - Durante el arrastre, la pompa sigue el dedo en tiempo real sobre la cápsula (	ouch-none, pointer capture).
+   - Al cruzar los límites de cada pestaña, la pestaña se resalta y se dispara una micro-interacción háptica de selección (	riggerHaptic('light')).
+   - Al soltar el dedo, la pompa se ajusta elásticamente a la pestaña más cercana, emite un pulso háptico de confirmación (	riggerHaptic('medium')) y navega automáticamente a la ruta correspondiente (
+outer.push).
+4. **Animación de deformación líquida de la pompa ('Squash & Stretch')**:
+   - Al cambiar de pestaña (tanto por toque como por salto entre pestañas distantes, p. ej. de Profile a Home):
+   - La pompa se estira horizontalmente en la dirección del movimiento (scaleX: 1.45, scaleY: 0.72), acelerando en el centro del recorrido como una gota de mercurio o pompa de jabón líquida real, comprimiéndose elásticamente al impactar en la pestaña destino (scaleX: 0.88, scaleY: 1.10) y asentándose con físicas spring de Apple.

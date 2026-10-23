@@ -1,8 +1,10 @@
 // ... imports
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { motion, LayoutGroup } from 'framer-motion';
+import { usePathname } from 'next/navigation';
+
+import { motion, LayoutGroup } from 'framer-motion';
+
 import NavbarKlozetLogo from './NavbarKlozetLogo';
 import { Home, Search, Send, UserRound, Crown, Heart } from 'lucide-react';
 import { useUser } from '@/store/userStore';
@@ -136,7 +138,7 @@ export default function Sidebar() {
                         <motion.div
                           whileTap={{ scale: 0.86 }}
                           transition={{ type: 'spring', stiffness: 500, damping: 22 }}
-                          className="relative w-[50px] h-[28px] flex items-center justify-center"
+                          className="relative w-[46px] h-[28px] flex items-center justify-center"
                         >
                           <NavbarKlozetLogo isActive={isActive} />
                         </motion.div>
