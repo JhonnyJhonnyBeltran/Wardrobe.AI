@@ -1,9 +1,9 @@
 // ... imports
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
-import { usePathname } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { usePathname } from 'next/navigation';
+import { motion, LayoutGroup } from 'framer-motion';
+import NavbarKlozetLogo from './NavbarKlozetLogo';
 import { Home, Search, Send, UserRound, Crown, Heart } from 'lucide-react';
 import { useUser } from '@/store/userStore';
 import { useUiStore } from '@/store/uiStore';
@@ -71,7 +71,8 @@ export default function Sidebar() {
     <>
       <aside className={`hidden md:flex flex-col w-[72px] min-w-[72px] max-w-[72px] shrink-0 h-screen sticky top-0 bg-[var(--background)]/90 backdrop-blur-md border-r border-[var(--border-color)] z-[5001] items-center py-6 will-change-transform isolate transition-all duration-300 ${storeTabBarHidden ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
         {/* Nav Items */}
-        <nav className="flex-1 flex flex-col gap-6 w-full items-center">
+        <LayoutGroup id="desktopSidebarNav">
+        <nav className="flex-1 flex flex-col gap-5 w-full items-center">
           {navItems.map((item, index) => {
             const isActive = item.labelKey === 'notifications'
               ? showNotifications
@@ -85,20 +86,29 @@ export default function Sidebar() {
                   <button
                     id={item.labelKey === 'notifications' ? 'notifications-nav-btn' : undefined}
                     onClick={item.action}
-                    className={`flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-200 
-                            ${isActive
-                        ? 'text-[var(--brand-pink)]'
-                        : 'text-[var(--foreground)] hover:text-[var(--brand-pink)]'
+                    className={`relative flex items-center justify-center w-12 h-12 rounded-2xl transition-all duration-200 
+                      ${isActive
+                        ? 'text-[var(--brand-pink,#FF66C4)]'
+                        : 'text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white'
                       }`}
                   >
+                    {/* Desktop Active Glass Lens */}
+                    {isActive && (
+                      <motion.div
+                        layoutId="desktopActiveGlassPill"
+                        className="absolute inset-0 rounded-2xl bg-black/[0.05] dark:bg-white/[0.12] backdrop-blur-xl border border-black/[0.06] dark:border-white/[0.16] shadow-xs pointer-events-none -z-10"
+                        transition={{ type: 'spring', stiffness: 420, damping: 30, mass: 0.65 }}
+                      />
+                    )}
                     <div className="relative flex items-center justify-center pointer-events-none">
                       {React.cloneElement(item.icon as React.ReactElement<any>, {
-                        strokeWidth: isActive ? 3 : 2,
-                        className: `w-[30px] h-[30px] ${(item.icon as any).props.className || ''}`
+                        strokeWidth: isActive ? 2.6 : 1.8,
+                        fill: 'none',
+                        className: `w-[26px] h-[26px] transition-[stroke-width] duration-200 ${(item.icon as any).props.className || ''}`
                       })}
 
                       {badgeCount > 0 && (
-                        <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1.5 flex items-center justify-center bg-[var(--brand-pink)] text-white text-[10px] font-bold rounded-full border-2 border-[var(--background)]">
+                        <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1.5 flex items-center justify-center bg-[var(--brand-pink,#FF66C4)] text-white text-[10px] font-bold rounded-full border-2 border-[var(--background)]">
                           {badgeCount > 99 ? '+99' : badgeCount}
                         </span>
                       )}
@@ -107,49 +117,39 @@ export default function Sidebar() {
                 ) : (
                   <Link
                     href={item.href}
-                    className={`flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-200 
-                        ${isActive
-                        ? 'text-[var(--brand-pink)]'
-                        : 'text-[var(--foreground)] hover:text-[var(--brand-pink)]'
+                    className={`relative flex items-center justify-center w-12 h-12 rounded-2xl transition-all duration-200 
+                      ${isActive
+                        ? 'text-[var(--brand-pink,#FF66C4)]'
+                        : 'text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white'
                       }`}
                   >
+                    {/* Desktop Active Glass Lens */}
+                    {isActive && (
+                      <motion.div
+                        layoutId="desktopActiveGlassPill"
+                        className="absolute inset-0 rounded-2xl bg-black/[0.05] dark:bg-white/[0.12] backdrop-blur-xl border border-black/[0.06] dark:border-white/[0.16] shadow-xs pointer-events-none -z-10"
+                        transition={{ type: 'spring', stiffness: 420, damping: 30, mass: 0.65 }}
+                      />
+                    )}
                     <div className="relative flex items-center justify-center">
                       {item.isLogoMark ? (
                         <motion.div
-                          whileTap={{ scale: 0.84 }}
+                          whileTap={{ scale: 0.86 }}
                           transition={{ type: 'spring', stiffness: 500, damping: 22 }}
-                          className="relative w-[28px] h-[28px] flex items-center justify-center"
+                          className="relative w-[50px] h-[28px] flex items-center justify-center"
                         >
-                          <Image
-                            src="/klozet-logo.png"
-                            alt="Armario"
-                            width={28}
-                            height={28}
-                            className={`object-contain transition-transform duration-200 dark:hidden ${
-                              isActive ? 'scale-110 drop-shadow-[0_2px_8px_rgba(255,102,196,0.45)]' : 'opacity-70 hover:opacity-100'
-                            }`}
-                          />
-                          <Image
-                            src="/klozet-logo-dark.png"
-                            alt="Armario"
-                            width={28}
-                            height={28}
-                            className={`object-contain transition-transform duration-200 hidden dark:block ${
-                              isActive ? 'scale-110 drop-shadow-[0_2px_8px_rgba(255,102,196,0.45)]' : 'opacity-70 hover:opacity-100'
-                            }`}
-                          />
+                          <NavbarKlozetLogo isActive={isActive} />
                         </motion.div>
                       ) : (
                         <>
-                      {/* Clone element to apply specific styling logic matching Mobile TabBar */}
-                      {React.cloneElement(item.icon as React.ReactElement<any>, {
-                        strokeWidth: isActive ? 2.5 : 1.8,
-                        fill: (isActive && ['notifications', 'home'].includes(item.labelKey)) ? 'currentColor' : 'none',
-                        className: `w-[28px] h-[28px] ${(item.icon as any).props.className || ''}`
-                      })}
+                          {React.cloneElement(item.icon as React.ReactElement<any>, {
+                            strokeWidth: isActive ? 2.6 : 1.8,
+                            fill: 'none',
+                            className: `w-[26px] h-[26px] transition-[stroke-width] duration-200 ${(item.icon as any).props.className || ''}`
+                          })}
 
                           {badgeCount > 0 && item.labelKey !== 'search' && (
-                            <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1.5 flex items-center justify-center bg-[var(--brand-pink)] text-white text-[10px] font-bold rounded-full border-2 border-[var(--background)]">
+                            <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1.5 flex items-center justify-center bg-[var(--brand-pink,#FF66C4)] text-white text-[10px] font-bold rounded-full border-2 border-[var(--background)]">
                               {badgeCount > 99 ? '+99' : badgeCount}
                             </span>
                           )}
@@ -167,6 +167,7 @@ export default function Sidebar() {
             );
           })}
         </nav>
+      </LayoutGroup>
       </aside>
 
       {/* Desktop Notifications Popover */}

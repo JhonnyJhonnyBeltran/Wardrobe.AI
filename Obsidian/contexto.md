@@ -2379,3 +2379,27 @@ A petición del usuario, se retiraron las zapatillas Onitsuka Tiger de la landin
    - Posicionado en su lugar en la parte inferior derecha el tacón de plataforma charol (`tacon-plataforma.png`), sirviendo de ancla de calzado limpia y nítida. En la esquina superior izquierda se ubica el cardigan a rayas de Noon (`cardigan-rayas.png`), manteniendo un balance visual simétrico y de alta costura.
 2. **Frame 1 (Digitalización & escaneo en un toque):**
    - Eliminada la presencia inferior de las zapatillas Onitsuka Tiger, dejando una composición más aireada, legible y enfocada en los 5 elementos principales (sudadera Yuxus con escaneo láser, cardigan Noon, jeans Noon strass, botas cowboy y bolso Michael Kors).
+
+---
+
+## 153. Lente de Cristal Líquido (Efecto Apple con Refracción Cromática) y Logo Klozet Animado en Navbars (2026-10-23)
+
+### Contexto:
+A petición del usuario:
+1. El logo de Klozet en la navegación (tanto móvil como escritorio) debe alternar dinámicamente con una animación suave entre el monograma `KLZT` y el wordmark completo `KLOZET`. Además, se pinta en negro (o blanco en dark mode) en reposo, y pasa al rosa de marca (`--brand-pink` / `#FF66C4`) al estar activo.
+2. El icono de Home (y el resto de iconos de navegación) debe pasar a rosa y engrosarse ligeramente (`strokeWidth: 2.6`) sin relleno plano para conservar el contorno abierto.
+3. En el navbar móvil flotante, se implementó el efecto de **lente de cristal líquido** (Liquid Glass Lens) idéntico a la referencia visual facilitada, con aberración cromática en el borde (glow prismático cyan/rosa/azul), reflejos especulares de lente óptica curvada y deslizamiento elástico `layoutId` entre pestañas.
+
+### Modificaciones e Implementaciones:
+1. **Componente de Logo Dinámico (`components/NavbarKlozetLogo.tsx`):**
+   - Máscaras vectoriales exactas generadas a partir de los activos oficiales: [`public/klzt-mask.png`](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/public/klzt-mask.png) y [`public/klozet-wordmark-mask.png`](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/public/klozet-wordmark-mask.png).
+   - Alternancia automática periódica (~3.4s) entre el monograma `KLZT` y el wordmark `KLOZET` con animación elástica de entrada/salida (`AnimatePresence`).
+   - Tintado reactivo: negro/blanco en reposo y rosa `#FF66C4` con resplandor sutil en estado activo.
+2. **Navbar Móvil Flotante (`components/TabBar.tsx`):**
+   - **Lente de Cristal Líquido:** Cápsula ovalada flotante con elevación tridimensional, desenfoque óptico `backdrop-blur-2xl`, borde de refracción cromática prismática (cyan, rosa, azul) y arco de reflejo especular superior. Se desplaza con resorte físico fluido de Apple (`layoutId="activeTabLiquidGlassLens"`).
+   - Iconos en reposo con trazo estilizado `1.8`, y en activo pasan a rosa de marca con grosor incrementado a `2.6` manteniendo contorno geométrico sin relleno.
+   - Integrado el nuevo `<NavbarKlozetLogo isActive={isActive} />` en el botón central de Armario (`/closet`).
+3. **Sidebar de Escritorio (`components/Sidebar.tsx`):**
+   - Sincronizada la misma experiencia: Home e iconos activos a rosa con trazo `2.6`.
+   - Reemplazada la imagen estática por el logo reactivo animado `<NavbarKlozetLogo isActive={isActive} />`.
+   - Añadida píldora de vidrio translúcido activa (`layoutId="desktopActiveGlassPill"`).

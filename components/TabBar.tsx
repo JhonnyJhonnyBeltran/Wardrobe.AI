@@ -1,14 +1,13 @@
 'use client';
 
 /**
- * TabBar - Floating Apple-Style Glass Mobile Navigation
- * Interfaz nativa Apple iOS: cápsula flotante con vidrio translúcido (.apple-glass-bar),
- * respuesta elástica al toque con rebote físico y el logo oficial de Klozet.
+ * TabBar - Floating Apple-Style Liquid Glass Mobile Navigation
+ * Interfaz nativa Apple iOS: cápsula flotante con lente de cristal líquido (.apple-glass-bar),
+ * refracción cromática prismática activa (efecto lente Apple), respuesta háptica y logo reactivo.
  */
 
 import React from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 import { Home, Search, Heart, UserRound } from 'lucide-react';
@@ -16,6 +15,7 @@ import { useUiStore } from '@/store/uiStore';
 import { useMessageStore, selectTotalUnread, selectBadgeVisible } from '@/store/messageStore';
 import { useRealtimeStore, selectUnreadCount } from '@/store/realtimeStore';
 import { triggerHaptic } from '@/lib/haptic';
+import NavbarKlozetLogo from './NavbarKlozetLogo';
 
 interface TabItem {
   href: string;
@@ -84,44 +84,46 @@ export default function TabBar() {
                 className="flex-1 flex justify-center items-center h-full group touch-manipulation"
               >
                 <motion.div 
-                  whileTap={{ scale: 0.85 }}
+                  whileTap={{ scale: 0.86 }}
                   transition={{ type: 'spring', stiffness: 500, damping: 22, mass: 0.8 }}
                   className="relative flex flex-col items-center justify-center p-2 rounded-full"
                 >
-                  {/* Animación de slide en el navbar de móvil del cristal */}
+                  {/* Lente de cristal líquido activo (Efecto lente Apple con refracción cromática prismática) */}
                   {isActive && (
                     <motion.div
-                      layoutId="activeTabGlassCircle"
-                      className="absolute inset-0 -m-1 rounded-full bg-black/[0.07] dark:bg-white/[0.14] backdrop-blur-xl border border-black/[0.08] dark:border-white/[0.16] shadow-xs -z-10"
-                      transition={{ type: 'spring', stiffness: 380, damping: 28, mass: 0.7 }}
-                    />
+                      layoutId="activeTabLiquidGlassLens"
+                      className="absolute -inset-x-2.5 sm:-inset-x-3 -inset-y-1 sm:-inset-y-1.5 rounded-full z-0 pointer-events-none"
+                      transition={{ type: 'spring', stiffness: 420, damping: 30, mass: 0.65 }}
+                    >
+                      {/* Halo exterior de aberración cromática / refracción prismática en el borde */}
+                      <div className="absolute -inset-[1px] rounded-full bg-gradient-to-r from-cyan-400/40 via-[var(--brand-pink,#FF66C4)]/35 to-blue-500/40 opacity-80 blur-[1.5px]" />
+                      
+                      {/* Cuerpo de la lente de vidrio translúcido */}
+                      <div className="relative w-full h-full rounded-full bg-white/45 dark:bg-white/[0.18] backdrop-blur-2xl border border-white/70 dark:border-white/35 shadow-[0_8px_24px_rgba(0,0,0,0.25),inset_0_1.5px_2px_rgba(255,255,255,0.9),inset_0_-1.5px_2px_rgba(0,0,0,0.25)] overflow-hidden">
+                        {/* Reflejo especular superior en arco */}
+                        <div className="absolute top-0.5 left-2.5 right-2.5 h-[1px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90 rounded-full" />
+                        {/* Brillo ambiental inferior de retorno */}
+                        <div className="absolute bottom-0.5 left-3 right-3 h-[1px] bg-gradient-to-r from-transparent via-cyan-300/40 to-transparent opacity-60 rounded-full" />
+                      </div>
+                    </motion.div>
                   )}
 
                   {tab.isLogoMark ? (
-                    // Center Klozet Official Icon - Entero en negro
-                    <div className="relative w-[28px] h-[28px] flex items-center justify-center">
-                      <Image
-                        src="/klozet-logo.png"
-                        alt="Armario"
-                        width={28}
-                        height={28}
-                        priority
-                        className={`object-contain transition-transform duration-200 brightness-0 ${
-                          isActive ? 'scale-105 opacity-100' : 'opacity-60 group-hover:opacity-100'
-                        }`}
-                      />
+                    // Center Klozet Brand Icon - Animado klzt/klozet y teñido rosa en active
+                    <div className="relative z-10 w-[54px] h-[28px] flex items-center justify-center">
+                      <NavbarKlozetLogo isActive={isActive} />
                     </div>
                   ) : (
-                    // Active icons en rosa de marca (#FF66C4 / var(--brand-pink))
+                    // Active icons en rosa de marca (#FF66C4 / var(--brand-pink)), trazo más grueso y contorno sin relleno
                     <div
-                      className={`relative transition-colors duration-200 ${
-                        isActive ? 'text-[var(--brand-pink,#FF66C4)]' : 'text-zinc-500 dark:text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-zinc-100'
+                      className={`relative z-10 transition-colors duration-200 ${
+                        isActive ? 'text-[var(--brand-pink,#FF66C4)]' : 'text-zinc-600 dark:text-zinc-400 group-hover:text-black dark:group-hover:text-white'
                       }`}
                     >
                       {React.cloneElement(tab.icon as React.ReactElement<any>, {
-                        strokeWidth: isActive ? 2.4 : 1.8,
+                        strokeWidth: isActive ? 2.6 : 1.8,
                         fill: 'none',
-                        className: 'w-[23px] h-[23px]'
+                        className: 'w-[23px] h-[23px] transition-[stroke-width] duration-200'
                       })}
 
                       {/* Notification Badge with Spring Pop */}
