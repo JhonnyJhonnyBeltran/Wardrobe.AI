@@ -1011,23 +1011,18 @@ export default function ClosetPage() {
             </motion.button>
           )}
 
-          {/* Filter Button */}
+          {/* Search / Filter Button */}
           {activeTab !== 'calendar' && (
             <motion.button
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => setShowFilters(prev => !prev)}
-              className={`h-12 px-4 md:px-5 rounded-full flex items-center justify-center gap-2 border shadow-lg transition-all cursor-pointer ${
-                activeFilterCount > 0
-                  ? 'bg-[var(--foreground)] text-[var(--background)] border-transparent'
-                  : 'bg-[var(--card-bg)] text-[var(--foreground)] border-[var(--border-color)] hover:border-[var(--brand-pink)]/50 hover:bg-[var(--background-secondary)]'
-              }`}
-              aria-label="Filtros"
+              className="w-12 h-12 rounded-full bg-[var(--brand-pink)] flex items-center justify-center text-white shadow-lg hover:shadow-[0_0_20px_rgba(236,72,153,0.4)] transition-all cursor-pointer relative"
+              aria-label="Buscar y filtrar"
             >
-              <Filter className="w-5 h-5 text-[var(--brand-pink)]" strokeWidth={2.2} />
-              <span className="text-sm font-bold whitespace-nowrap">Filtrar</span>
+              <Search className="w-5 h-5 flex-shrink-0" strokeWidth={2.4} />
               {activeFilterCount > 0 && (
-                <span className="w-5 h-5 rounded-full bg-[var(--brand-pink)] text-white text-[11px] font-bold flex items-center justify-center ml-0.5">
+                <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 text-[10px] font-bold flex items-center justify-center border-2 border-[var(--background)] shadow-sm">
                   {activeFilterCount}
                 </span>
               )}

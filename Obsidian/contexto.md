@@ -2553,3 +2553,20 @@ Ajustes solicitados por el usuario para simplificar y dar protagonismo absoluto 
    - Estado privado: icono `Lock` (candado cerrado).
 5. **Funcionalidades Mantenidas**:
    - Favoritos con un toque (`Heart`), edición en lienzo (`/create?outfit_id=...`), publicación en el feed (`/post?outfit_id=...`), exportación a Instagram Story (`ExportStoryModal`) y borrado con confirmación integrada.
+
+
+---
+
+## 160. Botón Flotante de Búsqueda/Filtro en Armario (`app/(app)/closet/page.tsx`) (2026-10-23)
+
+### Contexto:
+A petición del usuario ("el botón de filtrar cambialo a un icono de search sin texto y de color rosa al igual que elk de abajo de +"), se modificó el botón flotante de filtrado en la pantalla de Armario.
+
+### Modificaciones:
+1. **Icono y Sin Texto**:
+   - Sustituido el icono de embudo (`Filter`) y el texto "Filtrar" por un icono limpio de lupa (`Search` con `strokeWidth={2.4}`) sin ninguna etiqueta de texto.
+2. **Estilo Circular Rosa a Juego con el Botón '+'**:
+   - Adaptado a una cápsula circular de 48x48 (`w-12 h-12 rounded-full`).
+   - Fondo rosa de marca Klozet (`bg-[var(--brand-pink)]`) con icono blanco (`text-white`) y sombra profunda con halo al hacer hover (`hover:shadow-[0_0_20px_rgba(236,72,153,0.4)]`), idéntico al botón inferior de añadir prenda/outfit.
+3. **Indicador de Filtros Activos**:
+   - Preservado un badge contador de filtros activos en la esquina superior derecha (`absolute -top-1 -right-1 w-5 h-5 rounded-full bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 text-[10px] font-bold`) para mantener visibilidad de estados activos.
