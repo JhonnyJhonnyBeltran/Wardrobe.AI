@@ -106,7 +106,7 @@ export default function TabBar() {
                   <div
                     className={`relative z-10 transition-colors duration-150 ${
                       isActive
-                        ? 'text-[var(--brand-pink,#FF66C4)] drop-shadow-[0_2px_10px_rgba(255,102,196,0.45)]'
+                        ? 'text-[var(--brand-pink,#FF66C4)]'
                         : 'text-zinc-500 dark:text-zinc-400 group-hover:text-black dark:group-hover:text-white'
                     }`}
                   >

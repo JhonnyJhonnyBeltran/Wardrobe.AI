@@ -81,7 +81,7 @@ export default function NavbarKlozetLogo({ isActive, className = '' }: NavbarKlo
                 width={26}
                 height={28}
                 priority
-                className="object-contain w-full h-full drop-shadow-[0_2px_8px_rgba(255,102,196,0.5)] transition-transform duration-200 scale-105"
+                className="object-contain w-full h-full transition-transform duration-200 scale-105"
               />
             ) : (
               <>
@@ -122,7 +122,7 @@ export default function NavbarKlozetLogo({ isActive, className = '' }: NavbarKlo
                 width={24}
                 height={28}
                 priority
-                className="object-contain w-full h-full drop-shadow-[0_2px_8px_rgba(255,102,196,0.5)] transition-transform duration-200 scale-105"
+                className="object-contain w-full h-full transition-transform duration-200 scale-105"
               />
             ) : (
               <>
@@ -163,7 +163,7 @@ export default function NavbarKlozetLogo({ isActive, className = '' }: NavbarKlo
                 width={50}
                 height={22}
                 priority
-                className="object-contain w-full h-full drop-shadow-[0_2px_8px_rgba(255,102,196,0.5)] transition-transform duration-200 scale-105"
+                className="object-contain w-full h-full transition-transform duration-200 scale-105"
               />
             ) : (
               <>

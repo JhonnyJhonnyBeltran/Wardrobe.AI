@@ -2624,3 +2624,20 @@ A petición del usuario ("manten el limite de 30 dias pero añade una pantalla p
    - Texto informativo: *"No has tenido actividad en los últimos 30 días. Cuando alguien te siga, comente o dé me gusta a tus looks, aparecerá aquí."*
    - Botones de acción rápida en pastilla: *"Explorar feed"* (enlace a `/feed`) y *"Crear look"* (enlace a `/create`).
    - Totalmente responsivo para vista móvil completa (`/notifications`) y modal emergente de escritorio (`NotificationsPopover`).
+
+
+---
+
+## 164. Retirada de Sombra Rosa Difuminada en Logo Klozet e Iconos de Navegación (`components/NavbarKlozetLogo.tsx`, `components/TabBar.tsx`) (2026-10-23)
+
+### Contexto:
+A petición del usuario ("al poner el active en el icono de klozet sale un difuminado de sombra rosa quitalo y haz que sea como los otros iconos sin sombra"):
+Se eliminó cualquier halo difuminado, brillo o sombra rosa en el estado activo del logo de Klozet y en los iconos de navegación.
+
+### Modificaciones:
+1. **Logo de Klozet Sin Sombra (`components/NavbarKlozetLogo.tsx`)**:
+   - Eliminadas las clases `drop-shadow-[0_2px_8px_rgba(255,102,196,0.5)]` en las 3 variantes activas (`klzt-pink.png`, `k-bubble-pink.png`, `klozet-bubble-pink.png`).
+   - El logo activo ahora se renderiza nítido y plano en rosa oficial (`#FF66C4`) con escala limpia `scale-105`, idéntico en fidelidad a los iconos vectoriales contorneados.
+2. **Iconos de Navegación Móvil Planos (`components/TabBar.tsx`)**:
+   - Purgada la clase residual `drop-shadow-[0_2px_10px_rgba(255,102,196,0.45)]` en el contenedor activo.
+   - Todos los iconos activos se muestran limpios sin difuminados, respetando el Brand Kit de Klozet y las directrices Apple HIG (cero gradientes o brillos de neón).
