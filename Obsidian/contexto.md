@@ -2427,3 +2427,23 @@ outer.push).
 4. **Animación de deformación líquida de la pompa ('Squash & Stretch')**:
    - Al cambiar de pestaña (tanto por toque como por salto entre pestañas distantes, p. ej. de Profile a Home):
    - La pompa se estira horizontalmente en la dirección del movimiento (scaleX: 1.45, scaleY: 0.72), acelerando en el centro del recorrido como una gota de mercurio o pompa de jabón líquida real, comprimiéndose elásticamente al impactar en la pestaña destino (scaleX: 0.88, scaleY: 1.10) y asentándose con físicas spring de Apple.
+
+---
+
+## 155. Efecto Lupa Convexa en Alrededores (Webgl-Liquid-Glass), Ciclo Trilogía de Logo (KLZT -> K -> Klozet) y Set de Animación Pares (Zoom In / Shrink) cada 15s (2026-10-23)
+
+### Contexto:
+A petición del usuario:
+1. **Set de 2 Animaciones de Logo y Ciclo Completo (NavbarKlozetLogo.tsx)**:
+   - **Ciclo Estético de 3 Estados**: klzt (monograma) -> k (mascota bubble con ojos) -> klozet (wordmark completo de pompitas) -> klzt... en bucle continuo cada **15 segundos**.
+   - **Set de 2 Animaciones Pares**:
+     - **Salida**: *Shrink to Center* (el logo saliente se encoge acelerando centrípetamente hasta desaparecer en el punto central scale: 0, opacity: 0).
+     - **Entrada ('Al contrario')**: *Zoom In desde Primer Plano* (el nuevo logo emerge desde el primer plano con escala agrandada scale: 1.45 y desenfoque suave, enfocándose y contrayéndose elásticamente hasta asentarse en scale: 1.0 con rebote elástico Apple spring stiffness: 440, damping: 24).
+2. **Efecto Lupa en los Alrededores (Inspirado en webgl-liquid-glass)**:
+   - **Magnificación Óptica Continua**: En lugar de un toggle binario, se implementó un campo de refracción óptica continua sobre la barra:
+     - **Zona Núcleo (< 11% de distancia al centro de la lente)**: El icono bajo la pompa se magnifica a 1.24x, con elevación tridimensional y: -3px y color activo rosa #FF66C4.
+     - **Zona Perimetral / Alrededores (11% a 23%)**: Los iconos adyacentes sufren una dilatación óptica proporcional (scale: 1.08x) y una ligera tracción visual hacia el centro de la lente (opticalPullX), generando un efecto idéntico a deslizar una lupa convexa real sobre iconos físicos.
+   - **Deformación por Presión e Inercia (Press Bulge & Velocity Skew)**:
+     - Durante el arrastre táctil con el pulgar, la pompa se ensancha (scaleY: 1.10, scaleX: 1.08 + vel * 0.008) simulando la presión del dedo sobre la gota líquida.
+     - En movimientos rápidos se aplica inclinación por inercia (skewX proporcional a la velocidad de arrastre).
+   - **Respuesta Háptica 'Sináptica' de Precisión**: Ticks hápticos inmediatos (	riggerHaptic('light')) cada vez que la lente cruza el centro de un nuevo icono, y pulso de confirmación (	riggerHaptic('medium')) al soltar.
