@@ -2641,3 +2641,27 @@ Se eliminó cualquier halo difuminado, brillo o sombra rosa en el estado activo 
 2. **Iconos de Navegación Móvil Planos (`components/TabBar.tsx`)**:
    - Purgada la clase residual `drop-shadow-[0_2px_10px_rgba(255,102,196,0.45)]` en el contenedor activo.
    - Todos los iconos activos se muestran limpios sin difuminados, respetando el Brand Kit de Klozet y las directrices Apple HIG (cero gradientes o brillos de neón).
+
+
+---
+
+## 165. Unificación Estilística de Botones en Armario y Botón Kloe (`app/(app)/closet/page.tsx`) (2026-10-23)
+
+### Contexto:
+Ajustes solicitados por el usuario para coherencia visual y usabilidad en Armario:
+1. Reemplazar el botón "Subir Prenda" superior por el botón de acceso directo a Kloe, retirando el banner redundante.
+2. Unificar el estilo de los 3 botones flotantes en escritorio (Seleccionar, Filtrar, Nueva Prenda/Outfit) para que compartan la misma cápsula rosa (`bg-[var(--brand-pink)]`), tipografía y muestren su texto descriptivo.
+3. Cambiar el icono `+` del botón "Crear Outfit" por `Sparkles`.
+
+### Modificaciones:
+1. **Acciones Superiores de Cabecera**:
+   - Botón *"Crear Outfit"*: icono cambiado de `Plus` a `Sparkles` con acento rosa (`text-[var(--brand-pink)]`).
+   - Botón *"Kloe"*: reemplaza el botón anterior de *"Subir Prenda"* con avatar oficial de Kloe (`/kloe-avatar-v2.png`) y enlace directo a `/closet/kloe`.
+   - Retirado el banner inferior de Kloe para maximizar el área visible de prendas y looks.
+2. **Pila de Botones Flotantes (FAB) Unificada**:
+   - **En escritorio (`md:`)**:
+     - *Seleccionar*: cápsula rosa (`bg-[var(--brand-pink)] text-white h-12 px-5 rounded-full shadow-lg`) con icono `Check` blanco y texto *"Seleccionar"* (*"Cancelar"* en modo activo).
+     - *Filtrar*: cápsula rosa idéntica con icono `Search` blanco y texto *"Filtrar"*, más badge indicador si hay filtros aplicados.
+     - *Nueva Prenda / Nuevo Outfit*: cápsula rosa idéntica con texto visible, mostrando `Plus` en pestaña de prendas o `Sparkles` en pestaña de outfits.
+   - **En móvil**:
+     - *Filtrar* y *Nueva Prenda* permanecen como cápsulas circulares compactas de 48x48 (`h-12 min-w-[48px] px-0`) solo con icono.

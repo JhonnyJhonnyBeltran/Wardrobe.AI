@@ -632,7 +632,7 @@ export default function ClosetPage() {
       <header className="sticky top-0 z-40 bg-[var(--background)]/95 backdrop-blur-md pb-2 supports-[ios]:pt-safe-top">
         <div className="max-w-7xl mx-auto px-4 pt-4 space-y-4">
 
-          {/* Top Actions: Create Outfit & Add Garment with Apple Spring Bounce */}
+          {/* Top Actions: Crear Outfit (con Sparkles) & Kloe (reemplazando Subir Prenda) */}
           <div className="bg-[var(--card-bg)]/90 backdrop-blur-xl p-1.5 sm:p-2 rounded-2xl flex items-center gap-2 border border-black/[0.06] dark:border-white/[0.08] shadow-xs">
             <Link href="/create" className="flex-1">
               <motion.button 
@@ -641,52 +641,24 @@ export default function ClosetPage() {
                 transition={{ type: 'spring', stiffness: 500, damping: 24 }}
                 className="w-full py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl bg-[var(--foreground)] text-[var(--background)] font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 shadow-sm hover:opacity-95 transition-opacity cursor-pointer"
               >
-                <Plus className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--brand-pink)]" strokeWidth={2.5} />
+                <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--brand-pink)]" strokeWidth={2.2} />
                 <span>Crear Outfit</span>
               </motion.button>
             </Link>
-            <button 
-              onClick={() => setShowAddModal(true)}
-              className="flex-1"
-            >
+            <Link href="/closet/kloe" className="flex-1">
               <motion.div 
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.94 }}
                 transition={{ type: 'spring', stiffness: 500, damping: 24 }}
-                className="w-full py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl bg-[var(--background-secondary)] text-[var(--foreground)] font-semibold text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 border border-[var(--border-color)] hover:border-[var(--brand-pink)]/40 transition-all shadow-xs cursor-pointer"
+                className="w-full py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl bg-[var(--background-secondary)] text-[var(--foreground)] font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 border border-[var(--border-color)] hover:border-[var(--brand-pink)]/40 transition-all shadow-xs cursor-pointer group"
               >
-                <Shirt className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--brand-pink)]" />
-                <span>Subir Prenda</span>
+                <div className="relative w-5 h-5 rounded-full overflow-hidden shrink-0 border border-black/10 dark:border-white/10">
+                  <Image src="/kloe-avatar-v2.png" alt="Kloe" fill className="object-cover" />
+                </div>
+                <span>Kloe</span>
               </motion.div>
-            </button>
+            </Link>
           </div>
-
-          {/* Organic Prompt Banner to consult Kloe - Apple Card Style */}
-          <Link href="/closet/kloe" className="block mb-2 cursor-pointer">
-            <motion.div 
-              whileHover={{ scale: 1.015 }}
-              whileTap={{ scale: 0.96 }}
-              transition={{ type: 'spring', stiffness: 500, damping: 24 }}
-              className="bg-[var(--card-bg)]/90 backdrop-blur-xl border border-black/[0.06] dark:border-white/[0.08] hover:border-[var(--brand-pink)]/40 rounded-2xl p-3.5 flex items-center justify-between transition-all shadow-xs group"
-            >
-              <div className="flex items-center gap-3">
-                <div className="relative w-12 h-8 flex-shrink-0 flex items-center justify-center">
-                  <Image src="/kloe-logo-large.png" alt="Kloe" fill className="object-contain group-hover:scale-105 transition-transform" />
-                </div>
-                <div>
-                  <p className="text-xs font-bold text-[var(--foreground)] flex items-center gap-1">
-                    ¿Qué me pongo hoy?
-                  </p>
-                  <p className="text-[11px] text-[var(--foreground-tertiary)]">
-                    Pídele a Kloe que te arme un look con tu ropa en segundos
-                  </p>
-                </div>
-              </div>
-              <span className="text-xs font-semibold text-[var(--brand-pink)] flex items-center gap-1 group-hover:translate-x-0.5 transition-transform">
-                Consultar &rarr;
-              </span>
-            </motion.div>
-          </Link>
 
           {/* Progress / Tutorial Bar (disappears permanently at 100%) */}
           <ProfileProgressBar />
@@ -997,14 +969,14 @@ export default function ClosetPage() {
                   setSelectionMode(true);
                 }
               }}
-              className={`h-12 px-4 md:px-5 rounded-full hidden md:flex items-center justify-center gap-2 border shadow-lg transition-all cursor-pointer ${
+              className={`h-12 px-5 rounded-full hidden md:flex items-center justify-center gap-2 shadow-lg transition-all cursor-pointer ${
                 selectionMode
-                  ? 'bg-[var(--foreground)] text-[var(--background)] border-transparent'
-                  : 'bg-[var(--card-bg)] text-[var(--foreground)] border-[var(--border-color)] hover:border-[var(--brand-pink)]/50 hover:bg-[var(--background-secondary)]'
+                  ? 'bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 shadow-md'
+                  : 'bg-[var(--brand-pink)] text-white hover:shadow-[0_0_20px_rgba(236,72,153,0.4)]'
               }`}
               aria-label={selectionMode ? 'Cancelar selección' : 'Seleccionar prendas'}
             >
-              <Check className="w-5 h-5 text-[var(--brand-pink)]" strokeWidth={2.2} />
+              <Check className="w-5 h-5 text-white flex-shrink-0" strokeWidth={2.5} />
               <span className="text-sm font-bold whitespace-nowrap">
                 {selectionMode ? 'Cancelar' : 'Seleccionar'}
               </span>
@@ -1014,13 +986,16 @@ export default function ClosetPage() {
           {/* Search / Filter Button */}
           {activeTab !== 'calendar' && (
             <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
               onClick={() => setShowFilters(prev => !prev)}
-              className="w-12 h-12 rounded-full bg-[var(--brand-pink)] flex items-center justify-center text-white shadow-lg hover:shadow-[0_0_20px_rgba(236,72,153,0.4)] transition-all cursor-pointer relative"
+              className="h-12 min-w-[48px] px-0 md:px-5 rounded-full bg-[var(--brand-pink)] flex items-center justify-center gap-2 text-white shadow-lg hover:shadow-[0_0_20px_rgba(236,72,153,0.4)] transition-all cursor-pointer relative"
               aria-label="Buscar y filtrar"
             >
               <Search className="w-5 h-5 flex-shrink-0" strokeWidth={2.4} />
+              <span className="hidden md:block text-sm font-bold whitespace-nowrap pr-0.5">
+                Filtrar
+              </span>
               {activeFilterCount > 0 && (
                 <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 text-[10px] font-bold flex items-center justify-center border-2 border-[var(--background)] shadow-sm">
                   {activeFilterCount}
@@ -1054,7 +1029,11 @@ export default function ClosetPage() {
                 className="h-12 min-w-[48px] px-0 md:px-5 rounded-full bg-[var(--brand-pink)] flex items-center justify-center gap-2 text-white shadow-lg hover:shadow-[0_0_20px_rgba(236,72,153,0.4)] transition-all cursor-pointer group"
                 aria-label={activeTab === 'items' ? 'Nueva Prenda' : activeTab === 'outfits' ? 'Nuevo Outfit' : 'Añadir outfit para hoy'}
               >
-                <Plus className="w-5 h-5 flex-shrink-0" strokeWidth={2.5} />
+                {activeTab === 'outfits' ? (
+                  <Sparkles className="w-5 h-5 flex-shrink-0" strokeWidth={2.2} />
+                ) : (
+                  <Plus className="w-5 h-5 flex-shrink-0" strokeWidth={2.5} />
+                )}
                 <span className="hidden md:block text-sm font-bold whitespace-nowrap pr-0.5">
                   {activeTab === 'items' ? 'Nueva Prenda' : activeTab === 'outfits' ? 'Nuevo Outfit' : 'Añadir outfit para hoy'}
                 </span>
