@@ -2365,3 +2365,17 @@ Todas las imágenes fueron recortadas mediante IA (`rembg`) eliminando fondos un
    - Detalles de stickers de moda en superposición sobre las tarjetas editoriales desktop (`hoodie-yuxus.png`, `bolso-mk.png`) y la composición móvil.
 6. **Microinteracciones Hápticas:**
    - Cada sticker cuenta con microinteracción táctil al toque (`triggerHaptic('light')`), elevación spring en hover (`scale: 1.1`) y compresión al pulsar (`scale: 0.94`), reforzando el concepto "un juguete dentro de un iPhone".
+
+---
+
+## 152. Retirada de Sticker Onitsuka Tiger en la Landing Page (2026-10-23)
+
+### Contexto:
+A petición del usuario, se retiraron las zapatillas Onitsuka Tiger de la landing page debido a imperfecciones y artefactos en el recorte del activo gráfico original.
+
+### Modificaciones (`app/(public)/page.tsx`):
+1. **Frame 0 (Armario lleno, nada que ponerte):**
+   - Retirado el sticker de las Onitsuka Tiger.
+   - Posicionado en su lugar en la parte inferior derecha el tacón de plataforma charol (`tacon-plataforma.png`), sirviendo de ancla de calzado limpia y nítida. En la esquina superior izquierda se ubica el cardigan a rayas de Noon (`cardigan-rayas.png`), manteniendo un balance visual simétrico y de alta costura.
+2. **Frame 1 (Digitalización & escaneo en un toque):**
+   - Eliminada la presencia inferior de las zapatillas Onitsuka Tiger, dejando una composición más aireada, legible y enfocada en los 5 elementos principales (sudadera Yuxus con escaneo láser, cardigan Noon, jeans Noon strass, botas cowboy y bolso Michael Kors).

@@ -238,7 +238,7 @@ export default function LandingPage() {
                   variants={itemFadeUp}
                   className="w-full max-w-[300px] sm:max-w-[460px] md:max-w-[560px] lg:max-w-[620px] h-[175px] sm:h-[235px] md:h-[275px] relative flex items-center justify-center my-1 sm:my-2"
                 >
-                  {/* Flank Top-Left: Platform Stiletto (New) */}
+                  {/* Flank Top-Left: Cardigan Rayas Noon */}
                   <motion.div 
                     variants={itemFloatIn(-50, -18, -10)}
                     animate={{ y: [0, -7, 0], rotate: [-10, -8, -10] }}
@@ -249,15 +249,15 @@ export default function LandingPage() {
                     className="hidden sm:block absolute -left-2 sm:left-0 md:left-2 top-0 sm:top-1 w-14 sm:w-20 md:w-26 drop-shadow-md z-15 cursor-pointer"
                   >
                     <Image 
-                      src="/landing/tacon-plataforma.png" 
-                      alt="Tacón Plataforma" 
+                      src="/landing/cardigan-rayas.png" 
+                      alt="Cardigan Rayas" 
                       width={180} 
                       height={160} 
                       className="w-full h-auto object-contain -rotate-10" 
                       priority 
                     />
                     <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-white/90 dark:bg-zinc-800/90 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.08] text-[8px] sm:text-[9px] font-semibold text-zinc-800 dark:text-zinc-200 whitespace-nowrap shadow-xs">
-                      Platform Heel
+                      Cardigan Noon
                     </div>
                   </motion.div>
 
@@ -331,7 +331,7 @@ export default function LandingPage() {
                     </div>
                   </motion.div>
 
-                  {/* Flank Top-Right: Reloj Lotus Chrono (New) */}
+                  {/* Flank Top-Right: Reloj Lotus Chrono */}
                   <motion.div 
                     variants={itemFloatIn(55, -18, 12)}
                     animate={{ y: [0, -8, 0], rotate: [12, 10, 12] }}
@@ -354,7 +354,7 @@ export default function LandingPage() {
                     </div>
                   </motion.div>
 
-                  {/* Flank Bottom-Left: Bolso Guess Monograma (New) */}
+                  {/* Flank Bottom-Left: Bolso Guess Monograma */}
                   <motion.div 
                     variants={itemFloatIn(-45, 25, -10)}
                     animate={{ y: [0, 8, 0], rotate: [-10, -7, -10] }}
@@ -377,24 +377,27 @@ export default function LandingPage() {
                     </div>
                   </motion.div>
 
-                  {/* Bottom: Onitsuka Tiger */}
+                  {/* Bottom-Right: Platform Stiletto */}
                   <motion.div 
-                    variants={itemFloatIn(10, 25, -6)}
+                    variants={itemFloatIn(25, 20, -6)}
                     animate={{ y: [0, -6, 0], rotate: [-6, -4, -6] }}
-                    transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-                    whileHover={{ scale: 1.08, rotate: -2 }}
+                    transition={{ duration: 4.6, repeat: Infinity, ease: 'easeInOut' }}
+                    whileHover={{ scale: 1.1, rotate: -2 }}
                     whileTap={{ scale: 0.94 }}
                     onClick={() => triggerHaptic('light')}
-                    className="absolute -bottom-2 right-2 sm:right-6 md:right-10 w-20 sm:w-28 md:w-38 drop-shadow-lg z-30 cursor-pointer"
+                    className="absolute -bottom-2 right-2 sm:right-6 md:right-10 w-18 sm:w-24 md:w-32 drop-shadow-lg z-30 cursor-pointer"
                   >
                     <Image 
-                      src="/landing/onitsuka-tiger.png" 
-                      alt="Tiger Sneakers" 
-                      width={240} 
-                      height={150} 
+                      src="/landing/tacon-plataforma.png" 
+                      alt="Tacón Plataforma" 
+                      width={200} 
+                      height={180} 
                       className="w-full h-auto object-contain -rotate-6" 
                       priority 
                     />
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-white/90 dark:bg-zinc-800/90 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.08] text-[8px] sm:text-[9px] font-semibold text-zinc-800 dark:text-zinc-200 whitespace-nowrap shadow-xs">
+                      Platform Stiletto
+                    </div>
                   </motion.div>
                 </motion.div>
 
@@ -571,25 +574,6 @@ export default function LandingPage() {
                     <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-white/95 dark:bg-zinc-800/95 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.08] text-[8px] sm:text-[9px] font-semibold text-zinc-800 dark:text-zinc-200 whitespace-nowrap shadow-xs">
                       Michael Kors
                     </div>
-                  </motion.div>
-
-                  {/* Bottom: Onitsuka Sneaker */}
-                  <motion.div 
-                    variants={itemFloatIn(10, 25, 6)}
-                    animate={{ y: [0, 5, 0], rotate: [6, 4, 6] }}
-                    transition={{ duration: 3.8, repeat: Infinity, ease: 'easeInOut' }}
-                    whileHover={{ scale: 1.08, rotate: 2 }}
-                    whileTap={{ scale: 0.94 }}
-                    onClick={() => triggerHaptic('light')}
-                    className="absolute -bottom-2 right-2 sm:right-6 md:right-10 w-18 sm:w-26 md:w-36 pointer-events-auto drop-shadow-lg z-25 cursor-pointer"
-                  >
-                    <Image 
-                      src="/landing/onitsuka-tiger.png" 
-                      alt="Onitsuka Tiger" 
-                      width={240} 
-                      height={140} 
-                      className="w-full h-auto object-contain rotate-6" 
-                    />
                   </motion.div>
                 </div>
               </div>
