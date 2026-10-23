@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-import { motion, LayoutGroup } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 import NavbarKlozetLogo from './NavbarKlozetLogo';
 import { Home, Search, Send, UserRound, Crown, Heart } from 'lucide-react';
@@ -73,8 +73,7 @@ export default function Sidebar() {
     <>
       <aside className={`hidden md:flex flex-col w-[72px] min-w-[72px] max-w-[72px] shrink-0 h-screen sticky top-0 bg-[var(--background)]/90 backdrop-blur-md border-r border-[var(--border-color)] z-[5001] items-center py-6 will-change-transform isolate transition-all duration-300 ${storeTabBarHidden ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
         {/* Nav Items */}
-        <LayoutGroup id="desktopSidebarNav">
-        <nav className="flex-1 flex flex-col gap-5 w-full items-center">
+                <nav className="flex-1 flex flex-col gap-5 w-full items-center">
           {navItems.map((item, index) => {
             const isActive = item.labelKey === 'notifications'
               ? showNotifications
@@ -94,14 +93,6 @@ export default function Sidebar() {
                         : 'text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white'
                       }`}
                   >
-                    {/* Desktop Active Glass Lens */}
-                    {isActive && (
-                      <motion.div
-                        layoutId="desktopActiveGlassPill"
-                        className="absolute inset-0 rounded-2xl bg-black/[0.05] dark:bg-white/[0.12] backdrop-blur-xl border border-black/[0.06] dark:border-white/[0.16] shadow-xs pointer-events-none -z-10"
-                        transition={{ type: 'spring', stiffness: 420, damping: 30, mass: 0.65 }}
-                      />
-                    )}
                     <div className="relative flex items-center justify-center pointer-events-none">
                       {React.cloneElement(item.icon as React.ReactElement<any>, {
                         strokeWidth: isActive ? 2.6 : 1.8,
@@ -125,14 +116,6 @@ export default function Sidebar() {
                         : 'text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white'
                       }`}
                   >
-                    {/* Desktop Active Glass Lens */}
-                    {isActive && (
-                      <motion.div
-                        layoutId="desktopActiveGlassPill"
-                        className="absolute inset-0 rounded-2xl bg-black/[0.05] dark:bg-white/[0.12] backdrop-blur-xl border border-black/[0.06] dark:border-white/[0.16] shadow-xs pointer-events-none -z-10"
-                        transition={{ type: 'spring', stiffness: 420, damping: 30, mass: 0.65 }}
-                      />
-                    )}
                     <div className="relative flex items-center justify-center">
                       {item.isLogoMark ? (
                         <motion.div
@@ -169,7 +152,6 @@ export default function Sidebar() {
             );
           })}
         </nav>
-      </LayoutGroup>
       </aside>
 
       {/* Desktop Notifications Popover */}

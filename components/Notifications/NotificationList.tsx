@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X } from 'lucide-react';
+import { X, Heart, Sparkles, Bell } from 'lucide-react';
 import { useUser } from '@/store/userStore';
 import { useRealtimeStore } from '@/store/realtimeStore';
 import Image from 'next/image';
@@ -59,7 +59,7 @@ export default function NotificationList({ compact = false, onClose }: Notificat
         const actorKey = (item as any)?.actor?.id || (item as any)?.actor_id || (item as any)?.sender_id || 'unknown';
         const typeKey = (item as any)?.type || 'notification';
         const entityKey = (item as any)?.postId || (item as any)?.entity_id || (item as any)?.resource_id || (item as any)?.data?.post_id || '';
-        const dedupeKey = item.id ? item.id : `${actorKey}_${typeKey}_${entityKey}`;
+        const dedupeKey = item.type === 'system' ? (item.id || `${actorKey}_${typeKey}_${entityKey}`) : `${actorKey}_${typeKey}_${entityKey}`;
         
         if (!deduplicatedMap.has(dedupeKey)) {
             deduplicatedMap.set(dedupeKey, item);
@@ -133,9 +133,7 @@ export default function NotificationList({ compact = false, onClose }: Notificat
         }
 
         const realNotifications: Notification[] = [];
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        const thirtyDaysAgoISO = thirtyDaysAgo.toISOString();
+        let hadError = false;
 
         // Helper to get relative time safely
         const getTimeAgo = (dateString: string) => {
@@ -163,19 +161,28 @@ export default function NotificationList({ compact = false, onClose }: Notificat
 
         // 1. Obtener sugerencias inteligentes (Solo primera página)
         if (currentPage === 0) {
-            const smartSuggestions = await getSmartSuggestions(user.id);
-            realNotifications.push(...smartSuggestions);
+            try {
+                const smartSuggestions = await getSmartSuggestions(user.id);
+                if (smartSuggestions && smartSuggestions.length > 0) {
+                    realNotifications.push(...smartSuggestions);
+                }
+            } catch (suggErr) {
+                console.warn("[NotificationList] Smart suggestions error:", suggErr);
+            }
         }
 
         try {
-            // 2. Fetch Follows (Real Data limitadas a 30 días)
-            const { data: followsData } = await supabase
+            // 2. Fetch Follows (Sin límite arbitrario de 30 días)
+            const { data: followsData, error: followsError } = await supabase
                 .from('follows')
                 .select('*, follower:follower_id(*)')
                 .eq('following_id', user.id)
-                .gte('created_at', thirtyDaysAgoISO)
                 .order('created_at', { ascending: false })
                 .range(from, to);
+
+            if (followsError) {
+                console.warn("[NotificationList] Error fetching follows:", followsError);
+            }
 
             const follows = followsData || [];
 
@@ -206,7 +213,7 @@ export default function NotificationList({ compact = false, onClose }: Notificat
             if (myPosts && myPosts.length > 0) {
                 const myPostIds = myPosts.map((p: any) => p.id);
                 // LIKES
-                const { data: likes } = await supabase
+                const { data: likes, error: likesError } = await supabase
                     .from('likes')
                     .select(`
               user_id, post_id, created_at,
@@ -215,9 +222,12 @@ export default function NotificationList({ compact = false, onClose }: Notificat
            `)
                     .in('post_id', myPostIds)
                     .neq('user_id', user.id) // Avoid self-likes
-                    .gte('created_at', thirtyDaysAgoISO)
                     .order('created_at', { ascending: false })
                     .range(from, to);
+
+                if (likesError) {
+                    console.warn("[NotificationList] Error fetching likes:", likesError);
+                }
 
                 if (likes) {
                     likes.forEach((l: any) => {
@@ -239,7 +249,7 @@ export default function NotificationList({ compact = false, onClose }: Notificat
                 }
 
                 // COMMENTS
-                const { data: comments } = await supabase
+                const { data: comments, error: commentsError } = await supabase
                     .from('comments' as any)
                     .select(`
               id, user_id, post_id, created_at, content,
@@ -248,9 +258,12 @@ export default function NotificationList({ compact = false, onClose }: Notificat
            `)
                     .in('post_id', myPostIds)
                     .neq('user_id', user.id) // Avoid self-comments
-                    .gte('created_at', thirtyDaysAgoISO)
                     .order('created_at', { ascending: false })
                     .range(from, to);
+
+                if (commentsError) {
+                    console.warn("[NotificationList] Error fetching comments:", commentsError);
+                }
 
                 if (comments) {
                     comments.forEach((c: any) => {
@@ -274,15 +287,67 @@ export default function NotificationList({ compact = false, onClose }: Notificat
                 }
             }
 
+            // 4. Fetch Direct Notifications (tabla notifications)
+            const { data: dbNotifs, error: dbNotifsError } = await supabase
+                .from('notifications')
+                .select('*')
+                .eq('user_id', user.id)
+                .order('created_at', { ascending: false })
+                .range(from, to);
+
+            if (!dbNotifsError && dbNotifs && dbNotifs.length > 0) {
+                const senderIds = Array.from(new Set(
+                    dbNotifs
+                        .map((n: any) => n.sender_id || n.actor_id || n.data?.actor_id || n.data?.sender_id)
+                        .filter(Boolean)
+                ));
+
+                let senderProfileMap: Record<string, any> = {};
+                if (senderIds.length > 0) {
+                    const { data: profiles } = await supabase
+                        .from('profiles')
+                        .select('id, username, full_name, avatar_url')
+                        .in('id', senderIds);
+                    if (profiles) {
+                        profiles.forEach((p: any) => {
+                            senderProfileMap[p.id] = p;
+                        });
+                    }
+                }
+
+                dbNotifs.forEach((n: any) => {
+                    const sid = n.sender_id || n.actor_id || n.data?.actor_id || n.data?.sender_id;
+                    const profile = sid ? senderProfileMap[sid] : null;
+                    const notifType = (n.type as any) || 'system';
+
+                    realNotifications.push({
+                        id: n.id,
+                        type: notifType,
+                        actor: {
+                            id: sid || 'system',
+                            username: profile?.username || n.data?.username || 'klozet',
+                            name: profile?.full_name || profile?.username || n.title || 'Klozet',
+                            avatar: profile?.avatar_url || n.data?.avatar_url || ''
+                        },
+                        content: n.message || n.data?.content || n.title || '',
+                        time: getTimeAgo(n.created_at),
+                        timestamp: new Date(n.created_at).getTime(),
+                        image: n.data?.image_url,
+                        postId: n.entity_id || n.data?.post_id
+                    });
+                });
+            }
+
         } catch (err) {
             console.error("Error fetching activity", err);
+            hadError = true;
             setLoadError(true);
         } finally {
             setLoading(false);
             setLoadingMore(false);
         }
 
-        if (!loadError) {
+        if (!hadError) {
             const newFetched = realNotifications;
             
             if (isLoadMore) {
@@ -482,8 +547,42 @@ export default function NotificationList({ compact = false, onClose }: Notificat
         );
     }
 
+    if (loadError && notifications.length === 0) {
+        return (
+            <div className={`flex flex-col items-center justify-center text-center py-16 px-4 ${compact ? 'py-10' : 'py-20'}`}>
+                <div className="w-14 h-14 rounded-2xl bg-red-500/10 text-red-500 flex items-center justify-center mb-3">
+                    <X className="w-6 h-6" />
+                </div>
+                <h3 className="text-sm font-bold text-[var(--foreground)] mb-1">
+                    No se pudo cargar la actividad
+                </h3>
+                <p className="text-xs text-[var(--foreground-secondary)] mb-4">
+                    Comprueba tu conexión o vuelve a intentarlo.
+                </p>
+                <button
+                    onClick={() => fetchNotifications(false)}
+                    className="px-4 py-2 rounded-full bg-[var(--brand-pink)] text-white text-xs font-bold shadow-sm hover:opacity-95 transition-opacity cursor-pointer"
+                >
+                    Reintentar
+                </button>
+            </div>
+        );
+    }
+
     if (notifications.length === 0) {
-        return null;
+        return (
+            <div className={`flex flex-col items-center justify-center text-center py-16 px-4 ${compact ? 'py-10' : 'py-20'}`}>
+                <div className="w-16 h-16 rounded-3xl bg-[var(--background-secondary)] border border-[var(--border-color)]/60 flex items-center justify-center mb-4 shadow-sm">
+                    <Heart className="w-7 h-7 text-[var(--brand-pink)]" strokeWidth={1.8} />
+                </div>
+                <h3 className="text-base font-bold text-[var(--foreground)] mb-1">
+                    Sin actividad todavía
+                </h3>
+                <p className="text-xs sm:text-sm text-[var(--foreground-secondary)] max-w-xs leading-relaxed">
+                    Cuando otros usuarios te sigan, comenten o den me gusta a tus looks, aparecerán aquí.
+                </p>
+            </div>
+        );
     }
 
     return (
@@ -635,7 +734,35 @@ export default function NotificationList({ compact = false, onClose }: Notificat
                                     </div>
                                 );
                             }
-                            return null;
+
+                            // Generic notification fallback
+                            return (
+                                <div key={notif.id} className={`flex items-center gap-3 group p-3 rounded-2xl transition-colors ${bgClass}`}>
+                                    {notif.actor?.avatar ? (
+                                        <Link href={`/profile/${notif.actor!.username || notif.actor!.id}`} className="relative shrink-0" onClick={onClose}>
+                                            <Avatar src={notif.actor.avatar} alt={notif.actor.name} size="md" />
+                                        </Link>
+                                    ) : (
+                                        <div className="w-10 h-10 rounded-full bg-[var(--background-secondary)] flex items-center justify-center shrink-0 border border-[var(--border-color)]">
+                                            <Sparkles className="w-5 h-5 text-[var(--brand-pink)]" />
+                                        </div>
+                                    )}
+                                    <div className="flex-1 text-sm min-w-0">
+                                        <p className="font-semibold text-[var(--foreground)] truncate">
+                                            {notif.actor?.name || 'Klozet'}
+                                        </p>
+                                        <p className="text-[var(--foreground-secondary)] text-xs mt-0.5">
+                                            {notif.content}
+                                        </p>
+                                        <span className="text-[var(--foreground-tertiary)] text-[11px] block mt-0.5">{notif.time}</span>
+                                    </div>
+                                    {notif.image && notif.postId && (
+                                        <Link href={`/post/${notif.postId}`} onClick={onClose} className="w-10 h-10 rounded-md overflow-hidden relative border border-[var(--border-color)] hover:opacity-80 transition-opacity shrink-0">
+                                            <Image src={notif.image} alt="Post" fill className="object-cover" />
+                                        </Link>
+                                    )}
+                                </div>
+                            );
                         })}
                     </div>
                 </section>

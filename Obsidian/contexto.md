@@ -2570,3 +2570,37 @@ A petición del usuario ("el botón de filtrar cambialo a un icono de search sin
    - Fondo rosa de marca Klozet (`bg-[var(--brand-pink)]`) con icono blanco (`text-white`) y sombra profunda con halo al hacer hover (`hover:shadow-[0_0_20px_rgba(236,72,153,0.4)]`), idéntico al botón inferior de añadir prenda/outfit.
 3. **Indicador de Filtros Activos**:
    - Preservado un badge contador de filtros activos en la esquina superior derecha (`absolute -top-1 -right-1 w-5 h-5 rounded-full bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 text-[10px] font-bold`) para mantener visibilidad de estados activos.
+
+
+---
+
+## 161. Corrección de Carga de Notificaciones y Feed de Actividad (`components/Notifications/NotificationList.tsx`) (2026-10-23)
+
+### Causa del Problema:
+1. **Filtro Rígido de 30 Días**: Existía un filtro forzado (`.gte('created_at', thirtyDaysAgoISO)`) en las consultas de seguidores, me gustas y comentarios. Toda la actividad previa al último mes quedaba descartada por completo.
+2. **Ausencia de Estado Vacío (Empty State)**: Cuando la lista de notificaciones daba 0 elementos, el componente ejecutaba `return null;`, dejando la pantalla en blanco absoluto e induciendo a pensar que la pantalla se congeló o no cargó.
+3. **Omisión de la Tabla `public.notifications`**: No se consultaban las notificaciones directas ni mensajes del sistema guardados en la tabla núcleo `notifications`.
+4. **Vulnerabilidad en Sugerencias Inteligentes**: `getSmartSuggestions` se llamaba fuera del bloque `try/catch`, de modo que cualquier excepción o fallo en caché bloqueaba el ciclo de vida y dejaba la pantalla en estado de esqueleto perpetuo.
+
+### Solución Implementada:
+1. **Eliminación del Límite de 30 Días**: Se eliminó `.gte('created_at', thirtyDaysAgoISO)`. Ahora se recuperan todas las notificaciones históricas ordenadas cronológicamente y gestionadas mediante paginación e infinite scroll (`range(from, to)`).
+2. **Consulta a `public.notifications`**: Se incorporó la recuperación de notificaciones directas/sistema con resolución de perfiles de remitentes (`senderProfileMap`).
+3. **Empty State & Error State Apple HIG**:
+   - Estado vacío elegante con icono `Heart` en rosa de marca, título *"Sin actividad todavía"* y descripción clara.
+   - Estado de error con botón *"Reintentar"* en caso de fallos de red.
+4. **Aislamiento Seguro**: `getSmartSuggestions` encapsulado en `try/catch` para no romper la carga principal.
+5. **Deduplicación Robusta**: Clave de deduplicación unificada (`${actorKey}_${typeKey}_${entityKey}`) y renderizado de respaldo para tipos genéricos de notificación.
+
+---
+
+## 162. Retirada de Burbuja en Navbar de Escritorio (`components/Sidebar.tsx`) (2026-10-23)
+
+### Contexto:
+A petición del usuario ("En el navbar de ordenador quiero que tambien quites la burbuja"), se eliminó la burbuja / lente flotante de cristal en la barra lateral de navegación de escritorio, alineándola con el estilo sobrio del navbar móvil.
+
+### Modificaciones:
+1. **Eliminación de la Burbuja Activa**:
+   - Retirado el elemento `<motion.div layoutId="desktopActiveGlassPill" ... />` tanto en los enlaces de navegación como en el botón de notificaciones.
+   - Retirado el envoltorio `<LayoutGroup id="desktopSidebarNav">`.
+2. **Estado Activo Sobrio**:
+   - El icono activo pasa directamente a rosa de marca (`text-[var(--brand-pink,#FF66C4)]`) con trazo más grueso (`strokeWidth: 2.6`), sin fondos de pastilla o burbujas de cristal detrás.
