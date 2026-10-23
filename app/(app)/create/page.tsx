@@ -25,7 +25,6 @@ import {
     PartyPopper, 
     Zap, 
     Heart, 
-    Sparkles, 
     Circle,
     Coffee, 
     Crown, 
@@ -52,7 +51,7 @@ import { useUiStore } from '@/store/uiStore';
 import { useTourStore } from '@/store/tourStore';
 
 const OUTFIT_OCCASIONS = [
-    { id: 'everyday', label: 'Diario', icon: Sparkles },
+    { id: 'everyday', label: 'Diario', icon: Sun },
     { id: 'casual', label: 'Casual', icon: Coffee },
     { id: 'streetwear', label: 'Streetwear', icon: Flame },
     { id: 'business', label: 'Negocios', icon: Briefcase },
@@ -1141,7 +1140,7 @@ export default function CreateOutfitPage() {
                                         <div className="min-w-0">
                                             <p className="text-xs font-bold text-[var(--foreground)] flex items-center gap-1 truncate">
                                                 ¿Quieres que Kloe te ayude?
-                                                <Sparkles className="w-3 h-3 text-[var(--brand-pink)] shrink-0" />
+                                                <Sun className="w-3 h-3 text-[var(--brand-pink)] shrink-0" />
                                             </p>
                                             <p className="text-[11px] text-[var(--foreground-secondary)] truncate">
                                                 Combina tus prendas con IA en segundos

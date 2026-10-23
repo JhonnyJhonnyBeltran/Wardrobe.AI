@@ -2665,3 +2665,24 @@ Ajustes solicitados por el usuario para coherencia visual y usabilidad en Armari
      - *Nueva Prenda / Nuevo Outfit*: cápsula rosa idéntica con texto visible, mostrando `Plus` en pestaña de prendas o `Sparkles` en pestaña de outfits.
    - **En móvil**:
      - *Filtrar* y *Nueva Prenda* permanecen como cápsulas circulares compactas de 48x48 (`h-12 min-w-[48px] px-0`) solo con icono.
+
+
+---
+
+## 166. Veto Total de Sparkles y Rediseño de Botones en Armario (`app/(app)/closet/page.tsx`) (2026-10-23)
+
+### Contexto:
+A petición expresa del usuario:
+1. **Veto total de `Sparkles`**: Prohibido y sustituido en todas las pantallas y componentes de la aplicación.
+2. **Crear Outfit con `+` Simple**: Reemplazado cualquier icono de sparkles en Armario por un `Plus` simple con acento rosa.
+3. **Botón Kloe Limpio y Grande**: Rediseñado el botón superior de Kloe para eliminar cualquier borde circular o texto, mostrando exclusivamente el icono oficial de Kloe (`/kloe-avatar-v2.png`) en gran tamaño centrado en el botón.
+
+### Modificaciones Realizadas:
+1. **Veto y Sustitución Global de `Sparkles`**:
+   - Purgadas las importaciones y usos de `Sparkles` en más de 20 archivos (`closet`, `create`, `outfit`, `chat`, `premium`, `search`, `NotificationList`, `OutfitCard`, `OutfitDetailModal`, `GuidedTour`, etc.).
+   - Sustituido según contexto: `Plus` para creación, `Sun` para ocasiones diarias, `Zap`/`Star` para elementos premium y destacadas, `Camera` para fotos y `Palette` para estilismo.
+2. **Botón Kloe en Armario**:
+   - Eliminado el recorte circular (`rounded-full`), el borde contenedor y la etiqueta de texto *"Kloe"*.
+   - Ahora aloja únicamente la mascota de Kloe en gran formato (`w-8 h-8 sm:w-9 sm:h-9`) con `object-contain` centrado en el botón.
+3. **Botón Crear Outfit**:
+   - Reemplazado por icono `Plus` simple (`strokeWidth={2.5}`) tanto en cabecera como en la botonera flotante.

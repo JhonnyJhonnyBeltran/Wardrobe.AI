@@ -10,7 +10,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRef } from 'react';
 import {
-  Heart, Grid3x3, List, Search, Filter, Plus, Wand2, X, Shirt, Layers, Share2, Trash2, Check, CalendarDays, Sparkles
+  Heart, Grid3x3, List, Search, Filter, Plus, Wand2, X, Shirt, Layers, Share2, Trash2, Check, CalendarDays
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button, Card, FloatingCreateButton, OutfitCard, ClothingItem, NotificationToastContainer, WardrobeSelectionModal, OutfitDetailModal, EmptyState, SkeletonCard, ProfileProgressBar } from '@/components';
@@ -632,7 +632,7 @@ export default function ClosetPage() {
       <header className="sticky top-0 z-40 bg-[var(--background)]/95 backdrop-blur-md pb-2 supports-[ios]:pt-safe-top">
         <div className="max-w-7xl mx-auto px-4 pt-4 space-y-4">
 
-          {/* Top Actions: Crear Outfit (con Sparkles) & Kloe (reemplazando Subir Prenda) */}
+          {/* Top Actions: Crear Outfit (+ simple) & Kloe (icono grande centrado, sin borde ni texto) */}
           <div className="bg-[var(--card-bg)]/90 backdrop-blur-xl p-1.5 sm:p-2 rounded-2xl flex items-center gap-2 border border-black/[0.06] dark:border-white/[0.08] shadow-xs">
             <Link href="/create" className="flex-1">
               <motion.button 
@@ -641,7 +641,7 @@ export default function ClosetPage() {
                 transition={{ type: 'spring', stiffness: 500, damping: 24 }}
                 className="w-full py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl bg-[var(--foreground)] text-[var(--background)] font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 shadow-sm hover:opacity-95 transition-opacity cursor-pointer"
               >
-                <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--brand-pink)]" strokeWidth={2.2} />
+                <Plus className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--brand-pink)]" strokeWidth={2.5} />
                 <span>Crear Outfit</span>
               </motion.button>
             </Link>
@@ -650,12 +650,18 @@ export default function ClosetPage() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.94 }}
                 transition={{ type: 'spring', stiffness: 500, damping: 24 }}
-                className="w-full py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl bg-[var(--background-secondary)] text-[var(--foreground)] font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 border border-[var(--border-color)] hover:border-[var(--brand-pink)]/40 transition-all shadow-xs cursor-pointer group"
+                className="w-full py-2 sm:py-2.5 px-3 rounded-xl bg-[var(--background-secondary)] flex items-center justify-center hover:border-[var(--brand-pink)]/40 transition-all shadow-xs cursor-pointer group"
+                aria-label="Kloe"
               >
-                <div className="relative w-5 h-5 rounded-full overflow-hidden shrink-0 border border-black/10 dark:border-white/10">
-                  <Image src="/kloe-avatar-v2.png" alt="Kloe" fill className="object-cover" />
+                <div className="relative w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center">
+                  <Image 
+                    src="/kloe-avatar-v2.png" 
+                    alt="Kloe" 
+                    fill 
+                    className="object-contain group-hover:scale-105 transition-transform" 
+                    priority 
+                  />
                 </div>
-                <span>Kloe</span>
               </motion.div>
             </Link>
           </div>
@@ -1029,11 +1035,7 @@ export default function ClosetPage() {
                 className="h-12 min-w-[48px] px-0 md:px-5 rounded-full bg-[var(--brand-pink)] flex items-center justify-center gap-2 text-white shadow-lg hover:shadow-[0_0_20px_rgba(236,72,153,0.4)] transition-all cursor-pointer group"
                 aria-label={activeTab === 'items' ? 'Nueva Prenda' : activeTab === 'outfits' ? 'Nuevo Outfit' : 'Añadir outfit para hoy'}
               >
-                {activeTab === 'outfits' ? (
-                  <Sparkles className="w-5 h-5 flex-shrink-0" strokeWidth={2.2} />
-                ) : (
-                  <Plus className="w-5 h-5 flex-shrink-0" strokeWidth={2.5} />
-                )}
+                <Plus className="w-5 h-5 flex-shrink-0" strokeWidth={2.5} />
                 <span className="hidden md:block text-sm font-bold whitespace-nowrap pr-0.5">
                   {activeTab === 'items' ? 'Nueva Prenda' : activeTab === 'outfits' ? 'Nuevo Outfit' : 'Añadir outfit para hoy'}
                 </span>

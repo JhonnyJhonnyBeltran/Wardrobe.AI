@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
 export default function NotFoundPage() {
   const router = useRouter();
@@ -43,7 +43,7 @@ export default function NotFoundPage() {
 
         {/* 404 Badge */}
         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] text-xs font-extrabold uppercase tracking-wider mb-4 border border-[var(--brand-pink)]/20">
-          <Sparkles className="w-3.5 h-3.5" />
+          <ArrowRight className="w-3.5 h-3.5" />
           Error 404
         </span>
 

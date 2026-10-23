@@ -7,7 +7,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ChevronRight, ChevronLeft, Check, Sparkles } from 'lucide-react';
+import { X, ChevronRight, ChevronLeft, Check } from 'lucide-react';
 import { Button, Card } from '@/components';
 import { supabase } from '@/lib/supabase/client';
 import Image from 'next/image';
@@ -136,7 +136,7 @@ export default function StyleQuizModal({ isOpen, onClose, onComplete, required =
                         <div className="flex items-center justify-between mb-6 flex-shrink-0">
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[var(--brand-pink)] to-[var(--brand-pink-dark)] flex items-center justify-center">
-                                    <Sparkles className="w-5 h-5 text-white" />
+                                    <Check className="w-5 h-5 text-white" />
                                 </div>
                                 <div>
                                     <h2 className="text-xl font-bold text-[var(--foreground)]">

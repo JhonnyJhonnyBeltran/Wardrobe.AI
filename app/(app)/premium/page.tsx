@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Crown, Check, X, Sparkles, Loader2, ShieldCheck, Zap } from 'lucide-react';
+import { Crown, Check, X, Loader2, ShieldCheck, Zap } from 'lucide-react';
 import Link from 'next/link';
 import { LogoMark } from '@/components';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -207,7 +207,7 @@ export default function PremiumPage() {
                             </>
                         ) : (
                             <>
-                                <Sparkles className="w-5 h-5" />
+                                <Zap className="w-5 h-5" />
                                 <span>
                                     Desbloquear Klozet Premium ({selectedPlan === 'yearly' ? '24,99 €/año' : '2,99 €/mes'})
                                 </span>

@@ -3,7 +3,7 @@
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Sparkles, 
+  Palette, 
   Check, 
   ChevronRight, 
   ChevronLeft, 
@@ -25,7 +25,7 @@ import { useUser } from '@/store/userStore';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 const STEP_ICONS: Record<TourStepId, React.ElementType> = {
-  style_preferences: Sparkles,
+  style_preferences: Palette,
   avatar: Camera,
   upload_clothes: Plus,
   create_outfit: Layers,
@@ -120,7 +120,7 @@ export default function GuidedTourModal() {
   }, [showCelebration, hideCelebration]);
 
   const currentStep = TOUR_STEPS[currentStepIndex] || TOUR_STEPS[0];
-  const StepIcon = currentStep ? (STEP_ICONS[currentStep.id] || Sparkles) : Sparkles;
+  const StepIcon = currentStep ? (STEP_ICONS[currentStep.id] || Palette) : Palette;
   const isCurrentCompleted = currentStep ? completedSteps.includes(currentStep.id) : false;
   const isTourActive = hasStartedTour && !isDismissed && !isTourCompleted;
 

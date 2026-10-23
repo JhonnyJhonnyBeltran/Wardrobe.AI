@@ -7,7 +7,6 @@ import {
   ArrowLeft, 
   Layers, 
   Coffee, 
-  Sparkles, 
   Briefcase, 
   Crown, 
   PartyPopper, 
@@ -37,7 +36,7 @@ const getOccasionInfo = (occ?: string) => {
   if (!key || key === 'none' || key === 'null') return null;
   
   const map: Record<string, { label: string; icon: any }> = {
-    everyday: { label: 'Diario', icon: Sparkles },
+    everyday: { label: 'Diario', icon: Sun },
     casual: { label: 'Casual', icon: Coffee },
     streetwear: { label: 'Streetwear', icon: Flame },
     business: { label: 'Negocios', icon: Briefcase },

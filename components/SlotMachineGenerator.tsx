@@ -8,7 +8,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles } from 'lucide-react';
+import { Wand2 } from 'lucide-react';
 
 export interface SlotMachineItem {
     id: string;
@@ -123,7 +123,7 @@ export const SlotMachineGenerator: React.FC<SlotMachineGeneratorProps> = ({
                     transition={{ delay: 0.2, duration: 0.6, ease: [0.68, -0.55, 0.265, 1.55] }}
                     className="absolute top-4 right-4 z-20"
                 >
-                    <Sparkles className="w-6 h-6 text-[var(--brand-pink)] animate-pulse-glow" />
+                    <Wand2 className="w-6 h-6 text-[var(--brand-pink)]" />
                 </motion.div>
             )}
         </div>

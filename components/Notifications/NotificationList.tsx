@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Heart, Sparkles, Bell } from 'lucide-react';
+import { X, Heart, Bell } from 'lucide-react';
 import { useUser } from '@/store/userStore';
 import { useRealtimeStore } from '@/store/realtimeStore';
 import Image from 'next/image';
@@ -772,7 +772,7 @@ export default function NotificationList({ compact = false, onClose }: Notificat
                                         </Link>
                                     ) : (
                                         <div className="w-10 h-10 rounded-full bg-[var(--background-secondary)] flex items-center justify-center shrink-0 border border-[var(--border-color)]">
-                                            <Sparkles className="w-5 h-5 text-[var(--brand-pink)]" />
+                                            <Bell className="w-5 h-5 text-[var(--brand-pink)]" />
                                         </div>
                                     )}
                                     <div className="flex-1 text-sm min-w-0">

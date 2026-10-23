@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Sparkles, Zap, Star } from 'lucide-react';
+import { Zap, Star } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface PremiumGeneratorProps {
@@ -60,7 +60,7 @@ export function PremiumGenerator({ isVisible, onComplete }: PremiumGeneratorProp
                             transition={{ duration: 2, repeat: Infinity }}
                             className="absolute inset-0 bg-[var(--brand-pink)] blur-xl opacity-50 rounded-full"
                         />
-                        <Sparkles className="w-16 h-16 text-white relative z-10" />
+                        <Star className="w-16 h-16 text-white relative z-10" />
                     </div>
                 </div>
             </div>

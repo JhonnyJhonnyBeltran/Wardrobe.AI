@@ -9,7 +9,7 @@ import {
   ChevronDown, 
   FileText, 
   ShieldCheck, 
-  Sparkles
+  Star
 } from 'lucide-react';
 import { useUser } from '@/store';
 import { triggerHaptic } from '@/lib/haptic';
@@ -749,7 +749,7 @@ export default function LandingPage() {
                     className="absolute -bottom-2 sm:bottom-6 right-0 sm:right-2 z-20 px-3.5 py-2 rounded-2xl rounded-tr-xs bg-[var(--brand-pink,#FF66C4)] text-white shadow-md max-w-[180px] sm:max-w-[220px]"
                   >
                     <div className="flex items-center gap-1 mb-0.5">
-                      <Sparkles className="w-3 h-3 text-white" />
+                      <Star className="w-3 h-3 text-white" />
                       <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider">Kloe</span>
                     </div>
                     <p className="text-[10px] sm:text-xs text-white/95 font-medium leading-snug">
@@ -855,7 +855,7 @@ export default function LandingPage() {
                       className="object-cover" 
                     />
                     <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2.5 py-0.5 sm:py-1 rounded-full bg-white/95 dark:bg-zinc-800/95 backdrop-blur-xl border border-black/[0.08] dark:border-white/[0.08] text-[8px] sm:text-[10px] font-semibold text-zinc-900 dark:text-zinc-100 whitespace-nowrap shadow-md flex items-center gap-1">
-                      <Sparkles className="w-3 h-3 text-[var(--brand-pink,#FF66C4)]" />
+                      <Star className="w-3 h-3 text-[var(--brand-pink,#FF66C4)]" />
                       <span>Lienzo de Hoy</span>
                     </div>
                   </motion.div>

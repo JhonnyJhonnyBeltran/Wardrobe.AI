@@ -4,7 +4,7 @@ import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, Upload, X, Camera, Sparkles } from 'lucide-react';
+import { ChevronLeft, Upload, X, Camera } from 'lucide-react';
 import { Button, LogoMark, Card } from '@/components';
 import { useUser } from '@/store/userStore';
 
@@ -139,7 +139,7 @@ export default function CreatePostPage() {
 
                             <div className="mb-8">
                                 <h3 className="text-sm font-bold text-[var(--foreground-secondary)] mb-3 flex items-center gap-2">
-                                    <Sparkles className="w-4 h-4 text-[var(--brand-pink)]" />
+                                    <Camera className="w-4 h-4 text-[var(--brand-pink)]" />
                                     Añadir etiquetas
                                 </h3>
                                 <div className="flex flex-wrap gap-2">

@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ArrowLeft, Clock, Calendar, Share2, Sparkles, ArrowRight, Bookmark } from 'lucide-react';
+import { ArrowLeft, Clock, Calendar, Share2, ArrowRight, Bookmark } from 'lucide-react';
 import { ARTICLES_DATA, Article } from '@/lib/trends/articlesData';
 import PublicHeader from '@/components/public/PublicHeader';
 import PublicFooter from '@/components/public/PublicFooter';
@@ -226,7 +226,7 @@ export default async function ArticleDetailPage({ params }: PageProps) {
               {section.keyTakeaways && section.keyTakeaways.length > 0 && (
                 <div className="my-5 p-5 rounded-2xl bg-[var(--card-bg)] border border-[var(--border-color)] shadow-xs">
                   <p className="text-xs font-bold uppercase tracking-wider text-[var(--brand-pink)] mb-2.5 flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5" />
+                    <Bookmark className="w-3.5 h-3.5" />
                     <span>Puntos Clave</span>
                   </p>
                   <ul className="space-y-1.5 text-xs sm:text-sm text-[var(--foreground-secondary)]">

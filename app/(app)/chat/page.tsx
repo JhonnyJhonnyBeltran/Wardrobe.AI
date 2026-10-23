@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Bot, Sparkles } from 'lucide-react';
+import { Bot } from 'lucide-react';
 import { LogoMark } from '@/components';
 
 export default function ChatPage() {
@@ -29,7 +29,7 @@ export default function ChatPage() {
             transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
             className="absolute -top-2 -right-2 bg-[var(--brand-purple)] text-white p-1.5 rounded-full shadow-lg"
           >
-            <Sparkles className="w-4 h-4" />
+            <Bot className="w-4 h-4" />
           </motion.div>
         </motion.div>
 

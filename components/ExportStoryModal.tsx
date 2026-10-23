@@ -8,9 +8,9 @@ import {
   Download, 
   Share2, 
   Instagram, 
-  Sparkles, 
   Check, 
   Layers,
+  Camera,
   Smartphone,
   Square
 } from 'lucide-react';
@@ -329,7 +329,7 @@ export default function ExportStoryModal({
                   </div>
                 ) : (
                   <div className="py-12 text-center">
-                    <Sparkles className="w-8 h-8 text-[var(--brand-pink)] mx-auto mb-2 opacity-70" />
+                    <Camera className="w-8 h-8 text-[var(--brand-pink)] mx-auto mb-2 opacity-70" />
                     <p className={`text-xs ${themeStyles.textSecondary}`}>Outfit sin prendas asociadas</p>
                   </div>
                 )}
@@ -350,7 +350,7 @@ export default function ExportStoryModal({
               {/* Bottom Elegant Watermark */}
               <div className="pt-2 border-t border-black/5 dark:border-white/10 flex items-center justify-between text-[8px] sm:text-[9px]">
                 <div className="flex items-center gap-1 text-[var(--brand-pink)] font-bold">
-                  <Sparkles className="w-3 h-3" />
+                  <Camera className="w-3 h-3" />
                   <span className="tracking-widest uppercase">Curated on Klozet</span>
                 </div>
                 <span className={`${themeStyles.textSecondary} font-mono tracking-wider`}>

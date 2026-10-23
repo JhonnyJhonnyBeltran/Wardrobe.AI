@@ -7,7 +7,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Palette, Ruler, Shirt, Sparkles, Save, Check } from 'lucide-react';
+import { ArrowLeft, Palette, Ruler, Shirt, Save, Check } from 'lucide-react';
 import { Card, Button } from '@/components';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/store/userStore';
@@ -176,7 +176,7 @@ export default function PreferencesPage() {
                     <Card className="p-5">
                         <div className="flex items-center gap-3 mb-4">
                             <div className="w-10 h-10 rounded-xl bg-[var(--brand-pink)]/10 flex items-center justify-center">
-                                <Sparkles className="w-5 h-5 text-[var(--brand-pink)]" />
+                                <Palette className="w-5 h-5 text-[var(--brand-pink)]" />
                             </div>
                             <div>
                                 <div className="font-medium text-[var(--foreground)]">Tu estilo de moda</div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useRef, useCallback, Fragment } from 'react';
-import { Search as SearchIcon, X, Users, Image as ImageIcon, UserPlus, Check, Clock, Trash2, Sparkles } from 'lucide-react';
+import { Search as SearchIcon, X, Users, Image as ImageIcon, UserPlus, Check, Clock, Trash2, Star } from 'lucide-react';
 import PostCard, { type Post } from '@/components/Feed/PostCard';
 import SponsoredAdCard from '@/components/Feed/SponsoredAdCard';
 import { EmptyState, InfiniteScrollFooter, PullToRefresh, SkeletonSearch, SkeletonUserList } from '@/components';
@@ -767,7 +767,7 @@ export default function SearchPage() {
                   }`}
                 >
                   {chip.isHistory && <Clock className="w-3 h-3 text-[var(--brand-pink)] shrink-0" />}
-                  {chip.isPreferred && !chip.isHistory && <Sparkles className="w-3 h-3 text-amber-400 shrink-0" />}
+                  {chip.isPreferred && !chip.isHistory && <Star className="w-3 h-3 text-amber-400 shrink-0" />}
                   <span>{chip.text}</span>
                 </button>
               );

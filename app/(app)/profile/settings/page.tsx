@@ -30,7 +30,6 @@ import {
     Trash2,
     Edit,
     Crown,
-    Sparkles
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ChevronRight, HelpCircle } from 'lucide-react';

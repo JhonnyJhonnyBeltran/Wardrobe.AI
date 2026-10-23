@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Plus, Check, X } from 'lucide-react';
+import { Heart, Plus, Check, X } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
 import { useUser } from '@/store/userStore';
 import { haptics } from '@/lib/haptic';
@@ -151,7 +151,7 @@ export default function DiscoveredStyleBanner() {
                 <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-3.5 min-w-0">
                         <div className="w-10 h-10 rounded-2xl bg-[var(--brand-pink)]/10 dark:bg-[var(--brand-pink)]/20 border border-[var(--brand-pink)]/20 flex items-center justify-center shrink-0 text-[var(--brand-pink)]">
-                            <Sparkles className="w-5 h-5" />
+                            <Heart className="w-5 h-5" />
                         </div>
                         <div className="min-w-0">
                             <div className="flex items-center gap-1.5 mb-0.5">

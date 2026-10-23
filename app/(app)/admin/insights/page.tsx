@@ -14,7 +14,6 @@ import {
   ShieldCheck, 
   Smartphone, 
   Globe, 
-  Sparkles, 
   Bot, 
   Trash2, 
   Filter,
@@ -300,7 +299,7 @@ export default function AdminInsightsDashboard() {
                             }`}
                           >
                             {isBug && <AlertTriangle className="w-3 h-3" />}
-                            {item.category === 'feature' && <Sparkles className="w-3 h-3" />}
+                            {item.category === 'feature' && <Zap className="w-3 h-3" />}
                             {item.category === 'ai' && <Bot className="w-3 h-3" />}
                             {item.category}
                           </span>
@@ -444,7 +443,7 @@ export default function AdminInsightsDashboard() {
 
             <div className="p-6 rounded-3xl bg-zinc-900/80 border border-zinc-800">
               <h3 className="text-base font-bold text-white mb-4 flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-[#ff2d78]" />
+                <Zap className="w-5 h-5 text-[#ff2d78]" />
                 <span>Motor de IA y Pasarela</span>
               </h3>
               <div className="space-y-3 text-xs">

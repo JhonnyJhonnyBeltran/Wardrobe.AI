@@ -7,7 +7,7 @@
 
 import React, { memo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Lock, Sparkles, Briefcase, Heart, Zap, Flower2, PartyPopper, Circle, Snowflake, ShoppingBag, Layers, Globe, Edit2, Trash2, Send } from 'lucide-react';
+import { Lock, Sun, Star, Crown, Briefcase, Heart, Zap, Flower2, PartyPopper, Circle, Snowflake, ShoppingBag, Layers, Globe, Edit2, Trash2, Send } from 'lucide-react';
 import type { Outfit } from '@/types/outfit';
 import { resolveImageUrl } from '@/lib/imageUtils';
 
@@ -30,15 +30,15 @@ const styleConfig: Record<string, { icon: React.ReactNode; gradient: string }> =
     'sport': { icon: <Zap className="w-3 h-3" />, gradient: 'from-orange-400 to-red-500' },
     'date': { icon: <Heart className="w-3 h-3" />, gradient: 'from-rose-400 to-pink-500' },
     'business': { icon: <Briefcase className="w-3 h-3" />, gradient: 'from-slate-500 to-gray-700' },
-    'everyday': { icon: <Sparkles className="w-3 h-3" />, gradient: 'from-amber-400 to-orange-500' },
+    'everyday': { icon: <Sun className="w-3 h-3" />, gradient: 'from-amber-400 to-orange-500' },
     // Fallbacks for legacy mock styles if needed
-    'Quiet Luxury': { icon: <Sparkles className="w-3 h-3" />, gradient: 'from-stone-400 to-stone-600' },
+    'Quiet Luxury': { icon: <Crown className="w-3 h-3" />, gradient: 'from-stone-400 to-stone-600' },
     'Cherry Red Statement': { icon: <Heart className="w-3 h-3" />, gradient: 'from-red-400 to-rose-600' },
     'Street Chic': { icon: <Zap className="w-3 h-3" />, gradient: 'from-violet-400 to-purple-500' },
     'Business Minimal': { icon: <Briefcase className="w-3 h-3" />, gradient: 'from-slate-500 to-gray-700' },
     'Weekend Casual': { icon: <Circle className="w-3 h-3" />, gradient: 'from-blue-400 to-indigo-500' },
     'Date Night': { icon: <Heart className="w-3 h-3" />, gradient: 'from-rose-400 to-pink-500' },
-    'It-Girl Approved': { icon: <Sparkles className="w-3 h-3" />, gradient: 'from-amber-400 to-orange-500' },
+    'It-Girl Approved': { icon: <Star className="w-3 h-3" />, gradient: 'from-amber-400 to-orange-500' },
     'Winter Layers': { icon: <Snowflake className="w-3 h-3" />, gradient: 'from-sky-400 to-blue-500' },
     'Boho Weekend': { icon: <Flower2 className="w-3 h-3" />, gradient: 'from-amber-300 to-yellow-500' },
     'Party Ready': { icon: <PartyPopper className="w-3 h-3" />, gradient: 'from-violet-400 to-purple-500' },

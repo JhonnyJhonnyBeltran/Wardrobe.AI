@@ -23,7 +23,6 @@ import {
     Flower2, 
     Snowflake, 
     Layers, 
-    Sparkles, 
     Trash2, 
     Edit2, 
     Lock,
@@ -55,7 +54,7 @@ interface OutfitDetailModalProps {
 }
 
 const styleConfig: Record<string, { icon: React.ReactNode; label: string }> = {
-    'everyday': { icon: <Sparkles className="w-3.5 h-3.5" />, label: 'Diario' },
+    'everyday': { icon: <Sun className="w-3.5 h-3.5" />, label: 'Diario' },
     'casual': { icon: <Coffee className="w-3.5 h-3.5" />, label: 'Casual' },
     'streetwear': { icon: <Flame className="w-3.5 h-3.5" />, label: 'Streetwear' },
     'business': { icon: <Briefcase className="w-3.5 h-3.5" />, label: 'Negocios' },

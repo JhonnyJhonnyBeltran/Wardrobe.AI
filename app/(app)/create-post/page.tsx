@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Shirt, Layers, Camera, Check, Plus, Image as ImageIcon, X, ChevronRight, Edit2, Search, Heart, Sparkles, Tag } from 'lucide-react';
+import { ArrowLeft, Shirt, Layers, Camera, Check, Plus, Image as ImageIcon, X, ChevronRight, Edit2, Search, Heart, Tag } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';
 import Image from 'next/image';

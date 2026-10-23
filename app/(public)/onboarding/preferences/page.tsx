@@ -10,7 +10,7 @@
 import { useState, useEffect, useMemo, Suspense, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ChevronRight, ChevronLeft, Check, Minus, Plus, X, User, AtSign, Loader2, Sparkles } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Check, Minus, Plus, X, User, AtSign, Loader2 } from 'lucide-react';
 import { Button, LogoMark } from '@/components';
 import { useUser } from '@/store/userStore';
 import { useSocial } from '@/lib/hooks/useSocial';

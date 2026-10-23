@@ -3,7 +3,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Sparkles, 
   Check, 
   Zap, 
   ShieldCheck, 
@@ -281,7 +280,7 @@ export default function KloeProModal({ isOpen, onClose, redirectBackToCloset = f
               <div className="flex items-center justify-between p-3.5 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)]">
                 <div className="flex items-center gap-2.5">
                   <div className="w-9 h-9 rounded-xl bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] flex items-center justify-center shrink-0">
-                    <Sparkles className="w-4 h-4" />
+                    <Zap className="w-4 h-4" />
                   </div>
                   <div>
                     <h4 className="text-xs font-bold text-[var(--foreground)]">

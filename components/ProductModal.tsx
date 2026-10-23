@@ -7,7 +7,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ExternalLink, ShoppingBag, Shirt, Tag, Palette, Ruler, Layers, CalendarDays, Sparkles, Heart, Edit2, Trash2 } from 'lucide-react';
+import { X, ExternalLink, ShoppingBag, Shirt, Tag, Palette, Ruler, Layers, CalendarDays, Heart, Edit2, Trash2 } from 'lucide-react';
 import { OutfitItem } from '@/lib/fashion/outfitGenerator';
 import { useBodyScrollLock } from '@/lib/hooks';
 
@@ -165,7 +165,7 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
                                         transition={{ delay: 0.3, type: 'spring' }}
                                         className="absolute top-4 left-4 px-3 py-1.5 bg-[var(--brand-pink)] rounded-full flex items-center gap-1.5 shadow-lg"
                                     >
-                                        <Sparkles className="w-4 h-4 text-white" />
+                                        <Tag className="w-4 h-4 text-white" />
                                         <span className="text-white text-xs font-bold leading-none">Tendencia</span>
                                     </motion.div>
                                 )}

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Send, AlertTriangle, Sparkles, Bot, MessageSquare, CheckCircle2, Loader2, HelpCircle } from 'lucide-react';
+import { X, Send, AlertTriangle, Bot, MessageSquare, CheckCircle2, Loader2, HelpCircle } from 'lucide-react';
 import { useUser } from '@/store/userStore';
 import { toast } from 'sonner';
 
@@ -15,7 +15,7 @@ type FeedbackCategory = 'bug' | 'feature' | 'ai' | 'other';
 
 const CATEGORIES: { id: FeedbackCategory; label: string; icon: React.ElementType }[] = [
   { id: 'bug', label: 'Error o Bug', icon: AlertTriangle },
-  { id: 'feature', label: 'Sugerencia', icon: Sparkles },
+  { id: 'feature', label: 'Sugerencia', icon: HelpCircle },
   { id: 'ai', label: 'IA / Kloe', icon: Bot },
   { id: 'other', label: 'Otro', icon: MessageSquare },
 ];
