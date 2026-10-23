@@ -2763,3 +2763,20 @@ Ajustes solicitados tras la revisión del modal de compartir post:
    - Inhabilitación temporal de `scrollSnapType` durante la animación programada (`style.scrollSnapType = 'none'`) para evitar que el navegador anule la interpolación, restableciéndola a `x mandatory` al concluir.
    - Bandera `isAnimatingScrollRef` que silencia eventos de scroll redundantes durante la animación.
    - El deslizamiento táctil nativo en móvil permanece intacto al 100%, mientras que en ordenador la navegación por botones ahora desliza con suavidad de 60 FPS.
+
+
+---
+
+## 170. Eliminación de Acciones Hover en Tarjeta de Outfit (`components/OutfitCard.tsx`) (2026-10-23)
+
+### Contexto:
+A petición expresa del usuario:
+1. En la pantalla de Armario / Klozet, eliminar todos los iconos que aparecen al hacer hover sobre el lienzo de un outfit (hacer privado/público, editar, crear publicación, eliminar).
+2. Mantener únicamente el icono de favorito (`Heart`) en la esquina superior derecha.
+
+### Modificaciones Realizadas:
+1. **Limpieza del Lienzo de Outfit (`components/OutfitCard.tsx`)**:
+   - Eliminado el contenedor flotante `hidden md:flex gap-2 opacity-0 group-hover:opacity-100` que mostraba los botones de visibilidad, edición, publicación y borrado.
+   - Purgadas las importaciones no utilizadas (`Globe`, `Edit2`, `Trash2`, `Send`).
+   - Se conserva el botón de favoritos (`Heart`) y el indicador de privacidad (`Lock`) en la esquina superior derecha.
+   - La gestión completa de edición, borrado, visibilidad y exportación permanece accesible al pulsar sobre la tarjeta mediante `OutfitDetailModal`.

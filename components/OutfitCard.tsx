@@ -7,7 +7,7 @@
 
 import React, { memo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Lock, Sun, Star, Crown, Briefcase, Heart, Zap, Flower2, PartyPopper, Circle, Snowflake, ShoppingBag, Layers, Globe, Edit2, Trash2, Send } from 'lucide-react';
+import { Lock, Sun, Star, Crown, Briefcase, Heart, Zap, Flower2, PartyPopper, Circle, Snowflake, ShoppingBag, Layers } from 'lucide-react';
 import type { Outfit } from '@/types/outfit';
 import { resolveImageUrl } from '@/lib/imageUtils';
 
@@ -203,66 +203,6 @@ const OutfitCard = ({ outfit, isLocked = false, onClick, onEdit, onDelete, onSha
                     </div>
                 )}
             </div>
-
-            {/* Actions Overlay (Visible on Desktop Hover Only) */}
-            {
-                !isLocked && (
-                    <div className="absolute top-2 left-2 hidden md:flex gap-2 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-200 z-10 flex-row">
-                        {onToggleVisibility && !(outfit.posts && outfit.posts.length > 0) && (
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onToggleVisibility(outfit);
-                                }}
-                                className="p-2 bg-[var(--card-bg)]/90 backdrop-blur-sm border border-[var(--border-color)] rounded-full shadow-sm hover:bg-[var(--background-secondary)] text-[var(--foreground-secondary)] transition-colors"
-                                title={outfit.is_public ? "Hacer privado" : "Hacer público"}
-                            >
-                                {outfit.is_public ? (
-                                    <Globe className="w-4 h-4 text-[var(--brand-pink)]" />
-                                ) : (
-                                    <Lock className="w-4 h-4 text-[var(--foreground-secondary)]" />
-                                )}
-                            </button>
-                        )}
-                        {onEdit && (
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onEdit(outfit);
-                                }}
-                                className="p-2 bg-[var(--card-bg)]/90 backdrop-blur-sm border border-[var(--border-color)] rounded-full shadow-sm hover:bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:text-[var(--foreground)] transition-colors"
-                                title="Editar"
-                            >
-                                <Edit2 className="w-4 h-4" />
-                            </button>
-                        )}
-                        {onShare && (
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onShare(outfit);
-                                }}
-                                className="p-2 bg-[var(--card-bg)]/90 backdrop-blur-sm border border-[var(--border-color)] rounded-full shadow-sm hover:bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] transition-colors"
-                                title="Crear Publicación"
-                            >
-                                <Send className="w-4 h-4" />
-                            </button>
-                        )}
-                        {onDelete && (
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    onDelete(outfit.id);
-                                }}
-                                className="p-2 bg-[var(--card-bg)]/90 backdrop-blur-sm border border-[var(--border-color)] rounded-full shadow-sm hover:bg-red-500/10 text-red-500 transition-colors"
-                                title="Eliminar"
-                            >
-                                <Trash2 className="w-4 h-4" />
-                            </button>
-                        )}
-                    </div>
-                )
-            }
 
             {/* Shop indicator */}
             {
