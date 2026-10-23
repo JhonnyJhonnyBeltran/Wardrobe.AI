@@ -2528,3 +2528,28 @@ El modal de detalle de outfit presentaba problemas de jerarquía visual y maquet
    - Renderizado completo de `<ExportStoryModal>` con temas, formatos y descarga.
 6. **Validación**:
    - `npm run build` verificado exitosamente (0 errores en las 70 rutas).
+
+---
+
+## 159. Optimización de Modal de Outfit: Canvas Máximo, Retirada de Notch y Prendas, Icono Candado (`components/OutfitDetailModal.tsx`) (2026-10-23)
+
+### Contexto:
+Ajustes solicitados por el usuario para simplificar y dar protagonismo absoluto al look generado:
+1. Eliminar la sección inferior de "Prendas de este look".
+2. Reemplazar el icono de público/privado: candado abierto (`LockOpen`) para público y candado cerrado (`Lock`) para privado.
+3. Eliminar el notch/drag handle superior móvil y bordes divisores intrusivos.
+4. Alargar y expandir al máximo el canvas del outfit para que las prendas ocupen todo el protagonismo vertical.
+
+### Modificaciones (`components/OutfitDetailModal.tsx`):
+1. **Lienzo Alargado al Máximo (`flex-1 min-h-0`)**:
+   - En móvil, el contenedor del modal pasa a ocupar `h-[82vh]` con el canvas como `flex-1 min-h-0`, expandiéndose para mostrar todas las prendas en gran escala sin cortes ni scroll innecesario.
+   - En escritorio mantiene `md:w-[58%] md:h-full` para armonía horizontal.
+2. **Eliminación del Notch y Borde Superior**:
+   - Purgado el drag handle superior (`w-10 h-1`). El modal ahora tiene un remate limpio y continuo (`rounded-[32px] md:rounded-[36px]`).
+3. **Eliminación de la Sección "Prendas de este look"**:
+   - Retirada la cuadrícula de tarjetas de artículos del modal. El pie inferior ahora es compacto (`shrink-0`), albergando únicamente el título/estilo, fecha, métricas y los botones de acción rápida.
+4. **Iconografía de Privacidad (Candados)**:
+   - Estado público: icono `LockOpen` (candado abierto) en la etiqueta de estado y en el botón de alternar visibilidad.
+   - Estado privado: icono `Lock` (candado cerrado).
+5. **Funcionalidades Mantenidas**:
+   - Favoritos con un toque (`Heart`), edición en lienzo (`/create?outfit_id=...`), publicación en el feed (`/post?outfit_id=...`), exportación a Instagram Story (`ExportStoryModal`) y borrado con confirmación integrada.

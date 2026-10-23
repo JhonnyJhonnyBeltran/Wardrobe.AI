@@ -1,14 +1,12 @@
 'use client';
 
 /**
- * OutfitDetailModal - Apple-Crafted Outfit Detail View
- * Diseñado según los estándares HIG y el manual de marca de Klozet:
- * - Cabecera con drag handle iOS y botón de cierre en vidrio translúcido.
- * - Staging interactivo de prendas con ambient stage lighting.
- * - Botonera de acciones jerarquizada: Primaria "Editar en lienzo" (dark pill) + "Publicar" (pink accent),
- *   más herramientas compactas de 1 toque (Story, Favorito, Visibilidad pública/privada y Eliminar).
- * - Desglose táctil de prendas visible en móvil y escritorio con tarjetas squircle y apertura de detalle.
- * - Soporte integrado y funcional para ExportStoryModal (Instagram Stories).
+ * OutfitDetailModal - Maximized Canvas Outfit Detail View
+ * - Canvas alargado al máximo para visualización completa del look.
+ * - Sin notch ni borde superior intrusivo.
+ * - Iconos de visibilidad actualizados: LockOpen (candado abierto para público) y Lock (candado cerrado para privado).
+ * - Sección "Prendas de este look" eliminada según solicitud.
+ * - Acciones claras: Editar en lienzo, Publicar en feed, Instagram Story, Alternar candado y Eliminar.
  */
 
 import React, { useState, useEffect } from 'react';
@@ -28,17 +26,14 @@ import {
     Sparkles, 
     Trash2, 
     Edit2, 
-    Eye, 
     Lock,
-    Globe,
+    LockOpen,
     Coffee,
     Crown,
     Flame,
     Palmtree,
     Moon,
     Sun,
-    Tag,
-    ChevronRight,
     ExternalLink
 } from 'lucide-react';
 import Link from 'next/link';
@@ -110,8 +105,6 @@ export function OutfitDetailModal({
         item.brand || item.clothing_items?.brand || item.clothing_item?.brand;
     const getItemCategory = (item: any) => 
         item.category || item.clothing_items?.category || item.clothing_item?.category;
-    const getItemColor = (item: any) => 
-        item.color_hex || item.colorHex || item.color || item.clothing_items?.color_hex || item.clothing_item?.color_hex;
 
     const handleItemClick = (clothing: any) => {
         triggerHaptic('light');
@@ -140,9 +133,9 @@ export function OutfitDetailModal({
                     {/* Modal Content Wrapper */}
                     <motion.div
                         key="outfit-wrapper"
-                        initial={{ opacity: 0, y: 40 }}
+                        initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 40 }}
+                        exit={{ opacity: 0, y: 30 }}
                         transition={{ 
                             type: 'spring',
                             damping: 28,
@@ -151,14 +144,9 @@ export function OutfitDetailModal({
                         className="fixed inset-0 z-[6020] flex items-end md:items-center justify-center px-3 sm:px-6 pb-[calc(var(--tabbar-height)+8px)] md:pb-0 pointer-events-none"
                     >
                         <motion.div
-                            className="w-full max-w-md md:max-w-[1040px] max-h-[calc(100dvh-var(--tabbar-height)-20px)] md:h-[84vh] bg-[var(--background)] rounded-[28px] md:rounded-[36px] flex flex-col md:flex-row overflow-hidden shadow-2xl relative border border-[var(--border-color)] pointer-events-auto"
+                            className="w-full max-w-md md:max-w-[1040px] h-[82vh] max-h-[calc(100dvh-var(--tabbar-height)-16px)] md:h-[84vh] bg-[var(--background)] rounded-[32px] md:rounded-[36px] flex flex-col md:flex-row overflow-hidden shadow-2xl relative border border-[var(--border-color)] pointer-events-auto"
                             onClick={(e) => e.stopPropagation()}
                         >
-                            {/* iOS Drag Handle (Mobile only) */}
-                            <div className="md:hidden pt-2.5 pb-1 flex justify-center w-full z-30 shrink-0">
-                                <div className="w-10 h-1 rounded-full bg-zinc-300 dark:bg-zinc-700" />
-                            </div>
-
                             {/* Top Right Controls (Favorite + Close) */}
                             <div className="absolute top-3 right-3 md:top-4 md:right-4 z-30 flex items-center gap-2">
                                 {onToggleFavorite && (
@@ -191,8 +179,8 @@ export function OutfitDetailModal({
                                 </button>
                             </div>
 
-                            {/* Left Column (Desktop) / Top Canvas Stage (Mobile) */}
-                            <div className="relative w-full h-[36vh] min-h-[220px] max-h-[300px] md:min-h-0 md:max-h-none md:h-full md:w-[58%] shrink-0 bg-gradient-to-b from-[#f9fafb] to-[#f3f4f6] dark:from-[#131316] dark:to-[#0c0c0e] z-0 flex flex-col items-center justify-center md:border-r border-b md:border-b-0 border-[var(--border-color)] overflow-hidden">
+                            {/* Maximized Canvas Stage (Left Column in Desktop / Expanded Full-Flex in Mobile) */}
+                            <div className="relative w-full flex-1 min-h-0 md:h-full md:w-[58%] shrink bg-gradient-to-b from-[#f9fafb] to-[#f3f4f6] dark:from-[#131316] dark:to-[#0c0c0e] z-0 flex flex-col items-center justify-center md:border-r border-[var(--border-color)] overflow-hidden">
                                 <div className="absolute inset-0 w-full h-full">
                                     <InteractiveOutfitViewer
                                         outfit={outfit}
@@ -210,10 +198,10 @@ export function OutfitDetailModal({
                                 </div>
                             </div>
 
-                            {/* Right Column (Desktop) / Scrollable Bottom Half (Mobile) */}
-                            <div className="relative z-10 w-full flex-1 flex flex-col bg-[var(--background)] overflow-y-auto custom-scrollbar p-4 sm:p-5 md:p-6 gap-4">
-                                {/* 1. Title & Metadata */}
-                                <div className="flex flex-col gap-1.5">
+                            {/* Bottom Info Section (Clean & Compact) */}
+                            <div className="relative z-10 w-full shrink-0 md:flex-1 md:shrink flex flex-col bg-[var(--background)] p-4 sm:p-5 md:p-6 gap-3 border-t border-[var(--border-color)]/60 md:border-t-0 md:overflow-y-auto">
+                                {/* Title & Metadata Tags */}
+                                <div className="flex flex-col gap-1">
                                     <div className="flex items-center gap-1.5 flex-wrap">
                                         {outfit.occasion && config && (
                                             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-black/5 dark:border-white/5">
@@ -228,7 +216,7 @@ export function OutfitDetailModal({
                                         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-black/5 dark:border-white/5">
                                             {outfit.is_public ? (
                                                 <>
-                                                    <Globe className="w-3 h-3 text-[var(--brand-pink,#FF66C4)]" />
+                                                    <LockOpen className="w-3 h-3 text-[var(--brand-pink,#FF66C4)]" />
                                                     Público
                                                 </>
                                             ) : (
@@ -239,13 +227,13 @@ export function OutfitDetailModal({
                                             )}
                                         </span>
                                     </div>
-                                    <h2 className="text-xl md:text-2xl font-bold text-[var(--foreground)] tracking-tight leading-tight mt-1">
+                                    <h2 className="text-xl md:text-2xl font-bold text-[var(--foreground)] tracking-tight leading-tight mt-0.5">
                                         {outfit.name || 'Outfit sin título'}
                                     </h2>
                                 </div>
 
-                                {/* 2. Action Hierarchy (Main CTAs + Tool Bar) */}
-                                <div className="flex flex-col gap-2 pt-0.5">
+                                {/* Action Hierarchy (Editar + Publicar + Story + Candado + Eliminar) */}
+                                <div className="flex flex-col gap-2">
                                     {/* Primary Row: Editar en lienzo + Publicar */}
                                     <div className="flex items-center gap-2.5">
                                         <Link
@@ -277,7 +265,7 @@ export function OutfitDetailModal({
                                         </Link>
                                     </div>
 
-                                    {/* Secondary Row: Story (Instagram) + Visibilidad + Eliminar */}
+                                    {/* Secondary Row: Story (Instagram) + Visibilidad (Candado Abierto/Cerrado) + Eliminar */}
                                     <div className="flex items-center gap-2">
                                         <button
                                             type="button"
@@ -300,18 +288,18 @@ export function OutfitDetailModal({
                                                     triggerHaptic('light');
                                                     onToggleVisibility(outfit);
                                                 }}
-                                                className="h-9 px-3 rounded-xl bg-zinc-100 dark:bg-zinc-850 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-200 border border-black/5 dark:border-white/5 font-medium text-xs flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all cursor-pointer"
-                                                title={outfit.is_public ? 'Hacer privado' : 'Hacer público'}
+                                                className="h-9 px-3.5 rounded-xl bg-zinc-100 dark:bg-zinc-850 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-200 border border-black/5 dark:border-white/5 font-semibold text-xs flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all cursor-pointer"
+                                                title={outfit.is_public ? 'Hacer privado (cerrar candado)' : 'Hacer público (abrir candado)'}
                                             >
                                                 {outfit.is_public ? (
                                                     <>
-                                                        <Globe className="w-3.5 h-3.5 text-[var(--brand-pink,#FF66C4)] shrink-0" />
-                                                        <span className="hidden sm:inline">Público</span>
+                                                        <LockOpen className="w-3.5 h-3.5 text-[var(--brand-pink,#FF66C4)] shrink-0" />
+                                                        <span className="text-xs">Público</span>
                                                     </>
                                                 ) : (
                                                     <>
                                                         <Lock className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                                                        <span className="hidden sm:inline">Privado</span>
+                                                        <span className="text-xs">Privado</span>
                                                     </>
                                                 )}
                                             </button>
@@ -331,74 +319,6 @@ export function OutfitDetailModal({
                                                 <span className="hidden sm:inline">Eliminar</span>
                                             </button>
                                         )}
-                                    </div>
-                                </div>
-
-                                {/* 3. Garments Breakdown (Prendas de este look - Visible en Móvil y Desktop) */}
-                                <div className="flex flex-col gap-2.5 pt-1 pb-2">
-                                    <div className="flex items-center justify-between">
-                                        <h3 className="font-bold text-sm text-[var(--foreground)] tracking-tight">
-                                            Prendas de este look
-                                        </h3>
-                                        <span className="text-[11px] text-zinc-400 dark:text-zinc-500">
-                                            {items.length} {items.length === 1 ? 'artículo' : 'artículos'}
-                                        </span>
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-2">
-                                        {items.map((item: any, idx: number) => {
-                                            const clothing = item.clothing_items || item.clothing_item || item;
-                                            const img = getItemImage(item);
-                                            if (!clothing || (!img && !clothing.name)) return null;
-
-                                            const name = getItemName(item) || 'Prenda';
-                                            const brand = getItemBrand(item) || 'Sin marca';
-                                            const color = getItemColor(item);
-                                            const category = getItemCategory(item);
-
-                                            return (
-                                                <motion.div
-                                                    key={clothing.id || idx}
-                                                    whileHover={{ scale: 1.02 }}
-                                                    whileTap={{ scale: 0.98 }}
-                                                    onClick={() => handleItemClick(clothing)}
-                                                    className="flex items-center gap-2 p-2 rounded-2xl bg-zinc-50 dark:bg-zinc-900/60 border border-black/5 dark:border-white/5 hover:border-black/10 dark:hover:border-white/10 transition-all cursor-pointer group"
-                                                >
-                                                    <div className="w-11 h-11 rounded-xl bg-white dark:bg-zinc-800/80 p-1 flex items-center justify-center shrink-0 overflow-hidden relative shadow-2xs">
-                                                        {img ? (
-                                                            <Image
-                                                                src={img}
-                                                                alt={name}
-                                                                width={44}
-                                                                height={44}
-                                                                className="object-contain w-full h-full group-hover:scale-105 transition-transform duration-200"
-                                                            />
-                                                        ) : (
-                                                            <div
-                                                                className="w-full h-full rounded-lg"
-                                                                style={{ backgroundColor: color || '#ccc' }}
-                                                            />
-                                                        )}
-                                                    </div>
-
-                                                    <div className="flex flex-col min-w-0 flex-1">
-                                                        <p className="text-xs font-bold text-[var(--foreground)] truncate leading-tight group-hover:text-[var(--brand-pink,#FF66C4)] transition-colors">
-                                                            {name}
-                                                        </p>
-                                                        <p className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">
-                                                            {brand}
-                                                        </p>
-                                                        {category && (
-                                                            <span className="text-[9px] uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mt-0.5">
-                                                                {category}
-                                                            </span>
-                                                        )}
-                                                    </div>
-
-                                                    <ChevronRight className="w-3.5 h-3.5 text-zinc-400 group-hover:translate-x-0.5 transition-transform shrink-0 pr-0.5 opacity-60" />
-                                                </motion.div>
-                                            );
-                                        })}
                                     </div>
                                 </div>
                             </div>
