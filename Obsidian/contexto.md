@@ -2886,3 +2886,19 @@ Establecimiento de límites estrictos para evitar que Kloe actúe como un chatbo
 2. **Filtro Heurístico en Fallback (`generateHeuristicStylingResponse`)**:
    - Detección de intenciones y palabras clave ajenas a la moda (cocina, recetas, código, política, matemáticas, medicina, etc.).
    - Respuesta automática y cercana de rechazo cordial cuando la consulta no guarda relación con prendas o looks.
+
+
+---
+
+## 176. Animación Alternante de Logo de Kloe en Armario (`/closet`) (2026-10-26)
+
+### Contexto:
+Sustitución del icono estático del botón superior de acceso a Kloe en `/closet` para alternar dinámicamente cada 10 segundos entre la mascota de Kloe (`/kloe-avatar-v2.png`) y el wordmark tipográfico oficial (`/kloe-logo-large.png`), replicando la misma animación de transición que el navbar.
+
+### Modificaciones Realizadas:
+1. **Componente `KloeButtonAnimatedLogo` (`app/(app)/closet/page.tsx`)**:
+   - Creado componente con estado cíclico (`avatar` ↔ `wordmark`) con intervalo exacto de 10.000 ms.
+   - Implementado el set de animación de 2 tiempos de `NavbarKlozetLogo`:
+     - **Salida:** Shrink to center (`scale: 0`, aceleración centrípeta hacia el punto central).
+     - **Entrada:** Elastic zoom in (`scale: 1.45 -> 1.0`, rebote físico con resorte Apple `type: 'spring', stiffness: 440, damping: 24`).
+   - Dimensiones adaptativas proporcionadas para mantener alineación y altura con el botón adyacente "Crear Outfit".

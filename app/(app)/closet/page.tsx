@@ -7,7 +7,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import { useRef } from 'react';
 import {
   Heart, Grid3x3, List, Search, Filter, Plus, Wand2, X, Shirt, Layers, Share2, Trash2, Check, CalendarDays
@@ -30,6 +30,87 @@ import Link from 'next/link';
 
 import { supabase } from '@/lib/supabase/client';
 import Image from 'next/image';
+
+function KloeButtonAnimatedLogo() {
+  const [logoVariant, setLogoVariant] = useState<'avatar' | 'wordmark'>('avatar');
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setLogoVariant((prev) => (prev === 'avatar' ? 'wordmark' : 'avatar'));
+    }, 10000); // 10 segundos exactos
+    return () => clearInterval(timer);
+  }, []);
+
+  const variants: Variants = {
+    initial: {
+      scale: 1.45,
+      opacity: 0,
+      filter: 'blur(3px)',
+    },
+    animate: {
+      scale: 1,
+      opacity: 1,
+      filter: 'blur(0px)',
+      transition: {
+        type: 'spring' as const,
+        stiffness: 440,
+        damping: 24,
+        mass: 0.65,
+      },
+    },
+    exit: {
+      scale: 0,
+      opacity: 0,
+      filter: 'blur(2px)',
+      transition: {
+        duration: 0.3,
+        ease: [0.4, 0, 0.7, -0.4],
+      },
+    },
+  };
+
+  return (
+    <div className="relative flex items-center justify-center select-none overflow-visible w-full h-8 sm:h-9">
+      <AnimatePresence mode="wait">
+        {logoVariant === 'avatar' ? (
+          <motion.div
+            key="kloe-avatar"
+            variants={variants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            className="relative w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center"
+          >
+            <Image
+              src="/kloe-avatar-v2.png"
+              alt="Kloe"
+              fill
+              className="object-contain group-hover:scale-105 transition-transform"
+              priority
+            />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="kloe-wordmark"
+            variants={variants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            className="relative w-20 sm:w-24 h-7 sm:h-8 flex items-center justify-center"
+          >
+            <Image
+              src="/kloe-logo-large.png"
+              alt="Kloe"
+              fill
+              className="object-contain group-hover:scale-105 transition-transform"
+              priority
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 export default function ClosetPage() {
   const router = useRouter();
@@ -653,15 +734,7 @@ export default function ClosetPage() {
                 className="w-full py-2 sm:py-2.5 px-3 rounded-xl bg-[var(--background-secondary)] flex items-center justify-center hover:border-[var(--brand-pink)]/40 transition-all shadow-xs cursor-pointer group"
                 aria-label="Kloe"
               >
-                <div className="relative w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center">
-                  <Image 
-                    src="/kloe-avatar-v2.png" 
-                    alt="Kloe" 
-                    fill 
-                    className="object-contain group-hover:scale-105 transition-transform" 
-                    priority 
-                  />
-                </div>
+                <KloeButtonAnimatedLogo />
               </motion.div>
             </Link>
           </div>
