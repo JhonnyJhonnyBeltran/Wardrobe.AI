@@ -231,6 +231,58 @@ export function OutfitDetailModal({
                                     </h2>
                                 </div>
 
+                                {/* Desktop Garment Cards Grid (Prendas del outfit) */}
+                                {items.length > 0 && (
+                                    <div className="hidden md:flex flex-col gap-2 my-1 overflow-hidden">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+                                                Prendas del look
+                                            </span>
+                                            <span className="text-[11px] font-semibold text-zinc-400">
+                                                {items.length} piezas
+                                            </span>
+                                        </div>
+                                        <div className="grid grid-cols-2 gap-2 max-h-[160px] overflow-y-auto pr-1">
+                                            {items.map((item: any, idx: number) => {
+                                                const raw = item.clothing_items || item.clothing_item || item;
+                                                const imgUrl = getItemImage(item);
+                                                const name = getItemName(item) || 'Prenda';
+                                                const brand = getItemBrand(item);
+                                                const category = getItemCategory(item);
+
+                                                return (
+                                                    <div
+                                                        key={raw.id || item.id || idx}
+                                                        onClick={() => handleItemClick(raw)}
+                                                        className="group flex items-center gap-2.5 p-2 rounded-xl bg-zinc-50 dark:bg-zinc-850/70 hover:bg-zinc-100 dark:hover:bg-zinc-800 border border-black/[0.04] dark:border-white/[0.06] hover:border-[var(--brand-pink,#FF66C4)]/30 transition-all cursor-pointer select-none"
+                                                    >
+                                                        <div className="relative w-10 h-10 shrink-0 rounded-lg bg-white dark:bg-zinc-900 border border-black/5 dark:border-white/5 overflow-hidden flex items-center justify-center p-0.5">
+                                                            {imgUrl ? (
+                                                                <Image
+                                                                    src={imgUrl}
+                                                                    alt={name}
+                                                                    fill
+                                                                    className="object-contain p-0.5 group-hover:scale-105 transition-transform"
+                                                                />
+                                                            ) : (
+                                                                <span className="text-sm">👕</span>
+                                                            )}
+                                                        </div>
+                                                        <div className="min-w-0 flex-1">
+                                                            <p className="text-xs font-bold text-[var(--foreground)] truncate group-hover:text-[var(--brand-pink,#FF66C4)] transition-colors">
+                                                                {name}
+                                                            </p>
+                                                            <p className="text-[10px] text-zinc-400 truncate font-medium">
+                                                                {brand || category || 'Básico'}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+
                                 {/* Action Hierarchy (Editar + Publicar + Story + Candado + Eliminar) */}
                                 <div className="flex flex-col gap-2.5 md:gap-3 md:mt-auto">
                                     {/* Primary Row: Editar en lienzo + Publicar */}

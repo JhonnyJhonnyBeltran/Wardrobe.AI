@@ -2919,3 +2919,18 @@ Sustitución del icono estático del botón superior de acceso a Kloe en `/close
 2. **Banner de Kloe Unificado (`app/(app)/closet/page.tsx`)**:
    - Retirado el botón adyacente "Crear Outfit" y la sombra flotante.
    - Reemplazado por un único bloque a ancho completo con fondo `bg-[var(--background-secondary)]`, bordes sutiles y la animación elástica alternante de Kloe.
+
+
+---
+
+## 178. Tarjetas de Prendas Integradas en OutfitDetailModal (Desktop) (2026-10-26)
+
+### Contexto:
+Inclusión de tarjetas visuales de las prendas que componen el outfit dentro del panel lateral de información en pantalla de ordenador (`OutfitDetailModal.tsx`), situadas inmediatamente debajo del título del outfit.
+
+### Modificaciones Realizadas:
+1. **Grid de Tarjetas de Prendas (`components/OutfitDetailModal.tsx`)**:
+   - Renderizado condicional en pantallas medianas y grandes (`hidden md:flex`).
+   - Muestra cada prenda con su miniatura oficial (`Image`), nombre, marca o categoría.
+   - Interacción interactiva: al hacer clic en cualquiera de las tarjetas de prendas se abre el modal de detalle de dicha prenda (`setSelectedItemForDetail`) con haptic feedback y previsualización.
+   - Contenedor con `max-h-[160px]` y scroll suave con diseño Apple para convivir armoniosamente con los botones de acción sin desbordar el modal.
