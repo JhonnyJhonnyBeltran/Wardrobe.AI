@@ -2934,3 +2934,25 @@ Inclusión de tarjetas visuales de las prendas que componen el outfit dentro del
    - Muestra cada prenda con su miniatura oficial (`Image`), nombre, marca o categoría.
    - Interacción interactiva: al hacer clic en cualquiera de las tarjetas de prendas se abre el modal de detalle de dicha prenda (`setSelectedItemForDetail`) con haptic feedback y previsualización.
    - Contenedor con `max-h-[160px]` y scroll suave con diseño Apple para convivir armoniosamente con los botones de acción sin desbordar el modal.
+
+
+---
+
+## 179. Lanzador Nativo Klozet Dashboard y Copia Rápida para Asistente IA (2026-10-26)
+
+### Contexto:
+1. Creación de una aplicación de escritorio nativa para el Dashboard de Administración e Insights (`/admin/insights`), con la misma arquitectura sin consolas de Interactive Brokers.
+2. Comprobación y asignación automática de puertos libres si el 3000 está ocupado.
+3. Incorporación de botones de copia con formato markdown adaptado para transferir incidencias y sugerencias directamente al asistente IA.
+4. Auditoría del sistema de recarga y versionado automático ante incompatibilidad en dispositivos móviles.
+
+### Modificaciones Realizadas:
+1. **Lanzador Nativo Sin Consola (`desktop_dashboard.pyw` y `Klozet Dashboard.exe`)**:
+   - Arquitectura idéntica a Interactive Brokers: proceso `.exe` compilado en C# (`Launcher.cs`) con flags `CREATE_NO_WINDOW = 0x08000000` y `DETACHED_PROCESS`.
+   - Cero ventanas CMD o terminales abiertas.
+   - Escaneo inteligente de puertos: si el puerto 3000 está en uso, busca automáticamente el siguiente puerto libre disponible (3001..3050) y arranca la aplicación.
+   - Ventana nativa GUI creada con `pywebview` (1440x900) con icono oficial de Klozet (`public/klozet-app.ico`).
+   - Binario ejecutable compilado y depositado directamente en el Escritorio: `C:\Users\EthanCurro\Desktop\Klozet Dashboard.exe`.
+2. **Copia de Reportes para Asistente IA (`app/(app)/admin/insights/page.tsx`)**:
+   - Añadido botón superior "Copiar todo para IA" con resumen formateado de todos los reportes de usuario.
+   - Añadido botón individual "Copiar para IA" en cada tarjeta de reporte con metadatos de pantalla, dispositivo y usuario.

@@ -19,7 +19,9 @@ import {
   Filter,
   Activity,
   Layers,
-  ArrowUpRight
+  ArrowUpRight,
+  Copy,
+  Check
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -44,6 +46,7 @@ export default function AdminInsightsDashboard() {
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [copiedId, setCopiedId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'feedback' | 'insights' | 'system'>('feedback');
 
   const fetchFeedbacks = async () => {
@@ -64,6 +67,51 @@ export default function AdminInsightsDashboard() {
   useEffect(() => {
     fetchFeedbacks();
   }, []);
+
+  const handleCopyFeedbackForAI = (item: FeedbackItem) => {
+    const textToCopy = [
+      '[REPORTE DE USUARIO - KLOZET]',
+      'ID: ' + item.id,
+      'Fecha: ' + new Date(item.created_at).toLocaleString('es-ES'),
+      'Usuario: ' + (item.username ? '@' + item.username : (item.email || 'Anónimo')),
+      'Tipo: ' + item.category.toUpperCase(),
+      'Estado: ' + item.status,
+      'Mensaje:',
+      item.message,
+      item.metadata ? '\nMetadatos de pantalla / dispositivo:\n' + JSON.stringify(item.metadata, null, 2) : '',
+      '========================================',
+      'Objetivo: Analizar la incidencia, revisar el impacto en código y proponer corrección.'
+    ].filter(Boolean).join('\n');
+
+    navigator.clipboard.writeText(textToCopy);
+    setCopiedId(item.id);
+    toast.success('¡Reporte copiado! Ya puedes pegárselo al asistente IA');
+    setTimeout(() => setCopiedId(null), 2500);
+  };
+
+  const handleCopyAllForAI = () => {
+    if (filteredFeedbacks.length === 0) {
+      toast.info('No hay reportes para copiar');
+      return;
+    }
+    const fullText = [
+      '=== RESUMEN COMPLETO DE REPORTES E INFLUENCIAS DE USUARIOS KLOZET (' + filteredFeedbacks.length + ' casos) ===\n',
+      ...filteredFeedbacks.map((item, idx) => {
+        return [
+          '--- Caso #' + (idx + 1) + ' [' + item.category.toUpperCase() + '] ---',
+          'ID: ' + item.id,
+          'Usuario: ' + (item.username ? '@' + item.username : (item.email || 'Anónimo')),
+          'Fecha: ' + new Date(item.created_at).toLocaleString('es-ES'),
+          'Mensaje: ' + item.message,
+          'Metadatos: ' + JSON.stringify(item.metadata || {}),
+          '----------------------------------------'
+        ].join('\n');
+      })
+    ].join('\n');
+
+    navigator.clipboard.writeText(fullText);
+    toast.success('¡Todos los reportes copiados en bloque para el asistente IA!');
+  };
 
   const handleUpdateStatus = async (id: string, newStatus: string) => {
     try {
@@ -314,6 +362,23 @@ export default function AdminInsightsDashboard() {
                         </div>
 
                         <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleCopyFeedbackForAI(item)}
+                            className="px-2.5 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white text-[11px] font-semibold transition-all cursor-pointer flex items-center gap-1 border border-white/5"
+                            title="Copiar este reporte formateado para pasarlo a la IA"
+                          >
+                            {copiedId === item.id ? (
+                              <>
+                                <Check className="w-3 h-3 text-emerald-400" />
+                                <span className="text-emerald-400 font-bold">Copiado</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="w-3 h-3" />
+                                <span>Copiar para IA</span>
+                              </>
+                            )}
+                          </button>
                           {isResolved ? (
                             <button
                               onClick={() => handleUpdateStatus(item.id, 'pending')}
