@@ -3,7 +3,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { AlertCircle, CheckCircle2, Info, X, AlertTriangle } from 'lucide-react';
 import { useUiStore } from '@/store/uiStore';
-import { Button } from '@/components';
+import Button from './Button';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 
 export default function SystemModal() {

@@ -159,7 +159,7 @@ export default function CookiesBanner() {
                                 <button
                                     type="button"
                                     onClick={handleAcceptAll}
-                                    className="w-full h-10 px-3 text-xs md:text-sm font-semibold rounded-xl bg-[var(--brand-pink)] text-white hover:bg-[var(--brand-pink-dark)] shadow-md shadow-[var(--brand-pink)]/20 transition-all focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--brand-pink)] active:scale-[0.98]"
+                                    className="w-full h-10 px-3 text-xs md:text-sm font-semibold rounded-xl bg-[var(--brand-pink)] text-zinc-950 font-bold hover:opacity-90 shadow-md shadow-[var(--brand-pink)]/20 transition-all focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--brand-pink)] active:scale-[0.98]"
                                     aria-label="Aceptar todas las cookies"
                                 >
                                     Aceptar todas
@@ -335,7 +335,7 @@ export default function CookiesBanner() {
                                 <button
                                     type="button"
                                     onClick={handleSaveCustom}
-                                    className="w-full sm:flex-1 h-11 px-4 text-xs md:text-sm font-semibold rounded-xl bg-[var(--brand-pink)] text-white hover:bg-[var(--brand-pink-dark)] shadow-md shadow-[var(--brand-pink)]/20 transition-all focus-visible:ring-2 focus-visible:ring-[var(--brand-pink)]"
+                                    className="w-full sm:flex-1 h-11 px-4 text-xs md:text-sm font-semibold rounded-xl bg-[var(--brand-pink)] text-zinc-950 font-bold hover:opacity-90 shadow-md shadow-[var(--brand-pink)]/20 transition-all focus-visible:ring-2 focus-visible:ring-[var(--brand-pink)]"
                                     aria-label="Guardar configuración seleccionada"
                                 >
                                     Guardar preferencias

@@ -32,7 +32,7 @@ export default function KloeProModal({ isOpen, onClose, redirectBackToCloset = f
   const [loading, setLoading] = useState(false);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
 
-  const stripePromise = useMemo(() => getStripeClientPromise(), []);
+  const stripePromise = useMemo(() => (isOpen && (view === 'checkout' || clientSecret) ? getStripeClientPromise() : null), [isOpen, view, clientSecret]);
 
   useBodyScrollLock(isOpen);
 

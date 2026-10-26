@@ -2823,3 +2823,26 @@ Implementación técnica integral y hoja de ruta para alcanzar la máxima releva
    - Inyectado bloque de preguntas frecuentes ("¿Qué es Klozet?", "¿Cómo digitalizo mi ropa?", "¿Quién es Kloe?", "¿Es gratis?") directamente en el @graph global para fragmentos destacados (Google Rich Snippets) y respuestas conversacionales en IA.
 4. **Hoja de Ruta Documentada**:
    - Creado documento maestro en Obsidian/hoja_de_ruta_seo_geo_posicionamiento.md.
+---
+
+## 173. Optimización Radical de Rendimiento Core Web Vitals y Accesibilidad (2026-10-26)
+
+### Contexto:
+Diagnóstico y resolución de cuellos de botella identificados en PageSpeed Insights (Rendimiento 61 → Objetivo 90+, LCP de 10,4s y Accesibilidad 90):
+
+### Modificaciones Realizadas:
+1. **Desactivación de AdSense en la Landing Page (components/AdSenseScript.tsx)**:
+   - Limitada la inyección del SDK de Google AdSense exclusivamente a la revista editorial (/trends), donde existen bloques reales de anuncios.
+   - En la landing page (/) se eliminó la carga innecesaria de scripts publicitarios (pagead2, doubleclick, undingchoices), ahorrando más de 400 KiB de descarga y eliminando más de 2,1 segundos de retraso en el LCP causados por banners de consentimiento.
+   - Configurada estrategia strategy="lazyOnload" en lugar de fterInteractive.
+2. **Carga Perezosa de Stripe (components/KloeProModal.tsx & components/SystemModal.tsx)**:
+   - KloeProModal: getStripeClientPromise() ahora solo se invoca cuando el modal está abierto y en la vista de pasarela (iew === 'checkout').
+   - SystemModal: Sustituido el import barrel rom '@/components' por importación directa rom './Button', eliminando la inclusión involuntaria del SDK de Stripe (252 KiB, 150 ms de CPU) en la carga inicial de la aplicación.
+3. **Optimización de Imagen Watermark (pp/(public)/page.tsx)**:
+   - Eliminada la propiedad priority del imagotipo de fondo con opacidad 0.03.
+   - Inyectado atributo responsive sizes="(max-width: 640px) 360px, 720px" y dimensiones reales para evitar la descarga de imágenes sobredimensionadas de 2048px en dispositivos móviles (ahorro de 24,4 KiB).
+4. **Accesibilidad Perfecta (WCAG AAA & Zoom Asistivo)**:
+   - pp/layout.tsx: Modificado maximumScale: 5 en iewport para permitir ampliación a usuarios con baja visión.
+   - Contraste: Actualizado el texto de botones rosas de la landing ("Registro", "Empezar gratis") y botón "Aceptar todas" de cookies a 	ext-zinc-950 font-bold, elevando la proporción de contraste de 2.8:1 a 7.5:1 (Nivel AAA).
+5. **Modern Baseline en package.json**:
+   - Añadido rowserslist para navegadores modernos, eliminando 14 KiB de polyfills heredados innecesarios.

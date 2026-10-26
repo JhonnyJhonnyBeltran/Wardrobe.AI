@@ -150,7 +150,7 @@ export default function LandingPage() {
           {user ? (
             <Link 
               href="/closet" 
-              className="px-3.5 sm:px-5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold bg-[var(--brand-pink,#FF66C4)] text-white hover:opacity-95 transition-all shadow-sm active:scale-95 flex items-center gap-1 sm:gap-1.5"
+              className="px-3.5 sm:px-5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold bg-[var(--brand-pink,#FF66C4)] text-zinc-950 font-bold hover:opacity-95 transition-all shadow-sm active:scale-95 flex items-center gap-1 sm:gap-1.5"
             >
               <span>Mi Armario</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -165,7 +165,7 @@ export default function LandingPage() {
               </Link>
               <Link 
                 href="/auth" 
-                className="px-3.5 sm:px-5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold bg-[var(--brand-pink,#FF66C4)] text-white hover:opacity-95 transition-all shadow-sm active:scale-95 flex items-center gap-1"
+                className="px-3.5 sm:px-5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold bg-[var(--brand-pink,#FF66C4)] text-zinc-950 font-bold hover:opacity-95 transition-all shadow-sm active:scale-95 flex items-center gap-1"
               >
                 <span>Registro</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -190,11 +190,13 @@ export default function LandingPage() {
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[450px] sm:max-w-[900px] opacity-[0.03] dark:opacity-[0.05] pointer-events-none -z-10 transition-transform duration-700">
         <Image 
           src="/landing/klozet-nombre-grande.png" 
-          alt="Klozet" 
-          width={1000} 
-          height={320} 
+          alt="" 
+          role="presentation"
+          aria-hidden="true"
+          width={720} 
+          height={230} 
+          sizes="(max-width: 640px) 360px, 720px"
           className="w-full h-auto object-contain"
-          priority 
         />
       </div>
 
@@ -406,7 +408,7 @@ export default function LandingPage() {
                   <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                     <Link
                       href={user ? "/closet" : "/auth"}
-                      className="px-6 sm:px-8 py-2.5 sm:py-3 rounded-full font-semibold text-xs sm:text-sm bg-[var(--brand-pink,#FF66C4)] text-white hover:opacity-95 transition-all shadow-md shadow-[var(--brand-pink,#FF66C4)]/20 inline-flex items-center gap-2 group"
+                      className="px-6 sm:px-8 py-2.5 sm:py-3 rounded-full font-bold text-xs sm:text-sm bg-[var(--brand-pink,#FF66C4)] text-zinc-950 hover:opacity-95 transition-all shadow-md shadow-[var(--brand-pink,#FF66C4)]/20 inline-flex items-center gap-2 group"
                     >
                       <span>{user ? "Ir a mi armario" : "Empezar gratis"}</span>
                       <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
@@ -1088,7 +1090,7 @@ export default function LandingPage() {
                   <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                     <Link
                       href="/auth"
-                      className="w-full sm:w-auto px-7 sm:px-9 py-3 sm:py-3.5 rounded-full font-semibold text-xs sm:text-sm md:text-base bg-[var(--brand-pink,#FF66C4)] text-white hover:opacity-95 transition-all shadow-md shadow-[var(--brand-pink,#FF66C4)]/20 inline-flex items-center justify-center gap-2 group"
+                      className="w-full sm:w-auto px-7 sm:px-9 py-3 sm:py-3.5 rounded-full font-bold text-xs sm:text-sm md:text-base bg-[var(--brand-pink,#FF66C4)] text-zinc-950 hover:opacity-95 transition-all shadow-md shadow-[var(--brand-pink,#FF66C4)]/20 inline-flex items-center justify-center gap-2 group"
                     >
                       <span>Entrar a Klozet gratis</span>
                       <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
