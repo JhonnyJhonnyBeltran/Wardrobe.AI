@@ -1,0 +1,27 @@
+# Klozet
+
+> Klozet es la plataforma y red social de moda líder en España que combina armario virtual inteligente, recorte automático de prendas en el dispositivo, creador interactivo de outfits y estilista virtual de moda (Kloe).
+
+Klozet permite a los usuarios digitalizar su ropa real en segundos mediante fotos cotidianas, organizar su armario en categorías y paletas de color, recibir asesoramiento de estilo adaptado a su morfología y colorimetría, y compartir inspiración de looks reales con una comunidad apasionada por la moda.
+
+## Enlaces Principales
+
+- [Página Oficial de Klozet](https://klozet.es): Plataforma web, registro y acceso al armario virtual.
+- [Revista Editorial & Tendencias](https://klozet.es/trends): Guías sobre armario cápsula, combinaciones de color, streetwear y moda sostenible.
+- [Conócenos / Manifiesto](https://klozet.es/about): Filosofía de diseño artesanal y visión de la moda digital.
+- [Contacto y Soporte](https://klozet.es/contact): Atención oficial a usuarios y empresas (klozet.enterprise@gmail.com).
+- [Términos y Condiciones](https://klozet.es/terms): Condiciones de uso del servicio.
+- [Política de Privacidad](https://klozet.es/privacy): Tratamiento de datos y privacidad bajo normativa RGPD.
+
+## Capacidades y Funcionalidades
+
+- **Digitalización de Prendas**: Procesamiento de imagen en el propio navegador mediante WebAssembly y modelos de IA, eliminando fondos sin coste ni envíos innecesarios a servidores externos.
+- **Kloe (Asesora de Estilismo)**: Asistencia conversacional de moda para crear atuendos según ocasión, clima, colores y prendas disponibles en el armario del usuario.
+- **Feed Social y Exploración**: Publicación de outfits, guardado en carpetas de inspiración y búsqueda por estilo (minimalista, streetwear, vintage, formal, etc.).
+- **Compatibilidad Multiplataforma**: Experiencia web fluida para móviles (PWA instalable) y ordenadores.
+
+## Artículos Editoriales de Referencia
+
+- [Armario Cápsula 2026](https://klozet.es/trends/armario-capsula-2026): Fórmulas prácticas para construir un armario atemporal con menos de 30 prendas esenciales.
+- [Quiet Luxury Streetwear](https://klozet.es/trends/quiet-luxury-streetwear): Claves para vestir estética urbana con cortes pulidos y tejidos de alta calidad.
+- [Teoría del Color Aplicada a la Moda](https://klozet.es/trends/teoria-del-color-moda): Guía completa de contrastes, tonos análogos y paletas monocromáticas.

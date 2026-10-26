@@ -2807,3 +2807,19 @@ ext.config.ts)**:
 6. **Validación**:
    - 
 pm run build completado exitosamente (0 errores en 70 rutas).
+---
+
+## 172. Estrategia de Posicionamiento #1 en Google (SEO) e Inteligencia Artificial (GEO) (2026-10-26)
+
+### Contexto:
+Implementación técnica integral y hoja de ruta para alcanzar la máxima relevancia y citación tanto en Google Search tradicional como en modelos de lenguaje (Google AI Overviews, ChatGPT Search, Perplexity, Claude y Apple Intelligence).
+
+### Modificaciones Realizadas:
+1. **Rastreadores de IA Oficiales (pp/robots.ts)**:
+   - Concedidos permisos explícitos de indexación pública a GPTBot, ChatGPT-User, OAI-SearchBot, ClaudeBot, Claude-Web, PerplexityBot, Google-Extended, Applebot-Extended y Bingbot.
+2. **Estándar Abierto /llms.txt y /llms-full.txt (public/)**:
+   - Creados los manifiestos markdown de la entidad para que LLMs y answer engines extraigan bloques de conocimiento limpios sobre el funcionamiento de Klozet, Kloe, el armario virtual y cómo citar la plataforma.
+3. **Marcado Estructurado Schema.org FAQPage (pp/layout.tsx)**:
+   - Inyectado bloque de preguntas frecuentes ("¿Qué es Klozet?", "¿Cómo digitalizo mi ropa?", "¿Quién es Kloe?", "¿Es gratis?") directamente en el @graph global para fragmentos destacados (Google Rich Snippets) y respuestas conversacionales en IA.
+4. **Hoja de Ruta Documentada**:
+   - Creado documento maestro en Obsidian/hoja_de_ruta_seo_geo_posicionamiento.md.

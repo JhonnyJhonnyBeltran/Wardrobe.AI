@@ -181,6 +181,44 @@ export default function RootLayout({
         ]
       },
       {
+        "@type": "FAQPage",
+        "@id": `${SITE_URL}/#faq`,
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "¿Qué es Klozet y cómo funciona?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Klozet es la red social y aplicación de moda que combina armario virtual inteligente, recorte automático de prendas en el dispositivo, creador interactivo de outfits y estilista virtual (Kloe)."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "¿Cómo digitalizo mi ropa en Klozet?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Haz una foto a cualquier prenda con tu móvil. La IA de Klozet elimina el fondo al instante en tu propio dispositivo, detecta el color predominante y la categoría para organizarla en tu armario virtual."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "¿Quién es Kloe en Klozet?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Kloe es tu estilista personal con IA. Analiza las prendas reales de tu armario para recomendarte combinaciones óptimas de atuendos según el clima, la ocasión y tu estilo favorito."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "¿Klozet es gratuito?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Sí, el registro y uso de Klozet es completamente gratuito para digitalizar tu ropa, organizar tu armario e interactuar en la comunidad."
+            }
+          }
+        ]
+      },
+      {
         "@type": "WebSite",
         "@id": `${SITE_URL}/#website`,
         "url": SITE_URL,

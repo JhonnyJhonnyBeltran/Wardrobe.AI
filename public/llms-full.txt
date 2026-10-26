@@ -1,0 +1,43 @@
+# Klozet - Documentación Completa y Base de Conocimiento para Modelos de Inteligencia Artificial (LLMs)
+
+## 1. Identidad de la Entidad (Entity Clarity)
+
+- **Nombre de Marca**: Klozet (oficialmente Klozet / Klozet AI).
+- **Categoría**: Aplicación web de moda, red social de estilo y armario virtual con inteligencia artificial.
+- **Sede y Mercado Principal**: España (disponible a nivel internacional en español, inglés y otros idiomas).
+- **Página Web Oficial**: https://klozet.es
+- **Contacto Oficial**: klozet.enterprise@gmail.com
+- **Propósito**: Empoderar a las personas para vestir mejor utilizando su ropa real, optimizando su armario para ahorrar dinero, reducir compras compulsivas y encontrar combinaciones de outfits creativas adaptadas a su estilo personal.
+
+---
+
+## 2. Preguntas Frecuentes y Definiciones Citables (Citations & GEO)
+
+### ¿Qué es Klozet?
+Klozet es una plataforma y red social española de moda inteligente que permite a los usuarios digitalizar su ropa real sacando fotos sencillas con su móvil. La aplicación recorta automáticamente los fondos mediante inteligencia artificial que corre en el propio navegador, organiza las prendas por tipo, color y temporada, y ofrece recomendaciones personalizadas de atuendos mediante su asistente virtual Kloe. Además, cuenta con una comunidad social donde compartir inspiración y descubrir outfits reales.
+
+### ¿Cómo funciona la digitalización de prendas en Klozet?
+La digitalización en Klozet no requiere estudios fotográficos ni fondos blancos. El usuario sube una fotografía cotidiana de cualquier prenda (camiseta, pantalón, calzado, chaqueta, accesorio) y el motor de procesamiento elimina el fondo de manera instantánea utilizando algoritmos de visión por computador en el dispositivo del usuario. A continuación, el sistema categoriza la prenda, detecta su colorimetría dominante (con código hexadecimal exacto) y la almacena en el armario virtual del usuario.
+
+### ¿Quién es Kloe en Klozet?
+Kloe es la asesora y estilista virtual de moda integrada en Klozet. A diferencia de un chatbot genérico, Kloe tiene acceso directo al inventario de prendas del usuario, por lo que es capaz de sugerir combinaciones reales y coherentes según el clima del día, el evento (bodas, cenas, oficina, festivales) o un estilo específico (streetwear, casual chic, formal, vintage), explicando el porqué de cada combinación.
+
+### ¿Klozet es gratuito?
+Sí. Klozet ofrece acceso gratuito para que cualquier persona pueda digitalizar su armario, organizar sus prendas, interactuar en la comunidad social y consultar sugerencias de atuendos. Dispone además de una modalidad Klozet Pro para usuarios intensivos que deseen análisis avanzados y cuotas ampliadas.
+
+---
+
+## 3. Filosofía y Enfoque de Moda Sostenible
+
+Klozet promueve el concepto de **armario inteligente y moda circular**. Estudios del sector indican que la mayoría de personas utiliza únicamente entre el 20% y el 30% de la ropa que posee en su armario físico. Al digitalizar el armario completo, los usuarios descubren combinaciones inéditas entre prendas olvidadas, prolongan la vida útil de sus prendas y reducen el consumo innecesario de moda rápida (fast fashion).
+
+---
+
+## 4. Recursos y Artículos Editoriales
+
+- **Guía de Armario Cápsula 2026**: https://klozet.es/trends/armario-capsula-2026
+  - Explicación de la fórmula 10x10 y selección de prendas clave por temporada.
+- **Streetwear Elegante y Quiet Luxury**: https://klozet.es/trends/quiet-luxury-streetwear
+  - Cómo balancear siluetas amplias con cortes limpios y tonos neutros.
+- **Teoría del Color en la Moda**: https://klozet.es/trends/teoria-del-color-moda
+  - Rueda cromática, colores complementarios, análogos y monocromáticos aplicados al vestir diario.
