@@ -713,25 +713,14 @@ export default function ClosetPage() {
       <header className="sticky top-0 z-40 bg-[var(--background)]/95 backdrop-blur-md pb-2 supports-[ios]:pt-safe-top">
         <div className="max-w-7xl mx-auto px-4 pt-4 space-y-4">
 
-          {/* Top Actions: Crear Outfit (+ simple) & Kloe (icono grande centrado, sin borde ni texto) */}
-          <div className="bg-[var(--card-bg)]/90 backdrop-blur-xl p-1.5 sm:p-2 rounded-2xl flex items-center gap-2 border border-black/[0.06] dark:border-white/[0.08] shadow-xs">
-            <Link href="/create" className="flex-1">
-              <motion.button 
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.94 }}
-                transition={{ type: 'spring', stiffness: 500, damping: 24 }}
-                className="w-full py-2.5 sm:py-3 px-3 sm:px-4 rounded-xl bg-[var(--foreground)] text-[var(--background)] font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 shadow-sm hover:opacity-95 transition-opacity cursor-pointer"
-              >
-                <Plus className="w-4 h-4 sm:w-5 sm:h-5 text-[var(--brand-pink)]" strokeWidth={2.5} />
-                <span>Crear Outfit</span>
-              </motion.button>
-            </Link>
-            <Link href="/closet/kloe" className="flex-1">
+          {/* Kloe Action Banner (ancho completo, sin sombra redundante ni botón duplicado de crear outfit) */}
+          <div className="w-full">
+            <Link href="/closet/kloe" className="block w-full">
               <motion.div 
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.94 }}
+                whileHover={{ scale: 1.01 }}
+                whileTap={{ scale: 0.98 }}
                 transition={{ type: 'spring', stiffness: 500, damping: 24 }}
-                className="w-full py-2 sm:py-2.5 px-3 rounded-xl bg-[var(--background-secondary)] flex items-center justify-center hover:border-[var(--brand-pink)]/40 transition-all shadow-xs cursor-pointer group"
+                className="w-full py-2.5 sm:py-3 px-4 rounded-2xl bg-[var(--background-secondary)] flex items-center justify-center border border-black/[0.06] dark:border-white/[0.08] hover:border-[var(--brand-pink)]/40 transition-all cursor-pointer group"
                 aria-label="Kloe"
               >
                 <KloeButtonAnimatedLogo />

@@ -2902,3 +2902,20 @@ Sustitución del icono estático del botón superior de acceso a Kloe en `/close
      - **Salida:** Shrink to center (`scale: 0`, aceleración centrípeta hacia el punto central).
      - **Entrada:** Elastic zoom in (`scale: 1.45 -> 1.0`, rebote físico con resorte Apple `type: 'spring', stiffness: 440, damping: 24`).
    - Dimensiones adaptativas proporcionadas para mantener alineación y altura con el botón adyacente "Crear Outfit".
+
+
+---
+
+## 177. Optimización de Espaciado en OutfitDetailModal y Banner Unificado de Kloe en `/closet` (2026-10-26)
+
+### Contexto:
+1. Mejora del espaciado del modal de detalle de outfit (`OutfitDetailModal.tsx`) en pantallas de ordenador (desktop): los botones ya no se apilan contra el margen superior, distribuyéndose armónicamente con `justify-between` y `mt-auto`.
+2. Simplificación del banner superior en `/closet` (`closet/page.tsx`): eliminación del botón redundante "Crear Outfit" y de sombras pesadas, dejando un único contenedor ancho, limpio y minimalista dedicado al acceso animado de Kloe.
+
+### Modificaciones Realizadas:
+1. **Layout y Espaciado en Desktop (`components/OutfitDetailModal.tsx`)**:
+   - Contenedor lateral derecho configurado con `justify-between`, padding ampliado en desktop (`md:p-8 md:pt-14`) y `md:gap-6`.
+   - Bloque de jerarquía de acciones (Editar, Publicar, Story, Visibilidad, Eliminar) anclado en la parte inferior con `md:mt-auto` para un equilibrio visual idóneo.
+2. **Banner de Kloe Unificado (`app/(app)/closet/page.tsx`)**:
+   - Retirado el botón adyacente "Crear Outfit" y la sombra flotante.
+   - Reemplazado por un único bloque a ancho completo con fondo `bg-[var(--background-secondary)]`, bordes sutiles y la animación elástica alternante de Kloe.

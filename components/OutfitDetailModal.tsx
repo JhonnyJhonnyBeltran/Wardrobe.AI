@@ -198,7 +198,7 @@ export function OutfitDetailModal({
                             </div>
 
                             {/* Bottom Info Section (Clean & Compact) */}
-                            <div className="relative z-10 w-full shrink-0 md:flex-1 md:shrink flex flex-col bg-[var(--background)] p-4 sm:p-5 md:p-6 gap-3 border-t border-[var(--border-color)]/60 md:border-t-0 md:overflow-y-auto">
+                            <div className="relative z-10 w-full shrink-0 md:flex-1 md:shrink flex flex-col justify-between bg-[var(--background)] p-4 sm:p-5 md:p-8 md:pt-14 gap-4 md:gap-6 border-t border-[var(--border-color)]/60 md:border-t-0 md:overflow-y-auto">
                                 {/* Title & Metadata Tags */}
                                 <div className="flex flex-col gap-1">
                                     <div className="flex items-center gap-1.5 flex-wrap">
@@ -232,7 +232,7 @@ export function OutfitDetailModal({
                                 </div>
 
                                 {/* Action Hierarchy (Editar + Publicar + Story + Candado + Eliminar) */}
-                                <div className="flex flex-col gap-2">
+                                <div className="flex flex-col gap-2.5 md:gap-3 md:mt-auto">
                                     {/* Primary Row: Editar en lienzo + Publicar */}
                                     <div className="flex items-center gap-2.5">
                                         <Link
