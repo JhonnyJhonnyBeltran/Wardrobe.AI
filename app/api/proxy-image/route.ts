@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+import { checkIpRateLimit } from '@/lib/closy/rateLimiter';
 
 /**
  * Validates whether a given URL is safe to fetch (Prevents SSRF attacks)
@@ -54,6 +56,26 @@ function isSafeUrl(urlStr: string): boolean {
  */
 export async function POST(request: NextRequest) {
     try {
+        // 1. IP rate limiting
+        const forwarded = request.headers.get('x-forwarded-for');
+        const clientIp = forwarded ? forwarded.split(',')[0].trim() : '127.0.0.1';
+        if (!checkIpRateLimit(clientIp)) {
+            return NextResponse.json(
+                { success: false, error: 'Demasiadas peticiones. Espera un momento.' },
+                { status: 429 }
+            );
+        }
+
+        // 2. Authentication check
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            return NextResponse.json(
+                { success: false, error: 'Debes iniciar sesión para usar el proxy de imágenes' },
+                { status: 401 }
+            );
+        }
+
         const body = await request.json().catch(() => ({}));
         const { url } = body;
 

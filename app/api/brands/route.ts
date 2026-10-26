@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({ brands: data || [] });
+    return NextResponse.json({ brands: data || [] }, { headers: { 'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400' } });
   } catch (error) {
     console.error('[Brands API] Unexpected error:', error);
     return NextResponse.json(

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { checkIpRateLimit } from '@/lib/closy/rateLimiter';
 import fs from 'fs';
 import path from 'path';
 

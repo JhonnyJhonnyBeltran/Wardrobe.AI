@@ -1,4 +1,6 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+import { checkIpRateLimit } from '@/lib/closy/rateLimiter';
 import { fetchHTML } from '@/lib/fashion/webScraper';
 
 /**
@@ -362,6 +364,17 @@ async function filterValidImages(images: string[]): Promise<string[]> {
 export async function POST(request: Request) {
     let url = '';
     try {
+        const forwarded = (request as any).headers?.get ? (request as any).headers.get('x-forwarded-for') : null;
+        const clientIp = forwarded ? forwarded.split(',')[0].trim() : '127.0.0.1';
+        if (!checkIpRateLimit(clientIp)) {
+            return NextResponse.json({ error: 'Demasiadas peticiones. Espera un momento.' }, { status: 429 });
+        }
+
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            return NextResponse.json({ error: 'Debes iniciar sesión para importar prendas desde enlace' }, { status: 401 });
+        }
         const body = await request.json();
         url = body.url;
 

@@ -6,12 +6,26 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+import { checkIpRateLimit } from '@/lib/closy/rateLimiter';
 import { FashionBotClient } from '@/lib/fashionBotClient';
 
 const botClient = new FashionBotClient();
 
 export async function POST(request: NextRequest) {
     try {
+        const forwarded = request.headers.get('x-forwarded-for');
+        const clientIp = forwarded ? forwarded.split(',')[0].trim() : '127.0.0.1';
+        if (!checkIpRateLimit(clientIp)) {
+            return NextResponse.json({ success: false, error: 'Demasiadas peticiones' }, { status: 429 });
+        }
+
+        const supabase = await createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+            return NextResponse.json({ success: false, error: 'Debes iniciar sesión para generar outfits' }, { status: 401 });
+        }
+
         const body = await request.json();
         const { action, options } = body;
 

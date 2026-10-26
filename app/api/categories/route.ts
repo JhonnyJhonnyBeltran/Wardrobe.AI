@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return NextResponse.json({ categories: data || [] });
+    return NextResponse.json({ categories: data || [] }, { headers: { 'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400' } });
   } catch (error) {
     console.error('[Categories API] Unexpected error:', error);
     return NextResponse.json(

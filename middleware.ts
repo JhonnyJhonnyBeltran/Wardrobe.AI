@@ -35,16 +35,36 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // This will refresh session if expired - required for Server Components
-  // https://supabase.com/docs/guides/auth/server-side/nextjs
-  // ADDED: Safety race to prevent middleware from hanging requests if Supabase is slow
-  try {
-    await Promise.race([
-      supabase.auth.getUser(),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('Auth timeout')), 5000))
-    ]);
-  } catch (e) {
-    console.warn('[Middleware] Auth check timed out or failed, proceeding anyway.');
+  // Optimization for high scale (1k-15k+ concurrent users):
+  // Public pages and webhook/cron endpoints do not require active session refresh.
+  // Skipping supabase.auth.getUser() on public traffic prevents connection/rate-limit saturation.
+  const pathname = request.nextUrl.pathname;
+  const isPublicRoute = 
+    pathname === '/' ||
+    pathname.startsWith('/about') ||
+    pathname.startsWith('/contact') ||
+    pathname.startsWith('/contacto') ||
+    pathname.startsWith('/terms') ||
+    pathname.startsWith('/privacy') ||
+    pathname.startsWith('/cookies') ||
+    pathname.startsWith('/trends') ||
+    pathname.startsWith('/auth') ||
+    pathname.startsWith('/login') ||
+    pathname.startsWith('/api/cron') ||
+    pathname.startsWith('/api/webhooks');
+
+  // Only refresh session if we are navigating protected routes AND there is a potential session cookie
+  const hasAuthCookie = request.cookies.getAll().some(c => c.name.includes('wardrobe-auth') || c.name.includes('sb-'));
+
+  if (!isPublicRoute && hasAuthCookie) {
+    try {
+      await Promise.race([
+        supabase.auth.getUser(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Auth timeout')), 3000))
+      ]);
+    } catch (e) {
+      console.warn('[Middleware] Auth check timed out or failed, proceeding anyway.');
+    }
   }
 
   // Internationalization: Detect Accept-Language header if no cookie set yet

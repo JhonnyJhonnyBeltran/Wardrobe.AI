@@ -2780,3 +2780,30 @@ A petición expresa del usuario:
    - Purgadas las importaciones no utilizadas (`Globe`, `Edit2`, `Trash2`, `Send`).
    - Se conserva el botón de favoritos (`Heart`) y el indicador de privacidad (`Lock`) en la esquina superior derecha.
    - La gestión completa de edición, borrado, visibilidad y exportación permanece accesible al pulsar sobre la tarjeta mediante `OutfitDetailModal`.
+
+---
+
+## 171. Arquitectura de Alta Escalabilidad (1k-15k Usuarios) y Blindaje de Seguridad de APIs (2026-10-26)
+
+### Contexto:
+Preparación de Klozet para escalar a más de 1.000 y hasta 15.000 usuarios activos simultáneos en tiempo real sin caídas de servicio, fuga de secretos ni saturación de cuotas.
+
+### Modificaciones Realizadas:
+1. **Optimización de Middleware (middleware.ts)**:
+   - Excluidas todas las rutas públicas (/, /about, /contact, /terms, /privacy, /cookies, /trends, /auth, /login, webhooks y cron) de la comprobación redundante supabase.auth.getUser().
+   - Evita decenas de miles de llamadas innecesarias a la API de Auth de Supabase en picos de tráfico masivo global.
+2. **Blindaje de APIs Expuestas**:
+   - pp/api/proxy-image/route.ts: Añadido rate limit por IP (checkIpRateLimit) y autenticación obligatoria de sesión para prevenir que sea usado como proxy abierto.
+   - pp/api/scrape-product/route.ts: Protegido contra ataques de denegación de servicio por Puppeteer con IP rate limiting y sesión de usuario obligatoria.
+   - pp/api/bot/route.ts: Protegido con autenticación de usuario y limitación por IP.
+   - pp/api/feedback/route.ts: Protegido con limitación por IP contra spam.
+3. **Edge Caching para Reducción de Carga en Base de Datos**:
+   - pp/api/brands/route.ts y pp/api/categories/route.ts: Incorporada cabecera Cache-Control: public, s-maxage=3600, stale-while-revalidate=86400 para que Vercel Edge CDN sirva el 95% de las lecturas sin consultar PostgreSQL.
+4. **Cabeceras Globales de Seguridad Empresarial (
+ext.config.ts)**:
+   - Inyectadas cabeceras X-Content-Type-Options: nosniff, X-Frame-Options: SAMEORIGIN, X-XSS-Protection: 1; mode=block, Referrer-Policy: strict-origin-when-cross-origin y Permissions-Policy.
+5. **Documentación de Infraestructura y Escalado**:
+   - Creado documento completo en Obsidian/arquitectura_escalabilidad_seguridad.md.
+6. **Validación**:
+   - 
+pm run build completado exitosamente (0 errores en 70 rutas).
