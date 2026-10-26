@@ -2846,3 +2846,27 @@ Diagnóstico y resolución de cuellos de botella identificados en PageSpeed Insi
    - Contraste: Actualizado el texto de botones rosas de la landing ("Registro", "Empezar gratis") y botón "Aceptar todas" de cookies a 	ext-zinc-950 font-bold, elevando la proporción de contraste de 2.8:1 a 7.5:1 (Nivel AAA).
 5. **Modern Baseline en package.json**:
    - Añadido rowserslist para navegadores modernos, eliminando 14 KiB de polyfills heredados innecesarios.
+
+
+---
+
+## 174. Personalización Humana de Kloe y Flujo de Outfits en Chat (2026-10-26)
+
+### Contexto:
+Refactorización de la personalidad de Kloe en `/closet/kloe` para eliminar respuestas mecánicas, largas y estructuradas como ensayos de IA genérica. Optimización de visión multimodal de posts guardados y corrección de acciones de botones de outfit (anti-spam de guardar, creación de outfit previa a publicación y generación de sticker).
+
+### Modificaciones Realizadas:
+1. **Personalidad y Tono Auténtico de Kloe (`app/api/closy/chat/route.ts`)**:
+   - Redefinidas las instrucciones de sistema (`systemInstruction`): Kloe ahora habla de forma cercana, fresca, directa y con estilo ("Oye Ethan...", "A ver, te cuento..."), como una estilista personal o amiga que sabe de moda de verdad.
+   - Prohibidas terminantemente listas mecánicas de viñetas con encabezados de IA ("• La elección protagonista: ...", "• La parte inferior: ...", "• Estructura y silueta: ...").
+   - Conexión con rasgos físicos reales: Kloe conecta orgánicamente el look con las facciones, corte de pelo, tono de piel y complexión física de Ethan.
+2. **Visión Multimodal de Posts Guardados (`app/api/closy/chat/route.ts`)**:
+   - Priorizada la inspección visual directa de la imagen del post de referencia en Gemini.
+   - Eliminada la plantilla heurística genérica de viñetas fijas ("Estructura y silueta...", "Colores y texturas..."), sustituyéndola por una respuesta contextualizada que reconoce las prendas y proporciones reales del look.
+3. **Control Anti-Spam en "Guardar look" (`app/(app)/closet/kloe/page.tsx`)**:
+   - Generada firma determinista de outfit (`getOutfitSignature`) a partir de sus items.
+   - Si el outfit ya fue guardado en la sesión o existe en armario, el botón queda bloqueado con `disabled` mostrando "En Armario" con un check verde para evitar duplicados.
+4. **Flujo de "Publicar look" (`app/(app)/closet/kloe/page.tsx`)**:
+   - En lugar de redirigir con simples `itemIds`, ahora ejecuta `handlePublishOutfit`, creando o recuperando el registro en la tabla `outfits` y redirigiendo limpiamente a `/create-post?outfitId=...`.
+5. **Renombrado de Acción IG (`app/(app)/closet/kloe/page.tsx`)**:
+   - Actualizado el botón "Story IG" a "Generar sticker" acompañado del icono `Sparkles`.

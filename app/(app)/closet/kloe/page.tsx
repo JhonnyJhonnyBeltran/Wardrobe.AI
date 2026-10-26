@@ -21,7 +21,8 @@ import {
   Camera,
   AlertCircle,
   Instagram,
-  Share2
+  Share2,
+  Sparkles
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -329,12 +330,22 @@ export default function KloePage() {
   const [attachedPost, setAttachedPost] = useState<AttachedPost | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
   const [savingOutfitKey, setSavingOutfitKey] = useState<string | null>(null);
+  const [publishingOutfitKey, setPublishingOutfitKey] = useState<string | null>(null);
   const [savedOutfitKeys, setSavedOutfitKeys] = useState<Set<string>>(new Set());
+  const [savedOutfitIdMap, setSavedOutfitIdMap] = useState<Map<string, string>>(new Map());
   const [exportModalOutfit, setExportModalOutfit] = useState<any | null>(null);
 
-  const handleSaveOutfitToCloset = async (outfit: any) => {
-    if (!outfit || !outfit.items || outfit.items.length === 0) return;
-    const outfitKey = (outfit.name || '') + outfit.items.map((i: any) => i.id).join('');
+  const getOutfitSignature = (outfit: any) => {
+    if (!outfit || !outfit.items) return '';
+    return outfit.items.map((i: any) => i.id || i).sort().join('_');
+  };
+
+  const handleSaveOutfitToCloset = async (outfit: any): Promise<string | null> => {
+    if (!outfit || !outfit.items || outfit.items.length === 0) return null;
+    const outfitKey = getOutfitSignature(outfit);
+    if (savedOutfitKeys.has(outfitKey) && savedOutfitIdMap.has(outfitKey)) {
+      return savedOutfitIdMap.get(outfitKey) || null;
+    }
     setSavingOutfitKey(outfitKey);
     try {
       const res = await fetch('/api/closy/save-outfit', {
@@ -347,18 +358,51 @@ export default function KloePage() {
         })
       });
       if (res.ok) {
+        const data = await res.json();
+        const createdId = data.outfit_id || data.outfit?.id;
         setSavedOutfitKeys(prev => new Set(prev).add(outfitKey));
+        if (createdId) {
+          setSavedOutfitIdMap(prev => new Map(prev).set(outfitKey, createdId));
+        }
         toast.success('¡Outfit guardado en tu armario!');
+        return createdId || null;
       } else {
         toast.error('No se pudo guardar el outfit');
+        return null;
       }
     } catch (err) {
       console.error('[KloeChat] Error saving outfit:', err);
       toast.error('Error al guardar el look');
+      return null;
     } finally {
       setSavingOutfitKey(null);
     }
   };
+
+  const handlePublishOutfit = async (outfit: any) => {
+    if (!outfit || !outfit.items || outfit.items.length === 0) return;
+    const outfitKey = getOutfitSignature(outfit);
+    setPublishingOutfitKey(outfitKey);
+    try {
+      let outfitId = savedOutfitIdMap.get(outfitKey);
+      if (!outfitId) {
+        outfitId = (await handleSaveOutfitToCloset(outfit)) || undefined;
+      }
+      if (outfitId) {
+        router.push(`/create-post?outfitId=${outfitId}`);
+      } else {
+        const itemIds = (outfit.items || []).map((i: any) => i.id).join(',');
+        router.push(`/create-post?itemIds=${itemIds}&title=${encodeURIComponent(outfit.name || 'Look Kloe')}`);
+      }
+    } catch (err) {
+      console.error('[KloeChat] Error publishing outfit:', err);
+      toast.error('Error al preparar el look para publicar');
+    } finally {
+      setPublishingOutfitKey(null);
+    }
+  };
+
+
   const [showProModal, setShowProModal] = useState(false);
   const [quotaInfo, setQuotaInfo] = useState<{
     isPremium: boolean;
@@ -1314,15 +1358,18 @@ export default function KloePage() {
                     {/* 1. Guardar en Armario */}
                     <button
                       onClick={() => handleSaveOutfitToCloset(msg.recommended_outfit)}
-                      disabled={savingOutfitKey === ((msg.recommended_outfit.name || '') + msg.recommended_outfit.items.map((i: any) => i.id).join(''))}
-                      className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-[var(--background-secondary)] hover:bg-[var(--foreground)] hover:text-[var(--background)] text-[var(--foreground)] text-xs font-semibold border border-[var(--border-color)] transition-all active:scale-[0.98] disabled:opacity-50"
+                      disabled={
+                        savedOutfitKeys.has(getOutfitSignature(msg.recommended_outfit)) ||
+                        savingOutfitKey === getOutfitSignature(msg.recommended_outfit)
+                      }
+                      className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-[var(--background-secondary)] hover:bg-[var(--foreground)] hover:text-[var(--background)] text-[var(--foreground)] text-xs font-semibold border border-[var(--border-color)] transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {savedOutfitKeys.has((msg.recommended_outfit.name || '') + msg.recommended_outfit.items.map((i: any) => i.id).join('')) ? (
+                      {savedOutfitKeys.has(getOutfitSignature(msg.recommended_outfit)) ? (
                         <>
                           <Check className="w-3.5 h-3.5 text-emerald-500" />
                           <span className="truncate text-emerald-600 dark:text-emerald-400 font-bold">En Armario</span>
                         </>
-                      ) : savingOutfitKey === ((msg.recommended_outfit.name || '') + msg.recommended_outfit.items.map((i: any) => i.id).join('')) ? (
+                      ) : savingOutfitKey === getOutfitSignature(msg.recommended_outfit) ? (
                         <>
                           <Loader2 className="w-3.5 h-3.5 animate-spin" />
                           <span className="truncate">Guardando...</span>
@@ -1335,22 +1382,32 @@ export default function KloePage() {
                       )}
                     </button>
 
-                    {/* 2. Publicar en el Feed */}
-                    <Link
-                      href={`/create-post?itemIds=${(msg.recommended_outfit.items || []).map((i: any) => i.id).join(',')}&title=${encodeURIComponent(msg.recommended_outfit.name || 'Look Kloe')}`}
-                      className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-[var(--background-secondary)] hover:bg-[var(--foreground)] hover:text-[var(--background)] text-[var(--foreground)] text-xs font-semibold border border-[var(--border-color)] transition-all active:scale-[0.98]"
+                    {/* 2. Publicar en el Feed (crea outfit y redirige con outfitId) */}
+                    <button
+                      onClick={() => handlePublishOutfit(msg.recommended_outfit)}
+                      disabled={publishingOutfitKey === getOutfitSignature(msg.recommended_outfit)}
+                      className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-[var(--background-secondary)] hover:bg-[var(--foreground)] hover:text-[var(--background)] text-[var(--foreground)] text-xs font-semibold border border-[var(--border-color)] transition-all active:scale-[0.98] disabled:opacity-50"
                     >
-                      <Share2 className="w-3.5 h-3.5" />
-                      <span className="truncate">Publicar look</span>
-                    </Link>
+                      {publishingOutfitKey === getOutfitSignature(msg.recommended_outfit) ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          <span className="truncate">Preparando...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Share2 className="w-3.5 h-3.5" />
+                          <span className="truncate">Publicar look</span>
+                        </>
+                      )}
+                    </button>
 
-                    {/* 3. Exportar a Instagram Story */}
+                    {/* 3. Exportar a Instagram Story (Generar sticker) */}
                     <button
                       onClick={() => setExportModalOutfit(msg.recommended_outfit)}
                       className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-gradient-to-r from-pink-500/10 to-purple-500/10 hover:from-pink-500/20 hover:to-purple-500/20 text-pink-600 dark:text-pink-400 text-xs font-semibold border border-pink-500/30 transition-all active:scale-[0.98]"
                     >
-                      <Instagram className="w-3.5 h-3.5" />
-                      <span className="truncate">Story IG</span>
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span className="truncate">Generar sticker</span>
                     </button>
 
                     {/* 4. Editar en el Lienzo */}
