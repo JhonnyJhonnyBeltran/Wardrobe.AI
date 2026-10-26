@@ -2870,3 +2870,19 @@ Refactorización de la personalidad de Kloe en `/closet/kloe` para eliminar resp
    - En lugar de redirigir con simples `itemIds`, ahora ejecuta `handlePublishOutfit`, creando o recuperando el registro en la tabla `outfits` y redirigiendo limpiamente a `/create-post?outfitId=...`.
 5. **Renombrado de Acción IG (`app/(app)/closet/kloe/page.tsx`)**:
    - Actualizado el botón "Story IG" a "Generar sticker" acompañado del icono `Sparkles`.
+
+
+---
+
+## 175. Filtro Inviolable de Rol para Kloe (Moda y Estilismo Exclusivos) (2026-10-26)
+
+### Contexto:
+Establecimiento de límites estrictos para evitar que Kloe actúe como un chatbot de propósito general o responda a preguntas fuera de su marco (programación, recetas de cocina, política, medicina, matemáticas, tareas escolares, etc.).
+
+### Modificaciones Realizadas:
+1. **Regla de Sistema Inviolable (`app/api/closy/chat/route.ts`)**:
+   - Inyectada la directiva `"LÍMITE ESTRICTO DE ROL Y MARCO DE ESTILISTA (FILTRO INVIOLABLE)"`.
+   - Si el usuario plantea cualquier cuestión fuera del mundo de la moda, ropa, estilismo o compras, Kloe tiene prohibido responder sobre el tema externo y debe declinar cordialmente reconduciendo a su armario o combinaciones de ropa.
+2. **Filtro Heurístico en Fallback (`generateHeuristicStylingResponse`)**:
+   - Detección de intenciones y palabras clave ajenas a la moda (cocina, recetas, código, política, matemáticas, medicina, etc.).
+   - Respuesta automática y cercana de rechazo cordial cuando la consulta no guarda relación con prendas o looks.

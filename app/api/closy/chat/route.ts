@@ -537,6 +537,13 @@ PERSONALIDAD Y VOZ:
 - PROHIBIDO el uso de emojis en el texto.
 - PROHIBIDO usar almohadillas ("#", "##", "###"). Usa negrita cuando quieras destacar nombres de prendas o firmas.
 
+LÍMITE ESTRICTO DE ROL Y MARCO DE ESTILISTA (FILTRO INVIOLABLE):
+- Eres ÚNICA Y EXCLUSIVAMENTE una asesora de estilismo, moda, imagen personal, morfología, colorimetría y combinaciones de ropa para el armario de ${userName}.
+- Si el usuario te hace preguntas FUERA de este marco (por ejemplo: programación, recetas de cocina, política, matemáticas, medicina, historia general, redacción de ensayos, tareas escolares, dudas técnicas o cualquier tema no relacionado con moda/ropa/estilo):
+  * TIENES TOTALMENTE PROHIBIDO contestar a esa pregunta o tema externo.
+  * Responde de forma cordial, cercana pero firme y directa que como su estilista personal solo puedes ayudarle con temas de moda, looks, combinaciones de ropa, compras o su armario personal, reconduciendo la conversación a su estilo (ejemplo: "Oye ${userName}, yo aquí soy tu estilista personal y mi mundo es la moda y tu armario. Para temas fuera de looks, prendas o estilo no te puedo ayudar, pero si necesitas armar un outfit, combinar ropa o elegir compras clave, ¡aquí me tienes!").
+  * Devuelve siempre "recommended_outfit": null y sugerencias de moda en "follow_up_suggestions".
+
 PERFIL FÍSICO Y ESTILO DE ${userName}:
 - Nombre: ${userName}
 - Sexo / Género: ${userGender}
@@ -1109,7 +1116,31 @@ function generateHeuristicStylingResponse(
 ) {
   const items = context.wardrobe.items || [];
   const lower = userPrompt.toLowerCase();
+  const userName = context.user?.firstName || (context.user?.fullName ? context.user.fullName.split(' ')[0] : '') || (context.user?.username ? context.user.username.replace(/^@/, '') : 'Ethan');
   const primaryItem = attachedItems.length > 0 ? attachedItems[0] : null;
+
+  // 0. Stylist Scope Guard (Fallback filter for off-topic queries)
+  const offTopicKeywords = [
+    'receta', 'cocinar', 'ingredientes', 'programar', 'código', 'codigo', 'javascript', 'python', 'sql',
+    'matemática', 'matematica', 'calcula', 'ecuación', 'ecuacion', 'politica', 'política', 'gobierno',
+    'medicina', 'síntomas', 'sintomas', 'enfermedad', 'pastilla', 'dolor de cabeza',
+    'redacta un ensayo', 'tarea de historia', 'guerra mundial', 'quién descubrió', 'quien descubrio'
+  ];
+  const isOffTopic = offTopicKeywords.some(kw => lower.includes(kw)) && 
+    !lower.includes('ropa') && !lower.includes('look') && !lower.includes('outfit') && !lower.includes('vestir') && !lower.includes('prenda');
+
+  if (isOffTopic) {
+    return {
+      message: `Oye ${userName}, yo aquí soy tu estilista personal y mi especialidad absoluta es la moda, tus combinaciones y sacarle el máximo partido a tu armario. Para temas fuera de looks, compras o imagen no puedo ayudarte, pero si quieres armar un conjunto o combinar cualquier prenda, ¡dime y nos ponemos a ello!`,
+      recommended_outfit: null,
+      highlighted_item_ids: [],
+      follow_up_suggestions: [
+        'Arma un look con mi ropa de diario',
+        '¿Qué compras me recomiendas para esta temporada?',
+        '¿Cómo combinar prendas según mis facciones?'
+      ]
+    };
+  }
 
   // If user attached specific garments, prioritize them as target garments
   if (primaryItem) {
@@ -1204,8 +1235,6 @@ El secreto de este look está en la caída fluida y en cómo equilibra las propo
       ]
     };
   }
-
-  const userName = context.user?.firstName || (context.user?.fullName ? context.user.fullName.split(' ')[0] : '') || (context.user?.username ? context.user.username.replace(/^@/, '') : '');
 
   // Scenario 1: Empty or very few items in wardrobe (0-2 items)
   if (items.length === 0) {
