@@ -2956,3 +2956,34 @@ Inclusión de tarjetas visuales de las prendas que componen el outfit dentro del
 2. **Copia de Reportes para Asistente IA (`app/(app)/admin/insights/page.tsx`)**:
    - Añadido botón superior "Copiar todo para IA" con resumen formateado de todos los reportes de usuario.
    - Añadido botón individual "Copiar para IA" en cada tarjeta de reporte con metadatos de pantalla, dispositivo y usuario.
+
+
+---
+
+## 180. Dictamen del Consejo de Negocio y Business Plan Maestro (2026-10-28)
+
+### Contexto:
+Ejecución del Consejo de Negocio con 4 subagentes especializados (`business-believer`, `business-hater`, `business-investor`, `business-judge`) para auditar la viabilidad económica, técnica, legal y estratégica de Klozet (Wardrobe.AI).
+
+### Veredicto del Consejo:
+- **Estado:** APROBADO CON CONDICIONES CRÍTICAS DE PIVOTE TÉCNICO (86/100).
+- **Documento Maestro Generado:** `Obsidian/business-plan.md`.
+
+### Puntos Clave y Decisiones Estratégicas:
+1. **Propuesta de Valor & Moat (`business-believer`):**
+   - Identidad sólida ("un juguete dentro de un iPhone"), avatar Kloe interactivo y exportación viral tipo Strava hacia Instagram Stories.
+   - Eficiencia técnica destacada: recorte de fondos en cliente WASM (`@imgly/background-removal`, 0 € coste servidor) y caché SHA-256 en prompts Gemini.
+2. **Riesgos Críticos Identificados (`business-hater`):**
+   - Trampa del armario vacío: 85% de churn en D1 si el usuario no tiene prendas subidas.
+   - Riesgo RGPD Art. 9: subida de fotos faciales/corporales a APIs externas en `/api/closy/generate-avatar`.
+   - Fragilidad Serverless: Puppeteer/Chromium en `/api/scrape-product` expuesto a timeouts y bloqueos anti-bot.
+   - Unit economics descontrolados con usuarios intensivos y visión multimodal sin límite.
+3. **Estructura Financiera & Pricing (`business-investor`):**
+   - Aumento del ticket Pro de 2,99 €/mes a **4,99 €/mes** y **29,99 € - 34,99 €/año** para evitar que las comisiones de Stripe devoren el margen.
+   - Break-even ultra bajo: 14 usuarios Pro cubren toda la infraestructura mensual (~60 €).
+   - Vía de monetización secundaria: enlaces de afiliados de moda (LTK / Inditex / Awin) cuando Kloe detecta huecos de estilo.
+4. **4 Pivotes Obligatorios del Juez (`business-judge`):**
+   - Onboarding con Armario Cápsula Base (8-12 prendas universales precargadas en 1 tap).
+   - Reemplazo de biometría en `/api/closy/generate-avatar` por arquetipos estilizados ilustrados.
+   - Sustitución de Puppeteer por parser OpenGraph/JSON-LD + subida manual de captura.
+   - Límite estricto de contexto visual (máx 6 prendas por consulta a Gemini) y desactivación de push spam cada 3 horas.
