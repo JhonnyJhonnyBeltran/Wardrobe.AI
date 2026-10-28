@@ -1,18 +1,18 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Crown, Check, X, Loader2, ShieldCheck, Zap } from 'lucide-react';
-import Link from 'next/link';
+import { Crown, Check, X, ShieldCheck, Zap } from 'lucide-react';
 import { LogoMark } from '@/components';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import { useUiStore } from '@/store/uiStore';
 
 export default function PremiumPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('yearly');
-    const [loading, setLoading] = useState(false);
+    const { openPremiumModal } = useUiStore();
 
     useEffect(() => {
         if (searchParams.get('subscribed') === 'success' || searchParams.get('success') === 'true') {
@@ -49,31 +49,8 @@ export default function PremiumPage() {
         };
     }, [router]);
 
-    const handleCheckout = async () => {
-        setLoading(true);
-        try {
-            const res = await fetch('/api/stripe/checkout', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ plan: selectedPlan, embedded: false })
-            });
-
-            const data = await res.json();
-
-            if (!res.ok) {
-                throw new Error(data.error || 'Error al conectar con la pasarela de pago');
-            }
-
-            if (data.url) {
-                window.location.href = data.url;
-            } else {
-                throw new Error('No se pudo generar la sesión de pago');
-            }
-        } catch (err: any) {
-            console.error('[PremiumPage] Checkout error:', err);
-            toast.error(err.message || 'Error al iniciar el pago. Inténtalo de nuevo.');
-            setLoading(false);
-        }
+    const handleOpenPaymentModal = () => {
+        openPremiumModal();
     };
 
     const benefits = [
@@ -92,6 +69,7 @@ export default function PremiumPage() {
                     <button
                         onClick={() => router.back()}
                         className="p-2 -ml-2 text-[var(--foreground-secondary)] hover:text-[var(--foreground)] transition-colors cursor-pointer"
+                        aria-label="Volver"
                     >
                         <X className="w-6 h-6" />
                     </button>
@@ -114,23 +92,22 @@ export default function PremiumPage() {
                         </div>
                     </div>
 
-                    <h1 className="text-3xl md:text-4xl font-extrabold mb-3 text-[var(--foreground)] tracking-tight">
-                        Klozet Premium
+                    <h1 className="text-3xl font-black text-[var(--foreground)] mb-3 tracking-tight">
+                        Desbloquea <span className="text-[var(--brand-pink)]">Klozet Pro</span>
                     </h1>
-
-                    <p className="text-base text-[var(--foreground-secondary)] max-w-md mx-auto">
-                        Tu estilista de moda Kloe para lucir impecable en cualquier ocasión
+                    <p className="text-sm text-[var(--foreground-secondary)] max-w-md mx-auto leading-relaxed">
+                        Tu estilista de moda personal en el bolsillo. Consultas infinitas, análisis visual de tus prendas y looks ilimitados.
                     </p>
                 </motion.div>
 
-                {/* Plan Selector */}
+                {/* Plans Selection */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1 }}
                     className="grid grid-cols-2 gap-3 mb-8"
                 >
-                    {/* Annual Plan */}
+                    {/* Yearly Plan */}
                     <div
                         onClick={() => setSelectedPlan('yearly')}
                         className={`relative p-4 rounded-2xl border-2 cursor-pointer transition-all ${
@@ -139,7 +116,7 @@ export default function PremiumPage() {
                                 : 'border-[var(--border-color)] bg-[var(--card-bg)] hover:border-[var(--foreground-tertiary)]'
                         }`}
                     >
-                        <div className="absolute -top-2.5 right-3 bg-[var(--brand-pink)] text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                        <div className="absolute -top-3 right-3 bg-[var(--brand-pink)] text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs">
                             Ahorra 30%
                         </div>
                         <div className="text-xs font-semibold text-[var(--foreground-secondary)] mb-1">Plan Anual</div>
@@ -188,7 +165,7 @@ export default function PremiumPage() {
                     </div>
                 </motion.div>
 
-                {/* Action Button */}
+                {/* Action Button: Opens native in-app payment modal with Apple Pay & Google Pay */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -196,29 +173,19 @@ export default function PremiumPage() {
                     className="space-y-3 mb-6"
                 >
                     <button
-                        onClick={handleCheckout}
-                        disabled={loading}
-                        className="w-full py-4 px-6 rounded-2xl bg-[var(--brand-pink)] text-white font-bold text-base hover:opacity-95 active:scale-[0.98] transition-all shadow-xl shadow-[var(--brand-pink)]/25 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                        onClick={handleOpenPaymentModal}
+                        className="w-full py-4 px-6 rounded-2xl bg-[var(--brand-pink)] text-white font-bold text-base hover:opacity-95 active:scale-[0.98] transition-all shadow-xl shadow-[var(--brand-pink)]/25 flex items-center justify-center gap-2 cursor-pointer"
                     >
-                        {loading ? (
-                            <>
-                                <Loader2 className="w-5 h-5 animate-spin" />
-                                <span>Iniciando pasarela de pago segura...</span>
-                            </>
-                        ) : (
-                            <>
-                                <Zap className="w-5 h-5" />
-                                <span>
-                                    Desbloquear Klozet Premium ({selectedPlan === 'yearly' ? '24,99 €/año' : '2,99 €/mes'})
-                                </span>
-                            </>
-                        )}
+                        <Zap className="w-5 h-5 fill-white" />
+                        <span>
+                            Abrir Hoja de Pago Rápido ({selectedPlan === 'yearly' ? '24,99 €/año' : '2,99 €/mes'})
+                        </span>
                     </button>
 
                     <div className="flex items-center justify-center gap-4 text-xs text-[var(--foreground-tertiary)]">
                         <span className="flex items-center gap-1">
                             <ShieldCheck className="w-4 h-4 text-emerald-500" />
-                            Pago seguro cifrado por Stripe
+                            Pago seguro con Apple Pay, Google Pay y Tarjeta
                         </span>
                         <span>•</span>
                         <span>Cancela en 1 clic cuando quieras</span>
@@ -228,4 +195,3 @@ export default function PremiumPage() {
         </div>
     );
 }
-

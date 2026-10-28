@@ -37,7 +37,7 @@
 * **Trampa del Micro-Ticket:** Cobrar 2,99€/mes deja a Stripe con el 9,8% a 11,8% del ticket neto (0,25€ fijos + 1,4%). Se debe subir a **4,99 €/mes** y **34,99 €/año** (+75% de beneficio neto por usuario).
 * **El Plan Anual como Ancla:** Aporta 20,05€ netos de caja en día 1 con solo 2,4% de comisión Stripe y cero churn mensual durante 12 meses.
 * **Costes Fijos Mínimos:** Vercel Pro ($20) + Supabase Pro ($25) + Dominio (~10€) = **~51 € / mes**. Se cubren con solo **14 suscriptores**.
-* **Segunda Vía de Ingresos:** Afiliación de compras (LTK, Awin, Inditex) cuando Kloe detecte prendas faltantes en el armario (+15-25% de ARPU con 100% de margen).
+* **Vías Secundarias (Pospuestas):** La afiliación de moda se descarta de momento por complejidad operativa y técnica. El 100% del foco comercial se concentra en la suscripción directa Pro.
 
 ---
 
@@ -74,7 +74,7 @@ Para autorizar el lanzamiento, se deben ejecutar obligatoriamente 4 medidas:
   * **4,99 € / mes** (IVA incl.)
   * **29,99 € / año** (precio de lanzamiento para los primeros 500 suscriptores) $\rightarrow$ **34,99 € / año** estándar (~2,91 €/mes).
   * Armario ilimitado, consultas ilimitadas con Kloe (hasta 30/día), exportación en alta definición sin marcas de agua y calendario.
-* **Afiliación de Moda:** Comisión media del 7% al 12% en prendas recomendadas por Kloe vía Awin / LTK / Stylink.
+* **Nota de Monetización:** Afiliación de compras (LTK, Awin, Inditex) pospuesta indefinidamente. La totalidad del modelo de ingresos se concentra en suscripciones de pago directo mediante la Hoja de Pago rápida (Payment Sheet de Apple Pay, Google Pay y tarjetas).
 
 ### C. Unit Economics por Suscriptor
 * **Plan Mensual (4,99 €):**

@@ -150,25 +150,25 @@ export default function LandingPage() {
           {user ? (
             <Link 
               href="/closet" 
-              className="px-3.5 sm:px-5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold bg-[var(--brand-pink,#FF66C4)] text-zinc-950 font-bold hover:opacity-95 transition-all shadow-sm active:scale-95 flex items-center gap-1 sm:gap-1.5"
+              className="px-3.5 sm:px-5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-bold bg-[var(--brand-pink,#FF66C4)] text-white hover:opacity-95 transition-all shadow-sm active:scale-95 flex items-center gap-1 sm:gap-1.5"
             >
               <span>Mi Armario</span>
-              <ArrowRight className="w-3.5 h-3.5" />
+              <ArrowRight className="w-3.5 h-3.5 text-white" />
             </Link>
           ) : (
             <>
               <Link 
                 href="/auth" 
-                className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium text-zinc-700 dark:text-zinc-200 hover:text-zinc-950 dark:hover:text-white bg-zinc-100/80 dark:bg-zinc-800/80 backdrop-blur-md border border-black/[0.04] dark:border-white/[0.06] transition-all active:scale-95"
+                className="px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-bold text-zinc-950 dark:text-zinc-50 hover:text-black dark:hover:text-white bg-white dark:bg-zinc-800/90 backdrop-blur-md border border-zinc-200 dark:border-zinc-700 shadow-sm transition-all active:scale-95"
               >
                 Entrar
               </Link>
               <Link 
                 href="/auth" 
-                className="px-3.5 sm:px-5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold bg-[var(--brand-pink,#FF66C4)] text-zinc-950 font-bold hover:opacity-95 transition-all shadow-sm active:scale-95 flex items-center gap-1"
+                className="px-3.5 sm:px-5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-bold bg-[var(--brand-pink,#FF66C4)] text-white hover:opacity-95 transition-all shadow-sm active:scale-95 flex items-center gap-1"
               >
                 <span>Registro</span>
-                <ArrowRight className="w-3.5 h-3.5" />
+                <ArrowRight className="w-3.5 h-3.5 text-white" />
               </Link>
             </>
           )}
@@ -258,7 +258,7 @@ export default function LandingPage() {
                       className="w-full h-auto object-contain -rotate-10" 
                       priority 
                     />
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-white/90 dark:bg-zinc-800/90 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.08] text-[8px] sm:text-[9px] font-semibold text-zinc-800 dark:text-zinc-200 whitespace-nowrap shadow-xs">
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
                       Cardigan Noon
                     </div>
                   </motion.div>
@@ -281,7 +281,7 @@ export default function LandingPage() {
                       className="w-full h-auto object-contain -rotate-8" 
                       priority 
                     />
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-white/90 dark:bg-zinc-800/90 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.08] text-[8px] sm:text-[9px] font-semibold text-zinc-800 dark:text-zinc-200 whitespace-nowrap shadow-xs">
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
                       Camisa Lino
                     </div>
                   </motion.div>
@@ -304,7 +304,7 @@ export default function LandingPage() {
                       className="w-full h-auto object-contain rotate-2 transition-transform duration-500" 
                       priority 
                     />
-                    <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white/95 dark:bg-zinc-800/95 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.08] text-[8px] sm:text-[10px] font-semibold text-zinc-900 dark:text-zinc-100 whitespace-nowrap shadow-sm flex items-center gap-1">
+                    <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[8px] sm:text-[10px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-[var(--brand-pink,#FF66C4)]" />
                       <span>Scuffers Hoodie</span>
                     </div>
@@ -328,7 +328,7 @@ export default function LandingPage() {
                       className="w-full h-auto object-contain rotate-8" 
                       priority 
                     />
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-white/90 dark:bg-zinc-800/90 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.08] text-[8px] sm:text-[9px] font-semibold text-zinc-800 dark:text-zinc-200 whitespace-nowrap shadow-xs">
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
                       Denim Wide
                     </div>
                   </motion.div>
@@ -351,7 +351,7 @@ export default function LandingPage() {
                       className="w-full h-auto object-contain rotate-12" 
                       priority 
                     />
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-white/90 dark:bg-zinc-800/90 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.08] text-[8px] sm:text-[9px] font-semibold text-zinc-800 dark:text-zinc-200 whitespace-nowrap shadow-xs">
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
                       Lotus Chrono
                     </div>
                   </motion.div>
@@ -374,7 +374,7 @@ export default function LandingPage() {
                       className="w-full h-auto object-contain -rotate-10" 
                       priority 
                     />
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-white/90 dark:bg-zinc-800/90 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.08] text-[8px] sm:text-[9px] font-semibold text-zinc-800 dark:text-zinc-200 whitespace-nowrap shadow-xs">
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
                       Guess Bag
                     </div>
                   </motion.div>
@@ -397,7 +397,7 @@ export default function LandingPage() {
                       className="w-full h-auto object-contain -rotate-6" 
                       priority 
                     />
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-white/90 dark:bg-zinc-800/90 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.08] text-[8px] sm:text-[9px] font-semibold text-zinc-800 dark:text-zinc-200 whitespace-nowrap shadow-xs">
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
                       Platform Stiletto
                     </div>
                   </motion.div>
@@ -408,10 +408,10 @@ export default function LandingPage() {
                   <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                     <Link
                       href={user ? "/closet" : "/auth"}
-                      className="px-6 sm:px-8 py-2.5 sm:py-3 rounded-full font-bold text-xs sm:text-sm bg-[var(--brand-pink,#FF66C4)] text-zinc-950 hover:opacity-95 transition-all shadow-md shadow-[var(--brand-pink,#FF66C4)]/20 inline-flex items-center gap-2 group"
+                      className="px-6 sm:px-8 py-2.5 sm:py-3 rounded-full font-bold text-xs sm:text-sm bg-[var(--brand-pink,#FF66C4)] text-white hover:opacity-95 transition-all shadow-md shadow-[var(--brand-pink,#FF66C4)]/20 inline-flex items-center gap-2 group"
                     >
                       <span>{user ? "Ir a mi armario" : "Empezar gratis"}</span>
-                      <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                      <ArrowRight className="w-3.5 h-3.5 text-white group-hover:translate-x-1 transition-transform" />
                     </Link>
                   </motion.div>
                 </motion.div>
@@ -474,7 +474,7 @@ export default function LandingPage() {
                       height={180} 
                       className="w-full h-auto object-contain -rotate-8" 
                     />
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-white/95 dark:bg-zinc-800/95 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.08] text-[8px] sm:text-[9px] font-semibold text-zinc-800 dark:text-zinc-200 whitespace-nowrap shadow-xs">
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
                       Cardigan Noon
                     </div>
                   </motion.div>
@@ -496,7 +496,7 @@ export default function LandingPage() {
                       height={220} 
                       className="w-full h-auto object-contain -rotate-10" 
                     />
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-white/95 dark:bg-zinc-800/95 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.08] text-[8px] sm:text-[9px] font-semibold text-zinc-800 dark:text-zinc-200 whitespace-nowrap shadow-xs">
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
                       Cowboy Boots
                     </div>
                   </motion.div>
@@ -528,7 +528,7 @@ export default function LandingPage() {
                         className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[var(--brand-pink,#FF66C4)] to-transparent shadow-[0_0_14px_var(--brand-pink,#FF66C4)] pointer-events-none"
                       />
                     </div>
-                    <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white/95 dark:bg-zinc-800/95 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.08] text-[8px] sm:text-[10px] font-semibold text-zinc-900 dark:text-zinc-100 whitespace-nowrap shadow-sm flex items-center gap-1">
+                    <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[8px] sm:text-[10px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-[var(--brand-pink,#FF66C4)]" />
                       <span>Yuxus Hoodie</span>
                     </div>
@@ -551,7 +551,7 @@ export default function LandingPage() {
                       height={260} 
                       className="w-full h-auto object-contain rotate-10" 
                     />
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-white/95 dark:bg-zinc-800/95 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.08] text-[8px] sm:text-[9px] font-semibold text-zinc-800 dark:text-zinc-200 whitespace-nowrap shadow-xs">
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
                       Noon Denim
                     </div>
                   </motion.div>
@@ -573,7 +573,7 @@ export default function LandingPage() {
                       height={160} 
                       className="w-full h-auto object-contain -rotate-6" 
                     />
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-white/95 dark:bg-zinc-800/95 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.08] text-[8px] sm:text-[9px] font-semibold text-zinc-800 dark:text-zinc-200 whitespace-nowrap shadow-xs">
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
                       Michael Kors
                     </div>
                   </motion.div>
@@ -640,7 +640,7 @@ export default function LandingPage() {
                       height={190} 
                       className="w-full h-auto object-contain rotate-8" 
                     />
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-white/95 dark:bg-zinc-800/95 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.08] text-[8px] sm:text-[9px] font-semibold text-zinc-800 dark:text-zinc-200 whitespace-nowrap shadow-xs">
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
                       Eme Studios
                     </div>
                   </motion.div>
@@ -662,7 +662,7 @@ export default function LandingPage() {
                       height={260} 
                       className="w-full h-auto object-contain -rotate-8" 
                     />
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-white/95 dark:bg-zinc-800/95 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.08] text-[8px] sm:text-[9px] font-semibold text-zinc-800 dark:text-zinc-200 whitespace-nowrap shadow-xs">
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
                       Noon Strass
                     </div>
                   </motion.div>
@@ -684,7 +684,7 @@ export default function LandingPage() {
                       height={240} 
                       className="w-full h-auto object-contain rotate-10" 
                     />
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-white/90 dark:bg-zinc-800/90 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.08] text-[8px] sm:text-[9px] font-semibold text-zinc-800 dark:text-zinc-200 whitespace-nowrap shadow-xs">
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
                       Lotus Chrono
                     </div>
                   </motion.div>
@@ -706,7 +706,7 @@ export default function LandingPage() {
                       height={160} 
                       className="w-full h-auto object-contain -rotate-6" 
                     />
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-white/90 dark:bg-zinc-800/90 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.08] text-[8px] sm:text-[9px] font-semibold text-zinc-800 dark:text-zinc-200 whitespace-nowrap shadow-xs">
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
                       Michael Kors
                     </div>
                   </motion.div>
@@ -815,7 +815,7 @@ export default function LandingPage() {
                       fill 
                       className="object-cover" 
                     />
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-white/95 dark:bg-zinc-800/95 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.08] text-[7px] sm:text-[9px] font-semibold text-zinc-900 dark:text-zinc-100 whitespace-nowrap shadow-xs">
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[7px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
                       Look Minimal
                     </div>
                   </motion.div>
@@ -837,7 +837,7 @@ export default function LandingPage() {
                       height={160} 
                       className="w-full h-auto object-contain rotate-12" 
                     />
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-white/95 dark:bg-zinc-800/95 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.08] text-[7px] sm:text-[9px] font-semibold text-zinc-800 dark:text-zinc-200 whitespace-nowrap shadow-xs">
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[7px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
                       Cardigan
                     </div>
                   </motion.div>
@@ -856,7 +856,7 @@ export default function LandingPage() {
                       fill 
                       className="object-cover" 
                     />
-                    <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2.5 py-0.5 sm:py-1 rounded-full bg-white/95 dark:bg-zinc-800/95 backdrop-blur-xl border border-black/[0.08] dark:border-white/[0.08] text-[8px] sm:text-[10px] font-semibold text-zinc-900 dark:text-zinc-100 whitespace-nowrap shadow-md flex items-center gap-1">
+                    <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2.5 py-0.5 sm:py-1 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[8px] sm:text-[10px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap flex items-center gap-1">
                       <Star className="w-3 h-3 text-[var(--brand-pink,#FF66C4)]" />
                       <span>Lienzo de Hoy</span>
                     </div>
@@ -879,7 +879,7 @@ export default function LandingPage() {
                       height={180} 
                       className="w-full h-auto object-contain -rotate-10" 
                     />
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-white/95 dark:bg-zinc-800/95 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.08] text-[7px] sm:text-[9px] font-semibold text-zinc-800 dark:text-zinc-200 whitespace-nowrap shadow-xs">
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[7px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
                       Guess Bag
                     </div>
                   </motion.div>
@@ -901,7 +901,7 @@ export default function LandingPage() {
                       height={140} 
                       className="w-full h-auto object-contain rotate-8" 
                     />
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-white/95 dark:bg-zinc-800/95 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.08] text-[7px] sm:text-[9px] font-semibold text-zinc-800 dark:text-zinc-200 whitespace-nowrap shadow-xs">
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[7px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
                       Stiletto
                     </div>
                   </motion.div>
@@ -920,7 +920,7 @@ export default function LandingPage() {
                       fill 
                       className="object-cover" 
                     />
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-white/95 dark:bg-zinc-800/95 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.08] text-[7px] sm:text-[9px] font-semibold text-[var(--brand-pink,#FF66C4)] whitespace-nowrap shadow-xs">
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[7px] sm:text-[9px] font-bold text-[var(--brand-pink,#FF66C4)] whitespace-nowrap">
                       Street Style
                     </div>
                   </motion.div>
@@ -957,7 +957,7 @@ export default function LandingPage() {
                   fill 
                   className="object-cover" 
                 />
-                <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white/95 dark:bg-zinc-800/95 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.08] text-[9px] font-semibold text-zinc-900 dark:text-zinc-100 whitespace-nowrap shadow-xs">
+                <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
                   @comunidad • Denim
                 </div>
 
@@ -989,7 +989,7 @@ export default function LandingPage() {
                   fill 
                   className="object-cover" 
                 />
-                <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white/95 dark:bg-zinc-800/95 backdrop-blur-md border border-black/[0.08] dark:border-white/[0.08] text-[9px] font-semibold text-[var(--brand-pink,#FF66C4)] whitespace-nowrap shadow-xs">
+                <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[9px] font-bold text-[var(--brand-pink,#FF66C4)] whitespace-nowrap">
                   Elegante • Kloe
                 </div>
 
@@ -1090,17 +1090,17 @@ export default function LandingPage() {
                   <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                     <Link
                       href="/auth"
-                      className="w-full sm:w-auto px-7 sm:px-9 py-3 sm:py-3.5 rounded-full font-bold text-xs sm:text-sm md:text-base bg-[var(--brand-pink,#FF66C4)] text-zinc-950 hover:opacity-95 transition-all shadow-md shadow-[var(--brand-pink,#FF66C4)]/20 inline-flex items-center justify-center gap-2 group"
+                      className="w-full sm:w-auto px-7 sm:px-9 py-3 sm:py-3.5 rounded-full font-bold text-xs sm:text-sm md:text-base bg-[var(--brand-pink,#FF66C4)] text-white hover:opacity-95 transition-all shadow-md shadow-[var(--brand-pink,#FF66C4)]/20 inline-flex items-center justify-center gap-2 group"
                     >
                       <span>Entrar a Klozet gratis</span>
-                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                      <ArrowRight className="w-4 h-4 text-white group-hover:translate-x-1 transition-transform" />
                     </Link>
                   </motion.div>
                   
                   {user && (
                     <Link
                       href="/closet"
-                      className="w-full sm:w-auto px-5 sm:px-7 py-3 rounded-full font-semibold text-xs sm:text-sm bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-100 transition-all active:scale-95 inline-flex items-center justify-center"
+                      className="w-full sm:w-auto px-5 sm:px-7 py-3 rounded-full font-bold text-xs sm:text-sm bg-white hover:bg-zinc-50 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-950 dark:text-zinc-50 border border-zinc-200 dark:border-zinc-700 shadow-sm transition-all active:scale-95 inline-flex items-center justify-center"
                     >
                       Ir a mi armario
                     </Link>
@@ -1156,10 +1156,10 @@ export default function LandingPage() {
         <button
           onClick={nextFrame}
           aria-label="Siguiente pantalla"
-          className="fixed bottom-2.5 sm:bottom-4 left-1/2 -translate-x-1/2 z-40 px-3.5 py-1.5 rounded-full bg-zinc-100/90 dark:bg-zinc-800/90 backdrop-blur-md border border-black/[0.06] dark:border-white/[0.08] text-[10px] sm:text-xs font-medium text-zinc-600 dark:text-zinc-300 hover:text-zinc-950 dark:hover:text-white transition-all flex items-center gap-1 shadow-xs active:scale-95 cursor-pointer pointer-events-auto"
+          className="fixed bottom-2.5 sm:bottom-4 left-1/2 -translate-x-1/2 z-40 px-3.5 py-1.5 rounded-full bg-white dark:bg-zinc-900 backdrop-blur-md border border-zinc-200 dark:border-zinc-700 text-[10px] sm:text-xs font-bold text-zinc-900 dark:text-zinc-100 hover:text-black dark:hover:text-white transition-all flex items-center gap-1 shadow-sm active:scale-95 cursor-pointer pointer-events-auto"
         >
           <span>Desliza</span>
-          <ChevronDown className="w-3.5 h-3.5" />
+          <ChevronDown className="w-3.5 h-3.5 text-zinc-900 dark:text-zinc-100" />
         </button>
       )}
     </div>

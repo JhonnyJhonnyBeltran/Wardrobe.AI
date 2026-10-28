@@ -2987,3 +2987,15 @@ Ejecución del Consejo de Negocio con 4 subagentes especializados (`business-bel
    - Reemplazo de biometría en `/api/closy/generate-avatar` por arquetipos estilizados ilustrados.
    - Sustitución de Puppeteer por parser OpenGraph/JSON-LD + subida manual de captura.
    - Límite estricto de contexto visual (máx 6 prendas por consulta a Gemini) y desactivación de push spam cada 3 horas.
+
+
+### Actualización Operativa (2026-10-28):
+1. **Afiliación de Moda Pospuesta:** Se descarta la vía de afiliados de moda por dificultad y fricción técnica/operativa. El 100% del modelo de ingresos se enfoca en suscripciones directas Pro.
+2. **Payment Sheet Nativo (Apple Pay & Google Pay) y Eliminación de Redirección Externa:**
+   - La ventana de pago emergente rápida se denomina técnicamente **Payment Sheet** (Apple Pay Payment Sheet en Safari/iOS y Google Pay Payment Sheet en Chrome/Android).
+   - Se elimina la redirección a páginas web completas externas (`checkout.stripe.com`).
+   - Se monta globalmente `<PremiumModal />` en `components/AppLayout.tsx` para responder a llamadas de `openPremiumModal()` desde cualquier pantalla (Feed, Kloe, Perfil).
+   - `app/(app)/premium/page.tsx` y `components/Feed/PremiumAdCard.tsx` ahora abren directamente el modal de pago in-app con la sesión embebida de Stripe, permitiendo que al pulsar Apple Pay o Google Pay se despliegue inmediatamente la Payment Sheet nativa del sistema operativo.
+3. **Rediseño de Píldoras y Contraste en Landing Page (`app/(public)/page.tsx`):**
+   - **Píldoras rosas:** texto e iconos configurados en blanco nítido (`text-white font-bold`).
+   - **Píldoras blancas (stickers de prendas, botón Entrar, botón Desliza, botón secundario Mi Armario):** fondo blanco sólido (`bg-white dark:bg-zinc-900`), texto en negro/gris oscuro (`text-zinc-950 font-bold`), borde de contraste nítido (`border-zinc-200/90 dark:border-zinc-700`) y sombra de elevación (`shadow-sm`) para evitar que se desvanezcan sobre el fondo.

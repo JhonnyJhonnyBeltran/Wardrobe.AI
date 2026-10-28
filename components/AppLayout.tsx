@@ -11,6 +11,7 @@ import AuthGuard from './AuthGuard';
 import FloatingCreateButton from './FloatingCreateButton';
 import SaveModal from './SaveModal';
 import GuidedTourModal from './GuidedTour/GuidedTourModal';
+import PremiumModal from './PremiumModal';
 import { useUiStore } from '@/store/uiStore';
 import { UploadCloud, X } from 'lucide-react';
 import Link from 'next/link';
@@ -144,6 +145,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
       {/* Global Modals */}
       <SaveModal />
       <GuidedTourModal />
+      <PremiumModal />
 
       {/* Global Save Toast */}
       <AnimatePresence>
