@@ -253,13 +253,13 @@ export async function POST(request: NextRequest) {
       userProfile?.subscription_status === 'active'
     );
 
-    // 5. Apply Persistent Database + Memory Rate Limiting (Free: 8 daily, Premium: 35 daily, reset 00:00 Madrid)
+    // 5. Apply Persistent Database + Memory Rate Limiting (Free: 3 daily, Premium: 35 daily, reset 00:00 Madrid)
     const todayKey = getMadridDayKey();
     const dbDailyCount = ((userProfile as any)?.ai_daily_usage_date === todayKey)
       ? Number((userProfile as any)?.ai_daily_usage_count || 0)
       : 0;
 
-    const FREE_CHAT_LIMIT = 8;
+    const FREE_CHAT_LIMIT = 3;
     const PREMIUM_CHAT_LIMIT = 35;
     const activeLimit = isPremium ? PREMIUM_CHAT_LIMIT : FREE_CHAT_LIMIT;
 
@@ -268,10 +268,10 @@ export async function POST(request: NextRequest) {
         { 
           error: isPremium 
             ? 'Has agotado tus 35 consultas diarias con Kloe. Tu límite se restablecerá a las 00:00 (hora peninsular).' 
-            : 'Has agotado tus 8 consultas gratuitas de hoy con Kloe. Tu límite se restablecerá a las 00:00 (hora peninsular) o desbloquea Kloe Pro para 35 consultas diarias.',
+            : 'Has agotado tus 3 consultas gratuitas de hoy con Kloe. Tu límite se restablecerá a las 00:00 (hora peninsular) o desbloquea Kloe Pro para 35 consultas diarias.',
           message: isPremium 
             ? 'Has agotado tus 35 consultas diarias con Kloe. Tu límite se restablecerá a las 00:00 (hora peninsular).' 
-            : 'Has agotado tus 8 consultas gratuitas de hoy con Kloe. Tu límite se restablecerá a las 00:00 (hora peninsular) o desbloquea Kloe Pro para 35 consultas diarias.',
+            : 'Has agotado tus 3 consultas gratuitas de hoy con Kloe. Tu límite se restablecerá a las 00:00 (hora peninsular) o desbloquea Kloe Pro para 35 consultas diarias.',
           limitReached: true,
           isDailyLimit: true,
           isPremium,
@@ -326,18 +326,6 @@ export async function POST(request: NextRequest) {
     const attachedItems: any[] = Array.isArray(body.attached_items) && body.attached_items.length > 0
       ? body.attached_items
       : (body.attached_item ? [body.attached_item] : []);
-
-    // 8. Premium Check: Attaching wardrobe garments or saved posts is exclusively a Kloe Pro feature
-    if (!isPremium && (attachedItems.length > 0 || body.attached_post)) {
-      return NextResponse.json(
-        {
-          error: 'Elegir prendas de tu armario como input o adjuntar looks guardados es una funcionalidad exclusiva de Kloe Pro',
-          message: 'Desbloquea Kloe Pro para poder elegir prendas de tu armario como input y adjuntar looks guardados.',
-          isPremiumRequired: true
-        },
-        { status: 403 }
-      );
-    }
 
     const geminiApiKey = getGeminiApiKey();
     let aiResult: any = null;
@@ -503,7 +491,22 @@ export async function GET() {
 
 
 /**
- * Invokes Google Gemini with Multimodal Image Recognition & Fast Fallback Cascade
+ * Determines whether a garment is already well-tagged in metadata
+ * (e.g. "Camiseta Eme Studios de rayas", category "top", color "Azul").
+ * When true, Kloe reads its metadata directly and does NOT need to fetch/analyze its image bytes.
+ */
+function isGarmentWellTagged(item: any): boolean {
+  if (!item) return false;
+  const rawName = String(item.name || '').trim().toLowerCase();
+  const genericNames = ['nueva prenda', 'prenda', 'prenda sin nombre', 'item', 'clothing', 'ropa', 'sin nombre'];
+  const hasDescriptiveName = rawName.length >= 5 && !genericNames.includes(rawName);
+  const hasCategory = Boolean(item.category && String(item.category).toLowerCase() !== 'other');
+  const hasColor = Boolean(item.color && String(item.color).trim().length > 1 && String(item.color).toLowerCase() !== 'no especificado');
+  return hasDescriptiveName && hasCategory && hasColor;
+}
+
+/**
+ * Invokes Google Gemini with Context-Aware Metadata-First Vision & Fast Fallback Cascade
  */
 async function callGeminiAssistant(
   apiKey: string,
@@ -520,10 +523,16 @@ async function callGeminiAssistant(
       (context.user.username && context.user.username.toLowerCase() !== 'usuario' ? context.user.username.replace(/^@/, '') : '') || 
       'Ethan';
     const userName = rawCandidateName.charAt(0).toUpperCase() + rawCandidateName.slice(1);
-    const userGender = context.user.gender === 'men' 
-      ? 'Hombre (recomienda prendas masculinas y siluetas de hombre)' 
-      : (context.user.gender === 'women' ? 'Mujer (recomienda prendas femeninas y siluetas de mujer)' : 'Unisex');
+    const isMan = context.user.gender === 'men' || context.user.gender === 'man';
+    const isWoman = context.user.gender === 'women' || context.user.gender === 'woman';
+    const userGender = isMan
+      ? 'Chico / Hombre (recomienda prendas masculinas y siluetas de hombre)'
+      : (isWoman ? 'Chica / Mujer (recomienda prendas femeninas y siluetas de mujer)' : 'Unisex');
     const userAge = context.user.age ? `${context.user.age} años` : 'Joven / Adulto';
+    const userHeight = context.user.height ? `${context.user.height} cm` : 'Estándar';
+    const userBodyType = context.user.bodyType || context.user.bodyShape || 'Equilibrado';
+    const userEyeColor = context.user.eyeColor || 'No especificado';
+    const userHairColor = context.user.hairColor || 'No especificado';
 
     const systemInstruction = `
 Eres Kloe, la estilista personal y asesora de imagen de ${userName}.
@@ -541,22 +550,27 @@ LÍMITE ESTRICTO DE ROL Y MARCO DE ESTILISTA (FILTRO INVIOLABLE):
 - Eres ÚNICA Y EXCLUSIVAMENTE una asesora de estilismo, moda, imagen personal, morfología, colorimetría y combinaciones de ropa para el armario de ${userName}.
 - Si el usuario te hace preguntas FUERA de este marco (por ejemplo: programación, recetas de cocina, política, matemáticas, medicina, historia general, redacción de ensayos, tareas escolares, dudas técnicas o cualquier tema no relacionado con moda/ropa/estilo):
   * TIENES TOTALMENTE PROHIBIDO contestar a esa pregunta o tema externo.
-  * Responde de forma cordial, cercana pero firme y directa que como su estilista personal solo puedes ayudarle con temas de moda, looks, combinaciones de ropa, compras o su armario personal, reconduciendo la conversación a su estilo (ejemplo: "Oye ${userName}, yo aquí soy tu estilista personal y mi mundo es la moda y tu armario. Para temas fuera de looks, prendas o estilo no te puedo ayudar, pero si necesitas armar un outfit, combinar ropa o elegir compras clave, ¡aquí me tienes!").
+  * Responde de forma cordial, cercana pero firme y directa que como su estilista personal solo puedes ayudarle con temas de moda, looks, combinaciones de ropa, compras o su armario personal, reconduciendo la conversación a su estilo.
   * Devuelve siempre "recommended_outfit": null y sugerencias de moda en "follow_up_suggestions".
 
-PERFIL FÍSICO Y ESTILO DE ${userName}:
+PERFIL FÍSICO ("DINOS CÓMO ERES") Y ESTILO DE ${userName}:
 - Nombre: ${userName}
-- Sexo / Género: ${userGender}
+- Chica / Chico: ${userGender}
 - Edad: ${userAge}
+- Altura: ${userHeight}
+- Tipo de cuerpo / Silueta: ${userBodyType}
+- Color de ojos: ${userEyeColor}
+- Color de pelo: ${userHairColor}
 - Estilo personal y vibra: ${context.user.bio || 'Urbano, moderno y versátil'}
-- Facciones, corte de pelo, tono de piel y complexión física: Tienes acceso visual a sus fotos de referencia física y datos morfológicos (${context.user.bodyShape || 'Estándar'}, ${context.user.seasonPalette || 'Neutra'}).
-  * Conecta SIEMPRE tus recomendaciones con sus rasgos reales: cómo le enmarca la cara un cuello, cómo favorece a sus facciones o corte de pelo un color concreto, o cómo equilibra su silueta y complexión física el corte del pantalón o prenda superior.
-  * Hazlo sonar totalmente orgánico (ej: "Con tu corte y tus facciones, ese tono azul marino te enmarca la cara brutal...", "Para tu complexión, ese corte te da una caída limpia sin hacerte ver rígido").
+  * Conecta tus recomendaciones con sus datos físicos reales: cómo le sienta un tiro o largo según su altura (${userHeight}) y su tipo de cuerpo (${userBodyType}), y cómo favorecen los colores a su color de ojos (${userEyeColor}) y de pelo (${userHairColor}).
 
-CUANDO EL USUARIO ADJUNTA UN POST O LOOK GUARDADO:
-- REGLA DE ORO: ¡MIRA LA FOTO Y LAS PRENDAS REALES DEL POST!
-- Jamás sueltes una plantilla vacía. Si el post tiene foto o prendas desglosadas, describe lo que realmente lleva la persona en la imagen (ej: "Veo que lleva una sobrecamisa en tono crudo con un pantalón recto fluido y zapatillas retro...").
-- Explícale por qué funciona esa combinación con su rollo urbano y cómo aterrizarlo a su estilo y a sus facciones.
+REGLA DE ORO DE CONTEXTO VISUAL Y METADATOS:
+1. CUANDO EL USUARIO TE PASA UN POST (O PREGUNTA "¿QUÉ LLEVA LA CHICA / EL CHICO EN ESE OUTFIT?"):
+   - Analiza la imagen del post adjunto y sus prendas etiquetadas.
+   - Explica con detalle qué prendas lleva la persona del post (cortes, colores, capas, calzado, estilo), por qué funciona ese outfit y cómo ${userName} puede recrearlo o adaptarlo con su armario.
+2. CUANDO EL USUARIO PREGUNTA POR UN OUTFIT SUYO O UNA PRENDA SUYA:
+   - PRIMERO lee los metadatos de la prenda (nombre, marca, categoría, color, tejido, temporada). Si la prenda está bien etiquetada (por ejemplo, "Camiseta Eme Studios de rayas", color "azul"), comprende la prenda directamente por sus metadatos sin necesitar más información.
+   - SOLO como último recurso (cuando los metadatos están incompletos o el usuario pide analizar un detalle visual concreto) apóyate en la imagen adjunta de la prenda.
 
 CUANDO SE PIDE UN OUTFIT O QUÉ PONERSE:
 - Selecciona prendas reales de su armario en "recommended_outfit" con sus IDs exactos.
@@ -564,7 +578,7 @@ CUANDO SE PIDE UN OUTFIT O QUÉ PONERSE:
 
 CUANDO PREGUNTA POR COMPRAS O TENDENCIAS:
 - Si pregunta por una temporada (invierno, verano, entretiempo), adáptate al 100% al clima y a su edad/género.
-- Menciona marcas reales (Uniqlo, COS, Massimo Dutti, Zara, Arket, Nike, etc.), tejidos y cortes específicos (boxy fit, regular, perneras amplias, lana merino, algodón pesado).
+- Menciona marcas reales (Uniqlo, COS, Massimo Dutti, Zara, Arket, Eme Studios, Nike, etc.), tejidos y cortes específicos.
 - Pon "recommended_outfit": null.
 
 FORMATO JSON ESTRICTO:
@@ -585,9 +599,7 @@ Devuelve SIEMPRE tu respuesta en formato JSON estrictamente válido:
     const sanitizedHistory: Array<{ role: 'user' | 'model'; parts: any[] }> = [];
     for (const h of history.slice(-6)) {
       const role: 'user' | 'model' = h.role === 'user' ? 'user' : 'model';
-      // Skip if first turn is model
       if (sanitizedHistory.length === 0 && role === 'model') continue;
-      // Skip if duplicate consecutive role
       if (sanitizedHistory.length > 0 && sanitizedHistory[sanitizedHistory.length - 1].role === role) continue;
       
       sanitizedHistory.push({
@@ -596,17 +608,27 @@ Devuelve SIEMPRE tu respuesta en formato JSON estrictamente válido:
       });
     }
 
-    // If the last history turn is 'user', pop it so the incoming user message takes the final 'user' slot
     if (sanitizedHistory.length > 0 && sanitizedHistory[sanitizedHistory.length - 1].role === 'user') {
       sanitizedHistory.pop();
     }
 
-    // Fetch visual images for up to 12 garments and up to 4 saved inspirations in parallel
-    const itemsToFetch = (context.wardrobe.items || []).slice(0, 12);
-    const savedToFetch = (context.savedInspirations || []).slice(0, 4);
+    const lowerPrompt = userPrompt.toLowerCase();
+    const wantsVisualInspection =
+      lowerPrompt.includes('mira la foto') ||
+      lowerPrompt.includes('analiza la imagen') ||
+      lowerPrompt.includes('analiza la foto') ||
+      lowerPrompt.includes('estampado') ||
+      lowerPrompt.includes('textura');
+
+    // Smart Metadata-First Vision:
+    // Only fetch images for wardrobe garments whose metadata is incomplete/generic (max 4 items) as a last resort!
+    // Well-tagged garments (e.g., "Camiseta Eme Studios de rayas", color "Azul") are understood 100% via metadata.
+    const poorlyTaggedWardrobeItems = (context.wardrobe.items || [])
+      .filter((item: any) => !isGarmentWellTagged(item))
+      .slice(0, 4);
 
     const imageFetches = await Promise.allSettled(
-      itemsToFetch.map(async (item: any) => {
+      poorlyTaggedWardrobeItems.map(async (item: any) => {
         if (!item.imageUrl) return null;
         const imgData = await fetchImageAsBase64(item.imageUrl);
         if (!imgData) return null;
@@ -619,48 +641,23 @@ Devuelve SIEMPRE tu respuesta en formato JSON estrictamente válido:
       })
     );
 
-    const savedFetches = await Promise.allSettled(
-      savedToFetch.map(async (saved: any) => {
-        if (!saved.imageUrl) return null;
-        const imgData = await fetchImageAsBase64(saved.imageUrl);
-        if (!imgData) return null;
-        return {
-          id: saved.id,
-          title: saved.title,
-          imgData
-        };
-      })
-    );
-
-    // Fetch up to 3 face photos and 3 body photos for user physical profile recognition
-    const facePhotos: string[] = (context.user.facePhotos || []).slice(0, 3);
-    const bodyPhotos: string[] = (context.user.bodyPhotos || []).slice(0, 3);
-    const physicalPhotoUrls = [...facePhotos, ...bodyPhotos];
-
-    const physicalFetches = await Promise.allSettled(
-      physicalPhotoUrls.map(async (url: string, pIdx: number) => {
-        const imgData = await fetchImageAsBase64(url);
-        if (!imgData) return null;
-        const isFace = pIdx < facePhotos.length;
-        return { isFace, idx: isFace ? pIdx + 1 : pIdx - facePhotos.length + 1, imgData };
-      })
-    );
-
     const userParts: any[] = [
       {
         text: `
-PERFIL DEL USUARIO:
+PERFIL DEL USUARIO ("DINOS CÓMO ERES"):
 - Nombre: ${userName}
 - Nombre de usuario: @${context.user.username}
-- Sexo / Género: ${userGender}
+- Chica / Chico: ${userGender}
 - Edad: ${userAge}
+- Altura: ${userHeight}
+- Tipo de cuerpo: ${userBodyType}
+- Color de ojos: ${userEyeColor}
+- Color de pelo: ${userHairColor}
 - Biografía / Estilo personal: ${context.user.bio || 'Sin especificar'}
-- Morfología: ${context.user.bodyShape || 'Estándar'}
-- Colorimetría: ${context.user.seasonPalette || 'Neutra'}
 - Estilos favoritos: ${(context.user.preferredStyles || []).join(', ') || 'Moda actual'}
 - Total de prendas registradas: ${context.wardrobe.totalItems}
 
-METADATOS DEL ARMARIO (Prendas reales del usuario):
+METADATOS DEL ARMARIO (Fuente primaria de verdad para comprender las prendas del usuario):
 ${JSON.stringify(context.wardrobe.items.map((i: any) => ({
   id: i.id,
   name: i.name,
@@ -678,25 +675,10 @@ ${JSON.stringify(context.savedInspirations || [])}
       }
     ];
 
-    // Append physical profile reference photos of user (face & body)
-    physicalFetches.forEach(res => {
-      if (res.status === 'fulfilled' && res.value) {
-        userParts.push({
-          text: `FOTO DE REFERENCIA FÍSICA DEL USUARIO (${res.value.isFace ? `Rostro #${res.value.idx}` : `Cuerpo #${res.value.idx}`} - Evalúa su tono de piel, color de pelo, ojos, altura y complexión física):`
-        });
-        userParts.push({
-          inline_data: {
-            mime_type: res.value.imgData.mimeType,
-            data: res.value.imgData.data
-          }
-        });
-      }
-    });
-
     // Append custom image attached directly by the user in this message if present
     if (attachedCustomImagePart) {
       userParts.push({
-        text: `*** FOTO ADJUNTA DIRECTAMENTE POR EL USUARIO EN ESTE MENSAJE (Prenda que vio en tienda, look de Pinterest o foto a analizar): ***`
+        text: `*** FOTO ADJUNTA DIRECTAMENTE POR EL USUARIO EN ESTE MENSAJE (Analiza el outfit, las prendas que lleva la persona o la prenda mostrada): ***`
       });
       userParts.push({
         inline_data: {
@@ -706,11 +688,11 @@ ${JSON.stringify(context.savedInspirations || [])}
       });
     }
 
-    // Append visual images of garments so Gemini can directly inspect them
+    // Append visual images ONLY for wardrobe items that lacked complete metadata
     imageFetches.forEach(res => {
       if (res.status === 'fulfilled' && res.value) {
         userParts.push({
-          text: `FOTO REAL DE LA PRENDA (ID: "${res.value.id}", Nombre en BD: "${res.value.name}", Categoría en BD: "${res.value.category}"):`
+          text: `FOTO DE APOYO PARA PRENDA CON METADATOS INCOMPLETOS (ID: "${res.value.id}", Nombre: "${res.value.name}", Categoría: "${res.value.category}"):`
         });
         userParts.push({
           inline_data: {
@@ -721,22 +703,7 @@ ${JSON.stringify(context.savedInspirations || [])}
       }
     });
 
-    // Append visual images of saved inspirations
-    savedFetches.forEach(res => {
-      if (res.status === 'fulfilled' && res.value) {
-        userParts.push({
-          text: `FOTO DE LOOK GUARDADO POR EL USUARIO (Inspiración ID: "${res.value.id}", Título: "${res.value.title}"):`
-        });
-        userParts.push({
-          inline_data: {
-            mime_type: res.value.imgData.mimeType,
-            data: res.value.imgData.data
-          }
-        });
-      }
-    });
-
-    // Append specific attached garments if user provided any
+    // Append specific attached garments if user provided any (Metadata-First + Image only as last resort)
     if (attachedItems.length > 0) {
       const itemsList = attachedItems.map((item, idx) => `Prenda #${idx + 1}:
 - ID: "${item.id}"
@@ -744,39 +711,48 @@ ${JSON.stringify(context.savedInspirations || [])}
 - Categoría: "${item.category || 'Prenda'}"
 - Color: "${item.color || 'No especificado'}"
 - Tejido / Material: "${item.fabric || 'No especificado'}"
-- Marca: "${item.brand || 'No especificado'}"`).join('\n\n');
+- Temporada: "${item.season || 'Todo el año'}"
+- Marca: "${item.brand || 'No especificado'}"
+- Etiquetado completo: ${isGarmentWellTagged(item) ? 'SÍ (Comprende esta prenda directamente por sus metadatos)' : 'NO (Se adjunta imagen como apoyo)'}`).join('\n\n');
 
       userParts.push({
         text: `
-*** PRENDAS ESPECÍFICAS ADJUNTAS POR EL USUARIO (${attachedItems.length} prenda${attachedItems.length > 1 ? 's' : ''}) ***
+*** PRENDAS ESPECÍFICAS DEL USUARIO ADJUNTAS EN LA CONSULTA (${attachedItems.length} prenda${attachedItems.length > 1 ? 's' : ''}) ***
 ${itemsList}
-(El usuario ha seleccionado expresamente estas prendas de su armario como eje de su consulta. Céntrate en responder a su pregunta teniendo en cuenta todas estas piezas).
+(Lee primero estos metadatos. Si la prenda está bien etiquetada como "Camiseta Eme Studios de rayas, color azul", ya tienes toda la información necesaria para combinarla o valorarla).
 `
       });
 
-      const attachedFetches = await Promise.allSettled(
-        attachedItems.slice(0, 8).map(async (item: any, idx: number) => {
-          const itemImgUrl = item.imageUrl || item.image_url || item.original_image || item.original_image_url;
-          if (!itemImgUrl) return null;
-          const itemImgData = await fetchImageAsBase64(itemImgUrl);
-          if (!itemImgData) return null;
-          return { item, idx, itemImgData };
-        })
-      );
+      // Only fetch image for attached items that are NOT well-tagged OR when the user explicitly asks to inspect the photo
+      const itemsNeedingVision = attachedItems
+        .slice(0, 6)
+        .filter((item: any) => !isGarmentWellTagged(item) || wantsVisualInspection);
 
-      attachedFetches.forEach(res => {
-        if (res.status === 'fulfilled' && res.value) {
-          userParts.push({
-            text: `FOTO EN ALTA RESOLUCIÓN DE LA PRENDA ADJUNTA #${res.value.idx + 1} ("${res.value.item.name}"):`
-          });
-          userParts.push({
-            inline_data: {
-              mime_type: res.value.itemImgData.mimeType,
-              data: res.value.itemImgData.data
-            }
-          });
-        }
-      });
+      if (itemsNeedingVision.length > 0) {
+        const attachedFetches = await Promise.allSettled(
+          itemsNeedingVision.map(async (item: any, idx: number) => {
+            const itemImgUrl = item.imageUrl || item.image_url || item.original_image || item.original_image_url;
+            if (!itemImgUrl) return null;
+            const itemImgData = await fetchImageAsBase64(itemImgUrl);
+            if (!itemImgData) return null;
+            return { item, idx, itemImgData };
+          })
+        );
+
+        attachedFetches.forEach(res => {
+          if (res.status === 'fulfilled' && res.value) {
+            userParts.push({
+              text: `FOTO DE LA PRENDA ADJUNTA ("${res.value.item.name}"):`
+            });
+            userParts.push({
+              inline_data: {
+                mime_type: res.value.itemImgData.mimeType,
+                data: res.value.itemImgData.data
+              }
+            });
+          }
+        });
+      }
     }
 
     // Append specific attached saved post if user provided one

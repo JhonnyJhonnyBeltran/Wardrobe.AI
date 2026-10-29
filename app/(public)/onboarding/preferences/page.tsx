@@ -1,20 +1,46 @@
 'use client';
 
 /**
- * Onboarding Preferences Page
- * Step 0: Age Selector (Interactive modern slider)
- * Step 1: Style / Identity Category (Woman, Man, Unisex)
- * Step 2: Visual Style Selection (Dynamic gender-based photography)
+ * Onboarding Preferences Page - Phased Guided Onboarding
+ * Step 0: Identity (Name & @username)
+ * Step 1: Age Selector
+ * Step 2: Gender / Identity Category (Chica, Chico, Unisex)
+ * Step 3: "Dinos cómo eres" (Height, Body Type, Eye Color, Hair Color)
+ * Step 4: Visual Style Selection (Dynamic gender-based photography)
+ * Step 5: Accessories Style
+ * Step 6: "Digitaliza tu armario en 15 minutos" (Math Pain Point + Photo/Web Guide + Direct Batch Upload up to 20 items)
  */
 
-import { useState, useEffect, useMemo, Suspense, useCallback } from 'react';
+import { useState, useEffect, useMemo, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ChevronRight, ChevronLeft, Check, Minus, Plus, X, User, AtSign, Loader2 } from 'lucide-react';
+import {
+    ChevronRight,
+    ChevronLeft,
+    Check,
+    Minus,
+    Plus,
+    X,
+    User,
+    AtSign,
+    Loader2,
+    Ruler,
+    Eye,
+    Palette,
+    Camera,
+    Globe,
+    Layers,
+    Clock,
+} from 'lucide-react';
 import { Button, LogoMark } from '@/components';
 import { useUser } from '@/store/userStore';
 import { useSocial } from '@/lib/hooks/useSocial';
 import { supabase } from '@/lib/supabase/client';
+import {
+    BODY_TYPES_BY_GENDER,
+    EYE_COLOR_OPTIONS,
+    HAIR_COLOR_OPTIONS,
+} from '@/components/AvatarCalibrationModal';
 import Image from 'next/image';
 
 interface StyleItem {
@@ -78,7 +104,6 @@ const ACCESSORY_OPTIONS: AccessoryOption[] = [
     },
 ];
 
-// 34 Comprehensive Style Definitions with Real Fashion Outfit Photography
 const COMPREHENSIVE_STYLES: StyleItem[] = [
     {
         id: 'casual-moderno',
@@ -107,7 +132,7 @@ const COMPREHENSIVE_STYLES: StyleItem[] = [
     {
         id: 'old-money',
         slug: 'old-money',
-        name: 'Old Money / Quiet Luxury',
+        name: 'Old Money / Clásico',
         image_url: '/styles/men/old-money.jpg',
         image_url_woman: '/styles/women/old-money.jpg',
         image_url_man: '/styles/men/old-money.jpg',
@@ -357,14 +382,14 @@ const COMPREHENSIVE_STYLES: StyleItem[] = [
 const GENDER_OPTIONS = [
     {
         value: 'woman',
-        label: 'Mujer',
-        sublabel: 'Moda y cortes femeninos',
+        label: 'Chica',
+        sublabel: 'Moda, cortes y proporciones femeninas',
         image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&q=80',
     },
     {
         value: 'man',
-        label: 'Hombre',
-        sublabel: 'Moda y cortes masculinos',
+        label: 'Chico',
+        sublabel: 'Moda, cortes y proporciones masculinas',
         image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80',
     },
     {
@@ -375,7 +400,6 @@ const GENDER_OPTIONS = [
     },
 ];
 
-// Helper to derive legacy age_range string from numeric age
 function getAgeRangeFromAge(age: number): string {
     if (age < 18) return 'under_18';
     if (age <= 24) return '18_24';
@@ -410,10 +434,18 @@ function PreferencesContent() {
     const [isUsernameAvailable, setIsUsernameAvailable] = useState<boolean | null>(null);
     const [usernameError, setUsernameError] = useState('');
 
-    // Steps 1 to 4: Core state
+    // Steps 1 to 6: Core state
     const [step, setStep] = useState(0);
     const [age, setAge] = useState<number>(24);
-    const [gender, setGender] = useState('');
+    const [gender, setGender] = useState<'woman' | 'man' | 'other' | ''>('');
+
+    // Step 3: "Dinos cómo eres" (Physical Profile)
+    const [height, setHeight] = useState<number>(170);
+    const [bodyType, setBodyType] = useState<string>('reloj_de_arena');
+    const [eyeColor, setEyeColor] = useState<string>('marron_oscuro');
+    const [hairColor, setHairColor] = useState<string>('castano_oscuro');
+
+    // Step 4 & 5: Styles & Accessories
     const [selectedStyles, setSelectedStyles] = useState<string[]>([]);
     const [selectedAccessory, setSelectedAccessory] = useState<string>('minimalista');
 
@@ -423,6 +455,9 @@ function PreferencesContent() {
     const [isSaving, setIsSaving] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
 
+    const totalSteps = isFromSettings ? 6 : 7;
+    const maxStepIndex = totalSteps - 1;
+
     useEffect(() => {
         if (isLoadingUser) return;
 
@@ -431,7 +466,6 @@ function PreferencesContent() {
             return;
         }
 
-        // Initialize user info
         if (user.name) {
             setFullName(prev => prev || user.name);
         }
@@ -452,7 +486,12 @@ function PreferencesContent() {
                 else if (user.ageRange === '35_44' || user.ageRange === '35-44') setAge(38);
                 else setAge(50);
             }
-            setGender(prev => prev || user.gender || '');
+            if (user.gender) setGender(prev => prev || user.gender!);
+            if (user.height) setHeight(Number(user.height));
+            if (user.bodyType || user.morphology) setBodyType(user.bodyType || user.morphology || 'reloj_de_arena');
+            if (user.eyeColor) setEyeColor(user.eyeColor);
+            if (user.hairColor) setHairColor(user.hairColor);
+
             if (Array.isArray(user.preferredStyles)) {
                 setSelectedStyles(prev => prev.length ? prev : user.preferredStyles!);
             }
@@ -485,6 +524,24 @@ function PreferencesContent() {
         loadStyles();
     }, [user, router, isLoadingUser, isFromSettings, isEditModeQuery]);
 
+    // Ensure bodyType matches gender options when gender changes
+    const currentBodyOptions = useMemo(() => {
+        const key = gender === 'man' ? 'man' : gender === 'other' ? 'other' : 'woman';
+        return BODY_TYPES_BY_GENDER[key] || BODY_TYPES_BY_GENDER.woman;
+    }, [gender]);
+
+    useEffect(() => {
+        const validIds = currentBodyOptions.map(o => o.id);
+        if (!validIds.includes(bodyType)) {
+            setBodyType(currentBodyOptions[0].id);
+        }
+        // Adjust default height when selecting gender if untouched
+        if (!user?.height && height === 170) {
+            if (gender === 'woman') setHeight(165);
+            else if (gender === 'man') setHeight(178);
+        }
+    }, [gender, currentBodyOptions]);
+
     const handleUsernameChange = async (rawVal: string) => {
         const clean = rawVal.toLowerCase().replace(/[^a-z0-9_]/g, '');
         setUsername(clean);
@@ -506,14 +563,12 @@ function PreferencesContent() {
         }
     };
 
-    // Merge DB styles with comprehensive fallback list ensuring full coverage
     const availableStyles = useMemo(() => {
         if (!dbStyles || dbStyles.length === 0) return COMPREHENSIVE_STYLES;
 
         const dbMap = new Map(dbStyles.map(s => [s.slug || s.id, s]));
         const merged: StyleItem[] = [];
 
-        // Include all comprehensive styles, enriching with DB data when available
         COMPREHENSIVE_STYLES.forEach(fallback => {
             const match = dbMap.get(fallback.slug || fallback.id) || dbStyles.find(d => d.name.toLowerCase() === fallback.name.toLowerCase());
             if (match) {
@@ -531,7 +586,6 @@ function PreferencesContent() {
             }
         });
 
-        // Add any remaining extra styles from DB
         dbMap.forEach(extra => {
             merged.push({
                 id: extra.id,
@@ -546,7 +600,6 @@ function PreferencesContent() {
         return merged;
     }, [dbStyles]);
 
-    // Choose image based on gender selection
     const getStyleImage = (style: StyleItem, idx: number) => {
         if (gender === 'man') {
             return style.image_url_man || style.image_url || style.image_url_woman || '';
@@ -554,7 +607,6 @@ function PreferencesContent() {
         if (gender === 'woman') {
             return style.image_url_woman || style.image_url || style.image_url_man || '';
         }
-        // Unisex: alternate curated photos
         return idx % 2 === 0
             ? (style.image_url_woman || style.image_url || style.image_url_man || '')
             : (style.image_url_man || style.image_url || style.image_url_woman || '');
@@ -573,17 +625,18 @@ function PreferencesContent() {
         }
         if (step === 1 && !age) return;
         if (step === 2 && !gender) return;
-        if (step === 3 && selectedStyles.length === 0) return;
-        if (step === 4 && !selectedAccessory) return;
+        if (step === 3 && (!height || !bodyType || !eyeColor || !hairColor)) return;
+        if (step === 4 && selectedStyles.length === 0) return;
+        if (step === 5 && !selectedAccessory) return;
 
-        if (step < 4) {
+        if (step < maxStepIndex) {
             setStep(prev => prev + 1);
         } else {
-            handleComplete();
+            handleComplete(false);
         }
     };
 
-    const handleComplete = async () => {
+    const handleComplete = async (openUploaderImmediately: boolean = false) => {
         if (!user) return;
         setIsSaving(true);
 
@@ -591,19 +644,39 @@ function PreferencesContent() {
         const usesAccessoriesVal = selectedAccessory !== 'ninguno';
         const cleanUsername = (username.trim() || user.username || `user_${user.id.substring(0, 8)}`).toLowerCase().replace(/[^a-z0-9_]/g, '');
         const finalName = fullName.trim() || user.name || 'Usuario';
+        const finalGender = (gender || 'woman') as 'woman' | 'man' | 'other';
+
+        const physicalProfilePayload = {
+            gender: finalGender,
+            height,
+            body_type: bodyType,
+            eye_color: eyeColor,
+            hair_color: hairColor,
+            updated_at: new Date().toISOString(),
+        };
 
         try {
+            const currentNotifPrefs = (user.notificationSettings as any) || {};
+            const updatedNotifPrefs = {
+                ...currentNotifPrefs,
+                physical_profile: physicalProfilePayload,
+            };
+
             let payload: Record<string, any> = {
                 id: user.id,
                 full_name: finalName,
                 username: cleanUsername,
                 age: age,
                 age_range: ageRangeComputed,
-                gender: gender,
+                gender: finalGender,
+                height: height,
+                body_shape: bodyType,
+                morphology: bodyType,
                 preferred_styles: selectedStyles,
                 visual_style_preferences: selectedStyles,
                 uses_accessories: usesAccessoriesVal,
                 accessories_style: selectedAccessory,
+                notification_preferences: updatedNotifPrefs,
                 style_completed: true,
                 updated_at: new Date().toISOString(),
             };
@@ -612,39 +685,56 @@ function PreferencesContent() {
                 .from('profiles')
                 .upsert(payload);
 
-            // Fallback: If accessories_style column doesn't exist in remote Supabase DB yet
-            if (error && (error.code === 'PGRST204' || error.message?.includes('accessories_style') || error.message?.includes('uses_accessories'))) {
-                console.warn('Retrying profiles upsert without accessories columns:', error.message);
-                delete payload.accessories_style;
-                const retry1 = await (supabase as any).from('profiles').upsert(payload);
-                if (retry1.error && (retry1.error.code === 'PGRST204' || retry1.error.message?.includes('uses_accessories'))) {
-                    delete payload.uses_accessories;
-                    const retry2 = await (supabase as any).from('profiles').upsert(payload);
-                    error = retry2.error;
-                } else {
-                    error = retry1.error;
-                }
+            // Resilient fallback if optional columns do not exist in remote DB
+            if (error) {
+                console.warn('Retrying profiles upsert with core columns + JSONB physical_profile:', error.message);
+                const safePayload: Record<string, any> = {
+                    id: user.id,
+                    full_name: finalName,
+                    username: cleanUsername,
+                    age: age,
+                    age_range: ageRangeComputed,
+                    gender: finalGender,
+                    preferred_styles: selectedStyles,
+                    visual_style_preferences: selectedStyles,
+                    notification_preferences: updatedNotifPrefs,
+                    style_completed: true,
+                    updated_at: new Date().toISOString(),
+                };
+                const retry = await (supabase as any).from('profiles').upsert(safePayload);
+                error = retry.error;
             }
 
             if (error) throw error;
 
-            // Update local store
+            if (typeof window !== 'undefined' && user.id) {
+                localStorage.setItem(`wardrobe_physical_profile_${user.id}`, JSON.stringify(physicalProfilePayload));
+            }
+
             setUser({
                 ...user,
                 name: finalName,
                 username: cleanUsername,
                 age: age,
                 ageRange: ageRangeComputed as any,
-                gender: gender as any,
+                gender: finalGender,
+                height: height,
+                bodyType: bodyType,
+                morphology: bodyType,
+                eyeColor: eyeColor,
+                hairColor: hairColor,
                 preferredStyles: selectedStyles,
                 visualStylePreferences: selectedStyles,
                 usesAccessories: usesAccessoriesVal,
                 accessoriesStyle: selectedAccessory,
-                styleCompleted: true
+                styleCompleted: true,
             });
 
-            // Redirect logic:
-            // If editing preferences (from profile settings or existing profile), NEVER trigger the tour!
+            if (openUploaderImmediately) {
+                router.push('/closet?action=new-item&startTour=true');
+                return;
+            }
+
             const isTourCompleted = typeof window !== 'undefined' && user?.id && localStorage.getItem(`klozet_tour_completed_${user.id}`) === 'true';
             if (isEditing || isFromSettings || isEditModeQuery || user.styleCompleted || isTourCompleted) {
                 if (isFromSettings) {
@@ -653,7 +743,6 @@ function PreferencesContent() {
                     router.push('/closet');
                 }
             } else {
-                // Brand new user finishing onboarding for the first time
                 router.push('/closet?startTour=true');
             }
         } catch (err: any) {
@@ -678,13 +767,13 @@ function PreferencesContent() {
 
     return (
         <div className="min-h-screen bg-[var(--background)] pb-28 md:pb-32 overflow-hidden flex flex-col selection:bg-[var(--brand-pink)] selection:text-white">
-            {/* Minimal Header with 5 Step Indicators */}
+            {/* Minimal Header with Step Indicators */}
             <header className="px-6 py-5 flex items-center justify-between sticky top-0 z-50 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-color)]/30">
                 <div className="flex gap-1.5 sm:gap-2 items-center">
-                    {[0, 1, 2, 3, 4].map((s) => (
+                    {Array.from({ length: totalSteps }).map((_, s) => (
                         <div
                             key={s}
-                            className={`h-1.5 w-6 sm:w-10 rounded-full transition-all duration-300 ${step >= s ? 'bg-[var(--brand-pink)]' : 'bg-[var(--border-color)]'}`}
+                            className={`h-1.5 w-5 sm:w-8 rounded-full transition-all duration-300 ${step >= s ? 'bg-[var(--brand-pink)]' : 'bg-[var(--border-color)]'}`}
                         />
                     ))}
                 </div>
@@ -697,7 +786,9 @@ function PreferencesContent() {
                         <X className="w-5 h-5" />
                     </button>
                 ) : (
-                    <div className="w-9" />
+                    <span className="text-xs font-semibold text-[var(--foreground-tertiary)]">
+                        Paso {step + 1} de {totalSteps}
+                    </span>
                 )}
             </header>
 
@@ -723,7 +814,6 @@ function PreferencesContent() {
                             </div>
 
                             <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-3xl p-6 sm:p-8 space-y-5 shadow-sm">
-                                {/* Full Name */}
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold uppercase tracking-wider text-[var(--foreground-secondary)] block">
                                         Tu nombre o alias
@@ -742,7 +832,6 @@ function PreferencesContent() {
                                     </div>
                                 </div>
 
-                                {/* Username Handle */}
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold uppercase tracking-wider text-[var(--foreground-secondary)] block">
                                         Nombre de usuario único (@handle)
@@ -806,24 +895,21 @@ function PreferencesContent() {
                                 </p>
                             </div>
 
-                            {/* Modern Interactive Age Card */}
                             <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-3xl p-6 sm:p-8 flex flex-col items-center gap-6 shadow-sm">
-                                {/* Digital readout */}
                                 <div className="text-center space-y-1">
                                     <div className="flex items-baseline justify-center gap-2">
-                                        <span className="text-6xl sm:text-7xl font-extrabold tracking-tight text-[var(--brand-pink)] tabular-nums">
+                                        <span className="text-6xl sm:text-7xl font-bold tracking-tight text-[var(--brand-pink)] tabular-nums font-display">
                                             {age}
                                         </span>
                                         <span className="text-xl sm:text-2xl font-semibold text-[var(--foreground-secondary)]">
                                             años
                                         </span>
                                     </div>
-                                    <p className="text-xs sm:text-sm font-medium text-[var(--foreground-tertiary)] uppercase tracking-wider">
+                                    <p className="text-xs sm:text-sm font-medium text-[var(--foreground-tertiary)]">
                                         {getAgeLabel(age)}
                                     </p>
                                 </div>
 
-                                {/* Slider Control with Precision Buttons */}
                                 <div className="w-full max-w-md space-y-4">
                                     <div className="flex items-center gap-3">
                                         <button
@@ -867,7 +953,6 @@ function PreferencesContent() {
                                     </div>
                                 </div>
 
-                                {/* Quick Age Selector Pills */}
                                 <div className="flex flex-wrap justify-center gap-2 pt-2 border-t border-[var(--border-color)]/50 w-full">
                                     {[18, 21, 25, 30, 40, 50].map((preset) => (
                                         <button
@@ -900,10 +985,10 @@ function PreferencesContent() {
                         >
                             <div className="text-center md:text-left space-y-2">
                                 <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-[var(--foreground)]">
-                                    Preferencia de catálogo
+                                    ¿Eres chica o chico?
                                 </h1>
                                 <p className="text-sm sm:text-base text-[var(--foreground-secondary)]">
-                                    Selecciona el enfoque de prendas y modelos que deseas ver en tus recomendaciones.
+                                    Selecciona el enfoque de prendas, cortes y proporciones para tu armario y para Kloe.
                                 </p>
                             </div>
 
@@ -915,7 +1000,7 @@ function PreferencesContent() {
                                             key={option.value}
                                             type="button"
                                             onClick={() => {
-                                                setGender(option.value);
+                                                setGender(option.value as 'woman' | 'man' | 'other');
                                                 setTimeout(() => setStep(3), 220);
                                             }}
                                             className={`relative w-full h-24 sm:h-32 rounded-2xl overflow-hidden text-left transition-all duration-200 group cursor-pointer ${
@@ -930,14 +1015,14 @@ function PreferencesContent() {
                                                 fill
                                                 className="object-cover transition-transform duration-500 group-hover:scale-105"
                                             />
-                                            <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/55 to-black/25" />
+                                            <div className="absolute inset-0 bg-black/55" />
 
                                             <div className="absolute inset-0 p-4 sm:p-6 flex items-center justify-between z-10">
                                                 <div className="space-y-0.5 sm:space-y-1">
                                                     <span className="text-white text-lg sm:text-2xl font-bold tracking-wide block">
                                                         {option.label}
                                                     </span>
-                                                    <span className="text-white/75 text-xs sm:text-sm block">
+                                                    <span className="text-white/80 text-xs sm:text-sm block">
                                                         {option.sublabel}
                                                     </span>
                                                 </div>
@@ -959,10 +1044,166 @@ function PreferencesContent() {
                         </motion.div>
                     )}
 
-                    {/* STEP 3: EXPANDED STYLES GRID */}
+                    {/* STEP 3: "DINOS CÓMO ERES" (PHYSICAL PROFILE) */}
                     {step === 3 && (
                         <motion.div
-                            key="step3"
+                            key="step3_physical"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            transition={{ duration: 0.25 }}
+                            className="flex flex-col gap-6 pb-6"
+                        >
+                            <div className="text-center md:text-left space-y-2">
+                                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] text-xs font-semibold">
+                                    <User className="w-3.5 h-3.5" />
+                                    <span>Perfil físico para Kloe · Sin fotos faciales</span>
+                                </div>
+                                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-[var(--foreground)]">
+                                    Dinos cómo eres
+                                </h1>
+                                <p className="text-sm sm:text-base text-[var(--foreground-secondary)]">
+                                    Kloe utiliza tu altura, silueta y rasgos para recomendarte los cortes, tiros y colores que mejor te sientan. Podrás editarlo siempre desde Ajustes.
+                                </p>
+                            </div>
+
+                            <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-3xl p-5 sm:p-7 space-y-6 shadow-sm">
+                                {/* 1. Altura */}
+                                <div className="p-4 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)]">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className="text-xs font-semibold text-[var(--foreground-secondary)] flex items-center gap-1.5">
+                                            <Ruler className="w-4 h-4 text-[var(--brand-pink)]" />
+                                            Tu altura
+                                        </span>
+                                        <span className="text-2xl font-bold text-[var(--foreground)] font-display tabular-nums">
+                                            {height} <span className="text-xs font-normal text-[var(--foreground-secondary)]">cm</span>
+                                        </span>
+                                    </div>
+                                    <input
+                                        type="range"
+                                        min={145}
+                                        max={210}
+                                        step={1}
+                                        value={height}
+                                        onChange={(e) => setHeight(Number(e.target.value))}
+                                        className="w-full accent-[var(--brand-pink)] cursor-pointer h-2.5 rounded-lg"
+                                    />
+                                    <div className="flex justify-between text-[11px] text-[var(--foreground-tertiary)] mt-1.5">
+                                        <span>145 cm</span>
+                                        <span>175 cm</span>
+                                        <span>210 cm</span>
+                                    </div>
+                                </div>
+
+                                {/* 2. Tipo de cuerpo adaptado a Chica / Chico */}
+                                <div className="space-y-2.5">
+                                    <label className="block text-xs font-semibold text-[var(--foreground-secondary)]">
+                                        Tu tipo de cuerpo ({gender === 'man' ? 'Chico' : gender === 'other' ? 'Unisex' : 'Chica'})
+                                    </label>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                        {currentBodyOptions.map((opt) => {
+                                            const active = bodyType === opt.id;
+                                            return (
+                                                <button
+                                                    key={opt.id}
+                                                    type="button"
+                                                    onClick={() => setBodyType(opt.id)}
+                                                    className={`text-left p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-2.5 ${
+                                                        active
+                                                            ? 'bg-[var(--brand-pink)]/10 border-[var(--brand-pink)] text-[var(--foreground)] shadow-sm'
+                                                            : 'bg-[var(--background-secondary)] border-[var(--border-color)] text-[var(--foreground)] hover:border-[var(--foreground-tertiary)]'
+                                                    }`}
+                                                >
+                                                    <div className="min-w-0">
+                                                        <div className="text-sm font-semibold">{opt.label}</div>
+                                                        <div className="text-[11px] text-[var(--foreground-secondary)] mt-0.5 leading-snug">
+                                                            {opt.desc}
+                                                        </div>
+                                                    </div>
+                                                    <div
+                                                        className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 border ${
+                                                            active
+                                                                ? 'bg-[var(--brand-pink)] border-[var(--brand-pink)] text-white'
+                                                                : 'border-[var(--border-color)]'
+                                                        }`}
+                                                    >
+                                                        {active && <Check className="w-3 h-3 stroke-[3]" />}
+                                                    </div>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                {/* 3. Color de ojos */}
+                                <div className="space-y-2.5">
+                                    <label className="text-xs font-semibold text-[var(--foreground-secondary)] flex items-center gap-1.5">
+                                        <Eye className="w-4 h-4 text-[var(--brand-pink)]" />
+                                        Color de ojos
+                                    </label>
+                                    <div className="flex flex-wrap gap-2">
+                                        {EYE_COLOR_OPTIONS.map((eye) => {
+                                            const active = eyeColor === eye.id;
+                                            return (
+                                                <button
+                                                    key={eye.id}
+                                                    type="button"
+                                                    onClick={() => setEyeColor(eye.id)}
+                                                    className={`px-3.5 py-2 rounded-full text-xs font-semibold flex items-center gap-2 border transition-all cursor-pointer ${
+                                                        active
+                                                            ? 'bg-[var(--foreground)] text-[var(--background)] border-[var(--foreground)] shadow-sm'
+                                                            : 'bg-[var(--background-secondary)] text-[var(--foreground)] border-[var(--border-color)] hover:border-[var(--foreground-tertiary)]'
+                                                    }`}
+                                                >
+                                                    <span
+                                                        className="w-3 h-3 rounded-full border border-black/20 shrink-0"
+                                                        style={{ backgroundColor: eye.swatch }}
+                                                    />
+                                                    <span>{eye.label}</span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                {/* 4. Color de pelo */}
+                                <div className="space-y-2.5">
+                                    <label className="text-xs font-semibold text-[var(--foreground-secondary)] flex items-center gap-1.5">
+                                        <Palette className="w-4 h-4 text-[var(--brand-pink)]" />
+                                        Color de pelo
+                                    </label>
+                                    <div className="flex flex-wrap gap-2">
+                                        {HAIR_COLOR_OPTIONS.map((hair) => {
+                                            const active = hairColor === hair.id;
+                                            return (
+                                                <button
+                                                    key={hair.id}
+                                                    type="button"
+                                                    onClick={() => setHairColor(hair.id)}
+                                                    className={`px-3.5 py-2 rounded-full text-xs font-semibold flex items-center gap-2 border transition-all cursor-pointer ${
+                                                        active
+                                                            ? 'bg-[var(--foreground)] text-[var(--background)] border-[var(--foreground)] shadow-sm'
+                                                            : 'bg-[var(--background-secondary)] text-[var(--foreground)] border-[var(--border-color)] hover:border-[var(--foreground-tertiary)]'
+                                                    }`}
+                                                >
+                                                    <span
+                                                        className="w-3 h-3 rounded-full border border-black/20 shrink-0"
+                                                        style={{ backgroundColor: hair.swatch }}
+                                                    />
+                                                    <span>{hair.label}</span>
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
+
+                    {/* STEP 4: EXPANDED STYLES GRID */}
+                    {step === 4 && (
+                        <motion.div
+                            key="step4_styles"
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -20 }}
@@ -987,7 +1228,6 @@ function PreferencesContent() {
                                 </p>
                             </div>
 
-                            {/* 34 Grid Items with dynamic gender-specific photography */}
                             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-4 pb-4">
                                 {availableStyles.map((style, idx) => {
                                     const styleKey = style.slug || style.id;
@@ -1017,15 +1257,12 @@ function PreferencesContent() {
                                                 <div className="absolute inset-0 bg-[var(--background-secondary)] flex items-center justify-center text-[var(--foreground-tertiary)]" />
                                             )}
 
-                                            {/* Gradient overlay */}
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-black/10 z-10" />
+                                            <div className="absolute inset-0 bg-black/45 z-10" />
 
-                                            {/* Pink overlay when selected */}
                                             {isSelected && (
                                                 <div className="absolute inset-0 bg-[var(--brand-pink)]/25 z-20 transition-opacity" />
                                             )}
 
-                                            {/* Selection indicator pill */}
                                             <div className="absolute top-2.5 right-2.5 z-30">
                                                 <div
                                                     className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${
@@ -1038,7 +1275,6 @@ function PreferencesContent() {
                                                 </div>
                                             </div>
 
-                                            {/* Name Label */}
                                             <div className="absolute bottom-0 left-0 right-0 p-2.5 sm:p-3.5 z-30">
                                                 <span className="text-white text-xs sm:text-sm font-semibold tracking-wide block leading-snug line-clamp-2 drop-shadow-sm">
                                                     {style.name}
@@ -1051,10 +1287,10 @@ function PreferencesContent() {
                         </motion.div>
                     )}
 
-                    {/* STEP 4: ACCESSORIES STYLE SELECTION */}
-                    {step === 4 && (
+                    {/* STEP 5: ACCESSORIES STYLE SELECTION */}
+                    {step === 5 && (
                         <motion.div
-                            key="step4"
+                            key="step5_accessories"
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -20 }}
@@ -1092,7 +1328,7 @@ function PreferencesContent() {
                                                 fill
                                                 className="object-cover transition-transform duration-500 group-hover:scale-105"
                                             />
-                                            <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/30" />
+                                            <div className="absolute inset-0 bg-black/60" />
 
                                             <div className="absolute inset-0 p-4 sm:p-5 flex items-center justify-between z-10">
                                                 <div className="space-y-0.5 sm:space-y-1 max-w-[80%]">
@@ -1120,48 +1356,164 @@ function PreferencesContent() {
                             </div>
                         </motion.div>
                     )}
+
+                    {/* STEP 6: PHASED ACTION - MATH PAIN POINT + PHOTO/WEB GUIDE + DIRECT UPLOAD UP TO 20 ITEMS */}
+                    {step === 6 && (
+                        <motion.div
+                            key="step6_upload_guide"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            transition={{ duration: 0.25 }}
+                            className="flex flex-col gap-5 pb-8"
+                        >
+                            {/* Mathematical Pain Point Banner */}
+                            <div className="bg-[var(--foreground)] text-[var(--background)] rounded-[2rem] p-6 sm:p-7 shadow-xl">
+                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--brand-pink)] text-white text-xs font-bold mb-3">
+                                    <Clock className="w-3.5 h-3.5" />
+                                    <span>El cálculo que cambia tus mañanas</span>
+                                </div>
+                                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight leading-tight">
+                                    15 minutos hoy te ahorran <span className="text-[var(--brand-pink)]">91 horas al año</span>
+                                </h1>
+                                <p className="text-xs sm:text-sm opacity-80 mt-2.5 leading-relaxed">
+                                    Pasamos una media de <strong>15 minutos cada mañana</strong> frente al armario sin saber qué ponernos. Al cabo del año son <strong>5.475 minutos perdidos</strong> (más de <strong>91 horas</strong> o casi <strong>4 días enteros</strong> frente al espejo).
+                                </p>
+
+                                <div className="grid grid-cols-3 gap-2.5 mt-5 pt-4 border-t border-white/15 dark:border-black/15 text-center">
+                                    <div className="p-2.5 rounded-2xl bg-white/10 dark:bg-black/10">
+                                        <div className="text-xl sm:text-2xl font-bold font-display text-[var(--brand-pink)]">15 min</div>
+                                        <div className="text-[11px] opacity-75">Subir tu ropa hoy</div>
+                                    </div>
+                                    <div className="p-2.5 rounded-2xl bg-white/10 dark:bg-black/10">
+                                        <div className="text-xl sm:text-2xl font-bold font-display">5.475 m</div>
+                                        <div className="text-[11px] opacity-75">Ahorrados al año</div>
+                                    </div>
+                                    <div className="p-2.5 rounded-2xl bg-white/10 dark:bg-black/10">
+                                        <div className="text-xl sm:text-2xl font-bold font-display text-emerald-400 dark:text-emerald-600">+91 h</div>
+                                        <div className="text-[11px] opacity-75">Casi 4 días libres</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* How to upload in 3 simple ways */}
+                            <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-[2rem] p-5 sm:p-6 space-y-4 shadow-sm">
+                                <h2 className="text-base sm:text-lg font-bold text-[var(--foreground)]">
+                                    ¿Cómo subir tus prendas en segundos?
+                                </h2>
+
+                                <div className="space-y-3">
+                                    <div className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)]">
+                                        <div className="w-10 h-10 rounded-2xl bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] flex items-center justify-center shrink-0">
+                                            <Camera className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-sm font-bold text-[var(--foreground)]">
+                                                1. Haz fotos rápidas a tu ropa
+                                            </h3>
+                                            <p className="text-xs text-[var(--foreground-secondary)] mt-0.5 leading-relaxed">
+                                                Extiende la prenda sobre la cama o en una percha con luz natural. Nosotros borramos el fondo y detectamos categoría, color y estación automáticamente.
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)]">
+                                        <div className="w-10 h-10 rounded-2xl bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] flex items-center justify-center shrink-0">
+                                            <Globe className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-sm font-bold text-[var(--foreground)]">
+                                                2. O coge fotos y capturas de webs
+                                            </h3>
+                                            <p className="text-xs text-[var(--foreground-secondary)] mt-0.5 leading-relaxed">
+                                                ¿No te apetece sacar la ropa del armario? Guarda la foto de la web donde la compraste (Zara, Mango, Bershka, Pull&Bear, Nike, Eme Studios...) y súbela tal cual.
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)]">
+                                        <div className="w-10 h-10 rounded-2xl bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] flex items-center justify-center shrink-0">
+                                            <Layers className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-sm font-bold text-[var(--foreground)]">
+                                                3. Sube hasta 20 prendas de golpe (armario ilimitado)
+                                            </h3>
+                                            <p className="text-xs text-[var(--foreground-secondary)] mt-0.5 leading-relaxed">
+                                                Selecciona hasta <strong>20 fotos a la vez</strong> desde tu galería. Sin límite total de prendas en tu armario.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Direct Action CTAs */}
+                                <div className="pt-2 space-y-2.5">
+                                    <button
+                                        type="button"
+                                        disabled={isSaving}
+                                        onClick={() => handleComplete(true)}
+                                        className="w-full py-4 px-6 rounded-full bg-[var(--brand-pink)] text-white font-bold text-sm sm:text-base hover:opacity-95 active:scale-[0.99] transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                                    >
+                                        <Plus className="w-5 h-5" />
+                                        <span>{isSaving ? 'Preparando tu armario...' : 'Subir mis primeras prendas ahora (hasta 20)'}</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        disabled={isSaving}
+                                        onClick={() => handleComplete(false)}
+                                        className="w-full py-3 px-6 rounded-full bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:text-[var(--foreground)] font-semibold text-xs sm:text-sm transition-colors cursor-pointer"
+                                    >
+                                        Ir a mi armario y subir luego
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
                 </AnimatePresence>
             </main>
 
-            {/* Bottom Floating Navigation */}
-            <div className="fixed bottom-0 left-0 right-0 p-4 sm:p-6 bg-gradient-to-t from-[var(--background)] via-[var(--background)] to-transparent z-40 pointer-events-none">
-                <div className="max-w-xl mx-auto flex justify-between gap-3 sm:gap-4 pointer-events-auto">
-                    {step > 0 && (
+            {/* Bottom Floating Navigation (Hidden on Step 6 because Step 6 has its own primary dual CTAs) */}
+            {step < 6 && (
+                <div className="fixed bottom-0 left-0 right-0 p-4 sm:p-6 bg-gradient-to-t from-[var(--background)] via-[var(--background)] to-transparent z-40 pointer-events-none">
+                    <div className="max-w-xl mx-auto flex justify-between gap-3 sm:gap-4 pointer-events-auto">
+                        {step > 0 && (
+                            <Button
+                                variant="secondary"
+                                size="lg"
+                                className="w-14 sm:w-auto sm:px-6 h-13 rounded-full flex items-center justify-center gap-2"
+                                onClick={() => setStep(prev => prev - 1)}
+                                type="button"
+                            >
+                                <ChevronLeft className="w-5 h-5" />
+                                <span className="hidden sm:inline">Atrás</span>
+                            </Button>
+                        )}
+
                         <Button
-                            variant="secondary"
                             size="lg"
-                            className="w-14 sm:w-auto sm:px-6 h-13 rounded-2xl flex items-center justify-center gap-2"
-                            onClick={() => setStep(prev => prev - 1)}
+                            className="flex-1 h-13 rounded-full text-[15px] font-semibold max-w-sm ml-auto disabled:opacity-40 disabled:cursor-not-allowed"
+                            onClick={handleNext}
+                            disabled={
+                                (step === 0 && (!fullName.trim() || fullName.trim().length < 2 || username.length < 3 || isUsernameAvailable === false || isCheckingUsername)) ||
+                                (step === 1 && !age) ||
+                                (step === 2 && !gender) ||
+                                (step === 3 && (!height || !bodyType || !eyeColor || !hairColor)) ||
+                                (step === 4 && selectedStyles.length === 0) ||
+                                (step === 5 && !selectedAccessory) ||
+                                isSaving
+                            }
                             type="button"
                         >
-                            <ChevronLeft className="w-5 h-5" />
-                            <span className="hidden sm:inline">Atrás</span>
+                            {isSaving
+                                ? 'Guardando...'
+                                : step === maxStepIndex
+                                ? 'Guardar cambios'
+                                : 'Continuar'}
+                            {step < maxStepIndex && !isSaving && <ChevronRight className="w-4 h-4 ml-1.5" />}
                         </Button>
-                    )}
-
-                    <Button
-                        size="lg"
-                        className="flex-1 h-13 rounded-2xl text-[15px] font-semibold max-w-sm ml-auto disabled:opacity-40 disabled:cursor-not-allowed"
-                        onClick={handleNext}
-                        disabled={
-                            (step === 0 && (!fullName.trim() || fullName.trim().length < 2 || username.length < 3 || isUsernameAvailable === false || isCheckingUsername)) ||
-                            (step === 1 && !age) ||
-                            (step === 2 && !gender) ||
-                            (step === 3 && selectedStyles.length === 0) ||
-                            (step === 4 && !selectedAccessory) ||
-                            isSaving
-                        }
-                        type="button"
-                    >
-                        {isSaving
-                            ? 'Guardando...'
-                            : step === 4
-                            ? 'Finalizar y explorar'
-                            : 'Continuar'}
-                        {step < 4 && !isSaving && <ChevronRight className="w-4 h-4 ml-1.5" />}
-                    </Button>
+                    </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 }

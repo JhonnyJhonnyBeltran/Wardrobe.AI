@@ -49,17 +49,17 @@ export const TOUR_STEPS: TourStep[] = [
   },
   {
     id: 'upload_clothes',
-    title: 'Añadir al menos 2 prendas al armario',
-    shortTitle: 'Sube 2 prendas',
-    subtitle: 'Digitaliza tu ropa en segundos',
-    description: 'Haz foto a tus prendas o sube capturas de webs (Zara, Nike, ASOS). El fondo se elimina automáticamente.',
-    actionText: 'Subir prendas al armario',
+    title: 'Digitaliza tus prendas (hasta 20 de golpe)',
+    shortTitle: 'Sube tu ropa',
+    subtitle: '15 min hoy = 91 horas ahorradas al año',
+    description: 'Decidir qué ponerte te quita 15 min cada mañana (5.475 min / 91 horas al año). Sube hasta 20 fotos de golpe desde tu cámara o capturas de webs: sin límite de prendas en tu armario.',
+    actionText: 'Subir prendas ahora (hasta 20)',
     actionUrl: '/closet?action=new-item',
-    tipTitle: 'Trucos para fotos nivel catálogo',
+    tipTitle: 'Cómo subir tu armario en 15 minutos',
     tips: [
-      'Luz natural directa: Haz la foto cerca de una ventana para captar los tonos y texturas reales.',
-      'Fondo liso y plano: Extiende la prenda sobre la cama o cuélgala en una percha contra una pared neutra.',
-      'O fotos de tiendas: Sube capturas de tus marcas favoritas y la app limpiará el fondo al instante.'
+      'Luz natural y fondo liso: Extiende la prenda sobre la cama o en una percha. El recorte de fondo es automático.',
+      'Capturas de webs de moda: Guarda fotos de Zara, Mango, Bershka, Nike o Eme Studios y súbelas directamente.',
+      'Lotes de hasta 20 fotos: Selecciona hasta 20 prendas a la vez sin límite total en tu armario.'
     ],
     badge: 'Paso 3 de 6',
     weight: 25

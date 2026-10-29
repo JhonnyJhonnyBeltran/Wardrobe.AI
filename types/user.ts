@@ -19,12 +19,15 @@ export interface UserProfile {
   morphology?: string; // e.g., 'triangle', 'hourglass'
   colorimetry?: string; // e.g., 'winter', 'summer'
 
-  // Style Questionnaire Fields
+  // Style Questionnaire & Physical Profile Fields ("Dinos cómo eres")
   age?: number;
   ageRange?: 'under_18' | '18_24' | '25_34' | '35_44' | '45_plus' | '18-24' | '25-34' | '35-44' | '45-54' | '55+';
   gender?: 'woman' | 'man' | 'other';
   height?: number; // in cm
   heightRange?: 'short' | 'medium' | 'tall';
+  bodyType?: string; // e.g., 'reloj_de_arena', 'caderas_anchas', 'atletico', 'abombado', 'esbelto'
+  eyeColor?: string; // e.g., 'marron_oscuro', 'marron_claro', 'verde', 'azul', 'gris', 'negro'
+  hairColor?: string; // e.g., 'negro', 'castano_oscuro', 'castano_claro', 'rubio', 'pelirrojo', 'gris_platino'
   preferredStyles?: string[]; // e.g., ['casual', 'sporty', 'elegant']
   usesAccessories?: boolean;
   accessoriesStyle?: string; // 'minimalista' | 'llamativo' | 'clasico' | 'urbano' | 'ninguno'
@@ -33,7 +36,7 @@ export interface UserProfile {
   isPrivate?: boolean; // Profile privacy
   language?: 'es' | 'en' | 'fr' | 'de' | 'it' | 'pt'; // User UI language
   notificationSettings?: { push: boolean; email: boolean } | any;
-  kloeTrialMessagesUsed?: number; // Count of free trial messages used with Kloe (out of 8)
+  kloeTrialMessagesUsed?: number; // Count of free daily messages used with Kloe (out of 3)
 }
 
 export interface UserPreferences {

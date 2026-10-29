@@ -9,8 +9,7 @@ import {
   Loader2,
   X,
   ChevronLeft,
-  Lock,
-  CreditCard
+  Lock
 } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -76,7 +75,6 @@ export default function KloeProModal({ isOpen, onClose, redirectBackToCloset = f
         setClientSecret(data.clientSecret);
         setView('checkout');
       } else if (data.url) {
-        // Fallback to hosted redirect if server provided URL
         window.location.href = data.url;
       } else {
         throw new Error('No se pudo inicializar la pasarela de pago');
@@ -90,10 +88,10 @@ export default function KloeProModal({ isOpen, onClose, redirectBackToCloset = f
   };
 
   const features = [
-    'Estilismo y consultas ilimitadas con Kloe 24/7',
-    'Análisis visual de tus prendas y fotos reales',
-    'Montaje automático de outfits en el lienzo',
-    'Programación de looks en tu calendario semanal'
+    'Estilismo personal con Kloe 24/7 (hasta 35 consultas/día)',
+    'Análisis contextual de tus prendas, outfits y posts',
+    'Montaje directo de outfits recomendados en el lienzo',
+    'Recomendaciones adaptadas a tu morfología y clima local'
   ];
 
   return (
@@ -122,8 +120,8 @@ export default function KloeProModal({ isOpen, onClose, redirectBackToCloset = f
           <div className="w-12 h-1 bg-[var(--foreground-tertiary)]/30 rounded-full mx-auto mb-3 sm:hidden" />
 
           {/* Background Ambient Glow */}
-          <div className="absolute -top-24 -right-24 w-48 h-48 bg-[var(--brand-pink)]/20 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-purple-500/15 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -top-24 -right-24 w-48 h-48 bg-[var(--brand-pink)]/15 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-[var(--brand-pink)]/10 rounded-full blur-3xl pointer-events-none" />
 
           {/* Top Actions: Back button (if in checkout) & Close button */}
           <div className="flex items-center justify-between mb-2">
@@ -161,11 +159,11 @@ export default function KloeProModal({ isOpen, onClose, redirectBackToCloset = f
                   />
                 </div>
                 
-                <h3 className="text-xl font-black text-[var(--foreground)] leading-tight tracking-tight">
+                <h3 className="text-xl font-bold text-[var(--foreground)] leading-tight tracking-tight">
                   Desbloquea <span className="text-[var(--brand-pink)]">Klozet Pro</span>
                 </h3>
                 <p className="text-xs text-[var(--foreground-secondary)] mt-1.5 max-w-xs leading-relaxed font-medium">
-                  Estilismo ilimitado con Kloe, análisis de tus fotos reales y recomendaciones de looks de pies a cabeza.
+                  Estilismo completo con Kloe, análisis contextual de looks y recomendaciones a tu medida. Tu armario y calendario siguen siendo 100% gratis.
                 </p>
               </div>
 
@@ -183,7 +181,7 @@ export default function KloeProModal({ isOpen, onClose, redirectBackToCloset = f
 
               {/* Pricing Options Cards */}
               <div className="grid grid-cols-2 gap-2.5 sm:gap-3 mb-5">
-                {/* Yearly Option (Best Value) */}
+                {/* Yearly Option (Best Value - Irresistible Annual Offer) */}
                 <div
                   onClick={() => setSelectedPlan('yearly')}
                   className={`relative p-3.5 sm:p-4 rounded-2xl border-2 cursor-pointer transition-all flex flex-col justify-between active:scale-[0.98] ${
@@ -193,8 +191,8 @@ export default function KloeProModal({ isOpen, onClose, redirectBackToCloset = f
                   }`}
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-[var(--brand-pink)] text-white tracking-wider shadow-xs">
-                      Ahorra 30%
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[var(--brand-pink)] text-white tracking-wide shadow-xs">
+                      Ahorra 67%
                     </span>
                     <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
                       selectedPlan === 'yearly' ? 'border-[var(--brand-pink)] bg-[var(--brand-pink)]' : 'border-[var(--border-color)]'
@@ -206,11 +204,11 @@ export default function KloeProModal({ isOpen, onClose, redirectBackToCloset = f
                   <div>
                     <p className="text-xs font-bold text-[var(--foreground)]">Plan Anual</p>
                     <div className="flex items-baseline gap-1 mt-0.5">
-                      <span className="text-xl sm:text-2xl font-black text-[var(--foreground)]">24,99 €</span>
+                      <span className="text-xl sm:text-2xl font-bold text-[var(--foreground)]">19,99 €</span>
                       <span className="text-[10px] text-[var(--foreground-secondary)] font-medium">/año</span>
                     </div>
                     <p className="text-[11px] text-[var(--brand-pink)] font-bold mt-1">
-                      ~2,08 € / mes
+                      Solo 1,66 € / mes
                     </p>
                   </div>
                 </div>
@@ -225,7 +223,7 @@ export default function KloeProModal({ isOpen, onClose, redirectBackToCloset = f
                   }`}
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-[10px] font-bold text-[var(--foreground-tertiary)] uppercase tracking-wider">
+                    <span className="text-[10px] font-bold text-[var(--foreground-tertiary)] tracking-wide">
                       Mensual
                     </span>
                     <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
@@ -238,7 +236,7 @@ export default function KloeProModal({ isOpen, onClose, redirectBackToCloset = f
                   <div>
                     <p className="text-xs font-bold text-[var(--foreground)]">Plan Mensual</p>
                     <div className="flex items-baseline gap-1 mt-0.5">
-                      <span className="text-xl sm:text-2xl font-black text-[var(--foreground)]">2,99 €</span>
+                      <span className="text-xl sm:text-2xl font-bold text-[var(--foreground)]">4,99 €</span>
                       <span className="text-[10px] text-[var(--foreground-secondary)] font-medium">/mes</span>
                     </div>
                     <p className="text-[11px] text-[var(--foreground-tertiary)] font-medium mt-1">
@@ -252,7 +250,7 @@ export default function KloeProModal({ isOpen, onClose, redirectBackToCloset = f
               <button
                 onClick={handleStartCheckout}
                 disabled={loading}
-                className="w-full h-13 py-3.5 px-6 rounded-2xl bg-[var(--brand-pink)] hover:bg-[#ff3377] text-white font-black text-sm shadow-xl shadow-[var(--brand-pink)]/25 flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-75 disabled:cursor-not-allowed cursor-pointer"
+                className="w-full h-13 py-3.5 px-6 rounded-full bg-[var(--brand-pink)] hover:opacity-95 text-white font-bold text-sm shadow-xl shadow-[var(--brand-pink)]/25 flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-75 disabled:cursor-not-allowed cursor-pointer"
               >
                 {loading ? (
                   <>
@@ -287,7 +285,7 @@ export default function KloeProModal({ isOpen, onClose, redirectBackToCloset = f
                       {selectedPlan === 'yearly' ? 'Klozet Pro · Plan Anual' : 'Klozet Pro · Plan Mensual'}
                     </h4>
                     <p className="text-[11px] text-[var(--foreground-secondary)] font-medium">
-                      {selectedPlan === 'yearly' ? '24,99 € / año (~2,08 €/mes)' : '2,99 € / mes'}
+                      {selectedPlan === 'yearly' ? '19,99 € / año (1,66 €/mes)' : '4,99 € / mes'}
                     </p>
                   </div>
                 </div>

@@ -269,16 +269,16 @@ export default function GuidedTourModal() {
 
                     <div className="space-y-2.5 text-xs sm:text-[13px] text-[var(--foreground-secondary)] leading-relaxed">
                       <div className="flex items-start gap-2.5">
-                        <span className="w-5 h-5 rounded-full bg-amber-400/10 text-amber-500 flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">1</span>
-                        <p><strong className="text-[var(--foreground)]">Luz natural directa:</strong> Haz la foto cerca de una ventana o con buena iluminación para captar los tonos reales de la prenda.</p>
+                        <span className="w-5 h-5 rounded-full bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">1</span>
+                        <p><strong className="text-[var(--foreground)]">15 min hoy = 91 h ahorradas al año:</strong> Pierdes 5.475 minutos al año decidiendo qué ponerte cada mañana. Digitaliza tu ropa una vez y ahorra casi 4 días al año.</p>
                       </div>
                       <div className="flex items-start gap-2.5">
-                        <span className="w-5 h-5 rounded-full bg-purple-400/10 text-purple-500 flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">2</span>
-                        <p><strong className="text-[var(--foreground)]">Fondo liso y plano:</strong> Extiende la prenda sobre la cama o mesa, o cuélgala en una percha contra una pared neutra.</p>
+                        <span className="w-5 h-5 rounded-full bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">2</span>
+                        <p><strong className="text-[var(--foreground)]">Fotos tuyas o de webs:</strong> Haz foto con luz natural sobre fondo liso o sube capturas de Zara, Mango, Bershka, Nike o Eme Studios. Borramos el fondo al instante.</p>
                       </div>
                       <div className="flex items-start gap-2.5">
-                        <span className="w-5 h-5 rounded-full bg-pink-400/10 text-[var(--brand-pink)] flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">3</span>
-                        <p><strong className="text-[var(--foreground)]">O fotos de tiendas online:</strong> Puedes subir fotos guardadas de webs (Zara, ASOS, Nike, Mango) y la IA eliminará el fondo automáticamente.</p>
+                        <span className="w-5 h-5 rounded-full bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">3</span>
+                        <p><strong className="text-[var(--foreground)]">Hasta 20 prendas de golpe:</strong> Selecciona hasta 20 fotos por lote, sin límite total de prendas en tu armario.</p>
                       </div>
                     </div>
 

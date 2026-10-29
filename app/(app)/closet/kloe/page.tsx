@@ -19,10 +19,7 @@ import {
   Bookmark,
   User,
   Camera,
-  AlertCircle,
-  Instagram,
   Share2,
-  Sparkles
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -36,7 +33,6 @@ import { haptics } from '@/lib/haptic';
 import ProductModal from '@/components/ProductModal';
 import KloeProModal from '@/components/KloeProModal';
 import AvatarCalibrationModal from '@/components/AvatarCalibrationModal';
-import LoadingSpinner from '@/components/LoadingSpinner';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { resolveImageUrl } from '@/lib/imageUtils';
 
@@ -92,7 +88,7 @@ interface Conversation {
 
 const getStorageKey = (userId?: string) => userId ? `kloe_conversations_${userId}` : null;
 const MAX_CONVERSATIONS = 5;
-const MAX_TRIAL_MESSAGES = 8;
+const MAX_TRIAL_MESSAGES = 3;
 
 /**
  * Robust thumbnail component that gracefully displays "Prenda borrada"
@@ -152,7 +148,6 @@ function GarmentThumbnail({
           </p>
         </div>
       )}
-
     </div>
   );
 }
@@ -160,7 +155,7 @@ function GarmentThumbnail({
 const INITIAL_MESSAGE: ChatMessage = {
   id: 'welcome',
   role: 'assistant',
-  content: '¡Hola! Soy Kloe, tu estilista personal. Puedo analizar todas las prendas de tu armario y tus looks guardados para ayudarte a crear cualquier outfit.',
+  content: '¡Hola! Soy Kloe, tu estilista personal. Puedo analizar las prendas de tu armario y tus looks guardados para crear cualquier outfit o explicarte qué lleva una publicación.',
   follow_up_suggestions: [
     'Arma un look casual con mis prendas',
     'Recomiéndame un outfit para una cena',
@@ -171,7 +166,6 @@ const INITIAL_MESSAGE: ChatMessage = {
 };
 
 function FormattedMessageText({ content, isUser }: { content: string; isUser?: boolean }) {
-  // 1. Normalizar viñetas huérfanas y espaciados
   const cleaned = (content || '')
     .replace(/(?:^|\n)\s*[•\-\*]\s*\n\s*/g, '\n• ')
     .replace(/\s+,\s+\*\*/g, ', **')
@@ -190,11 +184,9 @@ function FormattedMessageText({ content, isUser }: { content: string; isUser?: b
               const trimmed = line.trim();
               if (!trimmed) return null;
 
-              // Comprobar encabezados Markdown (#, ##, ###, ####)
               const headerMatch = trimmed.match(/^#{1,4}\s+(.+)$/);
               const isHeader = !!headerMatch;
 
-              // Comprobar viñetas (-, *, •, +)
               const isBullet = !isHeader && (
                 trimmed.startsWith('- ') || 
                 trimmed.startsWith('* ') || 
@@ -430,7 +422,7 @@ export default function KloePage() {
     fetchQuota();
   }, [user?.id]);
 
-  const maxDay = quotaInfo?.dailyLimit ?? (isPremium() ? 35 : 8);
+  const maxDay = quotaInfo?.dailyLimit ?? (isPremium() ? 35 : MAX_TRIAL_MESSAGES);
   const remainingToday = quotaInfo?.remainingDay ?? maxDay;
   const isInputUnlocked = quotaInfo ? quotaInfo.remainingDay > 0 : true;
 
@@ -475,7 +467,7 @@ export default function KloePage() {
     lastScrollY.current = currentScrollY;
   };
   
-  // User Physical Profile Reference Photos Modal
+  // User Physical Profile ("Dinos cómo eres") Modal
   const [showCalibrationModal, setShowCalibrationModal] = useState(false);
 
   // Custom Image Upload for AI Vision Styling Advice
@@ -503,8 +495,8 @@ export default function KloePage() {
 
   // Cycling thinking messages with realistic AI Stylist reasoning stages
   const thinkingMessages = [
-    'Inspeccionando fotos y prendas de tu armario...',
-    'Analizando armonía de colores, tejidos y morfología...',
+    'Revisando los metadatos de tu armario...',
+    'Analizando armonía de colores, tejidos y tu perfil físico...',
     'Equilibrando capas, proporciones y código de vestimenta...',
     'Estructurando el look y redactando tu asesoría de estilo...'
   ];
@@ -525,7 +517,6 @@ export default function KloePage() {
 
   // Load conversations scoped strictly to current user ID
   useEffect(() => {
-    // 0. Purge legacy global unscoped keys to prevent cross-account leakage
     try {
       localStorage.removeItem('kloe_conversations_v1');
       localStorage.removeItem('klosy_conversations_v1');
@@ -541,7 +532,6 @@ export default function KloePage() {
     const userKey = getStorageKey(user.id);
     let hasLoadedLocal = false;
 
-    // 1. Instant local storage hydration for THIS specific user
     if (userKey) {
       try {
         const stored = localStorage.getItem(userKey);
@@ -565,7 +555,6 @@ export default function KloePage() {
       setMessages([INITIAL_MESSAGE]);
     }
 
-    // 2. Fetch and merge remote conversations from database for THIS authenticated user
     const fetchRemoteConvs = async () => {
       try {
         const { data: sessionData } = await supabase.auth.getSession();
@@ -606,7 +595,6 @@ export default function KloePage() {
               return merged;
             });
           } else if (!hasLoadedLocal) {
-            // New user with 0 remote conversations
             setConversations([]);
             setActiveConversationId('default');
             setMessages([INITIAL_MESSAGE]);
@@ -640,7 +628,7 @@ export default function KloePage() {
     if (!user?.id) return;
     setLoadingWardrobe(true);
     try {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('clothing_items')
         .select('*')
         .eq('user_id', user.id)
@@ -658,7 +646,7 @@ export default function KloePage() {
     if (!user?.id) return;
     setLoadingSaved(true);
     try {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('saves')
         .select(`
           id,
@@ -689,34 +677,19 @@ export default function KloePage() {
 
   const openWardrobe = () => {
     haptics.selection();
-    if (!isPremium()) {
-      setShowProModal(true);
-      toast.info('Elegir prendas de tu armario como input es una función de Kloe Pro');
-      return;
-    }
     setShowWardrobeDrawer(true);
     fetchWardrobe();
   };
 
   const openSaved = () => {
     haptics.selection();
-    if (!isPremium()) {
-      setShowProModal(true);
-      toast.info('Adjuntar looks y publicaciones guardadas es una función de Kloe Pro');
-      return;
-    }
     setShowSavedDrawer(true);
     fetchSavedPosts();
   };
 
-  // Toggle garment selection to attach multiple items to input (Kloe Pro)
+  // Toggle garment selection to attach multiple items to input
   const handleToggleWardrobeItem = (item: any) => {
     haptics.selection();
-    if (!isPremium()) {
-      setShowProModal(true);
-      toast.info('Elegir prendas de tu armario como input es una función de Kloe Pro');
-      return;
-    }
     setAttachedItems(prev => {
       const exists = prev.some(i => i.id === item.id);
       if (exists) {
@@ -737,14 +710,9 @@ export default function KloePage() {
     });
   };
 
-  // Select saved post to attach to input with deep outfit resolution (Kloe Pro)
+  // Select saved post to attach to input with deep outfit resolution
   const handleSelectSavedPost = async (post: any) => {
     haptics.selection();
-    if (!isPremium()) {
-      setShowProModal(true);
-      toast.info('Adjuntar looks guardados es una función de Kloe Pro');
-      return;
-    }
     if (attachedPost?.id === post.id) {
       setAttachedPost(null);
       setShowSavedDrawer(false);
@@ -838,9 +806,9 @@ export default function KloePage() {
     if (quotaInfo && quotaInfo.remainingDay <= 0) {
       if (!isPremium()) {
         setShowProModal(true);
-        toast.info('Has completado tus 8 mensajes gratuitos de hoy');
+        toast.info('Has completado tus 3 consultas gratuitas de hoy');
       } else {
-        toast.info('Has alcanzado tus 35 mensajes diarios. Se recarga a las 00:00.');
+        toast.info('Has alcanzado tus 35 consultas diarias. Se recarga a las 00:00.');
       }
       return;
     }
@@ -853,12 +821,6 @@ export default function KloePage() {
     const currentAttachedPost = attachedPost;
     const currentAttachedImage = attachedImage;
 
-    if (!isPremium() && (currentAttachedItems.length > 0 || currentAttachedPost)) {
-      setShowProModal(true);
-      toast.info('Adjuntar prendas de tu armario o looks guardados es exclusivo de Kloe Pro');
-      return;
-    }
-
     let defaultPrompt = '';
     if (!text) {
       if (currentAttachedImage) {
@@ -870,7 +832,7 @@ export default function KloePage() {
       } else if (currentAttachedItems.length > 1) {
         defaultPrompt = `¿Cómo puedo combinar estas ${currentAttachedItems.length} prendas (${currentAttachedItems.map(i => i.name).join(', ')}) juntas en un outfit?`;
       } else if (currentAttachedPost) {
-        defaultPrompt = `¿Cómo puedo recrear o inspirarme en este look guardado?`;
+        defaultPrompt = `¿Qué lleva la persona en este outfit y cómo puedo recrearlo con mi armario?`;
       }
     }
 
@@ -921,17 +883,17 @@ export default function KloePage() {
           return;
         }
         if (res.status === 429) {
-          setQuotaInfo(prev => ({
+          setQuotaInfo({
             isPremium: data.isPremium ?? isPremium(),
-            dailyLimit: data.dailyLimit ?? (isPremium() ? 35 : 8),
-            usedToday: data.usedToday ?? (isPremium() ? 35 : 8),
+            dailyLimit: data.dailyLimit ?? (isPremium() ? 35 : MAX_TRIAL_MESSAGES),
+            usedToday: data.usedToday ?? (isPremium() ? 35 : MAX_TRIAL_MESSAGES),
             remainingDay: 0,
             limitReached: true
-          }));
+          });
 
           const limitMsg = data.message || (isPremium()
             ? 'Has alcanzado tus 35 consultas diarias con Kloe. Tu límite se restablecerá hoy a las 00:00 (hora peninsular).'
-            : 'Has completado tus 8 mensajes gratuitos de hoy. Tu límite se restablecerá hoy a las 00:00 (hora peninsular) o desbloquea Kloe Pro para 35 consultas diarias.');
+            : 'Has completado tus 3 consultas gratuitas de hoy. Tu límite se restablecerá hoy a las 00:00 (hora peninsular) o desbloquea Kloe Pro para 35 consultas diarias.');
 
           const botMsg: ChatMessage = {
             id: `kloe_${Date.now()}`,
@@ -949,7 +911,7 @@ export default function KloePage() {
       if (typeof data.remainingDay === 'number') {
         setQuotaInfo({
           isPremium: data.isPremium ?? isPremium(),
-          dailyLimit: data.dailyLimit ?? (isPremium() ? 35 : 8),
+          dailyLimit: data.dailyLimit ?? (isPremium() ? 35 : MAX_TRIAL_MESSAGES),
           usedToday: data.usedToday ?? 1,
           remainingDay: data.remainingDay,
           limitReached: data.remainingDay <= 0
@@ -995,7 +957,6 @@ export default function KloePage() {
 
       persistConversations(currentConvs);
 
-      // Guided tour real-time trigger
       try {
         useTourStore.getState().markStepComplete('talk_to_kloe', '¡Has completado tu primera consulta de estilo con Kloe!', true);
       } catch (tourErr) {
@@ -1023,9 +984,8 @@ export default function KloePage() {
   return (
     <div className="min-h-screen bg-[var(--background)] flex flex-col justify-between max-w-5xl mx-auto">
       
-      {/* DESKTOP HEADER (Fixed top from sidebar edge, centered 10s animated logo, back button to /closet) */}
+      {/* DESKTOP HEADER */}
       <header className="hidden md:flex fixed top-0 md:left-[72px] left-0 right-0 z-30 h-16 bg-[var(--background)]/85 backdrop-blur-xl border-b border-[var(--border-color)]/50 px-8 items-center justify-between">
-        {/* Left: Back button to /closet & Quota badge */}
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.push('/closet')}
@@ -1061,18 +1021,14 @@ export default function KloePage() {
 
           <button
             onClick={() => {
-              if (!isPremium()) {
-                setShowProModal(true);
-                toast.info('La personalización por perfil físico es una función exclusiva de Klozet Pro');
-                return;
-              }
+              haptics.selection();
               setShowCalibrationModal(true);
             }}
             className="p-2.5 text-gray-900 dark:text-white hover:text-[var(--brand-pink)] dark:hover:text-[var(--brand-pink)] rounded-full hover:bg-[var(--background-secondary)] transition-colors cursor-pointer"
-            title="Mi Perfil Físico (Fotos de referencia de rostro y cuerpo)"
-            aria-label="Mi Perfil Físico"
+            title="Dinos cómo eres (Perfil físico)"
+            aria-label="Dinos cómo eres"
           >
-            <Camera className="w-5 h-5" />
+            <User className="w-5 h-5" />
           </button>
 
           <button
@@ -1095,9 +1051,8 @@ export default function KloePage() {
         </div>
       </header>
 
-      {/* MOBILE HEADER (Normalized h-14 apple-glass-bar with back button to /closet, centered logo, right actions) */}
+      {/* MOBILE HEADER */}
       <header className="fixed top-0 left-0 right-0 z-30 h-14 apple-glass-bar px-4 flex items-center justify-between pt-safe md:hidden">
-        {/* Left: Back button to /closet */}
         <button
           onClick={() => router.push('/closet')}
           className="touch-target-44 flex items-center justify-center -ml-2 text-[var(--foreground)] hover:text-[var(--brand-pink)] transition-colors cursor-pointer"
@@ -1131,18 +1086,14 @@ export default function KloePage() {
 
           <button
             onClick={() => {
-              if (!isPremium()) {
-                setShowProModal(true);
-                toast.info('La personalización por perfil físico es una función exclusiva de Klozet Pro');
-                return;
-              }
+              haptics.selection();
               setShowCalibrationModal(true);
             }}
             className="p-2 text-[var(--foreground)] hover:text-[var(--brand-pink)] rounded-full transition-colors cursor-pointer"
-            title="Mi Perfil Físico"
-            aria-label="Mi Perfil Físico"
+            title="Dinos cómo eres"
+            aria-label="Dinos cómo eres"
           >
-            <Camera className="w-4 h-4" />
+            <User className="w-4 h-4" />
           </button>
 
           <button
@@ -1170,24 +1121,22 @@ export default function KloePage() {
         onScroll={handleMessagesScroll}
         className="flex-1 overflow-y-auto px-4 md:px-6 pt-16 md:pt-20 pb-28 md:pb-24 space-y-6 no-scrollbar"
       >
-
-        
         {/* Free Tier Upgrade Banner - Only shown when limit has been reached */}
         {!isPremium() && remainingToday <= 0 && (
           <motion.div 
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-pink-500/10 border border-[var(--brand-pink)]/30 rounded-2xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm"
+            className="bg-[var(--brand-pink)]/10 border border-[var(--brand-pink)]/30 rounded-2xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm"
           >
             <div className="flex items-center gap-2.5 min-w-0">
               <Crown className="w-5 h-5 text-[var(--brand-pink)] flex-shrink-0" />
               <div className="min-w-0">
                 <p className="text-xs text-[var(--foreground-secondary)] leading-relaxed">
-                  Has completado tus <strong className="text-[var(--brand-pink)]">8 mensajes gratuitos de hoy</strong>. Pásate a Pro para disfrutar de 35 mensajes diarios.
+                  Has completado tus <strong className="text-[var(--brand-pink)]">3 consultas gratuitas de hoy</strong>. Pásate a Pro para disfrutar de 35 consultas diarias.
                 </p>
                 <div className="w-full max-w-[200px] h-1.5 bg-black/10 dark:bg-white/10 rounded-full mt-1.5 overflow-hidden">
                   <div 
-                    className="h-full bg-gradient-to-r from-[var(--brand-pink)] to-purple-500 rounded-full transition-all duration-300"
+                    className="h-full bg-[var(--brand-pink)] rounded-full transition-all duration-300"
                     style={{ width: '100%' }}
                   />
                 </div>
@@ -1195,9 +1144,9 @@ export default function KloePage() {
             </div>
             <button
               onClick={() => setShowProModal(true)}
-              className="text-xs font-bold px-3.5 py-2 bg-[var(--brand-pink)] text-white rounded-xl hover:opacity-90 transition-opacity flex-shrink-0 shadow-sm cursor-pointer self-start sm:self-auto"
+              className="text-xs font-bold px-3.5 py-2 bg-[var(--brand-pink)] text-white rounded-full hover:opacity-90 transition-opacity flex-shrink-0 shadow-sm cursor-pointer self-start sm:self-auto"
             >
-              Kloe Pro (2,99 €)
+              Kloe Pro (desde 1,66 €/mes)
             </button>
           </motion.div>
         )}
@@ -1303,7 +1252,7 @@ export default function KloePage() {
               <div
                 className={`p-4 rounded-3xl ${
                   msg.role === 'user'
-                    ? 'bg-gradient-to-tr from-[var(--brand-pink)] to-[#ff4088] text-white rounded-tr-sm shadow-md shadow-[var(--brand-pink)]/20'
+                    ? 'bg-[var(--brand-pink)] text-white rounded-tr-sm shadow-md shadow-[var(--brand-pink)]/20'
                     : 'bg-[var(--card-bg)] text-[var(--foreground)] border border-[var(--border-color)] rounded-tl-sm shadow-xs'
                 }`}
               >
@@ -1353,7 +1302,7 @@ export default function KloePage() {
                     ))}
                   </div>
 
-                  {/* Direct Action Buttons: Save, Post, Export to IG, Edit Canvas */}
+                  {/* Direct Action Buttons: Save, Post, Export, Edit Canvas */}
                   <div className="grid grid-cols-2 gap-2 pt-1">
                     {/* 1. Guardar en Armario */}
                     <button
@@ -1382,7 +1331,7 @@ export default function KloePage() {
                       )}
                     </button>
 
-                    {/* 2. Publicar en el Feed (crea outfit y redirige con outfitId) */}
+                    {/* 2. Publicar en el Feed */}
                     <button
                       onClick={() => handlePublishOutfit(msg.recommended_outfit)}
                       disabled={publishingOutfitKey === getOutfitSignature(msg.recommended_outfit)}
@@ -1404,9 +1353,9 @@ export default function KloePage() {
                     {/* 3. Exportar a Instagram Story (Generar sticker) */}
                     <button
                       onClick={() => setExportModalOutfit(msg.recommended_outfit)}
-                      className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-gradient-to-r from-pink-500/10 to-purple-500/10 hover:from-pink-500/20 hover:to-purple-500/20 text-pink-600 dark:text-pink-400 text-xs font-semibold border border-pink-500/30 transition-all active:scale-[0.98]"
+                      className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-[var(--brand-pink)]/10 hover:bg-[var(--brand-pink)]/20 text-[var(--brand-pink)] text-xs font-semibold border border-[var(--brand-pink)]/30 transition-all active:scale-[0.98]"
                     >
-                      <Sparkles className="w-3.5 h-3.5" />
+                      <Share2 className="w-3.5 h-3.5" />
                       <span className="truncate">Generar sticker</span>
                     </button>
 
@@ -1513,7 +1462,7 @@ export default function KloePage() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Floating Bottom Input Bar or Locked Premium Bar - Fixed Apple HIG style */}
+      {/* Floating Bottom Input Bar */}
       <div className="fixed bottom-[calc(72px+env(safe-area-inset-bottom,0px))] md:bottom-0 left-0 right-0 pointer-events-none w-full max-w-3xl md:max-w-4xl mx-auto px-4 md:px-6 pb-2 md:pb-6 pt-2 z-30 flex flex-col items-center">
         
         {/* Floating Attachment Cards Strip */}
@@ -1563,10 +1512,11 @@ export default function KloePage() {
                   <div className="flex items-center gap-2.5 bg-[var(--card-bg)]/95 dark:bg-[#18181f]/95 backdrop-blur-2xl border border-[var(--brand-pink)]/50 rounded-2xl p-2 shadow-lg shrink-0 max-w-[240px]">
                     <div className="relative w-10 h-10 rounded-xl bg-[var(--background-secondary)] overflow-hidden shrink-0 border border-[var(--border-color)]">
                       {attachedPost.imageUrl || attachedPost.image_url ? (
-                        <img
-                          src={resolveImageUrl(attachedPost.imageUrl || attachedPost.image_url)}
+                        <Image
+                          src={attachedPost.imageUrl || attachedPost.image_url || ''}
                           alt={attachedPost.caption || 'Look guardado'}
-                          className="w-full h-full object-cover"
+                          fill
+                          className="object-cover"
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-[var(--brand-pink)]">
@@ -1579,7 +1529,7 @@ export default function KloePage() {
                         Look Guardado
                       </span>
                       <p className="text-xs font-semibold text-[var(--foreground)] truncate">
-                        {attachedPost.caption || 'Inspiración'}
+                        {attachedPost.caption || 'Look de referencia'}
                       </p>
                     </div>
                     <button
@@ -1596,7 +1546,6 @@ export default function KloePage() {
                   </div>
                 )}
 
-                {/* Attached Garments Cards */}
                 {attachedItems.map((it) => (
                   <div
                     key={it.id}
@@ -1678,38 +1627,26 @@ export default function KloePage() {
                 type="button"
                 onClick={openWardrobe}
                 className="relative p-2 rounded-full text-gray-900 dark:text-white hover:text-[var(--brand-pink)] dark:hover:text-[var(--brand-pink)] transition-colors cursor-pointer group"
-                title={isPremium() ? "Adjuntar prendas de tu armario" : "Elegir prendas de tu armario (Kloe Pro)"}
+                title="Adjuntar prendas de tu armario"
                 aria-label="Adjuntar prendas"
               >
                 <Shirt className="w-4 h-4" />
-                {!isPremium() ? (
-                  <span className="absolute -top-1 -right-1 px-1 py-0.2 bg-gradient-to-r from-amber-500 to-orange-500 text-[8px] font-black text-white rounded-full leading-none shadow-xs">
-                    PRO
+                {attachedItems.length > 0 && (
+                  <span className="absolute top-0 right-0 w-4 h-4 rounded-full bg-[var(--brand-pink)] text-white text-[9px] font-bold flex items-center justify-center">
+                    {attachedItems.length}
                   </span>
-                ) : (
-                  attachedItems.length > 0 && (
-                    <span className="absolute top-0 right-0 w-4 h-4 rounded-full bg-[var(--brand-pink)] text-white text-[9px] font-bold flex items-center justify-center">
-                      {attachedItems.length}
-                    </span>
-                  )
                 )}
               </button>
               <button
                 type="button"
                 onClick={openSaved}
                 className="relative p-2 rounded-full text-gray-900 dark:text-white hover:text-[var(--brand-pink)] dark:hover:text-[var(--brand-pink)] transition-colors cursor-pointer group"
-                title={isPremium() ? "Adjuntar look guardado" : "Adjuntar look guardado (Kloe Pro)"}
+                title="Adjuntar look o post guardado"
                 aria-label="Adjuntar look guardado"
               >
                 <Bookmark className="w-4 h-4" />
-                {!isPremium() ? (
-                  <span className="absolute -top-1 -right-1 px-1 py-0.2 bg-gradient-to-r from-amber-500 to-orange-500 text-[8px] font-black text-white rounded-full leading-none shadow-xs">
-                    PRO
-                  </span>
-                ) : (
-                  attachedPost && (
-                    <span className="absolute top-0 right-0 w-2 h-2 rounded-full bg-[var(--brand-pink)]" />
-                  )
+                {attachedPost && (
+                  <span className="absolute top-0 right-0 w-2 h-2 rounded-full bg-[var(--brand-pink)]" />
                 )}
               </button>
             </div>
@@ -1729,7 +1666,7 @@ export default function KloePage() {
                       : (attachedItems.length > 1
                         ? `Pregúntale a Kloe sobre estas ${attachedItems.length} prendas...`
                         : (attachedPost 
-                          ? `Pregúntale a Kloe sobre este look guardado...` 
+                          ? `Pregúntale qué lleva en este look o cómo recrearlo...` 
                           : `Pregúntale a Kloe...`))))
               }
               disabled={isTyping || !isInputUnlocked}
@@ -1757,8 +1694,8 @@ export default function KloePage() {
               <div className="min-w-0">
                 <p className="text-xs text-[var(--foreground)] font-semibold truncate">
                   {isPremium()
-                    ? 'Has completado tus 35 mensajes diarios.'
-                    : 'Has completado tus 8 mensajes diarios gratuitos.'}
+                    ? 'Has completado tus 35 consultas diarias.'
+                    : 'Has completado tus 3 consultas gratuitas de hoy.'}
                 </p>
                 <p className="text-[10px] text-[var(--foreground-secondary)] truncate">
                   Se recargan automáticamente hoy a las 00:00 (hora peninsular).
@@ -1768,16 +1705,16 @@ export default function KloePage() {
             {!isPremium() && (
               <button
                 onClick={() => setShowProModal(true)}
-                className="px-3.5 py-2 bg-[var(--brand-pink)] hover:bg-[#ff3377] text-white font-bold text-xs rounded-2xl shadow-sm transition-all flex-shrink-0 cursor-pointer"
+                className="px-3.5 py-2 bg-[var(--brand-pink)] hover:opacity-95 text-white font-bold text-xs rounded-full shadow-sm transition-all flex-shrink-0 cursor-pointer"
               >
-                Kloe Pro (2,99 €)
+                Kloe Pro (desde 1,66 €/mes)
               </button>
             )}
           </div>
         )}
       </div>
 
-      {/* History Drawer - Aligned with Navbar */}
+      {/* History Drawer */}
       <AnimatePresence>
         {showHistoryDrawer && (
           <>
@@ -1881,7 +1818,7 @@ export default function KloePage() {
                 </div>
 
                 <p className="text-xs text-[var(--foreground-secondary)]">
-                  Toca cualquier look que hayas guardado para adjuntarlo como referencia y preguntarle a Kloe lo que quieras.
+                  Toca cualquier publicación guardada para adjuntarla y preguntarle a Kloe qué lleva esa persona o cómo recrear el outfit.
                 </p>
 
                 {loadingSaved ? (
@@ -1974,7 +1911,6 @@ export default function KloePage() {
                     <X className="w-5 h-5" />
                   </button>
                 </div>
-
 
                 <div className="relative">
                   <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--foreground-tertiary)]" />
@@ -2072,13 +2008,13 @@ export default function KloePage() {
         redirectBackToCloset={false}
       />
 
-      {/* Physical Profile Calibration Modal (6 Photos) */}
+      {/* Physical Profile Modal ("Dinos cómo eres") */}
       <AvatarCalibrationModal
         isOpen={showCalibrationModal}
         onClose={() => setShowCalibrationModal(false)}
         onCalibrationComplete={() => {
           setShowCalibrationModal(false);
-          toast.success('¡Fotos de tu perfil físico guardadas con éxito! Kloe personalizará todas tus recomendaciones a tus facciones.');
+          toast.success('¡Tu perfil físico se ha guardado! Kloe adaptará cortes, tiros y colores a ti.');
         }}
       />
 

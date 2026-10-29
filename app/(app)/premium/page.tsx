@@ -54,11 +54,11 @@ export default function PremiumPage() {
     };
 
     const benefits = [
-        { title: 'Estilismo Ilimitado con Kloe 24/7', desc: 'Sin límites de consultas ni bloqueos diarios.' },
-        { title: 'Análisis Visual Inteligente de Ropa', desc: 'Kloe ve las fotos reales de tus prendas y tus combinaciones.' },
+        { title: 'Estilismo con Kloe 24/7 (hasta 35 consultas/día)', desc: 'Pídele looks, combinaciones y consejos de moda siempre que quieras.' },
+        { title: 'Análisis Contextual de Posts y Prendas', desc: 'Envíale cualquier post o prenda para que te explique el outfit completo.' },
         { title: 'Montaje de Looks en el Lienzo', desc: 'Pasa los outfits recomendados al lienzo con 1 solo toque.' },
-        { title: 'Acceso Prioritario y Novedades VIP', desc: 'Nuevos filtros de estilismo, texturas y ocasiones antes que nadie.' },
-        { title: 'Experiencia 100% Limpia Sin Anuncios', desc: 'Navegación ultra rápida sin interrupciones.' }
+        { title: 'Armario Ilimitado y Calendario Gratis para Todos', desc: 'Sube todas tus prendas sin límite y organiza tu semana en el calendario.' },
+        { title: 'Experiencia 100% Limpia Sin Anuncios', desc: 'Navegación rápida y fluida sin interrupciones.' }
     ];
 
     return (
@@ -92,11 +92,11 @@ export default function PremiumPage() {
                         </div>
                     </div>
 
-                    <h1 className="text-3xl font-black text-[var(--foreground)] mb-3 tracking-tight">
+                    <h1 className="text-3xl font-bold text-[var(--foreground)] mb-3 tracking-tight">
                         Desbloquea <span className="text-[var(--brand-pink)]">Klozet Pro</span>
                     </h1>
                     <p className="text-sm text-[var(--foreground-secondary)] max-w-md mx-auto leading-relaxed">
-                        Tu estilista de moda personal en el bolsillo. Consultas infinitas, análisis visual de tus prendas y looks ilimitados.
+                        Tu estilista de moda personal en el bolsillo. Consultas ampliadas, análisis contextual de looks y recomendaciones a medida.
                     </p>
                 </motion.div>
 
@@ -116,12 +116,12 @@ export default function PremiumPage() {
                                 : 'border-[var(--border-color)] bg-[var(--card-bg)] hover:border-[var(--foreground-tertiary)]'
                         }`}
                     >
-                        <div className="absolute -top-3 right-3 bg-[var(--brand-pink)] text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs">
-                            Ahorra 30%
+                        <div className="absolute -top-3 right-3 bg-[var(--brand-pink)] text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-xs">
+                            Ahorra 67% · Mejor opción
                         </div>
                         <div className="text-xs font-semibold text-[var(--foreground-secondary)] mb-1">Plan Anual</div>
-                        <div className="text-2xl font-extrabold text-[var(--foreground)]">24,99 €</div>
-                        <div className="text-[11px] text-[var(--foreground-tertiary)] mt-0.5">~2,08 €/mes facturado al año</div>
+                        <div className="text-2xl font-bold text-[var(--foreground)]">19,99 €</div>
+                        <div className="text-[11px] font-bold text-[var(--brand-pink)] mt-0.5">Solo 1,66 €/mes (menos de 4 meses)</div>
                     </div>
 
                     {/* Monthly Plan */}
@@ -134,7 +134,7 @@ export default function PremiumPage() {
                         }`}
                     >
                         <div className="text-xs font-semibold text-[var(--foreground-secondary)] mb-1">Plan Mensual</div>
-                        <div className="text-2xl font-extrabold text-[var(--foreground)]">2,99 €</div>
+                        <div className="text-2xl font-bold text-[var(--foreground)]">4,99 €</div>
                         <div className="text-[11px] text-[var(--foreground-tertiary)] mt-0.5">Facturado mensualmente</div>
                     </div>
                 </motion.div>
@@ -146,7 +146,7 @@ export default function PremiumPage() {
                     transition={{ delay: 0.2 }}
                     className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-2xl p-6 mb-8 divide-y divide-[var(--border-color)]"
                 >
-                    <h2 className="text-sm font-bold text-[var(--foreground-secondary)] uppercase tracking-wider mb-4">
+                    <h2 className="text-xs font-bold text-[var(--foreground-secondary)] tracking-wide mb-4">
                         Todo lo que incluye tu suscripción
                     </h2>
 
@@ -174,11 +174,11 @@ export default function PremiumPage() {
                 >
                     <button
                         onClick={handleOpenPaymentModal}
-                        className="w-full py-4 px-6 rounded-2xl bg-[var(--brand-pink)] text-white font-bold text-base hover:opacity-95 active:scale-[0.98] transition-all shadow-xl shadow-[var(--brand-pink)]/25 flex items-center justify-center gap-2 cursor-pointer"
+                        className="w-full py-4 px-6 rounded-full bg-[var(--brand-pink)] text-white font-bold text-base hover:opacity-95 active:scale-[0.98] transition-all shadow-xl shadow-[var(--brand-pink)]/25 flex items-center justify-center gap-2 cursor-pointer"
                     >
                         <Zap className="w-5 h-5 fill-white" />
                         <span>
-                            Abrir Hoja de Pago Rápido ({selectedPlan === 'yearly' ? '24,99 €/año' : '2,99 €/mes'})
+                            Abrir Hoja de Pago Rápido ({selectedPlan === 'yearly' ? '19,99 €/año · 1,66 €/mes' : '4,99 €/mes'})
                         </span>
                     </button>
 

@@ -16,7 +16,6 @@ import { useRouter } from 'next/navigation';
 import { useTheme } from '@/store/themeStore';
 import { useLanguageStore, SUPPORTED_LANGUAGES } from '@/store/languageStore';
 import { useTranslation } from '@/lib/i18n';
-import type { Language } from '@/lib/i18n/translations';
 import {
     ChevronLeft,
     Moon,
@@ -29,15 +28,21 @@ import {
     LogOut,
     Trash2,
     Edit,
-    Crown,
+    User,
+    ChevronRight,
+    HelpCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { ChevronRight, HelpCircle } from 'lucide-react';
 import FeedbackModal from '@/components/FeedbackModal';
+import AvatarCalibrationModal, {
+    BODY_TYPES_BY_GENDER,
+    EYE_COLOR_OPTIONS,
+    HAIR_COLOR_OPTIONS,
+} from '@/components/AvatarCalibrationModal';
 import { useNotificationSettingsStore } from '@/store/notificationSettingsStore';
 
 export default function SettingsPage() {
-    const { user, isPremium, togglePremium } = useUser();
+    const { user } = useUser();
     const { signOut } = useAuth();
     const router = useRouter();
     const { theme, setTheme } = useTheme();
@@ -45,6 +50,7 @@ export default function SettingsPage() {
     const { t } = useTranslation();
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+    const [showPhysicalModal, setShowPhysicalModal] = useState(false);
     const [deleteInput, setDeleteInput] = useState('');
     const [isDeleting, setIsDeleting] = useState(false);
     const [showStyleForm, setShowStyleForm] = useState(false);
@@ -61,14 +67,6 @@ export default function SettingsPage() {
 
     useEffect(() => {
         const fetchStyles = async () => {
-            const allStyleIds = [
-                ...(user?.preferredStyles || []),
-                ...(user?.visualStylePreferences || [])
-            ];
-            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-            const validUuids = allStyleIds.filter(id => uuidRegex.test(id));
-            
-            // Map de soporte para IDs antiguos pre-DB
             const map: Record<string, string> = {
                 'casual': 'Casual',
                 'street': 'Streetwear',
@@ -135,7 +133,6 @@ export default function SettingsPage() {
                 throw new Error(errData.error || 'Error al eliminar la cuenta');
             }
             
-            // Clean local cache thoroughly
             if (typeof window !== 'undefined') {
                 try {
                     localStorage.clear();
@@ -169,7 +166,6 @@ export default function SettingsPage() {
         }
         setIsUpdatingPassword(true);
         try {
-            // Re-authenticate to verify old password
             if (!user?.email) throw new Error('No se encontró el email del usuario');
             const { error: signInError } = await supabase.auth.signInWithPassword({
                 email: user.email,
@@ -180,7 +176,6 @@ export default function SettingsPage() {
                 throw new Error('La contraseña actual es incorrecta');
             }
 
-            // If successful, update to new password
             const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
             if (updateError) throw updateError;
             
@@ -212,7 +207,15 @@ export default function SettingsPage() {
 
     if (!user) return null;
 
-    // Animation variants
+    const allBodyOptions = [
+        ...BODY_TYPES_BY_GENDER.woman,
+        ...BODY_TYPES_BY_GENDER.man,
+        ...BODY_TYPES_BY_GENDER.other,
+    ];
+    const bodyLabel = allBodyOptions.find((b) => b.id === (user.bodyType || user.morphology))?.label || user.bodyType || user.morphology;
+    const eyeLabel = EYE_COLOR_OPTIONS.find((e) => e.id === user.eyeColor)?.label || user.eyeColor;
+    const hairLabel = HAIR_COLOR_OPTIONS.find((h) => h.id === user.hairColor)?.label || user.hairColor;
+
     const containerVariants = {
         hidden: { opacity: 0 },
         visible: {
@@ -282,8 +285,6 @@ export default function SettingsPage() {
                         {t.profile.configuration}
                     </h2>
 
-
-                    {/* Datos personales - Contexto §4F: Avatar, Nombre, Bio, Usuario */}
                     <Link href="/profile/settings/personal">
                         <Card className="p-5 mb-4 cursor-pointer transition-colors">
                             <div className="flex items-center gap-3">
@@ -291,15 +292,15 @@ export default function SettingsPage() {
                                     <Edit className="w-5 h-5 text-[var(--brand-pink)]" />
                                 </div>
                                 <div className="flex-1">
-                                    <div className="font-medium text-[var(--foreground)]">Datos personales</div>
-                                    <div className="text-xs text-[var(--foreground-tertiary)]">Avatar, nombre, bio y usuario</div>
+                                    <div className="font-medium text-[var(--foreground)]">Datos personales y cómo eres</div>
+                                    <div className="text-xs text-[var(--foreground-tertiary)]">Avatar, nombre, bio, altura, tipo de cuerpo, ojos y pelo</div>
                                 </div>
                                 <ChevronLeft className="w-5 h-5 text-[var(--foreground-tertiary)] rotate-180" />
                             </div>
                         </Card>
                     </Link>
 
-                    {/* Ajustes generales - EXPANDIDO */}
+                    {/* Ajustes generales */}
                     <Card className="p-5 mb-4">
                         <div className="flex items-center gap-3 mb-4">
                             <div className="w-10 h-10 rounded-xl bg-[var(--brand-pink)]/10 flex items-center justify-center">
@@ -315,7 +316,6 @@ export default function SettingsPage() {
                             </div>
                         </div>
 
-                        {/* Tema */}
                         <div className="space-y-4 mb-4">
                             <div>
                                 <div className="text-sm font-medium text-[var(--foreground)] mb-2">{t.profile.theme}</div>
@@ -343,7 +343,6 @@ export default function SettingsPage() {
                                 </div>
                             </div>
 
-                            {/* Idioma */}
                             <div>
                                 <div className="text-sm font-medium text-[var(--foreground)] mb-2.5 flex items-center gap-2">
                                     <Globe className="w-4 h-4 text-[var(--brand-pink)]" />
@@ -477,78 +476,98 @@ export default function SettingsPage() {
                     </Card>
                 </motion.div>
 
-                {/* TU ESTILO */}
-                {user.styleCompleted && (
-                    <motion.div variants={itemVariants} className="mb-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-sm font-semibold text-[var(--foreground-secondary)] uppercase tracking-wider">
-                                {t.profile.yourStyle}
-                            </h2>
+                {/* TU ESTILO Y PERFIL FÍSICO ("DINOS CÓMO ERES") */}
+                <motion.div variants={itemVariants} className="mb-6">
+                    <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+                        <h2 className="text-sm font-semibold text-[var(--foreground-secondary)] uppercase tracking-wider">
+                            {t.profile.yourStyle} y Perfil Físico
+                        </h2>
+                        <div className="flex items-center gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setShowPhysicalModal(true)}
+                                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] text-xs font-semibold hover:border-[var(--brand-pink)] transition-colors cursor-pointer"
+                            >
+                                <User className="w-3.5 h-3.5 text-[var(--brand-pink)]" />
+                                <span>Cómo eres</span>
+                            </button>
                             <Link
                                 href="/onboarding/preferences?from=settings"
-                                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--brand-pink)] text-white text-sm font-medium hover:opacity-90 transition-opacity"
+                                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[var(--brand-pink)] text-white text-xs font-semibold hover:opacity-90 transition-opacity"
                             >
-                                <Edit className="w-4 h-4" />
-                                {t.common.edit}
+                                <Edit className="w-3.5 h-3.5" />
+                                <span>{t.common.edit} estilo</span>
                             </Link>
                         </div>
-                        <Card className="p-5">
-                            <div className="space-y-5">
-                                {/* Info básica en grid */}
-                                <div className="grid grid-cols-2 gap-4">
-                                    {user.gender && (
-                                        <div>
-                                            <div className="text-xs text-[var(--foreground-tertiary)] mb-1">{t.profile.gender}</div>
-                                            <div className="font-medium text-[var(--foreground)]">
-                                                {user.gender === 'woman' ? 'Mujer' : user.gender === 'man' ? 'Hombre' : user.gender === 'other' ? 'Unisex / Mixto' : user.gender}
-                                            </div>
-                                        </div>
-                                    )}
-                                    {(user.height || user.heightRange) && (
-                                        <div>
-                                            <div className="text-xs text-[var(--foreground-tertiary)] mb-1">{t.profile.height}</div>
-                                            <div className="font-medium text-[var(--foreground)]">
-                                                {user.height ? `${user.height} cm` : user.heightRange}
-                                            </div>
-                                        </div>
-                                    )}
-                                    <div>
-                                        <div className="text-xs text-[var(--foreground-tertiary)] mb-1">
-                                            {t.profile.accessories}
-                                        </div>
-                                        <div className="font-medium text-[var(--foreground)]">
-                                            {user.accessoriesStyle === 'minimalista' ? 'Minimalista' :
-                                             user.accessoriesStyle === 'clasico' ? 'Clásico / Elegante' :
-                                             user.accessoriesStyle === 'llamativo' ? 'Statement / Llamativo' :
-                                             user.accessoriesStyle === 'urbano' ? 'Urbano / Streetwear' :
-                                             user.accessoriesStyle === 'ninguno' ? 'Sin accesorios' :
-                                             user.usesAccessories ? 'Minimalista' : 'Sin accesorios'}
-                                        </div>
+                    </div>
+                    <Card className="p-5">
+                        <div className="space-y-5">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                                <div>
+                                    <div className="text-xs text-[var(--foreground-tertiary)] mb-1">{t.profile.gender}</div>
+                                    <div className="font-medium text-sm text-[var(--foreground)]">
+                                        {user.gender === 'woman' ? 'Chica' : user.gender === 'man' ? 'Chico' : user.gender === 'other' ? 'Unisex / Mixto' : 'Sin definir'}
                                     </div>
                                 </div>
-
-                                {/* Estilos preferidos */}
-                                {user.preferredStyles && user.preferredStyles.length > 0 && (
-                                    <div>
-                                        <div className="text-xs text-[var(--foreground-tertiary)] mb-2">
-                                            {t.profile.preferredStyles}
-                                        </div>
-                                        <div className="flex flex-wrap gap-2">
-                                            {user.preferredStyles.map((style, idx) => (
-                                                <span
-                                                    key={idx}
-                                                    className="px-3 py-1.5 rounded-full bg-[var(--brand-pink)]/8 text-[var(--brand-pink)] text-xs font-medium"
-                                                >
-                                                    {styleNames[style] || style}
-                                                </span>
-                                            ))}
-                                        </div>
+                                <div>
+                                    <div className="text-xs text-[var(--foreground-tertiary)] mb-1">{t.profile.height}</div>
+                                    <div className="font-medium text-sm text-[var(--foreground)]">
+                                        {user.height ? `${user.height} cm` : user.heightRange || 'Sin definir'}
                                     </div>
-                                )}
+                                </div>
+                                <div>
+                                    <div className="text-xs text-[var(--foreground-tertiary)] mb-1">Tipo de cuerpo</div>
+                                    <div className="font-medium text-sm text-[var(--foreground)]">
+                                        {bodyLabel || 'Sin definir'}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="text-xs text-[var(--foreground-tertiary)] mb-1">Color de ojos</div>
+                                    <div className="font-medium text-sm text-[var(--foreground)]">
+                                        {eyeLabel || 'Sin definir'}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="text-xs text-[var(--foreground-tertiary)] mb-1">Color de pelo</div>
+                                    <div className="font-medium text-sm text-[var(--foreground)]">
+                                        {hairLabel || 'Sin definir'}
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="text-xs text-[var(--foreground-tertiary)] mb-1">
+                                        {t.profile.accessories}
+                                    </div>
+                                    <div className="font-medium text-sm text-[var(--foreground)]">
+                                        {user.accessoriesStyle === 'minimalista' ? 'Minimalista' :
+                                         user.accessoriesStyle === 'clasico' ? 'Clásico / Elegante' :
+                                         user.accessoriesStyle === 'llamativo' ? 'Statement / Llamativo' :
+                                         user.accessoriesStyle === 'urbano' ? 'Urbano / Streetwear' :
+                                         user.accessoriesStyle === 'ninguno' ? 'Sin accesorios' :
+                                         user.usesAccessories ? 'Minimalista' : 'Sin accesorios'}
+                                    </div>
+                                </div>
                             </div>
-                        </Card>
-                    </motion.div>
-                )}
+
+                            {user.preferredStyles && user.preferredStyles.length > 0 && (
+                                <div>
+                                    <div className="text-xs text-[var(--foreground-tertiary)] mb-2">
+                                        {t.profile.preferredStyles}
+                                    </div>
+                                    <div className="flex flex-wrap gap-2">
+                                        {user.preferredStyles.map((style, idx) => (
+                                            <span
+                                                key={idx}
+                                                className="px-3 py-1.5 rounded-full bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] text-xs font-medium"
+                                            >
+                                                {styleNames[style] || style}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </Card>
+                </motion.div>
 
                 {/* SOPORTE Y REPORTES */}
                 <motion.div variants={itemVariants} className="mb-6">
@@ -581,7 +600,6 @@ export default function SettingsPage() {
                         {t.profile.account}
                     </h2>
                     <Card className="overflow-hidden">
-                        {/* Cerrar sesión */}
                         <button
                             onClick={handleLogout}
                             className="w-full flex items-center gap-4 p-4 border-b border-[var(--border-color)] cursor-pointer hover:bg-red-500/5 transition-colors"
@@ -592,7 +610,6 @@ export default function SettingsPage() {
                             <span className="font-medium text-red-500 flex-1 text-left">{t.profile.logout}</span>
                         </button>
 
-                        {/* Eliminar cuenta */}
                         <button
                             onClick={() => setShowDeleteConfirm(true)}
                             className="w-full flex items-center gap-4 p-4 cursor-pointer hover:bg-red-500/5 transition-colors"
@@ -609,6 +626,12 @@ export default function SettingsPage() {
                         </button>
                     </Card>
                 </motion.div>
+
+                {/* Physical Profile Modal ("Dinos cómo eres") */}
+                <AvatarCalibrationModal
+                    isOpen={showPhysicalModal}
+                    onClose={() => setShowPhysicalModal(false)}
+                />
 
                 {/* Style Form Modal */}
                 <AnimatePresence>
@@ -634,7 +657,6 @@ export default function SettingsPage() {
                                     {t.profile.editStyleDesc}
                                 </p>
                                 <div className="space-y-4">
-                                    {/* Aquí irá el formulario de estilo */}
                                     <div className="text-center py-8">
                                         <p className="text-[var(--foreground-secondary)]">
                                             {t.profile.styleFormPlaceholder}
@@ -654,8 +676,6 @@ export default function SettingsPage() {
                         </motion.div>
                     )}
                 </AnimatePresence>
-
-
 
                 {/* Password Modal */}
                 <AnimatePresence>
@@ -732,8 +752,6 @@ export default function SettingsPage() {
                     )}
                 </AnimatePresence>
 
-
-
                 {/* Delete Confirmation Modal */}
                 <AnimatePresence>
                     {showDeleteConfirm && (
@@ -795,9 +813,6 @@ export default function SettingsPage() {
                     )}
                 </AnimatePresence>
 
-
-
-                                {/* Feedback & Bug Report Modal */}
                 <FeedbackModal 
                     isOpen={showFeedbackModal} 
                     onClose={() => setShowFeedbackModal(false)} 

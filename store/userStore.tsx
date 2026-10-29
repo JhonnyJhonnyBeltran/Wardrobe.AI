@@ -134,8 +134,14 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
       let subscriptionTier = (isPremiumFromDb || isEthanUser ? SubscriptionTier.PREMIUM : SubscriptionTier.FREE);
 
-      // Style preferences
+      // Style preferences & physical profile
       const styleSource = profile || legacyProfile || {};
+      const physicalProfile = styleSource.notification_preferences?.physical_profile || {};
+      const normalizedGender =
+        styleSource.gender === 'women' ? 'woman' :
+        styleSource.gender === 'men' ? 'man' :
+        styleSource.gender === 'unisex' ? 'other' :
+        (styleSource.gender || physicalProfile.gender);
 
       setUser((prev) => ({
         id: authUser.id,
@@ -147,15 +153,18 @@ export function UserProvider({ children }: { children: ReactNode }) {
         subscriptionTier: subscriptionTier,
         createdAt: new Date(authUser.created_at || Date.now()),
 
-        // Morph/Color
-        morphology: styleSource.morphology,
+        // Morph/Color & Physical Profile ("Dinos cómo eres")
+        morphology: styleSource.morphology || styleSource.body_shape || physicalProfile.body_type,
+        bodyType: styleSource.body_shape || styleSource.morphology || physicalProfile.body_type,
+        eyeColor: styleSource.eye_color || physicalProfile.eye_color,
+        hairColor: styleSource.hair_color || physicalProfile.hair_color,
         colorimetry: styleSource.colorimetry,
 
         // Style Profile
-        age: styleSource.age,
+        age: styleSource.age ?? physicalProfile.age,
         ageRange: styleSource.age_range,
-        gender: styleSource.gender,
-        height: styleSource.height,
+        gender: normalizedGender,
+        height: styleSource.height ?? physicalProfile.height,
         heightRange: styleSource.height_range,
         preferredStyles: styleSource.preferred_styles,
         usesAccessories: styleSource.uses_accessories,

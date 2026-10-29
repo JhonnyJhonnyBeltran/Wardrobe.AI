@@ -2999,3 +2999,33 @@ Ejecución del Consejo de Negocio con 4 subagentes especializados (`business-bel
 3. **Rediseño de Píldoras y Contraste en Landing Page (`app/(public)/page.tsx`):**
    - **Píldoras rosas:** texto e iconos configurados en blanco nítido (`text-white font-bold`).
    - **Píldoras blancas (stickers de prendas, botón Entrar, botón Desliza, botón secundario Mi Armario):** fondo blanco sólido (`bg-white dark:bg-zinc-900`), texto en negro/gris oscuro (`text-zinc-950 font-bold`), borde de contraste nítido (`border-zinc-200/90 dark:border-zinc-700`) y sombra de elevación (`shadow-sm`) para evitar que se desvanezcan sobre el fondo.
+
+
+---
+
+## 181. Ejecución de Directrices de Producto Post-Consejo de Negocio: Perfil Físico "Dinos cómo eres" (Sin Biometría), Onboarding por Fases (15 min = 91h/año), Visión Contextual Metadata-First en Kloe, Precios Anuales Irresistibles y Notificaciones Climáticas/Estacionales (Octubre 2026)
+
+1. **Eliminación de Reconocimiento Facial/Corporal $\rightarrow$ Perfil Físico "Dinos cómo eres":**
+   - Se eliminó por completo la subida de 6 fotos biométricas (3 rostro + 3 cuerpo) en Kloe (`components/AvatarCalibrationModal.tsx`, `app/api/user/avatar-calibration/route.ts`, `app/api/closy/generate-avatar/route.ts`, `app/api/closy/chat/route.ts`, `lib/closy/contextIndexer.ts`, `app/(app)/closet/kloe/page.tsx`).
+   - Se sustituyó por la sección **"Dinos cómo eres"**: selector de género (*Chica / Chico / Unisex*), slider de altura en cm (145–210 cm), tipo de cuerpo adaptado según género (*Reloj de arena, Caderas más anchas, Atlético, Más abombado / Robusto, Alto y estilizado*, etc.), color de ojos y color de pelo.
+   - Integrado en el **Onboarding** (`app/(public)/onboarding/preferences/page.tsx`), en el modal de **Kloe** (`components/AvatarCalibrationModal.tsx`) y editable en cualquier momento desde **Ajustes del Perfil** (`app/(app)/profile/settings/page.tsx` y `app/(app)/profile/settings/personal/page.tsx`).
+
+2. **Onboarding por Fases con Cálculo Matemático de Dolor (15 min hoy = 91 horas/año) y Subida Guiada (hasta 20 fotos por lote, Armario Ilimitado):**
+   - Se mantiene el armario **100% ilimitado** para todos los usuarios (sin límite de 12 ni de 25 prendas) y la subida por lotes de hasta **20 prendas a la vez**.
+   - Se añadió la fase final guiada en el Onboarding (`app/(public)/onboarding/preferences/page.tsx`) y en el Tour Guiado (`store/tourStore.ts`, `components/GuidedTour/GuidedTourModal.tsx`) con el cálculo matemático: *15 min cada mañana × 365 días = 5.475 min = +91 horas al año (~4 días enteros frente al espejo)*, explicando visualmente cómo hacer fotos con luz natural o capturas de tienda online y redirigiendo directamente a `/closet?action=new-item&startTour=true`.
+
+3. **Conservación Íntegra de Puppeteer en `/api/scrape-product`:**
+   - Se mantuvo intacto `/api/scrape-product/route.ts` con Puppeteer para preservar la máxima precisión en el análisis de productos de tiendas web.
+
+4. **Visión Contextual Inteligente en Kloe (Metadatos Primero, Imagen como Último Recurso):**
+   - En `app/api/closy/chat/route.ts` y `lib/closy/contextIndexer.ts`, cuando el usuario adjunta un **post**, Kloe analiza la imagen y metadatos del post para explicar exactamente qué prendas lleva la persona en ese outfit.
+   - Cuando el usuario pregunta por un **outfit suyo o una prenda de su armario**, Kloe lee primero todos sus metadatos (`name`, `brand`, `category`, `color`, `fabric`, `season`). Si la prenda está bien etiquetada (`isGarmentWellTagged`), no descarga ni envía la imagen a Gemini Vision; solo inspecciona la foto de la prenda como último recurso cuando faltan datos o el usuario pide análisis visual explícito.
+
+5. **Precios Pro (Anual Irresistible), 3 Consultas Gratis/Día, Calendario Gratis para Todos y Cero Afiliados:**
+   - Cuota gratuita de Kloe ajustada a **3 consultas/día** (`lib/closy/rateLimiter.ts`, `app/(app)/closet/kloe/page.tsx`).
+   - **Calendario 100% gratuito** para todos los usuarios (eliminado de las restricciones de `components/KloeProModal.tsx`).
+   - Precios en `components/KloeProModal.tsx` y `app/(app)/premium/page.tsx`: **Plan Mensual 4,99 €/mes** y **Plan Anual 19,99 €/año (~1,66 €/mes · Ahorra 67%)**.
+   - Eliminada cualquier referencia a afiliación de compras en `Obsidian/business-plan.md`.
+
+6. **Notificaciones Diarias Planificadas por Clima, Estacionalidad y Progreso (`lib/hooks/usePeriodicReminders.ts`):**
+   - Sustituido el temporizador de 3 horas por una programación diaria en las franjas de las **08:00, 15:00 y 16:00** (máximo 1 notificación al día) que consulta el clima local vía Open-Meteo y la estación del año para alternar entre recordatorios de subida (*"Sube una prenda hoy: estás más cerca de digitalizar tu armario entero. 15 min ahora te ahorran 91 horas al año"*) y sugerencias climáticas (*"Hace sol hoy: saca tus looks de verano a pasear"* / *"Hoy refresca: saca tus looks de invierno a pasear"*).

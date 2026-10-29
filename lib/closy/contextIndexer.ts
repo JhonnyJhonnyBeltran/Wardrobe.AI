@@ -18,13 +18,15 @@ export interface UserStylingContext {
     bio?: string;
     preferredStyles: string[];
     bodyShape?: string;
+    bodyType?: string;
+    height?: number;
+    eyeColor?: string;
+    hairColor?: string;
     seasonPalette?: string;
     morphology?: string;
     colorimetry?: string;
     gender?: string;
     age?: number;
-    facePhotos?: string[];
-    bodyPhotos?: string[];
   };
   wardrobe: {
     totalItems: number;
@@ -72,7 +74,7 @@ export async function buildUserStylingContext(
     // 1. Fetch Profile Preferences from profiles with admin client (RLS bypass)
     const { data: profile } = await admin
       .from('profiles')
-      .select('id, username, full_name, bio, preferred_styles, body_shape, season_palette, gender, age, age_range, morphology, colorimetry, face_photos, body_photos, notification_preferences')
+      .select('*')
       .eq('id', userId)
       .maybeSingle();
 
@@ -254,6 +256,12 @@ export async function buildUserStylingContext(
       console.warn('[ContextIndexer] Could not fetch saved posts:', saveErr);
     }
 
+    const physicalProfile = (profile?.notification_preferences as any)?.physical_profile || {};
+    const finalHeight = (profile as any)?.height || physicalProfile.height;
+    const finalBodyType = profile?.body_shape || (profile as any)?.morphology || physicalProfile.body_type;
+    const finalEyeColor = (profile as any)?.eye_color || physicalProfile.eye_color;
+    const finalHairColor = (profile as any)?.hair_color || physicalProfile.hair_color;
+
     return {
       user: {
         id: userId,
@@ -262,14 +270,16 @@ export async function buildUserStylingContext(
         firstName: formattedFirstName || undefined,
         bio: profile?.bio,
         preferredStyles: profile?.preferred_styles || [],
-        bodyShape: profile?.body_shape || (profile as any)?.morphology,
+        bodyShape: finalBodyType,
+        bodyType: finalBodyType,
+        height: typeof finalHeight === 'number' ? finalHeight : (finalHeight ? Number(finalHeight) : undefined),
+        eyeColor: finalEyeColor,
+        hairColor: finalHairColor,
         seasonPalette: profile?.season_palette || (profile as any)?.colorimetry,
-        morphology: (profile as any)?.morphology || profile?.body_shape,
+        morphology: finalBodyType,
         colorimetry: (profile as any)?.colorimetry || profile?.season_palette,
-        gender: finalGender,
+        gender: finalGender || physicalProfile.gender,
         age: typeof finalAge === 'number' ? finalAge : undefined,
-        facePhotos: (profile?.face_photos || (profile?.notification_preferences as any)?.avatar_calibration?.face_photos || []).filter(Boolean),
-        bodyPhotos: (profile?.body_photos || (profile?.notification_preferences as any)?.avatar_calibration?.body_photos || []).filter(Boolean)
       },
       wardrobe: {
         totalItems: clothingList.length,

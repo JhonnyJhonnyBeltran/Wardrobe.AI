@@ -43,21 +43,6 @@ async function resolveUserAndClient(request: NextRequest) {
   return { client, user };
 }
 
-function checkUserIsPremium(profile: any, user: any): boolean {
-  if (!profile && !user) return false;
-  const isEthan = Boolean(
-    user?.email?.toLowerCase().includes('ethan') ||
-    profile?.username?.toLowerCase() === 'ethan' ||
-    profile?.full_name?.toLowerCase().includes('ethan')
-  );
-
-  return isEthan || Boolean(
-    profile?.is_premium ||
-    profile?.subscription_tier === 'premium' ||
-    profile?.subscription_status === 'active'
-  );
-}
-
 export async function GET(request: NextRequest) {
   try {
     const { client, user } = await resolveUserAndClient(request);
@@ -72,32 +57,32 @@ export async function GET(request: NextRequest) {
       .maybeSingle();
 
     if (error || !profile) {
-      return NextResponse.json({ face_photos: [], body_photos: [] });
+      return NextResponse.json({
+        physical_profile: null,
+      });
     }
 
-    // Strict Anti-Tampering Check
-    const isPremium = checkUserIsPremium(profile, user);
+    const notifPrefs = (profile as any).notification_preferences || {};
+    const storedPhysical = notifPrefs.physical_profile || {};
 
-    let facePhotos: string[] = (profile as any).face_photos || [];
-    let bodyPhotos: string[] = (profile as any).body_photos || [];
-
-    // Fallback to JSONB storage inside notification_preferences / preferences if array is empty
-    if (facePhotos.length === 0 && bodyPhotos.length === 0) {
-      const notifPrefs = (profile as any).notification_preferences || {};
-      if (notifPrefs.avatar_calibration) {
-        facePhotos = notifPrefs.avatar_calibration.face_photos || [];
-        bodyPhotos = notifPrefs.avatar_calibration.body_photos || [];
-      }
-    }
+    const gender = profile.gender || storedPhysical.gender || 'woman';
+    const height = profile.height || storedPhysical.height || 170;
+    const body_type = profile.body_shape || profile.morphology || storedPhysical.body_type || '';
+    const eye_color = profile.eye_color || storedPhysical.eye_color || '';
+    const hair_color = profile.hair_color || storedPhysical.hair_color || '';
 
     return NextResponse.json({
-      is_premium: isPremium,
-      face_photos: (facePhotos || []).filter(Boolean),
-      body_photos: (bodyPhotos || []).filter(Boolean),
+      physical_profile: {
+        gender,
+        height,
+        body_type,
+        eye_color,
+        hair_color,
+      },
     });
   } catch (err: any) {
-    console.error('[AvatarCalibration] GET error:', err);
-    return NextResponse.json({ error: err.message || 'Error al obtener fotos' }, { status: 500 });
+    console.error('[PhysicalProfile] GET error:', err);
+    return NextResponse.json({ error: err.message || 'Error al obtener perfil físico' }, { status: 500 });
   }
 }
 
@@ -109,138 +94,80 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json().catch(() => ({}));
-    const admin = getAdmin();
 
-    // 1. Fetch current profile state and verify Premium status (Anti-Tampering / Zero Client Trust)
     const { data: currentProfile } = await client
       .from('profiles')
       .select('*')
       .eq('id', user.id)
       .maybeSingle();
 
-    const isPremium = checkUserIsPremium(currentProfile, user);
-    if (!isPremium) {
-      return NextResponse.json({
-        error: 'La subida de fotos de tu perfil físico es una función exclusiva de Klozet Premium.',
-        isPremiumRequired: true
-      }, { status: 403 });
-    }
-
-    let currentFace: string[] = (currentProfile as any)?.face_photos || [];
-    let currentBody: string[] = (currentProfile as any)?.body_photos || [];
-
     const currentNotifs = (currentProfile as any)?.notification_preferences || {};
-    if (currentFace.length === 0 && currentBody.length === 0 && currentNotifs.avatar_calibration) {
-      currentFace = currentNotifs.avatar_calibration.face_photos || [];
-      currentBody = currentNotifs.avatar_calibration.body_photos || [];
-    }
+    const existingPhysical = currentNotifs.physical_profile || {};
 
-    let uploadedPhotoUrl: string | null = null;
+    const gender = body.gender || existingPhysical.gender || currentProfile?.gender || 'woman';
+    const height = typeof body.height === 'number' ? body.height : (Number(body.height) || existingPhysical.height || currentProfile?.height || 170);
+    const body_type = body.body_type ?? body.bodyType ?? existingPhysical.body_type ?? currentProfile?.body_shape ?? '';
+    const eye_color = body.eye_color ?? body.eyeColor ?? existingPhysical.eye_color ?? '';
+    const hair_color = body.hair_color ?? body.hairColor ?? existingPhysical.hair_color ?? '';
 
-    // Case A: Direct Base64 single photo upload via server-side storage
-    if (body.imageBase64 && body.type && typeof body.index === 'number') {
-      const { imageBase64, type, index, fileName } = body;
-      const cleanBase64 = imageBase64.replace(/^data:image\/\w+;base64,/, '');
-      const buffer = Buffer.from(cleanBase64, 'base64');
-      const ext = (fileName ? fileName.split('.').pop() : 'jpg') || 'jpg';
-      const storagePath = `calibration/${user.id}/${type}_${index}_${Date.now()}.${ext}`;
-
-      let bucketUsed = 'avatars';
-      let { error: uploadErr } = await admin.storage
-        .from('avatars')
-        .upload(storagePath, buffer, {
-          contentType: `image/${ext === 'png' ? 'png' : 'jpeg'}`,
-          upsert: true
-        });
-
-      if (uploadErr) {
-        bucketUsed = 'clothing';
-        const { error: fallbackUploadErr } = await admin.storage
-          .from('clothing')
-          .upload(storagePath, buffer, {
-            contentType: `image/${ext === 'png' ? 'png' : 'jpeg'}`,
-            upsert: true
-          });
-        if (fallbackUploadErr) {
-          console.error('[AvatarCalibration] Server storage upload failed:', fallbackUploadErr);
-          throw fallbackUploadErr;
-        }
-      }
-
-      const { data: publicUrlData } = admin.storage
-        .from(bucketUsed)
-        .getPublicUrl(storagePath);
-
-      const finalUrl = publicUrlData?.publicUrl || (imageBase64 as string);
-      uploadedPhotoUrl = finalUrl;
-
-      if (type === 'face') {
-        const nextFace = [...currentFace];
-        nextFace[index] = finalUrl;
-        currentFace = nextFace;
-      } else if (type === 'body') {
-        const nextBody = [...currentBody];
-        nextBody[index] = finalUrl;
-        currentBody = nextBody;
-      }
-    } else if (body.face_photos !== undefined || body.body_photos !== undefined) {
-      // Case B: Entire arrays update
-      if (Array.isArray(body.face_photos)) {
-        currentFace = body.face_photos;
-      }
-      if (Array.isArray(body.body_photos)) {
-        currentBody = body.body_photos;
-      }
-    }
-
-    const cleanFace = (currentFace || []).filter(Boolean);
-    const cleanBody = (currentBody || []).filter(Boolean);
+    const physicalProfilePayload = {
+      gender,
+      height,
+      body_type,
+      eye_color,
+      hair_color,
+      updated_at: new Date().toISOString(),
+    };
 
     const updatedNotifs = {
       ...currentNotifs,
-      avatar_calibration: {
-        face_photos: cleanFace,
-        body_photos: cleanBody,
-        updated_at: new Date().toISOString()
-      }
+      physical_profile: physicalProfilePayload,
+      // Clear legacy biometric photo arrays for GDPR privacy compliance
+      avatar_calibration: undefined,
     };
 
-    // 2. Persist update to profiles
-    let updatePayload: any = {
-      face_photos: cleanFace,
-      body_photos: cleanBody,
+    // Attempt full column + JSONB update
+    const fullPayload: Record<string, any> = {
+      gender,
+      height,
+      body_shape: body_type,
+      morphology: body_type,
+      face_photos: [],
+      body_photos: [],
       notification_preferences: updatedNotifs,
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
     };
 
-    let { error: updateError } = await (client.from('profiles') as any)
-      .update(updatePayload)
+    const { error: updateError } = await (client.from('profiles') as any)
+      .update(fullPayload)
       .eq('id', user.id);
 
     if (updateError) {
-      console.warn('[AvatarCalibration] Direct column update failed, saving in JSONB fallback:', updateError.message);
+      // Safe fallback if optional columns don't exist in schema
       const { error: fallbackError } = await (client.from('profiles') as any)
         .update({
+          gender,
           notification_preferences: updatedNotifs,
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
         .eq('id', user.id);
 
       if (fallbackError) {
-        console.error('[AvatarCalibration] Fallback update failed:', fallbackError);
-        throw fallbackError;
+        await (client.from('profiles') as any)
+          .update({
+            notification_preferences: updatedNotifs,
+          })
+          .eq('id', user.id);
       }
     }
 
     return NextResponse.json({
       success: true,
-      photoUrl: uploadedPhotoUrl,
-      face_photos: cleanFace,
-      body_photos: cleanBody,
-      message: 'Fotos de perfil físico guardadas exitosamente'
+      physical_profile: physicalProfilePayload,
+      message: 'Perfil físico guardado correctamente',
     });
   } catch (err: any) {
-    console.error('[AvatarCalibration] POST error:', err);
-    return NextResponse.json({ error: err.message || 'Error al guardar fotos' }, { status: 500 });
+    console.error('[PhysicalProfile] POST error:', err);
+    return NextResponse.json({ error: err.message || 'Error al guardar perfil físico' }, { status: 500 });
   }
 }
