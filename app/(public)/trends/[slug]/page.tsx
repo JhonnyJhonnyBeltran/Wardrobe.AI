@@ -3,8 +3,8 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ArrowLeft, Clock, Calendar, Share2, ArrowRight, Bookmark } from 'lucide-react';
-import { ARTICLES_DATA, Article } from '@/lib/trends/articlesData';
+import { Clock, Calendar, ArrowRight, Bookmark, ArrowLeft } from 'lucide-react';
+import { ARTICLES_DATA } from '@/lib/trends/articlesData';
 import PublicHeader from '@/components/public/PublicHeader';
 import PublicFooter from '@/components/public/PublicFooter';
 
@@ -24,14 +24,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   if (!article) {
     return {
-      title: 'Artículo no encontrado | Klozet Editorial',
+      title: 'Guía no encontrada | Klozet',
     };
   }
 
   const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://klozet.es';
 
   return {
-    title: `${article.title} | Klozet Editorial`,
+    title: `${article.title} | Klozet`,
     description: article.excerpt,
     keywords: article.tags,
     alternates: {
@@ -73,7 +73,6 @@ export default async function ArticleDetailPage({ params }: PageProps) {
   const relatedArticles = ARTICLES_DATA.filter((a) => a.slug !== slug).slice(0, 3);
   const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://klozet.es';
 
-  // Rich JSON-LD Article Schema for Google Search & AdSense compliance
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Article',
@@ -87,9 +86,9 @@ export default async function ArticleDetailPage({ params }: PageProps) {
     datePublished: `${article.publishedAt}T09:00:00+02:00`,
     dateModified: `${article.publishedAt}T09:00:00+02:00`,
     author: {
-      '@type': 'Organization',
+      '@type': 'Person',
       name: article.author.name,
-      url: siteUrl,
+      url: `${siteUrl}/about`,
     },
     publisher: {
       '@type': 'Organization',
@@ -102,92 +101,91 @@ export default async function ArticleDetailPage({ params }: PageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)] selection:bg-[var(--brand-pink)] selection:text-white">
-      {/* Schema.org Article Structured Data */}
+    <div className="min-h-screen bg-white dark:bg-[#111113] text-zinc-950 dark:text-zinc-50 antialiased selection:bg-[var(--brand-pink,#FF66C4)] selection:text-white">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      {/* Unified Public Header */}
       <PublicHeader />
 
-      {/* Article Container */}
-      <article className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-14">
-        {/* Breadcrumb Navigation */}
-        <nav aria-label="Breadcrumb" className="mb-6 flex items-center gap-2 text-xs text-[var(--foreground-tertiary)]">
-          <Link href="/" className="hover:underline">Inicio</Link>
-          <span>/</span>
-          <Link href="/trends" className="hover:underline">Tendencias</Link>
-          <span>/</span>
-          <span className="text-[var(--foreground)] font-medium truncate max-w-[200px] sm:max-w-none">{article.category}</span>
-        </nav>
+      <article className="max-w-3xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
+        {/* Back Link & Category */}
+        <div className="mb-6 flex items-center justify-between gap-4">
+          <Link
+            href="/trends"
+            className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-zinc-600 dark:text-zinc-400 hover:text-zinc-950 dark:hover:text-white transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Volver a todas las guías</span>
+          </Link>
 
-        {/* Category & Metadata */}
-        <div className="flex items-center gap-3 text-xs text-[var(--foreground-tertiary)] mb-4">
-          <span className="px-2.5 py-0.5 rounded-full bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] font-bold uppercase tracking-wider text-[11px]">
+          <span className="px-3 py-1 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 text-xs font-medium text-zinc-700 dark:text-zinc-300">
             {article.category}
-          </span>
-          <span className="flex items-center gap-1">
-            <Clock className="w-3.5 h-3.5" />
-            {article.readingTime}
-          </span>
-          <span>•</span>
-          <span className="flex items-center gap-1">
-            <Calendar className="w-3.5 h-3.5" />
-            {article.publishedAt}
           </span>
         </div>
 
-        {/* Headline */}
-        <h1 className="text-2xl sm:text-4xl md:text-5xl font-black tracking-tight leading-tight uppercase">
+        {/* Clean Sentence-Case Headline */}
+        <h1 className="text-3xl sm:text-4xl md:text-[42px] font-bold tracking-tight text-zinc-950 dark:text-white leading-[1.12]">
           {article.title}
         </h1>
 
-        {/* Subtitle / Excerpt */}
-        <p className="mt-4 text-base sm:text-lg text-[var(--foreground-secondary)] leading-relaxed font-serif italic">
-          «{article.excerpt}»
+        <p className="mt-4 text-base sm:text-lg text-zinc-600 dark:text-zinc-400 leading-relaxed">
+          {article.excerpt}
         </p>
 
-        {/* Author Card */}
-        <div className="flex items-center gap-3 my-6 pb-6 border-b border-[var(--border-color)]/70">
-          <div className="relative w-10 h-10 rounded-full overflow-hidden bg-stone-300 border border-[var(--border-color)]">
-            <Image
-              src={article.author.avatarUrl}
-              alt={article.author.name}
-              fill
-              className="object-cover"
-            />
-          </div>
-          <div>
-            <p className="text-xs sm:text-sm font-bold text-[var(--foreground)] leading-tight">{article.author.name}</p>
-            <p className="text-[11px] text-[var(--foreground-tertiary)]">{article.author.role}</p>
+        {/* Byline & Metadata */}
+        <div className="flex flex-wrap items-center justify-between gap-4 my-7 py-4 border-y border-zinc-200/80 dark:border-zinc-800/80">
+          <Link href="/about" className="flex items-center gap-3 group">
+            <div className="relative w-10 h-10 rounded-full overflow-hidden bg-zinc-200 dark:bg-zinc-800 border border-black/[0.08] dark:border-white/[0.08]">
+              <Image
+                src={article.author.avatarUrl}
+                alt={article.author.name}
+                fill
+                sizes="40px"
+                className="object-cover"
+              />
+            </div>
+            <div>
+              <p className="text-xs sm:text-sm font-semibold text-zinc-950 dark:text-white group-hover:text-[var(--brand-pink-dark,#ED4C9E)] transition-colors">
+                {article.author.name}
+              </p>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">{article.author.role}</p>
+            </div>
+          </Link>
+
+          <div className="flex items-center gap-3 text-xs text-zinc-500 dark:text-zinc-400 font-medium">
+            <span className="inline-flex items-center gap-1">
+              <Clock className="w-3.5 h-3.5" />
+              {article.readingTime}
+            </span>
+            <span>·</span>
+            <span className="inline-flex items-center gap-1">
+              <Calendar className="w-3.5 h-3.5" />
+              {article.publishedAt}
+            </span>
           </div>
         </div>
 
-        {/* Main Hero Photograph */}
-        <div className="relative w-full aspect-[16/10] sm:aspect-[16/9] rounded-3xl overflow-hidden bg-[var(--background-secondary)] shadow-xl mb-10 border border-[var(--border-color)]">
+        {/* Cover Photograph */}
+        <div className="relative w-full aspect-[16/10] rounded-[24px] overflow-hidden bg-zinc-100 dark:bg-zinc-900 border border-black/[0.06] dark:border-white/[0.08] mb-10">
           <Image
             src={article.coverImage}
             alt={article.title}
             fill
+            sizes="(max-width: 768px) 100vw, 768px"
             className="object-cover"
             priority
           />
         </div>
 
-        {/* Lead / Intro Paragraph */}
-        <div className="prose prose-lg dark:prose-invert max-w-none mb-10 text-[var(--foreground)]">
-          <p className="text-base sm:text-lg leading-relaxed font-medium">
-            <span className="text-4xl float-left font-serif font-black mr-2 leading-none text-[var(--brand-pink)]">
-              {article.content.intro.charAt(0)}
-            </span>
-            {article.content.intro.slice(1)}
-          </p>
-        </div>
+        {/* Lead Paragraph (Clean Inter, no serif drop-cap) */}
+        <p className="text-base sm:text-[18px] leading-relaxed font-medium text-zinc-800 dark:text-zinc-200 mb-10">
+          {article.content.intro}
+        </p>
 
         {/* Auto-Anuncio Interno In-Article: Habla con Kloe */}
-        <div className="my-8 p-5 sm:p-6 rounded-3xl bg-[var(--card-bg)] border border-[var(--brand-pink,#FF66C4)]/35 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="my-10 p-5 sm:p-6 rounded-[24px] bg-zinc-50 dark:bg-[#18181B] border border-zinc-200/90 dark:border-zinc-800 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
             <div className="relative w-20 h-12 shrink-0">
               <Image
@@ -198,53 +196,53 @@ export default async function ArticleDetailPage({ params }: PageProps) {
               />
             </div>
             <div>
-              <h3 className="text-sm sm:text-base font-bold text-[var(--foreground)] tracking-tight">
+              <h3 className="text-sm sm:text-base font-bold text-zinc-950 dark:text-white tracking-tight">
                 ¿Quieres aplicar esta guía a tu propia ropa?
               </h3>
-              <p className="text-xs text-[var(--foreground-secondary)] mt-0.5 leading-relaxed max-w-md">
+              <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 mt-0.5 leading-relaxed max-w-md">
                 Pregúntale a Kloe qué ponerte hoy: combina tus prendas reales según tu estilo y el clima en segundos.
               </p>
             </div>
           </div>
           <Link
             href="/closet/kloe"
-            className="shrink-0 inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-[var(--brand-pink,#FF66C4)] text-white text-xs font-bold shadow-sm hover:opacity-95 transition-all"
+            className="shrink-0 inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-[var(--brand-pink,#FF66C4)] text-white text-xs font-semibold shadow-xs hover:opacity-95 transition-all active:scale-95"
           >
             <span>Hablar con Kloe</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
 
-        {/* Article Core Sections */}
+        {/* Article Sections */}
         <div className="space-y-10 sm:space-y-12">
           {article.content.sections.map((section, idx) => (
             <section key={idx} className="space-y-4">
-              <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-[var(--foreground)]">
+              <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-950 dark:text-white">
                 {section.heading}
               </h2>
 
               {section.body.map((para, pIdx) => (
-                <p key={pIdx} className="text-sm sm:text-base text-[var(--foreground-secondary)] leading-relaxed">
+                <p key={pIdx} className="text-base text-zinc-600 dark:text-zinc-300 leading-relaxed">
                   {para}
                 </p>
               ))}
 
               {section.quote && (
-                <blockquote className="my-6 pl-4 border-l-4 border-[var(--brand-pink)] italic text-sm sm:text-base text-[var(--foreground)] font-serif bg-[var(--background-secondary)]/40 p-4 rounded-r-2xl">
+                <blockquote className="my-6 pl-5 border-l-2 border-[var(--brand-pink,#FF66C4)] text-base font-medium text-zinc-900 dark:text-zinc-100 py-1">
                   {section.quote}
                 </blockquote>
               )}
 
               {section.keyTakeaways && section.keyTakeaways.length > 0 && (
-                <div className="my-5 p-5 rounded-2xl bg-[var(--card-bg)] border border-[var(--border-color)] shadow-xs">
-                  <p className="text-xs font-bold uppercase tracking-wider text-[var(--brand-pink)] mb-2.5 flex items-center gap-1.5">
-                    <Bookmark className="w-3.5 h-3.5" />
-                    <span>Puntos Clave</span>
+                <div className="my-6 p-5 sm:p-6 rounded-[20px] bg-zinc-50 dark:bg-[#18181B] border border-zinc-200/80 dark:border-zinc-800">
+                  <p className="text-xs font-semibold text-zinc-950 dark:text-white mb-3 flex items-center gap-1.5">
+                    <Bookmark className="w-3.5 h-3.5 text-[var(--brand-pink,#FF66C4)]" />
+                    <span>Resumen práctico</span>
                   </p>
-                  <ul className="space-y-1.5 text-xs sm:text-sm text-[var(--foreground-secondary)]">
+                  <ul className="space-y-2 text-sm text-zinc-600 dark:text-zinc-300">
                     {section.keyTakeaways.map((item, tIdx) => (
-                      <li key={tIdx} className="flex items-start gap-2">
-                        <span className="text-[var(--brand-pink)] font-bold">•</span>
+                      <li key={tIdx} className="flex items-start gap-2.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[var(--brand-pink,#FF66C4)] mt-2 shrink-0" />
                         <span>{item}</span>
                       </li>
                     ))}
@@ -256,51 +254,53 @@ export default async function ArticleDetailPage({ params }: PageProps) {
         </div>
 
         {/* Conclusion */}
-        <div className="mt-12 p-6 sm:p-8 rounded-3xl bg-[var(--card-bg)] border border-[var(--border-color)]">
-          <h3 className="text-base sm:text-lg font-bold mb-2 uppercase tracking-tight text-[var(--foreground)]">
-            Conclusión Editorial
+        <div className="mt-12 p-6 sm:p-8 rounded-[24px] bg-zinc-50 dark:bg-[#18181B] border border-zinc-200/80 dark:border-zinc-800">
+          <h3 className="text-base sm:text-lg font-bold mb-2 tracking-tight text-zinc-950 dark:text-white">
+            En resumen
           </h3>
-          <p className="text-sm text-[var(--foreground-secondary)] leading-relaxed">
+          <p className="text-sm sm:text-base text-zinc-600 dark:text-zinc-300 leading-relaxed">
             {article.content.conclusion}
           </p>
         </div>
 
         {/* Tags */}
-        <div className="mt-8 pt-6 border-t border-[var(--border-color)]/70 flex items-center gap-2 flex-wrap">
-          <span className="text-xs text-[var(--foreground-tertiary)] font-semibold">Temas:</span>
+        <div className="mt-8 pt-6 border-t border-zinc-200/80 dark:border-zinc-800/80 flex items-center gap-2 flex-wrap">
           {article.tags.map((tag) => (
             <span
               key={tag}
-              className="px-3 py-1 rounded-full bg-[var(--background-secondary)] text-xs font-medium text-[var(--foreground-secondary)] border border-[var(--border-color)]/60"
+              className="px-3 py-1 rounded-full bg-zinc-100 dark:bg-zinc-900 text-xs font-medium text-zinc-600 dark:text-zinc-400"
             >
               #{tag}
             </span>
           ))}
         </div>
 
-        {/* Related Articles */}
-        <section className="mt-16 pt-10 border-t border-[var(--border-color)]">
-          <h3 className="text-xl font-bold tracking-tight mb-6">Otras Lecturas Recomendadas</h3>
+        {/* Related Guides */}
+        <section className="mt-16 pt-10 border-t border-zinc-200/80 dark:border-zinc-800/80">
+          <h3 className="text-xl font-bold tracking-tight text-zinc-950 dark:text-white mb-6">
+            Seguir leyendo
+          </h3>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
             {relatedArticles.map((rel) => (
               <Link
                 key={rel.slug}
                 href={`/trends/${rel.slug}`}
-                className="group rounded-2xl bg-[var(--card-bg)] border border-[var(--border-color)] overflow-hidden hover:border-[var(--brand-pink)]/40 transition-all flex flex-col justify-between"
+                className="group rounded-[20px] bg-zinc-50 dark:bg-[#18181B] border border-zinc-200/80 dark:border-zinc-800 overflow-hidden hover:border-zinc-300 dark:hover:border-zinc-700 transition-all flex flex-col justify-between"
               >
-                <div className="relative h-32 w-full bg-[var(--background-secondary)]">
+                <div className="relative h-32 w-full bg-zinc-100 dark:bg-zinc-900">
                   <Image
                     src={rel.coverImage}
                     alt={rel.title}
                     fill
+                    sizes="260px"
                     className="object-cover group-hover:scale-105 transition-transform duration-500"
                   />
                 </div>
-                <div className="p-3.5 flex flex-col justify-between flex-1">
-                  <h4 className="text-xs font-bold leading-snug line-clamp-2 group-hover:text-[var(--brand-pink)] transition-colors">
+                <div className="p-4 flex flex-col justify-between flex-1">
+                  <h4 className="text-xs sm:text-sm font-bold leading-snug line-clamp-2 text-zinc-950 dark:text-white group-hover:text-[var(--brand-pink-dark,#ED4C9E)] transition-colors">
                     {rel.title}
                   </h4>
-                  <span className="text-[10px] text-[var(--foreground-tertiary)] mt-2 flex items-center gap-1 font-medium">
+                  <span className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-2.5 flex items-center gap-1 font-medium">
                     <Clock className="w-3 h-3" />
                     {rel.readingTime}
                   </span>
@@ -311,7 +311,6 @@ export default async function ArticleDetailPage({ params }: PageProps) {
         </section>
       </article>
 
-      {/* Unified Public Footer */}
       <PublicFooter />
     </div>
   );

@@ -3,120 +3,150 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, MessageCircle } from 'lucide-react';
 import PublicHeader from '@/components/public/PublicHeader';
 import PublicFooter from '@/components/public/PublicFooter';
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-white dark:bg-[#09090b] text-zinc-900 dark:text-zinc-50 antialiased selection:bg-[var(--brand-pink,#FF66C4)] selection:text-white">
+    <div className="min-h-screen bg-white dark:bg-[#111113] text-zinc-950 dark:text-zinc-50 antialiased selection:bg-[var(--brand-pink,#FF66C4)] selection:text-white">
       <PublicHeader />
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 space-y-16">
-        
-        {/* Editorial Header */}
-        <div className="text-center space-y-4 max-w-2xl mx-auto">
-          <p className="text-xs uppercase font-bold tracking-widest text-[var(--brand-pink,#FF66C4)]">
-            Sobre Nosotros
-          </p>
-          <h1 className="text-4xl sm:text-5xl font-black tracking-tighter uppercase text-zinc-950 dark:text-white leading-[1.05]">
-            <span className="text-[1.2em] italic font-serif text-[var(--brand-pink,#FF66C4)] mr-0.5">E</span>l armario que de verdad usas
-          </h1>
-          <p className="text-base sm:text-lg text-zinc-600 dark:text-zinc-400 font-normal leading-relaxed">
-            Klozet nació para resolver una contradicción que todos vivimos: tener el armario petado de ropa y sentir cada mañana que no tienes nada que ponerte.
-          </p>
-        </div>
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
+        {/* Asymmetric Editorial Hero: Story on Left, Real Founder Photo on Right */}
+        <section className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center pb-16 sm:pb-24 border-b border-zinc-200/80 dark:border-zinc-800/80">
+          <div className="lg:col-span-7 space-y-6">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 text-xs font-medium text-zinc-700 dark:text-zinc-300">
+              <span>La historia detrás de Klozet</span>
+            </div>
 
-        {/* Hero Visual Banner */}
-        <div className="relative rounded-3xl overflow-hidden aspect-[16/9] w-full border border-black/[0.08] dark:border-white/[0.08] shadow-xl">
-          <Image
-            src="/landing/outfits/chica-brown-top-jeans.jpg"
-            alt="Editorial Klozet"
-            fill
-            className="object-cover"
-            priority
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
-          <div className="absolute bottom-6 left-6 right-6 text-white max-w-xl">
-            <p className="text-xs font-semibold uppercase tracking-wider text-[var(--brand-pink,#FF66C4)]">
-              Cultura Klozet
-            </p>
-            <p className="text-lg sm:text-2xl font-bold text-white mt-1 leading-snug">
-              &ldquo;El 80% del tiempo vestimos el 20% de lo que tenemos. El resto se queda en perchas olvidadas o en la famosa silla.&rdquo;
-            </p>
+            <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-zinc-950 dark:text-white leading-[1.08]">
+              De saltar entre Pinterest, Instagram y Zara a tener tu armario en el bolsillo.
+            </h1>
+
+            <div className="space-y-4 text-base sm:text-[17px] text-zinc-600 dark:text-zinc-300 leading-relaxed font-normal">
+              <p>
+                Hola, soy <strong className="text-zinc-950 dark:text-white font-semibold">Ethan</strong>. Klozet no nació en una agencia ni es el proyecto de una gran empresa: lo empecé a programar viendo el dilema que tenían mi novia y sus amigas cada vez que íbamos a salir o tenían que vestirse por la mañana.
+              </p>
+              <p>
+                Con el armario lleno de ropa, siempre pasaba lo mismo: decían que no tenían nada que ponerse y empezaban un bucle infinito saltando de <strong className="text-zinc-950 dark:text-white font-medium">Pinterest</strong> a <strong className="text-zinc-950 dark:text-white font-medium">Instagram</strong> y de ahí a <strong className="text-zinc-950 dark:text-white font-medium">Zara</strong>, viendo outfits de influencers, haciendo capturas de pantalla e intentando adivinar de qué marca era cada prenda o cómo combinar algo parecido con lo que tenían en casa.
+              </p>
+              <p>
+                Decidí crear Klozet para unir todas esas piezas en un solo lugar: una app donde digitalizas tu ropa real en minutos, ves de dónde es cada prenda que lleva la comunidad sin tener que adivinarlo y hablas con <strong className="text-zinc-950 dark:text-white font-medium">Kloe</strong> para que te monte el outfit del día con lo que ya tienes colgado en tu cuarto.
+              </p>
+            </div>
+
+            <div className="pt-2 flex flex-wrap items-center gap-3">
+              <Link
+                href="/auth"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-sm font-semibold bg-[var(--brand-pink,#FF66C4)] text-white hover:opacity-95 transition-all active:scale-[0.97] shadow-sm"
+              >
+                <span>Probar Klozet gratis</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+              <Link
+                href="/closet/kloe"
+                className="inline-flex items-center gap-2 px-5 py-3 rounded-full text-sm font-semibold bg-zinc-100 dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 hover:bg-zinc-200/70 dark:hover:bg-zinc-800 transition-all active:scale-[0.97]"
+              >
+                <MessageCircle className="w-4 h-4 text-[var(--brand-pink,#FF66C4)]" />
+                <span>Hablar con Kloe</span>
+              </Link>
+            </div>
           </div>
-        </div>
 
-        {/* Real Story Section */}
-        <section className="space-y-6 text-zinc-700 dark:text-zinc-300 leading-relaxed text-sm sm:text-base max-w-3xl mx-auto">
-          <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-zinc-950 dark:text-white uppercase">
-            Nuestra Historia
-          </h2>
-          <p>
-            Creamos Klozet cansados del mismo drama diario frente al espejo antes de salir. Acumular prendas que luego ni recuerdas que tienes en el fondo del cajón no soluciona nada.
-          </p>
-          <p>
-            En Klozet, tu ropa real se convierte en un lookbook interactivo. Le sacas una foto a tu sudadera o a tus zapatillas favoritas y ya las tienes en pantalla para montar fits al vuelo antes de desordenar el cuarto, probar qué pega con qué y salir con el conjunto clavado.
-          </p>
+          {/* Right Column: Real Photograph of Ethan and his Girlfriend */}
+          <div className="lg:col-span-5">
+            <figure className="relative rounded-[28px] overflow-hidden bg-zinc-100 dark:bg-zinc-900 border border-black/[0.08] dark:border-white/[0.08] shadow-[0_16px_40px_-12px_rgba(0,0,0,0.12)]">
+              <div className="relative aspect-[4/5] w-full">
+                <Image
+                  src="/about/ethan-fundador.jpg"
+                  alt="Ethan y su novia frente al espejo antes de salir"
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 440px"
+                  className="object-cover"
+                  priority
+                />
+              </div>
+              <figcaption className="px-5 py-3.5 bg-white/95 dark:bg-[#18181B]/95 backdrop-blur-xl border-t border-black/[0.06] dark:border-white/[0.08] flex items-center justify-between text-xs text-zinc-600 dark:text-zinc-400">
+                <span className="font-medium text-zinc-900 dark:text-zinc-100">Ethan · Creador de Klozet</span>
+                <span>El origen de la idea</span>
+              </figcaption>
+            </figure>
+          </div>
         </section>
 
-        {/* 3 Pillars */}
-        <section className="space-y-6 pt-4 max-w-3xl mx-auto">
-          <div className="border-t border-zinc-200 dark:border-zinc-800 pt-8">
-            <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-zinc-950 dark:text-white uppercase mb-2">
-              Cómo entendemos la moda
+        {/* Section 2: El problema real vs Cómo funciona Klozet (Clean Editorial Ledger, Not Generic Boxes) */}
+        <section className="py-16 sm:py-20 border-b border-zinc-200/80 dark:border-zinc-800/80">
+          <div className="max-w-2xl mb-12">
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-950 dark:text-white">
+              Qué cambia cuando pasas tu armario a Klozet
             </h2>
+            <p className="mt-2.5 text-sm sm:text-base text-zinc-600 dark:text-zinc-400 leading-relaxed">
+              En lugar de tener capturas perdidas en la galería del móvil y ropa olvidada al fondo del cajón, todo está conectado.
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            <div className="p-6 rounded-2xl bg-zinc-50 dark:bg-zinc-900/60 border border-black/[0.06] dark:border-white/[0.06] space-y-2.5">
-              <span className="text-xs font-mono font-bold text-[var(--brand-pink,#FF66C4)]">01</span>
-              <h3 className="text-base font-bold text-zinc-950 dark:text-white">
-                Tu ropa real es lo primero
-              </h3>
-              <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                Sin prendas ficticias de catálogo. Tus prendas de confianza fotografiadas y ordenadas para sacarles el máximo partido.
-              </p>
+          <div className="divide-y divide-zinc-200/80 dark:divide-zinc-800/80 border-t border-b border-zinc-200/80 dark:border-zinc-800/80">
+            <div className="py-7 grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-8 items-baseline">
+              <div className="md:col-span-4">
+                <h3 className="text-base sm:text-lg font-semibold text-zinc-950 dark:text-white">
+                  Fin a adivinar de dónde es cada prenda
+                </h3>
+              </div>
+              <div className="md:col-span-8 text-sm sm:text-base text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                Cuando ves un outfit en el feed de Klozet, puedes deslizar para ver las prendas exactas recortadas o pasarle el post a <strong className="text-zinc-950 dark:text-white font-medium">Kloe</strong> para que te explique qué lleva puesto esa persona y cómo montar ese mismo rollo con tu ropa.
+              </div>
             </div>
 
-            <div className="p-6 rounded-2xl bg-zinc-50 dark:bg-zinc-900/60 border border-black/[0.06] dark:border-white/[0.06] space-y-2.5">
-              <span className="text-xs font-mono font-bold text-[var(--brand-pink,#FF66C4)]">02</span>
-              <h3 className="text-base font-bold text-zinc-950 dark:text-white">
-                Kloe, tu colega de estilo
-              </h3>
-              <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                Le dices qué plan tienes o qué tiempo hace y te compone un fit completo con lo que ya tienes colgado.
-              </p>
+            <div className="py-7 grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-8 items-baseline">
+              <div className="md:col-span-4">
+                <h3 className="text-base sm:text-lg font-semibold text-zinc-950 dark:text-white">
+                  15 minutos hoy te ahorran 91 horas al año
+                </h3>
+              </div>
+              <div className="md:col-span-8 text-sm sm:text-base text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                Pasar 15 minutos cada mañana dudando frente al espejo suma más de 91 horas al año (casi 4 días enteros). Subiendo fotos rápidas de tu ropa o capturas desde la web donde la compraste, la app borra el fondo en tu dispositivo y deja tu armario listo para combinar en segundos.
+              </div>
             </div>
 
-            <div className="p-6 rounded-2xl bg-zinc-50 dark:bg-zinc-900/60 border border-black/[0.06] dark:border-white/[0.06] space-y-2.5">
-              <span className="text-xs font-mono font-bold text-[var(--brand-pink,#FF66C4)]">03</span>
-              <h3 className="text-base font-bold text-zinc-950 dark:text-white">
-                Comunidad real (OOTD)
-              </h3>
-              <p className="text-xs sm:text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                Inspiración auténtica de la calle sin poses forzadas, para descubrir cómo combina la gente las prendas que tú también tienes.
-              </p>
+            <div className="py-7 grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-8 items-baseline">
+              <div className="md:col-span-4">
+                <h3 className="text-base sm:text-lg font-semibold text-zinc-950 dark:text-white">
+                  Kloe conoce tu ropa y cómo eres
+                </h3>
+              </div>
+              <div className="md:col-span-8 text-sm sm:text-base text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                Sin subir fotos personales de tu cara: solo indicas tu altura, tu tipo de cuerpo, tu color de ojos y de pelo, y Kloe te recomienda combinaciones reales de tu propio armario según el tiempo que hace en tu ciudad y el plan que tengas.
+              </div>
             </div>
           </div>
         </section>
 
-        {/* Direct Call to Action */}
-        <div className="text-center pt-6 pb-4 space-y-4">
-          <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-zinc-950 dark:text-white uppercase">
-            Vístete mejor con lo que ya tienes
-          </h2>
-          <div className="pt-2">
-            <Link
-              href="/auth"
-              className="inline-flex items-center gap-2 px-8 py-3.5 rounded-full font-semibold text-sm bg-[var(--brand-pink,#FF66C4)] text-white hover:opacity-95 transition-all shadow-md shadow-[var(--brand-pink,#FF66C4)]/20 active:scale-95"
-            >
-              <span>Empezar en Klozet gratis</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
+        {/* Section 3: Direct Contact & Personal Note */}
+        <section className="pt-16 sm:pt-20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-8">
+          <div className="space-y-2 max-w-xl">
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-zinc-950 dark:text-white">
+              Construido escuchando a quienes lo usan cada día
+            </h2>
+            <p className="text-sm sm:text-base text-zinc-600 dark:text-zinc-400 leading-relaxed">
+              Si tienes cualquier idea para mejorar la app, echas en falta alguna función o quieres escribirme directamente, leo todos los mensajes en{' '}
+              <a
+                href="mailto:klozet.enterprise@gmail.com"
+                className="text-zinc-950 dark:text-white font-semibold underline decoration-[var(--brand-pink,#FF66C4)] underline-offset-4"
+              >
+                klozet.enterprise@gmail.com
+              </a>.
+            </p>
           </div>
-        </div>
 
+          <Link
+            href="/contact"
+            className="shrink-0 inline-flex items-center gap-2 px-6 py-3 rounded-full text-sm font-semibold bg-zinc-950 text-white dark:bg-white dark:text-zinc-950 hover:opacity-90 transition-all active:scale-[0.97]"
+          >
+            <span>Escribir a Ethan</span>
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+        </section>
       </main>
 
       <PublicFooter />

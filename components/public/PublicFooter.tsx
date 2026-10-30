@@ -6,101 +6,96 @@ import Image from 'next/image';
 
 export default function PublicFooter() {
   return (
-    <footer className="w-full bg-zinc-50 dark:bg-[#070709] border-t border-zinc-200/80 dark:border-zinc-800/80 text-zinc-600 dark:text-zinc-400 text-sm transition-colors">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-12">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-10 md:gap-8 mb-14">
-          
+    <footer className="w-full bg-zinc-50 dark:bg-[#0b0b0d] border-t border-zinc-200/80 dark:border-zinc-800/80 text-zinc-600 dark:text-zinc-400 text-sm transition-colors">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 pb-10">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-10 md:gap-8 mb-12">
           {/* Brand Column */}
-          <div className="md:col-span-2 space-y-4">
+          <div className="md:col-span-2 space-y-3.5">
             <Link href="/" className="inline-flex items-center gap-2 group">
               <div className="relative h-8 w-28 shrink-0">
-                <Image 
-                  src="/landing/klozet-nombre-grande.png" 
-                  alt="Klozet" 
-                  fill 
+                <Image
+                  src="/landing/klozet-nombre-grande.png"
+                  alt="Klozet"
+                  fill
                   sizes="112px"
-                  className="object-contain object-left" 
+                  className="object-contain object-left"
                 />
               </div>
             </Link>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400 max-w-sm leading-relaxed">
-              La red social de moda y armario virtual. Digitaliza tus prendas reales, descubre combinaciones inteligentes y conecta con una comunidad que viste con intención.
+            <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 max-w-sm leading-relaxed">
+              Tu armario real en el móvil. Digitaliza tus prendas, combina tus outfits en el lienzo, descubre qué lleva puesto la comunidad y habla con Kloe.
             </p>
-            <div className="pt-2 flex items-center gap-2 text-xs font-medium text-zinc-400 dark:text-zinc-500">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
-              <span>Plataforma activa y en evolución continua</span>
-            </div>
           </div>
 
-          {/* Editorial / Trends */}
-          <div className="space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-widest text-zinc-950 dark:text-zinc-200">
-              Editorial & Estilo
+          {/* Guías de Estilo */}
+          <div className="space-y-2.5">
+            <p className="text-xs font-semibold text-zinc-950 dark:text-zinc-100">
+              Guías de Estilo
             </p>
-            <ul className="space-y-2.5 text-xs sm:text-sm">
+            <ul className="space-y-2 text-xs sm:text-sm">
               <li>
                 <Link href="/trends" className="hover:text-zinc-950 dark:hover:text-white transition-colors">
-                  Todas las Guías
+                  Todas las guías
                 </Link>
               </li>
               <li>
                 <Link href="/trends/armario-capsula-2026" className="hover:text-zinc-950 dark:hover:text-white transition-colors">
-                  Armario Cápsula 2026
+                  Armario cápsula
                 </Link>
               </li>
               <li>
                 <Link href="/trends/quiet-luxury-streetwear" className="hover:text-zinc-950 dark:hover:text-white transition-colors">
-                  Quiet Luxury & Streetwear
+                  Streetwear y sastrería
                 </Link>
               </li>
               <li>
                 <Link href="/trends/teoria-del-color-moda" className="hover:text-zinc-950 dark:hover:text-white transition-colors">
-                  Teoría del Color en tu Ropa
+                  Teoría del color
                 </Link>
               </li>
               <li>
-                <Link href="/trends/moda-circular-armario-digital" className="hover:text-zinc-950 dark:hover:text-white transition-colors">
-                  Moda Circular y Armario
+                <Link href="/trends/moda-circular-digitalizacion" className="hover:text-zinc-950 dark:hover:text-white transition-colors">
+                  Coste por puesta
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Empresa */}
-          <div className="space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-widest text-zinc-950 dark:text-zinc-200">
-              Klozet
+          {/* Proyecto */}
+          <div className="space-y-2.5">
+            <p className="text-xs font-semibold text-zinc-950 dark:text-zinc-100">
+              Proyecto
             </p>
-            <ul className="space-y-2.5 text-xs sm:text-sm">
+            <ul className="space-y-2 text-xs sm:text-sm">
               <li>
                 <Link href="/about" className="hover:text-zinc-950 dark:hover:text-white transition-colors">
-                  Sobre Nosotros
+                  La historia de Klozet
                 </Link>
               </li>
               <li>
                 <Link href="/contact" className="hover:text-zinc-950 dark:hover:text-white transition-colors">
-                  Contacto & Soporte
+                  Contacto y soporte
+                </Link>
+              </li>
+              <li>
+                <Link href="/closet/kloe" className="hover:text-zinc-950 dark:hover:text-white transition-colors">
+                  Hablar con Kloe
                 </Link>
               </li>
               <li>
                 <Link href="/auth" className="hover:text-zinc-950 dark:hover:text-white transition-colors">
-                  Crear Cuenta
-                </Link>
-              </li>
-              <li>
-                <Link href="/auth" className="hover:text-zinc-950 dark:hover:text-white transition-colors">
-                  Acceso a Mi Armario
+                  Entrar a mi armario
                 </Link>
               </li>
             </ul>
           </div>
 
           {/* Legal */}
-          <div className="space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-widest text-zinc-950 dark:text-zinc-200">
+          <div className="space-y-2.5">
+            <p className="text-xs font-semibold text-zinc-950 dark:text-zinc-100">
               Legal
             </p>
-            <ul className="space-y-2.5 text-xs sm:text-sm">
+            <ul className="space-y-2 text-xs sm:text-sm">
               <li>
                 <Link href="/privacy" className="hover:text-zinc-950 dark:hover:text-white transition-colors">
                   Política de Privacidad
@@ -117,11 +112,11 @@ export default function PublicFooter() {
                 </Link>
               </li>
               <li>
-                <a 
-                  href="mailto:contacto@klozet.es" 
+                <a
+                  href="mailto:klozet.enterprise@gmail.com"
                   className="hover:text-zinc-950 dark:hover:text-white transition-colors"
                 >
-                  contacto@klozet.es
+                  klozet.enterprise@gmail.com
                 </a>
               </li>
             </ul>
@@ -129,9 +124,9 @@ export default function PublicFooter() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="pt-8 border-t border-zinc-200 dark:border-zinc-800/70 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-500 dark:text-zinc-500">
-          <p>© {new Date().getFullYear()} Klozet. Todos los derechos reservados. Diseñado y desarrollado con pasión artesanal.</p>
-          <div className="flex items-center gap-6">
+        <div className="pt-6 border-t border-zinc-200 dark:border-zinc-800/70 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-500">
+          <p>© {new Date().getFullYear()} Klozet · Creado por Ethan.</p>
+          <div className="flex items-center gap-5">
             <Link href="/privacy" className="hover:underline">Privacidad</Link>
             <Link href="/terms" className="hover:underline">Términos</Link>
             <Link href="/cookies" className="hover:underline">Cookies</Link>

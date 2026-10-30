@@ -129,10 +129,10 @@ export default function LandingPage() {
       onTouchEnd={handleTouchEnd}
       className="h-[100dvh] min-h-[100dvh] w-screen overflow-hidden bg-white dark:bg-[#0a0a0c] text-zinc-900 dark:text-zinc-50 selection:bg-[var(--brand-pink,#FF66C4)] selection:text-white flex flex-col justify-between fixed inset-0 select-none antialiased"
     >
-      {/* 1. TOP BAR WITH LOGO, EDITORIAL LINKS AND AUTH BUTTONS */}
+      {/* 1. TOP BAR WITH LOGO AND AUTH BUTTONS */}
       <header className="fixed top-0 left-0 right-0 z-50 px-4 sm:px-8 py-3 sm:py-5 flex items-center justify-between pointer-events-none">
         {/* Left: Brand Logo (Se oculta en el último frame junto a los botones) */}
-        <div className={`pointer-events-auto flex items-center gap-4 transition-opacity duration-300 ${currentFrame === 4 ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+        <div className={`pointer-events-auto flex items-center gap-2 transition-opacity duration-300 ${currentFrame === 4 ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
           <Link href="/" className="inline-block transition-transform active:scale-95">
             <Image 
               src="/landing/klozet-nombre-grande.png" 
@@ -143,28 +143,10 @@ export default function LandingPage() {
               priority
             />
           </Link>
-
-          <nav aria-label="Navegación principal" className="hidden md:flex items-center gap-4 text-xs font-semibold text-zinc-600 dark:text-zinc-300">
-            <Link href="/trends" className="hover:text-[var(--brand-pink,#FF66C4)] transition-colors">
-              Revista & Tendencias
-            </Link>
-            <Link href="/about" className="hover:text-[var(--brand-pink,#FF66C4)] transition-colors">
-              Sobre Nosotros
-            </Link>
-            <Link href="/contact" className="hover:text-[var(--brand-pink,#FF66C4)] transition-colors">
-              Contacto
-            </Link>
-          </nav>
         </div>
 
         {/* Right: Auth Buttons (Hidden gracefully on the final frame where big CTAs live) */}
         <div className={`pointer-events-auto flex items-center gap-1.5 sm:gap-3 transition-opacity duration-300 ${currentFrame === 4 ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-          <Link 
-            href="/trends" 
-            className="md:hidden px-3 py-1.5 rounded-full text-xs font-semibold text-zinc-700 dark:text-zinc-200 bg-white/90 dark:bg-zinc-800/90 backdrop-blur-md border border-zinc-200 dark:border-zinc-700 shadow-xs transition-all active:scale-95"
-          >
-            Tendencias
-          </Link>
           {user ? (
             <Link 
               href="/closet" 
@@ -1173,44 +1155,17 @@ export default function LandingPage() {
         </AnimatePresence>
       </main>
 
-      {/* Persistent Bottom Navigation & Legal Links (Always present in DOM from Frame 0) */}
+      {/* Floating Bouncing Down Arrow (No Pill, Never Overlaps CTA) */}
       {currentFrame < totalFrames - 1 && (
-        <div className="fixed bottom-2 sm:bottom-3.5 left-0 right-0 z-40 px-4 flex flex-col items-center gap-1.5 pointer-events-none">
-          <button
-            onClick={nextFrame}
-            aria-label="Siguiente pantalla"
-            className="px-3.5 py-1.5 rounded-full bg-white dark:bg-zinc-900 backdrop-blur-md border border-zinc-200 dark:border-zinc-700 text-[10px] sm:text-xs font-bold text-zinc-900 dark:text-zinc-100 hover:text-black dark:hover:text-white transition-all flex items-center gap-1 shadow-sm active:scale-95 cursor-pointer pointer-events-auto"
-          >
-            <span>Desliza</span>
-            <ChevronDown className="w-3.5 h-3.5 text-zinc-900 dark:text-zinc-100" />
-          </button>
-
-          <nav aria-label="Enlaces institucionales y legales" className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-[10px] text-zinc-500 dark:text-zinc-400 pointer-events-auto">
-            <Link href="/trends" className="hover:text-[var(--brand-pink,#FF66C4)] font-medium transition-colors">
-              Tendencias
-            </Link>
-            <span>·</span>
-            <Link href="/about" className="hover:text-[var(--brand-pink,#FF66C4)] transition-colors">
-              Sobre Nosotros
-            </Link>
-            <span>·</span>
-            <Link href="/privacy" className="hover:text-[var(--brand-pink,#FF66C4)] transition-colors">
-              Privacidad
-            </Link>
-            <span>·</span>
-            <Link href="/terms" className="hover:text-[var(--brand-pink,#FF66C4)] transition-colors">
-              Términos
-            </Link>
-            <span>·</span>
-            <Link href="/cookies" className="hover:text-[var(--brand-pink,#FF66C4)] transition-colors">
-              Cookies
-            </Link>
-            <span>·</span>
-            <Link href="/contact" className="hover:text-[var(--brand-pink,#FF66C4)] transition-colors">
-              Contacto
-            </Link>
-          </nav>
-        </div>
+        <motion.button
+          onClick={nextFrame}
+          aria-label="Siguiente pantalla"
+          animate={{ y: [0, 7, 0] }}
+          transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
+          className="fixed bottom-2.5 sm:bottom-4 left-1/2 -translate-x-1/2 z-40 p-2 text-zinc-400 hover:text-zinc-900 dark:text-zinc-500 dark:hover:text-zinc-100 transition-colors cursor-pointer pointer-events-auto"
+        >
+          <ChevronDown className="w-6 h-6 stroke-[2.2]" />
+        </motion.button>
       )}
     </div>
   );

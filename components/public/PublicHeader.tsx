@@ -15,8 +15,8 @@ export default function PublicHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinks = [
-    { href: '/trends', label: 'Tendencias & Guías' },
-    { href: '/about', label: 'Sobre Nosotros' },
+    { href: '/trends', label: 'Guías de Estilo' },
+    { href: '/about', label: 'Sobre Klozet' },
     { href: '/contact', label: 'Contacto' },
   ];
 

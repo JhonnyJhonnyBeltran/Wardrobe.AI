@@ -3078,3 +3078,23 @@ Ejecución del Consejo de Negocio con 4 subagentes especializados (`business-bel
 2. **Cards de Auto-Anuncio "Habla con Kloe" en Feed, Buscador y Revista Editorial:**
    - **[`components/Feed/SponsoredAdCard.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan's%20Project/Wardobre.ai/Wardrobe.AI/components/Feed/SponsoredAdCard.tsx):** Sustituidos los anuncios externos por 4 variantes de tarjetas de auto-promoción de Kloe en formato 4:5 (integración nativa en el grid de `/feed` y `/search`), con el logo oficial `/kloe-logo-large.png`, fotografía editorial adaptada por género (`Chica` / `Chico`) y botón en pastilla rosa (`#FF66C4`) que redirige directamente a `/closet/kloe` para activar consultas y convertir usuarios a Klozet Pro.
    - **[`components/Feed/PremiumAdCard.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan's%20Project/Wardobre.ai/Wardrobe.AI/components/Feed/PremiumAdCard.tsx), [`app/(public)/trends/page.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan's%20Project/Wardobre.ai/Wardrobe.AI/app/(public)/trends/page.tsx) y [`app/(public)/trends/[slug]/page.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan's%20Project/Wardobre.ai/Wardrobe.AI/app/(public)/trends/%5Bslug%5D/page.tsx):** Reemplazados los banners publicitarios por tarjetas de auto-anuncio *"Habla con Kloe"* que dirigen el tráfico lector hacia el asistente de estilismo `/closet/kloe`.
+
+
+---
+
+## 185. Limpieza de Cabecera y Flecha Flotante en Landing + Rediseño Editorial Anti-Slop con Historia Real de Ethan y su Novia (Octubre 2026)
+
+1. **Landing Page (`app/(public)/page.tsx`):**
+   - Eliminados de la esquina superior izquierda los enlaces `Revista & Tendencias`, `Sobre Nosotros` y `Contacto`, dejando exclusivamente el logotipo oficial de Klozet (`/landing/klozet-nombre-grande.png`) a la izquierda y los botones de acción a la derecha.
+   - Eliminada la píldora inferior `Desliza` que se solapaba con la píldora rosa `Ir a mi armario ->` y sustituida por un icono flotante limpio de flecha hacia abajo (`ChevronDown`) que rebota suavemente (`animate={{ y: [0, 7, 0] }}`, `duration: 2.4`).
+
+2. **Página "Sobre Klozet" (`app/(public)/about/page.tsx`) y Foto Real del Fundador (`public/about/ethan-fundador.jpg`):**
+   - Eliminada toda referencia corporativa genérica (*"somos un equipo"*, *"Equipo Editorial Klozet"*).
+   - Redactada en primera persona por **Ethan** contando el origen real de Klozet: cómo su novia y las amigas de ella se enfrentaban cada mañana al dilema de tener el armario lleno y sentir que no tenían qué ponerse, saltando de **Pinterest** a **Instagram** y a **Zara** viendo outfits de influencers e intentando adivinar de dónde era cada prenda y cómo combinarla con su ropa real.
+   - Integrada la fotografía real de Ethan y su novia (`/about/ethan-fundador.jpg`) en una maquetación editorial asimétrica (2 columnas en escritorio + tabla editorial numerada `01–04`), cero clichés de IA.
+
+3. **Rediseño Profesional Anti-Slop de Revista (`/trends`, `/trends/[slug]`) y Contacto (`/contact`):**
+   - Eliminados todos los patrones de *AI slop* (`font-black uppercase`, capitulares cursivas `italic font-serif`, badges diminutos centrados, filas de 3 cajas genéricas e iconos morados).
+   - Actualizada la autoría de las 10 guías editoriales en `lib/trends/articlesData.ts` a **Ethan · Creador de Klozet** con su avatar real (`/about/ethan-fundador.jpg`).
+   - Maquetación de revista estructurada en `/trends` (portada asimétrica 7/5 columnas + card *Habla con Kloe* + índice de archivo en 3 columnas) y lectura limpia en `/trends/[slug]` con tipografía Inter en sentence case.
+   - Página `/contact` reescrita con trato directo de Ethan (`soporte@klozet.es`, `contacto@klozet.es`) y listado horizontal limpio de preguntas frecuentes.
