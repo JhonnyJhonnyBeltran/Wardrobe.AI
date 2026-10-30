@@ -13,22 +13,36 @@ export default function robots(): MetadataRoute.Robots {
     '/terms',
     '/privacy',
     '/cookies',
-    '/auth',
-    '/login',
-    '/feed',
-    '/search',
-    '/post/*',
-    '/profile/*',
-    '/outfit/*',
+    '/ads.txt',
     '/llms.txt',
     '/llms-full.txt'
   ];
 
+  // Bloquear pantallas de login, onboarding, herramientas privadas y rutas sin contenido editorial
+  // para evitar que Mediapartners-Google (AdSense) audite formularios de acceso o pantallas de app
   const privateDisallowed = [
     '/api/*',
-    '/profile/settings/*',
+    '/auth',
+    '/auth/*',
+    '/login',
+    '/onboarding',
+    '/onboarding/*',
+    '/closet',
+    '/closet/*',
+    '/create',
+    '/create/*',
+    '/create-post',
+    '/process-image',
+    '/premium',
+    '/chat',
+    '/closy',
+    '/profile',
+    '/profile/*',
+    '/messages',
     '/messages/*',
-    '/notifications/*'
+    '/notifications',
+    '/notifications/*',
+    '/admin/*'
   ];
 
   return {
@@ -38,7 +52,7 @@ export default function robots(): MetadataRoute.Robots {
         allow: publicAllowed,
         disallow: privateDisallowed
       },
-      // Google Search & Google AI Overviews / Gemini
+      // Google Search, Google AdSense (Mediapartners-Google) & Gemini
       {
         userAgent: ['Googlebot', 'Google-Extended', 'Mediapartners-Google'],
         allow: publicAllowed,

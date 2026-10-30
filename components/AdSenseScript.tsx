@@ -4,26 +4,38 @@ import { usePathname } from 'next/navigation';
 import Script from 'next/script';
 
 /**
- * AdSenseScript - Compliance con Políticas del Programa Google AdSense y Optimización Core Web Vitals
- * 
- * Solo se carga el SDK de AdSense en rutas editoriales con contenido sustancial (/trends),
- * evitando cargar 400 KiB de scripts publicitarios en la landing page principal (/),
- * lo que reduce drásticamente el LCP, FCP y el tiempo de bloqueo del hilo principal.
+ * AdSenseScript - Compliance con Políticas del Programa Google AdSense
+ *
+ * Carga el SDK oficial de Google AdSense en las páginas públicas editoriales e institucionales
+ * (/, /trends, /trends/*, /about, /contact, /contacto, /privacy, /terms, /cookies) para que
+ * el verificador de sitios de AdSense y Mediapartners-Google validen el dominio raíz y los artículos,
+ * bloqueando su carga en pantallas de herramientas privadas, login, creación o mensajería.
  */
+const ALLOWED_PUBLIC_EXACT_PATHS = new Set([
+  '/',
+  '/trends',
+  '/about',
+  '/contact',
+  '/contacto',
+  '/privacy',
+  '/terms',
+  '/cookies',
+]);
+
 export default function AdSenseScript() {
   const pathname = usePathname() || '';
 
-  // Solo cargar en la revista editorial (/trends) donde residen los bloques publicitarios reales
-  const isEditorialRoute = pathname === '/trends' || pathname.startsWith('/trends/');
+  const isAllowedPublicRoute =
+    ALLOWED_PUBLIC_EXACT_PATHS.has(pathname) || pathname.startsWith('/trends/');
 
-  if (!isEditorialRoute) {
+  if (!isAllowedPublicRoute) {
     return null;
   }
 
   return (
     <Script
       id="google-adsense-sdk"
-      strategy="lazyOnload"
+      strategy="afterInteractive"
       src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4628313000953034"
       crossOrigin="anonymous"
     />

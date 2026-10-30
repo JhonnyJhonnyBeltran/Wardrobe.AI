@@ -3029,3 +3029,40 @@ Ejecución del Consejo de Negocio con 4 subagentes especializados (`business-bel
 
 6. **Notificaciones Diarias Planificadas por Clima, Estacionalidad y Progreso (`lib/hooks/usePeriodicReminders.ts`):**
    - Sustituido el temporizador de 3 horas por una programación diaria en las franjas de las **08:00, 15:00 y 16:00** (máximo 1 notificación al día) que consulta el clima local vía Open-Meteo y la estación del año para alternar entre recordatorios de subida (*"Sube una prenda hoy: estás más cerca de digitalizar tu armario entero. 15 min ahora te ahorran 91 horas al año"*) y sugerencias climáticas (*"Hace sol hoy: saca tus looks de verano a pasear"* / *"Hoy refresca: saca tus looks de invierno a pasear"*).
+
+
+---
+
+## 182. Auditoría del Consejo de Negocio — Ronda 2 Post-Implementación (Octubre 2026)
+
+- Documento actualizado en [`Obsidian/business-plan.md`](./business-plan.md).
+- **Veredicto Ejecutivo (`business-judge`):** **APROBADO PARA LANZAMIENTO A PRODUCCIÓN (93 / 100)** (+7 puntos frente a los 86/100 de la Ronda 1).
+- **Conclusiones Clave del Consejo:**
+  1. **`business-believer`:** El perfil físico *"Dinos cómo eres"* elimina el 80% de abandono por fricción de fotos personales; el armario ilimitado + calendario gratis dispara la retención diaria (DAU/MAU) y el efecto red; el dolor matemático (*15 min hoy = 91h/año*) junto al Plan Anual de **19,99 €/año (1,66 €/mes · Ahorra 67%)** convierte el upgrade en una compra impulsiva.
+  2. **`business-investor` (94/100):** El filtro *metadata-first* (`isGarmentWellTagged`) reduce un **85% los tokens de entrada** en Gemini (~8 €/mes por cada 1.000 usuarios activos). El armario ilimitado cuesta ~0,015 €/mes por usuario en Supabase Storage (100 GB alojan 900.000 prendas WebP). Margen neto del **91,7%** en mensual (**3,78 € netos**) y **95,1%** en anual (**15,71 € netos Día 1**, comisión Stripe del 2,65%, 0% churn en 12 meses). Break-even con **3 planes anuales/mes**.
+  3. **`business-hater` (Red Team):** Confirma neutralizado el riesgo RGPD Art. 9 y el gasto de tokens, y señala 3 puntos de atención técnica:
+     - Actualizar en Stripe Dashboard / Vercel las variables `STRIPE_PRICE_ID_YEARLY` (19,99 €) y `STRIPE_PRICE_ID_MONTHLY` (4,99 €) en `app/api/stripe/checkout/route.ts`.
+     - Las notificaciones de las 08:00, 15:00 y 16:00 en `usePeriodicReminders.ts` funcionan con la app/pestaña abierta; para despertar móviles con el navegador cerrado se recomienda enlazarlas a un Cron de servidor con Web Push VAPID.
+     - Vigilar conversión Free $\rightarrow$ Pro a 60 días con las 3 consultas/día gratuitas.
+
+
+---
+
+## 183. Precios Oficiales (2,99 €/mes y 24,99 €/año), Métricas de Usuarios en Vivo y Blindaje Definitivo para Aprobación de Google AdSense (Octubre 2026)
+
+1. **Métricas en Vivo de Base de Datos (Supabase):**
+   - **24 usuarios registrados** (`profiles`), **28 prendas digitalizadas** (`clothing_items`), **17 outfits creados** (`outfits`) y **10 publicaciones en el feed** (`posts`).
+
+2. **Precios Oficiales consolidados (`2,99 €/mes` y `24,99 €/año`):**
+   - Restaurados en [`components/KloeProModal.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan's%20Project/Wardobre.ai/Wardrobe.AI/components/KloeProModal.tsx) y [`app/(app)/premium/page.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan's%20Project/Wardobre.ai/Wardrobe.AI/app/(app)/premium/page.tsx), coincidiendo con los Price IDs activos de Stripe (`price_1U7DiWCt6LJbs620MmU8s5Vr` y `price_1U7DeHCt6LJbs620osDLmL2m`).
+   - **Margen Neto con optimización Metadata-First:**
+     - **Plan Mensual (`2,99 €`):** Base sin IVA `2,47 €` - Stripe (`0,29 €`) - IA/Storage (`0,023 €`) = **`2,16 € netos/mes` (87,4% de margen sobre base)**.
+     - **Plan Anual (`24,99 €`):** Base sin IVA `20,65 €` - Stripe (`0,60 €`, solo 2,4%) - IA/Storage anual (`0,28 €`) = **`19,77 € netos limpios en Día 1` (95,7% de margen sobre base)**.
+   - **Break-Even:** **24 suscriptores mensuales** o **3 suscripciones anuales al mes** para cubrir los ~51,50 €/mes de infraestructura fija.
+
+3. **Solución Integral al Rechazo de Google AdSense (*"Tu sitio web no está listo para mostrar anuncios"*):**
+   - **Causa 1 resuelta (`app/layout.tsx` y `components/AdSenseScript.tsx`):** Añadida la etiqueta `<meta name="google-adsense-account" content="ca-pub-4628313000953034" />` en `<head>` y habilitado `AdSenseScript` en todas las páginas públicas editoriales e institucionales (`/`, `/trends`, `/trends/*`, `/about`, `/contact`, `/privacy`, `/terms`, `/cookies`), bloqueándolo estrictamente en pantallas de login o herramientas privadas.
+   - **Causa 2 resuelta (`app/sitemap.ts` y `app/robots.ts`):** Eliminadas de `sitemap.xml` y bloqueadas en `robots.txt` las rutas de login y herramientas privadas (`/auth`, `/login`, `/closet`, `/create`, `/onboarding`, `/messages`) para que `Mediapartners-Google` no audite formularios de acceso ni redirecciones a login.
+   - **Causa 3 resuelta (`app/(public)/page.tsx`):** Añadida barra persistente de navegación editorial y legal (`Revista & Tendencias`, `Sobre Nosotros`, `Privacidad`, `Términos`, `Cookies`, `Contacto`) visible desde el `Frame 0` tanto en cabecera como en el pie de página.
+   - **Causa 4 resuelta (`app/(public)/trends/page.tsx` y `app/(public)/trends/[slug]/page.tsx`):** Eliminados los contenedores vacíos con `data-ad-slot="default"` ("Anuncio Patrocinado") que generaban cajas rotas en blanco durante la revisión.
+   - **Causa 5 resuelta (`lib/trends/articlesData.ts`):** Ampliado el portal editorial de 5 artículos cortos a **10 guías editoriales profundas y extensas** (Armario Cápsula, Streetwear & Quiet Luxury, Teoría del Color, Moda Circular & CPW, Calzado Imprescindible, Morfología y Proporciones, Manual de Tejidos, Método 5-4-3-2-1 de Maleta, 10 Errores al Vestir y Psicología del Vestir / 91 Horas al Año).

@@ -110,7 +110,10 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
     title: "Klozet"
   },
-  category: "fashion"
+  category: "fashion",
+  other: {
+    "google-adsense-account": "ca-pub-4628313000953034"
+  }
 };
 
 export const viewport: Viewport = {
@@ -242,6 +245,7 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning>
       <head>
+        <meta name="google-adsense-account" content="ca-pub-4628313000953034" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

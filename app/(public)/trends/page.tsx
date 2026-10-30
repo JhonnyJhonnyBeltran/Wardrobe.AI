@@ -185,23 +185,6 @@ export default function TrendsPage() {
           ))}
         </div>
 
-        {/* AdSense Placement Area (Safe, Public Publisher Page) */}
-        <section className="my-14 p-6 sm:p-8 rounded-3xl bg-[var(--background-secondary)]/50 border border-[var(--border-color)] text-center">
-          <p className="text-[10px] uppercase font-mono tracking-widest text-[var(--foreground-tertiary)] mb-3">
-            Publicidad de Proveedores Verificados · Google AdSense
-          </p>
-          <div className="min-h-[100px] flex items-center justify-center">
-            <ins
-              className="adsbygoogle"
-              style={{ display: 'block' }}
-              data-ad-client="ca-pub-4628313000953034"
-              data-ad-slot="default"
-              data-ad-format="auto"
-              data-full-width-responsive="true"
-            />
-          </div>
-        </section>
-
         {/* Klozet Call to Action */}
         <section className="rounded-3xl p-8 sm:p-12 bg-gradient-to-tr from-pink-500/10 via-purple-500/10 to-transparent border border-[var(--brand-pink)]/20 text-center max-w-3xl mx-auto">
           <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight">

@@ -186,23 +186,6 @@ export default async function ArticleDetailPage({ params }: PageProps) {
           </p>
         </div>
 
-        {/* AdSense In-Article Placement 1 (Safe Publisher Content Context) */}
-        <div className="my-8 p-4 rounded-2xl bg-[var(--background-secondary)]/40 border border-[var(--border-color)] text-center">
-          <p className="text-[9px] uppercase font-mono tracking-widest text-[var(--foreground-tertiary)] mb-2">
-            Anuncio Patrocinado
-          </p>
-          <div className="min-h-[90px] flex items-center justify-center">
-            <ins
-              className="adsbygoogle"
-              style={{ display: 'block', textAlign: 'center' }}
-              data-ad-layout="in-article"
-              data-ad-format="fluid"
-              data-ad-client="ca-pub-4628313000953034"
-              data-ad-slot="default"
-            />
-          </div>
-        </div>
-
         {/* Article Core Sections */}
         <div className="space-y-10 sm:space-y-12">
           {article.content.sections.map((section, idx) => (

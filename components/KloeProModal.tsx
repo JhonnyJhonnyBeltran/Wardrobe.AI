@@ -192,7 +192,7 @@ export default function KloeProModal({ isOpen, onClose, redirectBackToCloset = f
                 >
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[var(--brand-pink)] text-white tracking-wide shadow-xs">
-                      Ahorra 67%
+                      Ahorra 30%
                     </span>
                     <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
                       selectedPlan === 'yearly' ? 'border-[var(--brand-pink)] bg-[var(--brand-pink)]' : 'border-[var(--border-color)]'
@@ -204,11 +204,11 @@ export default function KloeProModal({ isOpen, onClose, redirectBackToCloset = f
                   <div>
                     <p className="text-xs font-bold text-[var(--foreground)]">Plan Anual</p>
                     <div className="flex items-baseline gap-1 mt-0.5">
-                      <span className="text-xl sm:text-2xl font-bold text-[var(--foreground)]">19,99 €</span>
+                      <span className="text-xl sm:text-2xl font-bold text-[var(--foreground)]">24,99 €</span>
                       <span className="text-[10px] text-[var(--foreground-secondary)] font-medium">/año</span>
                     </div>
                     <p className="text-[11px] text-[var(--brand-pink)] font-bold mt-1">
-                      Solo 1,66 € / mes
+                      ~2,08 € / mes
                     </p>
                   </div>
                 </div>
@@ -236,7 +236,7 @@ export default function KloeProModal({ isOpen, onClose, redirectBackToCloset = f
                   <div>
                     <p className="text-xs font-bold text-[var(--foreground)]">Plan Mensual</p>
                     <div className="flex items-baseline gap-1 mt-0.5">
-                      <span className="text-xl sm:text-2xl font-bold text-[var(--foreground)]">4,99 €</span>
+                      <span className="text-xl sm:text-2xl font-bold text-[var(--foreground)]">2,99 €</span>
                       <span className="text-[10px] text-[var(--foreground-secondary)] font-medium">/mes</span>
                     </div>
                     <p className="text-[11px] text-[var(--foreground-tertiary)] font-medium mt-1">
@@ -285,7 +285,7 @@ export default function KloeProModal({ isOpen, onClose, redirectBackToCloset = f
                       {selectedPlan === 'yearly' ? 'Klozet Pro · Plan Anual' : 'Klozet Pro · Plan Mensual'}
                     </h4>
                     <p className="text-[11px] text-[var(--foreground-secondary)] font-medium">
-                      {selectedPlan === 'yearly' ? '19,99 € / año (1,66 €/mes)' : '4,99 € / mes'}
+                      {selectedPlan === 'yearly' ? '24,99 € / año (~2,08 €/mes)' : '2,99 € / mes'}
                     </p>
                   </div>
                 </div>

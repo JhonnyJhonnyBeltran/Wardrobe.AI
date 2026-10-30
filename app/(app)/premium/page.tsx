@@ -117,11 +117,11 @@ export default function PremiumPage() {
                         }`}
                     >
                         <div className="absolute -top-3 right-3 bg-[var(--brand-pink)] text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-xs">
-                            Ahorra 67% · Mejor opción
+                            Ahorra 30% · Mejor opción
                         </div>
                         <div className="text-xs font-semibold text-[var(--foreground-secondary)] mb-1">Plan Anual</div>
-                        <div className="text-2xl font-bold text-[var(--foreground)]">19,99 €</div>
-                        <div className="text-[11px] font-bold text-[var(--brand-pink)] mt-0.5">Solo 1,66 €/mes (menos de 4 meses)</div>
+                        <div className="text-2xl font-bold text-[var(--foreground)]">24,99 €</div>
+                        <div className="text-[11px] font-bold text-[var(--brand-pink)] mt-0.5">~2,08 €/mes facturado al año</div>
                     </div>
 
                     {/* Monthly Plan */}
@@ -134,7 +134,7 @@ export default function PremiumPage() {
                         }`}
                     >
                         <div className="text-xs font-semibold text-[var(--foreground-secondary)] mb-1">Plan Mensual</div>
-                        <div className="text-2xl font-bold text-[var(--foreground)]">4,99 €</div>
+                        <div className="text-2xl font-bold text-[var(--foreground)]">2,99 €</div>
                         <div className="text-[11px] text-[var(--foreground-tertiary)] mt-0.5">Facturado mensualmente</div>
                     </div>
                 </motion.div>
@@ -178,7 +178,7 @@ export default function PremiumPage() {
                     >
                         <Zap className="w-5 h-5 fill-white" />
                         <span>
-                            Abrir Hoja de Pago Rápido ({selectedPlan === 'yearly' ? '19,99 €/año · 1,66 €/mes' : '4,99 €/mes'})
+                            Abrir Hoja de Pago Rápido ({selectedPlan === 'yearly' ? '24,99 €/año · ~2,08 €/mes' : '2,99 €/mes'})
                         </span>
                     </button>
 
