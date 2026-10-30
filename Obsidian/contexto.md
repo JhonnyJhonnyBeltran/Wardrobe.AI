@@ -3066,3 +3066,15 @@ Ejecución del Consejo de Negocio con 4 subagentes especializados (`business-bel
    - **Causa 3 resuelta (`app/(public)/page.tsx`):** Añadida barra persistente de navegación editorial y legal (`Revista & Tendencias`, `Sobre Nosotros`, `Privacidad`, `Términos`, `Cookies`, `Contacto`) visible desde el `Frame 0` tanto en cabecera como en el pie de página.
    - **Causa 4 resuelta (`app/(public)/trends/page.tsx` y `app/(public)/trends/[slug]/page.tsx`):** Eliminados los contenedores vacíos con `data-ad-slot="default"` ("Anuncio Patrocinado") que generaban cajas rotas en blanco durante la revisión.
    - **Causa 5 resuelta (`lib/trends/articlesData.ts`):** Ampliado el portal editorial de 5 artículos cortos a **10 guías editoriales profundas y extensas** (Armario Cápsula, Streetwear & Quiet Luxury, Teoría del Color, Moda Circular & CPW, Calzado Imprescindible, Morfología y Proporciones, Manual de Tejidos, Método 5-4-3-2-1 de Maleta, 10 Errores al Vestir y Psicología del Vestir / 91 Horas al Año).
+
+
+---
+
+## 184. Desactivación Temporal de Google AdSense y Sustitución por Cards de Auto-Anuncio "Habla con Kloe" (Octubre 2026)
+
+1. **Desactivación Limpia de Google AdSense ([`components/AdSenseScript.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan's%20Project/Wardobre.ai/Wardrobe.AI/components/AdSenseScript.tsx)):**
+   - Se desactiva la carga del script de AdSense mediante `ADSENSE_ENABLED = process.env.NEXT_PUBLIC_ENABLE_ADSENSE === 'true'` (`false` por defecto), conservando toda la arquitectura y las 10 guías editoriales listas para reactivarlo en el futuro con solo activar la variable de entorno.
+
+2. **Cards de Auto-Anuncio "Habla con Kloe" en Feed, Buscador y Revista Editorial:**
+   - **[`components/Feed/SponsoredAdCard.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan's%20Project/Wardobre.ai/Wardrobe.AI/components/Feed/SponsoredAdCard.tsx):** Sustituidos los anuncios externos por 4 variantes de tarjetas de auto-promoción de Kloe en formato 4:5 (integración nativa en el grid de `/feed` y `/search`), con el logo oficial `/kloe-logo-large.png`, fotografía editorial adaptada por género (`Chica` / `Chico`) y botón en pastilla rosa (`#FF66C4`) que redirige directamente a `/closet/kloe` para activar consultas y convertir usuarios a Klozet Pro.
+   - **[`components/Feed/PremiumAdCard.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan's%20Project/Wardobre.ai/Wardrobe.AI/components/Feed/PremiumAdCard.tsx), [`app/(public)/trends/page.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan's%20Project/Wardobre.ai/Wardrobe.AI/app/(public)/trends/page.tsx) y [`app/(public)/trends/[slug]/page.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan's%20Project/Wardobre.ai/Wardrobe.AI/app/(public)/trends/%5Bslug%5D/page.tsx):** Reemplazados los banners publicitarios por tarjetas de auto-anuncio *"Habla con Kloe"* que dirigen el tráfico lector hacia el asistente de estilismo `/closet/kloe`.

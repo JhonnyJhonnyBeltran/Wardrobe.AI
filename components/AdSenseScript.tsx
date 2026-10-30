@@ -4,13 +4,17 @@ import { usePathname } from 'next/navigation';
 import Script from 'next/script';
 
 /**
- * AdSenseScript - Compliance con Políticas del Programa Google AdSense
+ * AdSenseScript - Desactivado temporalmente a petición del fundador.
  *
- * Carga el SDK oficial de Google AdSense en las páginas públicas editoriales e institucionales
- * (/, /trends, /trends/*, /about, /contact, /contacto, /privacy, /terms, /cookies) para que
- * el verificador de sitios de AdSense y Mediapartners-Google validen el dominio raíz y los artículos,
- * bloqueando su carga en pantallas de herramientas privadas, login, creación o mensajería.
+ * Mientras ADSENSE_ENABLED sea false, no se inyecta el script de terceros de Google AdSense
+ * y en su lugar la plataforma muestra auto-anuncios internos ("Habla con Kloe") orientados
+ * a conversión a Klozet Pro.
+ *
+ * Para reactivar Google AdSense en el futuro:
+ * Definir NEXT_PUBLIC_ENABLE_ADSENSE="true" en las variables de entorno o cambiar ADSENSE_ENABLED a true.
  */
+const ADSENSE_ENABLED = process.env.NEXT_PUBLIC_ENABLE_ADSENSE === 'true';
+
 const ALLOWED_PUBLIC_EXACT_PATHS = new Set([
   '/',
   '/trends',
@@ -24,6 +28,10 @@ const ALLOWED_PUBLIC_EXACT_PATHS = new Set([
 
 export default function AdSenseScript() {
   const pathname = usePathname() || '';
+
+  if (!ADSENSE_ENABLED) {
+    return null;
+  }
 
   const isAllowedPublicRoute =
     ALLOWED_PUBLIC_EXACT_PATHS.has(pathname) || pathname.startsWith('/trends/');

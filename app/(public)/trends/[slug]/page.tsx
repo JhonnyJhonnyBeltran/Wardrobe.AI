@@ -186,6 +186,35 @@ export default async function ArticleDetailPage({ params }: PageProps) {
           </p>
         </div>
 
+        {/* Auto-Anuncio Interno In-Article: Habla con Kloe */}
+        <div className="my-8 p-5 sm:p-6 rounded-3xl bg-[var(--card-bg)] border border-[var(--brand-pink,#FF66C4)]/35 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
+            <div className="relative w-20 h-12 shrink-0">
+              <Image
+                src="/kloe-logo-large.png"
+                alt="Kloe"
+                fill
+                className="object-contain"
+              />
+            </div>
+            <div>
+              <h3 className="text-sm sm:text-base font-bold text-[var(--foreground)] tracking-tight">
+                ¿Quieres aplicar esta guía a tu propia ropa?
+              </h3>
+              <p className="text-xs text-[var(--foreground-secondary)] mt-0.5 leading-relaxed max-w-md">
+                Pregúntale a Kloe qué ponerte hoy: combina tus prendas reales según tu estilo y el clima en segundos.
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/closet/kloe"
+            className="shrink-0 inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-[var(--brand-pink,#FF66C4)] text-white text-xs font-bold shadow-sm hover:opacity-95 transition-all"
+          >
+            <span>Hablar con Kloe</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+
         {/* Article Core Sections */}
         <div className="space-y-10 sm:space-y-12">
           {article.content.sections.map((section, idx) => (

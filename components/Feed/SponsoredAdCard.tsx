@@ -1,117 +1,59 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import Image from 'next/image';
-import { ExternalLink } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { ArrowRight, MessageCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useUser } from '@/store/userStore';
 
-interface FashionSponsor {
+interface KloeSelfAdVariant {
   id: string;
-  brand: string;
-  styles: string[];
+  tag: string;
+  headline: string;
+  subtext: string;
+  ctaLabel: string;
   maleImage: string;
   femaleImage: string;
-  targetUrl: string;
 }
 
-const FASHION_SPONSORS: FashionSponsor[] = [
+const KLOE_PROMO_VARIANTS: KloeSelfAdVariant[] = [
   {
-    id: 'scuffers',
-    brand: 'Scuffers',
-    styles: ['streetwear', 'casual-moderno', 'skater-surf', 'clean-look'],
+    id: 'kloe-morning-fit',
+    tag: 'Estilista Kloe',
+    headline: '¿No sabes qué ponerte hoy?',
+    subtext: 'Habla con Kloe y te monta el outfit en segundos usando tu propia ropa.',
+    ctaLabel: 'Hablar con Kloe',
     maleImage: '/styles/men/streetwear.jpg',
     femaleImage: '/styles/women/streetwear.jpg',
-    targetUrl: 'https://scuffers.com',
   },
   {
-    id: 'nude-project',
-    brand: 'Nude Project',
-    styles: ['streetwear', 'y2k', 'skater-surf', 'casual-moderno'],
-    maleImage: '/styles/men/streetwear.jpg',
-    femaleImage: '/styles/women/y2k.jpg',
-    targetUrl: 'https://nude-project.com',
-  },
-  {
-    id: 'stussy',
-    brand: 'Stüssy',
-    styles: ['streetwear', 'skater-surf', 'workwear-americana', 'vintage-retro'],
-    maleImage: '/styles/men/skater-surf.jpg',
-    femaleImage: '/styles/women/streetwear.jpg',
-    targetUrl: 'https://www.stussy.com',
-  },
-  {
-    id: 'nike',
-    brand: 'Nike',
-    styles: ['deportivo-athleisure', 'streetwear', 'gorpcore-outdoor'],
-    maleImage: '/styles/men/casual-moderno.jpg',
-    femaleImage: '/styles/women/gorpcore-outdoor.jpg',
-    targetUrl: 'https://www.nike.com/es',
-  },
-  {
-    id: 'cos',
-    brand: 'COS',
-    styles: ['clean-look', 'minimalista', 'smart-casual', 'business-casual'],
+    id: 'kloe-recreate-post',
+    tag: 'Truco Kloe',
+    headline: '¿Te flipa un look del feed?',
+    subtext: 'Pásaselo a Kloe para que te explique cada prenda y lo recree con tu armario.',
+    ctaLabel: 'Probar con Kloe',
     maleImage: '/styles/men/clean-look.jpg',
     femaleImage: '/styles/women/clean-look.jpg',
-    targetUrl: 'https://www.cos.com',
   },
   {
-    id: 'zara',
-    brand: 'Zara',
-    styles: ['old-money', 'elegante-clasico', 'chic-parisino', 'casual-moderno'],
+    id: 'kloe-save-time',
+    tag: 'Tu Armario + Kloe',
+    headline: 'Ahorra 91 horas al año frente al espejo',
+    subtext: 'Dile a Kloe qué plan tienes hoy y qué tiempo hace: sal de casa con el fit clavado.',
+    ctaLabel: 'Preguntar a Kloe',
+    maleImage: '/styles/men/casual-moderno.jpg',
+    femaleImage: '/styles/women/minimalista.jpg',
+  },
+  {
+    id: 'kloe-night-out',
+    tag: 'Asesoría 24/7',
+    headline: '¿Cena, uni o plan de última hora?',
+    subtext: 'Tu estilista personal analiza los colores y cortes que mejor te sientan.',
+    ctaLabel: 'Hablar con Kloe',
     maleImage: '/styles/men/old-money.jpg',
     femaleImage: '/styles/women/elegante-clasico.jpg',
-    targetUrl: 'https://www.zara.com/es',
   },
-  {
-    id: 'carhartt',
-    brand: 'Carhartt WIP',
-    styles: ['workwear-americana', 'skater-surf', 'gorpcore-outdoor', 'streetwear'],
-    maleImage: '/styles/men/dark-academia.jpg',
-    femaleImage: '/styles/women/rock-grunge.jpg',
-    targetUrl: 'https://www.carhartt-wip.com/es',
-  },
-  {
-    id: 'diesel',
-    brand: 'Diesel',
-    styles: ['y2k', 'rock-grunge', 'vintage-retro', 'gotico-alt'],
-    maleImage: '/styles/men/rock-grunge.jpg',
-    femaleImage: '/styles/women/y2k.jpg',
-    targetUrl: 'https://global.diesel.com',
-  },
-  {
-    id: 'salomon',
-    brand: 'Salomon',
-    styles: ['gorpcore-outdoor', 'techwear', 'deportivo-athleisure'],
-    maleImage: '/styles/men/k-fashion.jpg',
-    femaleImage: '/styles/women/gorpcore-outdoor.jpg',
-    targetUrl: 'https://www.salomon.com/es-es',
-  },
-  {
-    id: 'zalando',
-    brand: 'Zalando',
-    styles: ['casual-moderno', 'minimalista', 'clean-look', 'smart-casual'],
-    maleImage: '/styles/men/chic-parisino.jpg',
-    femaleImage: '/styles/women/minimalista.jpg',
-    targetUrl: 'https://www.zalando.es',
-  },
-  {
-    id: 'massimo-dutti',
-    brand: 'Massimo Dutti',
-    styles: ['old-money', 'elegante-clasico', 'business-casual', 'smart-casual'],
-    maleImage: '/styles/men/old-money.jpg',
-    femaleImage: '/styles/women/old-money.jpg',
-    targetUrl: 'https://www.massimodutti.com/es',
-  },
-  {
-    id: 'arket',
-    brand: 'Arket',
-    styles: ['clean-look', 'minimalista', 'normcore', 'casual-moderno'],
-    maleImage: '/styles/men/clean-look.jpg',
-    femaleImage: '/styles/women/clean-look.jpg',
-    targetUrl: 'https://www.arket.com',
-  }
 ];
 
 interface SponsoredAdCardProps {
@@ -122,153 +64,85 @@ interface SponsoredAdCardProps {
 
 export default function SponsoredAdCard({
   index = 0,
-  adSlotId,
-  className = ''
+  className = '',
 }: SponsoredAdCardProps) {
+  const router = useRouter();
   const { user } = useUser();
-  const [mounted, setMounted] = useState(false);
 
-  const googleAdsClient = process.env.NEXT_PUBLIC_GOOGLE_ADS_CLIENT_ID || 'ca-pub-4628313000953034';
-  const googleAdSlot = adSlotId || process.env.NEXT_PUBLIC_GOOGLE_ADS_IN_FEED_SLOT;
-  const googleLayoutKey = process.env.NEXT_PUBLIC_GOOGLE_ADS_LAYOUT_KEY;
-
-  useEffect(() => {
-    setMounted(true);
-    if (googleAdSlot && typeof window !== 'undefined') {
-      try {
-        const win = window as any;
-        (win.adsbygoogle = win.adsbygoogle || []).push({});
-      } catch (e) {
-        console.warn('[GoogleAdSense] In-feed init error:', e);
-      }
-    }
-  }, [googleAdSlot]);
-
-  // Determine user gender preference
   const isFemale = useMemo(() => {
     if (!user?.gender) return false;
     const g = user.gender.toLowerCase();
-    return g.includes('fem') || g.includes('muj');
+    return g.includes('fem') || g.includes('muj') || g.includes('chic');
   }, [user?.gender]);
 
-  // Select sponsor based on style affinity and index
-  const sponsor = useMemo(() => {
-    // 1. Gather user's preferred styles
-    const preferredStyles: string[] = [];
-    if (user?.preferredStyles && Array.isArray(user.preferredStyles)) {
-      preferredStyles.push(...user.preferredStyles.map(s => s.toLowerCase()));
-    }
+  const variant = useMemo(() => {
+    return KLOE_PROMO_VARIANTS[index % KLOE_PROMO_VARIANTS.length] || KLOE_PROMO_VARIANTS[0];
+  }, [index]);
 
-    // Also inspect style interests from localStorage if available
-    if (typeof window !== 'undefined') {
-      try {
-        const rawInterests = localStorage.getItem('klozet_style_interest');
-        if (rawInterests) {
-          const parsed = JSON.parse(rawInterests);
-          const topInterests = Object.entries(parsed)
-            .sort((a: any, b: any) => b[1] - a[1])
-            .slice(0, 3)
-            .map(([style]) => style.toLowerCase());
-          preferredStyles.push(...topInterests);
-        }
-      } catch {}
-    }
-
-    // 2. Filter sponsors matching preferred styles
-    let matching = FASHION_SPONSORS;
-    if (preferredStyles.length > 0) {
-      const filtered = FASHION_SPONSORS.filter(s =>
-        s.styles.some(style => preferredStyles.includes(style))
-      );
-      if (filtered.length > 0) {
-        matching = filtered;
-      }
-    }
-
-    // 3. Deterministic pick to avoid hydration layout shifts
-    return matching[index % matching.length] || FASHION_SPONSORS[0];
-  }, [user?.preferredStyles, index]);
-
-  const imageUrl = isFemale ? sponsor.femaleImage : sponsor.maleImage;
+  const imageUrl = isFemale ? variant.femaleImage : variant.maleImage;
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-
-    // Track ad click for Meta Pixel / custom tracking if enabled
-    if (typeof window !== 'undefined') {
-      try {
-        const win = window as any;
-        if (win.fbq) {
-          win.fbq('trackCustom', 'SponsoredAdClick', {
-            brand: sponsor.brand,
-            adId: sponsor.id,
-            targetUrl: sponsor.targetUrl,
-          });
-        }
-      } catch {}
-
-      window.open(sponsor.targetUrl, '_blank', 'noopener,noreferrer');
-    }
+    router.push(user ? '/closet/kloe' : '/auth');
   };
-
-  if (googleAdSlot) {
-    return (
-      <motion.div
-        whileHover={{ scale: 1.025, transition: { duration: 0.2 } }}
-        whileTap={{ scale: 0.97 }}
-        transition={{ type: "spring", stiffness: 420, damping: 28 }}
-        className={`w-full relative z-10 apple-tap-feedback ${className}`}
-      >
-        <div className="group relative rounded-[22px] overflow-hidden bg-[var(--card-bg)] shadow-[0_4px_20px_-2px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_32px_-4px_rgba(0,0,0,0.08)] border border-black/[0.04] dark:border-white/[0.06] transition-all duration-300 w-full aspect-[4/5] flex items-center justify-center">
-          <ins
-            className="adsbygoogle"
-            style={{ display: 'block', width: '100%', height: '100%' }}
-            data-ad-client={googleAdsClient}
-            data-ad-slot={googleAdSlot}
-            data-ad-format="fluid"
-            {...(googleLayoutKey ? { 'data-ad-layout-key': googleLayoutKey } : {})}
-          />
-        </div>
-      </motion.div>
-    );
-  }
 
   return (
     <motion.div
-      whileHover={{ scale: 1.025, transition: { duration: 0.2 } }}
-      whileTap={{ scale: 0.97 }}
-      transition={{ type: "spring", stiffness: 420, damping: 28 }}
+      whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
+      whileTap={{ scale: 0.96 }}
+      transition={{ type: 'spring', stiffness: 420, damping: 28 }}
       className={`w-full relative z-10 apple-tap-feedback ${className}`}
       onClick={handleClick}
     >
-      <div className="group relative rounded-[22px] overflow-hidden bg-[var(--card-bg)] shadow-[0_4px_20px_-2px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_32px_-4px_rgba(0,0,0,0.08)] border border-black/[0.04] dark:border-white/[0.06] transition-all duration-300 cursor-pointer w-full">
+      <div className="group relative rounded-[22px] overflow-hidden bg-[var(--card-bg)] shadow-[0_4px_20px_-2px_rgba(0,0,0,0.06)] hover:shadow-[0_12px_32px_-4px_rgba(255,102,196,0.18)] border border-[var(--brand-pink,#FF66C4)]/30 transition-all duration-300 cursor-pointer w-full">
         <div className="relative w-full aspect-[4/5] overflow-hidden pointer-events-none bg-[var(--background-secondary)]">
-          {/* Fashion Outfit Photograph matching PostCard aspect ratio & resolution */}
+          {/* Editorial Fashion Background */}
           <Image
             src={imageUrl}
-            alt={`Look patrocinado de ${sponsor.brand}`}
+            alt={variant.headline}
             fill
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 33vw"
             quality={90}
-            className="w-full h-full object-cover transform-gpu"
+            className="w-full h-full object-cover transform-gpu group-hover:scale-105 transition-transform duration-500"
           />
 
-          {/* Bottom Gradient Vignette */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300" />
+          {/* Readability Scrim */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/15" />
 
-          {/* Brand Badge & Sponsored Indicator (Visible on both mobile and desktop) */}
-          <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between pointer-events-none z-10">
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/65 backdrop-blur-md border border-white/15 text-white shadow-md">
-              <span className="text-[11px] font-bold tracking-tight truncate max-w-[95px] sm:max-w-[130px]">
-                {sponsor.brand}
-              </span>
-              <span className="w-1 h-1 rounded-full bg-white/40" />
-              <span className="text-[9px] text-white/75 font-semibold uppercase tracking-wider">
-                Patrocinado
+          {/* Top Bar: Official Kloe Logo + Tag Pill */}
+          <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between z-10">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border border-zinc-200/80 dark:border-zinc-700 shadow-sm">
+              <span className="w-1.5 h-1.5 rounded-full bg-[var(--brand-pink,#FF66C4)]" />
+              <span className="text-[10px] font-bold text-zinc-950 dark:text-zinc-100 tracking-tight">
+                {variant.tag}
               </span>
             </div>
-            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-black/55 backdrop-blur-md flex items-center justify-center text-white border border-white/15 shadow-md group-hover:scale-105 transition-transform">
-              <ExternalLink className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+
+            <div className="relative w-12 h-7 sm:w-14 sm:h-8 drop-shadow-md">
+              <Image
+                src="/kloe-logo-large.png"
+                alt="Kloe"
+                fill
+                className="object-contain"
+              />
+            </div>
+          </div>
+
+          {/* Bottom Content & CTA Pill */}
+          <div className="absolute bottom-2.5 left-2.5 right-2.5 z-10 flex flex-col gap-2">
+            <div className="space-y-1">
+              <h3 className="text-xs sm:text-sm font-bold text-white leading-snug tracking-tight drop-shadow-xs">
+                {variant.headline}
+              </h3>
+              <p className="text-[10px] sm:text-xs text-white/85 font-normal leading-relaxed line-clamp-2">
+                {variant.subtext}
+              </p>
+            </div>
+
+            <div className="w-full py-2 px-3 rounded-full bg-[var(--brand-pink,#FF66C4)] text-white text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1.5 shadow-md">
+              <MessageCircle className="w-3.5 h-3.5 text-white stroke-[2.2]" />
+              <span>{variant.ctaLabel}</span>
+              <ArrowRight className="w-3.5 h-3.5 text-white group-hover:translate-x-0.5 transition-transform" />
             </div>
           </div>
         </div>

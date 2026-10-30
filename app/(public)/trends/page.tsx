@@ -185,21 +185,37 @@ export default function TrendsPage() {
           ))}
         </div>
 
-        {/* Klozet Call to Action */}
-        <section className="rounded-3xl p-8 sm:p-12 bg-gradient-to-tr from-pink-500/10 via-purple-500/10 to-transparent border border-[var(--brand-pink)]/20 text-center max-w-3xl mx-auto">
-          <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight">
-            ¿Quieres digitalizar tu ropa y aplicar estas guías?
+        {/* Auto-Anuncio Interno: Habla con Kloe */}
+        <section className="rounded-3xl p-6 sm:p-10 bg-[var(--card-bg)] border border-[var(--brand-pink,#FF66C4)]/35 shadow-sm text-center max-w-3xl mx-auto">
+          <div className="relative w-24 h-14 mx-auto mb-3">
+            <Image
+              src="/kloe-logo-large.png"
+              alt="Kloe"
+              fill
+              className="object-contain drop-shadow-sm"
+            />
+          </div>
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-[var(--foreground)]">
+            ¿No sabes qué ponerte hoy? Habla con Kloe
           </h2>
-          <p className="mt-2.5 text-xs sm:text-sm text-[var(--foreground-secondary)] max-w-xl mx-auto leading-relaxed">
-            Regístrate gratis en Klozet para eliminar fondos de tus prendas, recibir recomendaciones diarias de nuestra estilista IA Kloe y guardar tus combinaciones favoritas.
+          <p className="mt-2 text-xs sm:text-sm text-[var(--foreground-secondary)] max-w-xl mx-auto leading-relaxed">
+            Kloe analiza las prendas reales de tu armario, tu morfología y el clima de tu ciudad para montarte el outfit completo en segundos.
           </p>
-          <Link
-            href="/auth"
-            className="mt-6 inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[var(--brand-pink)] text-white text-xs sm:text-sm font-bold shadow-md hover:opacity-95 transition-all"
-          >
-            <span>Crear mi armario digital gratis</span>
-            <ArrowRight className="w-4 h-4" />
-          </Link>
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+            <Link
+              href="/closet/kloe"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[var(--brand-pink,#FF66C4)] text-white text-xs sm:text-sm font-bold shadow-md hover:opacity-95 transition-all"
+            >
+              <span>Hablar con Kloe ahora</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+            <Link
+              href="/auth"
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-[var(--background-secondary)] text-[var(--foreground)] border border-[var(--border-color)] text-xs sm:text-sm font-semibold hover:border-[var(--brand-pink,#FF66C4)]/40 transition-all"
+            >
+              <span>Crear mi armario gratis</span>
+            </Link>
+          </div>
         </section>
       </main>
 
