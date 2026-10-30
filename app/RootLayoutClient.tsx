@@ -12,6 +12,7 @@ import RealtimeProvider from "@/components/RealtimeProvider";
 import MessageProvider from "@/components/MessageProvider";
 import GlobalErrorBoundary from "@/components/GlobalErrorBoundary";
 import SmartModelPreloader from "@/components/SmartModelPreloader";
+import LanguageDomTranslator from "@/components/LanguageDomTranslator";
 
 import { Toaster } from 'sonner';
 
@@ -69,6 +70,7 @@ export default function RootLayoutClient({ children }: RootLayoutClientProps) {
           <RealtimeProvider>
             <MessageProvider>
               {/* Critical components */}
+              <LanguageDomTranslator />
               <SmartModelPreloader />
               <AppLifecycleManager />
               

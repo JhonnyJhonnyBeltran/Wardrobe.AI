@@ -240,7 +240,7 @@ export default function LandingPage() {
                   variants={itemFadeUp}
                   className="w-full max-w-[300px] sm:max-w-[460px] md:max-w-[560px] lg:max-w-[620px] h-[175px] sm:h-[235px] md:h-[275px] relative flex items-center justify-center my-1 sm:my-2"
                 >
-                  {/* Flank Top-Left: Cardigan Rayas Noon */}
+                  {/* Flank Top-Left: Jersey Punto Rayas (Hombre) */}
                   <motion.div 
                     variants={itemFloatIn(-50, -18, -10)}
                     animate={{ y: [0, -7, 0], rotate: [-10, -8, -10] }}
@@ -251,19 +251,19 @@ export default function LandingPage() {
                     className="hidden sm:block absolute -left-2 sm:left-0 md:left-2 top-0 sm:top-1 w-14 sm:w-20 md:w-26 drop-shadow-md z-15 cursor-pointer"
                   >
                     <Image 
-                      src="/landing/cardigan-rayas.png" 
-                      alt="Cardigan Rayas" 
+                      src="/landing/piezas/jersey-rayas-hombre.png" 
+                      alt="Jersey Punto Rayas" 
                       width={180} 
                       height={160} 
                       className="w-full h-auto object-contain -rotate-10" 
                       priority 
                     />
                     <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
-                      Cardigan Noon
+                      Jersey Rayas
                     </div>
                   </motion.div>
 
-                  {/* Left: Camisa Zara Cutout */}
+                  {/* Left: Top Halter Oliva (Mujer) */}
                   <motion.div 
                     variants={itemFloatIn(-35, 10, -8)}
                     animate={{ y: [0, 8, 0], rotate: [-8, -6, -8] }}
@@ -271,22 +271,22 @@ export default function LandingPage() {
                     whileHover={{ scale: 1.08, rotate: -3 }}
                     whileTap={{ scale: 0.94 }}
                     onClick={() => triggerHaptic('light')}
-                    className="absolute left-2 sm:left-10 md:left-16 top-1 sm:top-3 w-16 sm:w-24 md:w-32 drop-shadow-md z-10 cursor-pointer"
+                    className="absolute left-2 sm:left-10 md:left-16 top-1 sm:top-3 w-16 sm:w-24 md:w-30 drop-shadow-md z-10 cursor-pointer"
                   >
                     <Image 
-                      src="/landing/camisa-zara-cutout.png" 
-                      alt="Camisa Zara" 
+                      src="/landing/piezas/top-halter-oliva.png" 
+                      alt="Top Halter Plisado" 
                       width={180} 
                       height={220} 
                       className="w-full h-auto object-contain -rotate-8" 
                       priority 
                     />
                     <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
-                      Camisa Lino
+                      Top Halter
                     </div>
                   </motion.div>
 
-                  {/* Center Hero: Sudadera Scuffers Cutout */}
+                  {/* Center Hero: Chaqueta Militar Oliva (Hombre) */}
                   <motion.div 
                     variants={itemFloatIn(0, -6, 2)}
                     animate={{ y: [0, -10, 0], rotate: [2, 0, 2] }}
@@ -294,11 +294,11 @@ export default function LandingPage() {
                     whileHover={{ scale: 1.07, rotate: 0 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => triggerHaptic('light')}
-                    className="relative z-20 w-32 sm:w-44 md:w-52 drop-shadow-[0_16px_32px_rgba(255,102,196,0.3)] cursor-pointer"
+                    className="relative z-20 w-28 sm:w-40 md:w-48 drop-shadow-[0_16px_32px_rgba(255,102,196,0.28)] cursor-pointer"
                   >
                     <Image 
-                      src="/landing/sudadera-scuffers-cutout.png" 
-                      alt="Sudadera Scuffers" 
+                      src="/landing/piezas/chaqueta-militar.png" 
+                      alt="Chaqueta Militar" 
                       width={320} 
                       height={320} 
                       className="w-full h-auto object-contain rotate-2 transition-transform duration-500" 
@@ -306,11 +306,11 @@ export default function LandingPage() {
                     />
                     <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[8px] sm:text-[10px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-[var(--brand-pink,#FF66C4)]" />
-                      <span>Scuffers Hoodie</span>
+                      <span>Jacket Militar</span>
                     </div>
                   </motion.div>
 
-                  {/* Right: Jeans Stars Cutout */}
+                  {/* Right: Jeans Wide Leg (Mujer) */}
                   <motion.div 
                     variants={itemFloatIn(35, 10, 8)}
                     animate={{ y: [0, 7, 0], rotate: [8, 10, 8] }}
@@ -321,8 +321,8 @@ export default function LandingPage() {
                     className="absolute right-2 sm:right-10 md:right-16 top-1 sm:top-3 w-16 sm:w-24 md:w-30 drop-shadow-md z-10 cursor-pointer"
                   >
                     <Image 
-                      src="/landing/jeans-stars.png" 
-                      alt="Jeans Stars" 
+                      src="/landing/piezas/jeans-wide-mujer.png" 
+                      alt="Jeans Wide Leg" 
                       width={180} 
                       height={260} 
                       className="w-full h-auto object-contain rotate-8" 
@@ -333,7 +333,7 @@ export default function LandingPage() {
                     </div>
                   </motion.div>
 
-                  {/* Flank Top-Right: Reloj Lotus Chrono */}
+                  {/* Flank Top-Right: Reloj Cartier Tank */}
                   <motion.div 
                     variants={itemFloatIn(55, -18, 12)}
                     animate={{ y: [0, -8, 0], rotate: [12, 10, 12] }}
@@ -341,22 +341,22 @@ export default function LandingPage() {
                     whileHover={{ scale: 1.12, rotate: 6 }}
                     whileTap={{ scale: 0.94 }}
                     onClick={() => triggerHaptic('light')}
-                    className="hidden sm:block absolute -right-2 sm:right-0 md:right-2 top-0 sm:top-1 w-12 sm:w-16 md:w-22 drop-shadow-md z-25 cursor-pointer"
+                    className="hidden sm:block absolute -right-2 sm:right-0 md:right-2 top-0 sm:top-1 w-10 sm:w-14 md:w-18 drop-shadow-md z-25 cursor-pointer"
                   >
                     <Image 
-                      src="/landing/reloj-lotus.png" 
-                      alt="Reloj Lotus" 
-                      width={160} 
-                      height={240} 
+                      src="/landing/piezas/reloj-cartier-tank.png" 
+                      alt="Reloj Cartier Tank" 
+                      width={140} 
+                      height={220} 
                       className="w-full h-auto object-contain rotate-12" 
                       priority 
                     />
                     <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
-                      Lotus Chrono
+                      Cartier Tank
                     </div>
                   </motion.div>
 
-                  {/* Flank Bottom-Left: Bolso Guess Monograma */}
+                  {/* Flank Bottom-Left: Bolso Ante Beige */}
                   <motion.div 
                     variants={itemFloatIn(-45, 25, -10)}
                     animate={{ y: [0, 8, 0], rotate: [-10, -7, -10] }}
@@ -367,19 +367,19 @@ export default function LandingPage() {
                     className="hidden md:block absolute -left-4 bottom-0 w-16 sm:w-20 md:w-26 drop-shadow-md z-25 cursor-pointer"
                   >
                     <Image 
-                      src="/landing/bolso-guess.png" 
-                      alt="Bolso Guess" 
+                      src="/landing/piezas/bolso-ante-beige.png" 
+                      alt="Bolso Ante Beige" 
                       width={200} 
                       height={200} 
                       className="w-full h-auto object-contain -rotate-10" 
                       priority 
                     />
                     <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
-                      Guess Bag
+                      Suede Bag
                     </div>
                   </motion.div>
 
-                  {/* Bottom-Right: Platform Stiletto */}
+                  {/* Bottom-Right: Bailarinas Alaïa */}
                   <motion.div 
                     variants={itemFloatIn(25, 20, -6)}
                     animate={{ y: [0, -6, 0], rotate: [-6, -4, -6] }}
@@ -387,18 +387,18 @@ export default function LandingPage() {
                     whileHover={{ scale: 1.1, rotate: -2 }}
                     whileTap={{ scale: 0.94 }}
                     onClick={() => triggerHaptic('light')}
-                    className="absolute -bottom-2 right-2 sm:right-6 md:right-10 w-18 sm:w-24 md:w-32 drop-shadow-lg z-30 cursor-pointer"
+                    className="absolute -bottom-2 right-2 sm:right-6 md:right-10 w-16 sm:w-22 md:w-28 drop-shadow-lg z-30 cursor-pointer"
                   >
                     <Image 
-                      src="/landing/tacon-plataforma.png" 
-                      alt="Tacón Plataforma" 
+                      src="/landing/piezas/bailarinas-alaia.png" 
+                      alt="Bailarinas Alaïa" 
                       width={200} 
                       height={180} 
                       className="w-full h-auto object-contain -rotate-6" 
                       priority 
                     />
                     <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
-                      Platform Stiletto
+                      Alaïa Strass
                     </div>
                   </motion.div>
                 </motion.div>
@@ -457,7 +457,7 @@ export default function LandingPage() {
                 {/* Right Column: Laser Scan Showcase with Spring Animation */}
                 <div className="w-full md:w-1/2 h-[200px] sm:h-[280px] md:h-[400px] relative flex items-center justify-center z-10 max-w-[290px] sm:max-w-[400px] md:max-w-none">
                   
-                  {/* Top-Left: Cardigan Rayas Noon (New) */}
+                  {/* Top-Left: Jersey Punto Rayas (Hombre) */}
                   <motion.div 
                     variants={itemFloatIn(-40, -15, -8)}
                     animate={{ y: [0, -7, 0], rotate: [-8, -6, -8] }}
@@ -468,18 +468,18 @@ export default function LandingPage() {
                     className="absolute left-0 sm:left-2 md:left-4 top-0 sm:top-2 md:top-4 w-16 sm:w-24 md:w-34 drop-shadow-md z-15 cursor-pointer"
                   >
                     <Image 
-                      src="/landing/cardigan-rayas.png" 
-                      alt="Cardigan Rayas Noon" 
+                      src="/landing/piezas/jersey-rayas-hombre.png" 
+                      alt="Jersey Punto Rayas" 
                       width={200} 
                       height={180} 
                       className="w-full h-auto object-contain -rotate-8" 
                     />
                     <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
-                      Cardigan Noon
+                      Jersey Punto
                     </div>
                   </motion.div>
 
-                  {/* Bottom-Left: Botas Cowboy */}
+                  {/* Bottom-Left: Zapatillas Margiela Replica (Hombre) */}
                   <motion.div 
                     variants={itemFloatIn(-30, 20, -10)}
                     animate={{ y: [0, 6, 0], rotate: [-10, -8, -10] }}
@@ -487,21 +487,21 @@ export default function LandingPage() {
                     whileHover={{ scale: 1.08, rotate: -6 }}
                     whileTap={{ scale: 0.94 }}
                     onClick={() => triggerHaptic('light')}
-                    className="hidden sm:block absolute left-1 sm:left-4 md:left-6 bottom-1 sm:bottom-3 md:bottom-6 w-14 sm:w-20 md:w-28 drop-shadow-md z-10 cursor-pointer"
+                    className="hidden sm:block absolute left-1 sm:left-4 md:left-6 bottom-1 sm:bottom-3 md:bottom-6 w-14 sm:w-20 md:w-26 drop-shadow-md z-10 cursor-pointer"
                   >
                     <Image 
-                      src="/landing/botas-cowboy.png" 
-                      alt="Botas Cowboy" 
+                      src="/landing/piezas/zapatillas-margiela.png" 
+                      alt="Zapatillas Margiela Replica" 
                       width={160} 
                       height={220} 
                       className="w-full h-auto object-contain -rotate-10" 
                     />
                     <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
-                      Cowboy Boots
+                      Replica GAT
                     </div>
                   </motion.div>
 
-                  {/* Center Hero: Sudadera Yuxus with Laser Scanner (New Hero) */}
+                  {/* Center Hero: Top Halter Plisado with Laser Scanner */}
                   <motion.div 
                     variants={itemFloatIn(0, -6, 2)}
                     animate={{ y: [0, 8, 0], rotate: [2, 0, 2] }}
@@ -509,12 +509,12 @@ export default function LandingPage() {
                     whileHover={{ scale: 1.07 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => triggerHaptic('light')}
-                    className="relative z-20 w-32 sm:w-46 md:w-58 drop-shadow-[0_16px_32px_rgba(255,102,196,0.3)] cursor-pointer"
+                    className="relative z-20 w-28 sm:w-40 md:w-50 drop-shadow-[0_16px_32px_rgba(255,102,196,0.3)] cursor-pointer"
                   >
                     <div className="relative overflow-hidden rounded-2xl p-1">
                       <Image 
-                        src="/landing/hoodie-yuxus.png" 
-                        alt="Sudadera Yuxus" 
+                        src="/landing/piezas/top-halter-oliva.png" 
+                        alt="Top Halter Plisado" 
                         width={320} 
                         height={320} 
                         className="w-full h-auto object-contain rotate-2" 
@@ -530,11 +530,11 @@ export default function LandingPage() {
                     </div>
                     <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[8px] sm:text-[10px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-[var(--brand-pink,#FF66C4)]" />
-                      <span>Yuxus Hoodie</span>
+                      <span>Top Plisado</span>
                     </div>
                   </motion.div>
 
-                  {/* Top-Right: Jeans Noon Strass (New) */}
+                  {/* Top-Right: Jeans Lavado Gris (Hombre) */}
                   <motion.div 
                     variants={itemFloatIn(40, -15, 10)}
                     animate={{ y: [0, -6, 0], rotate: [10, 8, 10] }}
@@ -545,18 +545,18 @@ export default function LandingPage() {
                     className="absolute right-0 sm:right-2 md:right-4 top-0 sm:top-2 md:top-4 w-16 sm:w-22 md:w-30 drop-shadow-md z-15 cursor-pointer"
                   >
                     <Image 
-                      src="/landing/jeans-noon-strass.png" 
-                      alt="Jeans Noon Strass" 
+                      src="/landing/piezas/jeans-gris-hombre.png" 
+                      alt="Jeans Lavado Gris" 
                       width={160} 
                       height={260} 
                       className="w-full h-auto object-contain rotate-10" 
                     />
                     <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
-                      Noon Denim
+                      Denim Gris
                     </div>
                   </motion.div>
 
-                  {/* Bottom-Right: Bolso Michael Kors (New) */}
+                  {/* Bottom-Right: Bailarinas Chanel (Mujer) */}
                   <motion.div 
                     variants={itemFloatIn(30, 20, -6)}
                     animate={{ y: [0, 5, 0], rotate: [-6, -4, -6] }}
@@ -564,17 +564,17 @@ export default function LandingPage() {
                     whileHover={{ scale: 1.1, rotate: -2 }}
                     whileTap={{ scale: 0.94 }}
                     onClick={() => triggerHaptic('light')}
-                    className="hidden sm:block absolute right-1 sm:right-4 md:right-6 bottom-1 sm:bottom-3 md:bottom-6 w-16 sm:w-20 md:w-26 drop-shadow-md z-15 cursor-pointer"
+                    className="hidden sm:block absolute right-1 sm:right-4 md:right-6 bottom-1 sm:bottom-3 md:bottom-6 w-14 sm:w-18 md:w-24 drop-shadow-md z-15 cursor-pointer"
                   >
                     <Image 
-                      src="/landing/bolso-mk.png" 
-                      alt="Bolso Michael Kors" 
+                      src="/landing/piezas/bailarinas-chanel.png" 
+                      alt="Bailarinas Chanel" 
                       width={180} 
                       height={160} 
                       className="w-full h-auto object-contain -rotate-6" 
                     />
                     <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
-                      Michael Kors
+                      Bailarinas
                     </div>
                   </motion.div>
                 </div>
@@ -623,7 +623,7 @@ export default function LandingPage() {
                   {/* Floating Pulsing Aura */}
                   <div className="absolute w-[180px] sm:w-[260px] md:w-[360px] h-[180px] sm:h-[260px] md:h-[360px] rounded-full bg-gradient-to-tr from-[var(--brand-pink,#FF66C4)]/25 via-pink-300/15 to-transparent blur-2xl animate-pulse pointer-events-none" />
 
-                  {/* Top-Right Outfit Sticker: Hoodie Eme Studios (New) */}
+                  {/* Top-Right Outfit Sticker: Chaqueta Militar (Hombre) */}
                   <motion.div 
                     variants={itemFloatIn(45, -25, 8)}
                     animate={{ y: [0, -8, 0], rotate: [8, 5, 8] }}
@@ -634,18 +634,18 @@ export default function LandingPage() {
                     className="absolute -top-3 sm:top-1 right-0 sm:right-3 md:right-5 w-16 sm:w-24 md:w-32 drop-shadow-md z-15 cursor-pointer"
                   >
                     <Image 
-                      src="/landing/hoodie-eme-studios.png" 
-                      alt="Hoodie Eme Studios" 
+                      src="/landing/piezas/chaqueta-militar.png" 
+                      alt="Chaqueta Militar" 
                       width={180} 
                       height={190} 
                       className="w-full h-auto object-contain rotate-8" 
                     />
                     <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
-                      Eme Studios
+                      Jacket Militar
                     </div>
                   </motion.div>
 
-                  {/* Bottom-Left Outfit Sticker: Jeans Noon Strass (New) */}
+                  {/* Bottom-Left Outfit Sticker: Jeans Wide Leg (Mujer) */}
                   <motion.div 
                     variants={itemFloatIn(-45, 25, -8)}
                     animate={{ y: [0, 7, 0], rotate: [-8, -6, -8] }}
@@ -656,18 +656,18 @@ export default function LandingPage() {
                     className="absolute -bottom-4 sm:-bottom-1 left-0 sm:left-2 md:left-4 w-14 sm:w-22 md:w-28 drop-shadow-md z-15 cursor-pointer"
                   >
                     <Image 
-                      src="/landing/jeans-noon-strass.png" 
-                      alt="Jeans Noon Strass" 
+                      src="/landing/piezas/jeans-wide-mujer.png" 
+                      alt="Jeans Wide Leg" 
                       width={160} 
                       height={260} 
                       className="w-full h-auto object-contain -rotate-8" 
                     />
                     <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
-                      Noon Strass
+                      Denim Wide
                     </div>
                   </motion.div>
 
-                  {/* Top-Left Accessory: Reloj Lotus Chrono (New) */}
+                  {/* Top-Left Accessory: Gafas Miu Miu */}
                   <motion.div 
                     variants={itemFloatIn(-35, -20, 10)}
                     animate={{ y: [0, -6, 0], rotate: [10, 7, 10] }}
@@ -675,21 +675,21 @@ export default function LandingPage() {
                     whileHover={{ scale: 1.12, rotate: 4 }}
                     whileTap={{ scale: 0.94 }}
                     onClick={() => triggerHaptic('light')}
-                    className="hidden sm:block absolute top-0 sm:top-2 left-2 sm:left-4 md:left-6 w-12 sm:w-16 md:w-22 drop-shadow-md z-15 cursor-pointer"
+                    className="hidden sm:block absolute top-0 sm:top-2 left-2 sm:left-4 md:left-6 w-14 sm:w-20 md:w-26 drop-shadow-md z-15 cursor-pointer"
                   >
                     <Image 
-                      src="/landing/reloj-lotus.png" 
-                      alt="Reloj Lotus" 
-                      width={160} 
-                      height={240} 
+                      src="/landing/piezas/gafas-miumiu.png" 
+                      alt="Gafas Miu Miu" 
+                      width={180} 
+                      height={100} 
                       className="w-full h-auto object-contain rotate-10" 
                     />
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
-                      Lotus Chrono
+                    <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
+                      Miu Miu
                     </div>
                   </motion.div>
 
-                  {/* Bottom-Right Accessory: Bolso Michael Kors (New) */}
+                  {/* Bottom-Right Accessory: Bolso Ante Beige */}
                   <motion.div 
                     variants={itemFloatIn(40, 25, -6)}
                     animate={{ y: [0, 6, 0], rotate: [-6, -4, -6] }}
@@ -700,14 +700,14 @@ export default function LandingPage() {
                     className="hidden sm:block absolute -bottom-2 sm:bottom-1 right-2 sm:right-6 md:right-8 w-14 sm:w-20 md:w-26 drop-shadow-md z-15 cursor-pointer"
                   >
                     <Image 
-                      src="/landing/bolso-mk.png" 
-                      alt="Bolso Michael Kors" 
+                      src="/landing/piezas/bolso-ante-beige.png" 
+                      alt="Bolso Ante Beige" 
                       width={180} 
                       height={160} 
                       className="w-full h-auto object-contain -rotate-6" 
                     />
                     <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
-                      Michael Kors
+                      Suede Bag
                     </div>
                   </motion.div>
 
@@ -755,7 +755,7 @@ export default function LandingPage() {
                       <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider">Kloe</span>
                     </div>
                     <p className="text-[10px] sm:text-xs text-white/95 font-medium leading-snug">
-                      Hoodie Eme Studios + Jeans Noon Strass + Bolso MK. Cómodo y clavado.
+                      Top Halter + Wide Denim + Bailarinas Alaïa. Cómodo y clavado.
                     </p>
                   </motion.div>
                 </div>
@@ -801,26 +801,26 @@ export default function LandingPage() {
                 {/* Right Column: Editorial Moodboard Cluster with Tactile Floating Stickers */}
                 <div className="w-full md:w-1/2 h-[200px] sm:h-[280px] md:h-[430px] relative flex items-center justify-center z-10 max-w-[290px] sm:max-w-[440px] md:max-w-none">
                   
-                  {/* Left: Total White */}
+                  {/* Left: Outfit Mujer Halter & Alaïa */}
                   <motion.div 
                     variants={itemFloatIn(-40, -8, -8)}
                     animate={{ y: [0, 7, 0], rotate: [-8, -6, -8] }}
                     transition={{ duration: 4.8, repeat: Infinity, ease: 'easeInOut' }}
                     whileHover={{ scale: 1.08, rotate: -3 }}
-                    className="absolute left-1 sm:left-4 md:left-6 top-1 sm:top-3 md:top-6 w-16 sm:w-26 md:w-36 lg:w-40 aspect-[3/4] rounded-2xl overflow-hidden border border-black/[0.08] dark:border-white/[0.08] shadow-lg -rotate-8 transition-transform duration-500 z-10 cursor-pointer"
+                    className="absolute left-1 sm:left-4 md:left-6 top-1 sm:top-3 md:top-6 w-16 sm:w-26 md:w-36 lg:w-40 aspect-[3/4] rounded-2xl overflow-hidden bg-white border border-black/[0.08] dark:border-white/[0.08] shadow-lg -rotate-8 transition-transform duration-500 z-10 cursor-pointer p-1"
                   >
                     <Image 
-                      src="/landing/outfits/chica-blanco-total-look.jpg" 
-                      alt="Look Total White" 
+                      src="/landing/outfits/mujer-halter-alaia.jpg" 
+                      alt="Outfit Mujer Halter & Alaïa" 
                       fill 
-                      className="object-cover" 
+                      className="object-contain p-1" 
                     />
                     <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[7px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
-                      Look Minimal
+                      Look Mujer
                     </div>
                   </motion.div>
 
-                  {/* Canvas Floating Sticker 1: Cardigan Rayas Noon (New) */}
+                  {/* Canvas Floating Sticker 1: Zapatillas Margiela Replica */}
                   <motion.div 
                     variants={itemFloatIn(-30, -35, 12)}
                     animate={{ y: [0, -7, 0], rotate: [12, 9, 12] }}
@@ -828,33 +828,33 @@ export default function LandingPage() {
                     whileHover={{ scale: 1.15, rotate: 6 }}
                     whileTap={{ scale: 0.93 }}
                     onClick={() => triggerHaptic('light')}
-                    className="absolute -top-2 sm:top-0 left-0 sm:left-2 md:left-4 w-14 sm:w-22 md:w-28 drop-shadow-lg z-25 cursor-pointer"
+                    className="absolute -top-2 sm:top-0 left-0 sm:left-2 md:left-4 w-12 sm:w-18 md:w-24 drop-shadow-lg z-25 cursor-pointer"
                   >
                     <Image 
-                      src="/landing/cardigan-rayas.png" 
-                      alt="Cardigan Rayas" 
-                      width={180} 
-                      height={160} 
+                      src="/landing/piezas/zapatillas-margiela.png" 
+                      alt="Zapatillas Margiela Replica" 
+                      width={160} 
+                      height={180} 
                       className="w-full h-auto object-contain rotate-12" 
                     />
                     <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[7px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
-                      Cardigan
+                      Replica
                     </div>
                   </motion.div>
 
-                  {/* Centerpiece: Hero Canvas Collage */}
+                  {/* Centerpiece: Hero Canvas Collage (Hombre Militar & Margiela) */}
                   <motion.div 
                     variants={itemFloatIn(0, -6, 0)}
                     animate={{ y: [0, -7, 0] }}
                     transition={{ duration: 4.2, repeat: Infinity, ease: 'easeInOut' }}
                     whileHover={{ scale: 1.06 }}
-                    className="relative z-20 w-28 sm:w-42 md:w-56 lg:w-60 aspect-[3/4] rounded-2xl md:rounded-[24px] overflow-hidden border border-black/[0.08] dark:border-white/[0.08] shadow-[0_16px_36px_rgba(0,0,0,0.18)] cursor-pointer"
+                    className="relative z-20 w-28 sm:w-42 md:w-56 lg:w-60 aspect-[3/4] rounded-2xl md:rounded-[24px] overflow-hidden bg-white border border-black/[0.08] dark:border-white/[0.08] shadow-[0_16px_36px_rgba(0,0,0,0.18)] cursor-pointer p-1.5"
                   >
                     <Image 
-                      src="/landing/outfits/outfit-rayas-miumiu.jpg" 
-                      alt="Outfit Lienzo Miu Miu" 
+                      src="/landing/outfits/hombre-militar-margiela.png" 
+                      alt="Outfit Hombre Militar & Margiela" 
                       fill 
-                      className="object-cover" 
+                      className="object-contain p-1.5" 
                     />
                     <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2.5 py-0.5 sm:py-1 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[8px] sm:text-[10px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap flex items-center gap-1">
                       <Star className="w-3 h-3 text-[var(--brand-pink,#FF66C4)]" />
@@ -862,7 +862,7 @@ export default function LandingPage() {
                     </div>
                   </motion.div>
 
-                  {/* Canvas Floating Sticker 2: Bolso Guess Monograma (New) */}
+                  {/* Canvas Floating Sticker 2: Bolso Ante Beige */}
                   <motion.div 
                     variants={itemFloatIn(35, 30, -10)}
                     animate={{ y: [0, 6, 0], rotate: [-10, -7, -10] }}
@@ -873,18 +873,18 @@ export default function LandingPage() {
                     className="absolute -bottom-3 sm:bottom-0 right-0 sm:right-2 md:right-4 w-14 sm:w-20 md:w-26 drop-shadow-lg z-25 cursor-pointer"
                   >
                     <Image 
-                      src="/landing/bolso-guess.png" 
-                      alt="Bolso Guess" 
+                      src="/landing/piezas/bolso-ante-beige.png" 
+                      alt="Bolso Ante Beige" 
                       width={180} 
                       height={180} 
                       className="w-full h-auto object-contain -rotate-10" 
                     />
                     <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[7px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
-                      Guess Bag
+                      Suede Bag
                     </div>
                   </motion.div>
 
-                  {/* Canvas Floating Sticker 3: Tacón Plataforma (New) */}
+                  {/* Canvas Floating Sticker 3: Bailarinas Alaïa */}
                   <motion.div 
                     variants={itemFloatIn(-35, 30, 8)}
                     animate={{ y: [0, 6, 0], rotate: [8, 5, 8] }}
@@ -895,33 +895,33 @@ export default function LandingPage() {
                     className="hidden sm:block absolute -bottom-2 sm:bottom-1 left-2 sm:left-6 md:left-10 w-12 sm:w-18 md:w-24 drop-shadow-lg z-25 cursor-pointer"
                   >
                     <Image 
-                      src="/landing/tacon-plataforma.png" 
-                      alt="Tacón Plataforma" 
+                      src="/landing/piezas/bailarinas-alaia.png" 
+                      alt="Bailarinas Alaïa" 
                       width={160} 
                       height={140} 
                       className="w-full h-auto object-contain rotate-8" 
                     />
                     <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[7px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
-                      Stiletto
+                      Alaïa
                     </div>
                   </motion.div>
 
-                  {/* Right: Streetwear */}
+                  {/* Right: Outfit Mujer Rayas & Miu Miu */}
                   <motion.div 
                     variants={itemFloatIn(40, 8, 8)}
                     animate={{ y: [0, 6, 0], rotate: [8, 10, 8] }}
                     transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
                     whileHover={{ scale: 1.08, rotate: 5 }}
-                    className="absolute right-1 sm:right-4 md:right-6 bottom-1 sm:bottom-3 md:bottom-6 w-16 sm:w-26 md:w-36 lg:w-40 aspect-[3/4] rounded-2xl overflow-hidden border border-black/[0.08] dark:border-white/[0.08] shadow-lg rotate-8 transition-transform duration-500 z-10 cursor-pointer"
+                    className="absolute right-1 sm:right-4 md:right-6 bottom-1 sm:bottom-3 md:bottom-6 w-16 sm:w-26 md:w-36 lg:w-40 aspect-[3/4] rounded-2xl overflow-hidden bg-white border border-black/[0.08] dark:border-white/[0.08] shadow-lg rotate-8 transition-transform duration-500 z-10 cursor-pointer p-1"
                   >
                     <Image 
-                      src="/landing/outfits/chico-denim-sneakers-street.jpg" 
-                      alt="Look Streetwear" 
+                      src="/landing/outfits/mujer-rayas-miumiu-byredo.jpg" 
+                      alt="Outfit Mujer Rayas & Miu Miu" 
                       fill 
-                      className="object-cover" 
+                      className="object-contain p-1" 
                     />
                     <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[7px] sm:text-[9px] font-bold text-[var(--brand-pink,#FF66C4)] whitespace-nowrap">
-                      Street Style
+                      Look Diario
                     </div>
                   </motion.div>
                 </div>
@@ -946,26 +946,26 @@ export default function LandingPage() {
                 variants={itemFloatIn(-50, 0, -6)}
                 animate={{ y: [0, -7, 0], rotate: [-6, -4, -6] }}
                 transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-                className="hidden md:block absolute left-4 lg:left-8 xl:left-20 top-1/2 -translate-y-1/2 w-28 lg:w-40 xl:w-48 aspect-[3/4] rounded-2xl overflow-hidden border border-black/[0.08] dark:border-white/[0.08] shadow-xl -rotate-6 pointer-events-auto cursor-pointer z-10"
+                className="hidden md:block absolute left-4 lg:left-8 xl:left-20 top-1/2 -translate-y-1/2 w-28 lg:w-40 xl:w-48 aspect-[3/4] rounded-2xl overflow-hidden bg-white border border-black/[0.08] dark:border-white/[0.08] shadow-xl -rotate-6 pointer-events-auto cursor-pointer z-10 p-1.5"
                 whileHover={{ scale: 1.05, rotate: -3 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => triggerHaptic('light')}
               >
                 <Image 
-                  src="/landing/outfits/chico-denim-sneakers-street.jpg" 
-                  alt="Streetwear Chico" 
+                  src="/landing/outfits/hombre-cpcompany-cartier.png" 
+                  alt="Outfit Hombre C.P. Company & Cartier" 
                   fill 
-                  className="object-cover" 
+                  className="object-contain p-1.5" 
                 />
                 <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
-                  @comunidad • Denim
+                  Hombre • Denim
                 </div>
 
-                {/* Overlapping Yuxus Sticker Accent */}
+                {/* Overlapping Chaqueta Militar Sticker Accent */}
                 <div className="absolute -top-3 -right-3 w-16 lg:w-20 drop-shadow-md z-20 pointer-events-none">
                   <Image 
-                    src="/landing/hoodie-yuxus.png" 
-                    alt="Yuxus Hoodie" 
+                    src="/landing/piezas/chaqueta-militar.png" 
+                    alt="Chaqueta Militar" 
                     width={120} 
                     height={120} 
                     className="w-full h-auto object-contain rotate-12" 
@@ -978,26 +978,26 @@ export default function LandingPage() {
                 variants={itemFloatIn(50, 0, 6)}
                 animate={{ y: [0, 7, 0], rotate: [6, 8, 6] }}
                 transition={{ duration: 5.2, repeat: Infinity, ease: 'easeInOut' }}
-                className="hidden md:block absolute right-4 lg:right-8 xl:right-20 top-1/2 -translate-y-1/2 w-28 lg:w-40 xl:w-48 aspect-[3/4] rounded-2xl overflow-hidden border border-black/[0.08] dark:border-white/[0.08] shadow-xl rotate-6 pointer-events-auto cursor-pointer z-10"
+                className="hidden md:block absolute right-4 lg:right-8 xl:right-20 top-1/2 -translate-y-1/2 w-28 lg:w-40 xl:w-48 aspect-[3/4] rounded-2xl overflow-hidden bg-white border border-black/[0.08] dark:border-white/[0.08] shadow-xl rotate-6 pointer-events-auto cursor-pointer z-10 p-1.5"
                 whileHover={{ scale: 1.05, rotate: 3 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => triggerHaptic('light')}
               >
                 <Image 
-                  src="/landing/outfits/outfit-chaleco-cartier.jpg" 
-                  alt="Look Chaleco Cartier" 
+                  src="/landing/outfits/mujer-black-cartier-chanel.png" 
+                  alt="Outfit Mujer Cartier & Chanel" 
                   fill 
-                  className="object-cover" 
+                  className="object-contain p-1.5" 
                 />
                 <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[9px] font-bold text-[var(--brand-pink,#FF66C4)] whitespace-nowrap">
-                  Elegante • Kloe
+                  Mujer • Kloe
                 </div>
 
-                {/* Overlapping MK Bag Sticker Accent */}
+                {/* Overlapping Suede Bag Sticker Accent */}
                 <div className="absolute -top-2 -left-3 w-16 lg:w-20 drop-shadow-md z-20 pointer-events-none">
                   <Image 
-                    src="/landing/bolso-mk.png" 
-                    alt="Bolso Michael Kors" 
+                    src="/landing/piezas/bolso-ante-beige.png" 
+                    alt="Bolso Ante Beige" 
                     width={120} 
                     height={110} 
                     className="w-full h-auto object-contain -rotate-12" 
@@ -1043,13 +1043,13 @@ export default function LandingPage() {
                     whileHover={{ scale: 1.08 }} 
                     whileTap={{ scale: 0.94 }}
                     onClick={() => triggerHaptic('light')}
-                    className="w-16 sm:w-20 aspect-[3/4] rounded-xl overflow-hidden border border-black/[0.08] dark:border-white/[0.08] shadow-sm -rotate-3 relative cursor-pointer"
+                    className="w-16 sm:w-20 aspect-[3/4] rounded-xl overflow-hidden bg-white border border-black/[0.08] dark:border-white/[0.08] shadow-sm -rotate-3 relative cursor-pointer p-1"
                   >
                     <Image 
-                      src="/landing/outfits/chico-denim-sneakers-street.jpg" 
-                      alt="Streetwear Chico" 
+                      src="/landing/outfits/hombre-jersey-rayas-samba.jpg" 
+                      alt="Outfit Hombre Rayas & Samba" 
                       fill 
-                      className="object-cover" 
+                      className="object-contain p-1" 
                     />
                   </motion.div>
 
@@ -1062,8 +1062,8 @@ export default function LandingPage() {
                     className="w-11 drop-shadow-md z-20 cursor-pointer"
                   >
                     <Image 
-                      src="/landing/bolso-guess.png" 
-                      alt="Bolso Guess" 
+                      src="/landing/piezas/bolso-ante-beige.png" 
+                      alt="Bolso Ante Beige" 
                       width={80} 
                       height={80} 
                       className="w-full h-auto object-contain" 
@@ -1074,13 +1074,13 @@ export default function LandingPage() {
                     whileHover={{ scale: 1.08 }} 
                     whileTap={{ scale: 0.94 }}
                     onClick={() => triggerHaptic('light')}
-                    className="w-16 sm:w-20 aspect-[3/4] rounded-xl overflow-hidden border border-black/[0.08] dark:border-white/[0.08] shadow-sm rotate-3 relative cursor-pointer"
+                    className="w-16 sm:w-20 aspect-[3/4] rounded-xl overflow-hidden bg-white border border-black/[0.08] dark:border-white/[0.08] shadow-sm rotate-3 relative cursor-pointer p-1"
                   >
                     <Image 
-                      src="/landing/outfits/outfit-chaleco-cartier.jpg" 
-                      alt="Look Chaleco Cartier" 
+                      src="/landing/outfits/mujer-halter-alaia.jpg" 
+                      alt="Outfit Mujer Halter & Alaïa" 
                       fill 
-                      className="object-cover" 
+                      className="object-contain p-1" 
                     />
                   </motion.div>
                 </motion.div>

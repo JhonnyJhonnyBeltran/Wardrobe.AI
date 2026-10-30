@@ -3098,3 +3098,20 @@ Ejecución del Consejo de Negocio con 4 subagentes especializados (`business-bel
    - Actualizada la autoría de las 10 guías editoriales en `lib/trends/articlesData.ts` a **Ethan · Creador de Klozet** con su avatar real (`/about/ethan-fundador.jpg`).
    - Maquetación de revista estructurada en `/trends` (portada asimétrica 7/5 columnas + card *Habla con Kloe* + índice de archivo en 3 columnas) y lectura limpia en `/trends/[slug]` con tipografía Inter en sentence case.
    - Página `/contact` reescrita con trato directo de Ethan (`soporte@klozet.es`, `contacto@klozet.es`) y listado horizontal limpio de preguntas frecuentes.
+
+
+---
+
+## 186. Outfits Reales Hombre/Mujer en Landing y Anuncios Kloe + Auditoría i18n Global (2026-10-30)
+
+1. **Integración de Piezas y Outfits Reales (Hombre y Mujer) desde Descargas:**
+   - Copiados los 6 flat-lays de outfits completos de hombre y mujer a `public/landing/outfits/` (`mujer-halter-alaia.jpg`, `mujer-black-cartier-chanel.png`, `mujer-rayas-miumiu-byredo.jpg`, `hombre-cpcompany-cartier.png`, `hombre-militar-margiela.png`, `hombre-jersey-rayas-samba.jpg`).
+   - Extraídas las piezas individuales con fondo transparente en `public/landing/piezas/` (`top-halter-oliva.png`, `chaqueta-militar.png`, `jersey-rayas-hombre.png`, `zapatillas-margiela.png`, `bailarinas-alaia.png`, `bailarinas-chanel.png`, `bolso-ante-beige.png`, `reloj-cartier-tank.png`, `gafas-miumiu.png`, `jeans-wide-mujer.png`, `jeans-gris-hombre.png`, `camisa-cpcompany.png`, `diadema-carey.png`, `pinza-carey.png`) y aplicadas en los Frames 0, 1, 2, 3 y 4 de la Landing (`app/(public)/page.tsx`).
+
+2. **Rediseño del Card de Anuncio "Chatea con Kloe" (`components/Feed/SponsoredAdCard.tsx`):**
+   - Eliminada la píldora superior izquierda (`Asesoría 24/7` / `Estilista Kloe`), manteniendo únicamente el logotipo oficial `/kloe-logo-large.png`.
+   - Nuevo diseño editorial de lienzo blanco limpio con previsualización emparejada (mostrando simultáneamente outfits de mujer y de hombre en cada tarjeta y alternando el protagonismo según el índice del feed) junto al dock inferior y CTA en pastilla `#FF66C4` (`Chatea con Kloe`).
+
+3. **Auditoría y Traducción Reactiva Global i18n (`es`, `en`, `fr`, `de`, `it`, `pt`):**
+   - Corregida la inicialización y persistencia de idioma en `store/languageStore.ts` y `store/userStore.tsx` (prioridad a selección manual en `localStorage`, sincronización con `profiles.language` y `profiles.notification_preferences.language`).
+   - Creado el motor reactivo de traducción de DOM y atributos `lib/i18n/autoTranslate.ts` + `components/LanguageDomTranslator.tsx` montado en `app/RootLayoutClient.tsx` y sincronizado el idioma de respuesta de Kloe en `app/api/closy/chat/route.ts`.

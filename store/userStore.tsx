@@ -185,17 +185,27 @@ export function UserProvider({ children }: { children: ReactNode }) {
           ...(styleSource.notification_preferences || styleSource.notification_settings || {})
         },
         kloeTrialMessagesUsed: styleSource.kloe_trial_messages_used ?? styleSource.notification_preferences?.kloe_trial_messages_used ?? 0,
-        language: styleSource.language || undefined,
+        language: styleSource.language || styleSource.notification_preferences?.language || undefined,
       }));
 
-      // Synchronize Language from profile or Google OAuth locale
+      // Synchronize Language from localStorage manual choice first, then profile, then Google OAuth locale
       if (typeof window !== 'undefined') {
-        const userLang = styleSource.language;
+        const localManual = localStorage.getItem('klozet_language_manual') === 'true';
+        const localLang = localStorage.getItem('klozet_language');
+        const userLang = styleSource.language || styleSource.notification_preferences?.language;
         const googleLocale = authUser.user_metadata?.locale || authUser.user_metadata?.preferred_locale;
-        if (userLang) {
+
+        if (localManual && localLang) {
+          useLanguageStore.getState().initLanguage();
+          if (userLang !== localLang) {
+            useLanguageStore.getState().setLanguage(localLang as any, authUser.id);
+          }
+        } else if (userLang) {
           useLanguageStore.getState().setLanguage(userLang, authUser.id);
         } else if (googleLocale) {
           useLanguageStore.getState().detectAndSetFromGoogle(googleLocale, authUser.id);
+        } else {
+          useLanguageStore.getState().initLanguage();
         }
       }
 

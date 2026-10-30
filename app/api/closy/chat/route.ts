@@ -328,6 +328,7 @@ export async function POST(request: NextRequest) {
       : (body.attached_item ? [body.attached_item] : []);
 
     const geminiApiKey = getGeminiApiKey();
+    const activeLang = (body as any).language || request.cookies.get('klozet_language')?.value || 'es';
     let aiResult: any = null;
     if (geminiApiKey) {
       aiResult = await callGeminiAssistant(
@@ -337,7 +338,8 @@ export async function POST(request: NextRequest) {
         body.history || [],
         attachedItems,
         body.attached_post,
-        attachedCustomImagePart
+        attachedCustomImagePart,
+        activeLang
       );
     }
 
@@ -515,9 +517,19 @@ async function callGeminiAssistant(
   history: Array<{ role: string; content: string }>,
   attachedItems: any[] = [],
   attachedPost?: any,
-  attachedCustomImagePart?: { mimeType: string; data: string } | null
+  attachedCustomImagePart?: { mimeType: string; data: string } | null,
+  language: string = 'es'
 ) {
   try {
+    const langNames: Record<string, string> = {
+      es: 'Español',
+      en: 'English',
+      fr: 'Français',
+      de: 'Deutsch',
+      it: 'Italiano',
+      pt: 'Português',
+    };
+    const targetLanguageName = langNames[language] || 'Español';
     const rawCandidateName = context.user.firstName || 
       (context.user.fullName ? context.user.fullName.split(' ')[0] : '') || 
       (context.user.username && context.user.username.toLowerCase() !== 'usuario' ? context.user.username.replace(/^@/, '') : '') || 
@@ -536,6 +548,7 @@ async function callGeminiAssistant(
 
     const systemInstruction = `
 Eres Kloe, la estilista personal y asesora de imagen de ${userName}.
+IDIOMA DE RESPUESTA OBLIGATORIO: Debes escribir tanto "message", como "recommended_outfit.name" y "follow_up_suggestions" íntegramente en ${targetLanguageName} (código: ${language}).
 Tu tono con ${userName} es cercano, fresco, auténtico y con mucho rollo, exactamente como una estilista de confianza o tu mejor amiga que sabe muchísimo de moda y tendencias reales.
 
 PERSONALIDAD Y VOZ:

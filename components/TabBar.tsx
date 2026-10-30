@@ -17,6 +17,7 @@ import { Home, Search, Heart, UserRound } from 'lucide-react';
 import { useUiStore } from '@/store/uiStore';
 import { useMessageStore, selectTotalUnread, selectBadgeVisible } from '@/store/messageStore';
 import { useRealtimeStore, selectUnreadCount } from '@/store/realtimeStore';
+import { useTranslation } from '@/lib/i18n/useTranslation';
 import { triggerHaptic } from '@/lib/haptic';
 import NavbarKlozetLogo from './NavbarKlozetLogo';
 
@@ -30,6 +31,7 @@ interface TabItem {
 export default function TabBar() {
   const pathname = usePathname();
   const { isTabBarHidden: storeTabBarHidden, isCreateMenuOpen } = useUiStore();
+  const { t } = useTranslation();
 
   const messageUnreadCount = useMessageStore(selectTotalUnread);
   const messageBadgeVisible = useMessageStore(selectBadgeVisible);
@@ -83,6 +85,7 @@ export default function TabBar() {
             <Link
               key={tab.href}
               href={tab.href}
+              aria-label={t.nav[tab.labelKey]}
               onClick={() => {
                 triggerHaptic('light');
                 if (!isActive) {

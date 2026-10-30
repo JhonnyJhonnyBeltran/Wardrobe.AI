@@ -9,50 +9,75 @@ import { useUser } from '@/store/userStore';
 
 interface KloeSelfAdVariant {
   id: string;
-  tag: string;
   headline: string;
   subtext: string;
   ctaLabel: string;
-  maleImage: string;
-  femaleImage: string;
+  primaryImage: string;
+  primaryAlt: string;
+  secondaryImage: string;
+  secondaryAlt: string;
 }
 
 const KLOE_PROMO_VARIANTS: KloeSelfAdVariant[] = [
   {
-    id: 'kloe-morning-fit',
-    tag: 'Estilista Kloe',
+    id: 'kloe-morning-fit-1',
     headline: '¿No sabes qué ponerte hoy?',
-    subtext: 'Habla con Kloe y te monta el outfit en segundos usando tu propia ropa.',
-    ctaLabel: 'Hablar con Kloe',
-    maleImage: '/styles/men/streetwear.jpg',
-    femaleImage: '/styles/women/streetwear.jpg',
+    subtext: 'Chatea con Kloe y te monta el outfit en segundos usando tu propia ropa.',
+    ctaLabel: 'Chatea con Kloe',
+    primaryImage: '/landing/outfits/mujer-halter-alaia.jpg',
+    primaryAlt: 'Outfit Mujer Halter & Alaïa',
+    secondaryImage: '/landing/outfits/hombre-militar-margiela.png',
+    secondaryAlt: 'Outfit Hombre Militar & Margiela',
   },
   {
-    id: 'kloe-recreate-post',
-    tag: 'Truco Kloe',
+    id: 'kloe-recreate-post-2',
     headline: '¿Te flipa un look del feed?',
-    subtext: 'Pásaselo a Kloe para que te explique cada prenda y lo recree con tu armario.',
-    ctaLabel: 'Probar con Kloe',
-    maleImage: '/styles/men/clean-look.jpg',
-    femaleImage: '/styles/women/clean-look.jpg',
+    subtext: 'Pásaselo a Kloe para que analice cada prenda y lo recree con tu armario.',
+    ctaLabel: 'Chatea con Kloe',
+    primaryImage: '/landing/outfits/hombre-cpcompany-cartier.png',
+    primaryAlt: 'Outfit Hombre C.P. Company & Cartier',
+    secondaryImage: '/landing/outfits/mujer-black-cartier-chanel.png',
+    secondaryAlt: 'Outfit Mujer Cartier & Chanel',
   },
   {
-    id: 'kloe-save-time',
-    tag: 'Tu Armario + Kloe',
-    headline: 'Ahorra 91 horas al año frente al espejo',
-    subtext: 'Dile a Kloe qué plan tienes hoy y qué tiempo hace: sal de casa con el fit clavado.',
-    ctaLabel: 'Preguntar a Kloe',
-    maleImage: '/styles/men/casual-moderno.jpg',
-    femaleImage: '/styles/women/minimalista.jpg',
+    id: 'kloe-save-time-3',
+    headline: 'Sal de casa con el fit clavado',
+    subtext: 'Dile a Kloe qué plan tienes hoy y qué tiempo hace para combinar tus prendas.',
+    ctaLabel: 'Chatea con Kloe',
+    primaryImage: '/landing/outfits/mujer-rayas-miumiu-byredo.jpg',
+    primaryAlt: 'Outfit Mujer Rayas & Miu Miu',
+    secondaryImage: '/landing/outfits/hombre-jersey-rayas-samba.jpg',
+    secondaryAlt: 'Outfit Hombre Punto Rayas & Samba',
   },
   {
-    id: 'kloe-night-out',
-    tag: 'Asesoría 24/7',
+    id: 'kloe-night-out-4',
     headline: '¿Cena, uni o plan de última hora?',
-    subtext: 'Tu estilista personal analiza los colores y cortes que mejor te sientan.',
-    ctaLabel: 'Hablar con Kloe',
-    maleImage: '/styles/men/old-money.jpg',
-    femaleImage: '/styles/women/elegante-clasico.jpg',
+    subtext: 'Tu estilista personal combina los colores y cortes que mejor te sientan.',
+    ctaLabel: 'Chatea con Kloe',
+    primaryImage: '/landing/outfits/hombre-militar-margiela.png',
+    primaryAlt: 'Outfit Hombre Militar & Margiela',
+    secondaryImage: '/landing/outfits/mujer-halter-alaia.jpg',
+    secondaryAlt: 'Outfit Mujer Halter & Alaïa',
+  },
+  {
+    id: 'kloe-capsule-5',
+    headline: 'Sácale partido a todo tu armario',
+    subtext: 'Descubre combinaciones nuevas con la ropa que ya tienes colgada en casa.',
+    ctaLabel: 'Chatea con Kloe',
+    primaryImage: '/landing/outfits/mujer-black-cartier-chanel.png',
+    primaryAlt: 'Outfit Mujer Cartier & Chanel',
+    secondaryImage: '/landing/outfits/hombre-cpcompany-cartier.png',
+    secondaryAlt: 'Outfit Hombre C.P. Company & Cartier',
+  },
+  {
+    id: 'kloe-daily-6',
+    headline: 'Tu lookbook listo cada mañana',
+    subtext: 'Pregunta a Kloe y olvídate de probarte cinco cosas antes de salir.',
+    ctaLabel: 'Chatea con Kloe',
+    primaryImage: '/landing/outfits/hombre-jersey-rayas-samba.jpg',
+    primaryAlt: 'Outfit Hombre Punto Rayas & Samba',
+    secondaryImage: '/landing/outfits/mujer-rayas-miumiu-byredo.jpg',
+    secondaryAlt: 'Outfit Mujer Rayas & Miu Miu',
   },
 ];
 
@@ -69,17 +94,9 @@ export default function SponsoredAdCard({
   const router = useRouter();
   const { user } = useUser();
 
-  const isFemale = useMemo(() => {
-    if (!user?.gender) return false;
-    const g = user.gender.toLowerCase();
-    return g.includes('fem') || g.includes('muj') || g.includes('chic');
-  }, [user?.gender]);
-
   const variant = useMemo(() => {
     return KLOE_PROMO_VARIANTS[index % KLOE_PROMO_VARIANTS.length] || KLOE_PROMO_VARIANTS[0];
   }, [index]);
-
-  const imageUrl = isFemale ? variant.femaleImage : variant.maleImage;
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -88,62 +105,67 @@ export default function SponsoredAdCard({
 
   return (
     <motion.div
-      whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
-      whileTap={{ scale: 0.96 }}
+      whileHover={{ y: -3, transition: { duration: 0.2 } }}
+      whileTap={{ scale: 0.97 }}
       transition={{ type: 'spring', stiffness: 420, damping: 28 }}
       className={`w-full relative z-10 apple-tap-feedback ${className}`}
       onClick={handleClick}
     >
-      <div className="group relative rounded-[22px] overflow-hidden bg-[var(--card-bg)] shadow-[0_4px_20px_-2px_rgba(0,0,0,0.06)] hover:shadow-[0_12px_32px_-4px_rgba(255,102,196,0.18)] border border-[var(--brand-pink,#FF66C4)]/30 transition-all duration-300 cursor-pointer w-full">
-        <div className="relative w-full aspect-[4/5] overflow-hidden pointer-events-none bg-[var(--background-secondary)]">
-          {/* Editorial Fashion Background */}
-          <Image
-            src={imageUrl}
-            alt={variant.headline}
-            fill
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 33vw"
-            quality={90}
-            className="w-full h-full object-cover transform-gpu group-hover:scale-105 transition-transform duration-500"
-          />
+      <div className="group relative rounded-[24px] overflow-hidden bg-white dark:bg-[#141416] shadow-[0_6px_24px_-4px_rgba(0,0,0,0.08)] hover:shadow-[0_14px_34px_-6px_rgba(255,102,196,0.22)] border border-zinc-200/80 dark:border-zinc-800 transition-all duration-300 cursor-pointer w-full flex flex-col">
+        {/* Top Lookbook Canvas Area (Clean White Studio Canvas for Flat-Lay Pieces) */}
+        <div className="relative w-full aspect-[4/4.3] overflow-hidden bg-white p-3 sm:p-4 flex items-center justify-center">
+          {/* Official Kloe Logo Top-Left (No 24/7 Pill) */}
+          <div className="absolute top-2.5 left-3 z-20 w-12 h-6 sm:w-14 sm:h-7 pointer-events-none">
+            <Image
+              src="/kloe-logo-large.png"
+              alt="Kloe"
+              fill
+              className="object-contain object-left drop-shadow-xs"
+            />
+          </div>
 
-          {/* Readability Scrim */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/15" />
+          {/* Primary Flat-Lay Outfit */}
+          <div className="relative w-[78%] h-[92%] -translate-x-3 transition-transform duration-500 group-hover:scale-[1.03]">
+            <Image
+              src={variant.primaryImage}
+              alt={variant.primaryAlt}
+              fill
+              sizes="(max-width: 640px) 45vw, (max-width: 1024px) 40vw, 28vw"
+              quality={90}
+              className="object-contain"
+            />
+          </div>
 
-          {/* Top Bar: Official Kloe Logo + Tag Pill */}
-          <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between z-10">
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border border-zinc-200/80 dark:border-zinc-700 shadow-sm">
-              <span className="w-1.5 h-1.5 rounded-full bg-[var(--brand-pink,#FF66C4)]" />
-              <span className="text-[10px] font-bold text-zinc-950 dark:text-zinc-100 tracking-tight">
-                {variant.tag}
-              </span>
-            </div>
-
-            <div className="relative w-12 h-7 sm:w-14 sm:h-8 drop-shadow-md">
+          {/* Secondary Paired Gender Flat-Lay Card (Floating Lookbook Preview) */}
+          <div className="absolute bottom-2.5 right-2.5 z-20 w-[38%] aspect-[3/4] rounded-2xl bg-white border border-zinc-200/90 shadow-[0_8px_20px_rgba(0,0,0,0.12)] p-1.5 rotate-3 group-hover:rotate-1 group-hover:scale-105 transition-all duration-300">
+            <div className="relative w-full h-full">
               <Image
-                src="/kloe-logo-large.png"
-                alt="Kloe"
+                src={variant.secondaryImage}
+                alt={variant.secondaryAlt}
                 fill
+                sizes="(max-width: 640px) 22vw, 15vw"
+                quality={85}
                 className="object-contain"
               />
             </div>
           </div>
+        </div>
 
-          {/* Bottom Content & CTA Pill */}
-          <div className="absolute bottom-2.5 left-2.5 right-2.5 z-10 flex flex-col gap-2">
-            <div className="space-y-1">
-              <h3 className="text-xs sm:text-sm font-bold text-white leading-snug tracking-tight drop-shadow-xs">
-                {variant.headline}
-              </h3>
-              <p className="text-[10px] sm:text-xs text-white/85 font-normal leading-relaxed line-clamp-2">
-                {variant.subtext}
-              </p>
-            </div>
+        {/* Clean Editorial Footer Dock */}
+        <div className="px-3.5 py-3 bg-zinc-50/90 dark:bg-[#141416] border-t border-zinc-100 dark:border-zinc-800/80 flex flex-col gap-2.5">
+          <div className="space-y-0.5">
+            <h3 className="text-xs sm:text-[13px] font-bold text-zinc-950 dark:text-zinc-50 leading-snug tracking-tight">
+              {variant.headline}
+            </h3>
+            <p className="text-[10px] sm:text-[11px] text-zinc-500 dark:text-zinc-400 font-normal leading-relaxed line-clamp-2">
+              {variant.subtext}
+            </p>
+          </div>
 
-            <div className="w-full py-2 px-3 rounded-full bg-[var(--brand-pink,#FF66C4)] text-white text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1.5 shadow-md">
-              <MessageCircle className="w-3.5 h-3.5 text-white stroke-[2.2]" />
-              <span>{variant.ctaLabel}</span>
-              <ArrowRight className="w-3.5 h-3.5 text-white group-hover:translate-x-0.5 transition-transform" />
-            </div>
+          <div className="w-full py-2 px-3 rounded-full bg-[var(--brand-pink,#FF66C4)] text-white text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs group-hover:opacity-95 transition-opacity">
+            <MessageCircle className="w-3.5 h-3.5 text-white stroke-[2.2]" />
+            <span>{variant.ctaLabel}</span>
+            <ArrowRight className="w-3.5 h-3.5 text-white group-hover:translate-x-0.5 transition-transform" />
           </div>
         </div>
       </div>

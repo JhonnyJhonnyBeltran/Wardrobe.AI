@@ -82,8 +82,8 @@ interface LanguageState {
 }
 
 export const useLanguageStore = create<LanguageState>((set, get) => ({
-  language: 'es',
-  isManual: false,
+  language: typeof window !== 'undefined' ? getInitialLanguage() : 'es',
+  isManual: typeof window !== 'undefined' ? localStorage.getItem('klozet_language_manual') === 'true' : false,
 
   initLanguage: () => {
     if (typeof window === 'undefined') return;
@@ -115,10 +115,37 @@ export const useLanguageStore = create<LanguageState>((set, get) => ({
     try {
       const targetUserId = syncDbUserId || (await supabase.auth.getUser()).data.user?.id;
       if (targetUserId) {
-        await supabase
+        const { data: currentProfile } = await supabase
           .from('profiles')
-          .update({ language: lang })
+          .select('notification_preferences')
+          .eq('id', targetUserId)
+          .maybeSingle();
+
+        const currentPrefs = (currentProfile as any)?.notification_preferences || {};
+
+        const { error: updateErr } = await supabase
+          .from('profiles')
+          .update({
+            language: lang,
+            notification_preferences: {
+              ...currentPrefs,
+              language: lang,
+            },
+          } as any)
           .eq('id', targetUserId);
+
+        if (updateErr) {
+          // Fallback if top-level language column does not exist
+          await supabase
+            .from('profiles')
+            .update({
+              notification_preferences: {
+                ...currentPrefs,
+                language: lang,
+              },
+            } as any)
+            .eq('id', targetUserId);
+        }
       }
     } catch (err) {
       // Non-blocking if column doesn't exist yet

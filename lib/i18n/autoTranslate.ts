@@ -1,0 +1,643 @@
+import type { Language } from './translations';
+
+type TranslationTuple = [en: string, fr: string, de: string, it: string, pt: string];
+
+/**
+ * Exhaustive Spanish -> [EN, FR, DE, IT, PT] dictionary for all UI strings,
+ * buttons, labels, headings, placeholders, modals, and public/app screens.
+ */
+export const EXACT_UI_TRANSLATIONS: Record<string, TranslationTuple> = {
+  // ============================================================================
+  // NAVIGATION & GLOBAL SHELL
+  // ============================================================================
+  'Inicio': ['Home', 'Accueil', 'Startseite', 'Home', 'Início'],
+  'Buscar': ['Search', 'Rechercher', 'Suchen', 'Cerca', 'Pesquisar'],
+  'Mensajes': ['Messages', 'Messages', 'Nachrichten', 'Messaggi', 'Mensagens'],
+  'Armario': ['Closet', 'Dressing', 'Kleiderschrank', 'Armadio', 'Guarda-roupa'],
+  'Mi Armario': ['My Closet', 'Mon Dressing', 'Mein Kleiderschrank', 'Il mio Armadio', 'Meu Guarda-roupa'],
+  'Notificaciones': ['Notifications', 'Notifications', 'Benachrichtigungen', 'Notifiche', 'Notificações'],
+  'Actividad': ['Activity', 'Activité', 'Aktivität', 'Attività', 'Atividade'],
+  'Perfil': ['Profile', 'Profil', 'Profil', 'Profilo', 'Perfil'],
+  'Crear': ['Create', 'Créer', 'Erstellen', 'Crea', 'Criar'],
+  'Social': ['Social', 'Social', 'Community', 'Social', 'Social'],
+  'Navegación principal': ['Main navigation', 'Navigation principale', 'Hauptnavigation', 'Navigazione principale', 'Navegação principal'],
+  'Volver': ['Back', 'Retour', 'Zurück', 'Indietro', 'Voltar'],
+  'Atrás': ['Back', 'Retour', 'Zurück', 'Indietro', 'Voltar'],
+  'Siguiente': ['Next', 'Suivant', 'Weiter', 'Avanti', 'Seguinte'],
+  'Siguiente pantalla': ['Next screen', 'Écran suivant', 'Nächster Bildschirm', 'Schermata successiva', 'Próxima tela'],
+  'Anterior': ['Previous', 'Précédent', 'Zurück', 'Precedente', 'Anterior'],
+  'Guardar': ['Save', 'Enregistrer', 'Speichern', 'Salva', 'Salvar'],
+  'Guardar cambios': ['Save changes', 'Enregistrer les modifications', 'Änderungen speichern', 'Salva modifiche', 'Salvar alterações'],
+  'Guardando...': ['Saving...', 'Enregistrement...', 'Wird gespeichert...', 'Salvataggio...', 'Salvando...'],
+  'Guardado': ['Saved', 'Enregistré', 'Gespeichert', 'Salvato', 'Salvo'],
+  '¡Guardado!': ['Saved!', 'Enregistré !', 'Gespeichert!', 'Salvato!', 'Salvo!'],
+  'Cancelar': ['Cancel', 'Annuler', 'Abbrechen', 'Annulla', 'Cancelar'],
+  'Eliminar': ['Delete', 'Supprimer', 'Löschen', 'Elimina', 'Excluir'],
+  'Eliminando...': ['Deleting...', 'Suppression...', 'Wird gelöscht...', 'Eliminazione...', 'Excluindo...'],
+  'Editar': ['Edit', 'Modifier', 'Bearbeiten', 'Modifica', 'Editar'],
+  'Cerrar': ['Close', 'Fermer', 'Schließen', 'Chiudi', 'Fechar'],
+  'Confirmar': ['Confirm', 'Confirmer', 'Bestätigen', 'Conferma', 'Confirmar'],
+  'Aceptar': ['Accept', 'Accepter', 'Akzeptieren', 'Accetta', 'Aceitar'],
+  'Entendido': ['Got it', 'Compris', 'Verstanden', 'Capito', 'Entendi'],
+  'Omitir': ['Skip', 'Passer', 'Überspringen', 'Salta', 'Pular'],
+  'Finalizar': ['Finish', 'Terminer', 'Fertigstellen', 'Fine', 'Finalizar'],
+  'Completar': ['Complete', 'Terminer', 'Abschließen', 'Completa', 'Concluir'],
+  'Cargando...': ['Loading...', 'Chargement...', 'Wird geladen...', 'Caricamento...', 'Carregando...'],
+  'Subiendo...': ['Uploading...', 'Téléchargement...', 'Wird hochgeladen...', 'Caricamento...', 'Enviando...'],
+  'Procesando...': ['Processing...', 'Traitement...', 'Wird verarbeitet...', 'Elaborazione...', 'Processando...'],
+  'Analizando...': ['Analyzing...', 'Analyse en cours...', 'Wird analysiert...', 'Analisi in corso...', 'Analisando...'],
+  'Ver todo': ['See all', 'Tout voir', 'Alle ansehen', 'Vedi tutto', 'Ver tudo'],
+  'Ver más': ['See more', 'Voir plus', 'Mehr anzeigen', 'Vedi altro', 'Ver mais'],
+  'Ver menos': ['See less', 'Voir moins', 'Weniger anzeigen', 'Vedi meno', 'Ver menos'],
+  'Limpiar': ['Clear', 'Effacer', 'Löschen', 'Cancella', 'Limpar'],
+  'Limpiar todo': ['Clear all', 'Tout effacer', 'Alles löschen', 'Cancella tutto', 'Limpar tudo'],
+  'Limpiar filtros': ['Clear filters', 'Effacer les filtres', 'Filter zurücksetzen', 'Cancella filtri', 'Limpar filtros'],
+  'Restablecer': ['Reset', 'Réinitialiser', 'Zurücksetzen', 'Ripristina', 'Redefinir'],
+  'Aplicar': ['Apply', 'Appliquer', 'Anwenden', 'Applica', 'Aplicar'],
+  'Listo': ['Done', 'Terminé', 'Fertig', 'Fatto', 'Pronto'],
+  'Continuar': ['Continue', 'Continuer', 'Weiter', 'Continua', 'Continuar'],
+  'Compartir': ['Share', 'Partager', 'Teilen', 'Condividi', 'Compartilhar'],
+  'Copiar enlace': ['Copy link', 'Copier le lien', 'Link kopieren', 'Copia link', 'Copiar link'],
+  'Enlace copiado': ['Link copied', 'Lien copié', 'Link kopiert', 'Link copiato', 'Link copiado'],
+  '¡Enlace copiado al portapapeles!': ['Link copied to clipboard!', 'Lien copié dans le presse-papiers !', 'Link in die Zwischenablage kopiert!', 'Link copiato negli appunti!', 'Link copiado para a área de transferência!'],
+  'Descargar': ['Download', 'Télécharger', 'Herunterladen', 'Scarica', 'Baixar'],
+  'Enviar': ['Send', 'Envoyer', 'Senden', 'Invia', 'Enviar'],
+  'Enviando...': ['Sending...', 'Envoi en cours...', 'Wird gesendet...', 'Invio in corso...', 'Enviando...'],
+  'Publicar': ['Publish', 'Publier', 'Veröffentlichen', 'Pubblica', 'Publicar'],
+  'Publicando...': ['Publishing...', 'Publication...', 'Wird veröffentlicht...', 'Pubblicazione...', 'Publicando...'],
+  'Todo': ['All', 'Tout', 'Alle', 'Tutti', 'Tudo'],
+  'Todos': ['All', 'Tous', 'Alle', 'Tutti', 'Todos'],
+  'Todas': ['All', 'Toutes', 'Alle', 'Tutte', 'Todas'],
+  'Sí': ['Yes', 'Oui', 'Ja', 'Sì', 'Sim'],
+  'No': ['No', 'Non', 'Nein', 'No', 'Não'],
+  'Opcional': ['Optional', 'Optionnel', 'Optional', 'Opzionale', 'Opcional'],
+  'Nuevo': ['New', 'Nouveau', 'Neu', 'Nuovo', 'Novo'],
+  'Nueva': ['New', 'Nouvelle', 'Neu', 'Nuova', 'Nova'],
+  'Hoy': ['Today', 'Aujourd\'hui', 'Heute', 'Oggi', 'Hoje'],
+  'Ayer': ['Yesterday', 'Hier', 'Gestern', 'Ieri', 'Ontem'],
+  'Ahora': ['Now', 'Maintenant', 'Jetzt', 'Ora', 'Agora'],
+  'Justo ahora': ['Just now', 'À l\'instant', 'Gerade eben', 'Proprio ora', 'Agora mesmo'],
+  'Sin imagen': ['No image', 'Aucune image', 'Kein Bild', 'Nessuna immagine', 'Sem imagem'],
+
+  // ============================================================================
+  // FLOATING CREATE MENU
+  // ============================================================================
+  'Subir publicación': ['Create post', 'Créer une publication', 'Beitrag erstellen', 'Crea post', 'Criar publicação'],
+  'Comparte tu outfit con la comunidad': ['Share your outfit with the community', 'Partagez votre tenue avec la communauté', 'Teile dein Outfit mit der Community', 'Condividi il tuo outfit con la community', 'Compartilhe seu look com a comunidade'],
+  'Subir prenda': ['Add item', 'Ajouter un vêtement', 'Kleidungsstück hinzufügen', 'Aggiungi capo', 'Adicionar peça'],
+  'Añade ropa a tu armario digital': ['Add clothes to your digital wardrobe', 'Ajoutez des vêtements à votre dressing numérique', 'Füge Kleidung zu deinem digitalen Kleiderschrank hinzu', 'Aggiungi vestiti al tuo armadio digitale', 'Adicione roupas ao seu guarda-roupa digital'],
+  'Crear outfit': ['Create outfit', 'Créer une tenue', 'Outfit erstellen', 'Crea outfit', 'Criar look'],
+  'Crear Outfit': ['Create Outfit', 'Créer une tenue', 'Outfit erstellen', 'Crea Outfit', 'Criar Look'],
+  'Diseña looks en el lienzo libre': ['Design looks on the free canvas', 'Créez des looks sur la toile libre', 'Entwirf Looks auf der freien Leinwand', 'Crea look sulla tela libera', 'Crie looks na tela livre'],
+  'Hablar con Kloe': ['Talk to Kloe', 'Parler à Kloe', 'Mit Kloe sprechen', 'Parla con Kloe', 'Falar com a Kloe'],
+  'Chatea con Kloe': ['Chat with Kloe', 'Discuter avec Kloe', 'Mit Kloe chatten', 'Chatta con Kloe', 'Conversar com a Kloe'],
+  'Tu estilista personal al instante': ['Your instant personal stylist', 'Votre styliste personnel instantané', 'Dein persönlicher Sofort-Stylist', 'La tua stilista personale istantanea', 'Sua estilista pessoal instantânea'],
+
+  // ============================================================================
+  // FEED & SPONSORED KLOE SELF-ADS
+  // ============================================================================
+  'Explorar': ['Explore', 'Explorer', 'Entdecken', 'Esplora', 'Explorar'],
+  'Para ti': ['For you', 'Pour vous', 'Für dich', 'Per te', 'Para você'],
+  'Siguiendo': ['Following', 'Abonnements', 'Gefolgt', 'Seguiti', 'Seguindo'],
+  'Tendencias': ['Trending', 'Tendances', 'Trends', 'Tendenze', 'Tendências'],
+  ' Seguir': [' Follow', ' Suivre', ' Folgen', ' Segui', ' Seguir'],
+  'Seguir': ['Follow', 'Suivre', 'Folgen', 'Segui', 'Seguir'],
+  'Dejar de seguir': ['Unfollow', 'Ne plus suivre', 'Nicht mehr folgen', 'Non seguire più', 'Deixar de seguir'],
+  'Pendiente': ['Pending', 'En attente', 'Ausstehend', 'In sospeso', 'Pendente'],
+  'Solicitado': ['Requested', 'Demandé', 'Angefragt', 'Richiesto', 'Solicitado'],
+  'Me gusta': ['Like', 'J\'aime', 'Gefällt mir', 'Mi piace', 'Curtir'],
+  'Comentar': ['Comment', 'Commenter', 'Kommentieren', 'Commenta', 'Comentar'],
+  'Comentarios': ['Comments', 'Commentaires', 'Kommentare', 'Commenti', 'Comentários'],
+  'Añade un comentario...': ['Add a comment...', 'Ajouter un commentaire...', 'Kommentar hinzufügen...', 'Aggiungi un commento...', 'Adicione um comentário...'],
+  'Escribe un comentario...': ['Write a comment...', 'Écrire un commentaire...', 'Kommentar schreiben...', 'Scrivi un commento...', 'Escreva um comentário...'],
+  'No hay comentarios aún': ['No comments yet', 'Aucun commentaire pour l\'instant', 'Noch keine Kommentare', 'Ancora nessun commento', 'Nenhum comentário ainda'],
+  'Sé el primero en comentar': ['Be the first to comment', 'Soyez le premier à commenter', 'Schreibe den ersten Kommentar', 'Sii il primo a commentare', 'Seja o primeiro a comentar'],
+  'Reportar': ['Report', 'Signaler', 'Melden', 'Segnala', 'Denunciar'],
+  'Reportar publicación': ['Report post', 'Signaler la publication', 'Beitrag melden', 'Segnala post', 'Denunciar publicação'],
+  'Bloquear usuario': ['Block user', 'Bloquer l\'utilisateur', 'Benutzer blockieren', 'Blocca utente', 'Bloquear usuário'],
+  'Eliminar publicación': ['Delete post', 'Supprimer la publication', 'Beitrag löschen', 'Elimina post', 'Excluir publicação'],
+  'Prendas del outfit': ['Outfit items', 'Vêtements de la tenue', 'Kleidungsstücke des Outfits', 'Capi dell\'outfit', 'Peças do look'],
+  'Prendas etiquetadas': ['Tagged items', 'Vêtements identifiés', 'Markierte Kleidungsstücke', 'Capi taggati', 'Peças marcadas'],
+  'Ver prenda': ['View item', 'Voir le vêtement', 'Kleidungsstück ansehen', 'Vedi capo', 'Ver peça'],
+  'Comprar prenda': ['Buy item', 'Acheter le vêtement', 'Kleidungsstück kaufen', 'Acquista capo', 'Comprar peça'],
+  'Ver en tienda': ['View in store', 'Voir en boutique', 'Im Shop ansehen', 'Vedi nel negozio', 'Ver na loja'],
+  '¿No sabes qué ponerte hoy?': ['Don\'t know what to wear today?', 'Vous ne savez pas quoi porter aujourd\'hui ?', 'Weißt du nicht, was du heute anziehen sollst?', 'Non sai cosa indossare oggi?', 'Não sabe o que vestir hoje?'],
+  'Chatea con Kloe y te monta el outfit en segundos usando tu propia ropa.': ['Chat with Kloe and get an outfit in seconds using your own clothes.', 'Discutez avec Kloe et créez votre tenue en quelques secondes avec vos vêtements.', 'Chatte mit Kloe und erhalte in Sekunden ein Outfit aus deiner eigenen Kleidung.', 'Chatta con Kloe e crea il tuo outfit in pochi secondi con i tuoi vestiti.', 'Converse com a Kloe e monte seu look em segundos usando suas próprias roupas.'],
+  'Habla con Kloe y te monta el outfit en segundos usando tu propia ropa.': ['Talk to Kloe and get an outfit in seconds using your own clothes.', 'Parlez à Kloe et créez votre tenue en quelques secondes avec vos vêtements.', 'Sprich mit Kloe und erhalte in Sekunden ein Outfit aus deiner eigenen Kleidung.', 'Parla con Kloe e crea il tuo outfit in pochi secondi con i tuoi vestiti.', 'Fale com a Kloe e monte seu look em segundos usando suas próprias roupas.'],
+  '¿Te flipa un look del feed?': ['Love a look from the feed?', 'Vous adorez un look du fil ?', 'Gefällt dir ein Look aus dem Feed?', 'Ti piace un look del feed?', 'Curtiu um look do feed?'],
+  'Pásaselo a Kloe para que analice cada prenda y lo recree con tu armario.': ['Send it to Kloe to analyze every piece and recreate it with your wardrobe.', 'Envoyez-le à Kloe pour analyser chaque pièce et le recréer avec votre dressing.', 'Sende ihn an Kloe, um jedes Teil zu analysieren und mit deinem Kleiderschrank nachzustylen.', 'Inviaglielo a Kloe per analizzare ogni capo e ricrearlo con il tuo armadio.', 'Envie para a Kloe analisar cada peça e recriar com o seu guarda-roupa.'],
+  'Pásaselo a Kloe para que te explique cada prenda y lo recree con tu armario.': ['Send it to Kloe to explain every piece and recreate it with your wardrobe.', 'Envoyez-le à Kloe pour expliquer chaque pièce et le recréer avec votre dressing.', 'Sende ihn an Kloe, um jedes Teil zu erklären und mit deinem Kleiderschrank nachzustylen.', 'Inviaglielo a Kloe per spiegare ogni capo e ricrearlo con il tuo armadio.', 'Envie para a Kloe explicar cada peça e recriar com o seu guarda-roupa.'],
+  'Sal de casa con el fit clavado': ['Leave home with the perfect fit', 'Sortez avec le look parfait', 'Verlasse das Haus mit dem perfekten Outfit', 'Esci di casa con il look perfetto', 'Saia de casa com o look perfeito'],
+  'Ahorra 91 horas al año frente al espejo': ['Save 91 hours a year in front of the mirror', 'Économisez 91 heures par an devant le miroir', 'Spare 91 Stunden pro Jahr vor dem Spiegel', 'Risparmia 91 ore all\'anno davanti allo specchio', 'Economize 91 horas por ano em frente ao espelho'],
+  'Dile a Kloe qué plan tienes hoy y qué tiempo hace para combinar tus prendas.': ['Tell Kloe your plans and the weather today to style your clothes.', 'Dites à Kloe vos projets et la météo du jour pour assortir vos vêtements.', 'Sag Kloe, was du heute vorhast und wie das Wetter ist, um deine Kleidung zu kombinieren.', 'Di\' a Kloe quali sono i tuoi piani e il meteo di oggi per abbinare i tuoi capi.', 'Diga à Kloe qual é o seu plano hoje e como está o tempo para combinar suas peças.'],
+  '¿Cena, uni o plan de última hora?': ['Dinner, class, or last-minute plans?', 'Dîner, cours ou programme de dernière minute ?', 'Abendessen, Uni oder spontane Pläne?', 'Cena, università o piano dell\'ultimo minuto?', 'Jantar, faculdade ou plano de última hora?'],
+  'Tu estilista personal combina los colores y cortes que mejor te sientan.': ['Your personal stylist combines the colors and cuts that suit you best.', 'Votre styliste personnel combine les couleurs et coupes qui vous vont le mieux.', 'Dein persönlicher Stylist kombiniert die Farben und Schnitte, die dir am besten stehen.', 'La tua stilista personale abbina i colori e i tagli che ti donano di più.', 'Sua estilista pessoal combina as cores e cortes que melhor caem em você.'],
+  'Sácale partido a todo tu armario': ['Get the most out of your entire wardrobe', 'Tirez le meilleur parti de tout votre dressing', 'Hol das Beste aus deinem gesamten Kleiderschrank heraus', 'Valorizza tutto il tuo armadio', 'Aproveite ao máximo todo o seu guarda-roupa'],
+  'Descubre combinaciones nuevas con la ropa que ya tienes colgada en casa.': ['Discover new combinations with the clothes already hanging at home.', 'Découvrez de nouvelles combinaisons avec les vêtements que vous avez déjà.', 'Entdecke neue Kombinationen mit der Kleidung, die du bereits zu Hause hast.', 'Scopri nuovi abbinamenti con i vestiti che hai già a casa.', 'Descubra novas combinações com as roupas que você já tem em casa.'],
+  'Tu lookbook listo cada mañana': ['Your lookbook ready every morning', 'Votre lookbook prêt chaque matin', 'Dein Lookbook jeden Morgen bereit', 'Il tuo lookbook pronto ogni mattina', 'Seu lookbook pronto todas as manhãs'],
+  'Pregunta a Kloe y olvídate de probarte cinco cosas antes de salir.': ['Ask Kloe and forget trying on five outfits before heading out.', 'Demandez à Kloe et oubliez les cinq essayages avant de sortir.', 'Frag Kloe und vergiss das Anprobieren von fünf Outfits vor dem Rausgehen.', 'Chiedi a Kloe e dimentica di provare cinque capi prima di uscire.', 'Pergunte à Kloe e esqueça provar cinco roupas antes de sair.'],
+  'Probar con Kloe': ['Try with Kloe', 'Essayer avec Kloe', 'Mit Kloe testen', 'Prova con Kloe', 'Testar com a Kloe'],
+  'Preguntar a Kloe': ['Ask Kloe', 'Demander à Kloe', 'Kloe fragen', 'Chiedi a Kloe', 'Perguntar à Kloe'],
+  'No hay publicaciones aún': ['No posts yet', 'Aucune publication pour l\'instant', 'Noch keine Beiträge', 'Nessun post ancora', 'Nenhuma publicação ainda'],
+  'Sigue a otros usuarios o comparte tu primer outfit con la comunidad.': ['Follow other users or share your first outfit with the community.', 'Suivez d\'autres utilisateurs ou partagez votre première tenue.', 'Folge anderen Nutzern oder teile dein erstes Outfit mit der Community.', 'Segui altri utenti o condividi il tuo primo outfit con la community.', 'Siga outros usuários ou compartilhe seu primeiro look com a comunidade.'],
+
+  // ============================================================================
+  // SEARCH PAGE
+  // ============================================================================
+  'Buscar usuarios, prendas, estilos...': ['Search users, items, styles...', 'Rechercher des utilisateurs, vêtements, styles...', 'Nutzer, Kleidung, Stile suchen...', 'Cerca utenti, capi, stili...', 'Pesquisar usuários, peças, estilos...'],
+  'Buscar usuarios o estilos...': ['Search users or styles...', 'Rechercher des utilisateurs ou styles...', 'Nutzer oder Stile suchen...', 'Cerca utenti o stili...', 'Pesquisar usuários ou estilos...'],
+  'Usuarios': ['Users', 'Utilisateurs', 'Nutzer', 'Utenti', 'Usuários'],
+  'Publicaciones': ['Posts', 'Publications', 'Beiträge', 'Post', 'Publicações'],
+  'Recientes': ['Recent', 'Récents', 'Kürzlich', 'Recenti', 'Recentes'],
+  'Búsquedas recientes': ['Recent searches', 'Recherches récentes', 'Letzte Suchanfragen', 'Ricerche recenti', 'Pesquisas recentes'],
+  'Creadores sugeridos': ['Suggested creators', 'Créateurs suggérés', 'Vorgeschlagene Creator', 'Creator suggeriti', 'Criadores sugeridos'],
+  'Sugerencias para ti': ['Suggestions for you', 'Suggestions pour vous', 'Vorschläge für dich', 'Suggerimenti per te', 'Sugestões para você'],
+  'No se encontraron resultados': ['No results found', 'Aucun résultat trouvé', 'Keine Ergebnisse gefunden', 'Nessun risultato trovato', 'Nenhum resultado encontrado'],
+  'No se encontraron usuarios': ['No users found', 'Aucun utilisateur trouvé', 'Keine Benutzer gefunden', 'Nessun utente trovato', 'Nenhum usuário encontrado'],
+
+  // ============================================================================
+  // CLOSET & WARDROBE
+  // ============================================================================
+  'Prendas': ['Items', 'Vêtements', 'Kleidung', 'Capi', 'Peças'],
+  'Mis Prendas': ['My Items', 'Mes Vêtements', 'Meine Kleidung', 'I miei Capi', 'Minhas Peças'],
+  'Mis Outfits': ['My Outfits', 'Mes Tenues', 'Meine Outfits', 'I miei Outfit', 'Meus Looks'],
+  'Calendario': ['Calendar', 'Calendrier', 'Kalender', 'Calendario', 'Calendário'],
+  'Calendario de Outfits': ['Outfit Calendar', 'Calendrier de Tenues', 'Outfit-Kalender', 'Calendario Outfit', 'Calendário de Looks'],
+  'Planifica tus looks semanales y mensuales': ['Plan your weekly and monthly looks', 'Planifiez vos looks hebdomadaires et mensuels', 'Plane deine wöchentlichen und monatlichen Looks', 'Pianifica i tuoi look settimanali e mensili', 'Planeje seus looks semanais e mensais'],
+  'Añadir prenda': ['Add item', 'Ajouter un vêtement', 'Kleidungsstück hinzufügen', 'Aggiungi capo', 'Adicionar peça'],
+  'Añadir Prenda': ['Add Item', 'Ajouter un vêtement', 'Kleidungsstück hinzufügen', 'Aggiungi Capo', 'Adicionar Peça'],
+  'Añade tu primera prenda': ['Add your first item', 'Ajoutez votre premier vêtement', 'Füge dein erstes Kleidungsstück hinzu', 'Aggiungi il tuo primo capo', 'Adicione sua primeira peça'],
+  'Tu armario te está esperando': ['Your wardrobe is waiting for you', 'Votre dressing vous attend', 'Dein Kleiderschrank wartet auf dich', 'Il tuo armadio ti sta aspettando', 'Seu guarda-roupa está esperando por você'],
+  'Sube fotos de tu ropa o importa prendas desde tus tiendas favoritas para empezar a crear outfits.': ['Upload photos of your clothes or import items from your favorite stores to start creating outfits.', 'Téléchargez des photos de vos vêtements ou importez des articles pour créer des tenues.', 'Lade Fotos deiner Kleidung hoch oder importiere Teile aus deinen Lieblingsshops, um Outfits zu erstellen.', 'Carica foto dei tuoi vestiti o importa capi dai tuoi negozi preferiti per iniziare a creare outfit.', 'Envie fotos das suas roupas ou importe peças das suas lojas favoritas para começar a criar looks.'],
+  'Buscar en tu armario...': ['Search in your closet...', 'Rechercher dans votre dressing...', 'Im Kleiderschrank suchen...', 'Cerca nel tuo armadio...', 'Pesquisar no seu guarda-roupa...'],
+  'Buscar prendas...': ['Search items...', 'Rechercher des vêtements...', 'Kleidung suchen...', 'Cerca capi...', 'Pesquisar peças...'],
+  'Buscar outfits...': ['Search outfits...', 'Rechercher des tenues...', 'Outfits suchen...', 'Cerca outfit...', 'Pesquisar looks...'],
+  'Filtros': ['Filters', 'Filtres', 'Filter', 'Filtri', 'Filtros'],
+  'Favoritos': ['Favorites', 'Favoris', 'Favoriten', 'Preferiti', 'Favoritos'],
+  'Solo favoritos': ['Favorites only', 'Favoris uniquement', 'Nur Favoriten', 'Solo preferiti', 'Apenas favoritos'],
+  'Categoría': ['Category', 'Catégorie', 'Kategorie', 'Categoria', 'Categoria'],
+  'Categorías': ['Categories', 'Catégories', 'Kategorien', 'Categorie', 'Categorias'],
+  'Color': ['Color', 'Couleur', 'Farbe', 'Colore', 'Cor'],
+  'Colores': ['Colors', 'Couleurs', 'Farben', 'Colori', 'Cores'],
+  'Temporada': ['Season', 'Saison', 'Saison', 'Stagione', 'Estação'],
+  'Temporadas': ['Seasons', 'Saisons', 'Saisons', 'Stagioni', 'Estações'],
+  'Marca': ['Brand', 'Marque', 'Marke', 'Marca', 'Marca'],
+  'Marcas': ['Brands', 'Marques', 'Marken', 'Marche', 'Marcas'],
+  'Talla': ['Size', 'Taille', 'Größe', 'Taglia', 'Tamanho'],
+  'Tejido': ['Fabric', 'Tissu', 'Stoff', 'Tessuto', 'Tecido'],
+  'Material': ['Material', 'Matière', 'Material', 'Materiale', 'Material'],
+  'Precio': ['Price', 'Prix', 'Preis', 'Prezzo', 'Preço'],
+  'Notas': ['Notes', 'Notes', 'Notizen', 'Note', 'Notas'],
+  'Enlace de tienda': ['Store link', 'Lien de la boutique', 'Shop-Link', 'Link negozio', 'Link da loja'],
+  'Primavera': ['Spring', 'Printemps', 'Frühling', 'Primavera', 'Primavera'],
+  'Verano': ['Summer', 'Été', 'Sommer', 'Estate', 'Verão'],
+  'Otoño': ['Autumn', 'Automne', 'Herbst', 'Autunno', 'Outono'],
+  'Invierno': ['Winter', 'Hiver', 'Winter', 'Inverno', 'Inverno'],
+  'Todo el año': ['All year', 'Toute l\'année', 'Ganzjährig', 'Tutto l\'anno', 'Ano todo'],
+  'Camiseta / Top': ['T-Shirt / Top', 'T-shirt / Haut', 'T-Shirt / Oberteil', 'T-shirt / Top', 'Camiseta / Top'],
+  'Camisa': ['Shirt', 'Chemise', 'Hemd / Bluse', 'Camicia', 'Camisa'],
+  'Jersey / Suéter': ['Sweater', 'Pull', 'Pullover', 'Maglione', 'Suéter / Tricô'],
+  'Sudadera': ['Hoodie / Sweatshirt', 'Sweat à capuche', 'Hoodie / Sweatshirt', 'Felpa', 'Moletom'],
+  'Chaqueta / Cazadora': ['Jacket', 'Veste', 'Jacke', 'Giacca', 'Jaqueta'],
+  'Pantalón': ['Pants / Trousers', 'Pantalon', 'Hose', 'Pantaloni', 'Calça'],
+  'Falda': ['Skirt', 'Jupe', 'Rock', 'Gonna', 'Saia'],
+  'Vestido': ['Dress', 'Robe', 'Kleid', 'Abito', 'Vestido'],
+  'Abrigo': ['Coat / Outerwear', 'Manteau', 'Mantel', 'Cappotto', 'Casaco'],
+  'Zapatos / Sneakers': ['Shoes / Sneakers', 'Chaussures / Baskets', 'Schuhe / Sneaker', 'Scarpe / Sneakers', 'Sapatos / Tênis'],
+  'Calzado': ['Footwear', 'Chaussures', 'Schuhe', 'Calzature', 'Calçados'],
+  'Bolso / Mochila': ['Bag / Backpack', 'Sac / Sac à dos', 'Tasche / Rucksack', 'Borsa / Zaino', 'Bolsa / Mochila'],
+  'Accesorios': ['Accessories', 'Accessoires', 'Accessoires', 'Accessori', 'Acessórios'],
+  'Otros': ['Other', 'Autres', 'Sonstiges', 'Altro', 'Outros'],
+  'Partes de arriba': ['Tops', 'Hauts', 'Oberteile', 'Parti superiori', 'Partes de cima'],
+  'Partes de abajo': ['Bottoms', 'Bas', 'Unterteile', 'Parti inferiori', 'Partes de baixo'],
+  'Cuerpo entero': ['Full body', 'Corps entier', 'Einteiler', 'Corpo intero', 'Corpo inteiro'],
+  'Ropa exterior': ['Outerwear', 'Vêtements d\'extérieur', 'Oberbekleidung', 'Capispalla', 'Agasalhos'],
+  'Blanco': ['White', 'Blanc', 'Weiß', 'Bianco', 'Branco'],
+  'Negro': ['Black', 'Noir', 'Schwarz', 'Nero', 'Preto'],
+  'Gris': ['Gray', 'Gris', 'Grau', 'Grigio', 'Cinza'],
+  'Marrón': ['Brown', 'Marron', 'Braun', 'Marrone', 'Marrom'],
+  'Azul': ['Blue', 'Bleu', 'Blau', 'Blu', 'Azul'],
+  'Rojo': ['Red', 'Rouge', 'Rot', 'Rosso', 'Vermelho'],
+  'Verde': ['Green', 'Vert', 'Grün', 'Verde', 'Verde'],
+  'Rosa': ['Pink', 'Rose', 'Rosa', 'Rosa', 'Rosa'],
+  'Amarillo': ['Yellow', 'Jaune', 'Gelb', 'Giallo', 'Amarelo'],
+  'Morado': ['Purple', 'Violet', 'Lila', 'Viola', 'Roxo'],
+  'Naranja': ['Orange', 'Orange', 'Orange', 'Arancione', 'Laranja'],
+  'Multicolor': ['Multicolor', 'Multicolore', 'Mehrfarbig', 'Multicolore', 'Multicolorido'],
+  'Dorado': ['Gold', 'Doré', 'Gold', 'Oro', 'Dourado'],
+  'Plateado': ['Silver', 'Argenté', 'Silber', 'Argento', 'Prateado'],
+  'Algodón': ['Cotton', 'Coton', 'Baumwolle', 'Cotone', 'Algodão'],
+  'Lino': ['Linen', 'Lin', 'Leinen', 'Lino', 'Linho'],
+  'Lana': ['Wool', 'Laine', 'Wolle', 'Lana', 'Lã'],
+  'Seda': ['Silk', 'Soie', 'Seide', 'Seta', 'Seda'],
+  'Cuero / Piel': ['Leather', 'Cuir', 'Leder', 'Pelle', 'Couro'],
+  'Vaquero / Denim': ['Denim', 'Denim / Jean', 'Denim / Jeans', 'Denim', 'Jeans / Denim'],
+  'Poliéster': ['Polyester', 'Polyester', 'Polyester', 'Poliestere', 'Poliéster'],
+  'Punto': ['Knit', 'Maille', 'Strick', 'Maglia', 'Malha / Tricô'],
+  'Pana': ['Corduroy', 'Velours côtelé', 'Cord', 'Velluto a coste', 'Veludo cotelê'],
+  'Ante': ['Suede', 'Daim', 'Wildleder', 'Camoscio', 'Camurça'],
+  'Satén': ['Satin', 'Satin', 'Satin', 'Raso', 'Cetim'],
+  '¿Eliminar prenda?': ['Delete item?', 'Supprimer le vêtement ?', 'Kleidungsstück löschen?', 'Eliminare il capo?', 'Excluir peça?'],
+  '¿Eliminar outfit?': ['Delete outfit?', 'Supprimer la tenue ?', 'Outfit löschen?', 'Eliminare l\'outfit?', 'Excluir look?'],
+  'Prenda eliminada': ['Item deleted', 'Vêtement supprimé', 'Kleidungsstück gelöscht', 'Capo eliminato', 'Peça excluída'],
+  'Subir foto': ['Upload photo', 'Télécharger une photo', 'Foto hochladen', 'Carica foto', 'Enviar foto'],
+  'Hacer foto': ['Take photo', 'Prendre une photo', 'Foto aufnehmen', 'Scatta foto', 'Tirar foto'],
+  'Desde enlace web': ['From web link', 'Depuis un lien web', 'Über Web-Link', 'Da link web', 'De link da web'],
+  'Pegar enlace de tienda': ['Paste store link', 'Coller le lien de la boutique', 'Shop-Link einfügen', 'Incolla link del negozio', 'Colar link da loja'],
+  'Quitar fondo automáticamente': ['Remove background automatically', 'Supprimer l\'arrière-plan automatiquement', 'Hintergrund automatisch entfernen', 'Rimuovi sfondo automaticamente', 'Remover fundo automaticamente'],
+  'Eliminando fondo...': ['Removing background...', 'Suppression de l\'arrière-plan...', 'Hintergrund wird entfernt...', 'Rimozione sfondo...', 'Removendo fundo...'],
+  'Analizando prenda con IA...': ['Analyzing item with AI...', 'Analyse du vêtement...', 'Kleidungsstück wird analysiert...', 'Analisi del capo...', 'Analisando peça...'],
+  'Nombre de la prenda': ['Item name', 'Nom du vêtement', 'Name des Kleidungsstücks', 'Nome del capo', 'Nome da peça'],
+  'Guardar en mi armario': ['Save to my closet', 'Enregistrer dans mon dressing', 'Im Kleiderschrank speichern', 'Salva nel mio armadio', 'Salvar no meu guarda-roupa'],
+
+  // ============================================================================
+  // KLOE CHAT & AI STYLIST
+  // ============================================================================
+  'Tu estilista personal': ['Your personal stylist', 'Votre styliste personnel', 'Dein persönlicher Stylist', 'La tua stilista personale', 'Sua estilista pessoal'],
+  'Estilista Personal': ['Personal Stylist', 'Styliste Personnel', 'Persönlicher Stylist', 'Stilista Personale', 'Estilista Pessoal'],
+  'Nueva conversación': ['New conversation', 'Nouvelle conversation', 'Neues Gespräch', 'Nuova conversazione', 'Nova conversa'],
+  'Historial de chats': ['Chat history', 'Historique des discussions', 'Chatverlauf', 'Cronologia chat', 'Histórico de conversas'],
+  'Limpiar chat': ['Clear chat', 'Effacer la discussion', 'Chat löschen', 'Cancella chat', 'Limpar conversa'],
+  'Escribe a Kloe...': ['Message Kloe...', 'Écrire à Kloe...', 'Schreibe Kloe...', 'Scrivi a Kloe...', 'Escreva para a Kloe...'],
+  'Pregúntale a Kloe sobre tu armario o qué ponerte hoy...': ['Ask Kloe about your closet or what to wear today...', 'Demandez à Kloe quoi porter aujourd\'hui...', 'Frag Kloe nach deinem Kleiderschrank oder was du heute anziehen sollst...', 'Chiedi a Kloe del tuo armadio o cosa indossare oggi...', 'Pergunte à Kloe sobre seu guarda-roupa ou o que vestir hoje...'],
+  'Adjuntar prenda, outfit o post': ['Attach item, outfit, or post', 'Joindre un vêtement, une tenue ou un post', 'Kleidungsstück, Outfit oder Beitrag anhängen', 'Allega capo, outfit o post', 'Anexar peça, look ou publicação'],
+  '¿Qué me pongo hoy?': ['What should I wear today?', 'Que dois-je porter aujourd\'hui ?', 'Was soll ich heute anziehen?', 'Cosa mi metto oggi?', 'O que eu visto hoje?'],
+  'Look casual para hoy': ['Casual look for today', 'Look décontracté pour aujourd\'hui', 'Lässiger Look für heute', 'Look casual per oggi', 'Look casual para hoje'],
+  'Outfit para salir de noche': ['Night out outfit', 'Tenue de soirée', 'Outfit zum Ausgehen', 'Outfit per uscire stasera', 'Look para sair à noite'],
+  'Analiza mi armario': ['Analyze my wardrobe', 'Analyser mon dressing', 'Meinen Kleiderschrank analysieren', 'Analizza il mio armadio', 'Analisar meu guarda-roupa'],
+
+  // ============================================================================
+  // CREATE OUTFIT & CREATE POST
+  // ============================================================================
+  'Lienzo libre': ['Free canvas', 'Toile libre', 'Freie Leinwand', 'Tela libera', 'Tela livre'],
+  'Guardar Outfit': ['Save Outfit', 'Enregistrer la tenue', 'Outfit speichern', 'Salva Outfit', 'Salvar Look'],
+  'Nombre del outfit': ['Outfit name', 'Nom de la tenue', 'Name des Outfits', 'Nome dell\'outfit', 'Nome do look'],
+  'Descripción': ['Description', 'Description', 'Beschreibung', 'Descrizione', 'Descrição'],
+  'Público': ['Public', 'Public', 'Öffentlich', 'Pubblico', 'Público'],
+  'Privado': ['Private', 'Privé', 'Privat', 'Privato', 'Privado'],
+  'Vaciar lienzo': ['Clear canvas', 'Vider la toile', 'Leinwand leeren', 'Svuota tela', 'Limpar tela'],
+  'Añadir prendas al lienzo': ['Add items to canvas', 'Ajouter des vêtements à la toile', 'Kleidungsstücke zur Leinwand hinzufügen', 'Aggiungi capi alla tela', 'Adicionar peças à tela'],
+  'Nueva publicación': ['New post', 'Nouvelle publication', 'Neuer Beitrag', 'Nuovo post', 'Nova publicação'],
+  'Nueva Publicación': ['New Post', 'Nouvelle Publication', 'Neuer Beitrag', 'Nuovo Post', 'Nova Publicação'],
+  'Escribe un pie de foto...': ['Write a caption...', 'Écrivez une légende...', 'Bildunterschrift schreiben...', 'Scrivi una didascalia...', 'Escreva uma legenda...'],
+  'Etiquetar prendas': ['Tag items', 'Identifier des vêtements', 'Kleidungsstücke markieren', 'Tagga capi', 'Marcar peças'],
+  'Seleccionar outfit': ['Select outfit', 'Sélectionner une tenue', 'Outfit auswählen', 'Seleziona outfit', 'Selecionar look'],
+  'Compartir publicación': ['Share post', 'Partager la publication', 'Beitrag teilen', 'Condividi post', 'Compartilhar publicação'],
+
+  // ============================================================================
+  // MESSAGES & NOTIFICATIONS
+  // ============================================================================
+  'Solicitudes': ['Requests', 'Demandes', 'Anfragen', 'Richieste', 'Solicitações'],
+  'Tus mensajes': ['Your messages', 'Vos messages', 'Deine Nachrichten', 'I tuoi messaggi', 'Suas mensagens'],
+  'Envía mensajes privados a tus amigos': ['Send private messages to your friends', 'Envoyez des messages privés à vos amis', 'Sende private Nachrichten an deine Freunde', 'Invia messaggi privati ai tuoi amici', 'Envie mensagens privadas para seus amigos'],
+  'Inicia una conversación': ['Start a conversation', 'Démarrer une conversation', 'Gespräch beginnen', 'Inizia una conversazione', 'Iniciar uma conversa'],
+  'Envía un mensaje...': ['Send a message...', 'Envoyer un message...', 'Nachricht senden...', 'Invia un messaggio...', 'Envie uma mensagem...'],
+  'Escribe un mensaje...': ['Type a message...', 'Écrire un message...', 'Nachricht schreiben...', 'Scrivi un messaggio...', 'Digite uma mensagem...'],
+  'Visto': ['Seen', 'Vu', 'Gesehen', 'Visualizzato', 'Visto'],
+  'Marcar todo como leído': ['Mark all as read', 'Tout marquer comme lu', 'Alle als gelesen markieren', 'Segna tutto come letto', 'Marcar tudo como lido'],
+  'Marcar como leídas': ['Mark as read', 'Marquer comme lu', 'Als gelesen markieren', 'Segna come lette', 'Marcar como lidas'],
+  'No tienes notificaciones': ['You have no notifications', 'Vous n\'avez aucune notification', 'Du hast keine Benachrichtigungen', 'Non hai notifiche', 'Você não tem notificações'],
+  'Cuando alguien interactúe contigo, aparecerá aquí.': ['When someone interacts with you, it will appear here.', 'Lorsque quelqu\'un interagit avec vous, cela apparaîtra ici.', 'Wenn jemand mit dir interagiert, wird es hier angezeigt.', 'Quando qualcuno interagisce con te, apparirà qui.', 'Quando alguém interagir com você, aparecerá aqui.'],
+  'Solicitudes de seguimiento': ['Follow requests', 'Demandes d\'abonnement', 'Folgeanfragen', 'Richieste di seguir', 'Solicitações para seguir'],
+  'ha empezado a seguirte': ['started following you', 'a commencé à vous suivre', 'folgt dir jetzt', 'ha iniziato a seguirti', 'começou a seguir você'],
+  'comenzó a seguirte': ['started following you', 'a commencé à vous suivre', 'folgt dir jetzt', 'ha iniziato a seguirti', 'começou a seguir você'],
+  'le ha gustado tu publicación': ['liked your post', 'a aimé votre publication', 'gefällt dein Beitrag', 'ha messo mi piace al tuo post', 'curtiu sua publicação'],
+  'le gustó tu publicación': ['liked your post', 'a aimé votre publication', 'gefällt dein Beitrag', 'ha messo mi piace al tuo post', 'curtiu sua publicação'],
+  'ha comentado en tu publicación': ['commented on your post', 'a commenté votre publication', 'hat deinen Beitrag kommentiert', 'ha commentato il tuo post', 'comentou na sua publicação'],
+  'comentó tu publicación': ['commented on your post', 'a commenté votre publication', 'hat deinen Beitrag kommentiert', 'ha commentato il tuo post', 'comentou na sua publicação'],
+  'quiere seguirte': ['wants to follow you', 'souhaite vous suivre', 'möchte dir folgen', 'vuole seguirti', 'quer seguir você'],
+
+  // ============================================================================
+  // PROFILE & SETTINGS (GENERAL, PERSONAL, NOTIFICATIONS, SECURITY, PRIVACY)
+  // ============================================================================
+  'Seguidores': ['Followers', 'Abonnés', 'Follower', 'Follower', 'Seguidores'],
+  'Siguiendo ': ['Following ', 'Abonnements ', 'Gefolgt ', 'Seguiti ', 'Seguindo '],
+  'Carpetas': ['Folders', 'Dossiers', 'Ordner', 'Cartelle', 'Pastas'],
+  'Nueva carpeta': ['New folder', 'Nouveau dossier', 'Neuer Ordner', 'Nuova cartella', 'Nova pasta'],
+  'Crear carpeta': ['Create folder', 'Créer un dossier', 'Ordner erstellen', 'Crea cartella', 'Criar pasta'],
+  'Editar perfil': ['Edit profile', 'Modifier le profil', 'Profil bearbeiten', 'Modifica profilo', 'Editar perfil'],
+  'Editar Perfil': ['Edit Profile', 'Modifier le Profil', 'Profil bearbeiten', 'Modifica Profilo', 'Editar Perfil'],
+  'Compartir perfil': ['Share profile', 'Partager le profil', 'Profil teilen', 'Condividi profilo', 'Compartilhar perfil'],
+  'Configuración': ['Settings', 'Paramètres', 'Einstellungen', 'Impostazioni', 'Configurações'],
+  'Volver al perfil': ['Back to profile', 'Retour au profil', 'Zurück zum Profil', 'Torna al profilo', 'Voltar ao perfil'],
+  'Volver a configuración': ['Back to settings', 'Retour aux paramètres', 'Zurück zu den Einstellungen', 'Torna alle impostazioni', 'Voltar às configurações'],
+  'Ajustes generales': ['General settings', 'Paramètres généraux', 'Allgemeine Einstellungen', 'Impostazioni generali', 'Configurações gerais'],
+  'Tema, idioma y más': ['Theme, language and more', 'Thème, langue et plus', 'Design, Sprache und mehr', 'Tema, lingua e altro', 'Tema, idioma e mais'],
+  'Tema': ['Theme', 'Thème', 'Design', 'Tema', 'Tema'],
+  'Claro': ['Light', 'Clair', 'Hell', 'Chiaro', 'Claro'],
+  'Oscuro': ['Dark', 'Sombre', 'Dunkel', 'Scuro', 'Escuro'],
+  'Idioma': ['Language', 'Langue', 'Sprache', 'Lingua', 'Idioma'],
+  'Idioma de la aplicación': ['App language', 'Langue de l\'application', 'App-Sprache', 'Lingua dell\'app', 'Idioma do aplicativo'],
+  'Dinos cómo eres': ['Tell us about yourself', 'Parlez-nous de vous', 'Erzähl uns von dir', 'Parlaci di te', 'Conte-nos sobre você'],
+  'Tu perfil físico y estilo': ['Your physical profile & style', 'Votre profil physique et style', 'Dein Körperprofil & Stil', 'Il tuo profilo fisico e stile', 'Seu perfil físico e estilo'],
+  'Físico y Estilo': ['Body & Style', 'Morphologie & Style', 'Körper & Stil', 'Fisico e Stile', 'Corpo e Estilo'],
+  'Chica': ['Woman', 'Femme', 'Frau', 'Donna', 'Mulher'],
+  'Chico': ['Man', 'Homme', 'Mann', 'Uomo', 'Homem'],
+  'Femenino': ['Female', 'Femme', 'Weiblich', 'Femminile', 'Feminino'],
+  'Masculino': ['Male', 'Homme', 'Männlich', 'Maschile', 'Masculino'],
+  'No binario': ['Non-binary', 'Non-binaire', 'Nicht-binär', 'Non binario', 'Não binário'],
+  'Altura': ['Height', 'Taille', 'Körpergröße', 'Altezza', 'Altura'],
+  'Tipo de cuerpo': ['Body type', 'Morphologie', 'Körpertyp', 'Tipo di corporatura', 'Tipo de corpo'],
+  'Color de pelo': ['Hair color', 'Couleur de cheveux', 'Haarfarbe', 'Colore dei capelli', 'Cor do cabelo'],
+  'Color de ojos': ['Eye color', 'Couleur des yeux', 'Augenfarbe', 'Colore degli occhi', 'Cor dos olhos'],
+  'Estilos preferidos': ['Preferred styles', 'Styles préférés', 'Bevorzugte Stile', 'Stili preferiti', 'Estilos preferidos'],
+  'Gestiona tus alertas': ['Manage your alerts', 'Gérez vos alertes', 'Verwalte deine Hinweise', 'Gestisci i tuoi avvisi', 'Gerencie seus alertas'],
+  'Nuevos seguidores': ['New followers', 'Nouveaux abonnés', 'Neue Follower', 'Nuovi follower', 'Novos seguidores'],
+  'Me gusta en publicaciones': ['Likes on posts', 'J\'aime sur les publications', 'Likes auf Beiträge', 'Mi piace ai post', 'Curtidas nas publicações'],
+  'Notificaciones Push': ['Push Notifications', 'Notifications Push', 'Push-Benachrichtigungen', 'Notifiche Push', 'Notificações Push'],
+  'Recordatorios diarios': ['Daily reminders', 'Rappels quotidiens', 'Tägliche Erinnerungen', 'Promemoria giornalieri', 'Lembretes diários'],
+  'Seguridad': ['Security', 'Sécurité', 'Sicherheit', 'Sicurezza', 'Segurança'],
+  'Contraseña y autenticación': ['Password and authentication', 'Mot de passe et authentification', 'Passwort und Authentifizierung', 'Password e autenticazione', 'Senha e autenticação'],
+  'Cambiar contraseña': ['Change password', 'Changer le mot de passe', 'Passwort ändern', 'Cambia password', 'Alterar senha'],
+  'Contraseña actual': ['Current password', 'Mot de passe actuel', 'Aktuelles Passwort', 'Password attuale', 'Senha atual'],
+  'Nueva contraseña': ['New password', 'Nouveau mot de passe', 'Neues Passwort', 'Nuova password', 'Nova senha'],
+  'Confirmar nueva contraseña': ['Confirm new password', 'Confirmer le nouveau mot de passe', 'Neues Passwort bestätigen', 'Conferma nuova password', 'Confirmar nova senha'],
+  'Actualizar contraseña': ['Update password', 'Mettre à jour le mot de passe', 'Passwort aktualisieren', 'Aggiorna password', 'Atualizar senha'],
+  'Privacidad': ['Privacy', 'Confidentialité', 'Datenschutz', 'Privacy', 'Privacidade'],
+  'Datos y permisos': ['Data and permissions', 'Données et autorisations', 'Daten und Berechtigungen', 'Dati e permessi', 'Dados e permissões'],
+  'Perfil privado': ['Private profile', 'Profil privé', 'Privates Profil', 'Profilo privato', 'Perfil privado'],
+  'Perfil público': ['Public profile', 'Profil public', 'Öffentliches Profil', 'Profilo pubblico', 'Perfil público'],
+  'Cuenta': ['Account', 'Compte', 'Konto', 'Account', 'Conta'],
+  'Cerrar sesión': ['Log out', 'Déconnexion', 'Abmelden', 'Esci', 'Sair'],
+  'Eliminar cuenta': ['Delete account', 'Supprimer le compte', 'Konto löschen', 'Elimina account', 'Excluir conta'],
+  '¿Eliminar cuenta?': ['Delete account?', 'Supprimer le compte ?', 'Konto wirklich löschen?', 'Eliminare l\'account?', 'Excluir conta?'],
+
+  // ============================================================================
+  // PREMIUM & KLOE PRO
+  // ============================================================================
+  'Mensual': ['Monthly', 'Mensuel', 'Monatlich', 'Mensile', 'Mensal'],
+  'Anual': ['Annual', 'Annuel', 'Jährlich', 'Annuale', 'Anual'],
+  'Más popular': ['Most popular', 'Le plus populaire', 'Am beliebtesten', 'Più popolare', 'Mais popular'],
+  'Mejor valor': ['Best value', 'Meilleure offre', 'Bester Wert', 'Miglior valore', 'Melhor valor'],
+  'Consultas ilimitadas con Kloe': ['Unlimited consultations with Kloe', 'Consultations illimitées avec Kloe', 'Unbegrenzte Beratungen mit Kloe', 'Consulenze illimitate con Kloe', 'Consultas ilimitadas com a Kloe'],
+  'Armario ilimitado': ['Unlimited wardrobe', 'Dressing illimité', 'Unbegrenzter Kleiderschrank', 'Armadio illimitato', 'Guarda-roupa ilimitado'],
+  'Suscribirse ahora': ['Subscribe now', 'S\'abonner maintenant', 'Jetzt abonnieren', 'Abbonati ora', 'Assinar agora'],
+  'Pago seguro con Stripe, Apple Pay y Google Pay': ['Secure payment with Stripe, Apple Pay & Google Pay', 'Paiement sécurisé avec Stripe, Apple Pay et Google Pay', 'Sichere Zahlung mit Stripe, Apple Pay und Google Pay', 'Pagamento sicuro con Stripe, Apple Pay e Google Pay', 'Pagamento seguro com Stripe, Apple Pay e Google Pay'],
+
+  // ============================================================================
+  // AUTH & ONBOARDING
+  // ============================================================================
+  'Iniciar sesión': ['Log in', 'Se connecter', 'Anmelden', 'Accedi', 'Entrar'],
+  'Crear cuenta': ['Sign up', 'Créer un compte', 'Konto erstellen', 'Crea account', 'Criar conta'],
+  'Entrar': ['Log in', 'Connexion', 'Anmelden', 'Accedi', 'Entrar'],
+  'Registro': ['Sign up', 'Inscription', 'Registrieren', 'Registrati', 'Cadastro'],
+  'Continuar con Google': ['Continue with Google', 'Continuer avec Google', 'Weiter mit Google', 'Continua con Google', 'Continuar com o Google'],
+  'Correo electrónico': ['Email address', 'Adresse e-mail', 'E-Mail-Adresse', 'Indirizzo email', 'E-mail'],
+  'Contraseña': ['Password', 'Mot de passe', 'Passwort', 'Password', 'Senha'],
+  'Nombre de usuario': ['Username', 'Nom d\'utilisateur', 'Benutzername', 'Nome utente', 'Nome de usuário'],
+  'Nombre completo': ['Full name', 'Nom complet', 'Vollständiger Name', 'Nome completo', 'Nome completo'],
+  '¿Olvidaste tu contraseña?': ['Forgot your password?', 'Mot de passe oublié ?', 'Passwort vergessen?', 'Hai dimenticato la password?', 'Esqueceu sua senha?'],
+  '¿No tienes cuenta?': ['Don\'t have an account?', 'Vous n\'avez pas de compte ?', 'Noch kein Konto?', 'Non hai un account?', 'Não tem uma conta?'],
+  '¿Ya tienes cuenta?': ['Already have an account?', 'Vous avez déjà un compte ?', 'Bereits ein Konto?', 'Hai già un account?', 'Já tem uma conta?'],
+  'Regístrate': ['Sign up', 'Inscrivez-vous', 'Registrieren', 'Registrati', 'Cadastre-se'],
+
+  // ============================================================================
+  // LANDING & PUBLIC PAGES
+  // ============================================================================
+  'Ir a mi armario': ['Go to my closet', 'Aller à mon dressing', 'Zu meinem Kleiderschrank', 'Vai al mio armadio', 'Ir para meu guarda-roupa'],
+  'Empezar gratis': ['Start for free', 'Commencer gratuitement', 'Kostenlos starten', 'Inizia gratis', 'Começar grátis'],
+  'Entrar a Klozet gratis': ['Join Klozet for free', 'Rejoindre Klozet gratuitement', 'Klozet kostenlos nutzen', 'Entra in Klozet gratis', 'Entrar no Klozet grátis'],
+  'Armario Lleno': ['Full Closet', 'Dressing Plein', 'Voller Schrank', 'Armadio Pieno', 'Armário Cheio'],
+  'Nada que ponerte': ['Nothing to wear', 'Rien à se mettre', 'Nichts anzuziehen', 'Niente da mettere', 'Nada para vestir'],
+  'Todas las mañanas el mismo lío frente al espejo. Klozet organiza tus prendas reales en un lookbook interactivo para que salgas con el fit clavado.': [
+    'Every morning the same struggle in front of the mirror. Klozet organizes your real clothes into an interactive lookbook so you step out with the perfect fit.',
+    'Chaque matin, la même galère devant le miroir. Klozet organise vos vrais vêtements dans un lookbook interactif pour sortir avec le look parfait.',
+    'Jeden Morgen dasselbe Chaos vor dem Spiegel. Klozet organisiert deine echte Kleidung in einem interaktiven Lookbook für das perfekte Outfit.',
+    'Ogni mattina lo stesso caos davanti allo specchio. Klozet organizza i tuoi capi reali in un lookbook interattivo per uscire con il look perfetto.',
+    'Todas as manhãs a mesma dúvida em frente ao espelho. O Klozet organiza suas roupas reais em um lookbook interativo para você sair com o look perfeito.'
+  ],
+  'Toda tu ropa': ['All your clothes', 'Tous vos vêtements', 'Deine ganze Kleidung', 'Tutti i tuoi vestiti', 'Todas as suas roupas'],
+  'En un toque': ['In one tap', 'En un geste', 'Mit einem Fingertipp', 'In un tocco', 'Em um toque'],
+  'Saca una foto en la percha o en la puerta de tu cuarto. El fondo desaparece al instante y tu ropa real queda limpia, ordenada y lista para combinar.': [
+    'Snap a photo on a hanger or your bedroom door. The background disappears instantly and your real clothes stay clean, organized, and ready to style.',
+    'Prenez une photo sur un cintre ou la porte de votre chambre. L\'arrière-plan disparaît instantanément et vos vêtements sont prêts à être assortis.',
+    'Mach ein Foto auf dem Kleiderbügel oder an der Zimmertür. Der Hintergrund verschwindet sofort und deine Kleidung ist ordentlich und bereit zum Kombinieren.',
+    'Scatta una foto sulla gruccia o sulla porta della camera. Lo sfondo scompare all\'istante e i tuoi vestiti restano puliti, ordinati e pronti da abbinare.',
+    'Tire uma foto no cabide ou na porta do quarto. O fundo desaparece na hora e suas roupas reais ficam limpas, organizadas e prontas para combinar.'
+  ],
+  'Qué me pongo': ['What to wear', 'Quoi porter', 'Was ziehe ich an', 'Cosa mi metto', 'O que vestir'],
+  'Kloe te ayuda': ['Kloe helps you', 'Kloe vous aide', 'Kloe hilft dir', 'Kloe ti aiuta', 'A Kloe te ajuda'],
+  'Dile qué plan tienes o qué tiempo hace. Kloe revisa tus prendas reales y te compone el outfit perfecto al segundo, sin gastar un euro en ropa nueva.': [
+    'Tell her your plans or the weather. Kloe checks your real clothes and builds the perfect outfit in seconds, without spending a cent on new clothes.',
+    'Dites-lui vos projets ou la météo. Kloe vérifie vos vrais vêtements et compose la tenue parfaite en une seconde, sans dépenser un euro.',
+    'Sag ihr, was du vorhast oder wie das Wetter ist. Kloe prüft deine echte Kleidung und stellt in Sekunden das perfekte Outfit zusammen.',
+    'Dille quali sono i tuoi piani o che tempo fa. Kloe controlla i tuoi capi reali e compone l\'outfit perfetto al secondo, senza spendere un euro.',
+    'Diga qual é o seu plano ou como está o tempo. A Kloe analisa suas peças reais e monta o look perfeito em segundos, sem gastar nada com roupa nova.'
+  ],
+  'Monta tu fit': ['Build your fit', 'Créez votre look', 'Bau dein Outfit', 'Crea il tuo look', 'Monte seu look'],
+  'Listo para hoy': ['Ready for today', 'Prêt pour aujourd\'hui', 'Bereit für heute', 'Pronto per oggi', 'Pronto para hoje'],
+  'Prueba combinaciones en el lienzo libre, guarda tus looks favoritos y sal de casa sabiendo qué ponerte antes de desordenar el cuarto.': [
+    'Try combinations on the free canvas, save your favorite looks, and leave home knowing what to wear before making a mess in your room.',
+    'Essayez des combinaisons sur la toile libre, enregistrez vos looks préférés et sortez en sachant quoi porter sans mettre votre chambre en désordre.',
+    'Probiere Kombinationen auf der freien Leinwand aus, speichere deine Lieblingslooks und verlasse das Haus perfekt gestylt.',
+    'Prova abbinamenti sulla tela libera, salva i tuoi look preferiti ed esci di casa sapendo cosa indossare prima di mettere in disordine la stanza.',
+    'Teste combinações na tela livre, salve seus looks favoritos e saia de casa sabendo o que vestir antes de bagunçar o quarto.'
+  ],
+  'Vístete mejor': ['Dress better', 'Habillez-vous mieux', 'Besser anziehen', 'Vestiti meglio', 'Vista-se melhor'],
+  'Disfruta tu ropa': ['Enjoy your clothes', 'Profitez de vos vêtements', 'Genieße deine Kleidung', 'Goditi i tuoi vestiti', 'Aproveite suas roupas'],
+  'Regístrate gratis en menos de un minuto y empieza a organizar tus outfits favoritos.': [
+    'Sign up for free in under a minute and start organizing your favorite outfits.',
+    'Inscrivez-vous gratuitement en moins d\'une minute et commencez à organiser vos tenues préférées.',
+    'Registriere dich kostenlos in weniger als einer Minute und organisiere deine Lieblingsoutfits.',
+    'Registrati gratis in meno di un minuto e inizia a organizzare i tuoi outfit preferiti.',
+    'Cadastre-se grátis em menos de um minuto e comece a organizar seus looks favoritos.'
+  ],
+  'Revista & Tendencias': ['Magazine & Trends', 'Magazine & Tendances', 'Magazin & Trends', 'Magazine & Tendenze', 'Revista & Tendências'],
+  'Sobre Nosotros': ['About Us', 'À Propos', 'Über Uns', 'Chi Siamo', 'Sobre Nós'],
+  'Términos': ['Terms', 'Conditions', 'AGB', 'Termini', 'Termos'],
+  'Términos y Condiciones': ['Terms & Conditions', 'Conditions Générales', 'AGB', 'Termini e Condizioni', 'Termos e Condições'],
+  'Política de Privacidad': ['Privacy Policy', 'Politique de Confidentialité', 'Datenschutzerklärung', 'Informativa sulla Privacy', 'Política de Privacidade'],
+  'Contacto': ['Contact', 'Contact', 'Kontakt', 'Contatti', 'Contato'],
+  'Todos los derechos reservados.': ['All rights reserved.', 'Tous droits réservés.', 'Alle Rechte vorbehalten.', 'Tutti i diritti riservati.', 'Todos os direitos reservados.'],
+  'Lienzo de Hoy': ['Today\'s Canvas', 'Toile du Jour', 'Heutige Leinwand', 'Tela di Oggi', 'Tela de Hoje'],
+  'Look Mujer': ['Women\'s Look', 'Look Femme', 'Damen-Look', 'Look Donna', 'Look Feminino'],
+  'Look Diario': ['Daily Look', 'Look Quotidien', 'Tages-Look', 'Look Giornaliero', 'Look Diário'],
+  'Hombre • Denim': ['Men • Denim', 'Homme • Denim', 'Herren • Denim', 'Uomo • Denim', 'Homem • Denim'],
+  'Mujer • Kloe': ['Women • Kloe', 'Femme • Kloe', 'Damen • Kloe', 'Donna • Kloe', 'Mulher • Kloe'],
+
+  // ============================================================================
+  // EXTENDED SETTINGS, ONBOARDING, MODALS, KLOE & CLOSET SCREENS
+  // ============================================================================
+  'Preferencias': ['Preferences', 'Préférences', 'Präferenzen', 'Preferenze', 'Preferências'],
+  'Apariencia': ['Appearance', 'Apparence', 'Erscheinungsbild', 'Aspetto', 'Aparência'],
+  'Selecciona el idioma de la interfaz': ['Select interface language', 'Sélectionnez la langue de l\'interface', 'Wähle die Sprache der Benutzeroberfläche', 'Seleziona la lingua dell\'interfaccia', 'Selecione o idioma da interface'],
+  'Tu Estilo': ['Your Style', 'Votre Style', 'Dein Stil', 'Il tuo Stile', 'Seu Estilo'],
+  'Género': ['Gender', 'Genre', 'Geschlecht', 'Genere', 'Gênero'],
+  'Edad': ['Age', 'Âge', 'Alter', 'Età', 'Idade'],
+  'Reloj de arena': ['Hourglass', 'Sablier', 'Sanduhr', 'Clessidra', 'Ampulheta'],
+  'Triángulo / Pera': ['Triangle / Pear', 'Triangle / Poire', 'Dreieck / Birne', 'Triangolo / Pera', 'Triângulo / Pera'],
+  'Triángulo invertido': ['Inverted triangle', 'Triangle inversé', 'Umgekehrtes Dreieck', 'Triangolo invertito', 'Triângulo invertido'],
+  'Rectángulo / Atlético': ['Rectangle / Athletic', 'Rectangle / Athlétique', 'Rechteck / Athletisch', 'Rettangolo / Atletico', 'Retângulo / Atlético'],
+  'Ovalado / Curvy': ['Oval / Curvy', 'Ovale / Curvy', 'Oval / Kurvig', 'Ovale / Curvy', 'Oval / Curvy'],
+  'Atlético': ['Athletic', 'Athlétique', 'Athletisch', 'Atletico', 'Atlético'],
+  'Delgado / Esbelto': ['Slim / Lean', 'Mince / Élancée', 'Schlank', 'Snello / Slanciato', 'Magro / Esguio'],
+  'Hombros anchos / V': ['Broad shoulders / V-shape', 'Épaules larges / Forme en V', 'Breite Schultern / V-Form', 'Spalle larghe / Forma a V', 'Ombros largos / Formato V'],
+  'Equilibrado': ['Balanced', 'Équilibré', 'Ausgewogen', 'Equilibrato', 'Equilibrado'],
+  'Robusto': ['Broad / Sturdy', 'Robuste', 'Kräftig', 'Robusto', 'Robusto'],
+  'Caderas más anchas': ['Wider hips', 'Hanches plus larges', 'Breitere Hüften', 'Fianchi più larghi', 'Quadris mais largos'],
+  'Más abombado / Curvy': ['Curvier / Voluminous', 'Plus galbé / Curvy', 'Kurviger', 'Più formoso / Curvy', 'Mais curvilíneo'],
+  'Castaño': ['Brown', 'Châtain', 'Braun', 'Castano', 'Castanho'],
+  'Moreno / Negro': ['Dark brown / Black', 'Brun / Noir', 'Dunkelbraun / Schwarz', 'Moro / Nero', 'Moreno / Preto'],
+  'Rubio': ['Blonde', 'Blond', 'Blond', 'Biondo', 'Loiro'],
+  'Pelirrojo': ['Red / Ginger', 'Roux', 'Rothaarig', 'Rosso', 'Ruivo'],
+  'Gris / Blanco': ['Gray / White', 'Gris / Blanc', 'Grau / Weiß', 'Grigio / Bianco', 'Grisulho / Branco'],
+  'Fantasía': ['Dyed / Fantasy', 'Fantaisie', 'Gefärbt / Fantasy', 'Fantasia', 'Fantasia / Colorido'],
+  'Miel / Avellana': ['Hazel / Honey', 'Noisette / Miel', 'Haselnussbraun', 'Nocciola / Miele', 'Mel / Avelã'],
+  'Azules': ['Blue', 'Bleus', 'Blau', 'Azzurri', 'Azuis'],
+  'Verdes': ['Green', 'Verts', 'Grün', 'Verdi', 'Verdes'],
+  'Marrones': ['Brown', 'Marrons', 'Braun', 'Marroni', 'Castanhos'],
+  'Grises': ['Gray', 'Gris', 'Grau', 'Grigi', 'Cinzas'],
+  'Negros': ['Black', 'Noirs', 'Schwarz', 'Neri', 'Pretos'],
+  'Minimalista': ['Minimalist', 'Minimaliste', 'Minimalistisch', 'Minimalista', 'Minimalista'],
+  'Clásico': ['Classic', 'Classique', 'Klassisch', 'Classico', 'Clássico'],
+  'Urbano': ['Urban', 'Urbain', 'Urban', 'Urbano', 'Urbano'],
+  'Elegante': ['Elegant', 'Élégant', 'Elegant', 'Elegante', 'Elegante'],
+  'Deportivo': ['Sporty', 'Sportif', 'Sportlich', 'Sportivo', 'Esportivo'],
+  'Bohemio': ['Bohemian', 'Bohème', 'Boho', 'Bohémien', 'Boêmio'],
+  'Armario Cápsula': ['Capsule Wardrobe', 'Garde-robe Capsule', 'Kapselgarderobe', 'Armadio Capsula', 'Guarda-roupa Cápsula'],
+  '15 minutos ahora = 91 horas ahorradas al año': ['15 minutes now = 91 hours saved per year', '15 minutes maintenant = 91 heures économisées par an', '15 Minuten jetzt = 91 Stunden pro Jahr gespart', '15 minuti ora = 91 ore risparmiate all\'anno', '15 minutos agora = 91 horas economizadas por ano'],
+  'Pasas una media de 15 minutos cada mañana decidiendo qué ponerte. Eso son más de 91 horas al año frente al espejo.': [
+    'You spend an average of 15 minutes every morning deciding what to wear. That\'s over 91 hours a year in front of the mirror.',
+    'Vous passez en moyenne 15 minutes chaque matin à décider quoi porter. C\'est plus de 91 heures par an devant le miroir.',
+    'Du verbringst durchschnittlich 15 Minuten jeden Morgen damit zu entscheiden, was du anziehst. Das sind über 91 Stunden pro Jahr vor dem Spiegel.',
+    'Passi in media 15 minuti ogni mattina a decidere cosa indossare. Sono più di 91 ore all\'anno davanti allo specchio.',
+    'Você passa em média 15 minutos todas as manhãs decidindo o que vestir. Isso representa mais de 91 horas por ano em frente ao espelho.'
+  ],
+  'Cómo hacer las fotos': ['How to take photos', 'Comment prendre les photos', 'So machst du Fotos', 'Come scattare le foto', 'Como tirar as fotos'],
+  'Importar desde tiendas web': ['Import from online stores', 'Importer depuis des boutiques en ligne', 'Aus Online-Shops importieren', 'Importa da negozi online', 'Importar de lojas online'],
+  '¡Hola! Soy Kloe, tu estilista personal. Puedo analizar las prendas de tu armario y tus looks guardados para crear cualquier outfit o explicarte qué lleva una publicación.': [
+    'Hi! I\'m Kloe, your personal stylist. I can analyze the clothes in your closet and your saved looks to build any outfit or explain what someone is wearing in a post.',
+    'Salut ! Je suis Kloe, votre styliste personnelle. Je peux analyser les vêtements de votre dressing et vos looks enregistrés pour créer n\'importe quelle tenue ou analyser un post.',
+    'Hallo! Ich bin Kloe, deine persönliche Stylistin. Ich kann deine Kleidung im Schrank und deine gespeicherten Looks analysieren, um jedes Outfit zu erstellen oder einen Beitrag zu erklären.',
+    'Ciao! Sono Kloe, la tua stilista personale. Posso analizzare i capi del tuo armadio e i tuoi look salvati per creare qualsiasi outfit o spiegarti cosa indossa una persona in un post.',
+    'Olá! Sou a Kloe, sua estilista pessoal. Posso analisar as peças do seu guarda-roupa e seus looks salvos para criar qualquer combinação ou explicar o que alguém está vestindo em um post.'
+  ],
+  'Arma un look casual con mis prendas': ['Build a casual look with my clothes', 'Crée un look décontracté avec mes vêtements', 'Erstelle einen lässigen Look mit meiner Kleidung', 'Crea un look casual con i miei capi', 'Monte um look casual com minhas peças'],
+  '¿Qué me pongo hoy según mi armario?': ['What should I wear today from my closet?', 'Que dois-je porter aujourd\'hui selon mon dressing ?', 'Was soll ich heute aus meinem Kleiderschrank anziehen?', 'Cosa mi metto oggi in base al mio armadio?', 'O que devo vestir hoje com meu guarda-roupa?'],
+  'Analiza qué lleva este post guardado': ['Analyze what they\'re wearing in this saved post', 'Analyse ce que porte la personne dans ce post', 'Analysiere das Outfit in diesem gespeicherten Beitrag', 'Analizza cosa indossa in questo post salvato', 'Analise o que está neste post salvo'],
+  '¿Qué compras clave me recomiendas?': ['What key purchases do you recommend?', 'Quels achats clés me recommandez-vous ?', 'Welche Schlüsselkäufe empfiehlst du mir?', 'Quali acquisti chiave mi consigli?', 'Quais compras-chave você me recomenda?'],
+  'Prenda borrada': ['Deleted item', 'Vêtement supprimé', 'Gelöschtes Teil', 'Capo eliminato', 'Peça excluída'],
+  'Guardar en Mis Outfits': ['Save to My Outfits', 'Enregistrer dans Mes Tenues', 'In Meine Outfits speichern', 'Salva nei Miei Outfit', 'Salvar em Meus Looks'],
+  'Outfit guardado': ['Outfit saved', 'Tenue enregistrée', 'Outfit gespeichert', 'Outfit salvato', 'Look salvo'],
+  'Desbloquear Kloe Pro': ['Unlock Kloe Pro', 'Débloquer Kloe Pro', 'Kloe Pro freischalten', 'Sblocca Kloe Pro', 'Desbloquear Kloe Pro'],
+  'Visibilidad': ['Visibility', 'Visibilité', 'Sichtbarkeit', 'Visibilità', 'Visibilidade'],
+  'Permite que otros vean tu perfil': ['Allow others to see your profile', 'Permettre aux autres de voir votre profil', 'Anderen erlauben, dein Profil zu sehen', 'Consenti agli altri di vedere il tuo profilo', 'Permitir que outros vejam seu perfil'],
+  'Compartir analíticas': ['Share analytics', 'Partager les analyses', 'Analysen teilen', 'Condividi statistiche', 'Compartilhar análises'],
+  'Ayúdanos a mejorar compartiendo datos anónimos': ['Help us improve by sharing anonymous data', 'Aidez-nous à nous améliorer en partageant des données anonymes', 'Hilf uns mit anonymen Daten, die App zu verbessern', 'Aiutaci a migliorare condividendo dati anonimi', 'Ajude-nos a melhorar compartilhando dados anônimos'],
+  'Datos y Personalización': ['Data & Personalization', 'Données et Personnalisation', 'Daten & Personalisierung', 'Dati e Personalizzazione', 'Dados e Personalização'],
+  'Recomendaciones personalizadas': ['Personalized recommendations', 'Recommandations personnalisées', 'Personalisierte Empfehlungen', 'Raccomandazioni personalizzate', 'Recomendações personalizadas'],
+  'Usa tu historial para mejorar sugerencias': ['Use your history to improve suggestions', 'Utiliser votre historique pour affiner les suggestions', 'Verwende den Verlauf für bessere Vorschläge', 'Usa la tua cronologia per migliorare i suggerimenti', 'Use seu histórico para melhorar sugestões'],
+  'Guardar historial': ['Save history', 'Historique des tenues', 'Verlauf speichern', 'Salva cronologia', 'Salvar histórico'],
+  'Mantén un registro de tus outfits generados': ['Keep a record of your generated outfits', 'Conserver un historique de vos looks générés', 'Behalte den Überblick über deine generierten Outfits', 'Tieni traccia degli outfit generati', 'Mantenha um registro dos seus looks gerados'],
+  'Tus Datos': ['Your Data', 'Vos Données', 'Deine Daten', 'I tuoi Dati', 'Seus Dados'],
+  'Descargar mis datos': ['Download my data', 'Télécharger mes données', 'Meine Daten herunterladen', 'Scarica i miei dati', 'Baixar meus dados'],
+  'Obtén una copia de toda tu información': ['Get a copy of all your information', 'Obtenir une copie de toutes vos informations', 'Erhalte eine Kopie all deiner Daten', 'Ottieni una copia di tutte le tue informazioni', 'Obtenha uma cópia de todas as suas informações'],
+  'Legal': ['Legal', 'Mentions Légales', 'Rechtliches', 'Legale', 'Legal'],
+  'Cambia entre modo claro y oscuro': ['Switch between light and dark mode', 'Basculer entre le mode clair et sombre', 'Zwischen hellem und dunklem Modus wechseln', 'Passa dalla modalità chiara a quella scura', 'Alternar entre modo claro e escuro'],
+  'Selecciona tu idioma preferido': ['Select your preferred language', 'Sélectionnez votre langue préférée', 'Wähle deine bevorzugte Sprache', 'Seleziona la tua lingua preferita', 'Selecione seu idioma preferido'],
+  'Dispositivo': ['Device', 'Appareil', 'Gerät', 'Dispositivo', 'Dispositivo'],
+  'Versión de la app': ['App version', 'Version de l\'application', 'App-Version', 'Versione dell\'app', 'Versão do aplicativo'],
+  'Zona de peligro': ['Danger zone', 'Zone de danger', 'Gefahrenzone', 'Zona pericolosa', 'Zona de perigo'],
+  'Elimina permanentemente tu cuenta y todos tus datos': ['Permanently delete your account and all your data', 'Supprimer définitivement votre compte et toutes vos données', 'Konto und alle Daten unwiderruflich löschen', 'Elimina definitivamente il tuo account e tutti i tuoi dati', 'Exclua permanentemente sua conta e todos os seus dados'],
+  'Esta acción no se puede deshacer. Todos tus datos, prendas y outfits serán eliminados permanentemente.': [
+    'This action cannot be undone. All your data, items, and outfits will be permanently deleted.',
+    'Cette action est irréversible. Toutes vos données, vêtements et tenues seront définitivement supprimés.',
+    'Diese Aktion kann nicht rückgängig gemacht werden. Alle deine Daten, Kleidungsstücke und Outfits werden dauerhaft gelöscht.',
+    'Questa azione non può essere annullata. Tutti i tuoi dati, capi e outfit verranno eliminati definitivamente.',
+    'Esta ação não pode ser desfeita. Todos os seus dados, peças e looks serão excluídos permanentemente.'
+  ],
+};
+
+interface DynamicPatternRule {
+  regex: RegExp;
+  format: (match: RegExpExecArray, langIdx: number) => string;
+}
+
+const DYNAMIC_PATTERNS: DynamicPatternRule[] = [
+  {
+    regex: /^hace\s+(\d+)\s+min(?:uto)?s?$/i,
+    format: (m, i) => [`${m[1]}m ago`, `il y a ${m[1]} min`, `vor ${m[1]} Min.`, `${m[1]} min fa`, `há ${m[1]} min`][i],
+  },
+  {
+    regex: /^hace\s+(\d+)\s+h(?:ora)?s?$/i,
+    format: (m, i) => [`${m[1]}h ago`, `il y a ${m[1]} h`, `vor ${m[1]} Std.`, `${m[1]} h fa`, `há ${m[1]} h`][i],
+  },
+  {
+    regex: /^hace\s+(\d+)\s+d[íi]as?$/i,
+    format: (m, i) => [`${m[1]}d ago`, `il y a ${m[1]} j`, `vor ${m[1]} T.`, `${m[1]} g fa`, `há ${m[1]} d`][i],
+  },
+  {
+    regex: /^(\d+)\s+prendas?$/i,
+    format: (m, i) => [`${m[1]} items`, `${m[1]} vêtements`, `${m[1]} Teile`, `${m[1]} capi`, `${m[1]} peças`][i],
+  },
+  {
+    regex: /^Ver\s+(\d+)\s+prendas?$/i,
+    format: (m, i) => [`View ${m[1]} items`, `Voir ${m[1]} vêtements`, `${m[1]} Teile ansehen`, `Vedi ${m[1]} capi`, `Ver ${m[1]} peças`][i],
+  },
+  {
+    regex: /^(\d+)\s+seleccionad[oa]s?$/i,
+    format: (m, i) => [`${m[1]} selected`, `${m[1]} sélectionné(s)`, `${m[1]} ausgewählt`, `${m[1]} selezionati`, `${m[1]} selecionado(s)`][i],
+  },
+  {
+    regex: /^Listo\s*\((\d+)\s+seleccionadas?\)$/i,
+    format: (m, i) => [`Done (${m[1]} selected)`, `Terminé (${m[1]} sélectionnés)`, `Fertig (${m[1]} ausgewählt)`, `Fatto (${m[1]} selezionati)`, `Pronto (${m[1]} selecionados)`][i],
+  },
+  {
+    regex: /^Tu Armario\s*\((\d+)\)$/i,
+    format: (m, i) => [`Your Closet (${m[1]})`, `Votre Dressing (${m[1]})`, `Dein Kleiderschrank (${m[1]})`, `Il tuo Armadio (${m[1]})`, `Seu Guarda-roupa (${m[1]})`][i],
+  },
+  {
+    regex: /^Looks Guardados\s*\((\d+)\)$/i,
+    format: (m, i) => [`Saved Looks (${m[1]})`, `Looks Enregistrés (${m[1]})`, `Gespeicherte Looks (${m[1]})`, `Look Salvati (${m[1]})`, `Looks Salvos (${m[1]})`][i],
+  },
+  {
+    regex: /^Subida m[úu]ltiple\s*\((\d+)\)$/i,
+    format: (m, i) => [`Batch upload (${m[1]})`, `Import multiple (${m[1]})`, `Mehrfach-Upload (${m[1]})`, `Caricamento multiplo (${m[1]})`, `Envio múltiplo (${m[1]})`][i],
+  },
+  {
+    regex: /^©\s*(\d{4})\s*Klozet\.\s*Todos los derechos reservados\.$/i,
+    format: (m, i) => [
+      `© ${m[1]} Klozet. All rights reserved.`,
+      `© ${m[1]} Klozet. Tous droits réservés.`,
+      `© ${m[1]} Klozet. Alle Rechte vorbehalten.`,
+      `© ${m[1]} Klozet. Tutti i diritti riservati.`,
+      `© ${m[1]} Klozet. Todos os direitos reservados.`,
+    ][i],
+  },
+];
+
+const LANG_INDEX: Record<Exclude<Language, 'es'>, number> = {
+  en: 0,
+  fr: 1,
+  de: 2,
+  it: 3,
+  pt: 4,
+};
+
+export function translateSpanishString(raw: string, lang: Language): string | null {
+  if (lang === 'es' || !raw) return null;
+  const trimmed = raw.trim();
+  if (!trimmed || trimmed.length < 2) return null;
+  if (trimmed.startsWith('@') || /^https?:\/\//i.test(trimmed)) return null;
+
+  const idx = LANG_INDEX[lang];
+  if (idx === undefined) return null;
+
+  const exact = EXACT_UI_TRANSLATIONS[trimmed];
+  if (exact && exact[idx]) {
+    const leading = raw.match(/^\s*/)?.[0] || '';
+    const trailing = raw.match(/\s*$/)?.[0] || '';
+    return `${leading}${exact[idx]}${trailing}`;
+  }
+
+  for (const rule of DYNAMIC_PATTERNS) {
+    const m = rule.regex.exec(trimmed);
+    if (m) {
+      const leading = raw.match(/^\s*/)?.[0] || '';
+      const trailing = raw.match(/\s*$/)?.[0] || '';
+      return `${leading}${rule.format(m, idx)}${trailing}`;
+    }
+  }
+
+  return null;
+}

@@ -19,6 +19,7 @@ export interface Translations {
     kloe: string;
     profile: string;
     search: string;
+    notifications: string;
   };
 
   // Closet Page
@@ -291,6 +292,7 @@ export const translations: Record<Language, Translations> = {
       kloe: 'Kloe',
       profile: 'Perfil',
       search: 'Buscar',
+      notifications: 'Notificaciones',
     },
     closet: {
       title: 'Mi Armario',
@@ -548,6 +550,7 @@ export const translations: Record<Language, Translations> = {
       kloe: 'Kloe',
       profile: 'Profile',
       search: 'Search',
+      notifications: 'Notifications',
     },
     closet: {
       title: 'My Closet',
@@ -805,6 +808,7 @@ export const translations: Record<Language, Translations> = {
       kloe: 'Kloe',
       profile: 'Profil',
       search: 'Recherche',
+      notifications: 'Notifications',
     },
     closet: {
       title: 'Mon Dressing',
@@ -1062,6 +1066,7 @@ export const translations: Record<Language, Translations> = {
       kloe: 'Kloe',
       profile: 'Profil',
       search: 'Suche',
+      notifications: 'Benachrichtigungen',
     },
     closet: {
       title: 'Mein Kleiderschrank',
@@ -1319,6 +1324,7 @@ export const translations: Record<Language, Translations> = {
       kloe: 'Kloe',
       profile: 'Profilo',
       search: 'Cerca',
+      notifications: 'Notifiche',
     },
     closet: {
       title: 'Il mio Armadio',
@@ -1576,6 +1582,7 @@ export const translations: Record<Language, Translations> = {
       kloe: 'Kloe',
       profile: 'Perfil',
       search: 'Pesquisar',
+      notifications: 'Notificações',
     },
     closet: {
       title: 'Meu Guarda-roupa',
