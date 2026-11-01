@@ -122,12 +122,28 @@ export default function LandingPage() {
     },
   });
 
+  // Force light mode on Landing Page (never dark)
+  useEffect(() => {
+    const root = document.documentElement;
+    const wasDark = root.classList.contains('dark');
+    root.classList.remove('dark');
+    root.style.colorScheme = 'light';
+    return () => {
+      const savedTheme = localStorage.getItem('klozet_theme');
+      if (savedTheme === 'dark' || (wasDark && !savedTheme)) {
+        root.classList.add('dark');
+        root.style.colorScheme = 'dark';
+      }
+    };
+  }, []);
+
   return (
     <div 
       onWheel={handleWheel}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
-      className="h-[100dvh] min-h-[100dvh] w-screen overflow-hidden bg-white dark:bg-[#0a0a0c] text-zinc-900 dark:text-zinc-50 selection:bg-[var(--brand-pink,#FF66C4)] selection:text-white flex flex-col justify-between fixed inset-0 select-none antialiased"
+      style={{ colorScheme: 'light', backgroundColor: '#ffffff', color: '#09090b' }}
+      className="h-[100dvh] min-h-[100dvh] w-screen overflow-hidden bg-white text-zinc-900 selection:bg-[var(--brand-pink,#FF66C4)] selection:text-white flex flex-col justify-between fixed inset-0 select-none antialiased"
     >
       {/* 1. TOP BAR WITH LOGO AND AUTH BUTTONS */}
       <header className="fixed top-0 left-0 right-0 z-50 px-4 sm:px-8 py-3 sm:py-5 flex items-center justify-between pointer-events-none">
@@ -159,7 +175,7 @@ export default function LandingPage() {
             <>
               <Link 
                 href="/auth" 
-                className="px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-bold text-zinc-950 dark:text-zinc-50 hover:text-black dark:hover:text-white bg-white dark:bg-zinc-800/90 backdrop-blur-md border border-zinc-200 dark:border-zinc-700 shadow-sm transition-all active:scale-95"
+                className="px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-bold text-zinc-950 hover:text-black bg-white backdrop-blur-md border border-zinc-200 shadow-sm transition-all active:scale-95"
               >
                 Entrar
               </Link>
@@ -178,7 +194,7 @@ export default function LandingPage() {
       {/* 2. ATMOSPHERIC BACKDROP LIGHTING */}
       <div 
         className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] sm:w-[820px] h-[340px] sm:h-[820px] rounded-full blur-3xl pointer-events-none transition-all duration-1000 -z-10 ${
-          currentFrame === 0 ? 'bg-gradient-to-tr from-[var(--brand-pink,#FF66C4)]/15 via-rose-200/10 dark:via-rose-950/20 to-transparent' :
+          currentFrame === 0 ? 'bg-gradient-to-tr from-[var(--brand-pink,#FF66C4)]/15 via-rose-200/10 to-transparent' :
           currentFrame === 1 ? 'bg-gradient-to-tr from-purple-500/12 via-[var(--brand-pink,#FF66C4)]/10 to-transparent' :
           currentFrame === 2 ? 'bg-gradient-to-tr from-[var(--brand-pink,#FF66C4)]/20 via-pink-400/15 to-transparent' :
           currentFrame === 3 ? 'bg-gradient-to-tr from-indigo-500/12 via-purple-500/10 to-transparent' :
@@ -187,7 +203,7 @@ export default function LandingPage() {
       />
 
       {/* 3. SUBTLE WATERMARK BACKGROUND */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[450px] sm:max-w-[900px] opacity-[0.03] dark:opacity-[0.05] pointer-events-none -z-10 transition-transform duration-700">
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[450px] sm:max-w-[900px] opacity-[0.03] pointer-events-none -z-10 transition-transform duration-700">
         <Image 
           src="/landing/klozet-nombre-grande.png" 
           alt="" 
@@ -219,7 +235,7 @@ export default function LandingPage() {
               <div className="my-auto w-full flex flex-col items-center gap-3 sm:gap-5 py-2">
                 {/* Monumental Editorial Headline (Estilo fc899bc: Drop-cap Italic Serif + Bold Display) */}
                 <motion.div variants={itemFadeUp} className="flex flex-col items-center">
-                  <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-[5.5rem] font-black tracking-tighter uppercase leading-[0.9] text-zinc-950 dark:text-white">
+                  <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-[5.5rem] font-black tracking-tighter uppercase leading-[0.9] text-zinc-950">
                     <span className="text-[1.2em] italic font-serif text-[var(--brand-pink,#FF66C4)] mr-0.5">A</span>rmario Lleno
                   </h1>
                   <h2 className="text-3xl sm:text-5xl md:text-6xl lg:text-[5.5rem] font-black tracking-tighter uppercase leading-[0.9] bg-gradient-to-r from-[var(--brand-pink,#FF66C4)] via-pink-400 to-purple-500 bg-clip-text text-transparent mt-0.5 sm:mt-1">
@@ -230,7 +246,7 @@ export default function LandingPage() {
                 {/* Narrative Text */}
                 <motion.p 
                   variants={itemFadeUp}
-                  className="text-xs sm:text-sm md:text-base text-zinc-600 dark:text-zinc-400 max-w-xs sm:max-w-md font-normal leading-relaxed"
+                  className="text-xs sm:text-sm md:text-base text-zinc-600 max-w-xs sm:max-w-md font-normal leading-relaxed"
                 >
                   Todas las mañanas el mismo lío frente al espejo. Klozet organiza tus prendas reales en un lookbook interactivo para que salgas con el fit clavado.
                 </motion.p>
@@ -258,7 +274,7 @@ export default function LandingPage() {
                       className="w-full h-auto object-contain -rotate-10" 
                       priority 
                     />
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 whitespace-nowrap">
                       Jersey Rayas
                     </div>
                   </motion.div>
@@ -281,7 +297,7 @@ export default function LandingPage() {
                       className="w-full h-auto object-contain -rotate-8" 
                       priority 
                     />
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 whitespace-nowrap">
                       Top Halter
                     </div>
                   </motion.div>
@@ -304,7 +320,7 @@ export default function LandingPage() {
                       className="w-full h-auto object-contain rotate-2 transition-transform duration-500" 
                       priority 
                     />
-                    <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[8px] sm:text-[10px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap flex items-center gap-1">
+                    <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[8px] sm:text-[10px] font-bold text-zinc-950 whitespace-nowrap flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-[var(--brand-pink,#FF66C4)]" />
                       <span>Jacket Militar</span>
                     </div>
@@ -328,7 +344,7 @@ export default function LandingPage() {
                       className="w-full h-auto object-contain rotate-8" 
                       priority 
                     />
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 whitespace-nowrap">
                       Denim Wide
                     </div>
                   </motion.div>
@@ -351,7 +367,7 @@ export default function LandingPage() {
                       className="w-full h-auto object-contain rotate-12" 
                       priority 
                     />
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 whitespace-nowrap">
                       Cartier Tank
                     </div>
                   </motion.div>
@@ -374,7 +390,7 @@ export default function LandingPage() {
                       className="w-full h-auto object-contain -rotate-10" 
                       priority 
                     />
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 whitespace-nowrap">
                       Suede Bag
                     </div>
                   </motion.div>
@@ -397,7 +413,7 @@ export default function LandingPage() {
                       className="w-full h-auto object-contain -rotate-6" 
                       priority 
                     />
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 whitespace-nowrap">
                       Alaïa Strass
                     </div>
                   </motion.div>
@@ -436,7 +452,7 @@ export default function LandingPage() {
                 <div className="w-full md:w-1/2 text-center md:text-left flex flex-col justify-center z-20">
                   <motion.h2 
                     variants={itemFadeUp}
-                    className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tighter uppercase leading-[0.9] text-zinc-950 dark:text-white"
+                    className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tighter uppercase leading-[0.9] text-zinc-950"
                   >
                     <span className="text-[1.2em] italic font-serif text-[var(--brand-pink,#FF66C4)] mr-0.5">T</span>oda tu ropa
                   </motion.h2>
@@ -448,7 +464,7 @@ export default function LandingPage() {
                   </motion.h3>
                   <motion.p 
                     variants={itemFadeUp}
-                    className="mt-3 sm:mt-4 text-xs sm:text-sm md:text-base text-zinc-600 dark:text-zinc-400 leading-relaxed max-w-xs sm:max-w-md mx-auto md:mx-0 font-normal"
+                    className="mt-3 sm:mt-4 text-xs sm:text-sm md:text-base text-zinc-600 leading-relaxed max-w-xs sm:max-w-md mx-auto md:mx-0 font-normal"
                   >
                     Saca una foto en la percha o en la puerta de tu cuarto. El fondo desaparece al instante y tu ropa real queda limpia, ordenada y lista para combinar.
                   </motion.p>
@@ -474,7 +490,7 @@ export default function LandingPage() {
                       height={180} 
                       className="w-full h-auto object-contain -rotate-8" 
                     />
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 whitespace-nowrap">
                       Jersey Punto
                     </div>
                   </motion.div>
@@ -496,7 +512,7 @@ export default function LandingPage() {
                       height={220} 
                       className="w-full h-auto object-contain -rotate-10" 
                     />
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 whitespace-nowrap">
                       Replica GAT
                     </div>
                   </motion.div>
@@ -528,7 +544,7 @@ export default function LandingPage() {
                         className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-[var(--brand-pink,#FF66C4)] to-transparent shadow-[0_0_14px_var(--brand-pink,#FF66C4)] pointer-events-none"
                       />
                     </div>
-                    <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[8px] sm:text-[10px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap flex items-center gap-1">
+                    <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[8px] sm:text-[10px] font-bold text-zinc-950 whitespace-nowrap flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-[var(--brand-pink,#FF66C4)]" />
                       <span>Top Plisado</span>
                     </div>
@@ -551,7 +567,7 @@ export default function LandingPage() {
                       height={260} 
                       className="w-full h-auto object-contain rotate-10" 
                     />
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 whitespace-nowrap">
                       Denim Gris
                     </div>
                   </motion.div>
@@ -573,7 +589,7 @@ export default function LandingPage() {
                       height={160} 
                       className="w-full h-auto object-contain -rotate-6" 
                     />
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 whitespace-nowrap">
                       Bailarinas
                     </div>
                   </motion.div>
@@ -599,7 +615,7 @@ export default function LandingPage() {
                 <div className="w-full md:w-1/2 text-center md:text-left flex flex-col justify-center z-20">
                   <motion.h2 
                     variants={itemFadeUp}
-                    className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tighter uppercase leading-[0.9] text-zinc-950 dark:text-white"
+                    className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tighter uppercase leading-[0.9] text-zinc-950"
                   >
                     <span className="text-[1.2em] italic font-serif text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-purple-400 mr-0.5">Q</span>ué me pongo
                   </motion.h2>
@@ -611,7 +627,7 @@ export default function LandingPage() {
                   </motion.h3>
                   <motion.p 
                     variants={itemFadeUp}
-                    className="mt-3 sm:mt-4 text-xs sm:text-sm md:text-base text-zinc-600 dark:text-zinc-400 leading-relaxed max-w-xs sm:max-w-md mx-auto md:mx-0 font-normal"
+                    className="mt-3 sm:mt-4 text-xs sm:text-sm md:text-base text-zinc-600 leading-relaxed max-w-xs sm:max-w-md mx-auto md:mx-0 font-normal"
                   >
                     Dile qué plan tienes o qué tiempo hace. Kloe revisa tus prendas reales y te compone el outfit perfecto al segundo, sin gastar un euro en ropa nueva.
                   </motion.p>
@@ -640,7 +656,7 @@ export default function LandingPage() {
                       height={190} 
                       className="w-full h-auto object-contain rotate-8" 
                     />
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 whitespace-nowrap">
                       Jacket Militar
                     </div>
                   </motion.div>
@@ -662,7 +678,7 @@ export default function LandingPage() {
                       height={260} 
                       className="w-full h-auto object-contain -rotate-8" 
                     />
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 whitespace-nowrap">
                       Denim Wide
                     </div>
                   </motion.div>
@@ -684,7 +700,7 @@ export default function LandingPage() {
                       height={100} 
                       className="w-full h-auto object-contain rotate-10" 
                     />
-                    <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
+                    <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 whitespace-nowrap">
                       Miu Miu
                     </div>
                   </motion.div>
@@ -706,7 +722,7 @@ export default function LandingPage() {
                       height={160} 
                       className="w-full h-auto object-contain -rotate-6" 
                     />
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 whitespace-nowrap">
                       Suede Bag
                     </div>
                   </motion.div>
@@ -736,9 +752,9 @@ export default function LandingPage() {
                     variants={itemFloatIn(-30, -30, -4)}
                     animate={{ y: [0, -5, 0] }}
                     transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
-                    className="absolute -top-1 sm:top-6 left-0 sm:left-2 z-20 px-3.5 py-2 rounded-2xl rounded-bl-xs bg-white/95 dark:bg-zinc-800/95 backdrop-blur-xl border border-black/[0.08] dark:border-white/[0.08] shadow-md max-w-[170px] sm:max-w-[210px]"
+                    className="absolute -top-1 sm:top-6 left-0 sm:left-2 z-20 px-3.5 py-2 rounded-2xl rounded-bl-xs bg-white/95 backdrop-blur-xl border border-black/[0.08] shadow-md max-w-[170px] sm:max-w-[210px]"
                   >
-                    <p className="text-[10px] sm:text-xs text-zinc-700 dark:text-zinc-200 font-medium">
+                    <p className="text-[10px] sm:text-xs text-zinc-700 font-medium">
                       &ldquo;¿Qué me pongo hoy para salir de chill?&rdquo;
                     </p>
                   </motion.div>
@@ -780,7 +796,7 @@ export default function LandingPage() {
                 <div className="w-full md:w-1/2 text-center md:text-left flex flex-col justify-center z-20">
                   <motion.h2 
                     variants={itemFadeUp}
-                    className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tighter uppercase leading-[0.9] text-zinc-950 dark:text-white"
+                    className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tighter uppercase leading-[0.9] text-zinc-950"
                   >
                     <span className="text-[1.2em] italic font-serif text-purple-400 mr-0.5">M</span>onta tu fit
                   </motion.h2>
@@ -792,7 +808,7 @@ export default function LandingPage() {
                   </motion.h3>
                   <motion.p 
                     variants={itemFadeUp}
-                    className="mt-3 sm:mt-4 text-xs sm:text-sm md:text-base text-zinc-600 dark:text-zinc-400 leading-relaxed max-w-xs sm:max-w-md mx-auto md:mx-0 font-normal"
+                    className="mt-3 sm:mt-4 text-xs sm:text-sm md:text-base text-zinc-600 leading-relaxed max-w-xs sm:max-w-md mx-auto md:mx-0 font-normal"
                   >
                     Prueba combinaciones en el lienzo libre, guarda tus looks favoritos y sal de casa sabiendo qué ponerte antes de desordenar el cuarto.
                   </motion.p>
@@ -807,7 +823,7 @@ export default function LandingPage() {
                     animate={{ y: [0, 7, 0], rotate: [-8, -6, -8] }}
                     transition={{ duration: 4.8, repeat: Infinity, ease: 'easeInOut' }}
                     whileHover={{ scale: 1.08, rotate: -3 }}
-                    className="absolute left-1 sm:left-4 md:left-6 top-1 sm:top-3 md:top-6 w-16 sm:w-26 md:w-36 lg:w-40 aspect-[3/4] rounded-2xl overflow-hidden bg-white border border-black/[0.08] dark:border-white/[0.08] shadow-lg -rotate-8 transition-transform duration-500 z-10 cursor-pointer p-1"
+                    className="absolute left-1 sm:left-4 md:left-6 top-1 sm:top-3 md:top-6 w-16 sm:w-26 md:w-36 lg:w-40 aspect-[3/4] rounded-2xl overflow-hidden bg-white border border-black/[0.08] shadow-lg -rotate-8 transition-transform duration-500 z-10 cursor-pointer p-1"
                   >
                     <Image 
                       src="/landing/outfits/mujer-halter-alaia.jpg" 
@@ -815,7 +831,7 @@ export default function LandingPage() {
                       fill 
                       className="object-contain p-1" 
                     />
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[7px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[7px] sm:text-[9px] font-bold text-zinc-950 whitespace-nowrap">
                       Look Mujer
                     </div>
                   </motion.div>
@@ -837,7 +853,7 @@ export default function LandingPage() {
                       height={180} 
                       className="w-full h-auto object-contain rotate-12" 
                     />
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[7px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[7px] sm:text-[9px] font-bold text-zinc-950 whitespace-nowrap">
                       Replica
                     </div>
                   </motion.div>
@@ -848,7 +864,7 @@ export default function LandingPage() {
                     animate={{ y: [0, -7, 0] }}
                     transition={{ duration: 4.2, repeat: Infinity, ease: 'easeInOut' }}
                     whileHover={{ scale: 1.06 }}
-                    className="relative z-20 w-28 sm:w-42 md:w-56 lg:w-60 aspect-[3/4] rounded-2xl md:rounded-[24px] overflow-hidden bg-white border border-black/[0.08] dark:border-white/[0.08] shadow-[0_16px_36px_rgba(0,0,0,0.18)] cursor-pointer p-1.5"
+                    className="relative z-20 w-28 sm:w-42 md:w-56 lg:w-60 aspect-[3/4] rounded-2xl md:rounded-[24px] overflow-hidden bg-white border border-black/[0.08] shadow-[0_16px_36px_rgba(0,0,0,0.18)] cursor-pointer p-1.5"
                   >
                     <Image 
                       src="/landing/outfits/hombre-militar-margiela.png" 
@@ -856,7 +872,7 @@ export default function LandingPage() {
                       fill 
                       className="object-contain p-1.5" 
                     />
-                    <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2.5 py-0.5 sm:py-1 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[8px] sm:text-[10px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap flex items-center gap-1">
+                    <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2.5 py-0.5 sm:py-1 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[8px] sm:text-[10px] font-bold text-zinc-950 whitespace-nowrap flex items-center gap-1">
                       <Star className="w-3 h-3 text-[var(--brand-pink,#FF66C4)]" />
                       <span>Lienzo de Hoy</span>
                     </div>
@@ -879,7 +895,7 @@ export default function LandingPage() {
                       height={180} 
                       className="w-full h-auto object-contain -rotate-10" 
                     />
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[7px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[7px] sm:text-[9px] font-bold text-zinc-950 whitespace-nowrap">
                       Suede Bag
                     </div>
                   </motion.div>
@@ -901,7 +917,7 @@ export default function LandingPage() {
                       height={140} 
                       className="w-full h-auto object-contain rotate-8" 
                     />
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[7px] sm:text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[7px] sm:text-[9px] font-bold text-zinc-950 whitespace-nowrap">
                       Alaïa
                     </div>
                   </motion.div>
@@ -912,7 +928,7 @@ export default function LandingPage() {
                     animate={{ y: [0, 6, 0], rotate: [8, 10, 8] }}
                     transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
                     whileHover={{ scale: 1.08, rotate: 5 }}
-                    className="absolute right-1 sm:right-4 md:right-6 bottom-1 sm:bottom-3 md:bottom-6 w-16 sm:w-26 md:w-36 lg:w-40 aspect-[3/4] rounded-2xl overflow-hidden bg-white border border-black/[0.08] dark:border-white/[0.08] shadow-lg rotate-8 transition-transform duration-500 z-10 cursor-pointer p-1"
+                    className="absolute right-1 sm:right-4 md:right-6 bottom-1 sm:bottom-3 md:bottom-6 w-16 sm:w-26 md:w-36 lg:w-40 aspect-[3/4] rounded-2xl overflow-hidden bg-white border border-black/[0.08] shadow-lg rotate-8 transition-transform duration-500 z-10 cursor-pointer p-1"
                   >
                     <Image 
                       src="/landing/outfits/mujer-rayas-miumiu-byredo.jpg" 
@@ -920,7 +936,7 @@ export default function LandingPage() {
                       fill 
                       className="object-contain p-1" 
                     />
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[7px] sm:text-[9px] font-bold text-[var(--brand-pink,#FF66C4)] whitespace-nowrap">
+                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[7px] sm:text-[9px] font-bold text-[var(--brand-pink,#FF66C4)] whitespace-nowrap">
                       Look Diario
                     </div>
                   </motion.div>
@@ -946,7 +962,7 @@ export default function LandingPage() {
                 variants={itemFloatIn(-50, 0, -6)}
                 animate={{ y: [0, -7, 0], rotate: [-6, -4, -6] }}
                 transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-                className="hidden md:block absolute left-4 lg:left-8 xl:left-20 top-1/2 -translate-y-1/2 w-28 lg:w-40 xl:w-48 aspect-[3/4] rounded-2xl overflow-hidden bg-white border border-black/[0.08] dark:border-white/[0.08] shadow-xl -rotate-6 pointer-events-auto cursor-pointer z-10 p-1.5"
+                className="hidden md:block absolute left-4 lg:left-8 xl:left-20 top-1/2 -translate-y-1/2 w-28 lg:w-40 xl:w-48 aspect-[3/4] rounded-2xl overflow-hidden bg-white border border-black/[0.08] shadow-xl -rotate-6 pointer-events-auto cursor-pointer z-10 p-1.5"
                 whileHover={{ scale: 1.05, rotate: -3 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => triggerHaptic('light')}
@@ -957,7 +973,7 @@ export default function LandingPage() {
                   fill 
                   className="object-contain p-1.5" 
                 />
-                <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[9px] font-bold text-zinc-950 dark:text-zinc-100 whitespace-nowrap">
+                <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[9px] font-bold text-zinc-950 whitespace-nowrap">
                   Hombre • Denim
                 </div>
 
@@ -978,7 +994,7 @@ export default function LandingPage() {
                 variants={itemFloatIn(50, 0, 6)}
                 animate={{ y: [0, 7, 0], rotate: [6, 8, 6] }}
                 transition={{ duration: 5.2, repeat: Infinity, ease: 'easeInOut' }}
-                className="hidden md:block absolute right-4 lg:right-8 xl:right-20 top-1/2 -translate-y-1/2 w-28 lg:w-40 xl:w-48 aspect-[3/4] rounded-2xl overflow-hidden bg-white border border-black/[0.08] dark:border-white/[0.08] shadow-xl rotate-6 pointer-events-auto cursor-pointer z-10 p-1.5"
+                className="hidden md:block absolute right-4 lg:right-8 xl:right-20 top-1/2 -translate-y-1/2 w-28 lg:w-40 xl:w-48 aspect-[3/4] rounded-2xl overflow-hidden bg-white border border-black/[0.08] shadow-xl rotate-6 pointer-events-auto cursor-pointer z-10 p-1.5"
                 whileHover={{ scale: 1.05, rotate: 3 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => triggerHaptic('light')}
@@ -989,7 +1005,7 @@ export default function LandingPage() {
                   fill 
                   className="object-contain p-1.5" 
                 />
-                <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-700 shadow-sm text-[9px] font-bold text-[var(--brand-pink,#FF66C4)] whitespace-nowrap">
+                <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[9px] font-bold text-[var(--brand-pink,#FF66C4)] whitespace-nowrap">
                   Mujer • Kloe
                 </div>
 
@@ -1022,7 +1038,7 @@ export default function LandingPage() {
                 {/* Monumental Closing Headline (Estilo fc899bc: Drop-cap Italic Serif) */}
                 <motion.h2 
                   variants={itemFadeUp}
-                  className="text-3xl sm:text-5xl md:text-6xl font-black text-zinc-950 dark:text-white tracking-tighter uppercase leading-[0.9]"
+                  className="text-3xl sm:text-5xl md:text-6xl font-black text-zinc-950 tracking-tighter uppercase leading-[0.9]"
                 >
                   <span className="text-[1.2em] italic font-serif text-[var(--brand-pink,#FF66C4)] mr-0.5">V</span>ístete mejor <br />
                   <span className="bg-gradient-to-r from-[var(--brand-pink,#FF66C4)] to-purple-500 bg-clip-text text-transparent">
@@ -1032,7 +1048,7 @@ export default function LandingPage() {
                 
                 <motion.p 
                   variants={itemFadeUp}
-                  className="mt-3 sm:mt-4 text-xs sm:text-sm md:text-base text-zinc-600 dark:text-zinc-400 leading-relaxed max-w-xs sm:max-w-md font-normal"
+                  className="mt-3 sm:mt-4 text-xs sm:text-sm md:text-base text-zinc-600 leading-relaxed max-w-xs sm:max-w-md font-normal"
                 >
                   Regístrate gratis en menos de un minuto y empieza a organizar tus outfits favoritos.
                 </motion.p>
@@ -1043,7 +1059,7 @@ export default function LandingPage() {
                     whileHover={{ scale: 1.08 }} 
                     whileTap={{ scale: 0.94 }}
                     onClick={() => triggerHaptic('light')}
-                    className="w-16 sm:w-20 aspect-[3/4] rounded-xl overflow-hidden bg-white border border-black/[0.08] dark:border-white/[0.08] shadow-sm -rotate-3 relative cursor-pointer p-1"
+                    className="w-16 sm:w-20 aspect-[3/4] rounded-xl overflow-hidden bg-white border border-black/[0.08] shadow-sm -rotate-3 relative cursor-pointer p-1"
                   >
                     <Image 
                       src="/landing/outfits/hombre-jersey-rayas-samba.jpg" 
@@ -1074,7 +1090,7 @@ export default function LandingPage() {
                     whileHover={{ scale: 1.08 }} 
                     whileTap={{ scale: 0.94 }}
                     onClick={() => triggerHaptic('light')}
-                    className="w-16 sm:w-20 aspect-[3/4] rounded-xl overflow-hidden bg-white border border-black/[0.08] dark:border-white/[0.08] shadow-sm rotate-3 relative cursor-pointer p-1"
+                    className="w-16 sm:w-20 aspect-[3/4] rounded-xl overflow-hidden bg-white border border-black/[0.08] shadow-sm rotate-3 relative cursor-pointer p-1"
                   >
                     <Image 
                       src="/landing/outfits/mujer-halter-alaia.jpg" 
@@ -1100,7 +1116,7 @@ export default function LandingPage() {
                   {user && (
                     <Link
                       href="/closet"
-                      className="w-full sm:w-auto px-5 sm:px-7 py-3 rounded-full font-bold text-xs sm:text-sm bg-white hover:bg-zinc-50 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-950 dark:text-zinc-50 border border-zinc-200 dark:border-zinc-700 shadow-sm transition-all active:scale-95 inline-flex items-center justify-center"
+                      className="w-full sm:w-auto px-5 sm:px-7 py-3 rounded-full font-bold text-xs sm:text-sm bg-white hover:bg-zinc-50 text-zinc-950 border border-zinc-200 shadow-sm transition-all active:scale-95 inline-flex items-center justify-center"
                     >
                       Ir a mi armario
                     </Link>
@@ -1111,9 +1127,9 @@ export default function LandingPage() {
               {/* Integrated Apple Legal & Directory Footer */}
               <motion.div 
                 variants={itemFadeUp}
-                className="w-full pt-3 sm:pt-4 border-t border-zinc-200/60 dark:border-zinc-800/60 flex flex-col sm:flex-row items-center justify-between gap-1.5 text-[10px] sm:text-xs text-zinc-500 dark:text-zinc-400 font-normal max-w-4xl mx-auto relative z-20 mt-auto"
+                className="w-full pt-3 sm:pt-4 border-t border-zinc-200/60 flex flex-col sm:flex-row items-center justify-between gap-1.5 text-[10px] sm:text-xs text-zinc-500 font-normal max-w-4xl mx-auto relative z-20 mt-auto"
               >
-                <p className="text-[9px] sm:text-[11px] text-zinc-400 dark:text-zinc-500">
+                <p className="text-[9px] sm:text-[11px] text-zinc-400">
                   © {new Date().getFullYear()} Klozet. Todos los derechos reservados.
                 </p>
                 
@@ -1121,29 +1137,29 @@ export default function LandingPage() {
                   <Link href="/trends" className="hover:text-[var(--brand-pink,#FF66C4)] font-semibold transition-colors">
                     Revista & Tendencias
                   </Link>
-                  <span className="text-zinc-300 dark:text-zinc-700">•</span>
+                  <span className="text-zinc-300">•</span>
                   <Link href="/about" className="hover:text-[var(--brand-pink,#FF66C4)] transition-colors">
                     Sobre Nosotros
                   </Link>
-                  <span className="text-zinc-300 dark:text-zinc-700">•</span>
+                  <span className="text-zinc-300">•</span>
                   <Link href="/terms" className="hover:text-[var(--brand-pink,#FF66C4)] transition-colors inline-flex items-center gap-0.5">
                     <FileText className="w-3 h-3" />
                     <span>Términos</span>
                   </Link>
-                  <span className="text-zinc-300 dark:text-zinc-700">•</span>
+                  <span className="text-zinc-300">•</span>
                   <Link href="/privacy" className="hover:text-[var(--brand-pink,#FF66C4)] transition-colors inline-flex items-center gap-0.5">
                     <ShieldCheck className="w-3 h-3" />
                     <span>Privacidad</span>
                   </Link>
-                  <span className="text-zinc-300 dark:text-zinc-700">•</span>
+                  <span className="text-zinc-300">•</span>
                   <Link href="/cookies" className="hover:text-[var(--brand-pink,#FF66C4)] transition-colors">
                     Cookies
                   </Link>
-                  <span className="text-zinc-300 dark:text-zinc-700">•</span>
+                  <span className="text-zinc-300">•</span>
                   <Link href="/contact" className="hover:text-[var(--brand-pink,#FF66C4)] transition-colors">
                     Contacto
                   </Link>
-                  <span className="text-zinc-300 dark:text-zinc-700">•</span>
+                  <span className="text-zinc-300">•</span>
                   <a href="mailto:soporte@klozet.es" className="hover:text-[var(--brand-pink,#FF66C4)] transition-colors">
                     soporte@klozet.es
                   </a>
@@ -1162,7 +1178,7 @@ export default function LandingPage() {
           aria-label="Siguiente pantalla"
           animate={{ y: [0, 7, 0] }}
           transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
-          className="fixed bottom-2.5 sm:bottom-4 left-1/2 -translate-x-1/2 z-40 p-2 text-zinc-400 hover:text-zinc-900 dark:text-zinc-500 dark:hover:text-zinc-100 transition-colors cursor-pointer pointer-events-auto"
+          className="fixed bottom-2.5 sm:bottom-4 left-1/2 -translate-x-1/2 z-40 p-2 text-zinc-400 hover:text-zinc-900 transition-colors cursor-pointer pointer-events-auto"
         >
           <ChevronDown className="w-6 h-6 stroke-[2.2]" />
         </motion.button>

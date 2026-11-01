@@ -2,9 +2,11 @@
 
 /**
  * Theme Store - State management for dark/light theme
+ * Landing page ('/') is strictly locked to light/white mode.
  */
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { usePathname } from 'next/navigation';
 
 type Theme = 'light' | 'dark';
 
@@ -20,6 +22,7 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export function ThemeProvider({ children }: { children: ReactNode }) {
     const [theme, setTheme] = useState<Theme>('light');
     const [mounted, setMounted] = useState(false);
+    const pathname = usePathname();
 
     useEffect(() => {
         // Get theme from localStorage
@@ -33,23 +36,29 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         if (!mounted) return;
 
-        // Apply theme to document
         const root = document.documentElement;
-        if (theme === 'dark') {
+        const isLanding = pathname === '/';
+
+        if (isLanding) {
+            root.classList.remove('dark');
+            root.style.colorScheme = 'light';
+        } else if (theme === 'dark') {
             root.classList.add('dark');
+            root.style.colorScheme = 'dark';
         } else {
             root.classList.remove('dark');
+            root.style.colorScheme = 'light';
         }
 
-        // Save to localStorage
+        // Save user's preference to localStorage
         localStorage.setItem('klozet_theme', theme);
-    }, [theme, mounted]);
+    }, [theme, mounted, pathname]);
 
     const toggleTheme = () => {
         setTheme(prev => prev === 'light' ? 'dark' : 'light');
     };
 
-    const isDark = theme === 'dark';
+    const isDark = pathname === '/' ? false : theme === 'dark';
 
     // Prevent flash of wrong theme
     if (!mounted) {

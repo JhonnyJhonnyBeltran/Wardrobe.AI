@@ -3115,3 +3115,7 @@ Ejecución del Consejo de Negocio con 4 subagentes especializados (`business-bel
 3. **Auditoría y Traducción Reactiva Global i18n (`es`, `en`, `fr`, `de`, `it`, `pt`):**
    - Corregida la inicialización y persistencia de idioma en `store/languageStore.ts` y `store/userStore.tsx` (prioridad a selección manual en `localStorage`, sincronización con `profiles.language` y `profiles.notification_preferences.language`).
    - Creado el motor reactivo de traducción de DOM y atributos `lib/i18n/autoTranslate.ts` + `components/LanguageDomTranslator.tsx` montado en `app/RootLayoutClient.tsx` y sincronizado el idioma de respuesta de Kloe en `app/api/closy/chat/route.ts`.
+
+4. **Landing Page 100% Blanca (Bloqueo de Modo Oscuro en `/`):**
+   - Eliminadas todas las clases `dark:*` de `app/(public)/page.tsx` y bloqueado `colorScheme: 'light'` + fondo `#ffffff`.
+   - Actualizado `store/themeStore.tsx` para que la ruta `/` elimine siempre la clase `.dark` de `document.documentElement` independientemente del tema del sistema o de la app.
