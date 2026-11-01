@@ -3119,3 +3119,26 @@ Ejecución del Consejo de Negocio con 4 subagentes especializados (`business-bel
 4. **Landing Page 100% Blanca (Bloqueo de Modo Oscuro en `/`):**
    - Eliminadas todas las clases `dark:*` de `app/(public)/page.tsx` y bloqueado `colorScheme: 'light'` + fondo `#ffffff`.
    - Actualizado `store/themeStore.tsx` para que la ruta `/` elimine siempre la clase `.dark` de `document.documentElement` independientemente del tema del sistema o de la app.
+
+
+---
+
+## 187. Detección Automática de España, Selector de Idioma Apple Glass y Traducción Integral de Landing (2026-11-01)
+
+1. **Detección Automática de España en `store/languageStore.ts`:**
+   - Creada función `isSpainOrSpanishUser()`:
+     - Detecta dominio `.es` (ej. `klozet.es`, `dev.klozet.es`).
+     - Detecta zonas horarias españolas (`Europe/Madrid`, `Atlantic/Canary`, `Africa/Ceuta`).
+     - Detecta si `navigator.languages` o `navigator.language` contiene `es`.
+   - Modificado `getInitialLanguage()`: si el usuario no tiene una selección manual guardada explícita (`klozet_language_manual === 'true'`), los usuarios españoles/en España reciben por defecto el idioma Español (`es`).
+
+2. **Selector de Idioma Apple Glass en la Barra Superior:**
+   - Añadido botón píldora translúcido (`bg-white/90 backdrop-blur-md border border-zinc-200/90`) con icono `Globe`, código de idioma y chevron.
+   - Popover elegante con banderas y nombres nativos de los 6 idiomas soportados (`ES`, `EN`, `FR`, `DE`, `IT`, `PT`) con haptic feedback y sincronización inmediata con Zustand, cookie y `localStorage`.
+   - El selector permanece visible y operativo en todos los frames de la landing page.
+
+3. **Traducción Reactiva Integral y Eliminación de Textos Hardcodeados (`lib/i18n/landingTranslations.ts`):**
+   - Solucionado el problema de textos mixtos (inglés/español) en la landing:
+     - Añadido `data-no-translate="true"` al contenedor raíz de la landing para evitar mutaciones parciales de nodos divididos por capitulares cursivas en `LanguageDomTranslator`.
+     - Creado diccionario completo `LANDING_TRANSLATIONS` en `lib/i18n/landingTranslations.ts` cubriendo todos los textos, titulares de capitular dividida (`drop-cap` y resto), párrafos descriptivos, botones de autenticación y CTA, nombres de prendas flotantes (Jersey Rayas, Top Halter, Chaqueta Militar, Denim Wide, Cartier Tank, Bolso Ante, Bailarinas, etc.), burbujas de chat de Kloe, etiquetas de moodboard y footer legal completo.
+     - Vinculación reactiva directa mediante `useLanguageStore()` en `app/(public)/page.tsx`.

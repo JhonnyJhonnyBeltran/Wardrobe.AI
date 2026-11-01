@@ -43,27 +43,69 @@ function setLanguageCookie(lang: Language) {
   }
 }
 
+export function isSpainOrSpanishUser(): boolean {
+  if (typeof window === 'undefined') return true;
+
+  try {
+    // 1. Domain ends with .es (e.g. klozet.es, dev.klozet.es)
+    if (window.location && window.location.hostname) {
+      const host = window.location.hostname.toLowerCase();
+      if (host.endsWith('.es') || host.includes('.es:')) return true;
+    }
+  } catch (e) {}
+
+  try {
+    // 2. Timezone in Spain (Europe/Madrid, Atlantic/Canary, Africa/Ceuta)
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (tz && (tz.includes('Madrid') || tz.includes('Canary') || tz.includes('Ceuta') || tz.includes('Spain'))) {
+      return true;
+    }
+  } catch (e) {}
+
+  try {
+    // 3. User navigator languages includes Spanish
+    if (Array.isArray(navigator.languages) && navigator.languages.length > 0) {
+      if (navigator.languages.some(lang => lang && lang.toLowerCase().startsWith('es'))) {
+        return true;
+      }
+    }
+    const navLang = navigator.language || (navigator as any).userLanguage;
+    if (navLang && navLang.toLowerCase().startsWith('es')) {
+      return true;
+    }
+  } catch (e) {}
+
+  return false;
+}
+
 export function getInitialLanguage(): Language {
   if (typeof window === 'undefined') return 'es';
 
   try {
-    // 1. User manual override has highest priority
+    // 1. Explicit user manual override has highest priority
+    const isManual = localStorage.getItem('klozet_language_manual') === 'true';
     const saved = localStorage.getItem('klozet_language');
-    if (saved && VALID_CODES.has(saved)) {
+    if (isManual && saved && VALID_CODES.has(saved)) {
       return saved as Language;
     }
   } catch (e) {}
 
+  // 2. Spain detection priority: domain .es, Spanish timezones, or Spanish navigator locales
+  if (isSpainOrSpanishUser()) {
+    return 'es';
+  }
+
   try {
-    // 2. Cookie check
+    // 3. Cookie check (if explicit manual)
     const match = document.cookie.match(/(?:^|;\s*)klozet_language=([^;]+)/);
     if (match && VALID_CODES.has(match[1])) {
-      return match[1] as Language;
+      const isManual = localStorage.getItem('klozet_language_manual') === 'true';
+      if (isManual) return match[1] as Language;
     }
   } catch (e) {}
 
   try {
-    // 3. Browser / system language
+    // 4. Browser / system language for non-Spain users
     const browserLang = navigator.language || (navigator as any).userLanguage;
     if (browserLang) {
       return normalizeLanguage(browserLang);

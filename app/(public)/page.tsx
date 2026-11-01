@@ -8,15 +8,26 @@ import {
   ArrowRight, 
   ChevronDown, 
   FileText, 
+  Globe, 
   ShieldCheck, 
   Star
 } from 'lucide-react';
 import { useUser } from '@/store';
 import { triggerHaptic } from '@/lib/haptic';
+import { useLanguageStore, SUPPORTED_LANGUAGES } from '@/store/languageStore';
+import { LANDING_TRANSLATIONS } from '@/lib/i18n/landingTranslations';
 
 export default function LandingPage() {
   const { user } = useUser();
+  const { language, setLanguage, initLanguage } = useLanguageStore();
+  const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
   const [currentFrame, setCurrentFrame] = useState(0);
+
+  useEffect(() => {
+    initLanguage();
+  }, [initLanguage]);
+
+  const t = LANDING_TRANSLATIONS[language] || LANDING_TRANSLATIONS.es;
   const totalFrames = 5;
   const isAnimatingRef = useRef(false);
   const touchStartYRef = useRef(0);
@@ -142,6 +153,7 @@ export default function LandingPage() {
       onWheel={handleWheel}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
+      data-no-translate="true"
       style={{ colorScheme: 'light', backgroundColor: '#ffffff', color: '#09090b' }}
       className="h-[100dvh] min-h-[100dvh] w-screen overflow-hidden bg-white text-zinc-900 selection:bg-[var(--brand-pink,#FF66C4)] selection:text-white flex flex-col justify-between fixed inset-0 select-none antialiased"
     >
@@ -161,33 +173,87 @@ export default function LandingPage() {
           </Link>
         </div>
 
-        {/* Right: Auth Buttons (Hidden gracefully on the final frame where big CTAs live) */}
-        <div className={`pointer-events-auto flex items-center gap-1.5 sm:gap-3 transition-opacity duration-300 ${currentFrame === 4 ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-          {user ? (
-            <Link 
-              href="/closet" 
-              className="px-3.5 sm:px-5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-bold bg-[var(--brand-pink,#FF66C4)] text-white hover:opacity-95 transition-all shadow-sm active:scale-95 flex items-center gap-1 sm:gap-1.5"
+        {/* Right: Language Selector + Auth Buttons */}
+        <div className="pointer-events-auto flex items-center gap-2 sm:gap-3">
+          {/* Subtle Apple Glass Language Switcher (Always accessible) */}
+          <div className="relative pointer-events-auto">
+            <button
+              type="button"
+              onClick={() => {
+                setIsLangMenuOpen((prev) => !prev);
+                triggerHaptic('light');
+              }}
+              className="h-8 px-2.5 rounded-full bg-white/90 backdrop-blur-md border border-zinc-200/90 shadow-xs hover:border-zinc-300 flex items-center gap-1.5 text-xs font-semibold text-zinc-800 hover:text-black transition-all active:scale-95 cursor-pointer"
+              aria-label="Seleccionar idioma"
+              title="Language"
             >
-              <span>Mi Armario</span>
-              <ArrowRight className="w-3.5 h-3.5 text-white" />
-            </Link>
-          ) : (
-            <>
+              <Globe className="w-3.5 h-3.5 text-zinc-600" />
+              <span className="uppercase text-[11px] font-bold tracking-wide">{language}</span>
+              <ChevronDown className={`w-3 h-3 text-zinc-400 transition-transform duration-200 ${isLangMenuOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {isLangMenuOpen && (
+              <>
+                <div 
+                  className="fixed inset-0 z-40" 
+                  onClick={() => setIsLangMenuOpen(false)} 
+                />
+                <div className="absolute right-0 mt-2 w-40 py-1.5 bg-white/95 backdrop-blur-xl border border-zinc-200/90 rounded-2xl shadow-xl z-50 animate-in fade-in zoom-in-95 duration-150">
+                  {SUPPORTED_LANGUAGES.map((opt) => (
+                    <button
+                      key={opt.code}
+                      type="button"
+                      onClick={() => {
+                        setLanguage(opt.code);
+                        setIsLangMenuOpen(false);
+                        triggerHaptic('light');
+                      }}
+                      className={`w-full px-3 py-1.5 text-left text-xs flex items-center justify-between transition-colors cursor-pointer ${
+                        language === opt.code
+                          ? 'font-bold text-[var(--brand-pink,#FF66C4)] bg-pink-50/60'
+                          : 'font-medium text-zinc-700 hover:bg-zinc-100/80 hover:text-zinc-950'
+                      }`}
+                    >
+                      <span className="flex items-center gap-2">
+                        <span className="text-sm">{opt.flag}</span>
+                        <span>{opt.nativeName}</span>
+                      </span>
+                      {language === opt.code && <span className="text-xs font-bold text-[var(--brand-pink,#FF66C4)]">✓</span>}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Auth Buttons (Hidden gracefully on the final frame where big CTAs live) */}
+          <div className={`flex items-center gap-1.5 sm:gap-3 transition-opacity duration-300 ${currentFrame === 4 ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+            {user ? (
               <Link 
-                href="/auth" 
-                className="px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-bold text-zinc-950 hover:text-black bg-white backdrop-blur-md border border-zinc-200 shadow-sm transition-all active:scale-95"
+                href="/closet" 
+                className="px-3.5 sm:px-5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-bold bg-[var(--brand-pink,#FF66C4)] text-white hover:opacity-95 transition-all shadow-sm active:scale-95 flex items-center gap-1 sm:gap-1.5"
               >
-                Entrar
-              </Link>
-              <Link 
-                href="/auth" 
-                className="px-3.5 sm:px-5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-bold bg-[var(--brand-pink,#FF66C4)] text-white hover:opacity-95 transition-all shadow-sm active:scale-95 flex items-center gap-1"
-              >
-                <span>Registro</span>
+                <span>{t.myCloset}</span>
                 <ArrowRight className="w-3.5 h-3.5 text-white" />
               </Link>
-            </>
-          )}
+            ) : (
+              <>
+                <Link 
+                  href="/auth" 
+                  className="px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-bold text-zinc-950 hover:text-black bg-white backdrop-blur-md border border-zinc-200 shadow-sm transition-all active:scale-95"
+                >
+                  {t.login}
+                </Link>
+                <Link 
+                  href="/auth" 
+                  className="px-3.5 sm:px-5 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-bold bg-[var(--brand-pink,#FF66C4)] text-white hover:opacity-95 transition-all shadow-sm active:scale-95 flex items-center gap-1"
+                >
+                  <span>{t.register}</span>
+                  <ArrowRight className="w-3.5 h-3.5 text-white" />
+                </Link>
+              </>
+            )}
+          </div>
         </div>
       </header>
 
@@ -236,10 +302,10 @@ export default function LandingPage() {
                 {/* Monumental Editorial Headline (Estilo fc899bc: Drop-cap Italic Serif + Bold Display) */}
                 <motion.div variants={itemFadeUp} className="flex flex-col items-center">
                   <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-[5.5rem] font-black tracking-tighter uppercase leading-[0.9] text-zinc-950">
-                    <span className="text-[1.2em] italic font-serif text-[var(--brand-pink,#FF66C4)] mr-0.5">A</span>rmario Lleno
+                    <span className="text-[1.2em] italic font-serif text-[var(--brand-pink,#FF66C4)] mr-0.5">{t.f0_title1_drop}</span>{t.f0_title1_rest}
                   </h1>
                   <h2 className="text-3xl sm:text-5xl md:text-6xl lg:text-[5.5rem] font-black tracking-tighter uppercase leading-[0.9] bg-gradient-to-r from-[var(--brand-pink,#FF66C4)] via-pink-400 to-purple-500 bg-clip-text text-transparent mt-0.5 sm:mt-1">
-                    <span className="text-[1.2em] italic font-serif text-pink-400 mr-0.5">N</span>ada que ponerte
+                    <span className="text-[1.2em] italic font-serif text-pink-400 mr-0.5">{t.f0_title2_drop}</span>{t.f0_title2_rest}
                   </h2>
                 </motion.div>
 
@@ -248,7 +314,7 @@ export default function LandingPage() {
                   variants={itemFadeUp}
                   className="text-xs sm:text-sm md:text-base text-zinc-600 max-w-xs sm:max-w-md font-normal leading-relaxed"
                 >
-                  Todas las mañanas el mismo lío frente al espejo. Klozet organiza tus prendas reales en un lookbook interactivo para que salgas con el fit clavado.
+                  {t.f0_desc}
                 </motion.p>
 
                 {/* Central Floating Fashion Cluster with Organic Spring Motion */}
@@ -275,7 +341,7 @@ export default function LandingPage() {
                       priority 
                     />
                     <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 whitespace-nowrap">
-                      Jersey Rayas
+                      {t.tag_jersey_rayas}
                     </div>
                   </motion.div>
 
@@ -298,7 +364,7 @@ export default function LandingPage() {
                       priority 
                     />
                     <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 whitespace-nowrap">
-                      Top Halter
+                      {t.tag_top_halter}
                     </div>
                   </motion.div>
 
@@ -322,7 +388,7 @@ export default function LandingPage() {
                     />
                     <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[8px] sm:text-[10px] font-bold text-zinc-950 whitespace-nowrap flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-[var(--brand-pink,#FF66C4)]" />
-                      <span>Jacket Militar</span>
+                      <span>{t.tag_jacket_militar}</span>
                     </div>
                   </motion.div>
 
@@ -345,7 +411,7 @@ export default function LandingPage() {
                       priority 
                     />
                     <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 whitespace-nowrap">
-                      Denim Wide
+                      {t.tag_denim_wide}
                     </div>
                   </motion.div>
 
@@ -368,7 +434,7 @@ export default function LandingPage() {
                       priority 
                     />
                     <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 whitespace-nowrap">
-                      Cartier Tank
+                      {t.tag_cartier_tank}
                     </div>
                   </motion.div>
 
@@ -391,7 +457,7 @@ export default function LandingPage() {
                       priority 
                     />
                     <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 whitespace-nowrap">
-                      Suede Bag
+                      {t.tag_bolso_ante}
                     </div>
                   </motion.div>
 
@@ -414,7 +480,7 @@ export default function LandingPage() {
                       priority 
                     />
                     <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 whitespace-nowrap">
-                      Alaïa Strass
+                      {t.tag_alaia_strass}
                     </div>
                   </motion.div>
                 </motion.div>
@@ -426,7 +492,7 @@ export default function LandingPage() {
                       href={user ? "/closet" : "/auth"}
                       className="px-6 sm:px-8 py-2.5 sm:py-3 rounded-full font-bold text-xs sm:text-sm bg-[var(--brand-pink,#FF66C4)] text-white hover:opacity-95 transition-all shadow-md shadow-[var(--brand-pink,#FF66C4)]/20 inline-flex items-center gap-2 group"
                     >
-                      <span>{user ? "Ir a mi armario" : "Empezar gratis"}</span>
+                      <span>{user ? t.f0_cta_closet : t.f0_cta_start}</span>
                       <ArrowRight className="w-3.5 h-3.5 text-white group-hover:translate-x-1 transition-transform" />
                     </Link>
                   </motion.div>
@@ -454,19 +520,19 @@ export default function LandingPage() {
                     variants={itemFadeUp}
                     className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tighter uppercase leading-[0.9] text-zinc-950"
                   >
-                    <span className="text-[1.2em] italic font-serif text-[var(--brand-pink,#FF66C4)] mr-0.5">T</span>oda tu ropa
+                    <span className="text-[1.2em] italic font-serif text-[var(--brand-pink,#FF66C4)] mr-0.5">{t.f1_title1_drop}</span>{t.f1_title1_rest}
                   </motion.h2>
                   <motion.h3 
                     variants={itemFadeUp}
                     className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tighter uppercase leading-[0.9] text-[var(--brand-pink,#FF66C4)] mt-0.5 sm:mt-1.5"
                   >
-                    <span className="text-[1.2em] italic font-serif text-purple-400 mr-0.5">E</span>n un toque
+                    <span className="text-[1.2em] italic font-serif text-purple-400 mr-0.5">{t.f1_title2_drop}</span>{t.f1_title2_rest}
                   </motion.h3>
                   <motion.p 
                     variants={itemFadeUp}
                     className="mt-3 sm:mt-4 text-xs sm:text-sm md:text-base text-zinc-600 leading-relaxed max-w-xs sm:max-w-md mx-auto md:mx-0 font-normal"
                   >
-                    Saca una foto en la percha o en la puerta de tu cuarto. El fondo desaparece al instante y tu ropa real queda limpia, ordenada y lista para combinar.
+                    {t.f1_desc}
                   </motion.p>
                 </div>
 
@@ -491,7 +557,7 @@ export default function LandingPage() {
                       className="w-full h-auto object-contain -rotate-8" 
                     />
                     <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 whitespace-nowrap">
-                      Jersey Punto
+                      {t.tag_jersey_punto}
                     </div>
                   </motion.div>
 
@@ -513,7 +579,7 @@ export default function LandingPage() {
                       className="w-full h-auto object-contain -rotate-10" 
                     />
                     <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 whitespace-nowrap">
-                      Replica GAT
+                      {t.tag_replica_gat}
                     </div>
                   </motion.div>
 
@@ -546,7 +612,7 @@ export default function LandingPage() {
                     </div>
                     <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[8px] sm:text-[10px] font-bold text-zinc-950 whitespace-nowrap flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-[var(--brand-pink,#FF66C4)]" />
-                      <span>Top Plisado</span>
+                      <span>{t.tag_top_plisado}</span>
                     </div>
                   </motion.div>
 
@@ -568,7 +634,7 @@ export default function LandingPage() {
                       className="w-full h-auto object-contain rotate-10" 
                     />
                     <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 whitespace-nowrap">
-                      Denim Gris
+                      {t.tag_denim_gris}
                     </div>
                   </motion.div>
 
@@ -590,7 +656,7 @@ export default function LandingPage() {
                       className="w-full h-auto object-contain -rotate-6" 
                     />
                     <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 whitespace-nowrap">
-                      Bailarinas
+                      {t.tag_bailarinas}
                     </div>
                   </motion.div>
                 </div>
@@ -617,19 +683,19 @@ export default function LandingPage() {
                     variants={itemFadeUp}
                     className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tighter uppercase leading-[0.9] text-zinc-950"
                   >
-                    <span className="text-[1.2em] italic font-serif text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-purple-400 mr-0.5">Q</span>ué me pongo
+                    <span className="text-[1.2em] italic font-serif text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-purple-400 mr-0.5">{t.f2_title1_drop}</span>{t.f2_title1_rest}
                   </motion.h2>
                   <motion.h3 
                     variants={itemFadeUp}
                     className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tighter uppercase leading-[0.9] bg-gradient-to-r from-[var(--brand-pink,#FF66C4)] via-pink-400 to-purple-500 bg-clip-text text-transparent mt-0.5 sm:mt-1.5"
                   >
-                    <span className="text-[1.2em] italic font-serif text-[var(--brand-pink,#FF66C4)] mr-0.5">K</span>loe te ayuda
+                    <span className="text-[1.2em] italic font-serif text-[var(--brand-pink,#FF66C4)] mr-0.5">{t.f2_title2_drop}</span>{t.f2_title2_rest}
                   </motion.h3>
                   <motion.p 
                     variants={itemFadeUp}
                     className="mt-3 sm:mt-4 text-xs sm:text-sm md:text-base text-zinc-600 leading-relaxed max-w-xs sm:max-w-md mx-auto md:mx-0 font-normal"
                   >
-                    Dile qué plan tienes o qué tiempo hace. Kloe revisa tus prendas reales y te compone el outfit perfecto al segundo, sin gastar un euro en ropa nueva.
+                    {t.f2_desc}
                   </motion.p>
                 </div>
 
@@ -701,7 +767,7 @@ export default function LandingPage() {
                       className="w-full h-auto object-contain rotate-10" 
                     />
                     <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 whitespace-nowrap">
-                      Miu Miu
+                      {t.tag_miu_miu}
                     </div>
                   </motion.div>
 
@@ -723,7 +789,7 @@ export default function LandingPage() {
                       className="w-full h-auto object-contain -rotate-6" 
                     />
                     <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[8px] sm:text-[9px] font-bold text-zinc-950 whitespace-nowrap">
-                      Suede Bag
+                      {t.tag_bolso_ante}
                     </div>
                   </motion.div>
 
@@ -755,7 +821,7 @@ export default function LandingPage() {
                     className="absolute -top-1 sm:top-6 left-0 sm:left-2 z-20 px-3.5 py-2 rounded-2xl rounded-bl-xs bg-white/95 backdrop-blur-xl border border-black/[0.08] shadow-md max-w-[170px] sm:max-w-[210px]"
                   >
                     <p className="text-[10px] sm:text-xs text-zinc-700 font-medium">
-                      &ldquo;¿Qué me pongo hoy para salir de chill?&rdquo;
+                      {t.f2_chat_user}
                     </p>
                   </motion.div>
 
@@ -771,7 +837,7 @@ export default function LandingPage() {
                       <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider">Kloe</span>
                     </div>
                     <p className="text-[10px] sm:text-xs text-white/95 font-medium leading-snug">
-                      Top Halter + Wide Denim + Bailarinas Alaïa. Cómodo y clavado.
+                      {t.f2_chat_kloe}
                     </p>
                   </motion.div>
                 </div>
@@ -798,19 +864,19 @@ export default function LandingPage() {
                     variants={itemFadeUp}
                     className="text-3xl sm:text-5xl md:text-6xl font-black tracking-tighter uppercase leading-[0.9] text-zinc-950"
                   >
-                    <span className="text-[1.2em] italic font-serif text-purple-400 mr-0.5">M</span>onta tu fit
+                    <span className="text-[1.2em] italic font-serif text-purple-400 mr-0.5">{t.f3_title1_drop}</span>{t.f3_title1_rest}
                   </motion.h2>
                   <motion.h3 
                     variants={itemFadeUp}
                     className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter uppercase leading-[0.9] text-[var(--brand-pink,#FF66C4)] mt-0.5 sm:mt-1.5"
                   >
-                    <span className="text-[1.2em] italic font-serif text-[var(--brand-pink,#FF66C4)] mr-0.5">L</span>isto para hoy
+                    <span className="text-[1.2em] italic font-serif text-[var(--brand-pink,#FF66C4)] mr-0.5">{t.f3_title2_drop}</span>{t.f3_title2_rest}
                   </motion.h3>
                   <motion.p 
                     variants={itemFadeUp}
                     className="mt-3 sm:mt-4 text-xs sm:text-sm md:text-base text-zinc-600 leading-relaxed max-w-xs sm:max-w-md mx-auto md:mx-0 font-normal"
                   >
-                    Prueba combinaciones en el lienzo libre, guarda tus looks favoritos y sal de casa sabiendo qué ponerte antes de desordenar el cuarto.
+                    {t.f3_desc}
                   </motion.p>
                 </div>
 
@@ -832,7 +898,7 @@ export default function LandingPage() {
                       className="object-contain p-1" 
                     />
                     <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[7px] sm:text-[9px] font-bold text-zinc-950 whitespace-nowrap">
-                      Look Mujer
+                      {t.tag_look_mujer}
                     </div>
                   </motion.div>
 
@@ -854,7 +920,7 @@ export default function LandingPage() {
                       className="w-full h-auto object-contain rotate-12" 
                     />
                     <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[7px] sm:text-[9px] font-bold text-zinc-950 whitespace-nowrap">
-                      Replica
+                      {t.tag_replica}
                     </div>
                   </motion.div>
 
@@ -874,7 +940,7 @@ export default function LandingPage() {
                     />
                     <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2.5 py-0.5 sm:py-1 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[8px] sm:text-[10px] font-bold text-zinc-950 whitespace-nowrap flex items-center gap-1">
                       <Star className="w-3 h-3 text-[var(--brand-pink,#FF66C4)]" />
-                      <span>Lienzo de Hoy</span>
+                      <span>{t.tag_lienzo_hoy}</span>
                     </div>
                   </motion.div>
 
@@ -896,7 +962,7 @@ export default function LandingPage() {
                       className="w-full h-auto object-contain -rotate-10" 
                     />
                     <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[7px] sm:text-[9px] font-bold text-zinc-950 whitespace-nowrap">
-                      Suede Bag
+                      {t.tag_bolso_ante}
                     </div>
                   </motion.div>
 
@@ -918,7 +984,7 @@ export default function LandingPage() {
                       className="w-full h-auto object-contain rotate-8" 
                     />
                     <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[7px] sm:text-[9px] font-bold text-zinc-950 whitespace-nowrap">
-                      Alaïa
+                      {t.tag_alaia}
                     </div>
                   </motion.div>
 
@@ -937,7 +1003,7 @@ export default function LandingPage() {
                       className="object-contain p-1" 
                     />
                     <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[7px] sm:text-[9px] font-bold text-[var(--brand-pink,#FF66C4)] whitespace-nowrap">
-                      Look Diario
+                      {t.tag_look_diario}
                     </div>
                   </motion.div>
                 </div>
@@ -974,7 +1040,7 @@ export default function LandingPage() {
                   className="object-contain p-1.5" 
                 />
                 <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[9px] font-bold text-zinc-950 whitespace-nowrap">
-                  Hombre • Denim
+                  {t.tag_hombre_denim}
                 </div>
 
                 {/* Overlapping Chaqueta Militar Sticker Accent */}
@@ -1006,7 +1072,7 @@ export default function LandingPage() {
                   className="object-contain p-1.5" 
                 />
                 <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[9px] font-bold text-[var(--brand-pink,#FF66C4)] whitespace-nowrap">
-                  Mujer • Kloe
+                  {t.tag_mujer_kloe}
                 </div>
 
                 {/* Overlapping Suede Bag Sticker Accent */}
@@ -1040,9 +1106,9 @@ export default function LandingPage() {
                   variants={itemFadeUp}
                   className="text-3xl sm:text-5xl md:text-6xl font-black text-zinc-950 tracking-tighter uppercase leading-[0.9]"
                 >
-                  <span className="text-[1.2em] italic font-serif text-[var(--brand-pink,#FF66C4)] mr-0.5">V</span>ístete mejor <br />
+                  <span className="text-[1.2em] italic font-serif text-[var(--brand-pink,#FF66C4)] mr-0.5">{t.f4_title1_drop}</span>{t.f4_title1_rest} <br />
                   <span className="bg-gradient-to-r from-[var(--brand-pink,#FF66C4)] to-purple-500 bg-clip-text text-transparent">
-                    <span className="text-[1.2em] italic font-serif text-pink-400 mr-0.5">D</span>isfruta tu ropa
+                    <span className="text-[1.2em] italic font-serif text-pink-400 mr-0.5">{t.f4_title2_drop}</span>{t.f4_title2_rest}
                   </span>
                 </motion.h2>
                 
@@ -1050,7 +1116,7 @@ export default function LandingPage() {
                   variants={itemFadeUp}
                   className="mt-3 sm:mt-4 text-xs sm:text-sm md:text-base text-zinc-600 leading-relaxed max-w-xs sm:max-w-md font-normal"
                 >
-                  Regístrate gratis en menos de un minuto y empieza a organizar tus outfits favoritos.
+                  {t.f4_desc}
                 </motion.p>
 
                 {/* Mobile Preview Cards with Tactile Stickers */}
@@ -1108,7 +1174,7 @@ export default function LandingPage() {
                       href="/auth"
                       className="w-full sm:w-auto px-7 sm:px-9 py-3 sm:py-3.5 rounded-full font-bold text-xs sm:text-sm md:text-base bg-[var(--brand-pink,#FF66C4)] text-white hover:opacity-95 transition-all shadow-md shadow-[var(--brand-pink,#FF66C4)]/20 inline-flex items-center justify-center gap-2 group"
                     >
-                      <span>Entrar a Klozet gratis</span>
+                      <span>{t.f4_cta_join}</span>
                       <ArrowRight className="w-4 h-4 text-white group-hover:translate-x-1 transition-transform" />
                     </Link>
                   </motion.div>
@@ -1118,7 +1184,7 @@ export default function LandingPage() {
                       href="/closet"
                       className="w-full sm:w-auto px-5 sm:px-7 py-3 rounded-full font-bold text-xs sm:text-sm bg-white hover:bg-zinc-50 text-zinc-950 border border-zinc-200 shadow-sm transition-all active:scale-95 inline-flex items-center justify-center"
                     >
-                      Ir a mi armario
+                      {t.f4_cta_closet}
                     </Link>
                   )}
                 </motion.div>
@@ -1130,34 +1196,34 @@ export default function LandingPage() {
                 className="w-full pt-3 sm:pt-4 border-t border-zinc-200/60 flex flex-col sm:flex-row items-center justify-between gap-1.5 text-[10px] sm:text-xs text-zinc-500 font-normal max-w-4xl mx-auto relative z-20 mt-auto"
               >
                 <p className="text-[9px] sm:text-[11px] text-zinc-400">
-                  © {new Date().getFullYear()} Klozet. Todos los derechos reservados.
+                  © {new Date().getFullYear()} Klozet. {t.footer_rights}
                 </p>
                 
                 <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-3.5 text-[10px] sm:text-[11px]">
                   <Link href="/trends" className="hover:text-[var(--brand-pink,#FF66C4)] font-semibold transition-colors">
-                    Revista & Tendencias
+                    {t.footer_trends}
                   </Link>
                   <span className="text-zinc-300">•</span>
                   <Link href="/about" className="hover:text-[var(--brand-pink,#FF66C4)] transition-colors">
-                    Sobre Nosotros
+                    {t.footer_about}
                   </Link>
                   <span className="text-zinc-300">•</span>
                   <Link href="/terms" className="hover:text-[var(--brand-pink,#FF66C4)] transition-colors inline-flex items-center gap-0.5">
                     <FileText className="w-3 h-3" />
-                    <span>Términos</span>
+                    <span>{t.footer_terms}</span>
                   </Link>
                   <span className="text-zinc-300">•</span>
                   <Link href="/privacy" className="hover:text-[var(--brand-pink,#FF66C4)] transition-colors inline-flex items-center gap-0.5">
                     <ShieldCheck className="w-3 h-3" />
-                    <span>Privacidad</span>
+                    <span>{t.footer_privacy}</span>
                   </Link>
                   <span className="text-zinc-300">•</span>
                   <Link href="/cookies" className="hover:text-[var(--brand-pink,#FF66C4)] transition-colors">
-                    Cookies
+                    {t.footer_cookies}
                   </Link>
                   <span className="text-zinc-300">•</span>
                   <Link href="/contact" className="hover:text-[var(--brand-pink,#FF66C4)] transition-colors">
-                    Contacto
+                    {t.footer_contact}
                   </Link>
                   <span className="text-zinc-300">•</span>
                   <a href="mailto:soporte@klozet.es" className="hover:text-[var(--brand-pink,#FF66C4)] transition-colors">
@@ -1175,7 +1241,7 @@ export default function LandingPage() {
       {currentFrame < totalFrames - 1 && (
         <motion.button
           onClick={nextFrame}
-          aria-label="Siguiente pantalla"
+          aria-label={t.aria_next}
           animate={{ y: [0, 7, 0] }}
           transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
           className="fixed bottom-2.5 sm:bottom-4 left-1/2 -translate-x-1/2 z-40 p-2 text-zinc-400 hover:text-zinc-900 transition-colors cursor-pointer pointer-events-auto"
