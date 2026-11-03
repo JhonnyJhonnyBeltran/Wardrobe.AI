@@ -226,7 +226,7 @@ export function OutfitDetailModal({
                                             )}
                                         </span>
                                     </div>
-                                    <h2 className="text-xl md:text-2xl font-bold text-[var(--foreground)] tracking-tight leading-tight mt-0.5">
+                                    <h2 data-no-translate={outfit.name ? "true" : undefined} className="text-xl md:text-2xl font-bold text-[var(--foreground)] tracking-tight leading-tight mt-0.5">
                                         {outfit.name || 'Outfit sin título'}
                                     </h2>
                                 </div>
@@ -269,10 +269,10 @@ export function OutfitDetailModal({
                                                             )}
                                                         </div>
                                                         <div className="min-w-0 flex-1">
-                                                            <p className="text-xs font-bold text-[var(--foreground)] truncate group-hover:text-[var(--brand-pink,#FF66C4)] transition-colors">
+                                                            <p data-no-translate="true" className="text-xs font-bold text-[var(--foreground)] truncate group-hover:text-[var(--brand-pink,#FF66C4)] transition-colors">
                                                                 {name}
                                                             </p>
-                                                            <p className="text-[10px] text-zinc-400 truncate font-medium">
+                                                            <p data-no-translate={brand ? "true" : undefined} className="text-[10px] text-zinc-400 truncate font-medium">
                                                                 {brand || category || 'Básico'}
                                                             </p>
                                                         </div>
@@ -419,8 +419,8 @@ export function OutfitDetailModal({
 
                                     <div className="w-full text-center flex-1 flex flex-col justify-between mt-4">
                                         <div>
-                                            <h3 className="text-xl font-bold text-[var(--foreground)]">{selectedItemForDetail.name || 'Prenda'}</h3>
-                                            <p className="text-zinc-500 dark:text-zinc-400 mt-1 text-sm font-medium">{selectedItemForDetail.brand || 'Sin marca'}</p>
+                                            <h3 data-no-translate="true" className="text-xl font-bold text-[var(--foreground)]">{selectedItemForDetail.name || 'Prenda'}</h3>
+                                            <p data-no-translate={selectedItemForDetail.brand ? "true" : undefined} className="text-zinc-500 dark:text-zinc-400 mt-1 text-sm font-medium">{selectedItemForDetail.brand || 'Sin marca'}</p>
                                             
                                             {selectedItemForDetail.category && (
                                                 <p className="text-xs text-zinc-400 uppercase tracking-wider mt-3 font-semibold">{selectedItemForDetail.category}</p>
@@ -489,8 +489,8 @@ export function OutfitDetailModal({
                                     </div>
 
                                     <div>
-                                        <h3 className="text-xl font-bold text-[var(--foreground)]">{selectedItemForDetail.name || 'Prenda'}</h3>
-                                        <p className="text-zinc-500 dark:text-zinc-400 font-medium mt-1">{selectedItemForDetail.brand || 'Sin marca'}</p>
+                                        <h3 data-no-translate="true" className="text-xl font-bold text-[var(--foreground)]">{selectedItemForDetail.name || 'Prenda'}</h3>
+                                        <p data-no-translate={selectedItemForDetail.brand ? "true" : undefined} className="text-zinc-500 dark:text-zinc-400 font-medium mt-1">{selectedItemForDetail.brand || 'Sin marca'}</p>
                                         {selectedItemForDetail.category && (
                                             <p className="text-xs text-zinc-400 uppercase tracking-wider mt-2 font-semibold">{selectedItemForDetail.category}</p>
                                         )}

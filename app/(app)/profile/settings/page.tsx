@@ -480,7 +480,7 @@ export default function SettingsPage() {
                 <motion.div variants={itemVariants} className="mb-6">
                     <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
                         <h2 className="text-sm font-semibold text-[var(--foreground-secondary)] uppercase tracking-wider">
-                            {t.profile.yourStyle} y Perfil Físico
+                            Tu Estilo y Perfil Físico
                         </h2>
                         <div className="flex items-center gap-2">
                             <button
@@ -496,7 +496,7 @@ export default function SettingsPage() {
                                 className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[var(--brand-pink)] text-white text-xs font-semibold hover:opacity-90 transition-opacity"
                             >
                                 <Edit className="w-3.5 h-3.5" />
-                                <span>{t.common.edit} estilo</span>
+                                <span>Editar estilo</span>
                             </Link>
                         </div>
                     </div>

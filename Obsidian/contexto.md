@@ -3142,3 +3142,16 @@ Ejecución del Consejo de Negocio con 4 subagentes especializados (`business-bel
      - Añadido `data-no-translate="true"` al contenedor raíz de la landing para evitar mutaciones parciales de nodos divididos por capitulares cursivas en `LanguageDomTranslator`.
      - Creado diccionario completo `LANDING_TRANSLATIONS` en `lib/i18n/landingTranslations.ts` cubriendo todos los textos, titulares de capitular dividida (`drop-cap` y resto), párrafos descriptivos, botones de autenticación y CTA, nombres de prendas flotantes (Jersey Rayas, Top Halter, Chaqueta Militar, Denim Wide, Cartier Tank, Bolso Ante, Bailarinas, etc.), burbujas de chat de Kloe, etiquetas de moodboard y footer legal completo.
      - Vinculación reactiva directa mediante `useLanguageStore()` en `app/(public)/page.tsx`.
+
+
+## 188. Auditoría Completa de Internacionalización (App i18n) y Botón "Ver traducción" en Posts (03/11/2026)
+
+- **Motor reactivo de traducción DOM (`components/LanguageDomTranslator.tsx` + `lib/i18n/autoTranslate.ts`)**:
+  - Corregido el conflicto entre `useTranslation()` y `LanguageDomTranslator`: `originalTextMap` solo registra nodos fuente cuando el idioma es `'es'` o el texto coincide con `isTranslatableSpanish()`, evitando sobrescribir textos ya traducidos por `useTranslation()` al alternar idiomas.
+  - Mejorado `translateSpanishString()` con búsqueda insensible a mayúsculas/minúsculas (`LOWERCASE_UI_TRANSLATIONS`), separación inteligente de símbolos y puntuación envolvente (`(`, `)`, `:`, `.`, `•`) para nodos de texto divididos por React (ej. `"Prendas del look ("`, `"Comentarios ("`, `"Talla:"`, `"prendas"`, `"piezas"`), y soporte de listas separadas por comas (ej. `"primavera, verano"`).
+  - Ampliado `EXACT_UI_TRANSLATIONS` y `DYNAMIC_PATTERNS` con más de 500 cadenas adicionales tras auditar todas las rutas de la aplicación (`Closet`, `Kloe`, `Create`, `Create Post`, `Post Detail`, `Outfit Detail`, `Profile`, `Settings`, `Notifications`, `Messages`, `Modals`, `Auth`, `Onboarding`, `Premium`).
+- **Preservación de nombres personalizados de prendas y outfits (`data-no-translate="true"`)**:
+  - Aplicado `data-no-translate="true"` a los nombres y marcas de prendas/outfits en `components/ProductModal.tsx`, `components/OutfitDetailModal.tsx`, `components/ItemDetailModal.tsx`, `components/Feed/GarmentModal.tsx` y `app/(app)/outfit/[id]/page.tsx`.
+- **Traducción automática de descripciones en Post (`app/(app)/post/[id]/page.tsx` + `app/api/translate/route.ts`)**:
+  - Creado el endpoint `/api/translate` (con motor rápido Google GTX y fallback IA en OpenRouter) que detecta el idioma origen y traduce la descripción al idioma activo del usuario (`es`, `en`, `fr`, `de`, `it`, `pt`).
+  - Añadido el botón interactivo `"Ver traducción"` / `"See translation"` (con alternancia a `"Ver original"` / `"See original"`) debajo de `post.caption` en la vista de Post.

@@ -114,8 +114,8 @@ export default function OutfitDetailsModal({ post, isOpen, onClose }: GarmentMod
                                         />
                                     </div>
                                     <div className="flex-1 flex flex-col justify-center">
-                                        <span className="text-xs text-[var(--foreground-tertiary)] font-medium uppercase tracking-wider">{garment.brand}</span>
-                                        <h4 className="font-semibold text-[var(--foreground)] mb-1">{garment.name}</h4>
+                                        <span data-no-translate="true" className="text-xs text-[var(--foreground-tertiary)] font-medium uppercase tracking-wider">{garment.brand}</span>
+                                        <h4 data-no-translate="true" className="font-semibold text-[var(--foreground)] mb-1">{garment.name}</h4>
                                     </div>
                                 </div>
                             ))}

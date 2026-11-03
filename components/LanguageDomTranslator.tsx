@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { useLanguageStore } from '@/store/languageStore';
-import { translateSpanishString } from '@/lib/i18n/autoTranslate';
+import { translateSpanishString, isTranslatableSpanish } from '@/lib/i18n/autoTranslate';
 import type { Language } from '@/lib/i18n/translations';
 
 const originalTextMap = new WeakMap<Text, string>();
@@ -22,13 +22,24 @@ function processTextNode(node: Text, lang: Language) {
   const currentVal = node.nodeValue || '';
   if (!currentVal.trim()) return;
 
-  const lastRendered = lastRenderedAttrOrText(node);
+  const lastRendered = lastRenderedTextMap.get(node);
   if (lastRendered === undefined || currentVal !== lastRendered) {
-    // React or DOM updated the underlying source text
-    originalTextMap.set(node, currentVal);
+    // Only record as Spanish source if we are in 'es' OR if the text is a recognized Spanish string.
+    // This prevents overwriting nodes managed by useTranslation() when they render in English/French/etc.
+    if (lang === 'es' || isTranslatableSpanish(currentVal)) {
+      originalTextMap.set(node, currentVal);
+    } else {
+      originalTextMap.delete(node);
+      lastRenderedTextMap.set(node, currentVal);
+      return;
+    }
   }
 
-  const sourceSpanish = originalTextMap.get(node) ?? currentVal;
+  const sourceSpanish = originalTextMap.get(node);
+  if (!sourceSpanish) {
+    lastRenderedTextMap.set(node, currentVal);
+    return;
+  }
 
   if (lang === 'es') {
     if (currentVal !== sourceSpanish) {
@@ -42,16 +53,9 @@ function processTextNode(node: Text, lang: Language) {
   if (translated && translated !== currentVal) {
     node.nodeValue = translated;
     lastRenderedTextMap.set(node, translated);
-  } else if (!translated && currentVal !== sourceSpanish) {
-    node.nodeValue = sourceSpanish;
-    lastRenderedTextMap.set(node, sourceSpanish);
   } else {
     lastRenderedTextMap.set(node, currentVal);
   }
-}
-
-function lastRenderedAttrOrText(node: Text): string | undefined {
-  return lastRenderedTextMap.get(node);
 }
 
 function processElementAttributes(el: Element, lang: Language) {
@@ -75,10 +79,20 @@ function processElementAttributes(el: Element, lang: Language) {
 
     const lastRendered = renderedMap.get(attr);
     if (lastRendered === undefined || val !== lastRendered) {
-      origMap.set(attr, val);
+      if (lang === 'es' || isTranslatableSpanish(val)) {
+        origMap.set(attr, val);
+      } else {
+        origMap.delete(attr);
+        renderedMap.set(attr, val);
+        continue;
+      }
     }
 
-    const sourceSpanish = origMap.get(attr) ?? val;
+    const sourceSpanish = origMap.get(attr);
+    if (!sourceSpanish) {
+      renderedMap.set(attr, val);
+      continue;
+    }
 
     if (lang === 'es') {
       if (val !== sourceSpanish) {
@@ -142,7 +156,8 @@ export default function LanguageDomTranslator() {
       if (isMutating) return;
       isMutating = true;
       try {
-        translateSubtree(target, language);
+        const currentLang = useLanguageStore.getState().language;
+        translateSubtree(target, currentLang);
       } finally {
         isMutating = false;
       }
@@ -154,14 +169,15 @@ export default function LanguageDomTranslator() {
       if (isMutating) return;
       isMutating = true;
       try {
+        const currentLang = useLanguageStore.getState().language;
         for (const m of mutations) {
           if (m.type === 'characterData' && m.target.nodeType === Node.TEXT_NODE) {
-            processTextNode(m.target as Text, language);
+            processTextNode(m.target as Text, currentLang);
           } else if (m.type === 'attributes' && m.target.nodeType === Node.ELEMENT_NODE) {
-            processElementAttributes(m.target as Element, language);
+            processElementAttributes(m.target as Element, currentLang);
           } else if (m.type === 'childList') {
             m.addedNodes.forEach((node) => {
-              translateSubtree(node, language);
+              translateSubtree(node, currentLang);
             });
           }
         }
@@ -171,13 +187,12 @@ export default function LanguageDomTranslator() {
     });
 
     observer.observe(document.body, {
-      Subtree: true,
       subtree: true,
       childList: true,
       characterData: true,
       attributes: true,
       attributeFilter: ['placeholder', 'title', 'aria-label'],
-    } as MutationObserverInit);
+    });
 
     return () => observer.disconnect();
   }, [language, pathname]);

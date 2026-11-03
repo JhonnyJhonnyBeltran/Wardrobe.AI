@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Heart, MessageCircle, Bookmark, Share, MoreHorizontal, MoreVertical, X, Send, ChevronLeft, ChevronRight, Edit2, Trash2 } from 'lucide-react';
+import { Heart, MessageCircle, Bookmark, Share, MoreHorizontal, MoreVertical, X, Send, ChevronLeft, ChevronRight, Edit2, Trash2, Languages } from 'lucide-react';
+import { useLanguageStore } from '@/store/languageStore';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';
 import { useUser } from '@/store/userStore';
@@ -85,6 +86,93 @@ export default function PostDetailPage() {
     const [replyingTo, setReplyingTo] = useState<{ id: string, username: string } | null>(null);
     const [showHeartAnim, setShowHeartAnim] = useState(false);
     const [selectedItem, setSelectedItem] = useState<any | null>(null);
+
+    // Caption Translation States
+    const { language } = useLanguageStore();
+    const [translatedCaption, setTranslatedCaption] = useState<string | null>(null);
+    const [showTranslatedCaption, setShowTranslatedCaption] = useState(false);
+    const [translatingCaption, setTranslatingCaption] = useState(false);
+    const [canTranslateCaption, setCanTranslateCaption] = useState(true);
+
+    const CAPTION_TRANSLATE_LABELS: Record<string, { see: string; original: string; loading: string }> = {
+        es: { see: 'Ver traducción', original: 'Ver original', loading: 'Traduciendo...' },
+        en: { see: 'See translation', original: 'See original', loading: 'Translating...' },
+        fr: { see: 'Voir la traduction', original: 'Voir l’original', loading: 'Traduction...' },
+        de: { see: 'Übersetzung anzeigen', original: 'Original anzeigen', loading: 'Wird übersetzt...' },
+        it: { see: 'Vedi traduzione', original: 'Vedi originale', loading: 'Traduzione...' },
+        pt: { see: 'Ver tradução', original: 'Ver original', loading: 'Traduzindo...' },
+    };
+    const captionT = CAPTION_TRANSLATE_LABELS[language] || CAPTION_TRANSLATE_LABELS.en;
+
+    useEffect(() => {
+        setShowTranslatedCaption(false);
+        setTranslatedCaption(null);
+        const rawCaption = typeof post?.caption === 'string' ? post.caption.trim() : '';
+        if (!rawCaption) {
+            setCanTranslateCaption(false);
+            return;
+        }
+        setCanTranslateCaption(true);
+        let cancelled = false;
+
+        fetch('/api/translate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: rawCaption, targetLang: language }),
+        })
+            .then((r) => (r.ok ? r.json() : null))
+            .then((data) => {
+                if (cancelled || !data) return;
+                const translated = typeof data.translatedText === 'string' ? data.translatedText.trim() : '';
+                const sourceLang = typeof data.detectedSourceLang === 'string' ? data.detectedSourceLang.toLowerCase() : '';
+                if (translated) {
+                    setTranslatedCaption(translated);
+                    const isSameText = translated.toLowerCase() === rawCaption.toLowerCase();
+                    if (isSameText && sourceLang === language) {
+                        setCanTranslateCaption(false);
+                    } else {
+                        setCanTranslateCaption(true);
+                    }
+                }
+            })
+            .catch(() => {});
+
+        return () => {
+            cancelled = true;
+        };
+    }, [post?.caption, language]);
+
+    const handleToggleCaptionTranslation = async () => {
+        if (showTranslatedCaption) {
+            setShowTranslatedCaption(false);
+            return;
+        }
+        if (translatedCaption) {
+            setShowTranslatedCaption(true);
+            return;
+        }
+        const rawCaption = typeof post?.caption === 'string' ? post.caption.trim() : '';
+        if (!rawCaption || translatingCaption) return;
+        setTranslatingCaption(true);
+        try {
+            const res = await fetch('/api/translate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ text: rawCaption, targetLang: language }),
+            });
+            if (res.ok) {
+                const data = await res.json();
+                if (data?.translatedText) {
+                    setTranslatedCaption(data.translatedText.trim());
+                    setShowTranslatedCaption(true);
+                }
+            }
+        } catch (err) {
+            console.error('Error translating caption:', err);
+        } finally {
+            setTranslatingCaption(false);
+        }
+    };
 
     const { showSaveToast, openFolderModal, setTabBarHidden, showModal } = useUiStore();
 
@@ -968,7 +1056,30 @@ export default function PostDetailPage() {
                 {/* @ts-ignore */}
                 {post.caption && (
                     <div className="px-4 py-4 w-full">
-                        <h6 className="text-[14px] text-gray-900 dark:text-white whitespace-pre-wrap leading-relaxed break-words break-all">{post.caption}</h6>
+                        <h6
+                            data-no-translate="true"
+                            className="text-[14px] text-gray-900 dark:text-white whitespace-pre-wrap leading-relaxed break-words"
+                        >
+                            {showTranslatedCaption && translatedCaption ? translatedCaption : post.caption}
+                        </h6>
+                        {canTranslateCaption && (
+                            <button
+                                type="button"
+                                onClick={handleToggleCaptionTranslation}
+                                disabled={translatingCaption}
+                                data-no-translate="true"
+                                className="mt-1.5 inline-flex items-center gap-1.5 text-[12px] font-medium text-gray-500 dark:text-gray-400 hover:text-[var(--brand-pink)] dark:hover:text-[var(--brand-pink)] transition-colors cursor-pointer select-none"
+                            >
+                                <Languages className="w-3.5 h-3.5 opacity-80" />
+                                <span>
+                                    {translatingCaption
+                                        ? captionT.loading
+                                        : showTranslatedCaption
+                                        ? captionT.original
+                                        : captionT.see}
+                                </span>
+                            </button>
+                        )}
                     </div>
                 )}
 

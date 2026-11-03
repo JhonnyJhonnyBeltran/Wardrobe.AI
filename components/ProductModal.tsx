@@ -192,8 +192,8 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
                             >
                                 {/* Brand & Name */}
                                 <div className="mb-4">
-                                    <p className="text-sm font-medium text-pink-500 mb-1">{displayItem.brand}</p>
-                                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">{displayItem.name}</h3>
+                                    <p data-no-translate="true" className="text-sm font-medium text-pink-500 mb-1">{displayItem.brand}</p>
+                                    <h3 data-no-translate="true" className="text-xl font-bold text-gray-900 dark:text-white">{displayItem.name}</h3>
                                 </div>
 
                                 {/* Details Grid */}

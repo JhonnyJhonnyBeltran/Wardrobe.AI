@@ -282,7 +282,7 @@ export default function OutfitDetailPage() {
             <section className="space-y-3">
               <div>
                 <div className="flex items-center gap-2.5 flex-wrap">
-                  <h1 className="text-2xl font-bold text-[var(--foreground)]">{outfit.name || 'Outfit sin título'}</h1>
+                  <h1 data-no-translate={outfit.name ? "true" : undefined} className="text-2xl font-bold text-[var(--foreground)]">{outfit.name || 'Outfit sin título'}</h1>
                   {occInfo && OccIcon && (
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] border border-[var(--brand-pink)]/20">
                       <OccIcon className="w-3.5 h-3.5" />

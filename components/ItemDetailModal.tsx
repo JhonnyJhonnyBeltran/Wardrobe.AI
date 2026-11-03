@@ -131,8 +131,8 @@ export default function ItemDetailModal({ outfit, isOpen, onClose }: ItemDetailM
 
                                         {/* Item Info */}
                                         <div className="flex-1 min-w-0">
-                                            <p className="font-medium text-[var(--foreground)] text-sm truncate">{item.name}</p>
-                                            <p className="text-xs text-[var(--foreground-secondary)]">{item.brand}</p>
+                                            <p data-no-translate="true" className="font-medium text-[var(--foreground)] text-sm truncate">{item.name}</p>
+                                            <p data-no-translate="true" className="text-xs text-[var(--foreground-secondary)]">{item.brand}</p>
                                             <div className="flex items-center gap-2 mt-1">
                                                 <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-[var(--background-tertiary)] text-xs text-[var(--foreground-secondary)] border border-[var(--border-color)]">
                                                     {typeLabels[item.type] || item.type}
