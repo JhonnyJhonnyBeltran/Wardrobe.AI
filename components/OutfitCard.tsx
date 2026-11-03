@@ -81,9 +81,9 @@ const OutfitCard = ({ outfit, isLocked = false, onClick, onEdit, onDelete, onSha
         >
             {/* Clickable Area */}
             <div className="cursor-pointer w-full">
-                {/* Outfit Preview */}
+                {/* Outfit Preview - Always White Canvas */}
                 <div
-                    className={`relative w-full aspect-[4/5] bg-white dark:bg-[#151518] overflow-hidden ${isLocked ? 'blur-sm' : ''
+                    className={`relative w-full aspect-[4/5] bg-white overflow-hidden ${isLocked ? 'blur-sm' : ''
                         }`}
                 >
                     {outfitPreviewImage && !imageError ? (

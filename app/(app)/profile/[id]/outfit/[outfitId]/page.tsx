@@ -271,7 +271,7 @@ export default function ProfileOutfitDetailPage() {
       <main className="w-full flex flex-col md:flex-row pb-24 md:pb-0 md:h-[calc(100vh-64px)] md:justify-center overflow-x-hidden md:overflow-hidden bg-[var(--background)]">
         
         {/* Left Column (Desktop) / Top Half (Mobile) - The Interactive Canvas Image */}
-        <div className="relative w-full aspect-[3/4] md:w-auto md:h-full md:aspect-[3/4] md:max-w-[calc(100%-400px)] shrink-0 bg-[#f8f9fa] dark:bg-[#111] z-0 flex items-center justify-center border-b md:border-b-0 md:border-r border-[var(--border-color)]">
+        <div className="relative w-full aspect-[3/4] md:w-auto md:h-full md:aspect-[3/4] md:max-w-[calc(100%-400px)] shrink-0 bg-white z-0 flex items-center justify-center border-b md:border-b-0 md:border-r border-[var(--border-color)]">
           <InteractiveOutfitViewer
             outfit={outfit}
             onItemClick={handleItemSelect}

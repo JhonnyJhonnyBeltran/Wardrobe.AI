@@ -3155,3 +3155,21 @@ Ejecución del Consejo de Negocio con 4 subagentes especializados (`business-bel
 - **Traducción automática de descripciones en Post (`app/(app)/post/[id]/page.tsx` + `app/api/translate/route.ts`)**:
   - Creado el endpoint `/api/translate` (con motor rápido Google GTX y fallback IA en OpenRouter) que detecta el idioma origen y traduce la descripción al idioma activo del usuario (`es`, `en`, `fr`, `de`, `it`, `pt`).
   - Añadido el botón interactivo `"Ver traducción"` / `"See translation"` (con alternancia a `"Ver original"` / `"See original"`) debajo de `post.caption` en la vista de Post.
+
+
+---
+
+## 189. Lienzo de Outfits Siempre Blanco en Modo Oscuro, Contraste de Modales y Botón "Generar sticker" (03/11/2026)
+
+1. **Fondo de Lienzo de Outfits Siempre Blanco (`#ffffff` / `bg-white`) en Modo Oscuro:**
+   - **[`components/OutfitCard.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan's%20Project/Wardobre.ai/Wardrobe.AI/components/OutfitCard.tsx):** Eliminado `dark:bg-[#151518]` en el contenedor de previsualización del outfit (`bg-white`) para que los looks creados sin imagen rasterizada estática (como los guardados desde Kloe) mantengan siempre el fondo blanco en el grid de `/closet` y `/profile`.
+   - **[`components/InteractiveOutfitViewer.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan's%20Project/Wardobre.ai/Wardrobe.AI/components/InteractiveOutfitViewer.tsx):** Sustituido `bg-[#f8f9fa] dark:bg-[#111]` por `bg-white` tanto en el contenedor de imagen estática como en el lienzo interactivo de prendas posicionadas.
+   - **[`components/OutfitDetailModal.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan's%20Project/Wardobre.ai/Wardrobe.AI/components/OutfitDetailModal.tsx):** Sustituido el fondo oscuro del escenario izquierdo (`dark:from-[#131316] dark:to-[#0c0c0e]`) por `bg-white` permanente, asegurando visibilidad total de prendas oscuras (azul marino, negro, gris carbón).
+   - **[`app/(app)/outfit/[id]/page.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan's%20Project/Wardobre.ai/Wardrobe.AI/app/(app)/outfit/%5Bid%5D/page.tsx), [`app/(app)/profile/[id]/outfit/[outfitId]/page.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan's%20Project/Wardobre.ai/Wardrobe.AI/app/(app)/profile/%5Bid%5D/outfit/%5BoutfitId%5D/page.tsx), [`app/(app)/post/[id]/page.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan's%20Project/Wardobre.ai/Wardrobe.AI/app/(app)/post/%5Bid%5D/page.tsx), [`components/OutfitCalendar.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan's%20Project/Wardobre.ai/Wardrobe.AI/components/OutfitCalendar.tsx) y [`app/(app)/create/page.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan's%20Project/Wardobre.ai/Wardrobe.AI/app/(app)/create/page.tsx):** Unificados todos los contenedores de lienzo y miniaturas de prendas del outfit a `bg-white`.
+
+2. **Corrección de Contraste en Modo Oscuro en `OutfitDetailModal.tsx`:**
+   - Eliminadas las clases inexistentes `dark:bg-zinc-850/70` y `dark:bg-zinc-850` (que dejaban fondos blancos `bg-zinc-50` / `bg-zinc-100` con texto blanco ilegible en modo oscuro).
+   - Aplicados tokens semánticos de alto contraste (`bg-[var(--background-secondary)]`, `hover:bg-[var(--background-tertiary)]`, `text-[var(--foreground)]`, `text-[var(--foreground-secondary)]`, `border-[var(--border-color)]`) en las tarjetas de *Prendas del look*, etiquetas de metadatos y botones secundarios, manteniendo las miniaturas de prenda sobre recuadro `bg-white`.
+
+3. **Sustitución del Botón "Story" (Instagram) por "Generar sticker":**
+   - En [`components/OutfitDetailModal.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan's%20Project/Wardobre.ai/Wardrobe.AI/components/OutfitDetailModal.tsx), reemplazado el botón `<Instagram /> Story` (`Exportar a Instagram Stories`) por `<Share2 /> Generar sticker`, apto para compartir en cualquier red social (Instagram, Snapchat, Twitter/X, etc.), y actualizado el tooltip `Story 9:16` a `Vertical 9:16` en [`components/ExportStoryModal.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan's%20Project/Wardobre.ai/Wardrobe.AI/components/ExportStoryModal.tsx).

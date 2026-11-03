@@ -325,7 +325,7 @@ export default function OutfitCalendar() {
                   <div key={`today-${outfit.calendar_id}`} className="bg-[var(--card-bg)] rounded-3xl border border-[var(--border-color)] p-4 shadow-sm relative overflow-hidden flex flex-col gap-4 hover:shadow-md transition-shadow">
                     <div 
                       onClick={() => setSelectedOutfitDetail(outfit)}
-                      className="cursor-pointer hover:opacity-90 transition-opacity shrink-0 flex items-center justify-center bg-[#f8f9fa] dark:bg-[#111] rounded-2xl border border-[var(--border-color)] overflow-hidden w-full aspect-[4/5] relative"
+                      className="cursor-pointer hover:opacity-90 transition-opacity shrink-0 flex items-center justify-center bg-white rounded-2xl border border-[var(--border-color)] overflow-hidden w-full aspect-[4/5] relative"
                     >
                         <button 
                           onClick={(e) => {
@@ -517,7 +517,7 @@ export default function OutfitCalendar() {
                       <div key={outfit.calendar_id} className="bg-[var(--card-bg)] rounded-3xl border border-[var(--border-color)] p-4 shadow-sm relative overflow-hidden flex flex-col gap-3">
                         <div 
                             onClick={() => setSelectedOutfitDetail(outfit)}
-                            className="cursor-pointer hover:opacity-90 transition-opacity shrink-0 flex items-center justify-center bg-[var(--background-secondary)] rounded-2xl border border-[var(--border-color)]/60 overflow-hidden w-full aspect-[3/4] max-h-[260px] sm:max-h-[300px] relative p-2"
+                            className="cursor-pointer hover:opacity-90 transition-opacity shrink-0 flex items-center justify-center bg-white rounded-2xl border border-[var(--border-color)]/60 overflow-hidden w-full aspect-[3/4] max-h-[260px] sm:max-h-[300px] relative p-2"
                         >
                             <button 
                               onClick={(e) => {

@@ -15,7 +15,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
     X, 
     Heart, 
-    Instagram,
+    Share2,
     Send, 
     Briefcase, 
     PartyPopper, 
@@ -155,7 +155,7 @@ export function OutfitDetailModal({
                                           triggerHaptic('light');
                                           onToggleFavorite(outfit, outfit.favorite ?? false);
                                         }}
-                                        className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-white/85 dark:bg-zinc-900/85 backdrop-blur-md border border-black/5 dark:border-white/10 flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:text-[var(--brand-pink,#FF66C4)] transition-all shadow-xs cursor-pointer active:scale-90"
+                                        className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-white/90 dark:bg-zinc-800/90 backdrop-blur-md border border-black/10 dark:border-white/15 flex items-center justify-center text-zinc-700 dark:text-zinc-200 hover:text-[var(--brand-pink,#FF66C4)] transition-all shadow-xs cursor-pointer active:scale-90"
                                         aria-label="Marcar como favorito"
                                     >
                                         <Heart
@@ -171,16 +171,16 @@ export function OutfitDetailModal({
                                         triggerHaptic('light');
                                         onClose();
                                     }}
-                                    className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-white/85 dark:bg-zinc-900/85 backdrop-blur-md border border-black/5 dark:border-white/10 flex items-center justify-center text-zinc-600 dark:text-zinc-300 hover:text-black dark:hover:text-white transition-all shadow-xs cursor-pointer active:scale-90"
+                                    className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-white/90 dark:bg-zinc-800/90 backdrop-blur-md border border-black/10 dark:border-white/15 flex items-center justify-center text-zinc-700 dark:text-zinc-200 hover:text-black dark:hover:text-white transition-all shadow-xs cursor-pointer active:scale-90"
                                     aria-label="Cerrar modal"
                                 >
                                     <X className="w-4 h-4" />
                                 </button>
                             </div>
 
-                            {/* Maximized Canvas Stage (Left Column in Desktop / Expanded Full-Flex in Mobile) */}
-                            <div className="relative w-full flex-1 min-h-0 md:h-full md:w-[58%] shrink bg-gradient-to-b from-[#f9fafb] to-[#f3f4f6] dark:from-[#131316] dark:to-[#0c0c0e] z-0 flex flex-col items-center justify-center md:border-r border-[var(--border-color)] overflow-hidden">
-                                <div className="absolute inset-0 w-full h-full">
+                            {/* Maximized Canvas Stage (Left Column in Desktop / Expanded Full-Flex in Mobile) - Always White */}
+                            <div className="relative w-full flex-1 min-h-0 md:h-full md:w-[58%] shrink bg-white z-0 flex flex-col items-center justify-center md:border-r border-[var(--border-color)] overflow-hidden">
+                                <div className="absolute inset-0 w-full h-full bg-white">
                                     <InteractiveOutfitViewer
                                         outfit={outfit}
                                         onItemClick={setSelectedItemForDetail}
@@ -191,7 +191,7 @@ export function OutfitDetailModal({
                                     />
                                 </div>
                                 <div className="absolute bottom-2.5 inset-x-0 flex justify-center pointer-events-none">
-                                    <span className="text-[10px] tracking-wider uppercase font-semibold text-zinc-400 dark:text-zinc-500 bg-white/70 dark:bg-zinc-900/70 backdrop-blur-xs px-2.5 py-0.5 rounded-full border border-black/[0.04] dark:border-white/[0.06]">
+                                    <span className="text-[10px] tracking-wider uppercase font-semibold text-zinc-500 bg-zinc-100/90 backdrop-blur-xs px-3 py-1 rounded-full border border-black/[0.06] shadow-2xs">
                                         Toca una prenda para ver detalles
                                     </span>
                                 </div>
@@ -203,16 +203,16 @@ export function OutfitDetailModal({
                                 <div className="flex flex-col gap-1">
                                     <div className="flex items-center gap-1.5 flex-wrap">
                                         {outfit.occasion && config && (
-                                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-black/5 dark:border-white/5">
+                                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[var(--background-secondary)] text-[var(--foreground-secondary)] border border-[var(--border-color)]">
                                                 {config.icon}
                                                 {config.label}
                                             </span>
                                         )}
-                                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-black/5 dark:border-white/5">
+                                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[var(--background-secondary)] text-[var(--foreground-secondary)] border border-[var(--border-color)]">
                                             <Layers className="w-3 h-3 text-[var(--brand-pink,#FF66C4)]" />
                                             {items.length} {items.length === 1 ? 'prenda' : 'prendas'}
                                         </span>
-                                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-black/5 dark:border-white/5">
+                                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[var(--background-secondary)] text-[var(--foreground-secondary)] border border-[var(--border-color)]">
                                             {outfit.is_public ? (
                                                 <>
                                                     <LockOpen className="w-3 h-3 text-[var(--brand-pink,#FF66C4)]" />
@@ -220,7 +220,7 @@ export function OutfitDetailModal({
                                                 </>
                                             ) : (
                                                 <>
-                                                    <Lock className="w-3 h-3 text-zinc-400" />
+                                                    <Lock className="w-3 h-3 text-[var(--foreground-tertiary)]" />
                                                     Privado
                                                 </>
                                             )}
@@ -235,10 +235,10 @@ export function OutfitDetailModal({
                                 {items.length > 0 && (
                                     <div className="hidden md:flex flex-col gap-2 my-1 overflow-hidden">
                                         <div className="flex items-center justify-between">
-                                            <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+                                            <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--foreground-secondary)]">
                                                 Prendas del look
                                             </span>
-                                            <span className="text-[11px] font-semibold text-zinc-400">
+                                            <span className="text-[11px] font-semibold text-[var(--foreground-tertiary)]">
                                                 {items.length} piezas
                                             </span>
                                         </div>
@@ -254,9 +254,9 @@ export function OutfitDetailModal({
                                                     <div
                                                         key={raw.id || item.id || idx}
                                                         onClick={() => handleItemClick(raw)}
-                                                        className="group flex items-center gap-2.5 p-2 rounded-xl bg-zinc-50 dark:bg-zinc-850/70 hover:bg-zinc-100 dark:hover:bg-zinc-800 border border-black/[0.04] dark:border-white/[0.06] hover:border-[var(--brand-pink,#FF66C4)]/30 transition-all cursor-pointer select-none"
+                                                        className="group flex items-center gap-2.5 p-2 rounded-xl bg-[var(--background-secondary)] hover:bg-[var(--background-tertiary)] border border-[var(--border-color)] hover:border-[var(--brand-pink,#FF66C4)]/40 transition-all cursor-pointer select-none"
                                                     >
-                                                        <div className="relative w-10 h-10 shrink-0 rounded-lg bg-white dark:bg-zinc-900 border border-black/5 dark:border-white/5 overflow-hidden flex items-center justify-center p-0.5">
+                                                        <div className="relative w-10 h-10 shrink-0 rounded-lg bg-white border border-black/10 overflow-hidden flex items-center justify-center p-0.5">
                                                             {imgUrl ? (
                                                                 <Image
                                                                     src={imgUrl}
@@ -272,7 +272,7 @@ export function OutfitDetailModal({
                                                             <p data-no-translate="true" className="text-xs font-bold text-[var(--foreground)] truncate group-hover:text-[var(--brand-pink,#FF66C4)] transition-colors">
                                                                 {name}
                                                             </p>
-                                                            <p data-no-translate={brand ? "true" : undefined} className="text-[10px] text-zinc-400 truncate font-medium">
+                                                            <p data-no-translate={brand ? "true" : undefined} className="text-[10px] text-[var(--foreground-secondary)] truncate font-medium">
                                                                 {brand || category || 'Básico'}
                                                             </p>
                                                         </div>
@@ -283,7 +283,7 @@ export function OutfitDetailModal({
                                     </div>
                                 )}
 
-                                {/* Action Hierarchy (Editar + Publicar + Story + Candado + Eliminar) */}
+                                {/* Action Hierarchy (Editar + Publicar + Generar sticker + Candado + Eliminar) */}
                                 <div className="flex flex-col gap-2.5 md:gap-3 md:mt-auto">
                                     {/* Primary Row: Editar en lienzo + Publicar */}
                                     <div className="flex items-center gap-2.5">
@@ -308,7 +308,7 @@ export function OutfitDetailModal({
                                         >
                                             <button
                                                 type="button"
-                                                className="w-full h-11 px-4 rounded-2xl bg-[var(--brand-pink,#FF66C4)]/10 text-[var(--brand-pink,#FF66C4)] border border-[var(--brand-pink,#FF66C4)]/20 hover:bg-[var(--brand-pink,#FF66C4)]/15 font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 active:scale-[0.98] transition-all shadow-xs cursor-pointer"
+                                                className="w-full h-11 px-4 rounded-2xl bg-[var(--brand-pink,#FF66C4)]/12 dark:bg-[var(--brand-pink,#FF66C4)]/20 text-[var(--brand-pink,#FF66C4)] border border-[var(--brand-pink,#FF66C4)]/25 dark:border-[var(--brand-pink,#FF66C4)]/35 hover:bg-[var(--brand-pink,#FF66C4)]/20 dark:hover:bg-[var(--brand-pink,#FF66C4)]/30 font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 active:scale-[0.98] transition-all shadow-xs cursor-pointer"
                                             >
                                                 <Send className="w-4 h-4 shrink-0" />
                                                 <span className="truncate">Publicar</span>
@@ -316,7 +316,7 @@ export function OutfitDetailModal({
                                         </Link>
                                     </div>
 
-                                    {/* Secondary Row: Story (Instagram) + Visibilidad (Candado Abierto/Cerrado) + Eliminar */}
+                                    {/* Secondary Row: Generar sticker + Visibilidad (Candado Abierto/Cerrado) + Eliminar */}
                                     <div className="flex items-center gap-2">
                                         <button
                                             type="button"
@@ -324,11 +324,11 @@ export function OutfitDetailModal({
                                                 triggerHaptic('light');
                                                 setShowExportModal(true);
                                             }}
-                                            className="flex-1 h-9 px-3 rounded-xl bg-zinc-100 dark:bg-zinc-850 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-200 border border-black/5 dark:border-white/5 font-semibold text-xs flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all cursor-pointer"
-                                            title="Exportar a Instagram Stories"
+                                            className="flex-1 h-9 px-3 rounded-xl bg-[var(--background-secondary)] hover:bg-[var(--background-tertiary)] text-[var(--foreground)] border border-[var(--border-color)] font-semibold text-xs flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all cursor-pointer"
+                                            title="Generar sticker"
                                         >
-                                            <Instagram className="w-3.5 h-3.5 text-pink-500 shrink-0" />
-                                            <span>Story</span>
+                                            <Share2 className="w-3.5 h-3.5 text-[var(--brand-pink,#FF66C4)] shrink-0" />
+                                            <span>Generar sticker</span>
                                         </button>
 
                                         {onToggleVisibility && !(outfit.posts && outfit.posts.length > 0) && (
@@ -339,7 +339,7 @@ export function OutfitDetailModal({
                                                     triggerHaptic('light');
                                                     onToggleVisibility(outfit);
                                                 }}
-                                                className="h-9 px-3.5 rounded-xl bg-zinc-100 dark:bg-zinc-850 hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-200 border border-black/5 dark:border-white/5 font-semibold text-xs flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all cursor-pointer"
+                                                className="h-9 px-3.5 rounded-xl bg-[var(--background-secondary)] hover:bg-[var(--background-tertiary)] text-[var(--foreground)] border border-[var(--border-color)] font-semibold text-xs flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all cursor-pointer"
                                                 title={outfit.is_public ? 'Hacer privado (cerrar candado)' : 'Hacer público (abrir candado)'}
                                             >
                                                 {outfit.is_public ? (
@@ -349,7 +349,7 @@ export function OutfitDetailModal({
                                                     </>
                                                 ) : (
                                                     <>
-                                                        <Lock className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                                                        <Lock className="w-3.5 h-3.5 text-[var(--foreground-secondary)] shrink-0" />
                                                         <span className="text-xs">Privado</span>
                                                     </>
                                                 )}
@@ -475,7 +475,7 @@ export function OutfitDetailModal({
                                         <X className="w-5 h-5 text-[var(--foreground)]" />
                                     </button>
 
-                                    <div className="relative w-full h-56 rounded-2xl overflow-hidden bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
+                                    <div className="relative w-full h-56 rounded-2xl overflow-hidden bg-white border border-black/10 flex items-center justify-center">
                                         {selectedItemForDetail.imageUrl || selectedItemForDetail.image_url ? (
                                             <Image 
                                                 src={selectedItemForDetail.imageUrl || selectedItemForDetail.image_url} 

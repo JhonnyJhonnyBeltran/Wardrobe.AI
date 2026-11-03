@@ -863,7 +863,7 @@ export default function PostDetailPage() {
                                         draggable={false}
                                     />
                                 ) : (
-                                    <div className="w-full aspect-[3/4] md:w-auto md:h-full md:aspect-[3/4] max-h-[85vh] md:max-h-screen relative bg-[#f8f9fa] dark:bg-[#111]">
+                                    <div className="w-full aspect-[3/4] md:w-auto md:h-full md:aspect-[3/4] max-h-[85vh] md:max-h-screen relative bg-white">
                                         <InteractiveOutfitViewer 
                                             outfit={slide.outfit} 
                                             onItemClick={(item) => setSelectedItem(item)}

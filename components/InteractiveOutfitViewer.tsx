@@ -125,7 +125,7 @@ const InteractiveOutfitViewer = ({
     if (itemsWithPositions.length === 0 && staticImage) {
         return (
             <div 
-                className={`relative w-full h-full bg-[#f8f9fa] dark:bg-[#111] overflow-hidden ${className} ${!disableInteraction && items.length > 0 ? 'cursor-pointer' : ''}`}
+                className={`relative w-full h-full bg-white overflow-hidden ${className} ${!disableInteraction && items.length > 0 ? 'cursor-pointer' : ''}`}
                 onClick={() => {
                     if (!disableInteraction && items.length > 0) {
                         const firstGarment = items[0].clothing_items || items[0].clothing_item || items[0].clothing || items[0];
@@ -146,9 +146,9 @@ const InteractiveOutfitViewer = ({
         );
     }
 
-    // Interactive canvas rendering
+    // Interactive canvas rendering (Always white background so dark garments remain visible in dark mode)
     return (
-        <div className={`relative w-full h-full bg-[#f8f9fa] dark:bg-[#111] overflow-hidden flex items-center justify-center ${className}`}>
+        <div className={`relative w-full h-full bg-white overflow-hidden flex items-center justify-center ${className}`}>
             {itemsWithPositions.map((item: any, i: number) => {
                 const isHovered = hoveredItemId === item.clothing.id;
                 const isSelected = selectedItemId === item.clothing.id;

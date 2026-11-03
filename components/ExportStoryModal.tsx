@@ -415,7 +415,7 @@ export default function ExportStoryModal({
                     ? 'bg-[var(--brand-pink)] text-white shadow-xs'
                     : 'text-[var(--foreground-secondary)] hover:text-[var(--foreground)]'
                 }`}
-                title="Story 9:16"
+                title="Vertical 9:16"
               >
                 <Smartphone className="w-3 h-3" />
                 <span className="text-[11px]">9:16</span>

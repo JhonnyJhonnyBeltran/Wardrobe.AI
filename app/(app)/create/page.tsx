@@ -1244,7 +1244,7 @@ export default function CreateOutfitPage() {
                                         className="flex items-center gap-2 pl-1.5 pr-2 py-1 bg-[var(--background-secondary)]/90 hover:bg-[var(--background-secondary)] border border-[var(--border-color)] hover:border-[var(--brand-pink)]/40 rounded-xl shadow-xs shrink-0 transition-all group max-w-[155px] sm:max-w-[175px]"
                                     >
                                         {/* Image Thumbnail */}
-                                        <div className="relative w-8 h-8 rounded-lg bg-white dark:bg-[#151518] border border-[var(--border-color)] overflow-hidden shrink-0 flex items-center justify-center p-0.5">
+                                        <div className="relative w-8 h-8 rounded-lg bg-white border border-[var(--border-color)] overflow-hidden shrink-0 flex items-center justify-center p-0.5">
                                             <img
                                                 src={item.imageUrl}
                                                 alt={item.name}
