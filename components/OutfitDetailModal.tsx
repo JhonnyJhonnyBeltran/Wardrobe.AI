@@ -41,6 +41,7 @@ import { Outfit } from '@/types/outfit';
 import { createPortal } from 'react-dom';
 import InteractiveOutfitViewer from './InteractiveOutfitViewer';
 import ExportStoryModal from './ExportStoryModal';
+import ProductModal from './ProductModal';
 import { triggerHaptic } from '@/lib/haptic';
 
 interface OutfitDetailModalProps {
@@ -376,156 +377,27 @@ export function OutfitDetailModal({
                         </motion.div>
                     </motion.div>
                     
-                    {/* Item Detail (Mobile: Bottom Sheet, Desktop: Standard Modal) */}
-                    <AnimatePresence>
-                        {selectedItemForDetail && (
-                            <>
-                                {/* Inner Backdrop */}
-                                <motion.div
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    exit={{ opacity: 0 }}
-                                    onClick={handleCloseItemDetail}
-                                    className="fixed inset-0 bg-black/50 z-[6030] backdrop-blur-xs"
-                                />
-
-                                {/* MOBILE: Bottom Sheet with Sticker Effect */}
-                                <motion.div
-                                    initial={{ y: "100%" }}
-                                    animate={{ y: 0 }}
-                                    exit={{ y: "100%" }}
-                                    transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                                    className="fixed bottom-0 left-0 right-0 z-[6040] bg-[var(--background)] rounded-t-[32px] p-6 pt-16 pb-8 shadow-[0_-10px_40px_rgba(0,0,0,0.15)] border-t border-[var(--border-color)] flex flex-col items-center justify-between min-h-[44vh] md:hidden pointer-events-auto"
-                                    onClick={(e) => e.stopPropagation()}
-                                >
-                                    <button 
-                                        type="button"
-                                        onClick={handleCloseItemDetail}
-                                        className="absolute top-4 right-4 p-2 bg-zinc-100 dark:bg-zinc-800 rounded-full text-zinc-500 dark:text-zinc-400 hover:text-black dark:hover:text-white transition-colors cursor-pointer"
-                                    >
-                                        <X className="w-5 h-5" />
-                                    </button>
-
-                                    <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-44 h-44 pointer-events-none">
-                                        <div className="w-full h-full relative" style={{ filter: 'drop-shadow(0 8px 16px rgba(0,0,0,0.18))' }}>
-                                            <Image 
-                                                src={selectedItemForDetail.imageUrl || selectedItemForDetail.image_url} 
-                                                alt={selectedItemForDetail.name || 'Prenda'} 
-                                                fill 
-                                                className="object-contain" 
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="w-full text-center flex-1 flex flex-col justify-between mt-4">
-                                        <div>
-                                            <h3 data-no-translate="true" className="text-xl font-bold text-[var(--foreground)]">{selectedItemForDetail.name || 'Prenda'}</h3>
-                                            <p data-no-translate={selectedItemForDetail.brand ? "true" : undefined} className="text-zinc-500 dark:text-zinc-400 mt-1 text-sm font-medium">{selectedItemForDetail.brand || 'Sin marca'}</p>
-                                            
-                                            {selectedItemForDetail.category && (
-                                                <p className="text-xs text-zinc-400 uppercase tracking-wider mt-3 font-semibold">{selectedItemForDetail.category}</p>
-                                            )}
-
-                                            <div className="flex flex-wrap items-center justify-center gap-2 mt-4 mb-2">
-                                                {(selectedItemForDetail.color || selectedItemForDetail.color_hex || selectedItemForDetail.colorHex) && (
-                                                    <div className="flex items-center gap-2 py-1.5 px-3 bg-zinc-100 dark:bg-zinc-800 rounded-full w-fit">
-                                                        <div className="w-3.5 h-3.5 rounded-full border border-zinc-300 dark:border-zinc-600 shadow-2xs" style={{ backgroundColor: selectedItemForDetail.color_hex || selectedItemForDetail.colorHex || selectedItemForDetail.color || '#ccc' }} />
-                                                        <span className="text-xs font-medium text-zinc-700 dark:text-zinc-300 capitalize">{selectedItemForDetail.color || selectedItemForDetail.colorHex || selectedItemForDetail.color_hex || 'Color'}</span>
-                                                    </div>
-                                                )}
-                                                {selectedItemForDetail.size && (
-                                                    <div className="flex items-center gap-1.5 py-1.5 px-3 bg-zinc-100 dark:bg-zinc-800 rounded-full w-fit">
-                                                        <span className="text-xs font-medium text-zinc-500">Talla:</span>
-                                                        <span className="text-xs font-bold text-[var(--foreground)]">{selectedItemForDetail.size}</span>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                        
-                                        {(selectedItemForDetail.source_url || selectedItemForDetail.sourceUrl) && (
-                                            <div className="mt-6 w-full">
-                                                <a 
-                                                    href={selectedItemForDetail.source_url || selectedItemForDetail.sourceUrl} 
-                                                    target="_blank" 
-                                                    rel="noopener noreferrer" 
-                                                    className="w-full bg-[var(--foreground)] text-[var(--background)] font-bold py-3.5 rounded-2xl hover:opacity-90 transition-opacity flex items-center justify-center gap-2 shadow-md text-sm"
-                                                >
-                                                    <span>Enlace a la tienda</span>
-                                                    <ExternalLink className="w-4 h-4" />
-                                                </a>
-                                            </div>
-                                        )}
-                                    </div>
-                                </motion.div>
-
-                                {/* DESKTOP: Centered Preview Modal */}
-                                <motion.div
-                                    initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                                    exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                                    transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                                    className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[6040] bg-[var(--background)] rounded-3xl max-w-sm w-[90%] p-5 space-y-4 shadow-2xl border border-[var(--border-color)] pointer-events-auto hidden md:block"
-                                    onClick={(e) => e.stopPropagation()}
-                                >
-                                    <button
-                                        type="button"
-                                        onClick={handleCloseItemDetail}
-                                        className="absolute top-3 right-3 p-2 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-full transition-colors z-10 cursor-pointer"
-                                    >
-                                        <X className="w-5 h-5 text-[var(--foreground)]" />
-                                    </button>
-
-                                    <div className="relative w-full h-56 rounded-2xl overflow-hidden bg-white border border-black/10 flex items-center justify-center">
-                                        {selectedItemForDetail.imageUrl || selectedItemForDetail.image_url ? (
-                                            <Image 
-                                                src={selectedItemForDetail.imageUrl || selectedItemForDetail.image_url} 
-                                                alt={selectedItemForDetail.name || 'Prenda'} 
-                                                fill 
-                                                className="object-contain p-4" 
-                                            />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-6xl" style={{ backgroundColor: selectedItemForDetail.color_hex || selectedItemForDetail.color || '#ccc' }}>👕</div>
-                                        )}
-                                    </div>
-
-                                    <div>
-                                        <h3 data-no-translate="true" className="text-xl font-bold text-[var(--foreground)]">{selectedItemForDetail.name || 'Prenda'}</h3>
-                                        <p data-no-translate={selectedItemForDetail.brand ? "true" : undefined} className="text-zinc-500 dark:text-zinc-400 font-medium mt-1">{selectedItemForDetail.brand || 'Sin marca'}</p>
-                                        {selectedItemForDetail.category && (
-                                            <p className="text-xs text-zinc-400 uppercase tracking-wider mt-2 font-semibold">{selectedItemForDetail.category}</p>
-                                        )}
-
-                                        <div className="flex flex-wrap items-center gap-2 mt-3 mb-4">
-                                            {(selectedItemForDetail.color || selectedItemForDetail.color_hex || selectedItemForDetail.colorHex) && (
-                                                <div className="flex items-center gap-2 py-1.5 px-3 bg-zinc-100 dark:bg-zinc-800 rounded-xl w-fit">
-                                                    <div className="w-3.5 h-3.5 rounded-full border border-zinc-300 dark:border-zinc-600" style={{ backgroundColor: selectedItemForDetail.color_hex || selectedItemForDetail.colorHex || selectedItemForDetail.color || '#ccc' }} />
-                                                    <span className="text-xs font-medium text-zinc-700 dark:text-zinc-300 capitalize">{selectedItemForDetail.color || selectedItemForDetail.colorHex || selectedItemForDetail.color_hex || 'Color'}</span>
-                                                </div>
-                                            )}
-                                            {selectedItemForDetail.size && (
-                                                <div className="flex items-center gap-1.5 py-1.5 px-3 bg-zinc-100 dark:bg-zinc-800 rounded-xl w-fit">
-                                                    <span className="text-xs font-medium text-zinc-500">Talla:</span>
-                                                    <span className="text-xs font-semibold text-[var(--foreground)]">{selectedItemForDetail.size}</span>
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        {(selectedItemForDetail.source_url || selectedItemForDetail.sourceUrl) && (
-                                            <a 
-                                                href={selectedItemForDetail.source_url || selectedItemForDetail.sourceUrl} 
-                                                target="_blank" 
-                                                rel="noopener noreferrer" 
-                                                className="w-full bg-[var(--foreground)] text-[var(--background)] font-bold py-3.5 rounded-xl hover:opacity-90 transition-opacity flex items-center justify-center gap-2 shadow-md text-sm mt-4"
-                                            >
-                                                <span>Ver en la web</span>
-                                                <ExternalLink className="w-4 h-4" />
-                                            </a>
-                                        )}
-                                    </div>
-                                </motion.div>
-                            </>
-                        )}
-                    </AnimatePresence>
+                    {/* Garment Detail Modal (Same ProductModal as in Post) */}
+                    <ProductModal
+                        isOpen={!!selectedItemForDetail}
+                        onClose={handleCloseItemDetail}
+                        item={selectedItemForDetail ? ({
+                            id: selectedItemForDetail.id,
+                            name: selectedItemForDetail.name,
+                            brand: selectedItemForDetail.brand,
+                            price: selectedItemForDetail.price,
+                            imageUrl: selectedItemForDetail.image_url || selectedItemForDetail.imageUrl,
+                            sourceUrl: selectedItemForDetail.source_url || selectedItemForDetail.sourceUrl,
+                            type: selectedItemForDetail.type || selectedItemForDetail.category,
+                            category: selectedItemForDetail.category || selectedItemForDetail.type,
+                            color: selectedItemForDetail.color,
+                            colorHex: selectedItemForDetail.color_hex || selectedItemForDetail.colorHex,
+                            size: selectedItemForDetail.size,
+                            fabric: selectedItemForDetail.fabric,
+                            season: selectedItemForDetail.season,
+                            reference: selectedItemForDetail.reference
+                        } as any) : null}
+                    />
 
                     {/* Export Story Modal (Instagram Stories) */}
                     <ExportStoryModal

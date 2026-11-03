@@ -3173,3 +3173,12 @@ Ejecución del Consejo de Negocio con 4 subagentes especializados (`business-bel
 
 3. **Sustitución del Botón "Story" (Instagram) por "Generar sticker":**
    - En [`components/OutfitDetailModal.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan's%20Project/Wardobre.ai/Wardrobe.AI/components/OutfitDetailModal.tsx), reemplazado el botón `<Instagram /> Story` (`Exportar a Instagram Stories`) por `<Share2 /> Generar sticker`, apto para compartir en cualquier red social (Instagram, Snapchat, Twitter/X, etc.), y actualizado el tooltip `Story 9:16` a `Vertical 9:16` en [`components/ExportStoryModal.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan's%20Project/Wardobre.ai/Wardrobe.AI/components/ExportStoryModal.tsx).
+
+
+---
+
+## 190. Unificación del Modal de Detalle de Prenda (`ProductModal`) al Pulsar Prendas de Outfits en Closet (03/11/2026)
+
+- **[`components/OutfitDetailModal.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan's%20Project/Wardobre.ai/Wardrobe.AI/components/OutfitDetailModal.tsx) y [`components/ProductModal.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan's%20Project/Wardobre.ai/Wardrobe.AI/components/ProductModal.tsx):**
+  - Sustituido el popup interno de detalle de prenda en `OutfitDetailModal.tsx` por el mismo componente `<ProductModal />` utilizado en `/post/[id]` al pulsar una prenda del outfit.
+  - Ajustado el `z-index` de `ProductModal.tsx` (`z-[6030]` backdrop y `z-[6040]` contenedor) para que se renderice por encima de `OutfitDetailModal` (`z-[6020]`).
