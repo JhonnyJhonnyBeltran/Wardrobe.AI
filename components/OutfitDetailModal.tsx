@@ -399,22 +399,28 @@ export function OutfitDetailModal({
                         } as any) : null}
                     />
 
-                    {/* Export Story Modal (Instagram Stories) */}
+                    {/* Export Story Modal (Sticker 9:16 HD) */}
                     <ExportStoryModal
                         isOpen={showExportModal}
                         onClose={() => setShowExportModal(false)}
                         title={outfit.name || 'Outfit'}
-                        items={items.map((it: any) => {
+                        outfit={outfit}
+                        initialMode="outfit"
+                        items={items.map((it: any, idx: number) => {
                             const c = it.clothing_items || it.clothing_item || it;
                             return {
-                                id: c.id,
+                                id: c.id || it.id,
                                 name: getItemName(it) || 'Prenda',
                                 imageUrl: getItemImage(it) || '',
                                 brand: getItemBrand(it),
                                 category: getItemCategory(it),
+                                position_x: it.position_x ?? it.positionX,
+                                position_y: it.position_y ?? it.positionY,
+                                scale: it.scale ?? 1,
+                                rotation: it.rotation ?? 0,
+                                layer_order: it.layer_order ?? it.zIndex ?? it.z_index ?? idx,
                             };
                         })}
-                        coverImageUrl={(outfit as any).image_url || (outfit as any).imageUrl}
                         occasion={config?.label}
                         season={outfit.season}
                     />

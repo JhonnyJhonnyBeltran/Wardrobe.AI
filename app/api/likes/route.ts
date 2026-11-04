@@ -5,36 +5,106 @@ import { createClient as createAdminClient } from '@supabase/supabase-js';
 export const dynamic = 'force-dynamic';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-const getAdmin = () => createAdminClient(supabaseUrl, serviceKey, {
-  auth: { persistSession: false, autoRefreshToken: false }
-});
+// Helper to authenticate user and select an RLS-authenticated (or service-role) database client
+async function getDbClient(request: NextRequest) {
+  let user: any = null;
+  let client: any = null;
 
-// Helper to authenticate user from cookies or Authorization Bearer token
-async function resolveAuthUser(request: NextRequest) {
-  try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) return user;
-  } catch {}
-
+  // 1. Check Bearer token from header
   const authHeader = request.headers.get('authorization') || request.headers.get('Authorization');
+  let token: string | null = null;
   if (authHeader?.startsWith('Bearer ')) {
-    try {
-      const token = authHeader.replace('Bearer ', '').trim();
-      const admin = getAdmin();
-      const { data: { user } } = await admin.auth.getUser(token);
-      if (user) return user;
-    } catch {}
+    token = authHeader.replace('Bearer ', '').trim();
   }
 
-  return null;
+  if (token) {
+    try {
+      const anonClient = createAdminClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+        auth: { persistSession: false, autoRefreshToken: false }
+      });
+      const { data } = await anonClient.auth.getUser(token);
+      if (data?.user) {
+        user = data.user;
+        client = createAdminClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+          global: { headers: { Authorization: `Bearer ${token}` } },
+          auth: { persistSession: false, autoRefreshToken: false }
+        });
+      }
+    } catch (e) {
+      console.warn('[api/likes] Error authenticating with Bearer token:', e);
+    }
+  }
+
+  // 2. If no user from token, check cookies via SSR createClient()
+  if (!user) {
+    try {
+      const supabaseServer = await createClient();
+      const { data } = await supabaseServer.auth.getUser();
+      if (data?.user) {
+        user = data.user;
+        client = supabaseServer;
+      }
+    } catch (e) {
+      console.warn('[api/likes] Error authenticating with server cookies:', e);
+    }
+  }
+
+  // 3. If service role key is available, also provide an admin client for count sync / notifications
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
+  const adminClient = serviceKey
+    ? createAdminClient(supabaseUrl, serviceKey, {
+        auth: { persistSession: false, autoRefreshToken: false }
+      })
+    : null;
+
+  if (!client) {
+    client = adminClient || createAdminClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
+      auth: { persistSession: false, autoRefreshToken: false }
+    });
+  }
+
+  return { client: adminClient || client, userClient: client, user };
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    const { client, user } = await getDbClient(request);
+    const { searchParams } = new URL(request.url);
+    const postId = searchParams.get('post_id') || searchParams.get('postId');
+
+    if (!postId) {
+      return NextResponse.json({ error: 'post_id is required' }, { status: 400 });
+    }
+
+    let isLiked = false;
+    if (user) {
+      const { data: existing } = await client
+        .from('likes')
+        .select('user_id')
+        .eq('post_id', postId)
+        .eq('user_id', user.id)
+        .limit(1);
+      isLiked = Boolean(existing && existing.length > 0);
+    }
+
+    const { count: realCount } = await client
+      .from('likes')
+      .select('*', { count: 'exact', head: true })
+      .eq('post_id', postId);
+
+    return NextResponse.json({
+      isLiked,
+      likes_count: typeof realCount === 'number' ? realCount : 0
+    });
+  } catch (error: any) {
+    return NextResponse.json({ error: error?.message || 'Error' }, { status: 500 });
+  }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await resolveAuthUser(request);
+    const { client, userClient, user } = await getDbClient(request);
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -55,31 +125,38 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'post_id is required' }, { status: 400 });
     }
 
-    const admin = getAdmin();
-
-    // 1. Insert or upsert like row safely
+    // 1. Check if like already exists; if not, insert row using authenticated client (avoids 42P10 onConflict error & 42501 RLS error)
     try {
-      await admin
+      const { data: existing } = await userClient
         .from('likes')
-        .upsert(
-          { post_id: postId, user_id: user.id },
-          { onConflict: 'user_id,post_id', ignoreDuplicates: true }
-        );
+        .select('user_id')
+        .eq('post_id', postId)
+        .eq('user_id', user.id)
+        .limit(1);
+
+      if (!existing || existing.length === 0) {
+        const { error: insertErr } = await userClient
+          .from('likes')
+          .insert({ post_id: postId, user_id: user.id });
+
+        if (insertErr && insertErr.code !== '23505') {
+          console.warn('[API /api/likes POST] Insert warning:', insertErr);
+        }
+      }
     } catch (insertErr) {
-      console.warn('[API /api/likes POST] Upsert warning (proceeding):', insertErr);
+      console.warn('[API /api/likes POST] Insert exception:', insertErr);
     }
 
     // 2. Fetch post to get author and image for safe notification
     try {
-      const { data: postData } = await admin
+      const { data: postData } = await client
         .from('posts')
         .select('user_id, image_url')
         .eq('id', postId)
         .maybeSingle();
 
-      // Send notification safely (never block or fail the like)
       if (postData && postData.user_id && postData.user_id !== user.id) {
-        const { data: senderProfile } = await admin
+        const { data: senderProfile } = await client
           .from('profiles')
           .select('username, full_name, avatar_url')
           .eq('id', user.id)
@@ -87,7 +164,7 @@ export async function POST(request: NextRequest) {
 
         const senderName = senderProfile?.full_name || senderProfile?.username || 'Alguien';
 
-        await admin
+        await client
           .from('notifications')
           .insert({
             user_id: postData.user_id,
@@ -111,14 +188,14 @@ export async function POST(request: NextRequest) {
     // 3. Recalculate exact real count from `likes` table and persist on `posts`
     let safeLikesCount = 1;
     try {
-      const { count: realCount } = await admin
+      const { count: realCount } = await client
         .from('likes')
         .select('*', { count: 'exact', head: true })
         .eq('post_id', postId);
 
-      safeLikesCount = typeof realCount === 'number' ? realCount : 1;
+      safeLikesCount = typeof realCount === 'number' ? Math.max(1, realCount) : 1;
 
-      await admin
+      await client
         .from('posts')
         .update({ likes_count: safeLikesCount })
         .eq('id', postId);
@@ -139,7 +216,7 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const user = await resolveAuthUser(request);
+    const { client, userClient, user } = await getDbClient(request);
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -160,10 +237,8 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'post_id is required' }, { status: 400 });
     }
 
-    const admin = getAdmin();
-
-    // 1. Remove like from `likes` table
-    const { error: deleteError } = await admin
+    // 1. Remove like from `likes` table using authenticated client
+    const { error: deleteError } = await userClient
       .from('likes')
       .delete()
       .eq('post_id', postId)
@@ -176,7 +251,7 @@ export async function DELETE(request: NextRequest) {
 
     // 2. Safely remove associated like notification
     try {
-      await admin
+      await client
         .from('notifications')
         .delete()
         .eq('entity_id', postId)
@@ -187,14 +262,14 @@ export async function DELETE(request: NextRequest) {
     }
 
     // 3. Recalculate exact real count from `likes` table and update `posts.likes_count`
-    const { count: realCount } = await admin
+    const { count: realCount } = await client
       .from('likes')
       .select('*', { count: 'exact', head: true })
       .eq('post_id', postId);
 
     const safeLikesCount = typeof realCount === 'number' ? realCount : 0;
 
-    await admin
+    await client
       .from('posts')
       .update({ likes_count: safeLikesCount })
       .eq('id', postId);
@@ -206,7 +281,6 @@ export async function DELETE(request: NextRequest) {
     });
   } catch (error: any) {
     console.error('[API /api/likes DELETE] Server exception:', error);
-    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ error: error?.message || 'Internal Server Error' }, { status: 500 });
   }
 }
-

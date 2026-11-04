@@ -8,6 +8,7 @@ import { useUser } from '@/store';
 import { OutfitDetailModal } from '@/components/OutfitDetailModal';
 import ProductModal from '@/components/ProductModal';
 import OutfitCard from '@/components/OutfitCard';
+import InteractiveOutfitViewer from '@/components/InteractiveOutfitViewer';
 import type { Outfit } from '@/types/outfit';
 import { Button } from '@/components';
 import { useUiStore } from '@/store/uiStore';
@@ -66,7 +67,14 @@ export default function OutfitCalendar() {
             name,
             image_url,
             favorite,
+            occasion,
+            season,
             outfit_items (
+              position_x,
+              position_y,
+              scale,
+              rotation,
+              layer_order,
               clothing_item:clothing_items (*)
             )
           )
@@ -81,11 +89,26 @@ export default function OutfitCalendar() {
       const grouped: Record<string, any[]> = {};
       data?.forEach((item: any) => {
         const d = item.date; // YYYY-MM-DD
+        const o = item.outfits;
+        if (!o) return;
         if (!grouped[d]) grouped[d] = [];
+        const mappedItems = (o.outfit_items || [])
+          .filter((oi: any) => oi.clothing_item)
+          .map((oi: any) => ({
+            ...oi.clothing_item,
+            clothing_item: oi.clothing_item,
+            clothing_items: oi.clothing_item,
+            position_x: oi.position_x,
+            position_y: oi.position_y,
+            scale: oi.scale,
+            rotation: oi.rotation,
+            layer_order: oi.layer_order,
+          }));
         grouped[d].push({
           calendar_id: item.id,
-          ...item.outfits,
-          items: item.outfits.outfit_items.map((oi: any) => oi.clothing_item).filter(Boolean)
+          ...o,
+          items: mappedItems,
+          outfit_items: mappedItems,
         });
       });
       setCalendarData(grouped);
@@ -109,6 +132,11 @@ export default function OutfitCalendar() {
         .select(`
           *,
           outfit_items (
+            position_x,
+            position_y,
+            scale,
+            rotation,
+            layer_order,
             clothing_item:clothing_items (*)
           )
         `)
@@ -117,11 +145,26 @@ export default function OutfitCalendar() {
 
       if (error) throw error;
       
-      const formatted = (data || []).map((o: any) => ({
-        ...o,
-        createdAt: new Date(o.created_at),
-        items: o.outfit_items.map((oi: any) => oi.clothing_item).filter(Boolean),
-      }));
+      const formatted = (data || []).map((o: any) => {
+        const mappedItems = (o.outfit_items || [])
+          .filter((oi: any) => oi.clothing_item)
+          .map((oi: any) => ({
+            ...oi.clothing_item,
+            clothing_item: oi.clothing_item,
+            clothing_items: oi.clothing_item,
+            position_x: oi.position_x,
+            position_y: oi.position_y,
+            scale: oi.scale,
+            rotation: oi.rotation,
+            layer_order: oi.layer_order,
+          }));
+        return {
+          ...o,
+          createdAt: new Date(o.created_at),
+          items: mappedItems,
+          outfit_items: mappedItems,
+        };
+      });
       setUserOutfits(formatted);
     } catch (err) {
       console.error('Error loading outfits for picker:', err);
@@ -349,11 +392,11 @@ export default function OutfitCalendar() {
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
-                        {outfit.image_url ? (
-                          <img src={outfit.image_url} alt={outfit.name} className="w-full h-full object-cover" />
-                        ) : (
-                          <span className="text-xs text-[var(--foreground-tertiary)]">Sin foto</span>
-                        )}
+                        <InteractiveOutfitViewer
+                          outfit={outfit}
+                          disableInteraction={true}
+                          className="w-full h-full"
+                        />
                     </div>
                     <div className="flex flex-col justify-center flex-1 text-center mt-2">
                       <h4 
@@ -541,11 +584,11 @@ export default function OutfitCalendar() {
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
-                            {outfit.image_url ? (
-                                <img src={outfit.image_url} alt={outfit.name} className="w-full h-full object-contain" />
-                            ) : (
-                                <span className="text-xs text-[var(--foreground-tertiary)]">Sin foto</span>
-                            )}
+                            <InteractiveOutfitViewer
+                              outfit={outfit}
+                              disableInteraction={true}
+                              className="w-full h-full"
+                            />
                         </div>
                         <div className="flex flex-col justify-center flex-1 text-center">
                             <h4 

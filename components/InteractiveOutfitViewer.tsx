@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
+import { resolveImageUrl } from '@/lib/imageUtils';
 
 interface InteractiveOutfitViewerProps {
     outfit: any;
@@ -57,14 +58,16 @@ const InteractiveOutfitViewer = ({
     );
 
     // If we don't have layout data, use the static image fallback
-    const staticImage = outfit.imageUrl || outfit.image_url;
+    const rawStaticImage = outfit.imageUrl || outfit.image_url;
+    const staticImage = rawStaticImage ? resolveImageUrl(rawStaticImage, '') : '';
     
     // Generate programmatic positions for items that lack them
     const itemsWithPositions = useMemo(() => {
         return items.map((item: any, i: number) => {
             const clothingRaw = item.clothing_items || item.clothing_item || item.clothing || item;
             const clothing = Array.isArray(clothingRaw) ? clothingRaw[0] : clothingRaw;
-            const img = clothing?.imageUrl || clothing?.image_url || clothing?.original_image_url || clothing?.originalImageUrl || item.image_url || item.imageUrl;
+            const rawImg = clothing?.imageUrl || clothing?.image_url || clothing?.original_image_url || clothing?.originalImageUrl || item.image_url || item.imageUrl;
+            const img = rawImg ? resolveImageUrl(rawImg, '') : '';
             
             let x = item.position_x ?? item.positionX;
             let y = item.position_y ?? item.positionY;

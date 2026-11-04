@@ -1032,6 +1032,15 @@ export const EXACT_UI_TRANSLATIONS: Record<string, TranslationTuple> = {
   'Consultar asesoría y estilo con Kloe': ['Consult styling advice with Kloe', 'Consulter Kloe pour des conseils de style', 'Stilberatung mit Kloe starten', 'Consulta Kloe per consigli di stile', 'Consultar estilo com a Kloe'],
   'Publicar un look en la comunidad': ['Publish a look to the community', 'Publier un look dans la communauté', 'Einen Look in der Community teilen', 'Pubblica un look nella community', 'Publicar um look na comunidade'],
   'Saltar y cerrar el tour definitivamente': ['Skip and close tour permanently', 'Passer et fermer le guide définitivement', 'Tour überspringen und dauerhaft schließen', 'Salta e chiudi il tour definitivamente', 'Pular e fechar o tour definitivamente'],
+  'Generar sticker HD': ['Generate HD sticker', 'Générer un sticker HD', 'HD-Sticker erstellen', 'Genera sticker HD', 'Gerar figurinha HD'],
+  'Copia el sticker para pegarlo en Instagram o descárgalo en HD': ['Copy the sticker to paste on Instagram or download in HD', 'Copiez le sticker pour le coller sur Instagram ou téléchargez en HD', 'Kopiere den Sticker zum Einfügen auf Instagram oder lade ihn in HD herunter', 'Copia lo sticker per incollarlo su Instagram o scaricalo in HD', 'Copie a figurinha para colar no Instagram ou baixe em HD'],
+  'Fondo del sticker': ['Sticker background', 'Fond du sticker', 'Sticker-Hintergrund', 'Sfondo dello sticker', 'Fundo da figurinha'],
+  'Sticker Outfit': ['Outfit Sticker', 'Sticker Tenue', 'Outfit-Sticker', 'Sticker Outfit', 'Figurinha do Look'],
+  'Generando HD...': ['Generating HD...', 'Génération HD...', 'HD wird erstellt...', 'Generazione HD...', 'Gerando HD...'],
+  'Copiando...': ['Copying...', 'Copie...', 'Kopieren...', 'Copia in corso...', 'Copiando...'],
+  'Copiar': ['Copy', 'Copier', 'Kopieren', 'Copia', 'Copiar'],
+  'Copiar enlace de la publicación': ['Copy post link', 'Copier le lien de la publication', 'Beitragslink kopieren', 'Copia link del post', 'Copiar link da publicação'],
+  'Enlace de la publicación copiado': ['Post link copied', 'Lien de la publication copié', 'Beitragslink kopiert', 'Link del post copiato', 'Link da publicação copiado'],
 };
 
 // Build a lowercase lookup map once so case variations ("prendas", "PRENDAS", "Usuario", etc.) match automatically

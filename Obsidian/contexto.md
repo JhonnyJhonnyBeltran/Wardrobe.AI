@@ -3182,3 +3182,23 @@ Ejecución del Consejo de Negocio con 4 subagentes especializados (`business-bel
 - **[`components/OutfitDetailModal.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan's%20Project/Wardobre.ai/Wardrobe.AI/components/OutfitDetailModal.tsx) y [`components/ProductModal.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan's%20Project/Wardobre.ai/Wardrobe.AI/components/ProductModal.tsx):**
   - Sustituido el popup interno de detalle de prenda en `OutfitDetailModal.tsx` por el mismo componente `<ProductModal />` utilizado en `/post/[id]` al pulsar una prenda del outfit.
   - Ajustado el `z-index` de `ProductModal.tsx` (`z-[6030]` backdrop y `z-[6040]` contenedor) para que se renderice por encima de `OutfitDetailModal` (`z-[6020]`).
+
+
+---
+
+## 191. Sticker HD 9:16 (Descargar + Copiar al Portapapeles Estilo Strava), Preservación de Orden/Posiciones de Prendas, Fotos de Outfits en Calendario y Persistencia de Likes en Posts (04/11/2026)
+
+1. **Exportación y Copia de Sticker en HD 9:16 (`components/ExportStoryModal.tsx`, `components/OutfitDetailModal.tsx`, `app/(app)/post/[id]/page.tsx`):**
+   - **Orden y posiciones idénticas al visor (`1:1`):** Corregido el mapeo en `OutfitDetailModal.tsx` (que antes omitía `position_x`, `position_y`, `scale`, `rotation` y `layer_order` al abrir `ExportStoryModal`, provocando que las prendas pasaran de columna vertical a cuadrícula 2×2). Añadido contenedor interno `aspect-[3/4]` dentro del lienzo `9:16` y eliminado el clamp `Math.max(scale, 0.65)` que deformaba accesorios pequeños como gorras (`scale: 0.46`). Para outfits sin coordenadas explícitas, se ordenan verticalmente de cabeza a pies (`getCategoryVerticalRank`).
+   - **Formato único `9:16` y renderizado nativo 2K HD (`1440 × 2560`):** Eliminado el selector de tamaños (`9:16 / 4:5 / 1:1`) dejando siempre `9:16`. Implementado motor `generateHdBlob()` sobre `<canvas>` HTML5 en resolución `1440 × 2560` que dibuja las prendas en su resolución original sin pérdida y los logotipos oficiales (`/klozet-bubble-pink.png` y `/k-bubble-pink.png`).
+   - **Botones `Descargar` y `Copiar` (estilo Strava para Instagram Stories):** Sustituido el botón `"Copiar link"` dentro del modal del sticker por el botón **`Copiar`**, que escribe el PNG transparente en HD directamente en el portapapeles del sistema (`navigator.clipboard.write([new ClipboardItem({ 'image/png': generateHdBlob() })])`) listo para pegar como sticker en Instagram Stories.
+   - **Botón `Copiar enlace` exclusivo en la publicación (`app/(app)/post/[id]/page.tsx`):** Añadido botón dedicado con icono `Link2` en la barra de acciones del post que copia `${window.location.origin}/post/${postId}`.
+
+2. **Corrección de Fotos de Outfits en Calendario (`components/OutfitCalendar.tsx`, `components/InteractiveOutfitViewer.tsx`):**
+   - Ampliadas las consultas de `calendar_outfits` y `outfits` en `OutfitCalendar.tsx` para incluir `position_x, position_y, scale, rotation, layer_order` de `outfit_items`.
+   - Sustituido el bloque estático `{outfit.image_url ? <img /> : <span>Sin foto</span>}` en *"Outfit de Hoy"* y en el modal de detalle del día por `<InteractiveOutfitViewer outfit={outfit} disableInteraction={true} />` y normalización `resolveImageUrl()`, renderizando siempre la composición real del outfit sobre fondo blanco.
+
+3. **Persistencia Real de Likes en Posts (`lib/services/likeManager.ts`, `app/api/likes/route.ts`, `app/(app)/post/[id]/page.tsx`):**
+   - **Causa raíz corregida:** La tabla `likes` en Supabase carecía de restricción única compuesta en `(user_id, post_id)`, por lo que `.upsert(..., { onConflict: 'user_id,post_id' })` fallaba silenciosamente con error PostgreSQL `42P10`, y `/api/likes` usaba un cliente sin sesión (`42501` RLS).
+   - Reemplazado `.upsert()` por verificación previa `.select('user_id')` + `.insert({ post_id, user_id })` tanto en `likeManager.ts` como en `app/api/likes/route.ts` (con cliente autenticado `getDbClient(request)`).
+   - En `app/(app)/post/[id]/page.tsx`, `fetchData` ahora resuelve `activeUserId` desde `supabase.auth.getSession()` si `useUser()` aún está hidratando, respeta `likeManager.getPendingState(postId)` y auto-sincroniza en segundo plano cualquier like previo guardado en la caché de `useFeedStore`.

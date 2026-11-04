@@ -6,6 +6,8 @@ import { useTourStore } from '@/store/tourStore';
 import { supabase } from '@/lib/supabase/client';
 
 class LikeManager {
+  private pendingLikes = new Map<string, boolean>();
+
   constructor() {
     if (typeof window !== 'undefined') {
       window.addEventListener('beforeunload', () => {
@@ -26,6 +28,8 @@ class LikeManager {
   ): { isLiked: boolean; likesCount: number } {
     const nextLiked = !currentLiked;
     const nextCount = Math.max(0, currentLiked ? currentCount - 1 : currentCount + 1);
+
+    this.pendingLikes.set(postId, nextLiked);
 
     // 1. Instant optimistic update across stores
     try {
@@ -59,15 +63,24 @@ class LikeManager {
       // Guaranteed direct client write if user is authenticated
       if (userId) {
         if (nextLiked) {
-          supabase.from('likes' as any).upsert(
-            { post_id: postId, user_id: userId },
-            { onConflict: 'user_id,post_id', ignoreDuplicates: true }
-          ).then(() => {}).catch(() => {});
-        } else {
-          supabase.from('likes' as any).delete()
+          const { data: existing } = await supabase
+            .from('likes' as any)
+            .select('user_id')
             .eq('post_id', postId)
             .eq('user_id', userId)
-            .then(() => {}).catch(() => {});
+            .limit(1);
+
+          if (!existing || existing.length === 0) {
+            await supabase
+              .from('likes' as any)
+              .insert({ post_id: postId, user_id: userId });
+          }
+        } else {
+          await supabase
+            .from('likes' as any)
+            .delete()
+            .eq('post_id', postId)
+            .eq('user_id', userId);
         }
       }
 
@@ -117,10 +130,10 @@ class LikeManager {
   }
 
   /**
-   * Checks if a post has a pending like state
+   * Checks if a post has a pending or session-toggled like state
    */
   public getPendingState(postId: string): boolean | undefined {
-    return undefined;
+    return this.pendingLikes.get(postId);
   }
 }
 

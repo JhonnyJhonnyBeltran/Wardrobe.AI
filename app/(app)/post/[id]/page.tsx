@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Heart, MessageCircle, Bookmark, Share, MoreHorizontal, MoreVertical, X, Send, ChevronLeft, ChevronRight, Edit2, Trash2, Languages } from 'lucide-react';
+import { Heart, MessageCircle, Bookmark, Share, Link2, Check, MoreHorizontal, MoreVertical, X, Send, ChevronLeft, ChevronRight, Edit2, Trash2, Languages } from 'lucide-react';
 import { useLanguageStore } from '@/store/languageStore';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';
@@ -47,6 +47,7 @@ export default function PostDetailPage() {
     const [activeSlide, setActiveSlide] = useState(0);
     const [isMobile, setIsMobile] = useState(false);
     const [showExportModal, setShowExportModal] = useState(false);
+    const [copiedPostLink, setCopiedPostLink] = useState(false);
 
     // Initial like state from likeManager or store caches
     const initialLiked = (() => {
@@ -348,12 +349,18 @@ export default function PostDetailPage() {
 
                 let likeRes: any = { data: [] }, saveRes: any = { data: [] }, followStatus = null;
 
-                if (user) {
+                let activeUserId = user?.id;
+                if (!activeUserId) {
+                    const { data: sessionData } = await supabase.auth.getSession();
+                    activeUserId = sessionData?.session?.user?.id;
+                }
+
+                if (activeUserId) {
                     const [l, s, f] = await Promise.all([
-                        supabase.from('likes' as any).select('user_id').eq('post_id', postId).eq('user_id', user.id),
-                        supabase.from('saves' as any).select('user_id').eq('post_id', postId).eq('user_id', user.id),
+                        supabase.from('likes' as any).select('user_id').eq('post_id', postId).eq('user_id', activeUserId),
+                        supabase.from('saves' as any).select('user_id').eq('post_id', postId).eq('user_id', activeUserId),
                         // @ts-ignore
-                        followService.getFollowStatus(user.id, postData.user_id),
+                        followService.getFollowStatus(activeUserId, postData.user_id),
                     ]);
                     likeRes = l;
                     saveRes = s;
@@ -373,17 +380,35 @@ export default function PostDetailPage() {
                     interestManager.recordPostInteraction(postData.id, postData.user_id, postData.style_ids);
                 } catch {}
 
-                // Prioritize likeManager pending state or store state over direct db query
+                // Prioritize likeManager pending state, DB state, or cached feedStore state
                 const pendingLike = likeManager.getPendingState(postId);
+                const dbLiked = Boolean(likeRes.data && (likeRes.data as any[]).length > 0);
+                const cachedFeedPost = useFeedStore.getState().posts.find(p => p.id === postId);
+                const cachedSearchState = useSearchStore.getState();
+                const cachedSearchPost = cachedSearchState.explorePosts.find(p => p.id === postId) || cachedSearchState.results.find(p => p.id === postId);
+                const cachedLiked = cachedFeedPost?.isLiked ?? cachedSearchPost?.isLiked;
+
                 if (pendingLike !== undefined) {
                     setIsLiked(pendingLike);
+                } else if (dbLiked) {
+                    setIsLiked(true);
+                    useFeedStore.getState().updatePostLike(postId, true, Math.max(1, (postData as any)?.likes_count || 0));
+                } else if (cachedLiked === true && activeUserId) {
+                    // Self-heal if post was liked in Feed cache before DB sync completed
+                    setIsLiked(true);
+                    fetch('/api/likes', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ post_id: postId, is_liked: true }),
+                    }).catch(() => {});
                 } else {
-                    setIsLiked(likeRes.data && (likeRes.data as any[]).length > 0);
+                    setIsLiked(false);
                 }
 
                 setIsSaved(saveRes.data && (saveRes.data as any[]).length > 0);
                 setIsFollowing(followStatus === 'accepted');
-                setLikesCount((postData as any)?.likes_count || 0);
+                const dbLikesCount = (postData as any)?.likes_count || 0;
+                setLikesCount( (!dbLiked && (pendingLike === true || cachedLiked === true)) ? Math.max(1, dbLikesCount) : dbLikesCount );
 
                 // Format comments
                 if (commentsData) {
@@ -585,6 +610,21 @@ export default function PostDetailPage() {
                 console.error('Error unsaving:', error);
                 setIsSaved(previousState); // Revert
             }
+        }
+    };
+
+    const handleCopyPostLink = async () => {
+        try {
+            try { haptics.selection(); } catch {}
+            const url = typeof window !== 'undefined' ? `${window.location.origin}/post/${postId}` : '';
+            if (navigator.clipboard && url) {
+                await navigator.clipboard.writeText(url);
+            }
+            setCopiedPostLink(true);
+            showSaveToast({ message: "Enlace de la publicación copiado", actionLabel: "" });
+            setTimeout(() => setCopiedPostLink(false), 2500);
+        } catch (error) {
+            console.log('Error copying post link:', error);
         }
     };
 
@@ -1039,10 +1079,22 @@ export default function PostDetailPage() {
                         <button 
                             onClick={() => setShowExportModal(true)} 
                             className="flex items-center gap-1.5 hover:opacity-70 transition-opacity text-gray-900 dark:text-white cursor-pointer"
-                            title="Compartir publicación"
-                            aria-label="Compartir publicación"
+                            title="Generar sticker HD"
+                            aria-label="Generar sticker HD"
                         >
                             <Share className="w-6 h-6 text-gray-900 dark:text-white" strokeWidth={2.2} />
+                        </button>
+                        <button
+                            onClick={handleCopyPostLink}
+                            className="flex items-center gap-1.5 hover:opacity-70 transition-opacity text-gray-900 dark:text-white cursor-pointer"
+                            title="Copiar enlace de la publicación"
+                            aria-label="Copiar enlace de la publicación"
+                        >
+                            {copiedPostLink ? (
+                                <Check className="w-6 h-6 text-[var(--brand-pink)]" strokeWidth={2.5} />
+                            ) : (
+                                <Link2 className="w-6 h-6 text-gray-900 dark:text-white" strokeWidth={2.2} />
+                            )}
                         </button>
                     </div>
                     <button onClick={toggleSave} className="p-2 -mr-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
@@ -1290,14 +1342,19 @@ export default function PostDetailPage() {
                     onClose={() => setShowExportModal(false)}
                     postId={post.id}
                     title={post.title || post.caption || 'Look Klozet'}
-                    coverImageUrl={post.image_url || post.imageUrl}
+                    coverImageUrl={(() => {
+                        const ro = post?.outfits ? (Array.isArray(post.outfits) ? post.outfits[0] : post.outfits) : (post?.outfit || null);
+                        const hasDistinct = Boolean(post?.image_url && (!ro || (post.image_url !== ro.image_url && post.image_url !== ro.imageUrl)));
+                        return hasDistinct ? (post.image_url || post.imageUrl) : undefined;
+                    })()}
+                    initialMode={currentSlide?.type === 'outfit' ? 'outfit' : undefined}
                     outfit={post?.outfits ? (Array.isArray(post.outfits) ? post.outfits[0] : post.outfits) : (post?.outfit || null)}
                     garments={(post?.clothing_items && post.clothing_items.length > 0)
                         ? post.clothing_items
                         : (post?.garments && post.garments.length > 0)
                         ? post.garments
                         : []}
-                    items={post.outfit?.items || []}
+                    items={post.outfit?.outfit_items || post.outfit?.items || []}
                     authorName={author.full_name || author.username || 'Klozet Creator'}
                     authorHandle={author.username || 'klozet'}
                     authorAvatarUrl={author.avatar_url}
