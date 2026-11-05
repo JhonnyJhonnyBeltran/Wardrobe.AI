@@ -15,6 +15,17 @@ interface InteractiveOutfitViewerProps {
     isActive?: boolean;
 }
 
+function getViewerCategoryVerticalRank(category?: string | null, name?: string | null): number {
+    const raw = `${category || ''} ${name || ''}`.toLowerCase();
+    if (/(hat|cap|gorra|gorro|sombrero|beanie|head|gafa|sunglass)/.test(raw)) return 1;
+    if (/(outerwear|jacket|coat|blazer|cazadora|abrigo)/.test(raw)) return 2;
+    if (/(top|shirt|camiseta|camisa|hoodie|sudadera|sweater|jersey|blusa|polo|knit|tank|crop)/.test(raw)) return 2.5;
+    if (/(dress|vestido|mono|jumpsuit)/.test(raw)) return 3;
+    if (/(pant|jean|trouser|pantalon|pantalón|vaquero|short|bermuda|skirt|falda|bottom|cargo|legging)/.test(raw)) return 4;
+    if (/(shoe|sneaker|zapatilla|bota|boot|sandal|loafer|mocasin|mocasín|heel|tacón|calzado|footwear|shox)/.test(raw)) return 5;
+    return 3.5;
+}
+
 const InteractiveOutfitViewer = ({ 
     outfit, 
     onItemClick, 
@@ -61,9 +72,38 @@ const InteractiveOutfitViewer = ({
     const rawStaticImage = outfit.imageUrl || outfit.image_url;
     const staticImage = rawStaticImage ? resolveImageUrl(rawStaticImage, '') : '';
     
-    // Generate programmatic positions for items that lack them
+    // Detect legacy 2x2 grid coordinates from old saves
+    const isLegacyGrid = useMemo(() => {
+        if (!items || items.length < 2) return false;
+        const allMatch = items.every((it: any) => {
+            const px = Math.round(it.position_x ?? it.positionX ?? 50);
+            const py = Math.round(it.position_y ?? it.positionY ?? 50);
+            return (px === 33 || px === 67 || px === 50) && (py === 33 || py === 67 || py === 50);
+        });
+        const hasGridOffset = items.some((it: any) => {
+            const px = Math.round(it.position_x ?? it.positionX ?? 50);
+            return px === 33 || px === 67;
+        });
+        return allMatch && hasGridOffset;
+    }, [items]);
+
+    // Generate programmatic positions for items that lack them or have legacy 2x2 coordinates
     const itemsWithPositions = useMemo(() => {
-        return items.map((item: any, i: number) => {
+        const needsVerticalStack = !hasLayoutData || isLegacyGrid;
+        const workingList = needsVerticalStack
+            ? [...items].sort((a: any, b: any) => {
+                const ca = a.clothing_items || a.clothing_item || a.clothing || a;
+                const cb = b.clothing_items || b.clothing_item || b.clothing || b;
+                const itemA = Array.isArray(ca) ? ca[0] : ca;
+                const itemB = Array.isArray(cb) ? cb[0] : cb;
+                return getViewerCategoryVerticalRank(itemA?.category || a.category, itemA?.name || a.name) -
+                       getViewerCategoryVerticalRank(itemB?.category || b.category, itemB?.name || b.name);
+            })
+            : items;
+
+        const total = workingList.length;
+
+        return workingList.map((item: any, i: number) => {
             const clothingRaw = item.clothing_items || item.clothing_item || item.clothing || item;
             const clothing = Array.isArray(clothingRaw) ? clothingRaw[0] : clothingRaw;
             const rawImg = clothing?.imageUrl || clothing?.image_url || clothing?.original_image_url || clothing?.originalImageUrl || item.image_url || item.imageUrl;
@@ -71,30 +111,34 @@ const InteractiveOutfitViewer = ({
             
             let x = item.position_x ?? item.positionX;
             let y = item.position_y ?? item.positionY;
+            let scale = item.scale ?? 1;
             
-            // If they don't have layout data, spread them nicely
-            if (x === undefined || x === null) {
-                // Simple grid layout spread
-                const cols = items.length > 2 ? 2 : 1;
-                const row = Math.floor(i / cols);
-                const col = i % cols;
-                
-                x = (col + 1) * (100 / (cols + 1));
-                y = (row + 1) * (100 / (Math.ceil(items.length / cols) + 1));
+            // If they don't have layout data or were in legacy 2x2 grid, stack vertically head-to-toe
+            if (needsVerticalStack || x === undefined || x === null || y === undefined || y === null) {
+                x = 50;
+                if (total === 1) {
+                    y = 50;
+                } else {
+                    const startY = total >= 4 ? 14 : 20;
+                    const endY = total >= 4 ? 86 : 80;
+                    y = startY + (i * (endY - startY)) / (total - 1);
+                }
+                const rank = getViewerCategoryVerticalRank(clothing?.category || item.category, clothing?.name || item.name);
+                if (rank === 1) scale = 0.55; // Hats / caps smaller
             }
 
             return {
                 ...item,
                 clothing,
                 img,
-                computedX: x,
-                computedY: y,
-                computedScale: item.scale ?? 1,
-                computedRotation: item.rotation ?? 0,
+                computedX: Number(x),
+                computedY: Number(y),
+                computedScale: Number(scale) || 1,
+                computedRotation: Number(item.rotation ?? 0),
                 computedZIndex: item.layer_order ?? item.zIndex ?? item.z_index ?? i
             };
         }).filter((item: any) => item.img);
-    }, [items]);
+    }, [items, hasLayoutData, isLegacyGrid]);
 
     // Sequential bounce entrance animation: items bounce one by one to show interactivity
     useEffect(() => {

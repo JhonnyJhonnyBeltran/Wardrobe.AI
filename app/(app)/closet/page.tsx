@@ -10,7 +10,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import { useRef } from 'react';
 import {
-  Heart, Grid3x3, List, Search, Filter, Plus, Wand2, X, Shirt, Layers, Share2, Trash2, Check, CalendarDays, Camera, Sparkles, Loader2
+  Heart, Grid3x3, List, Search, Filter, Plus, Wand2, X, Shirt, Layers, Share2, Trash2, Check, CalendarDays, Camera
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button, Card, FloatingCreateButton, OutfitCard, ClothingItem, NotificationToastContainer, WardrobeSelectionModal, OutfitDetailModal, EmptyState, SkeletonCard, ProfileProgressBar } from '@/components';
@@ -148,106 +148,7 @@ export default function ClosetPage() {
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [editingItem, setEditingItem] = useState<ClothingItemType | null>(null);
-  const [isSeedingStarter, setIsSeedingStarter] = useState(false);
   const { items, loading, loadingMore, hasMore, loadMore, addItem, updateItem, deleteItem, refresh } = useWardrobe();
-
-  const starterItemsPreview = useMemo(() => {
-    if (user?.gender === 'man') {
-      return [
-        {
-          name: 'Sudadera Scuffers',
-          category: 'hoodie' as const,
-          color: 'orange' as const,
-          brand: 'Scuffers',
-          season: ['autumn', 'winter', 'spring'] as any,
-          imageUrl: '/landing/sudadera-scuffers-cutout.png',
-        },
-        {
-          name: 'Sobrecamisa C.P. Company',
-          category: 'jacket' as const,
-          color: 'green' as const,
-          brand: 'C.P. Company',
-          season: ['autumn', 'spring'] as any,
-          imageUrl: '/landing/piezas/camisa-cpcompany.png',
-        },
-        {
-          name: 'Jeans Wide Fit Gris',
-          category: 'bottom' as const,
-          color: 'gray' as const,
-          brand: 'Zara',
-          season: ['spring', 'summer', 'autumn', 'winter'] as any,
-          imageUrl: '/landing/piezas/jeans-gris-hombre.png',
-        },
-        {
-          name: 'Zapatillas Replica',
-          category: 'shoes' as const,
-          color: 'white' as const,
-          brand: 'Maison Margiela',
-          season: ['spring', 'summer', 'autumn', 'winter'] as any,
-          imageUrl: '/landing/piezas/zapatillas-margiela.png',
-        },
-      ];
-    }
-    return [
-      {
-        name: 'Top Halter Oliva',
-        category: 'top' as const,
-        color: 'green' as const,
-        brand: 'Zara',
-        season: ['spring', 'summer'] as any,
-        imageUrl: '/landing/piezas/top-halter-oliva.png',
-      },
-      {
-        name: 'Cárdigan Rayas',
-        category: 'sweater' as const,
-        color: 'white' as const,
-        brand: 'Mango',
-        season: ['autumn', 'winter', 'spring'] as any,
-        imageUrl: '/landing/cardigan-rayas.png',
-      },
-      {
-        name: 'Jeans Wide Fit Azul',
-        category: 'bottom' as const,
-        color: 'blue' as const,
-        brand: 'Zara',
-        season: ['spring', 'summer', 'autumn', 'winter'] as any,
-        imageUrl: '/landing/piezas/jeans-wide-mujer.png',
-      },
-      {
-        name: 'Sneakers Star',
-        category: 'shoes' as const,
-        color: 'white' as const,
-        brand: 'Golden Goose',
-        season: ['spring', 'summer', 'autumn', 'winter'] as any,
-        imageUrl: '/landing/golden-goose.png',
-      },
-    ];
-  }, [user?.gender]);
-
-  const handleSeedStarterBasics = useCallback(async () => {
-    if (isSeedingStarter) return;
-    setIsSeedingStarter(true);
-    try {
-      for (const starter of starterItemsPreview) {
-        await addItem({
-          name: starter.name,
-          category: starter.category as any,
-          color: starter.color as any,
-          brand: starter.brand,
-          season: starter.season,
-          imageUrl: starter.imageUrl,
-          favorite: false,
-          isAiProcessed: true,
-        });
-      }
-      toast.success('¡4 básicos añadidos! Ya puedes crear un look en el lienzo o hablar con Kloe.');
-    } catch (e) {
-      console.error('Error seeding starter items:', e);
-      toast.error('No se pudieron cargar las prendas de prueba');
-    } finally {
-      setIsSeedingStarter(false);
-    }
-  }, [isSeedingStarter, starterItemsPreview, addItem]);
 
   // Selection Mode State (Synced with global store)
   const { isSelectionMode, setSelectionMode: setGlobalSelectionMode } = useUiStore();
@@ -897,80 +798,15 @@ export default function ClosetPage() {
                   ))}
                 </div>
               ) : (!items || items.length === 0) ? (
-                <div className="px-4 max-w-2xl mx-auto py-4">
-                  <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-[28px] p-5 sm:p-7 shadow-sm space-y-5">
-                    <div className="text-center sm:text-left space-y-1.5">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] text-xs font-bold">
-                        <Shirt className="w-3.5 h-3.5" />
-                        <span>Bienvenido a tu armario digital</span>
-                      </span>
-                      <h2 className="text-xl sm:text-2xl font-bold text-[var(--foreground)] tracking-tight">
-                        Añade tus primeras 3 prendas para empezar
-                      </h2>
-                      <p className="text-xs sm:text-sm text-[var(--foreground-secondary)] leading-relaxed">
-                        Sube fotos desde tu móvil (recortamos el fondo al instante), capturas de tiendas online (Zara, Mango, Bershka, Nike...) o prueba el estudio ahora mismo con 4 básicos de muestra.
-                      </p>
-                    </div>
-
-                    {/* Primary Action: Upload Own Clothes */}
-                    <button
-                      type="button"
-                      onClick={() => setShowAddModal(true)}
-                      className="w-full py-4 px-6 rounded-full bg-[var(--brand-pink)] text-white font-bold text-sm sm:text-base hover:opacity-95 active:scale-[0.99] transition-all shadow-md flex items-center justify-center gap-2.5 cursor-pointer"
-                    >
-                      <Camera className="w-5 h-5" />
-                      <span>Subir mis prendas ahora (hasta 20 de golpe)</span>
-                    </button>
-
-                    {/* Couch Fallback: 1-Tap Starter Basics */}
-                    <div className="bg-[var(--background-secondary)] border border-[var(--border-color)] rounded-3xl p-4 sm:p-5 space-y-3.5">
-                      <div className="flex items-center justify-between gap-2">
-                        <div>
-                          <h3 className="text-xs sm:text-sm font-bold text-[var(--foreground)]">
-                            ¿No tienes fotos a mano ahora mismo?
-                          </h3>
-                          <p className="text-[11px] sm:text-xs text-[var(--foreground-secondary)]">
-                            Añade estos 4 básicos en 1 toque para probar el lienzo y a Kloe al instante. Puedes borrarlos cuando quieras.
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-4 gap-2">
-                        {starterItemsPreview.map((st) => (
-                          <div
-                            key={st.name}
-                            className="aspect-square rounded-2xl bg-white border border-black/5 p-2 flex items-center justify-center overflow-hidden"
-                          >
-                            <img
-                              src={st.imageUrl}
-                              alt={st.name}
-                              className="w-full h-full object-contain"
-                            />
-                          </div>
-                        ))}
-                      </div>
-
-                      <button
-                        type="button"
-                        disabled={isSeedingStarter}
-                        onClick={handleSeedStarterBasics}
-                        className="w-full py-3 px-5 rounded-full bg-[var(--foreground)] text-[var(--background)] font-bold text-xs sm:text-sm hover:opacity-90 active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-                      >
-                        {isSeedingStarter ? (
-                          <>
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            <span>Añadiendo básicos a tu armario...</span>
-                          </>
-                        ) : (
-                          <>
-                            <Sparkles className="w-4 h-4 text-[var(--brand-pink)]" />
-                            <span>Cargar 4 básicos para probar Klozet ahora</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                </div>
+                <EmptyState
+                  icon={Shirt}
+                  title="Tu armario está vacío"
+                  description="Haz fotos a tus prendas o sube capturas de tiendas online. Recortamos el fondo automáticamente."
+                  actionLabel="Subir prendas (hasta 20 de golpe)"
+                  actionIcon={Camera}
+                  actionOnClick={() => setShowAddModal(true)}
+                  fullHeight={false}
+                />
               ) : (filteredContent as ClothingItemType[]).length === 0 ? (
                 <EmptyState
                   icon={Search}

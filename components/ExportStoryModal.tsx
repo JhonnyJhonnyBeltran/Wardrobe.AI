@@ -50,7 +50,7 @@ export interface ExportStoryModalProps {
   initialMode?: 'photo' | 'outfit';
 }
 
-type ColorTheme = 'transparent' | 'ivory' | 'noir' | 'rose';
+type ColorTheme = 'transparent' | 'white' | 'ivory' | 'noir' | 'rose';
 
 // Category rank helper so unpositioned garments stack head-to-toe vertically
 function getCategoryVerticalRank(category?: string | null, name?: string | null): number {
@@ -151,8 +151,21 @@ export default function ExportStoryModal({
 
     if (rawList.length === 0) return [];
 
-    // Check if at least one item has saved canvas coordinates
-    const hasExplicitPositions = rawList.some(
+    // Detect legacy 2x2 grid coordinates from old saves
+    const isLegacy2x2Grid =
+      rawList.length >= 2 &&
+      rawList.every((it: any) => {
+        const px = Math.round(it.position_x ?? it.positionX ?? 50);
+        const py = Math.round(it.position_y ?? it.positionY ?? 50);
+        return (px === 33 || px === 67 || px === 50) && (py === 33 || py === 67 || py === 50);
+      }) &&
+      rawList.some((it: any) => {
+        const px = Math.round(it.position_x ?? it.positionX ?? 50);
+        return px === 33 || px === 67;
+      });
+
+    // Check if at least one item has saved canvas coordinates (and not the legacy 2x2 grid)
+    const hasExplicitPositions = !isLegacy2x2Grid && rawList.some(
       (it: any) =>
         (it.position_x !== undefined && it.position_x !== null) ||
         (it.positionX !== undefined && it.positionX !== null)
@@ -192,8 +205,8 @@ export default function ExportStoryModal({
         let y = item.position_y ?? item.positionY;
         let scale = item.scale ?? 1;
 
-        // If no explicit coordinates, stack vertically in head-to-toe order along the center axis
-        if (x === undefined || x === null || y === undefined || y === null) {
+        // If no explicit coordinates or legacy grid, stack vertically in head-to-toe order along the center axis
+        if (!hasExplicitPositions || x === undefined || x === null || y === undefined || y === null) {
           x = 50;
           if (total === 1) {
             y = 50;
@@ -269,6 +282,12 @@ export default function ExportStoryModal({
       bg: 'bg-transparent',
       hex: null,
       textPrimary: 'text-zinc-900 dark:text-zinc-100',
+      textSecondary: 'text-zinc-500',
+    },
+    white: {
+      bg: 'bg-white',
+      hex: '#FFFFFF',
+      textPrimary: 'text-zinc-900',
       textSecondary: 'text-zinc-500',
     },
     ivory: {
@@ -644,6 +663,14 @@ export default function ExportStoryModal({
                 </button>
 
                 {/* Solid color swatches */}
+                <button
+                  type="button"
+                  onClick={() => { setColorTheme('white'); hapticLight(); }}
+                  className={`w-5 h-5 rounded-full bg-white border-2 transition-transform cursor-pointer ${
+                    colorTheme === 'white' ? 'border-[var(--brand-pink)] scale-110 shadow-xs' : 'border-zinc-300'
+                  }`}
+                  title="Blanco Puro"
+                />
                 <button
                   type="button"
                   onClick={() => { setColorTheme('ivory'); hapticLight(); }}

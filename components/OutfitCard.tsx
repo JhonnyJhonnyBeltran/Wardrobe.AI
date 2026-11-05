@@ -5,7 +5,7 @@
  * Updated to use real Outfit type from DB
  */
 
-import React, { memo, useState } from 'react';
+import React, { memo, useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Lock, Sun, Star, Crown, Briefcase, Heart, Zap, Flower2, PartyPopper, Circle, Snowflake, ShoppingBag, Layers } from 'lucide-react';
 import type { Outfit } from '@/types/outfit';
@@ -44,6 +44,18 @@ const styleConfig: Record<string, { icon: React.ReactNode; gradient: string }> =
     'Party Ready': { icon: <PartyPopper className="w-3 h-3" />, gradient: 'from-violet-400 to-purple-500' },
 };
 
+// Helper to get vertical rank for items without explicit coordinates
+function getCardCategoryVerticalRank(category?: string | null, name?: string | null): number {
+    const raw = `${category || ''} ${name || ''}`.toLowerCase();
+    if (/(hat|cap|gorra|gorro|sombrero|beanie|head|gafa|sunglass)/.test(raw)) return 1;
+    if (/(outerwear|jacket|coat|blazer|cazadora|abrigo)/.test(raw)) return 2;
+    if (/(top|shirt|camiseta|camisa|hoodie|sudadera|sweater|jersey|blusa|polo|knit|tank|crop)/.test(raw)) return 2.5;
+    if (/(dress|vestido|mono|jumpsuit)/.test(raw)) return 3;
+    if (/(pant|jean|trouser|pantalon|pantalón|vaquero|short|bermuda|skirt|falda|bottom|cargo|legging)/.test(raw)) return 4;
+    if (/(shoe|sneaker|zapatilla|bota|boot|sandal|loafer|mocasin|mocasín|heel|tacón|calzado|footwear|shox)/.test(raw)) return 5;
+    return 3.5;
+}
+
 const OutfitCard = ({ outfit, isLocked = false, onClick, onEdit, onDelete, onShare, onToggleFavorite, onToggleVisibility, index = 0 }: OutfitCardProps) => {
     const [imageError, setImageError] = useState(false);
     const styleKey = outfit.occasion || outfit.style || 'everyday';
@@ -66,6 +78,27 @@ const OutfitCard = ({ outfit, isLocked = false, onClick, onEdit, onDelete, onSha
     const items = outfit.items || [];
     const hasPositionedItems = items.some((it: any) => typeof it.position_x === 'number');
 
+    // Detect legacy 2x2 grid coordinates from old saves
+    const isLegacyGrid = items.length >= 2 && items.every((it: any) => {
+        const px = Math.round(it.position_x ?? 50);
+        const py = Math.round(it.position_y ?? 50);
+        return (px === 33 || px === 67 || px === 50) && (py === 33 || py === 67 || py === 50);
+    }) && items.some((it: any) => {
+        const px = Math.round(it.position_x ?? 50);
+        return px === 33 || px === 67;
+    });
+
+    const sortedItems = useMemo(() => {
+        if (!hasPositionedItems || isLegacyGrid) {
+            return [...items].sort((a: any, b: any) => {
+                const rankA = getCardCategoryVerticalRank(a.category, a.name);
+                const rankB = getCardCategoryVerticalRank(b.category, b.name);
+                return rankA - rankB;
+            });
+        }
+        return items;
+    }, [items, hasPositionedItems, isLegacyGrid]);
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -86,22 +119,27 @@ const OutfitCard = ({ outfit, isLocked = false, onClick, onEdit, onDelete, onSha
                     className={`relative w-full aspect-[4/5] bg-white overflow-hidden ${isLocked ? 'blur-sm' : ''
                         }`}
                 >
-                    {outfitPreviewImage && !imageError ? (
-                        <img
-                            src={outfitPreviewImage}
-                            alt={outfit.name}
-                            className="w-full h-full object-cover dark:mix-blend-normal"
-                            loading="lazy"
-                            onError={() => setImageError(true)}
-                        />
-                    ) : hasPositionedItems && items.length > 0 ? (
-                        /* Live Canvas Composition with exact positions */
+                    {/* Prioritize live positioned composition so clothes always render on clean white canvas and never legacy dark raster images */}
+                    {sortedItems.length > 0 ? (
+                        /* Live Canvas Composition with exact positions or vertical head-to-toe stack */
                         <div className="relative w-full h-full overflow-hidden p-2">
-                            {items.map((item: any, i: number) => {
+                            {sortedItems.map((item: any, i: number) => {
                                 const imgSrc = getItemImage(item);
-                                const posX = typeof item.position_x === 'number' ? item.position_x : 50;
-                                const posY = typeof item.position_y === 'number' ? item.position_y : 50;
-                                const itemScale = typeof item.scale === 'number' ? item.scale : 1;
+                                const total = sortedItems.length;
+
+                                let posX = typeof item.position_x === 'number' ? item.position_x : 50;
+                                let posY = typeof item.position_y === 'number' ? item.position_y : 50;
+                                let itemScale = typeof item.scale === 'number' ? item.scale : 1;
+
+                                if (!hasPositionedItems || isLegacyGrid) {
+                                    posX = 50;
+                                    const startY = total >= 4 ? 16 : 22;
+                                    const endY = total >= 4 ? 84 : 78;
+                                    posY = total === 1 ? 50 : startY + (i * (endY - startY)) / (total - 1);
+                                    const rank = getCardCategoryVerticalRank(item.category, item.name);
+                                    if (rank === 1) itemScale = 0.55;
+                                }
+
                                 const itemZ = item.layer_order || (i + 1);
 
                                 return (
@@ -139,6 +177,14 @@ const OutfitCard = ({ outfit, isLocked = false, onClick, onEdit, onDelete, onSha
                                 );
                             })}
                         </div>
+                    ) : outfitPreviewImage && !imageError ? (
+                        <img
+                            src={outfitPreviewImage}
+                            alt={outfit.name}
+                            className="w-full h-full object-cover dark:mix-blend-normal"
+                            loading="lazy"
+                            onError={() => setImageError(true)}
+                        />
                     ) : (
                         /* Balanced Grid Composition (Fallback for legacy outfits without coordinates) */
                         <div className="relative w-full h-full flex flex-col items-center justify-center p-3 gap-2">

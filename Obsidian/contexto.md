@@ -3249,3 +3249,34 @@ Ejecución del Consejo de Negocio con 4 subagentes especializados (`business-bel
      - Reordenadas las misiones de `TOUR_STEPS` (`store/tourStore.ts`) y `ProfileProgressBar.tsx` por orden de valor real: `1. Estilos (20%)` -> `2. Añade 3 prendas (25%)` -> `3. Crea tu primer outfit en el lienzo (20%)` -> `4. Pídele un look a Kloe (15%)` -> `5. Publica un look (10%)` -> `6. Foto de perfil (10%)`.
    - **Tarjeta de Bienvenida Anti-"Muro del Sofá" en `/closet` (`app/(app)/closet/page.tsx`)**:
      - Cuando el armario tiene `0 prendas`, muestra una tarjeta interactiva con botón principal para subir hasta 20 prendas de golpe (cámara, galería o capturas web) y un botón salvavidas **"Cargar 4 básicos para probar Klozet ahora (1 toque)"** que añade 4 prendas PNG transparentes reales (adaptadas a Chica/Chico) para probar el lienzo `/create` y Kloe en 3 segundos.
+
+
+---
+
+## 194. Estilos en Píldoras por Categoría con Filtro de Género y Buscador + Eliminación de Prendas Dummy (05/11/2026)
+
+1. **Eliminación Total de Prendas de Demostración Ficticias (`app/(app)/closet/page.tsx`):**
+   - Eliminada la inyección de 4 prendas ficticias ("starter basics").
+   - El armario vacío muestra exclusivamente el estado vacío nativo de Apple (`EmptyState`) enfocado en ropa real del usuario (cámara, galería o enlaces de tiendas).
+
+2. **Estilos en Píldoras Táctiles Agrupadas, Sin Fotos de Stock y Filtradas por Género (`app/(public)/onboarding/preferences/page.tsx`):**
+   - Eliminadas todas las imágenes de stock en géneros y estilos (cero fotos de modelos genéricos).
+   - Géneros diseñados como 3 cards de texto limpias (`Chica`, `Chico`, `Unisex`) con anillos de selección `#FF66C4`.
+   - Clasificación de estilos 1 a 1 por género:
+     - Solo Chica (`woman`): Coquette, Baddie / Glam, Cottagecore, Chic Parisino, Boho Chic.
+     - Solo Chico (`man`): Skater / Surf, Workwear / Americana, Techwear, Gorpcore.
+     - Compartidos / Unisex (`all`): Streetwear, Old Money, Y2K, Clean Look, K-Fashion, Casual Moderno, Minimalista, Normcore, Athleisure, Smart Casual, Elegante Clásico, Business Casual, Preppy, Cyberpunk, Dark Academia, Light Academia, Soft Girl/Boy, Gótico Alt, Harajuku, Vintage, Rock Grunge, Western, Noche/Fiesta, Coastal, Maximalista.
+   - Píldoras agrupadas en 6 categorías temáticas (*Tendencias & Virales, Casual & Diario, Elegante & Formal, Urbano & Outdoor, Aesthetic & Subculturas, Vintage & Ocasiones*).
+   - Buscador en tiempo real integrado y selector opcional *"Ver todos (sin filtro de género)"*.
+
+---
+
+## 195. Erradicación Definitiva de Cuadrícula 2x2 en Stickers, Disposición Vertical Anatómica y Lienzo Blanco en Cards (`ExportStoryModal`, `InteractiveOutfitViewer`, `OutfitCard`, `save-outfit`) (05/11/2026)
+
+1. **Fin de la Cuadrícula 2x2 (`cols = items.length > 2 ? 2 : 1`):**
+   - **`app/api/closy/save-outfit/route.ts`**: Al guardar outfits generados por Kloe, las prendas se ordenan anatómicamente de cabeza a pies (*Gorra/Sombrero y=12% scale=0.55 $\rightarrow$ Capa superior y=32% $\rightarrow$ Prenda de abrigo/Chaqueta y=35% x=52% $\rightarrow$ Pantalón/Falda y=62% $\rightarrow$ Calzado y=86% scale=0.9*) centradas en el eje `x=50%`, eliminando la disposición 2x2 (gorra al lado de sudadera y zapatilla al lado de pantalón).
+   - **`components/InteractiveOutfitViewer.tsx`**: Eliminado el fallback 2x2; si las prendas carecen de coordenadas o contienen las coordenadas legacy 2x2 (`33, 33`, `67, 33`, `33, 67`, `67, 67`), se auto-alinean de cabeza a pies a lo largo del eje central.
+   - **`components/ExportStoryModal.tsx`**: Añadida detección automática de coordenadas legacy 2x2 para reposicionarlas siempre en orden vertical anatómico idéntico al visor interactivo. Añadido selector de color Blanco Puro (`#FFFFFF`) junto al modo Transparente (PNG).
+
+2. **Lienzo Blanco Permanente en Tarjetas del Grid (`components/OutfitCard.tsx`):**
+   - En `components/OutfitCard.tsx`, se prioriza la composición interactiva (`hasPositionedItems && items.length > 0`) sobre `outfitPreviewImage`, garantizando que outfits antiguos creados con fondos negros se rendericen con prendas transparentes sobre el lienzo blanco limpio (`bg-white`) sin ningún fondo oscuro.

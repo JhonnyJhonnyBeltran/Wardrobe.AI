@@ -2,13 +2,9 @@
 
 /**
  * Onboarding Preferences Page - Phased Guided Onboarding
- * Step 0: Identity (Name & @username)
- * Step 1: Age Selector
- * Step 2: Gender / Identity Category (Chica, Chico, Unisex)
- * Step 3: "Dinos cómo eres" (Height, Body Type, Eye Color, Hair Color)
- * Step 4: Visual Style Selection (Dynamic gender-based photography)
- * Step 5: Accessories Style
- * Step 6: "Digitaliza tu armario en 15 minutos" (Math Pain Point + Photo/Web Guide + Direct Batch Upload up to 20 items)
+ * Step 0: Identidad (Enfoque de moda Chica/Chico/Unisex + Edad + Altura)
+ * Step 1: Silueta (Tipo de cuerpo + Colorimetría opcional)
+ * Step 2: Estilos Favoritos (Pills agrupadas por categorías, filtradas por género + buscador) + Accesorios
  */
 
 import { useState, useEffect, useMemo, Suspense } from 'react';
@@ -27,10 +23,8 @@ import {
     Ruler,
     Eye,
     Palette,
-    Camera,
-    Globe,
-    Layers,
-    Clock,
+    Search,
+    SlidersHorizontal,
 } from 'lucide-react';
 import { Button, LogoMark } from '@/components';
 import { useUser } from '@/store/userStore';
@@ -42,362 +36,115 @@ import {
     EYE_COLOR_OPTIONS,
     HAIR_COLOR_OPTIONS,
 } from '@/components/AvatarCalibrationModal';
-import Image from 'next/image';
 
 interface StyleItem {
     id: string;
     slug?: string;
     name: string;
-    image_url?: string;
-    image_url_woman?: string;
-    image_url_man?: string;
+    category: string;
+    genderTarget: 'woman' | 'man' | 'all';
 }
 
 interface AccessoryOption {
     id: string;
     name: string;
     sublabel: string;
-    image_woman: string;
-    image_man: string;
-    image_unisex: string;
 }
 
 const ACCESSORY_OPTIONS: AccessoryOption[] = [
     {
         id: 'minimalista',
         name: 'Minimalista',
-        sublabel: 'Sutil, discreto y funcional (reloj fino, anillos sutiles o cadenas finas)',
-        image_woman: 'https://images.unsplash.com/photo-1602751584552-8ba73aad10e1?w=800&q=80',
-        image_man: 'https://images.unsplash.com/photo-1524805444758-089113d48a6d?w=800&q=80',
-        image_unisex: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&q=80',
+        sublabel: 'Sutil y funcional (reloj fino o anillos discretos)',
     },
     {
         id: 'clasico',
         name: 'Clásico / Elegante',
-        sublabel: 'Atemporal y refinado (joyería clásica, reloj de piel, perlas o acero)',
-        image_woman: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=800&q=80',
-        image_man: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&q=80',
-        image_unisex: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&q=80',
+        sublabel: 'Atemporal (reloj de piel o acero, joyería clásica)',
     },
     {
         id: 'llamativo',
         name: 'Statement / Llamativo',
-        sublabel: 'Piezas protagonistas con presencia, volumen y brillo destacado',
-        image_woman: 'https://images.unsplash.com/photo-1535556116002-6281ff3e9f36?w=800&q=80',
-        image_man: 'https://images.unsplash.com/photo-1611652022419-a9419f74343d?w=800&q=80',
-        image_unisex: 'https://images.unsplash.com/photo-1535556116002-6281ff3e9f36?w=800&q=80',
+        sublabel: 'Piezas protagonistas con presencia y volumen',
     },
     {
         id: 'urbano',
         name: 'Urbano / Streetwear',
-        sublabel: 'Cadenas, gorras, gafas de sol y complementos de tendencia urbana',
-        image_woman: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800&q=80',
-        image_man: 'https://images.unsplash.com/photo-1576995853123-5a10305d93c0?w=800&q=80',
-        image_unisex: 'https://images.unsplash.com/photo-1576995853123-5a10305d93c0?w=800&q=80',
+        sublabel: 'Gorras, cadenas, gafas de sol y complementos',
     },
     {
         id: 'ninguno',
         name: 'Sin accesorios',
-        sublabel: 'Prefiero vestir looks limpios sin complementos adicionales',
-        image_woman: 'https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=800&q=80',
-        image_man: 'https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=800&q=80',
-        image_unisex: 'https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=800&q=80',
+        sublabel: 'Looks limpios sin complementos adicionales',
     },
 ];
 
 const COMPREHENSIVE_STYLES: StyleItem[] = [
-    {
-        id: 'casual-moderno',
-        slug: 'casual-moderno',
-        name: 'Casual Moderno',
-        image_url: '/styles/women/casual-moderno.jpg',
-        image_url_woman: '/styles/women/casual-moderno.jpg',
-        image_url_man: '/styles/men/casual-moderno.jpg',
-    },
-    {
-        id: 'streetwear',
-        slug: 'streetwear',
-        name: 'Streetwear',
-        image_url: '/styles/men/streetwear.jpg',
-        image_url_woman: '/styles/women/streetwear.jpg',
-        image_url_man: '/styles/men/streetwear.jpg',
-    },
-    {
-        id: 'elegante-clasico',
-        slug: 'elegante-clasico',
-        name: 'Elegante / Clásico',
-        image_url: '/styles/women/elegante-clasico.jpg',
-        image_url_woman: '/styles/women/elegante-clasico.jpg',
-        image_url_man: '/styles/men/elegante-clasico.jpg',
-    },
-    {
-        id: 'old-money',
-        slug: 'old-money',
-        name: 'Old Money / Clásico',
-        image_url: '/styles/men/old-money.jpg',
-        image_url_woman: '/styles/women/old-money.jpg',
-        image_url_man: '/styles/men/old-money.jpg',
-    },
-    {
-        id: 'minimalista',
-        slug: 'minimalista',
-        name: 'Minimalista',
-        image_url: '/styles/women/minimalista.jpg',
-        image_url_woman: '/styles/women/minimalista.jpg',
-        image_url_man: '/styles/men/minimalista.jpg',
-    },
-    {
-        id: 'deportivo-athleisure',
-        slug: 'deportivo-athleisure',
-        name: 'Deportivo / Athleisure',
-        image_url: '/styles/men/deportivo-athleisure.jpg',
-        image_url_woman: '/styles/women/deportivo-athleisure.jpg',
-        image_url_man: '/styles/men/deportivo-athleisure.jpg',
-    },
-    {
-        id: 'boho-chic',
-        slug: 'boho-chic',
-        name: 'Boho Chic',
-        image_url: '/styles/women/boho-chic.jpg',
-        image_url_woman: '/styles/women/boho-chic.jpg',
-        image_url_man: '/styles/men/boho-chic.jpg',
-    },
-    {
-        id: 'y2k',
-        slug: 'y2k',
-        name: 'Y2K',
-        image_url: '/styles/women/y2k.jpg',
-        image_url_woman: '/styles/women/y2k.jpg',
-        image_url_man: '/styles/men/y2k.jpg',
-    },
-    {
-        id: 'business-casual',
-        slug: 'business-casual',
-        name: 'Business Casual',
-        image_url: '/styles/men/business-casual.jpg',
-        image_url_woman: '/styles/women/business-casual.jpg',
-        image_url_man: '/styles/men/business-casual.jpg',
-    },
-    {
-        id: 'rock-grunge',
-        slug: 'rock-grunge',
-        name: 'Rock / Grunge',
-        image_url: '/styles/women/rock-grunge.jpg',
-        image_url_woman: '/styles/women/rock-grunge.jpg',
-        image_url_man: '/styles/men/rock-grunge.jpg',
-    },
-    {
-        id: 'preppy',
-        slug: 'preppy',
-        name: 'Preppy',
-        image_url: '/styles/men/preppy.jpg',
-        image_url_woman: '/styles/women/preppy.jpg',
-        image_url_man: '/styles/men/preppy.jpg',
-    },
-    {
-        id: 'vintage-retro',
-        slug: 'vintage-retro',
-        name: 'Vintage / Retro',
-        image_url: '/styles/women/vintage-retro.jpg',
-        image_url_woman: '/styles/women/vintage-retro.jpg',
-        image_url_man: '/styles/men/vintage-retro.jpg',
-    },
-    {
-        id: 'cottagecore',
-        slug: 'cottagecore',
-        name: 'Cottagecore',
-        image_url: '/styles/women/cottagecore.jpg',
-        image_url_woman: '/styles/women/cottagecore.jpg',
-        image_url_man: '/styles/men/cottagecore.jpg',
-    },
-    {
-        id: 'gotico-alt',
-        slug: 'gotico-alt',
-        name: 'Gótico / Alt',
-        image_url: '/styles/women/gotico-alt.jpg',
-        image_url_woman: '/styles/women/gotico-alt.jpg',
-        image_url_man: '/styles/men/gotico-alt.jpg',
-    },
-    {
-        id: 'techwear',
-        slug: 'techwear',
-        name: 'Techwear / Utilitario',
-        image_url: '/styles/men/techwear.jpg',
-        image_url_woman: '/styles/women/techwear.jpg',
-        image_url_man: '/styles/men/techwear.jpg',
-    },
-    {
-        id: 'dark-academia',
-        slug: 'dark-academia',
-        name: 'Dark Academia',
-        image_url: '/styles/women/dark-academia.jpg',
-        image_url_woman: '/styles/women/dark-academia.jpg',
-        image_url_man: '/styles/men/dark-academia.jpg',
-    },
-    {
-        id: 'light-academia',
-        slug: 'light-academia',
-        name: 'Light Academia',
-        image_url: '/styles/women/light-academia.jpg',
-        image_url_woman: '/styles/women/light-academia.jpg',
-        image_url_man: '/styles/men/light-academia.jpg',
-    },
-    {
-        id: 'skater-surf',
-        slug: 'skater-surf',
-        name: 'Skater / Surf',
-        image_url: '/styles/men/skater-surf.jpg',
-        image_url_woman: '/styles/women/skater-surf.jpg',
-        image_url_man: '/styles/men/skater-surf.jpg',
-    },
-    {
-        id: 'clean-look',
-        slug: 'clean-look',
-        name: 'Clean Look',
-        image_url: '/styles/women/clean-look.jpg',
-        image_url_woman: '/styles/women/clean-look.jpg',
-        image_url_man: '/styles/men/clean-look.jpg',
-    },
-    {
-        id: 'normcore',
-        slug: 'normcore',
-        name: 'Normcore',
-        image_url: '/styles/men/normcore.jpg',
-        image_url_woman: '/styles/women/normcore.jpg',
-        image_url_man: '/styles/men/normcore.jpg',
-    },
-    {
-        id: 'chic-parisino',
-        slug: 'chic-parisino',
-        name: 'Chic Parisino',
-        image_url: '/styles/women/chic-parisino.jpg',
-        image_url_woman: '/styles/women/chic-parisino.jpg',
-        image_url_man: '/styles/men/chic-parisino.jpg',
-    },
-    {
-        id: 'coastal-resort',
-        slug: 'coastal-resort',
-        name: 'Coastal / Resort',
-        image_url: '/styles/men/coastal-resort.jpg',
-        image_url_woman: '/styles/women/coastal-resort.jpg',
-        image_url_man: '/styles/men/coastal-resort.jpg',
-    },
-    {
-        id: 'western-cowboy',
-        slug: 'western-cowboy',
-        name: 'Western / Cowboy',
-        image_url: '/styles/women/western-cowboy.jpg',
-        image_url_woman: '/styles/women/western-cowboy.jpg',
-        image_url_man: '/styles/men/western-cowboy.jpg',
-    },
-    {
-        id: 'k-fashion',
-        slug: 'k-fashion',
-        name: 'K-Fashion',
-        image_url: '/styles/women/k-fashion.jpg',
-        image_url_woman: '/styles/women/k-fashion.jpg',
-        image_url_man: '/styles/men/k-fashion.jpg',
-    },
-    {
-        id: 'harajuku',
-        slug: 'harajuku',
-        name: 'Harajuku / J-Fashion',
-        image_url: '/styles/women/harajuku-j-fashion.jpg',
-        image_url_woman: '/styles/women/harajuku-j-fashion.jpg',
-        image_url_man: '/styles/men/harajuku-j-fashion.jpg',
-    },
-    {
-        id: 'workwear-americana',
-        slug: 'workwear-americana',
-        name: 'Workwear / Americana',
-        image_url: '/styles/men/workwear-americana.jpg',
-        image_url_woman: '/styles/women/workwear-americana.jpg',
-        image_url_man: '/styles/men/workwear-americana.jpg',
-    },
-    {
-        id: 'coquette',
-        slug: 'coquette',
-        name: 'Coquette',
-        image_url: '/styles/women/coquette.jpg',
-        image_url_woman: '/styles/women/coquette.jpg',
-        image_url_man: '/styles/men/coquette.jpg',
-    },
-    {
-        id: 'baddie-glam',
-        slug: 'baddie-glam',
-        name: 'Baddie / Glam',
-        image_url: '/styles/women/baddie-glam.jpg',
-        image_url_woman: '/styles/women/baddie-glam.jpg',
-        image_url_man: '/styles/men/baddie-glam.jpg',
-    },
-    {
-        id: 'maximalista',
-        slug: 'maximalista',
-        name: 'Maximalista',
-        image_url: '/styles/women/maximalista.jpg',
-        image_url_woman: '/styles/women/maximalista.jpg',
-        image_url_man: '/styles/men/maximalista.jpg',
-    },
-    {
-        id: 'gorpcore',
-        slug: 'gorpcore',
-        name: 'Gorpcore / Outdoor',
-        image_url: '/styles/men/gorpcore-outdoor.jpg',
-        image_url_woman: '/styles/women/gorpcore-outdoor.jpg',
-        image_url_man: '/styles/men/gorpcore-outdoor.jpg',
-    },
-    {
-        id: 'party-noche',
-        slug: 'party-noche',
-        name: 'Noche / Fiesta',
-        image_url: '/styles/women/noche-fiesta.jpg',
-        image_url_woman: '/styles/women/noche-fiesta.jpg',
-        image_url_man: '/styles/men/noche-fiesta.jpg',
-    },
-    {
-        id: 'smart-casual',
-        slug: 'smart-casual',
-        name: 'Smart Casual',
-        image_url: '/styles/men/smart-casual.jpg',
-        image_url_woman: '/styles/women/smart-casual.jpg',
-        image_url_man: '/styles/men/smart-casual.jpg',
-    },
-    {
-        id: 'soft-girl-boy',
-        slug: 'soft-girl-boy',
-        name: 'Soft Girl / Soft Boy',
-        image_url: '/styles/women/soft-girl-boy.jpg',
-        image_url_woman: '/styles/women/soft-girl-boy.jpg',
-        image_url_man: '/styles/men/soft-girl-boy.jpg',
-    },
-    {
-        id: 'cyberpunk',
-        slug: 'cyberpunk',
-        name: 'Cyberpunk / Y2K Tech',
-        image_url: '/styles/men/cyberpunk.jpg',
-        image_url_woman: '/styles/women/cyberpunk.jpg',
-        image_url_man: '/styles/men/cyberpunk.jpg',
-    },
+    // 🌟 Tendencias & Virales
+    { id: 'streetwear', slug: 'streetwear', name: 'Streetwear', category: 'Tendencias & Virales', genderTarget: 'all' },
+    { id: 'old-money', slug: 'old-money', name: 'Old Money', category: 'Tendencias & Virales', genderTarget: 'all' },
+    { id: 'y2k', slug: 'y2k', name: 'Y2K', category: 'Tendencias & Virales', genderTarget: 'all' },
+    { id: 'clean-look', slug: 'clean-look', name: 'Clean Look', category: 'Tendencias & Virales', genderTarget: 'all' },
+    { id: 'coquette', slug: 'coquette', name: 'Coquette', category: 'Tendencias & Virales', genderTarget: 'woman' },
+    { id: 'baddie-glam', slug: 'baddie-glam', name: 'Baddie / Glam', category: 'Tendencias & Virales', genderTarget: 'woman' },
+    { id: 'k-fashion', slug: 'k-fashion', name: 'K-Fashion', category: 'Tendencias & Virales', genderTarget: 'all' },
+
+    // 🏙️ Casual & Diario
+    { id: 'casual-moderno', slug: 'casual-moderno', name: 'Casual Moderno', category: 'Casual & Diario', genderTarget: 'all' },
+    { id: 'minimalista', slug: 'minimalista', name: 'Minimalista', category: 'Casual & Diario', genderTarget: 'all' },
+    { id: 'normcore', slug: 'normcore', name: 'Normcore', category: 'Casual & Diario', genderTarget: 'all' },
+    { id: 'deportivo-athleisure', slug: 'deportivo-athleisure', name: 'Deportivo / Athleisure', category: 'Casual & Diario', genderTarget: 'all' },
+    { id: 'smart-casual', slug: 'smart-casual', name: 'Smart Casual', category: 'Casual & Diario', genderTarget: 'all' },
+
+    // 👔 Elegante & Formal
+    { id: 'elegante-clasico', slug: 'elegante-clasico', name: 'Elegante / Clásico', category: 'Elegante & Formal', genderTarget: 'all' },
+    { id: 'business-casual', slug: 'business-casual', name: 'Business Casual', category: 'Elegante & Formal', genderTarget: 'all' },
+    { id: 'preppy', slug: 'preppy', name: 'Preppy', category: 'Elegante & Formal', genderTarget: 'all' },
+    { id: 'chic-parisino', slug: 'chic-parisino', name: 'Chic Parisino', category: 'Elegante & Formal', genderTarget: 'woman' },
+
+    // 🛹 Urbano, Tech & Outdoor
+    { id: 'skater-surf', slug: 'skater-surf', name: 'Skater / Surf', category: 'Urbano & Outdoor', genderTarget: 'man' },
+    { id: 'workwear-americana', slug: 'workwear-americana', name: 'Workwear / Americana', category: 'Urbano & Outdoor', genderTarget: 'man' },
+    { id: 'techwear', slug: 'techwear', name: 'Techwear / Utilitario', category: 'Urbano & Outdoor', genderTarget: 'man' },
+    { id: 'gorpcore', slug: 'gorpcore', name: 'Gorpcore / Outdoor', category: 'Urbano & Outdoor', genderTarget: 'man' },
+    { id: 'cyberpunk', slug: 'cyberpunk', name: 'Cyberpunk / Tech', category: 'Urbano & Outdoor', genderTarget: 'all' },
+
+    // ☕ Aesthetic & Subculturas
+    { id: 'dark-academia', slug: 'dark-academia', name: 'Dark Academia', category: 'Aesthetic & Subculturas', genderTarget: 'all' },
+    { id: 'light-academia', slug: 'light-academia', name: 'Light Academia', category: 'Aesthetic & Subculturas', genderTarget: 'all' },
+    { id: 'cottagecore', slug: 'cottagecore', name: 'Cottagecore', category: 'Aesthetic & Subculturas', genderTarget: 'woman' },
+    { id: 'soft-girl-boy', slug: 'soft-girl-boy', name: 'Soft Aesthetic', category: 'Aesthetic & Subculturas', genderTarget: 'all' },
+    { id: 'gotico-alt', slug: 'gotico-alt', name: 'Gótico / Alt', category: 'Aesthetic & Subculturas', genderTarget: 'all' },
+    { id: 'harajuku', slug: 'harajuku', name: 'Harajuku / J-Fashion', category: 'Aesthetic & Subculturas', genderTarget: 'all' },
+
+    // 🎸 Vintage, Retro & Ocasiones
+    { id: 'vintage-retro', slug: 'vintage-retro', name: 'Vintage / Retro', category: 'Vintage & Ocasiones', genderTarget: 'all' },
+    { id: 'rock-grunge', slug: 'rock-grunge', name: 'Rock / Grunge', category: 'Vintage & Ocasiones', genderTarget: 'all' },
+    { id: 'boho-chic', slug: 'boho-chic', name: 'Boho Chic', category: 'Vintage & Ocasiones', genderTarget: 'woman' },
+    { id: 'western-cowboy', slug: 'western-cowboy', name: 'Western / Cowboy', category: 'Vintage & Ocasiones', genderTarget: 'all' },
+    { id: 'party-noche', slug: 'party-noche', name: 'Noche / Fiesta', category: 'Vintage & Ocasiones', genderTarget: 'all' },
+    { id: 'coastal-resort', slug: 'coastal-resort', name: 'Coastal / Resort', category: 'Vintage & Ocasiones', genderTarget: 'all' },
+    { id: 'maximalista', slug: 'maximalista', name: 'Maximalista', category: 'Vintage & Ocasiones', genderTarget: 'all' },
 ];
 
 const GENDER_OPTIONS = [
     {
         value: 'woman',
         label: 'Chica',
-        sublabel: 'Moda, cortes y proporciones femeninas',
-        image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&q=80',
+        sublabel: 'Prendas y siluetas femeninas',
+        badge: 'Femenino',
     },
     {
         value: 'man',
         label: 'Chico',
-        sublabel: 'Moda, cortes y proporciones masculinas',
-        image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80',
+        sublabel: 'Prendas y siluetas masculinas',
+        badge: 'Masculino',
     },
     {
         value: 'other',
-        label: 'Unisex / Mixto',
-        sublabel: 'Inspiración diversa y combinada',
-        image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&q=80',
+        label: 'Unisex',
+        sublabel: 'Todos los estilos combinados',
+        badge: 'Mixto',
     },
 ];
 
@@ -407,15 +154,6 @@ function getAgeRangeFromAge(age: number): string {
     if (age <= 34) return '25_34';
     if (age <= 44) return '35_44';
     return '45_plus';
-}
-
-function getAgeLabel(age: number): string {
-    if (age < 18) return 'Menor de 18';
-    if (age <= 24) return 'Joven Adulto (18-24)';
-    if (age <= 34) return 'Adulto (25-34)';
-    if (age <= 44) return 'Maduro (35-44)';
-    if (age <= 59) return 'Senior (45-59)';
-    return '60+ años';
 }
 
 function PreferencesContent() {
@@ -439,7 +177,7 @@ function PreferencesContent() {
     // 3 Fast Steps:
     // Step 0: Identidad (Género + Edad + Altura + Nombre/@usuario solo si falta)
     // Step 1: Silueta y Proporciones (Tipo de cuerpo + Colorimetría opcional)
-    // Step 2: Estilos Favoritos (Top 12 + Ver todos + Accesorios en píldoras)
+    // Step 2: Estilos Favoritos (Pills agrupadas + Buscador + Accesorios)
     const [step, setStep] = useState(0);
     const [age, setAge] = useState<number>(24);
     const [gender, setGender] = useState<'woman' | 'man' | 'other' | ''>('woman');
@@ -454,10 +192,11 @@ function PreferencesContent() {
     // Styles & Accessories
     const [selectedStyles, setSelectedStyles] = useState<string[]>([]);
     const [selectedAccessory, setSelectedAccessory] = useState<string>('minimalista');
-    const [showAllStyles, setShowAllStyles] = useState(false);
+    const [styleSearch, setStyleSearch] = useState('');
+    const [showAllGenderStyles, setShowAllGenderStyles] = useState(false);
 
     // DB state
-    const [dbStyles, setDbStyles] = useState<StyleItem[]>([]);
+    const [dbStyles, setDbStyles] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
@@ -484,7 +223,6 @@ function PreferencesContent() {
             setIsUsernameAvailable(true);
         }
 
-        // Only ask for Name & @username if missing (e.g. Google OAuth) or explicitly editing profile settings
         const shouldAskIdentity = !hasValidName || !hasValidCustomUsername || isFromSettings || isEditModeQuery;
         setNeedsIdentityInput(shouldAskIdentity);
 
@@ -582,59 +320,40 @@ function PreferencesContent() {
         }
     };
 
+    // Filter styles by gender and combine with DB
     const availableStyles = useMemo(() => {
-        if (!dbStyles || dbStyles.length === 0) return COMPREHENSIVE_STYLES;
+        const base = COMPREHENSIVE_STYLES;
 
-        const dbMap = new Map(dbStyles.map(s => [s.slug || s.id, s]));
-        const merged: StyleItem[] = [];
+        return base.filter(style => {
+            if (showAllGenderStyles || !gender || gender === 'other') return true;
+            if (gender === 'woman') return style.genderTarget === 'woman' || style.genderTarget === 'all';
+            if (gender === 'man') return style.genderTarget === 'man' || style.genderTarget === 'all';
+            return true;
+        });
+    }, [gender, showAllGenderStyles]);
 
-        COMPREHENSIVE_STYLES.forEach(fallback => {
-            const match = dbMap.get(fallback.slug || fallback.id) || dbStyles.find(d => d.name.toLowerCase() === fallback.name.toLowerCase());
-            if (match) {
-                merged.push({
-                    id: match.id || fallback.id,
-                    slug: match.slug || fallback.slug,
-                    name: match.name || fallback.name,
-                    image_url: fallback.image_url || match.image_url,
-                    image_url_woman: fallback.image_url_woman || match.image_url_woman || match.image_url,
-                    image_url_man: fallback.image_url_man || match.image_url_man || match.image_url,
-                });
-                dbMap.delete(match.slug || match.id);
-            } else {
-                merged.push(fallback);
+    // Search filter
+    const displayedStyles = useMemo(() => {
+        if (!styleSearch.trim()) return availableStyles;
+        const q = styleSearch.toLowerCase().trim();
+        return availableStyles.filter(s =>
+            s.name.toLowerCase().includes(q) ||
+            s.category.toLowerCase().includes(q) ||
+            (s.slug && s.slug.toLowerCase().includes(q))
+        );
+    }, [availableStyles, styleSearch]);
+
+    // Group styles by category
+    const styleCategories = useMemo(() => {
+        const groups: Record<string, StyleItem[]> = {};
+        for (const style of displayedStyles) {
+            if (!groups[style.category]) {
+                groups[style.category] = [];
             }
-        });
-
-        dbMap.forEach(extra => {
-            merged.push({
-                id: extra.id,
-                slug: extra.slug || extra.id,
-                name: extra.name,
-                image_url: extra.image_url,
-                image_url_woman: extra.image_url_woman || extra.image_url,
-                image_url_man: extra.image_url_man || extra.image_url,
-            });
-        });
-
-        return merged;
-    }, [dbStyles]);
-
-    const visibleStyles = useMemo(() => {
-        if (showAllStyles) return availableStyles;
-        return availableStyles.slice(0, 12);
-    }, [availableStyles, showAllStyles]);
-
-    const getStyleImage = (style: StyleItem, idx: number) => {
-        if (gender === 'man') {
-            return style.image_url_man || style.image_url || style.image_url_woman || '';
+            groups[style.category].push(style);
         }
-        if (gender === 'woman') {
-            return style.image_url_woman || style.image_url || style.image_url_man || '';
-        }
-        return idx % 2 === 0
-            ? (style.image_url_woman || style.image_url || style.image_url_man || '')
-            : (style.image_url_man || style.image_url || style.image_url_woman || '');
-    };
+        return groups;
+    }, [displayedStyles]);
 
     const handleNext = () => {
         if (step === 0) {
@@ -836,7 +555,7 @@ function PreferencesContent() {
                                     {firstName && !needsIdentityInput ? `¡Hola, ${firstName}! Configura tu base` : 'Tu perfil de estilo en 30 segundos'}
                                 </h1>
                                 <p className="text-sm sm:text-base text-[var(--foreground-secondary)]">
-                                    Kloe ajustará cortes, proporciones y recomendaciones a tu medida.
+                                    Kloe adaptará recomendaciones, cortes y proporciones a tu medida.
                                 </p>
                             </div>
 
@@ -901,10 +620,10 @@ function PreferencesContent() {
                                 </div>
                             )}
 
-                            {/* 1. Selección de Enfoque (Chica / Chico / Unisex) */}
+                            {/* 1. Selección de Enfoque (Pills limpias Apple, sin fotos de stock) */}
                             <div className="space-y-2.5">
                                 <label className="text-xs font-bold uppercase tracking-wider text-[var(--foreground-secondary)] block">
-                                    1. ¿Qué enfoque de moda prefieres?
+                                    1. ¿Qué enfoque de moda buscas?
                                 </label>
                                 <div className="grid grid-cols-3 gap-2.5 sm:gap-3.5">
                                     {GENDER_OPTIONS.map((option) => {
@@ -914,41 +633,21 @@ function PreferencesContent() {
                                                 key={option.value}
                                                 type="button"
                                                 onClick={() => setGender(option.value as 'woman' | 'man' | 'other')}
-                                                className={`relative h-28 sm:h-36 rounded-3xl overflow-hidden text-left transition-all duration-200 group cursor-pointer ${
+                                                className={`py-4 px-3 sm:px-4 rounded-2xl border text-center transition-all duration-200 cursor-pointer flex flex-col items-center justify-center gap-1.5 ${
                                                     isSelected
-                                                        ? 'ring-3 ring-[var(--brand-pink)] scale-[0.99] shadow-md'
-                                                        : 'border border-[var(--border-color)] hover:border-[var(--brand-pink)]/50'
+                                                        ? 'border-[var(--brand-pink)] bg-[var(--brand-pink)]/10 text-[var(--foreground)] shadow-sm ring-1 ring-[var(--brand-pink)]'
+                                                        : 'border-[var(--border-color)] bg-[var(--card-bg)] text-[var(--foreground-secondary)] hover:border-[var(--brand-pink)]/40 hover:text-[var(--foreground)]'
                                                 }`}
                                             >
-                                                <Image
-                                                    src={option.image}
-                                                    alt={option.label}
-                                                    fill
-                                                    sizes="(max-width: 640px) 33vw, 220px"
-                                                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                                                />
-                                                <div className="absolute inset-0 bg-black/50" />
-                                                <div className="absolute inset-0 p-3 sm:p-4 flex flex-col justify-between z-10">
-                                                    <div className="flex justify-end">
-                                                        <div
-                                                            className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${
-                                                                isSelected
-                                                                    ? 'bg-[var(--brand-pink)] text-white shadow-sm'
-                                                                    : 'bg-white/25 text-transparent'
-                                                            }`}
-                                                        >
-                                                            <Check className="w-3.5 h-3.5" strokeWidth={3} />
-                                                        </div>
-                                                    </div>
-                                                    <div>
-                                                        <span className="text-white text-sm sm:text-lg font-bold block leading-tight">
-                                                            {option.label}
-                                                        </span>
-                                                        <span className="text-white/80 text-[10px] sm:text-xs line-clamp-1">
-                                                            {option.sublabel}
-                                                        </span>
-                                                    </div>
+                                                <div className="flex items-center gap-1.5">
+                                                    <span className={`text-sm sm:text-base font-bold ${isSelected ? 'text-[var(--brand-pink)]' : 'text-[var(--foreground)]'}`}>
+                                                        {option.label}
+                                                    </span>
+                                                    {isSelected && <Check className="w-3.5 h-3.5 text-[var(--brand-pink)]" strokeWidth={3} />}
                                                 </div>
+                                                <span className="text-[11px] sm:text-xs text-[var(--foreground-tertiary)] line-clamp-1 leading-tight">
+                                                    {option.sublabel}
+                                                </span>
                                             </button>
                                         );
                                     })}
@@ -1086,7 +785,7 @@ function PreferencesContent() {
                                     ¿Cuál es tu silueta?
                                 </h1>
                                 <p className="text-sm sm:text-base text-[var(--foreground-secondary)]">
-                                    Así Kloe equilibra tiros de pantalón, volúmenes y caídas que te favorecen.
+                                    Así Kloe equilibra tiros de pantalón, caídas y volúmenes ideales.
                                 </p>
                             </div>
 
@@ -1216,7 +915,7 @@ function PreferencesContent() {
                         </motion.div>
                     )}
 
-                    {/* PASO 3 DE 3: TUS ESTILOS FAVORITOS + ACCESORIOS EN PÍLDORA */}
+                    {/* PASO 3 DE 3: TUS ESTILOS FAVORITOS (PILLS AGRUPADAS + BUSCADOR + ACCESORIOS) */}
                     {step === 2 && (
                         <motion.div
                             key="step2_styles"
@@ -1226,6 +925,7 @@ function PreferencesContent() {
                             transition={{ duration: 0.22 }}
                             className="flex flex-col gap-6 pb-8"
                         >
+                            {/* Header */}
                             <div className="space-y-1.5">
                                 <div className="flex flex-wrap items-center justify-between gap-2">
                                     <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[var(--foreground)]">
@@ -1240,83 +940,106 @@ function PreferencesContent() {
                                     </span>
                                 </div>
                                 <p className="text-sm sm:text-base text-[var(--foreground-secondary)]">
-                                    Toca los estilos con los que más te identificas.
+                                    Toca los estilos que definen cómo te gusta vestir. Están filtrados según tu enfoque ({gender === 'man' ? 'Chico' : gender === 'woman' ? 'Chica' : 'Unisex'}).
                                 </p>
                             </div>
 
-                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3.5">
-                                {visibleStyles.map((style, idx) => {
-                                    const styleKey = style.slug || style.id;
-                                    const isSelected = selectedStyles.includes(styleKey) || selectedStyles.includes(style.id);
-                                    const imageUrl = getStyleImage(style, idx);
-
-                                    return (
+                            {/* Live Search Bar + Gender Filter Toggle */}
+                            <div className="space-y-2">
+                                <div className="relative">
+                                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--foreground-tertiary)]" />
+                                    <input
+                                        type="text"
+                                        value={styleSearch}
+                                        onChange={(e) => setStyleSearch(e.target.value)}
+                                        placeholder="Buscar estilos (ej. Streetwear, Old Money, Coquette...)"
+                                        className="w-full bg-[var(--card-bg)] text-[var(--foreground)] pl-11 pr-10 py-3 rounded-full border border-[var(--border-color)] focus:border-[var(--brand-pink)] transition-all outline-none text-xs sm:text-sm font-medium shadow-xs"
+                                    />
+                                    {styleSearch && (
                                         <button
-                                            key={styleKey}
                                             type="button"
-                                            onClick={() => toggleStyle(styleKey)}
-                                            className={`relative aspect-[4/5] rounded-2xl overflow-hidden group focus:outline-none transition-all duration-200 text-left cursor-pointer ${
-                                                isSelected
-                                                    ? 'ring-3 ring-[var(--brand-pink)] scale-[0.98] shadow-md'
-                                                    : 'border border-[var(--border-color)] hover:border-[var(--brand-pink)]/40 active:scale-[0.98]'
-                                            }`}
+                                            onClick={() => setStyleSearch('')}
+                                            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[var(--foreground-tertiary)] hover:text-[var(--foreground)] p-1 rounded-full cursor-pointer"
                                         >
-                                            {imageUrl ? (
-                                                <Image
-                                                    src={imageUrl}
-                                                    alt={style.name}
-                                                    fill
-                                                    sizes="(max-width: 640px) 50vw, 33vw"
-                                                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                                                />
-                                            ) : (
-                                                <div className="absolute inset-0 bg-[var(--background-secondary)]" />
-                                            )}
-
-                                            <div className="absolute inset-0 bg-black/40 z-10" />
-
-                                            {isSelected && (
-                                                <div className="absolute inset-0 bg-[var(--brand-pink)]/20 z-20 transition-opacity" />
-                                            )}
-
-                                            <div className="absolute top-2.5 right-2.5 z-30">
-                                                <div
-                                                    className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${
-                                                        isSelected
-                                                            ? 'bg-[var(--brand-pink)] text-white shadow-md scale-100'
-                                                            : 'bg-black/40 text-transparent border border-white/30 group-hover:border-white/70'
-                                                    }`}
-                                                >
-                                                    {isSelected && <Check className="w-3.5 h-3.5" strokeWidth={3} />}
-                                                </div>
-                                            </div>
-
-                                            <div className="absolute bottom-0 left-0 right-0 p-3 z-30">
-                                                <span className="text-white text-xs sm:text-sm font-bold tracking-wide block leading-snug line-clamp-2 drop-shadow-sm">
-                                                    {style.name}
-                                                </span>
-                                            </div>
+                                            <X className="w-3.5 h-3.5" />
                                         </button>
-                                    );
-                                })}
+                                    )}
+                                </div>
+
+                                <div className="flex items-center justify-between px-1 text-xs">
+                                    <span className="text-[var(--foreground-tertiary)]">
+                                        Mostrando {displayedStyles.length} estilos
+                                    </span>
+                                    {gender !== 'other' && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowAllGenderStyles(prev => !prev)}
+                                            className="text-[var(--brand-pink)] font-semibold hover:underline flex items-center gap-1 cursor-pointer"
+                                        >
+                                            <SlidersHorizontal className="w-3 h-3" />
+                                            <span>{showAllGenderStyles ? 'Volver a filtrar por género' : 'Ver todos (sin filtro de género)'}</span>
+                                        </button>
+                                    )}
+                                </div>
                             </div>
 
-                            {availableStyles.length > 12 && (
-                                <div className="flex justify-center">
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowAllStyles(prev => !prev)}
-                                        className="px-5 py-2.5 rounded-full bg-[var(--background-secondary)] hover:bg-[var(--border-color)]/60 border border-[var(--border-color)] text-xs sm:text-sm font-bold text-[var(--foreground)] transition-all cursor-pointer"
-                                    >
-                                        {showAllStyles
-                                            ? 'Mostrar menos estilos'
-                                            : `Ver los ${availableStyles.length} estilos (+${availableStyles.length - 12})`}
-                                    </button>
-                                </div>
-                            )}
+                            {/* Grouped Pills List */}
+                            <div className="space-y-6">
+                                {Object.keys(styleCategories).length === 0 ? (
+                                    <div className="text-center py-8 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-3xl p-6">
+                                        <p className="text-sm font-semibold text-[var(--foreground-secondary)]">
+                                            No se encontró ningún estilo para "{styleSearch}"
+                                        </p>
+                                        <button
+                                            type="button"
+                                            onClick={() => { setStyleSearch(''); setShowAllGenderStyles(true); }}
+                                            className="mt-2 text-xs font-bold text-[var(--brand-pink)] hover:underline cursor-pointer"
+                                        >
+                                            Limpiar búsqueda y mostrar todos
+                                        </button>
+                                    </div>
+                                ) : (
+                                    Object.entries(styleCategories).map(([categoryName, styles]) => {
+                                        const selectedInCategory = styles.filter(s => selectedStyles.includes(s.slug || s.id)).length;
+                                        return (
+                                            <div key={categoryName} className="space-y-2.5">
+                                                <div className="flex items-center justify-between text-xs font-bold text-[var(--foreground-secondary)] uppercase tracking-wider px-1">
+                                                    <span>{categoryName}</span>
+                                                    {selectedInCategory > 0 && (
+                                                        <span className="text-[11px] font-bold text-[var(--brand-pink)]">
+                                                            {selectedInCategory} elegidos
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <div className="flex flex-wrap gap-2 sm:gap-2.5">
+                                                    {styles.map(style => {
+                                                        const key = style.slug || style.id;
+                                                        const isSelected = selectedStyles.includes(key) || selectedStyles.includes(style.id);
+                                                        return (
+                                                            <button
+                                                                key={key}
+                                                                type="button"
+                                                                onClick={() => toggleStyle(key)}
+                                                                className={`px-4 py-2.5 rounded-full text-xs sm:text-sm font-semibold transition-all duration-150 flex items-center gap-1.5 cursor-pointer active:scale-95 ${
+                                                                    isSelected
+                                                                        ? 'bg-[var(--brand-pink)] text-white shadow-xs font-bold border border-[var(--brand-pink)]'
+                                                                        : 'bg-[var(--card-bg)] text-[var(--foreground)] border border-[var(--border-color)] hover:border-[var(--brand-pink)]/40 hover:bg-[var(--background-secondary)]'
+                                                                }`}
+                                                            >
+                                                                {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                                                                <span>{style.name}</span>
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        );
+                                    })
+                                )}
+                            </div>
 
-                            {/* Compact Pill Selector for Accessories (Replaces whole Step 5 screen) */}
-                            <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-3xl p-4 sm:p-5 space-y-3 shadow-xs">
+                            {/* Compact Pill Selector for Accessories (Zero images) */}
+                            <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-3xl p-4 sm:p-5 space-y-3 shadow-xs mt-2">
                                 <div className="flex items-center justify-between">
                                     <span className="text-xs font-bold uppercase tracking-wider text-[var(--foreground-secondary)]">
                                         Nivel de accesorios que sueles llevar
@@ -1331,7 +1054,7 @@ function PreferencesContent() {
                                                 key={opt.id}
                                                 type="button"
                                                 onClick={() => setSelectedAccessory(opt.id)}
-                                                className={`px-3.5 py-2 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
+                                                className={`px-3.5 py-2 rounded-full text-xs font-semibold border transition-all cursor-pointer active:scale-95 ${
                                                     active
                                                         ? 'bg-[var(--foreground)] text-[var(--background)] border-[var(--foreground)] shadow-xs'
                                                         : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)] border-[var(--border-color)] hover:text-[var(--foreground)]'
@@ -1355,7 +1078,7 @@ function PreferencesContent() {
                         <Button
                             variant="secondary"
                             size="lg"
-                            className="w-14 sm:w-auto sm:px-6 h-13 rounded-full flex items-center justify-center gap-2"
+                            className="w-14 sm:w-auto sm:px-6 h-13 rounded-full flex items-center justify-center gap-2 cursor-pointer"
                             onClick={() => setStep(prev => prev - 1)}
                             type="button"
                         >
@@ -1366,7 +1089,7 @@ function PreferencesContent() {
 
                     <Button
                         size="lg"
-                        className="flex-1 h-13 rounded-full text-[15px] font-bold max-w-sm ml-auto disabled:opacity-40 disabled:cursor-not-allowed shadow-lg"
+                        className="flex-1 h-13 rounded-full text-[15px] font-bold max-w-sm ml-auto disabled:opacity-40 disabled:cursor-not-allowed shadow-lg cursor-pointer"
                         onClick={handleNext}
                         disabled={
                             (step === 0 && (

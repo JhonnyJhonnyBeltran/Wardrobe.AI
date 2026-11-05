@@ -1,6 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
+function getSaveCategoryVerticalRank(category?: string | null, name?: string | null): number {
+  const raw = `${category || ''} ${name || ''}`.toLowerCase();
+  if (/(hat|cap|gorra|gorro|sombrero|beanie|head|gafa|sunglass)/.test(raw)) return 1;
+  if (/(outerwear|jacket|coat|blazer|cazadora|abrigo)/.test(raw)) return 2;
+  if (/(top|shirt|camiseta|camisa|hoodie|sudadera|sweater|jersey|blusa|polo|knit|tank|crop)/.test(raw)) return 2.5;
+  if (/(dress|vestido|mono|jumpsuit)/.test(raw)) return 3;
+  if (/(pant|jean|trouser|pantalon|pantalón|vaquero|short|bermuda|skirt|falda|bottom|cargo|legging)/.test(raw)) return 4;
+  if (/(shoe|sneaker|zapatilla|bota|boot|sandal|loafer|mocasin|mocasín|heel|tacón|calzado|footwear|shox)/.test(raw)) return 5;
+  return 3.5;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient();
@@ -37,20 +48,40 @@ export async function POST(request: NextRequest) {
 
     if (outfitErr) throw outfitErr;
 
-    // 2. Arrange items with coordinates on canvas
-    const outfitItemsArr = items.map((item: any, i: number) => {
-      const cols = items.length > 2 ? 2 : 1;
-      const row = Math.floor(i / cols);
-      const col = i % cols;
-      const x = (col + 1) * (100 / (cols + 1));
-      const y = (row + 1) * (100 / (Math.ceil(items.length / cols) + 1));
+    // 2. Sort items head-to-toe and arrange coordinates vertically on canvas
+    const sortedItems = [...items].sort((a: any, b: any) => {
+      const rankA = getSaveCategoryVerticalRank(a?.category, a?.name);
+      const rankB = getSaveCategoryVerticalRank(b?.category, b?.name);
+      return rankA - rankB;
+    });
+
+    const total = sortedItems.length;
+    const outfitItemsArr = sortedItems.map((item: any, i: number) => {
+      let x = 50;
+      let y = 50;
+      let scale = 1;
+
+      if (total === 1) {
+        y = 50;
+      } else {
+        const startY = total >= 4 ? 14 : 20;
+        const endY = total >= 4 ? 86 : 80;
+        y = startY + (i * (endY - startY)) / (total - 1);
+      }
+
+      const rank = getSaveCategoryVerticalRank(item?.category, item?.name);
+      if (rank === 1) scale = 0.55; // Hats / caps scaled smaller
+      if (rank === 2) {
+        x = 52;
+        scale = 1.05;
+      }
 
       return {
         outfit_id: newOutfit.id,
         clothing_item_id: item.id || item,
         position_x: Math.round(x),
         position_y: Math.round(y),
-        scale: 1,
+        scale: Number(scale.toFixed(2)),
         rotation: 0,
         layer_order: i + 1
       };
