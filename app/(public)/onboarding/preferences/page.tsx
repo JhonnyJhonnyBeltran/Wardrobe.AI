@@ -34,6 +34,7 @@ import {
 } from 'lucide-react';
 import { Button, LogoMark } from '@/components';
 import { useUser } from '@/store/userStore';
+import { useTourStore } from '@/store/tourStore';
 import { useSocial } from '@/lib/hooks/useSocial';
 import { supabase } from '@/lib/supabase/client';
 import {
@@ -427,27 +428,33 @@ function PreferencesContent() {
     const { user, setUser, isLoading: isLoadingUser } = useUser();
     const { checkUsernameAvailability } = useSocial();
 
-    // Step 0: Identity state
+    // Identity state (only shown if OAuth user without custom handle or editing from settings)
     const [fullName, setFullName] = useState('');
     const [username, setUsername] = useState('');
     const [isCheckingUsername, setIsCheckingUsername] = useState(false);
-    const [isUsernameAvailable, setIsUsernameAvailable] = useState<boolean | null>(null);
+    const [isUsernameAvailable, setIsUsernameAvailable] = useState<boolean | null>(true);
     const [usernameError, setUsernameError] = useState('');
+    const [needsIdentityInput, setNeedsIdentityInput] = useState(false);
 
-    // Steps 1 to 6: Core state
+    // 3 Fast Steps:
+    // Step 0: Identidad (Género + Edad + Altura + Nombre/@usuario solo si falta)
+    // Step 1: Silueta y Proporciones (Tipo de cuerpo + Colorimetría opcional)
+    // Step 2: Estilos Favoritos (Top 12 + Ver todos + Accesorios en píldoras)
     const [step, setStep] = useState(0);
     const [age, setAge] = useState<number>(24);
-    const [gender, setGender] = useState<'woman' | 'man' | 'other' | ''>('');
+    const [gender, setGender] = useState<'woman' | 'man' | 'other' | ''>('woman');
 
-    // Step 3: "Dinos cómo eres" (Physical Profile)
-    const [height, setHeight] = useState<number>(170);
+    // Physical Profile
+    const [height, setHeight] = useState<number>(168);
     const [bodyType, setBodyType] = useState<string>('reloj_de_arena');
     const [eyeColor, setEyeColor] = useState<string>('marron_oscuro');
     const [hairColor, setHairColor] = useState<string>('castano_oscuro');
+    const [showColorimetry, setShowColorimetry] = useState(false);
 
-    // Step 4 & 5: Styles & Accessories
+    // Styles & Accessories
     const [selectedStyles, setSelectedStyles] = useState<string[]>([]);
     const [selectedAccessory, setSelectedAccessory] = useState<string>('minimalista');
+    const [showAllStyles, setShowAllStyles] = useState(false);
 
     // DB state
     const [dbStyles, setDbStyles] = useState<StyleItem[]>([]);
@@ -455,7 +462,7 @@ function PreferencesContent() {
     const [isSaving, setIsSaving] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
 
-    const totalSteps = isFromSettings ? 6 : 7;
+    const totalSteps = 3;
     const maxStepIndex = totalSteps - 1;
 
     useEffect(() => {
@@ -466,13 +473,20 @@ function PreferencesContent() {
             return;
         }
 
+        const hasValidName = Boolean(user.name && user.name.trim().length >= 2 && user.name !== 'Usuario');
+        const hasValidCustomUsername = Boolean(user.username && user.username.length >= 3 && !user.username.startsWith('user_'));
+
         if (user.name) {
             setFullName(prev => prev || user.name);
         }
-        if (user.username && !user.username.startsWith('user_')) {
+        if (hasValidCustomUsername) {
             setUsername(prev => prev || user.username!);
             setIsUsernameAvailable(true);
         }
+
+        // Only ask for Name & @username if missing (e.g. Google OAuth) or explicitly editing profile settings
+        const shouldAskIdentity = !hasValidName || !hasValidCustomUsername || isFromSettings || isEditModeQuery;
+        setNeedsIdentityInput(shouldAskIdentity);
 
         const isUserConfigured = Boolean(user.styleCompleted);
         if (isUserConfigured || isFromSettings || isEditModeQuery) {
@@ -486,7 +500,7 @@ function PreferencesContent() {
                 else if (user.ageRange === '35_44' || user.ageRange === '35-44') setAge(38);
                 else setAge(50);
             }
-            if (user.gender) setGender(prev => prev || user.gender!);
+            if (user.gender) setGender(user.gender);
             if (user.height) setHeight(Number(user.height));
             if (user.bodyType || user.morphology) setBodyType(user.bodyType || user.morphology || 'reloj_de_arena');
             if (user.eyeColor) setEyeColor(user.eyeColor);
@@ -535,10 +549,10 @@ function PreferencesContent() {
         if (!validIds.includes(bodyType)) {
             setBodyType(currentBodyOptions[0].id);
         }
-        // Adjust default height when selecting gender if untouched
-        if (!user?.height && height === 170) {
+        if (!user?.height && (height === 168 || height === 165 || height === 178)) {
             if (gender === 'woman') setHeight(165);
             else if (gender === 'man') setHeight(178);
+            else setHeight(170);
         }
     }, [gender, currentBodyOptions]);
 
@@ -547,6 +561,11 @@ function PreferencesContent() {
         setUsername(clean);
         setIsUsernameAvailable(null);
         setUsernameError('');
+
+        if (clean === user?.username) {
+            setIsUsernameAvailable(true);
+            return;
+        }
 
         if (clean.length < 3) {
             if (clean.length > 0) setUsernameError('Mínimo 3 caracteres');
@@ -600,6 +619,11 @@ function PreferencesContent() {
         return merged;
     }, [dbStyles]);
 
+    const visibleStyles = useMemo(() => {
+        if (showAllStyles) return availableStyles;
+        return availableStyles.slice(0, 12);
+    }, [availableStyles, showAllStyles]);
+
     const getStyleImage = (style: StyleItem, idx: number) => {
         if (gender === 'man') {
             return style.image_url_man || style.image_url || style.image_url_woman || '';
@@ -612,31 +636,26 @@ function PreferencesContent() {
             : (style.image_url_man || style.image_url || style.image_url_woman || '');
     };
 
-    const getAccessoryImage = (option: AccessoryOption) => {
-        if (gender === 'man') return option.image_man;
-        if (gender === 'woman') return option.image_woman;
-        return option.image_unisex;
-    };
-
     const handleNext = () => {
         if (step === 0) {
-            if (!fullName.trim() || fullName.trim().length < 2) return;
-            if (username.length < 3 || isUsernameAvailable === false || isCheckingUsername) return;
+            if (needsIdentityInput) {
+                if (!fullName.trim() || fullName.trim().length < 2) return;
+                if (username.length < 3 || isUsernameAvailable === false || isCheckingUsername) return;
+            }
+            if (!gender || !age || !height) return;
         }
-        if (step === 1 && !age) return;
-        if (step === 2 && !gender) return;
-        if (step === 3 && (!height || !bodyType || !eyeColor || !hairColor)) return;
-        if (step === 4 && selectedStyles.length === 0) return;
-        if (step === 5 && !selectedAccessory) return;
+        if (step === 1 && !bodyType) return;
+        if (step === 2 && selectedStyles.length === 0) return;
 
         if (step < maxStepIndex) {
             setStep(prev => prev + 1);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         } else {
-            handleComplete(false);
+            handleComplete();
         }
     };
 
-    const handleComplete = async (openUploaderImmediately: boolean = false) => {
+    const handleComplete = async () => {
         if (!user) return;
         setIsSaving(true);
 
@@ -662,7 +681,7 @@ function PreferencesContent() {
                 physical_profile: physicalProfilePayload,
             };
 
-            let payload: Record<string, any> = {
+            const payload: Record<string, any> = {
                 id: user.id,
                 full_name: finalName,
                 username: cleanUsername,
@@ -685,7 +704,6 @@ function PreferencesContent() {
                 .from('profiles')
                 .upsert(payload);
 
-            // Resilient fallback if optional columns do not exist in remote DB
             if (error) {
                 console.warn('Retrying profiles upsert with core columns + JSONB physical_profile:', error.message);
                 const safePayload: Record<string, any> = {
@@ -730,20 +748,16 @@ function PreferencesContent() {
                 styleCompleted: true,
             });
 
-            if (openUploaderImmediately) {
-                router.push('/closet?action=new-item&startTour=true');
-                return;
-            }
+            // Pre-complete Step 1 of the Tour (Endowed Progress Effect: user starts at 20% in /closet!)
+            const tourStore = useTourStore.getState();
+            tourStore.initUserTour(user.id);
+            tourStore.startNewUserTour(user.id);
+            tourStore.markStepComplete('style_preferences', undefined, false);
 
-            const isTourCompleted = typeof window !== 'undefined' && user?.id && localStorage.getItem(`klozet_tour_completed_${user.id}`) === 'true';
-            if (isEditing || isFromSettings || isEditModeQuery || user.styleCompleted || isTourCompleted) {
-                if (isFromSettings) {
-                    router.push('/profile/settings');
-                } else {
-                    router.push('/closet');
-                }
+            if (isFromSettings) {
+                router.push('/profile/settings');
             } else {
-                router.push('/closet?startTour=true');
+                router.push('/closet');
             }
         } catch (err: any) {
             console.error('Error saving onboarding preferences:', err);
@@ -765,457 +779,459 @@ function PreferencesContent() {
         );
     }
 
+    const firstName = (fullName || user?.name || '').trim().split(' ')[0];
+
     return (
         <div className="min-h-screen bg-[var(--background)] pb-28 md:pb-32 overflow-hidden flex flex-col selection:bg-[var(--brand-pink)] selection:text-white">
-            {/* Minimal Header with Step Indicators */}
-            <header className="px-6 py-5 flex items-center justify-between sticky top-0 z-50 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-color)]/30">
-                <div className="flex gap-1.5 sm:gap-2 items-center">
+            {/* Minimal Header with 3 Step Indicators */}
+            <header className="px-6 py-4 flex items-center justify-between sticky top-0 z-50 bg-[var(--background)]/85 backdrop-blur-md border-b border-[var(--border-color)]/30">
+                <div className="flex gap-2 items-center">
                     {Array.from({ length: totalSteps }).map((_, s) => (
-                        <div
+                        <button
                             key={s}
-                            className={`h-1.5 w-5 sm:w-8 rounded-full transition-all duration-300 ${step >= s ? 'bg-[var(--brand-pink)]' : 'bg-[var(--border-color)]'}`}
+                            type="button"
+                            onClick={() => {
+                                if (s < step || isEditing) setStep(s);
+                            }}
+                            className={`h-2 rounded-full transition-all duration-300 ${
+                                step === s
+                                    ? 'w-10 bg-[var(--brand-pink)]'
+                                    : step > s
+                                    ? 'w-6 bg-[var(--brand-pink)]/45 cursor-pointer'
+                                    : 'w-6 bg-[var(--border-color)]'
+                            }`}
+                            aria-label={`Paso ${s + 1}`}
                         />
                     ))}
                 </div>
                 {isEditing ? (
                     <button
                         onClick={() => router.push(isFromSettings ? '/profile/settings' : '/closet')}
-                        className="p-2 rounded-full hover:bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:text-[var(--foreground)] transition-colors"
+                        className="p-2 rounded-full hover:bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:text-[var(--foreground)] transition-colors cursor-pointer"
                         aria-label="Cerrar"
                     >
                         <X className="w-5 h-5" />
                     </button>
                 ) : (
-                    <span className="text-xs font-semibold text-[var(--foreground-tertiary)]">
+                    <span className="text-xs font-bold text-[var(--foreground-secondary)] px-3 py-1 rounded-full bg-[var(--background-secondary)] border border-[var(--border-color)]">
                         Paso {step + 1} de {totalSteps}
                     </span>
                 )}
             </header>
 
-            <main className="flex-1 px-4 sm:px-6 max-w-2xl mx-auto w-full pt-6 md:pt-10 relative">
+            <main className="flex-1 px-4 sm:px-6 max-w-2xl mx-auto w-full pt-6 md:pt-8 relative">
                 <AnimatePresence mode="wait">
-                    {/* STEP 0: IDENTITY / NAME & USERNAME */}
+                    {/* PASO 1 DE 3: IDENTIDAD, GÉNERO, EDAD Y ALTURA */}
                     {step === 0 && (
                         <motion.div
-                            key="step0"
+                            key="step0_identity"
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -20 }}
-                            transition={{ duration: 0.25 }}
-                            className="flex flex-col gap-6 md:gap-8"
+                            transition={{ duration: 0.22 }}
+                            className="flex flex-col gap-6"
                         >
-                            <div className="text-center md:text-left space-y-2">
-                                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-[var(--foreground)]">
-                                    ¿Cómo te llamas?
+                            <div className="space-y-1.5">
+                                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[var(--foreground)]">
+                                    {firstName && !needsIdentityInput ? `¡Hola, ${firstName}! Configura tu base` : 'Tu perfil de estilo en 30 segundos'}
                                 </h1>
                                 <p className="text-sm sm:text-base text-[var(--foreground-secondary)]">
-                                    Elige tu nombre y un @usuario único para que tus amigos y la comunidad te reconozcan.
+                                    Kloe ajustará cortes, proporciones y recomendaciones a tu medida.
                                 </p>
                             </div>
 
-                            <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-3xl p-6 sm:p-8 space-y-5 shadow-sm">
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold uppercase tracking-wider text-[var(--foreground-secondary)] block">
-                                        Tu nombre o alias
-                                    </label>
-                                    <div className="relative">
-                                        <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--foreground-tertiary)]" />
-                                        <input
-                                            type="text"
-                                            value={fullName}
-                                            onChange={(e) => setFullName(e.target.value)}
-                                            placeholder="Ej. Ethan"
-                                            maxLength={50}
-                                            autoFocus
-                                            className="w-full bg-[var(--background-secondary)] text-[var(--foreground)] pl-12 pr-4 py-3.5 sm:py-4 rounded-2xl border border-[var(--border-color)] focus:border-[var(--brand-pink)] focus:ring-1 focus:ring-[var(--brand-pink)] transition-all outline-none text-sm sm:text-base font-medium placeholder:text-[var(--foreground-tertiary)]"
-                                        />
-                                    </div>
-                                </div>
+                            {/* Only shown if OAuth login without username or editing from Settings */}
+                            {needsIdentityInput && (
+                                <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-3xl p-5 sm:p-6 space-y-4 shadow-xs">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div className="space-y-1.5">
+                                            <label className="text-xs font-bold uppercase tracking-wider text-[var(--foreground-secondary)] block">
+                                                Tu nombre
+                                            </label>
+                                            <div className="relative">
+                                                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--foreground-tertiary)]" />
+                                                <input
+                                                    type="text"
+                                                    value={fullName}
+                                                    onChange={(e) => setFullName(e.target.value)}
+                                                    placeholder="Ej. Alex"
+                                                    maxLength={50}
+                                                    className="w-full bg-[var(--background-secondary)] text-[var(--foreground)] pl-11 pr-4 py-3 rounded-full border border-[var(--border-color)] focus:border-[var(--brand-pink)] transition-all outline-none text-sm font-medium"
+                                                />
+                                            </div>
+                                        </div>
 
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold uppercase tracking-wider text-[var(--foreground-secondary)] block">
-                                        Nombre de usuario único (@handle)
-                                    </label>
-                                    <div className="relative">
-                                        <AtSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--foreground-tertiary)]" />
-                                        <input
-                                            type="text"
-                                            value={username}
-                                            onChange={(e) => handleUsernameChange(e.target.value)}
-                                            placeholder="tu_usuario"
-                                            maxLength={30}
-                                            className={`w-full bg-[var(--background-secondary)] text-[var(--foreground)] pl-12 pr-28 py-3.5 sm:py-4 rounded-2xl border transition-all outline-none text-sm sm:text-base font-medium placeholder:text-[var(--foreground-tertiary)] ${
-                                                usernameError
-                                                    ? 'border-red-500/80 focus:border-red-500 focus:ring-1 focus:ring-red-500'
-                                                    : isUsernameAvailable === true
-                                                    ? 'border-emerald-500/80 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500'
-                                                    : 'border-[var(--border-color)] focus:border-[var(--brand-pink)] focus:ring-1 focus:ring-[var(--brand-pink)]'
-                                            }`}
-                                        />
-                                        <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
-                                            {isCheckingUsername && (
-                                                <Loader2 className="w-4 h-4 text-[var(--brand-pink)] animate-spin" />
-                                            )}
-                                            {!isCheckingUsername && isUsernameAvailable === true && username.length >= 3 && (
-                                                <span className="text-xs font-bold text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-full flex items-center gap-1">
-                                                    <Check className="w-3 h-3" strokeWidth={3} />
-                                                    Libre
-                                                </span>
+                                        <div className="space-y-1.5">
+                                            <label className="text-xs font-bold uppercase tracking-wider text-[var(--foreground-secondary)] block">
+                                                @usuario único
+                                            </label>
+                                            <div className="relative">
+                                                <AtSign className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--foreground-tertiary)]" />
+                                                <input
+                                                    type="text"
+                                                    value={username}
+                                                    onChange={(e) => handleUsernameChange(e.target.value)}
+                                                    placeholder="tu_usuario"
+                                                    maxLength={30}
+                                                    className={`w-full bg-[var(--background-secondary)] text-[var(--foreground)] pl-11 pr-20 py-3 rounded-full border transition-all outline-none text-sm font-medium ${
+                                                        usernameError
+                                                            ? 'border-red-500'
+                                                            : isUsernameAvailable === true
+                                                            ? 'border-emerald-500/80'
+                                                            : 'border-[var(--border-color)] focus:border-[var(--brand-pink)]'
+                                                    }`}
+                                                />
+                                                <div className="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center">
+                                                    {isCheckingUsername && (
+                                                        <Loader2 className="w-4 h-4 text-[var(--brand-pink)] animate-spin" />
+                                                    )}
+                                                    {!isCheckingUsername && isUsernameAvailable === true && username.length >= 3 && (
+                                                        <span className="text-[11px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                                            <Check className="w-3 h-3" strokeWidth={3} />
+                                                            OK
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            {usernameError && (
+                                                <p className="text-xs text-red-500 font-medium ml-2">{usernameError}</p>
                                             )}
                                         </div>
                                     </div>
-                                    {usernameError ? (
-                                        <p className="text-xs text-red-500 font-medium ml-1">{usernameError}</p>
-                                    ) : (
-                                        <p className="text-xs text-[var(--foreground-tertiary)] ml-1">
-                                            Solo letras, números y guiones bajos (mínimo 3 caracteres).
-                                        </p>
-                                    )}
+                                </div>
+                            )}
+
+                            {/* 1. Selección de Enfoque (Chica / Chico / Unisex) */}
+                            <div className="space-y-2.5">
+                                <label className="text-xs font-bold uppercase tracking-wider text-[var(--foreground-secondary)] block">
+                                    1. ¿Qué enfoque de moda prefieres?
+                                </label>
+                                <div className="grid grid-cols-3 gap-2.5 sm:gap-3.5">
+                                    {GENDER_OPTIONS.map((option) => {
+                                        const isSelected = gender === option.value;
+                                        return (
+                                            <button
+                                                key={option.value}
+                                                type="button"
+                                                onClick={() => setGender(option.value as 'woman' | 'man' | 'other')}
+                                                className={`relative h-28 sm:h-36 rounded-3xl overflow-hidden text-left transition-all duration-200 group cursor-pointer ${
+                                                    isSelected
+                                                        ? 'ring-3 ring-[var(--brand-pink)] scale-[0.99] shadow-md'
+                                                        : 'border border-[var(--border-color)] hover:border-[var(--brand-pink)]/50'
+                                                }`}
+                                            >
+                                                <Image
+                                                    src={option.image}
+                                                    alt={option.label}
+                                                    fill
+                                                    sizes="(max-width: 640px) 33vw, 220px"
+                                                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                                                />
+                                                <div className="absolute inset-0 bg-black/50" />
+                                                <div className="absolute inset-0 p-3 sm:p-4 flex flex-col justify-between z-10">
+                                                    <div className="flex justify-end">
+                                                        <div
+                                                            className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${
+                                                                isSelected
+                                                                    ? 'bg-[var(--brand-pink)] text-white shadow-sm'
+                                                                    : 'bg-white/25 text-transparent'
+                                                            }`}
+                                                        >
+                                                            <Check className="w-3.5 h-3.5" strokeWidth={3} />
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-white text-sm sm:text-lg font-bold block leading-tight">
+                                                            {option.label}
+                                                        </span>
+                                                        <span className="text-white/80 text-[10px] sm:text-xs line-clamp-1">
+                                                            {option.sublabel}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             </div>
-                        </motion.div>
-                    )}
 
-                    {/* STEP 1: AGE SLIDER */}
-                    {step === 1 && (
-                        <motion.div
-                            key="step1"
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
-                            transition={{ duration: 0.25 }}
-                            className="flex flex-col gap-8"
-                        >
-                            <div className="text-center md:text-left space-y-2">
-                                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-[var(--foreground)]">
-                                    ¿Cuál es tu edad?
-                                </h1>
-                                <p className="text-sm sm:text-base text-[var(--foreground-secondary)]">
-                                    Adaptamos las recomendaciones y tendencias de la comunidad según tu perfil.
-                                </p>
-                            </div>
-
-                            <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-3xl p-6 sm:p-8 flex flex-col items-center gap-6 shadow-sm">
-                                <div className="text-center space-y-1">
-                                    <div className="flex items-baseline justify-center gap-2">
-                                        <span className="text-6xl sm:text-7xl font-bold tracking-tight text-[var(--brand-pink)] tabular-nums font-display">
-                                            {age}
+                            {/* 2. Edad y Altura en una sola tarjeta táctil */}
+                            <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-3xl p-5 sm:p-6 grid grid-cols-1 sm:grid-cols-2 gap-6 shadow-xs">
+                                {/* Edad */}
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs font-bold uppercase tracking-wider text-[var(--foreground-secondary)]">
+                                            2. Tu edad
                                         </span>
-                                        <span className="text-xl sm:text-2xl font-semibold text-[var(--foreground-secondary)]">
-                                            años
+                                        <span className="text-2xl font-bold text-[var(--brand-pink)] tabular-nums">
+                                            {age} <span className="text-xs font-medium text-[var(--foreground-secondary)]">años</span>
                                         </span>
                                     </div>
-                                    <p className="text-xs sm:text-sm font-medium text-[var(--foreground-tertiary)]">
-                                        {getAgeLabel(age)}
-                                    </p>
-                                </div>
-
-                                <div className="w-full max-w-md space-y-4">
-                                    <div className="flex items-center gap-3">
+                                    <div className="flex items-center gap-2.5">
                                         <button
                                             type="button"
                                             onClick={() => setAge(prev => Math.max(14, prev - 1))}
-                                            disabled={age <= 14}
-                                            className="w-10 h-10 rounded-full bg-[var(--background-secondary)] hover:bg-[var(--border-color)] disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center text-[var(--foreground)] transition-colors shrink-0"
-                                            aria-label="Disminuir edad"
+                                            className="w-9 h-9 rounded-full bg-[var(--background-secondary)] hover:bg-[var(--border-color)] flex items-center justify-center text-[var(--foreground)] shrink-0 cursor-pointer"
+                                            aria-label="Restar edad"
                                         >
-                                            <Minus className="w-4 h-4" />
+                                            <Minus className="w-3.5 h-3.5" />
                                         </button>
-
-                                        <div className="relative flex-1 flex items-center">
-                                            <input
-                                                type="range"
-                                                min={14}
-                                                max={80}
-                                                step={1}
-                                                value={age}
-                                                onChange={(e) => setAge(Number(e.target.value))}
-                                                className="w-full h-3 bg-[var(--background-secondary)] rounded-full appearance-none cursor-pointer accent-[var(--brand-pink)] focus:outline-none"
-                                            />
-                                        </div>
-
+                                        <input
+                                            type="range"
+                                            min={14}
+                                            max={80}
+                                            step={1}
+                                            value={age}
+                                            onChange={(e) => setAge(Number(e.target.value))}
+                                            className="w-full h-2.5 bg-[var(--background-secondary)] rounded-full appearance-none cursor-pointer accent-[var(--brand-pink)]"
+                                        />
                                         <button
                                             type="button"
                                             onClick={() => setAge(prev => Math.min(80, prev + 1))}
-                                            disabled={age >= 80}
-                                            className="w-10 h-10 rounded-full bg-[var(--background-secondary)] hover:bg-[var(--border-color)] disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center text-[var(--foreground)] transition-colors shrink-0"
-                                            aria-label="Aumentar edad"
+                                            className="w-9 h-9 rounded-full bg-[var(--background-secondary)] hover:bg-[var(--border-color)] flex items-center justify-center text-[var(--foreground)] shrink-0 cursor-pointer"
+                                            aria-label="Sumar edad"
                                         >
-                                            <Plus className="w-4 h-4" />
+                                            <Plus className="w-3.5 h-3.5" />
                                         </button>
                                     </div>
-
-                                    <div className="flex justify-between text-xs text-[var(--foreground-tertiary)] font-medium px-1">
-                                        <span>14 años</span>
-                                        <span>30 años</span>
-                                        <span>50 años</span>
-                                        <span>80 años</span>
+                                    <div className="flex flex-wrap gap-1.5 pt-1">
+                                        {[18, 22, 26, 32, 40].map((preset) => (
+                                            <button
+                                                key={preset}
+                                                type="button"
+                                                onClick={() => setAge(preset)}
+                                                className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all cursor-pointer ${
+                                                    age === preset
+                                                        ? 'bg-[var(--brand-pink)] text-white'
+                                                        : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:text-[var(--foreground)]'
+                                                }`}
+                                            >
+                                                {preset}
+                                            </button>
+                                        ))}
                                     </div>
                                 </div>
 
-                                <div className="flex flex-wrap justify-center gap-2 pt-2 border-t border-[var(--border-color)]/50 w-full">
-                                    {[18, 21, 25, 30, 40, 50].map((preset) => (
+                                {/* Altura */}
+                                <div className="space-y-3 sm:border-l sm:border-[var(--border-color)]/60 sm:pl-6">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-xs font-bold uppercase tracking-wider text-[var(--foreground-secondary)] flex items-center gap-1">
+                                            <Ruler className="w-3.5 h-3.5 text-[var(--brand-pink)]" />
+                                            3. Tu altura
+                                        </span>
+                                        <span className="text-2xl font-bold text-[var(--foreground)] tabular-nums">
+                                            {height} <span className="text-xs font-medium text-[var(--foreground-secondary)]">cm</span>
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center gap-2.5">
                                         <button
-                                            key={preset}
                                             type="button"
-                                            onClick={() => setAge(preset)}
-                                            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all ${
-                                                age === preset
-                                                    ? 'bg-[var(--brand-pink)] text-white shadow-sm'
-                                                    : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:text-[var(--foreground)] hover:bg-[var(--border-color)]/60'
-                                            }`}
+                                            onClick={() => setHeight(prev => Math.max(145, prev - 1))}
+                                            className="w-9 h-9 rounded-full bg-[var(--background-secondary)] hover:bg-[var(--border-color)] flex items-center justify-center text-[var(--foreground)] shrink-0 cursor-pointer"
+                                            aria-label="Restar altura"
                                         >
-                                            {preset} años
+                                            <Minus className="w-3.5 h-3.5" />
                                         </button>
-                                    ))}
+                                        <input
+                                            type="range"
+                                            min={145}
+                                            max={210}
+                                            step={1}
+                                            value={height}
+                                            onChange={(e) => setHeight(Number(e.target.value))}
+                                            className="w-full h-2.5 bg-[var(--background-secondary)] rounded-full appearance-none cursor-pointer accent-[var(--brand-pink)]"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setHeight(prev => Math.min(210, prev + 1))}
+                                            className="w-9 h-9 rounded-full bg-[var(--background-secondary)] hover:bg-[var(--border-color)] flex items-center justify-center text-[var(--foreground)] shrink-0 cursor-pointer"
+                                            aria-label="Sumar altura"
+                                        >
+                                            <Plus className="w-3.5 h-3.5" />
+                                        </button>
+                                    </div>
+                                    <div className="flex flex-wrap gap-1.5 pt-1">
+                                        {(gender === 'man' ? [170, 175, 180, 185, 190] : [158, 163, 168, 173, 178]).map((preset) => (
+                                            <button
+                                                key={preset}
+                                                type="button"
+                                                onClick={() => setHeight(preset)}
+                                                className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all cursor-pointer ${
+                                                    height === preset
+                                                        ? 'bg-[var(--foreground)] text-[var(--background)]'
+                                                        : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:text-[var(--foreground)]'
+                                                }`}
+                                            >
+                                                {preset} cm
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
                         </motion.div>
                     )}
 
-                    {/* STEP 2: GENDER / PREFERENCE CATEGORY */}
-                    {step === 2 && (
+                    {/* PASO 2 DE 3: SILUETA Y RASGOS OPCIONALES */}
+                    {step === 1 && (
                         <motion.div
-                            key="step2"
+                            key="step1_silhouette"
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -20 }}
-                            transition={{ duration: 0.25 }}
-                            className="flex flex-col gap-6 md:gap-8"
-                        >
-                            <div className="text-center md:text-left space-y-2">
-                                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-[var(--foreground)]">
-                                    ¿Eres chica o chico?
-                                </h1>
-                                <p className="text-sm sm:text-base text-[var(--foreground-secondary)]">
-                                    Selecciona el enfoque de prendas, cortes y proporciones para tu armario y para Kloe.
-                                </p>
-                            </div>
-
-                            <div className="grid gap-3.5 sm:gap-4 mt-1">
-                                {GENDER_OPTIONS.map((option) => {
-                                    const isSelected = gender === option.value;
-                                    return (
-                                        <button
-                                            key={option.value}
-                                            type="button"
-                                            onClick={() => {
-                                                setGender(option.value as 'woman' | 'man' | 'other');
-                                                setTimeout(() => setStep(3), 220);
-                                            }}
-                                            className={`relative w-full h-24 sm:h-32 rounded-2xl overflow-hidden text-left transition-all duration-200 group cursor-pointer ${
-                                                isSelected
-                                                    ? 'ring-3 ring-[var(--brand-pink)] scale-[0.99] shadow-lg'
-                                                    : 'border border-[var(--border-color)] hover:border-[var(--brand-pink)]/50 active:scale-[0.98]'
-                                            }`}
-                                        >
-                                            <Image
-                                                src={option.image}
-                                                alt={option.label}
-                                                fill
-                                                className="object-cover transition-transform duration-500 group-hover:scale-105"
-                                            />
-                                            <div className="absolute inset-0 bg-black/55" />
-
-                                            <div className="absolute inset-0 p-4 sm:p-6 flex items-center justify-between z-10">
-                                                <div className="space-y-0.5 sm:space-y-1">
-                                                    <span className="text-white text-lg sm:text-2xl font-bold tracking-wide block">
-                                                        {option.label}
-                                                    </span>
-                                                    <span className="text-white/80 text-xs sm:text-sm block">
-                                                        {option.sublabel}
-                                                    </span>
-                                                </div>
-
-                                                <div
-                                                    className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center transition-all ${
-                                                        isSelected
-                                                            ? 'bg-[var(--brand-pink)] text-white shadow-md'
-                                                            : 'bg-white/20 text-white/50 group-hover:bg-white/40'
-                                                    }`}
-                                                >
-                                                    {isSelected && <Check className="w-4 h-4 sm:w-5 sm:h-5" strokeWidth={2.5} />}
-                                                </div>
-                                            </div>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </motion.div>
-                    )}
-
-                    {/* STEP 3: "DINOS CÓMO ERES" (PHYSICAL PROFILE) */}
-                    {step === 3 && (
-                        <motion.div
-                            key="step3_physical"
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
-                            transition={{ duration: 0.25 }}
+                            transition={{ duration: 0.22 }}
                             className="flex flex-col gap-6 pb-6"
                         >
-                            <div className="text-center md:text-left space-y-2">
-                                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] text-xs font-semibold">
-                                    <User className="w-3.5 h-3.5" />
-                                    <span>Perfil físico para Kloe · Sin fotos faciales</span>
-                                </div>
-                                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-[var(--foreground)]">
-                                    Dinos cómo eres
+                            <div className="space-y-1.5">
+                                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[var(--foreground)]">
+                                    ¿Cuál es tu silueta?
                                 </h1>
                                 <p className="text-sm sm:text-base text-[var(--foreground-secondary)]">
-                                    Kloe utiliza tu altura, silueta y rasgos para recomendarte los cortes, tiros y colores que mejor te sientan. Podrás editarlo siempre desde Ajustes.
+                                    Así Kloe equilibra tiros de pantalón, volúmenes y caídas que te favorecen.
                                 </p>
                             </div>
 
-                            <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-3xl p-5 sm:p-7 space-y-6 shadow-sm">
-                                {/* 1. Altura */}
-                                <div className="p-4 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)]">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <span className="text-xs font-semibold text-[var(--foreground-secondary)] flex items-center gap-1.5">
-                                            <Ruler className="w-4 h-4 text-[var(--brand-pink)]" />
-                                            Tu altura
-                                        </span>
-                                        <span className="text-2xl font-bold text-[var(--foreground)] font-display tabular-nums">
-                                            {height} <span className="text-xs font-normal text-[var(--foreground-secondary)]">cm</span>
-                                        </span>
-                                    </div>
-                                    <input
-                                        type="range"
-                                        min={145}
-                                        max={210}
-                                        step={1}
-                                        value={height}
-                                        onChange={(e) => setHeight(Number(e.target.value))}
-                                        className="w-full accent-[var(--brand-pink)] cursor-pointer h-2.5 rounded-lg"
-                                    />
-                                    <div className="flex justify-between text-[11px] text-[var(--foreground-tertiary)] mt-1.5">
-                                        <span>145 cm</span>
-                                        <span>175 cm</span>
-                                        <span>210 cm</span>
-                                    </div>
-                                </div>
-
-                                {/* 2. Tipo de cuerpo adaptado a Chica / Chico */}
-                                <div className="space-y-2.5">
-                                    <label className="block text-xs font-semibold text-[var(--foreground-secondary)]">
-                                        Tu tipo de cuerpo ({gender === 'man' ? 'Chico' : gender === 'other' ? 'Unisex' : 'Chica'})
-                                    </label>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                                        {currentBodyOptions.map((opt) => {
-                                            const active = bodyType === opt.id;
-                                            return (
-                                                <button
-                                                    key={opt.id}
-                                                    type="button"
-                                                    onClick={() => setBodyType(opt.id)}
-                                                    className={`text-left p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-2.5 ${
-                                                        active
-                                                            ? 'bg-[var(--brand-pink)]/10 border-[var(--brand-pink)] text-[var(--foreground)] shadow-sm'
-                                                            : 'bg-[var(--background-secondary)] border-[var(--border-color)] text-[var(--foreground)] hover:border-[var(--foreground-tertiary)]'
-                                                    }`}
-                                                >
-                                                    <div className="min-w-0">
-                                                        <div className="text-sm font-semibold">{opt.label}</div>
-                                                        <div className="text-[11px] text-[var(--foreground-secondary)] mt-0.5 leading-snug">
-                                                            {opt.desc}
-                                                        </div>
+                            <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-3xl p-5 sm:p-6 space-y-5 shadow-xs">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                    {currentBodyOptions.map((opt) => {
+                                        const active = bodyType === opt.id;
+                                        return (
+                                            <button
+                                                key={opt.id}
+                                                type="button"
+                                                onClick={() => setBodyType(opt.id)}
+                                                className={`text-left p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
+                                                    active
+                                                        ? 'bg-[var(--brand-pink)]/10 border-[var(--brand-pink)] text-[var(--foreground)] shadow-xs'
+                                                        : 'bg-[var(--background-secondary)] border-[var(--border-color)] text-[var(--foreground)] hover:border-[var(--foreground-tertiary)]'
+                                                }`}
+                                            >
+                                                <div className="min-w-0">
+                                                    <div className="text-sm font-bold">{opt.label}</div>
+                                                    <div className="text-xs text-[var(--foreground-secondary)] mt-0.5 leading-snug">
+                                                        {opt.desc}
                                                     </div>
-                                                    <div
-                                                        className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 border ${
-                                                            active
-                                                                ? 'bg-[var(--brand-pink)] border-[var(--brand-pink)] text-white'
-                                                                : 'border-[var(--border-color)]'
-                                                        }`}
-                                                    >
-                                                        {active && <Check className="w-3 h-3 stroke-[3]" />}
+                                                </div>
+                                                <div
+                                                    className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 border ${
+                                                        active
+                                                            ? 'bg-[var(--brand-pink)] border-[var(--brand-pink)] text-white'
+                                                            : 'border-[var(--border-color)]'
+                                                    }`}
+                                                >
+                                                    {active && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                                                </div>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+
+                                {/* Collapsible Optional Colorimetry */}
+                                <div className="pt-2 border-t border-[var(--border-color)]/60">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowColorimetry(prev => !prev)}
+                                        className="w-full flex items-center justify-between py-2 text-xs sm:text-sm font-semibold text-[var(--foreground-secondary)] hover:text-[var(--foreground)] transition-colors cursor-pointer"
+                                    >
+                                        <span className="flex items-center gap-2">
+                                            <Palette className="w-4 h-4 text-[var(--brand-pink)]" />
+                                            <span>Afinar colorimetría: ojos y pelo (opcional)</span>
+                                        </span>
+                                        <span className="text-xs text-[var(--brand-pink)] font-bold">
+                                            {showColorimetry ? 'Ocultar' : 'Personalizar +'}
+                                        </span>
+                                    </button>
+
+                                    <AnimatePresence>
+                                        {showColorimetry && (
+                                            <motion.div
+                                                initial={{ height: 0, opacity: 0 }}
+                                                animate={{ height: 'auto', opacity: 1 }}
+                                                exit={{ height: 0, opacity: 0 }}
+                                                className="overflow-hidden pt-3 space-y-4"
+                                            >
+                                                <div className="space-y-2">
+                                                    <label className="text-xs font-semibold text-[var(--foreground-secondary)] flex items-center gap-1.5">
+                                                        <Eye className="w-3.5 h-3.5 text-[var(--brand-pink)]" />
+                                                        Color de ojos
+                                                    </label>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {EYE_COLOR_OPTIONS.map((eye) => {
+                                                            const active = eyeColor === eye.id;
+                                                            return (
+                                                                <button
+                                                                    key={eye.id}
+                                                                    type="button"
+                                                                    onClick={() => setEyeColor(eye.id)}
+                                                                    className={`px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-2 border transition-all cursor-pointer ${
+                                                                        active
+                                                                            ? 'bg-[var(--foreground)] text-[var(--background)] border-[var(--foreground)]'
+                                                                            : 'bg-[var(--background-secondary)] text-[var(--foreground)] border-[var(--border-color)]'
+                                                                    }`}
+                                                                >
+                                                                    <span
+                                                                        className="w-3 h-3 rounded-full border border-black/20 shrink-0"
+                                                                        style={{ backgroundColor: eye.swatch }}
+                                                                    />
+                                                                    <span>{eye.label}</span>
+                                                                </button>
+                                                            );
+                                                        })}
                                                     </div>
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
+                                                </div>
 
-                                {/* 3. Color de ojos */}
-                                <div className="space-y-2.5">
-                                    <label className="text-xs font-semibold text-[var(--foreground-secondary)] flex items-center gap-1.5">
-                                        <Eye className="w-4 h-4 text-[var(--brand-pink)]" />
-                                        Color de ojos
-                                    </label>
-                                    <div className="flex flex-wrap gap-2">
-                                        {EYE_COLOR_OPTIONS.map((eye) => {
-                                            const active = eyeColor === eye.id;
-                                            return (
-                                                <button
-                                                    key={eye.id}
-                                                    type="button"
-                                                    onClick={() => setEyeColor(eye.id)}
-                                                    className={`px-3.5 py-2 rounded-full text-xs font-semibold flex items-center gap-2 border transition-all cursor-pointer ${
-                                                        active
-                                                            ? 'bg-[var(--foreground)] text-[var(--background)] border-[var(--foreground)] shadow-sm'
-                                                            : 'bg-[var(--background-secondary)] text-[var(--foreground)] border-[var(--border-color)] hover:border-[var(--foreground-tertiary)]'
-                                                    }`}
-                                                >
-                                                    <span
-                                                        className="w-3 h-3 rounded-full border border-black/20 shrink-0"
-                                                        style={{ backgroundColor: eye.swatch }}
-                                                    />
-                                                    <span>{eye.label}</span>
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-
-                                {/* 4. Color de pelo */}
-                                <div className="space-y-2.5">
-                                    <label className="text-xs font-semibold text-[var(--foreground-secondary)] flex items-center gap-1.5">
-                                        <Palette className="w-4 h-4 text-[var(--brand-pink)]" />
-                                        Color de pelo
-                                    </label>
-                                    <div className="flex flex-wrap gap-2">
-                                        {HAIR_COLOR_OPTIONS.map((hair) => {
-                                            const active = hairColor === hair.id;
-                                            return (
-                                                <button
-                                                    key={hair.id}
-                                                    type="button"
-                                                    onClick={() => setHairColor(hair.id)}
-                                                    className={`px-3.5 py-2 rounded-full text-xs font-semibold flex items-center gap-2 border transition-all cursor-pointer ${
-                                                        active
-                                                            ? 'bg-[var(--foreground)] text-[var(--background)] border-[var(--foreground)] shadow-sm'
-                                                            : 'bg-[var(--background-secondary)] text-[var(--foreground)] border-[var(--border-color)] hover:border-[var(--foreground-tertiary)]'
-                                                    }`}
-                                                >
-                                                    <span
-                                                        className="w-3 h-3 rounded-full border border-black/20 shrink-0"
-                                                        style={{ backgroundColor: hair.swatch }}
-                                                    />
-                                                    <span>{hair.label}</span>
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
+                                                <div className="space-y-2">
+                                                    <label className="text-xs font-semibold text-[var(--foreground-secondary)] flex items-center gap-1.5">
+                                                        <Palette className="w-3.5 h-3.5 text-[var(--brand-pink)]" />
+                                                        Color de pelo
+                                                    </label>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {HAIR_COLOR_OPTIONS.map((hair) => {
+                                                            const active = hairColor === hair.id;
+                                                            return (
+                                                                <button
+                                                                    key={hair.id}
+                                                                    type="button"
+                                                                    onClick={() => setHairColor(hair.id)}
+                                                                    className={`px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-2 border transition-all cursor-pointer ${
+                                                                        active
+                                                                            ? 'bg-[var(--foreground)] text-[var(--background)] border-[var(--foreground)]'
+                                                                            : 'bg-[var(--background-secondary)] text-[var(--foreground)] border-[var(--border-color)]'
+                                                                    }`}
+                                                                >
+                                                                    <span
+                                                                        className="w-3 h-3 rounded-full border border-black/20 shrink-0"
+                                                                        style={{ backgroundColor: hair.swatch }}
+                                                                    />
+                                                                    <span>{hair.label}</span>
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
                                 </div>
                             </div>
                         </motion.div>
                     )}
 
-                    {/* STEP 4: EXPANDED STYLES GRID */}
-                    {step === 4 && (
+                    {/* PASO 3 DE 3: TUS ESTILOS FAVORITOS + ACCESORIOS EN PÍLDORA */}
+                    {step === 2 && (
                         <motion.div
-                            key="step4_styles"
+                            key="step2_styles"
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -20 }}
-                            transition={{ duration: 0.25 }}
-                            className="flex flex-col gap-6"
+                            transition={{ duration: 0.22 }}
+                            className="flex flex-col gap-6 pb-8"
                         >
-                            <div className="text-center md:text-left space-y-2">
+                            <div className="space-y-1.5">
                                 <div className="flex flex-wrap items-center justify-between gap-2">
-                                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-[var(--foreground)]">
+                                    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[var(--foreground)]">
                                         Tus estilos favoritos
                                     </h1>
-                                    <span className={`text-xs font-semibold px-3 py-1 rounded-full border transition-colors ${
+                                    <span className={`text-xs font-bold px-3 py-1 rounded-full border transition-colors ${
                                         selectedStyles.length > 0
                                             ? 'bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] border-[var(--brand-pink)]/30'
                                             : 'bg-[var(--background-secondary)] text-[var(--foreground-tertiary)] border-[var(--border-color)]'
@@ -1224,12 +1240,12 @@ function PreferencesContent() {
                                     </span>
                                 </div>
                                 <p className="text-sm sm:text-base text-[var(--foreground-secondary)]">
-                                    Elige los estilos que mejor representen cómo te gusta vestir (selección obligatoria).
+                                    Toca los estilos con los que más te identificas.
                                 </p>
                             </div>
 
-                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-4 pb-4">
-                                {availableStyles.map((style, idx) => {
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3.5">
+                                {visibleStyles.map((style, idx) => {
                                     const styleKey = style.slug || style.id;
                                     const isSelected = selectedStyles.includes(styleKey) || selectedStyles.includes(style.id);
                                     const imageUrl = getStyleImage(style, idx);
@@ -1239,7 +1255,7 @@ function PreferencesContent() {
                                             key={styleKey}
                                             type="button"
                                             onClick={() => toggleStyle(styleKey)}
-                                            className={`relative aspect-[3/4] rounded-2xl overflow-hidden group focus:outline-none transition-all duration-200 text-left cursor-pointer ${
+                                            className={`relative aspect-[4/5] rounded-2xl overflow-hidden group focus:outline-none transition-all duration-200 text-left cursor-pointer ${
                                                 isSelected
                                                     ? 'ring-3 ring-[var(--brand-pink)] scale-[0.98] shadow-md'
                                                     : 'border border-[var(--border-color)] hover:border-[var(--brand-pink)]/40 active:scale-[0.98]'
@@ -1254,13 +1270,13 @@ function PreferencesContent() {
                                                     className="object-cover transition-transform duration-500 group-hover:scale-105"
                                                 />
                                             ) : (
-                                                <div className="absolute inset-0 bg-[var(--background-secondary)] flex items-center justify-center text-[var(--foreground-tertiary)]" />
+                                                <div className="absolute inset-0 bg-[var(--background-secondary)]" />
                                             )}
 
-                                            <div className="absolute inset-0 bg-black/45 z-10" />
+                                            <div className="absolute inset-0 bg-black/40 z-10" />
 
                                             {isSelected && (
-                                                <div className="absolute inset-0 bg-[var(--brand-pink)]/25 z-20 transition-opacity" />
+                                                <div className="absolute inset-0 bg-[var(--brand-pink)]/20 z-20 transition-opacity" />
                                             )}
 
                                             <div className="absolute top-2.5 right-2.5 z-30">
@@ -1275,8 +1291,8 @@ function PreferencesContent() {
                                                 </div>
                                             </div>
 
-                                            <div className="absolute bottom-0 left-0 right-0 p-2.5 sm:p-3.5 z-30">
-                                                <span className="text-white text-xs sm:text-sm font-semibold tracking-wide block leading-snug line-clamp-2 drop-shadow-sm">
+                                            <div className="absolute bottom-0 left-0 right-0 p-3 z-30">
+                                                <span className="text-white text-xs sm:text-sm font-bold tracking-wide block leading-snug line-clamp-2 drop-shadow-sm">
                                                     {style.name}
                                                 </span>
                                             </div>
@@ -1284,187 +1300,47 @@ function PreferencesContent() {
                                     );
                                 })}
                             </div>
-                        </motion.div>
-                    )}
 
-                    {/* STEP 5: ACCESSORIES STYLE SELECTION */}
-                    {step === 5 && (
-                        <motion.div
-                            key="step5_accessories"
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
-                            transition={{ duration: 0.25 }}
-                            className="flex flex-col gap-6"
-                        >
-                            <div className="text-center md:text-left space-y-2">
-                                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-[var(--foreground)]">
-                                    ¿Qué tipo de accesorios sueles llevar?
-                                </h1>
-                                <p className="text-sm sm:text-base text-[var(--foreground-secondary)]">
-                                    Personalizamos cómo completamos tus looks, recomendaciones y complementos.
-                                </p>
-                            </div>
-
-                            <div className="grid gap-2.5 sm:gap-4 mt-1 pb-4">
-                                {ACCESSORY_OPTIONS.map((option) => {
-                                    const isSelected = selectedAccessory === option.id;
-                                    const imageSrc = getAccessoryImage(option);
-
-                                    return (
-                                        <button
-                                            key={option.id}
-                                            type="button"
-                                            onClick={() => setSelectedAccessory(option.id)}
-                                            className={`relative w-full h-24 sm:h-28 rounded-2xl overflow-hidden text-left transition-all duration-200 group cursor-pointer ${
-                                                isSelected
-                                                    ? 'ring-3 ring-[var(--brand-pink)] scale-[0.99] shadow-lg'
-                                                    : 'border border-[var(--border-color)] hover:border-[var(--brand-pink)]/50 active:scale-[0.98]'
-                                            }`}
-                                        >
-                                            <Image
-                                                src={imageSrc}
-                                                alt={option.name}
-                                                fill
-                                                className="object-cover transition-transform duration-500 group-hover:scale-105"
-                                            />
-                                            <div className="absolute inset-0 bg-black/60" />
-
-                                            <div className="absolute inset-0 p-4 sm:p-5 flex items-center justify-between z-10">
-                                                <div className="space-y-0.5 sm:space-y-1 max-w-[80%]">
-                                                    <span className="text-white text-base sm:text-xl font-bold tracking-wide block">
-                                                        {option.name}
-                                                    </span>
-                                                    <span className="text-white/80 text-[11px] sm:text-sm block line-clamp-2">
-                                                        {option.sublabel}
-                                                    </span>
-                                                </div>
-
-                                                <div
-                                                    className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shrink-0 transition-all ${
-                                                        isSelected
-                                                            ? 'bg-[var(--brand-pink)] text-white shadow-md'
-                                                            : 'bg-white/20 text-white/50 group-hover:bg-white/40'
-                                                    }`}
-                                                >
-                                                    {isSelected && <Check className="w-4 h-4 sm:w-5 sm:h-5" strokeWidth={2.5} />}
-                                                </div>
-                                            </div>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </motion.div>
-                    )}
-
-                    {/* STEP 6: PHASED ACTION - MATH PAIN POINT + PHOTO/WEB GUIDE + DIRECT UPLOAD UP TO 20 ITEMS */}
-                    {step === 6 && (
-                        <motion.div
-                            key="step6_upload_guide"
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: -20 }}
-                            transition={{ duration: 0.25 }}
-                            className="flex flex-col gap-5 pb-8"
-                        >
-                            {/* Mathematical Pain Point Banner */}
-                            <div className="bg-[var(--foreground)] text-[var(--background)] rounded-[2rem] p-6 sm:p-7 shadow-xl">
-                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--brand-pink)] text-white text-xs font-bold mb-3">
-                                    <Clock className="w-3.5 h-3.5" />
-                                    <span>El cálculo que cambia tus mañanas</span>
-                                </div>
-                                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight leading-tight">
-                                    15 minutos hoy te ahorran <span className="text-[var(--brand-pink)]">91 horas al año</span>
-                                </h1>
-                                <p className="text-xs sm:text-sm opacity-80 mt-2.5 leading-relaxed">
-                                    Pasamos una media de <strong>15 minutos cada mañana</strong> frente al armario sin saber qué ponernos. Al cabo del año son <strong>5.475 minutos perdidos</strong> (más de <strong>91 horas</strong> o casi <strong>4 días enteros</strong> frente al espejo).
-                                </p>
-
-                                <div className="grid grid-cols-3 gap-2.5 mt-5 pt-4 border-t border-white/15 dark:border-black/15 text-center">
-                                    <div className="p-2.5 rounded-2xl bg-white/10 dark:bg-black/10">
-                                        <div className="text-xl sm:text-2xl font-bold font-display text-[var(--brand-pink)]">15 min</div>
-                                        <div className="text-[11px] opacity-75">Subir tu ropa hoy</div>
-                                    </div>
-                                    <div className="p-2.5 rounded-2xl bg-white/10 dark:bg-black/10">
-                                        <div className="text-xl sm:text-2xl font-bold font-display">5.475 m</div>
-                                        <div className="text-[11px] opacity-75">Ahorrados al año</div>
-                                    </div>
-                                    <div className="p-2.5 rounded-2xl bg-white/10 dark:bg-black/10">
-                                        <div className="text-xl sm:text-2xl font-bold font-display text-emerald-400 dark:text-emerald-600">+91 h</div>
-                                        <div className="text-[11px] opacity-75">Casi 4 días libres</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* How to upload in 3 simple ways */}
-                            <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-[2rem] p-5 sm:p-6 space-y-4 shadow-sm">
-                                <h2 className="text-base sm:text-lg font-bold text-[var(--foreground)]">
-                                    ¿Cómo subir tus prendas en segundos?
-                                </h2>
-
-                                <div className="space-y-3">
-                                    <div className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)]">
-                                        <div className="w-10 h-10 rounded-2xl bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] flex items-center justify-center shrink-0">
-                                            <Camera className="w-5 h-5" />
-                                        </div>
-                                        <div>
-                                            <h3 className="text-sm font-bold text-[var(--foreground)]">
-                                                1. Haz fotos rápidas a tu ropa
-                                            </h3>
-                                            <p className="text-xs text-[var(--foreground-secondary)] mt-0.5 leading-relaxed">
-                                                Extiende la prenda sobre la cama o en una percha con luz natural. Nosotros borramos el fondo y detectamos categoría, color y estación automáticamente.
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)]">
-                                        <div className="w-10 h-10 rounded-2xl bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] flex items-center justify-center shrink-0">
-                                            <Globe className="w-5 h-5" />
-                                        </div>
-                                        <div>
-                                            <h3 className="text-sm font-bold text-[var(--foreground)]">
-                                                2. O coge fotos y capturas de webs
-                                            </h3>
-                                            <p className="text-xs text-[var(--foreground-secondary)] mt-0.5 leading-relaxed">
-                                                ¿No te apetece sacar la ropa del armario? Guarda la foto de la web donde la compraste (Zara, Mango, Bershka, Pull&Bear, Nike, Eme Studios...) y súbela tal cual.
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)]">
-                                        <div className="w-10 h-10 rounded-2xl bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] flex items-center justify-center shrink-0">
-                                            <Layers className="w-5 h-5" />
-                                        </div>
-                                        <div>
-                                            <h3 className="text-sm font-bold text-[var(--foreground)]">
-                                                3. Sube hasta 20 prendas de golpe (armario ilimitado)
-                                            </h3>
-                                            <p className="text-xs text-[var(--foreground-secondary)] mt-0.5 leading-relaxed">
-                                                Selecciona hasta <strong>20 fotos a la vez</strong> desde tu galería. Sin límite total de prendas en tu armario.
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Direct Action CTAs */}
-                                <div className="pt-2 space-y-2.5">
+                            {availableStyles.length > 12 && (
+                                <div className="flex justify-center">
                                     <button
                                         type="button"
-                                        disabled={isSaving}
-                                        onClick={() => handleComplete(true)}
-                                        className="w-full py-4 px-6 rounded-full bg-[var(--brand-pink)] text-white font-bold text-sm sm:text-base hover:opacity-95 active:scale-[0.99] transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                                        onClick={() => setShowAllStyles(prev => !prev)}
+                                        className="px-5 py-2.5 rounded-full bg-[var(--background-secondary)] hover:bg-[var(--border-color)]/60 border border-[var(--border-color)] text-xs sm:text-sm font-bold text-[var(--foreground)] transition-all cursor-pointer"
                                     >
-                                        <Plus className="w-5 h-5" />
-                                        <span>{isSaving ? 'Preparando tu armario...' : 'Subir mis primeras prendas ahora (hasta 20)'}</span>
+                                        {showAllStyles
+                                            ? 'Mostrar menos estilos'
+                                            : `Ver los ${availableStyles.length} estilos (+${availableStyles.length - 12})`}
                                     </button>
-                                    <button
-                                        type="button"
-                                        disabled={isSaving}
-                                        onClick={() => handleComplete(false)}
-                                        className="w-full py-3 px-6 rounded-full bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:text-[var(--foreground)] font-semibold text-xs sm:text-sm transition-colors cursor-pointer"
-                                    >
-                                        Ir a mi armario y subir luego
-                                    </button>
+                                </div>
+                            )}
+
+                            {/* Compact Pill Selector for Accessories (Replaces whole Step 5 screen) */}
+                            <div className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-3xl p-4 sm:p-5 space-y-3 shadow-xs">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xs font-bold uppercase tracking-wider text-[var(--foreground-secondary)]">
+                                        Nivel de accesorios que sueles llevar
+                                    </span>
+                                    <span className="text-[11px] text-[var(--foreground-tertiary)]">Opcional</span>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                    {ACCESSORY_OPTIONS.map((opt) => {
+                                        const active = selectedAccessory === opt.id;
+                                        return (
+                                            <button
+                                                key={opt.id}
+                                                type="button"
+                                                onClick={() => setSelectedAccessory(opt.id)}
+                                                className={`px-3.5 py-2 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
+                                                    active
+                                                        ? 'bg-[var(--foreground)] text-[var(--background)] border-[var(--foreground)] shadow-xs'
+                                                        : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)] border-[var(--border-color)] hover:text-[var(--foreground)]'
+                                                }`}
+                                            >
+                                                {opt.name}
+                                            </button>
+                                        );
+                                    })}
                                 </div>
                             </div>
                         </motion.div>
@@ -1472,48 +1348,48 @@ function PreferencesContent() {
                 </AnimatePresence>
             </main>
 
-            {/* Bottom Floating Navigation (Hidden on Step 6 because Step 6 has its own primary dual CTAs) */}
-            {step < 6 && (
-                <div className="fixed bottom-0 left-0 right-0 p-4 sm:p-6 bg-gradient-to-t from-[var(--background)] via-[var(--background)] to-transparent z-40 pointer-events-none">
-                    <div className="max-w-xl mx-auto flex justify-between gap-3 sm:gap-4 pointer-events-auto">
-                        {step > 0 && (
-                            <Button
-                                variant="secondary"
-                                size="lg"
-                                className="w-14 sm:w-auto sm:px-6 h-13 rounded-full flex items-center justify-center gap-2"
-                                onClick={() => setStep(prev => prev - 1)}
-                                type="button"
-                            >
-                                <ChevronLeft className="w-5 h-5" />
-                                <span className="hidden sm:inline">Atrás</span>
-                            </Button>
-                        )}
-
+            {/* Bottom Floating Navigation */}
+            <div className="fixed bottom-0 left-0 right-0 p-4 sm:p-6 bg-gradient-to-t from-[var(--background)] via-[var(--background)] to-transparent z-40 pointer-events-none">
+                <div className="max-w-xl mx-auto flex justify-between gap-3 sm:gap-4 pointer-events-auto">
+                    {step > 0 && (
                         <Button
+                            variant="secondary"
                             size="lg"
-                            className="flex-1 h-13 rounded-full text-[15px] font-semibold max-w-sm ml-auto disabled:opacity-40 disabled:cursor-not-allowed"
-                            onClick={handleNext}
-                            disabled={
-                                (step === 0 && (!fullName.trim() || fullName.trim().length < 2 || username.length < 3 || isUsernameAvailable === false || isCheckingUsername)) ||
-                                (step === 1 && !age) ||
-                                (step === 2 && !gender) ||
-                                (step === 3 && (!height || !bodyType || !eyeColor || !hairColor)) ||
-                                (step === 4 && selectedStyles.length === 0) ||
-                                (step === 5 && !selectedAccessory) ||
-                                isSaving
-                            }
+                            className="w-14 sm:w-auto sm:px-6 h-13 rounded-full flex items-center justify-center gap-2"
+                            onClick={() => setStep(prev => prev - 1)}
                             type="button"
                         >
-                            {isSaving
-                                ? 'Guardando...'
-                                : step === maxStepIndex
-                                ? 'Guardar cambios'
-                                : 'Continuar'}
-                            {step < maxStepIndex && !isSaving && <ChevronRight className="w-4 h-4 ml-1.5" />}
+                            <ChevronLeft className="w-5 h-5" />
+                            <span className="hidden sm:inline">Atrás</span>
                         </Button>
-                    </div>
+                    )}
+
+                    <Button
+                        size="lg"
+                        className="flex-1 h-13 rounded-full text-[15px] font-bold max-w-sm ml-auto disabled:opacity-40 disabled:cursor-not-allowed shadow-lg"
+                        onClick={handleNext}
+                        disabled={
+                            (step === 0 && (
+                                !gender ||
+                                !age ||
+                                !height ||
+                                (needsIdentityInput && (!fullName.trim() || fullName.trim().length < 2 || username.length < 3 || isUsernameAvailable === false || isCheckingUsername))
+                            )) ||
+                            (step === 1 && !bodyType) ||
+                            (step === 2 && selectedStyles.length === 0) ||
+                            isSaving
+                        }
+                        type="button"
+                    >
+                        {isSaving
+                            ? 'Preparando tu armario...'
+                            : step === maxStepIndex
+                            ? (isFromSettings ? 'Guardar cambios' : 'Entrar a mi armario')
+                            : 'Continuar'}
+                        {!isSaving && <ChevronRight className="w-4 h-4 ml-1.5" />}
+                    </Button>
                 </div>
-            )}
+            </div>
         </div>
     );
 }

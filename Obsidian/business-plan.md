@@ -1,86 +1,100 @@
-# ⚖️ DICTAMEN DEL CONSEJO DE NEGOCIO (RONDA 2 POST-IMPLEMENTACIÓN): KLOZET (WARDROBE.AI)
+# ⚖️ DICTAMEN DEL CONSEJO DE NEGOCIO (RONDA 3 — AUDITORÍA INTEGRAL DE PRODUCTO, UX/UI, FLUJOS, BENCHMARK SOCIAL 2026 Y RETENCIÓN): KLOZET (WARDROBE.AI)
 
 **Para:** Ethan Curro (Fundador & Operador Técnico)  
 **De:** Consejo de Negocio (`business-believer`, `business-hater`, `business-investor`, `business-judge`)  
-**Fecha:** 29 de Octubre de 2026  
-**Estado:** **APROBADO PARA LANZAMIENTO A PRODUCCIÓN (93 / 100)**
+**Fecha:** 4 de Noviembre de 2026  
+**Estado:** **APROBADO CON HOJA DE RUTA DE PULIDO OBLIGATORIA (PRE-ESCALADO)**  
+**Puntuación Actual:** **78 / 100** *(Ingeniería 93/100; penalizada por fricción D1 de 1,16 prendas/usuario y bugs puntuales de flujo/UI)*  
+**Puntuación tras Plan de Choque:** **95 / 100**
 
 ---
 
-## 1. VEREDICTO EJECUTIVO DE RONDA 2 (`business-judge`)
+## 1. VEREDICTO EJECUTIVO Y RESPUESTA A LA PREGUNTA: "¿SI UN USUARIO LO PROBARA TODO HOY, SE QUEDARÍA O SE IRÍA?"
 
-* **ESTADO:** **APROBADO PARA LANZAMIENTO A PRODUCCIÓN**
-* **PUNTUACIÓN GLOBAL:** **93 / 100** *(+7 puntos respecto a Ronda 1: 86 $\rightarrow$ 93)*
-* **DICTAMEN EN 3 PUNTOS:**
-  1. **Blindaje Legal y de Márgenes (91,7% – 95,1%):** El paso de extracción biométrica de 6 fotos a perfil físico declarativo (*"Dinos cómo eres"*) y la arquitectura *metadata-first* (`isGarmentWellTagged`) en Kloe erradicaron el 100% del riesgo RGPD Art. 9 y redujeron un **85% el consumo de tokens** en Gemini Vision.
-  2. **Efecto Red y Retención Diaria (DAU/MAU):** La decisión de Ethan de dar **armario ilimitado (en lotes de 20 prendas)** y **calendario semanal 100% gratis** tiene un coste marginal casi nulo en Supabase (~0,015 €/usuario/mes para 45 prendas WebP de 100 KB), pero crea un *lock-in* masivo y alimenta el inventario social del feed.
-  3. **Oferta Gancho Anual (19,99 €/año · 1,66 €/mes · Ahorra 67%):** Situar el plan anual por debajo de la barrera psicológica de 20 € convierte la suscripción en una compra por impulso con **15,71 € netos limpios en caja el Día 1**, comisión de Stripe reducida al **2,65%** y **0% de churn durante 365 días**.
-
----
-
-## 2. AUDITORÍA DE LOS 3 SUBAGENTES EVALUADORES (RONDA 2)
-
-### A. Informe de `business-believer` (El Creyente — Propuesta de Valor & Psicología)
-* **"Dinos cómo eres" vs Biometría:** Subir 6 fotos personales (3 cara + 3 cuerpo) causaba ~80% de abandono por fricción e intimidad. El selector interactivo en 30 segundos (Chica/Chico/Unisex, slider 145–210 cm, silueta adaptada por género, color de ojos y pelo) da a Kloe las proporciones y colorimetría exactas con fricción cero.
-* **Dolor Matemático en Onboarding (`15 min hoy = 91 horas/año`):**
-  $$\text{15 min/mañana} \times 365\text{ días} = 5.475\text{ min} = \mathbf{+91\text{ horas/año}}\text{ (~4 días enteros frente al espejo)}$$
-  Educar visualmente en cómo hacer fotos con luz natural o capturas de tienda online y llevar directo a subir hasta 20 prendas de golpe (`/closet?action=new-item&startTour=true`) convierte el onboarding en acción inmediata.
-* **Calendario Gratis + 3 Consultas/Día:** El calendario gratuito convierte a Klozet en un hábito diario. Las 3 consultas diarias gratuitas permiten probar el valor real de Kloe, pero disparan el deseo de pasarse a Pro en cuanto el usuario organiza un fin de semana, un viaje o varios looks seguidos.
-
-### B. Informe de `business-hater` (El Escéptico / Red Team — Riesgos Cerrados y Puntos Ciegos)
-* **Victorias Confirmadas (Riesgos Letales Cerrados):**
-  1. **RGPD Art. 9 Neutralizado (10/10):** Cero fotos biométricas almacenadas o enviadas a terceros.
-  2. **Caída del 75–85% en coste de tokens de Kloe:** `isGarmentWellTagged` evita enviar fotos cuando la prenda ya tiene nombre, categoría y color.
-  3. **Fin del Spam de 3 horas:** Sustituido por franjas horarias con contexto climático real.
-* **4 Puntos Ciegos / Riesgos Residuales Detectados en Código:**
-  1. **Puppeteer en Serverless (`/api/scrape-product/route.ts`):** En Vercel Serverless, lanzar Chromium completo puede chocar con el límite de tamaño de lambda, timeouts de 15s o bloqueos anti-bot (Akamai/Cloudflare en Inditex). *Nota: Ya cuenta con fallback HTTP directo en el bloque `catch`, pero conviene vigilar los tiempos de respuesta en producción.*
-  2. **Notificaciones "Cliente-Only" (`lib/hooks/usePeriodicReminders.ts`):** El hook comprueba las franjas `08:00`, `15:00` y `16:00` con `setInterval` en el navegador, por lo que solo se ejecuta si el usuario tiene la pestaña/PWA abierta en esa hora. Para despertar a usuarios con la app cerrada se recomienda conectar un Cron de servidor a Web Push (VAPID).
-  3. **Fricción Física en Día 1:** Quien se registra fuera de casa (en el metro o en clase) no tiene su ropa delante para hacer fotos en ese minuto, aunque la guía de capturas de tiendas online mitiga gran parte de esa barrera.
-  4. **Generosidad del Free Tier:** Con 3 consultas/día (90 al mes) + Armario ilimitado + Calendario gratis, hay que monitorizar la tasa de conversión a Pro. Si baja del 2,5%, el desglose visual de posts de otros usuarios o la subida por lotes >5 fotos puede reservarse como ventaja Pro.
-
-### C. Informe de `business-investor` (El Inversor / VC — Unit Economics & Caja)
-* **Calificación Financiera:** **94 / 100 ("Diamante Financiero Operativo")**.
-* **Impacto del Filtro Metadata-First (`isGarmentWellTagged`):**
-  * Antes: 6 fotos biométricas + hasta 18 fotos de prendas en base64 = ~20.000 tokens/consulta.
-  * Ahora: Perfil físico en texto (~35 tokens) + metadatos de prendas bien etiquetadas = ~2.500 tokens/consulta (**-85% coste**).
-  * 1.000 usuarios activos haciendo 25 consultas/mes cuestan apenas **~7,50 € – 10,00 €/mes en Google Cloud**.
-* **Coste Real del Armario Ilimitado en Supabase Storage:**
-  * Cada prenda recortada en WebP (800×800) pesa ~100 KB.
-  * Supabase Pro ($25/mes) incluye **100 GB = ~900.000 prendas (~20.000 usuarios activos con 45 prendas)** sin coste adicional.
-* **Alerta Técnica en Pasarela Stripe (`app/api/stripe/checkout/route.ts`):**
-  * Los objetos `Price` en Stripe son inmutables. Hay que asegurarse de crear en Stripe Dashboard los dos nuevos precios (**4,99 €/mes** y **19,99 €/año**) y configurar sus IDs en las variables de entorno `STRIPE_PRICE_ID_MONTHLY` y `STRIPE_PRICE_ID_YEARLY`.
+1. **Minutos 0 a 2 (El flechazo inicial — SE ENAMORA):**
+   - La velocidad instantánea entre pestañas (`0 ms` SWR), la identidad *"Un juguete dentro de un iPhone"* (`#FF66C4` + cristal Apple), el recorte WASM en el navegador, el lienzo de outfits siempre blanco (`bg-white`, por directriz expresa del fundador para que las prendas oscuras luzcan nítidas en tema oscuro) y el nuevo exportador de **Stickers 9:16 en 2K HD (`1440×2560`) con botón Copiar directo al portapapeles estilo Strava** sorprenden al usuario desde el primer minuto.
+2. **Minuto 3 al Día 3 (Por qué hoy ~80% se enfría o se va si prueba todo a fondo):**
+   - **Causa #1 — El Muro de las `1,16 prendas/usuario` (Cold-Start Mortal):** En la base de datos hay 24 usuarios y 28 prendas (`1,16 prendas/usuario`). Quien descubre Klozet desde el sofá, en el metro o viendo TikTok no tiene su ropa extendida para fotografiarla en ese minuto. Sube 0 o 1 prenda, entra a `/create` o a Kloe (`/closet/kloe`), ve que con 1 prenda no se puede armar un outfit completo (mínimo 3 piezas: top + bottom + calzado) y cierra la app pensando *"luego en casa subo mi ropa"*.
+   - **Causa #2 — Flujos rotos si explora toda la app:**
+     1. En ordenador (`md:`), la bandeja de entrada de `/messages` oculta la lista de conversaciones (`md:hidden` en `app/(app)/messages/page.tsx:276`), dejando la pantalla sin chats donde hacer clic.
+     2. En `/closet/kloe`, el botón de upgrade promete `"Kloe Pro (desde 1,66 €/mes)"` (`kloe/page.tsx:1149, 1709`), pero al abrir `KloeProModal` el precio sube a `24,99 €/año (~2,08 €/mes)`, y si viene desde `/premium` habiendo elegido el plan mensual (`2,99 €`), el modal le resetea al anual (`24,99 €`).
+     3. En el Calendario (`OutfitCalendar.tsx:706-739`), al abrir una prenda con `ProductModal`, se pasan funciones vacías `onEdit={() => {}}` y `onDelete={() => {}}`, haciendo que aparezcan los botones *"Editar"* y *"Eliminar"* que al pulsarlos cierran el modal sin hacer nada.
+     4. En `/post/[id]`, el botón `"Responder"` en los comentarios (`lineas 1208 y 1280`) no tiene `onClick`, y publicar un post en `/create-post` no invalida la caché de 2 minutos de `useFeedStore`.
 
 ---
 
-## 3. UNIT ECONOMICS Y SALUD FINANCIERA DEFINITIVA (PRECIOS OFICIALES: 2,99 €/MES Y 24,99 €/AÑO)
+## 2. AUDITORÍA EXHAUSTIVA DE VISUALES, COLORES, INTERFACES, TEXTOS Y FLUJOS
 
-| Métrica | Plan Mensual (`2,99 €/mes`) | Plan Anual (`24,99 €/año` · `~2,08 €/mes` · Ahorra 30%) |
+### 🔴 A. Flujos Rotos y Bugs Funcionales (Prioridad Crítica)
+1. **Lista de Mensajes invisible en Escritorio (`app/(app)/messages/page.tsx:276`):** El contenedor de la lista de chats tiene `md:hidden`, por lo que en pantallas `>=768px` solo se ve el panel derecho vacío pidiendo *"Selecciona una conversación de la lista"* sin que exista la lista a la izquierda.
+2. **Incoherencia de Precios en Botones vs Modal (`app/(app)/closet/kloe/page.tsx:1149, 1709` vs `KloeProModal.tsx` vs `premium/page.tsx:52`):**
+   - `kloe/page.tsx` muestra `"desde 1,66 €/mes"` (antiguo cálculo de 19,99 €/año) en vez de `"desde 2,08 €/mes"` (24,99 €/año).
+   - `premium/page.tsx` no pasa `selectedPlan` a `openPremiumModal(selectedPlan)`.
+3. **Botones `() => {}` Muertos en Calendario y Modales (`components/OutfitCalendar.tsx:706-739`, `components/ItemDetailModal.tsx:65,72,180`, `app/(app)/create-post/page.tsx:582-584`):**
+   - Pasar `onEdit={() => {}}` y `onDelete={() => {}}` a `ProductModal` activa visualmente los botones de edición/borrado pero no ejecuta ninguna acción.
+4. **Botón `"Responder"` sin acción en Comentarios (`app/(app)/post/[id]/page.tsx:1208, 1280`):** El estado `replyingTo` existe pero nunca se conectó al `onClick` del botón `"Responder"`.
+5. **Redirecciones a `/login` inexistente (`components/Feed/PostCard.tsx:168`, `app/(app)/post/[id]/page.tsx:561, 576, 650`):** La ruta real es `/auth`, no `/login`.
+6. **Caché de Feed sin invalidar tras crear Post (`app/(app)/create-post/page.tsx:317`):** Tras publicar un look, `useFeedStore` mantiene la caché durante 120s y el usuario no ve su propio post recién publicado en `/feed`.
+7. **Pérdida de Rasgos Físicos al hidratar sesión (`store/userStore.tsx:120-157`):** `mapProfileToUser` no lee el fallback `notification_preferences.physical_profile`.
+8. **Rate Limit de Kloe en RAM volátil (`lib/closy/rateLimiter.ts:15`):** En Vercel Serverless, el `Map` en memoria se reinicia entre lambdas; debe sincronizarse con Supabase.
+9. **Bypass de email por substring (`store/userStore.tsx`, `ProfileProgressBar.tsx:20`):** `email.includes('ethan')` da positivo para `"bethany@gmail.com"`. Debe comprobar igualdad exacta con el email del fundador.
+10. **Llamada automática a `/api/translate` al abrir cualquier post (`app/(app)/post/[id]/page.tsx:108-137`):** Traduce en segundo plano en el `useEffect` inicial antes de que el usuario pulse *"Ver traducción"*.
+
+### 🟡 B. Visuales, Colores y Diseño (`Obsidian/brand_kit.md`)
+1. **Exceso de botones rosas simultáneos en `/closet` (`app/(app)/closet/page.tsx:1043-1102`) y `/messages` (`379-421`):**
+   - En `/closet` hay 3 FABs rosas apilados (*Seleccionar*, *Filtrar*, *Nueva Prenda*). Según `brand_kit.md` (§2.2, §6), solo *"+ Nueva Prenda"* debe ser rosa `#FF66C4`; *Seleccionar* y *Filtrar* deben usar superficie neutra/vidrio.
+2. **Orbes difuminados y colores morados prohibidos (`brand_kit.md §2.4`):**
+   - Orbes `blur-3xl` en `components/KloeProModal.tsx:123-124`, `app/(public)/auth/page.tsx:286-292` y `app/not-found.tsx:25`.
+   - Degradados morados residuales en `components/OutfitCard.tsx:27-44`, `components/CookiesBanner.tsx:289` y `app/(app)/chat/page.tsx:36`.
+3. **Contraste de Paneles en Modo Oscuro (`app/(app)/post/[id]/page.tsx:1056-1298`):**
+   - *Nota: El lienzo de outfits se mantiene en `bg-white` por regla expresa del fundador.*
+   - En cambio, la columna derecha de comentarios de `post/[id]/page.tsx` usa clases hardcodeadas `bg-white dark:bg-black` y `border-gray-100 dark:border-gray-800` en lugar de los tokens semánticos `bg-[var(--background)]`, `bg-[var(--card-bg)]` y `border-[var(--border-color)]`.
+4. **Geometría de Botones (`rounded-xl` $\rightarrow$ `rounded-full`) y Pestañas de `/closet` en Móvil:**
+   - Botones de acción en `profile/page.tsx:432`, `closet/kloe/page.tsx:1314-1365`, `ProductModal.tsx:279-315` y `OutfitDetailModal.tsx:305-360` usan `rounded-xl`/`rounded-2xl` en vez de pastilla `rounded-full`.
+   - En `/closet` móvil (`closet/page.tsx:744-765`), las 3 pestañas principales (*Armario*, *Outfits*, *Calendario*) ocultan su texto (`hidden sm:inline`), mostrando solo iconos sin etiqueta.
+   - En `OutfitDetailModal.tsx:237`, la lista de prendas del look está oculta en móvil (`hidden md:flex`).
+
+### 🟢 C. Textos y Copywriting
+1. **Jerga de "IA" y frases robóticas prohibidas por `brand_kit.md §8 y §10`:**
+   - `app/(app)/create/page.tsx:1146`: *"Combina tus prendas con IA en segundos"* $\rightarrow$ Cambiar a *"Combina tu ropa en segundos"*.
+   - `app/(app)/closet/kloe/page.tsx:498`: *"Revisando los metadatos de tu armario..."* $\rightarrow$ Cambiar a *"Mirando tu armario para armarte el look..."*.
+   - `app/(app)/premium/page.tsx:181`: *"Abrir Hoja de Pago Rápido"* $\rightarrow$ Cambiar a *"Empezar con Klozet Pro"*.
+   - `components/AddItemModal`: *"Eliminando fondo con IA..."* / *"Analizando con IA..."* $\rightarrow$ *"Recortando tu prenda..."* / *"Detectando color y estilo..."*.
+2. **Gramática y Textos Mixtos:**
+   - `components/Notifications/NotificationList.tsx:728`: `"{name} le gustó tu post"` $\rightarrow$ `"A {name} le gustó tu publicación"`.
+   - `app/(app)/closet/page.tsx:823`: `"No img"` $\rightarrow$ `"Sin foto"`.
+   - `components/ProductModal.tsx:216`: `Marca: Closet` cuando no hay marca $\rightarrow$ Mostrar `"Sin marca"` u ocultar fila.
+
+---
+
+## 3. BENCHMARK DE LAS REDES SOCIALES Y APPS MÁS PUNTERAS (2025–2026)
+
+| App Puntera | Qué hace que sus usuarios entren cada día | Cómo lo integramos en Klozet |
 | :--- | :--- | :--- |
-| **PVP Facturado** | **2,99 € / mes** | **24,99 € / año** *(~2,08 €/mes)* |
+| **Whering** | **1-Tap Basic Capsule** en el registro + **"Dress Me" (Ruleta tipo *Clueless*)** + **Style a Friend** | **1. Bandeja de Básicos en 1 Toque** cuando el armario tiene `<3` prendas.<br>**2. Ruleta "Klozet Shuffle"** en `/create` para girar Top / Bottom / Calzado. |
+| **Alta Daily** | **Look Matutino Automático** en portada según el clima del día (sin tener que abrir chat ni escribir prompts) + **Maletas de Viaje IA** | **3. Tarjeta "Tu Look de Hoy (Clima + Ocasión)"** arriba en `/closet` lista para guardar en calendario en 1 toque, y **Modo Maleta** en Kloe Pro. |
+| **Indyx** | **Analytics de Armario (Cost-Per-Wear, % de armario usado, prendas olvidadas)** + **The Open Closet** | **4. Panel de Estadísticas de Uso** en `/closet` (*"% de armario usado"*, *"Veces puesto"* cada vez que se agenda en el calendario o publica en un post). |
+| **Pickle** | **Polls sociales rápidas ("¿A o B para esta noche?")** votadas por la comunidad en tiempo real | **5. Encuesta rápida de 2 looks ("¿Cuál me pongo?")** en el Feed para multiplicar la interacción diaria. |
+| **Pinterest Shuffles & Cosmos** | **Botón "Remix"** sobre cualquier collage para recrearlo con tus piezas + curación limpia sin ruido | **6. Botón "Recrear con mi armario"** en `/post/[id]` que lleva el esquema del post directamente a Kloe o `/create`. |
+| **Strava & Retro** | **Sticker 9:16 transparente copiable al portapapeles** (¡ya implementado!) + **Recap Semanal / Racha de Calendario** | **7. Resumen Semanal ("Mi Semana en Klozet")** exportable los domingos desde el Calendario como sticker 9:16 para Instagram Stories. |
+
+---
+
+## 4. UNIT ECONOMICS OFICIALES CONSOLIDADOS (`2,99 €/MES` Y `24,99 €/AÑO`)
+
+| Métrica | Plan Mensual (`2,99 € / mes`) | Plan Anual (`24,99 € / año` · `~2,08 €/mes` · Ahorra 30%) |
+| :--- | :--- | :--- |
+| **PVP Facturado (IVA incl.)** | **2,99 €** | **24,99 €** |
 | IVA España (21%) | - 0,52 € | - 4,34 € |
 | **Base Imponible Neta** | **2,47 €** | **20,65 €** |
-| Comisión Stripe (`1,4% + 0,25 €`) | - 0,29 € *(9,7% del PVP)* | - 0,60 € *(solo 2,4% del PVP)* |
-| Gemini Flash (Metadata-First) | - 0,008 € / mes | - 0,10 € / año |
-| Supabase Storage (WebP ~100KB) | - 0,015 € / mes | - 0,18 € / año |
-| **BENEFICIO NETO LIMPIO** | **2,16 € / mes (87,4% margen s/base)** | **19,77 € en Día 1 (95,7% margen s/base)** |
+| Comisión Stripe UE (`1,4% + 0,25 €`) | - 0,29 € *(9,7% del PVP)* | - 0,60 € *(solo 2,4% del PVP)* |
+| Coste IA Gemini Flash *(Metadata-First)* | - 0,012 € / mes | - 0,14 € / año |
+| Coste Supabase Storage *(WebP ~100 KB)* | - 0,015 € / mes | - 0,18 € / año |
+| **BENEFICIO NETO LIMPIO EN CAJA** | **2,15 € / mes (87,0% margen s/base)** | **19,73 € en Día 1 (95,5% margen s/base)** |
 | **Riesgo de Churn** | Mensual | **0% durante 365 días** |
 
-* **Costes Fijos Mensuales Base:** Vercel Pro (~18,50 €) + Supabase Pro (~23,00 €) + Dominio (~10,00 €) = **~51,50 € / mes**.
-* **Punto de Break-Even Exacto:**
-  * **En Plan Anual (`24,99 €/año` = `19,77 €` netos limpios en caja):** Se cubre el 100% de los costes fijos del mes con **solo 3 suscripciones anuales al mes** (`3 × 19,77 € = 59,31 € netos`).
-  * **En Plan Mensual (`2,99 €/mes` = `2,16 €` netos limpios/mes):** Se cubre el 100% de los costes fijos con **24 suscriptores mensuales activos** (`24 × 2,16 € = 51,84 € netos`).
-  * **Mix combinado (50% anual / 50% mensual):** Break-even en caja con **~12 a 15 clientes de pago**.
-
----
-
-## 4. RECOMENDACIONES QUIRÚRGICAS DEL CONSEJO (PRÓXIMOS PASOS)
-
-1. **Actualizar Price IDs en Stripe Dashboard / Vercel:**
-   - Crear el precio mensual de **4,99 €** y el anual de **19,99 €** en Stripe y asignarlos a `STRIPE_PRICE_ID_MONTHLY` y `STRIPE_PRICE_ID_YEARLY` para que la Payment Sheet de Apple Pay / Google Pay cobre exactamente los nuevos importes.
-2. **Notificaciones Web Push en Servidor (Opcional Fase 1.5):**
-   - Mantener `usePeriodicReminders.ts` para notificaciones in-app en las franjas `08:00`, `15:00` y `16:00`, y complementarlo con un Cron Job de servidor (`/api/push`) para despertar también a los usuarios que tengan la pestaña cerrada.
-3. **Métrica de Control a 60 Días (Free $\rightarrow$ Pro):**
-   - Mantener las **3 consultas/día gratis** para maximizar el crecimiento inicial. Si la conversión a Pro es <2,5%, reservar el **desglose visual de outfits de posts ajenos** o reducir la cuota gratuita a **2 consultas/día**.
+* **Costes Fijos Mensuales Base:** ~43,00 € – 51,50 € / mes (Vercel Pro + Supabase Pro + Dominio).
+* **Break-Even Exacto:** **3 suscripciones anuales al mes** (`59,19 €` netos) o **20–24 suscriptores mensuales activos**.
 
 ---
 
@@ -88,7 +102,6 @@
 
 | Fase | Umbral MRR | Qué ejecuta Ethan (con IA) | Qué se delega / subcontrata |
 | :--- | :--- | :--- | :--- |
-| **Fase 0 (Tracción)** | **0 € – 1.500 €** | • Desarrollo Fullstack, producto y diseño.<br>• Contenido diario en TikTok/Reels con el hook de *"91 horas al año frente al espejo"* y stickers Strava.<br>• Soporte directo. | **Cero delegación.** 100% margen neto en caja. |
-| **Fase 1 (Sustento)** | **1.500 € – 4.500 €** | • Nuevas funcionalidades core y optimización de conversión anual. | • **Gestoría SaaS en España:** (~120 €/mes).<br>• **Revisión legal puntual:** (~350 € pago único). |
-| **Fase 2 (Escala)** | **4.500 € – 10.000 €** | • Dirección de producto y comunidad. | • **Red de 5–10 Micro-Creadores UGC:** Vídeos diarios mostrando su armario digital y looks con Kloe.<br>• **Soporte N1 a tiempo parcial.** |
-| **Fase 3 (Expansión)** | **> 10.000 €** | • Expansión internacional y acuerdos directos con marcas (>15.000–20.000 usuarios). | • **Ingeniero Mobile Nativo** + **Paid Media (TikTok/Meta Ads)**. |
+| **Fase 0 (Pulido y Tracción)** | **0 € – 1.500 €** | • Ejecución de las Fases 1, 2 y 3 de la Hoja de Ruta.<br>• Vídeos orgánicos en TikTok/Reels mostrando el Sticker 9:16 HD pegado en Instagram Stories y el reto de las *91 horas al año*. | **Cero delegación.** 100% margen neto en caja. |
+| **Fase 1 (Sustento)** | **1.500 € – 4.500 €** | • Nuevas mecánicas sociales (*Style a Friend*, *Modo Maleta*, *Klozet Shuffle*). | • **Gestoría SaaS en España:** (~120 €/mes).<br>• **Revisión legal puntual:** (~350 € pago único). |
+| **Fase 2 (Escala)** | **> 4.500 €** | • Dirección de producto y alianzas de marca. | • **Micro-creadores UGC** (5–10 perfiles de moda en TikTok/IG). |

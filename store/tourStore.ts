@@ -27,75 +27,75 @@ export interface TourStep {
 export const TOUR_STEPS: TourStep[] = [
   {
     id: 'style_preferences',
-    title: 'Estilo y preferencias seleccionadas',
+    title: 'Estilo y preferencias definidos',
     shortTitle: 'Tus estilos',
     subtitle: 'Define tus gustos y vibes de moda',
-    description: 'Configura tu edad, silueta y catálogo de estilos favoritos para que el feed y Kloe se adapten a tu estilo personal.',
+    description: 'Tu edad, silueta y catálogo de estilos favoritos para que el feed y Kloe se adapten a tu estilo personal.',
     actionText: 'Personalizar estilos',
     actionUrl: '/onboarding/preferences',
     badge: 'Paso 1 de 6',
     weight: 20
   },
   {
-    id: 'avatar',
-    title: 'Foto de perfil personalizada',
-    shortTitle: 'Foto de perfil',
-    subtitle: 'Tu identidad en la comunidad',
-    description: 'Sube una foto de perfil para que otros creadores y estilistas reconozcan tus looks y publicaciones.',
-    actionText: 'Añadir foto de perfil',
-    actionUrl: '/profile/edit',
-    badge: 'Paso 2 de 6',
-    weight: 15
-  },
-  {
     id: 'upload_clothes',
-    title: 'Digitaliza tus prendas (hasta 20 de golpe)',
+    title: 'Añade tus primeras 3 prendas',
     shortTitle: 'Sube tu ropa',
-    subtitle: '15 min hoy = 91 horas ahorradas al año',
-    description: 'Decidir qué ponerte te quita 15 min cada mañana (5.475 min / 91 horas al año). Sube hasta 20 fotos de golpe desde tu cámara o capturas de webs: sin límite de prendas en tu armario.',
-    actionText: 'Subir prendas ahora (hasta 20)',
+    subtitle: 'Sube fotos reales, capturas web o carga básicos de prueba',
+    description: 'Para montar un look completo necesitas al menos una parte de arriba, una de abajo y calzado. Sube hasta 20 prendas de golpe o prueba con nuestros básicos en 1 toque.',
+    actionText: 'Añadir prendas ahora',
     actionUrl: '/closet?action=new-item',
-    tipTitle: 'Cómo subir tu armario en 15 minutos',
+    tipTitle: '3 formas de llenar tu armario en segundos',
     tips: [
-      'Luz natural y fondo liso: Extiende la prenda sobre la cama o en una percha. El recorte de fondo es automático.',
-      'Capturas de webs de moda: Guarda fotos de Zara, Mango, Bershka, Nike o Eme Studios y súbelas directamente.',
-      'Lotes de hasta 20 fotos: Selecciona hasta 20 prendas a la vez sin límite total en tu armario.'
+      'Cámara o galería: Haz foto sobre la cama o percha. Recortamos el fondo automáticamente.',
+      'Capturas de tiendas: Sube fotos de Zara, Mango, Bershka, Pull&Bear, Nike o Scuffers.',
+      'Básicos en 1 toque: Si estás en el sofá sin fotos, carga 4 básicos de muestra desde tu armario vacío para probar el lienzo ya.'
     ],
-    badge: 'Paso 3 de 6',
+    badge: 'Paso 2 de 6',
     weight: 25
   },
   {
     id: 'create_outfit',
-    title: 'Crear un outfit en el lienzo',
+    title: 'Crea tu primer outfit en el lienzo',
     shortTitle: 'Crea tu look',
-    subtitle: 'Tu canvas libre para armar fits',
-    description: 'Combina tus prendas en el lienzo interactivo: muévelas, rótalas y ajusta proporciones como un estilista profesional.',
+    subtitle: 'Tu estudio blanco interactivo',
+    description: 'Combina tus prendas en el lienzo blanco: muévelas, escala proporciones, guárdalo en tu calendario o cópialo como Sticker HD para Instagram Stories.',
     actionText: 'Montar look en el lienzo',
     actionUrl: '/create',
+    badge: 'Paso 3 de 6',
+    weight: 20
+  },
+  {
+    id: 'talk_to_kloe',
+    title: 'Pídele un look a Kloe',
+    shortTitle: 'Habla con Kloe',
+    subtitle: 'Tu estilista personal 24/7',
+    description: 'Pídele a Kloe que te arme un outfit con tu ropa para hoy, para una cita, trabajo o fiesta según el clima de tu ciudad.',
+    actionText: 'Probar asesoría con Kloe',
+    actionUrl: '/closet/kloe',
     badge: 'Paso 4 de 6',
     weight: 15
   },
   {
-    id: 'talk_to_kloe',
-    title: 'Consultar asesoría y estilo con Kloe',
-    shortTitle: 'Habla con Kloe',
-    subtitle: 'Tu estilista personal 24/7',
-    description: 'Pídele a Kloe que te arme un look con tu ropa o cómo combinar cualquier prenda de tu armario para salir de fiesta, diario o una ocasión especial.',
-    actionText: 'Probar asesoría con Kloe',
-    actionUrl: '/closet/kloe',
+    id: 'create_post',
+    title: 'Publica un look en la comunidad',
+    shortTitle: 'Comparte tu look',
+    subtitle: 'Inspira y conecta con tu estilo',
+    description: 'Comparte tu outfit en el feed social, etiqueta tus prendas interactivas y recibe inspiración de otros creadores.',
+    actionText: 'Compartir publicación',
+    actionUrl: '/create-post',
     badge: 'Paso 5 de 6',
     weight: 10
   },
   {
-    id: 'create_post',
-    title: 'Publicar un look en la comunidad',
-    shortTitle: 'Comparte tu look',
-    subtitle: 'Inspira y conecta con tu vibe',
-    description: 'Publica tu outfit en el feed social, etiqueta tus prendas y recibe el feedback e inspiración de la comunidad.',
-    actionText: 'Compartir publicación',
-    actionUrl: '/create-post',
+    id: 'avatar',
+    title: 'Personaliza tu foto de perfil',
+    shortTitle: 'Foto de perfil',
+    subtitle: 'Tu identidad en la comunidad',
+    description: 'Añade tu foto de perfil para que otros creadores y amigos reconozcan tus outfits y publicaciones.',
+    actionText: 'Añadir foto de perfil',
+    actionUrl: '/profile/edit',
     badge: 'Paso 6 de 6',
-    weight: 15
+    weight: 10
   }
 ];
 
@@ -242,10 +242,10 @@ export const useTourStore = create<TourState>((set, get) => ({
       return;
     }
     const newState = {
-      isOpen: true,
+      isOpen: false,
       hasStartedTour: true,
-      currentStepIndex: 0,
-      completedSteps: [],
+      currentStepIndex: 1,
+      completedSteps: ['style_preferences'] as TourStepId[],
       isDismissed: false,
       isCompleted: false
     };

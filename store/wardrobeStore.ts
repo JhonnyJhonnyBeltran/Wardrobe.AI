@@ -191,8 +191,8 @@ export const useWardrobeStore = create<WardrobeState>((set, get) => ({
 
       // Guided Tour Realtime Step Progression
       try {
-        if (nextItems.length >= 2) {
-          useTourStore.getState().markStepComplete('upload_clothes', '¡Has subido tus 2 primeras prendas al armario!', true);
+        if (nextItems.length >= 3) {
+          useTourStore.getState().markStepComplete('upload_clothes', '¡Ya tienes tus primeras 3 prendas para crear un outfit!', true);
         }
       } catch (tourErr) {
         console.warn('[WardrobeStore] Error updating tour step:', tourErr);

@@ -22,7 +22,7 @@ import {
 import { useTourStore, TOUR_STEPS, TourStepId, calculateTourProgress } from '@/store/tourStore';
 import { useWardrobeStore } from '@/store/wardrobeStore';
 import { useUser } from '@/store/userStore';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 
 const STEP_ICONS: Record<TourStepId, React.ElementType> = {
   style_preferences: Palette,
@@ -37,6 +37,7 @@ const STEP_ICONS: Record<TourStepId, React.ElementType> = {
 
 export default function GuidedTourModal() {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const { user } = useUser();
   const { items } = useWardrobeStore();
@@ -100,12 +101,12 @@ export default function GuidedTourModal() {
     }
   }, [searchParams, user?.id, startNewUserTour, isTourCompleted, isDismissed]);
 
-  // Auto-detect completed clothes action
+  // Auto-detect completed clothes action (3 garments: Top + Bottom + Footwear)
   useEffect(() => {
     if (!user) return;
-    if (items.length >= 2 && !completedSteps.includes('upload_clothes')) {
+    if (items.length >= 3 && !completedSteps.includes('upload_clothes')) {
       const isActivelyOnTour = hasStartedTour && !isDismissed && !isTourCompleted;
-      markStepComplete('upload_clothes', '¡Has subido tus 2 primeras prendas al armario!', isActivelyOnTour);
+      markStepComplete('upload_clothes', '¡Ya tienes tus primeras 3 prendas para armar un look completo!', isActivelyOnTour);
     }
   }, [items.length, user, completedSteps, hasStartedTour, isDismissed, isTourCompleted, markStepComplete]);
 
@@ -284,7 +285,7 @@ export default function GuidedTourModal() {
 
                     <div className="pt-2 border-t border-[var(--border-color)]/50 flex items-center justify-between text-xs">
                       <span className="text-[var(--foreground-tertiary)] font-medium">Prendas en tu armario:</span>
-                      <span className="font-bold text-[var(--brand-pink)] tabular-nums">{items.length} / 2 recomendadas</span>
+                      <span className="font-bold text-[var(--brand-pink)] tabular-nums">{items.length} / 3 recomendadas</span>
                     </div>
                   </div>
                 )}
@@ -355,9 +356,9 @@ export default function GuidedTourModal() {
         )}
       </AnimatePresence>
 
-      {/* Floating Tour Guide Widget (Pill) while tour is active */}
+      {/* Floating Tour Guide Widget (Pill) while tour is active (hidden on /closet where ProfileProgressBar + FABs live) */}
       <AnimatePresence>
-        {isTourActive && !isOpen && (
+        {isTourActive && !isOpen && pathname !== '/closet' && (
           <motion.div
             initial={{ opacity: 0, y: 30, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}

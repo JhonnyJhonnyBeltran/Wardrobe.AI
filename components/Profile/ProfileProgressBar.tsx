@@ -135,7 +135,7 @@ export default function ProfileProgressBar() {
     user?.gender
   );
   const hasAvatar = Boolean(isEthan || (user?.avatar && !user.avatar.includes('placeholder')));
-  const has2Items = Boolean(isEthan || items.length >= 2);
+  const has3Items = Boolean(isEthan || items.length >= 3);
   const hasOutfit = Boolean(
     isEthan ||
     realMilestones.hasOutfit ||
@@ -164,10 +164,7 @@ export default function ProfileProgressBar() {
     if (hasStyle && !completedSteps.includes('style_preferences')) {
       store.markStepComplete('style_preferences', undefined, false);
     }
-    if (hasAvatar && !completedSteps.includes('avatar')) {
-      store.markStepComplete('avatar', undefined, false);
-    }
-    if (has2Items && !completedSteps.includes('upload_clothes')) {
+    if (has3Items && !completedSteps.includes('upload_clothes')) {
       store.markStepComplete('upload_clothes', undefined, false);
     }
     if (hasOutfit && !completedSteps.includes('create_outfit')) {
@@ -179,7 +176,10 @@ export default function ProfileProgressBar() {
     if (hasPost && !completedSteps.includes('create_post')) {
       store.markStepComplete('create_post', undefined, false);
     }
-  }, [user?.id, hasStyle, hasAvatar, has2Items, hasOutfit, hasKloe, hasPost, completedSteps]);
+    if (hasAvatar && !completedSteps.includes('avatar')) {
+      store.markStepComplete('avatar', undefined, false);
+    }
+  }, [user?.id, hasStyle, hasAvatar, has3Items, hasOutfit, hasKloe, hasPost, completedSteps]);
 
   if (!user) return null;
 
@@ -192,11 +192,11 @@ export default function ProfileProgressBar() {
 
   let score = 0;
   if (hasStyle) score += 20;
-  if (hasAvatar) score += 15;
-  if (has2Items) score += 25;
-  if (hasOutfit) score += 15;
-  if (hasKloe) score += 10;
-  if (hasPost) score += 15;
+  if (has3Items) score += 25;
+  if (hasOutfit) score += 20;
+  if (hasKloe) score += 15;
+  if (hasPost) score += 10;
+  if (hasAvatar) score += 10;
 
   const totalPercent = Math.min(100, score);
 
@@ -209,23 +209,37 @@ export default function ProfileProgressBar() {
     return null;
   }
 
-  // Dynamic status text matching the exact missing milestone
+  // Dynamic status text & next action matching the value-first milestone order
   let statusMessage = '';
+  let nextActionLabel = '';
+  let nextActionHref = '';
   if (!hasStyle) {
-    statusMessage = `Nivel de estilo al ${totalPercent}% · Define tus vibes de moda`;
-  } else if (!hasAvatar) {
-    statusMessage = `Nivel de estilo al ${totalPercent}% · Sube tu mejor foto de perfil`;
-  } else if (!has2Items) {
-    const needed = Math.max(1, 2 - items.length);
-    statusMessage = `Nivel de estilo al ${totalPercent}% · Sube ${needed} prenda${needed > 1 ? 's' : ''} más para combinar`;
+    statusMessage = `Paso 1 · Define tus estilos favoritos`;
+    nextActionLabel = 'Personalizar';
+    nextActionHref = '/onboarding/preferences';
+  } else if (!has3Items) {
+    const needed = Math.max(1, 3 - items.length);
+    statusMessage = `Siguiente paso · Añade ${needed} prenda${needed > 1 ? 's' : ''} (${items.length}/3) para crear tu primer look`;
+    nextActionLabel = 'Añadir ropa';
+    nextActionHref = '/closet?action=new-item';
   } else if (!hasOutfit) {
-    statusMessage = `Nivel de estilo al ${totalPercent}% · Monta tu primer fit en el lienzo`;
+    statusMessage = `Siguiente paso · Monta tu primer outfit en el lienzo blanco`;
+    nextActionLabel = 'Crear look';
+    nextActionHref = '/create';
   } else if (!hasKloe) {
-    statusMessage = `Nivel de estilo al ${totalPercent}% · Pídele estilismo a Kloe`;
+    statusMessage = `Siguiente paso · Pídele un look personalizado a Kloe`;
+    nextActionLabel = 'Hablar con Kloe';
+    nextActionHref = '/closet/kloe';
   } else if (!hasPost) {
-    statusMessage = `Nivel de estilo al ${totalPercent}% · Sube tu primer fit a la comunidad`;
+    statusMessage = `Siguiente paso · Publica tu primer look en la comunidad`;
+    nextActionLabel = 'Publicar';
+    nextActionHref = '/create-post';
+  } else if (!hasAvatar) {
+    statusMessage = `Último paso · Añade tu foto de perfil`;
+    nextActionLabel = 'Subir foto';
+    nextActionHref = '/profile/edit';
   } else {
-    statusMessage = `Nivel de estilo al ${totalPercent}% · Caza nuevas tendencias`;
+    statusMessage = `Nivel de estilo al ${totalPercent}%`;
   }
 
   return (
@@ -240,7 +254,7 @@ export default function ProfileProgressBar() {
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold uppercase tracking-wider text-[var(--brand-pink)]">
-                  Nivel de estilo
+                  Tu ruta en Klozet
                 </span>
                 <span className="text-xs font-semibold text-[var(--foreground)] tabular-nums">
                   {totalPercent}%
@@ -253,16 +267,24 @@ export default function ProfileProgressBar() {
           </div>
 
           <div className="flex items-center gap-1.5 shrink-0">
+            {nextActionHref && (
+              <Link
+                href={nextActionHref}
+                className="px-3 py-1.5 rounded-full bg-[var(--brand-pink)] text-white text-xs font-bold hover:opacity-90 transition-opacity whitespace-nowrap"
+              >
+                {nextActionLabel}
+              </Link>
+            )}
             <button
               onClick={() => openTour()}
-              className="text-xs text-[var(--foreground-tertiary)] hover:text-[var(--brand-pink)] p-1.5 rounded-lg hover:bg-[var(--background-secondary)] transition-colors cursor-pointer"
-              title="Abrir ruta de estilo"
+              className="text-xs text-[var(--foreground-tertiary)] hover:text-[var(--brand-pink)] p-1.5 rounded-full hover:bg-[var(--background-secondary)] transition-colors cursor-pointer"
+              title="Abrir guía paso a paso"
             >
               <HelpCircle className="w-4 h-4" />
             </button>
             <button
               onClick={() => setIsExpanded(!isExpanded)}
-              className="p-1.5 rounded-lg hover:bg-[var(--background-secondary)] text-[var(--foreground-secondary)] transition-colors cursor-pointer"
+              className="p-1.5 rounded-full hover:bg-[var(--background-secondary)] text-[var(--foreground-secondary)] transition-colors cursor-pointer"
               aria-label={isExpanded ? 'Ocultar detalles' : 'Ver detalles'}
             >
               {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -270,17 +292,17 @@ export default function ProfileProgressBar() {
           </div>
         </div>
 
-        {/* Progress Bar Track: Solid Brand Color (NO gradient) */}
+        {/* Progress Bar Track: Solid Brand Color */}
         <div className="w-full h-2 bg-[var(--background-secondary)] rounded-full overflow-hidden mt-3">
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${totalPercent}%` }}
             transition={{ duration: 0.6, ease: 'easeOut' }}
-            className="h-full rounded-full bg-[var(--brand-pink)] shadow-[0_0_10px_rgba(255,45,120,0.3)]"
+            className="h-full rounded-full bg-[var(--brand-pink)]"
           />
         </div>
 
-        {/* Expandable Checklist */}
+        {/* Expandable Checklist in Value-First Order */}
         <AnimatePresence>
           {isExpanded && (
             <motion.div
@@ -299,7 +321,7 @@ export default function ProfileProgressBar() {
                     {hasStyle && <Check className="w-2.5 h-2.5" strokeWidth={3} />}
                   </div>
                   <span className={hasStyle ? 'text-[var(--foreground)] font-medium' : 'text-[var(--foreground-secondary)]'}>
-                    Estilo y preferencias seleccionadas
+                    1. Estilo y preferencias definidos
                   </span>
                 </div>
                 {!hasStyle && (
@@ -309,38 +331,19 @@ export default function ProfileProgressBar() {
                 )}
               </div>
 
-              {/* Task 2: Avatar */}
+              {/* Task 2: Clothes (3 items) */}
               <div className="flex items-center justify-between text-xs">
                 <div className="flex items-center gap-2">
                   <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${
-                    hasAvatar ? 'bg-emerald-500 text-white' : 'border border-[var(--border-color)]'
+                    has3Items ? 'bg-emerald-500 text-white' : 'border border-[var(--border-color)]'
                   }`}>
-                    {hasAvatar && <Check className="w-2.5 h-2.5" strokeWidth={3} />}
+                    {has3Items && <Check className="w-2.5 h-2.5" strokeWidth={3} />}
                   </div>
-                  <span className={hasAvatar ? 'text-[var(--foreground)] font-medium' : 'text-[var(--foreground-secondary)]'}>
-                    Foto de perfil personalizada
+                  <span className={has3Items ? 'text-[var(--foreground)] font-medium' : 'text-[var(--foreground-secondary)]'}>
+                    2. Añade tus primeras 3 prendas ({Math.min(3, items.length)}/3)
                   </span>
                 </div>
-                {!hasAvatar && (
-                  <Link href="/profile/edit" className="text-[var(--brand-pink)] font-semibold hover:underline">
-                    Añadir foto
-                  </Link>
-                )}
-              </div>
-
-              {/* Task 3: Clothes */}
-              <div className="flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2">
-                  <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${
-                    has2Items ? 'bg-emerald-500 text-white' : 'border border-[var(--border-color)]'
-                  }`}>
-                    {has2Items && <Check className="w-2.5 h-2.5" strokeWidth={3} />}
-                  </div>
-                  <span className={has2Items ? 'text-[var(--foreground)] font-medium' : 'text-[var(--foreground-secondary)]'}>
-                    Añadir al menos 2 prendas al armario ({items.length}/2)
-                  </span>
-                </div>
-                {!has2Items && (
+                {!has3Items && (
                   <Link href="/closet?action=new-item" className="text-[var(--brand-pink)] font-semibold hover:underline flex items-center gap-1">
                     <Plus className="w-3 h-3" />
                     <span>Subir prenda</span>
@@ -348,7 +351,7 @@ export default function ProfileProgressBar() {
                 )}
               </div>
 
-              {/* Task 4: Outfit on Canvas */}
+              {/* Task 3: Outfit on Canvas */}
               <div className="flex items-center justify-between text-xs">
                 <div className="flex items-center gap-2">
                   <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${
@@ -357,7 +360,7 @@ export default function ProfileProgressBar() {
                     {hasOutfit && <Check className="w-2.5 h-2.5" strokeWidth={3} />}
                   </div>
                   <span className={hasOutfit ? 'text-[var(--foreground)] font-medium' : 'text-[var(--foreground-secondary)]'}>
-                    Crear un outfit en el lienzo
+                    3. Crea tu primer outfit en el lienzo
                   </span>
                 </div>
                 {!hasOutfit && (
@@ -367,7 +370,7 @@ export default function ProfileProgressBar() {
                 )}
               </div>
 
-              {/* Task 5: Talk to Kloe */}
+              {/* Task 4: Talk to Kloe */}
               <div className="flex items-center justify-between text-xs">
                 <div className="flex items-center gap-2">
                   <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${
@@ -376,7 +379,7 @@ export default function ProfileProgressBar() {
                     {hasKloe && <Check className="w-2.5 h-2.5" strokeWidth={3} />}
                   </div>
                   <span className={hasKloe ? 'text-[var(--foreground)] font-medium' : 'text-[var(--foreground-secondary)]'}>
-                    Consultar asesoría y estilo con Kloe
+                    4. Pídele un look a Kloe
                   </span>
                 </div>
                 {!hasKloe && (
@@ -386,7 +389,7 @@ export default function ProfileProgressBar() {
                 )}
               </div>
 
-              {/* Task 6: Community Post */}
+              {/* Task 5: Community Post */}
               <div className="flex items-center justify-between text-xs">
                 <div className="flex items-center gap-2">
                   <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${
@@ -395,12 +398,31 @@ export default function ProfileProgressBar() {
                     {hasPost && <Check className="w-2.5 h-2.5" strokeWidth={3} />}
                   </div>
                   <span className={hasPost ? 'text-[var(--foreground)] font-medium' : 'text-[var(--foreground-secondary)]'}>
-                    Publicar un look en la comunidad
+                    5. Publica un look en la comunidad
                   </span>
                 </div>
                 {!hasPost && (
                   <Link href="/create-post" className="text-[var(--brand-pink)] font-semibold hover:underline">
                     Publicar
+                  </Link>
+                )}
+              </div>
+
+              {/* Task 6: Avatar */}
+              <div className="flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2">
+                  <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${
+                    hasAvatar ? 'bg-emerald-500 text-white' : 'border border-[var(--border-color)]'
+                  }`}>
+                    {hasAvatar && <Check className="w-2.5 h-2.5" strokeWidth={3} />}
+                  </div>
+                  <span className={hasAvatar ? 'text-[var(--foreground)] font-medium' : 'text-[var(--foreground-secondary)]'}>
+                    6. Personaliza tu foto de perfil
+                  </span>
+                </div>
+                {!hasAvatar && (
+                  <Link href="/profile/edit" className="text-[var(--brand-pink)] font-semibold hover:underline">
+                    Añadir foto
                   </Link>
                 )}
               </div>

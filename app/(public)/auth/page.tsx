@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff, User, AtSign, CheckCircle, XCircle, Loader2, ArrowLeft } from 'lucide-react';
-import { Button, LogoExtended } from '@/components';
+import { Button } from '@/components';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useSocial } from '@/lib/hooks/useSocial';
 import { supabase } from '@/lib/supabase/client';
@@ -44,7 +44,7 @@ export default function AuthPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [emailConfirmPending, setEmailConfirmPending] = useState(false);
-    
+
     // Reset password state
     const [isResetPassword, setIsResetPassword] = useState(false);
     const [resetSent, setResetSent] = useState(false);
@@ -130,7 +130,6 @@ export default function AuthPage() {
 
         try {
             if (isLogin) {
-                // If it looks like a username (no @ + .), try resolving; otherwise use directly as email
                 const input = emailOrUser.trim();
                 let emailToUse: string;
                 if (input.includes('@') && input.includes('.')) {
@@ -146,6 +145,18 @@ export default function AuthPage() {
 
                 const res = await signIn(emailToUse, password);
                 if (res.success) {
+                    const { data: { user: authUser } } = await supabase.auth.getUser();
+                    if (authUser) {
+                        const { data: prof } = await supabase
+                            .from('profiles')
+                            .select('style_completed')
+                            .eq('id', authUser.id)
+                            .maybeSingle();
+                        if (prof && prof.style_completed === false) {
+                            router.push('/onboarding/preferences');
+                            return;
+                        }
+                    }
                     router.push('/closet');
                 } else {
                     const msg = res.error || 'Error al iniciar sesión';
@@ -168,16 +179,14 @@ export default function AuthPage() {
 
                 if (res.success) {
                     if (res.hasSession) {
-                    // Email confirmation disabled — user is logged in, go to onboarding
-                    router.push('/onboarding/preferences');
+                        router.push('/onboarding/preferences');
+                    } else {
+                        setEmailConfirmPending(true);
+                    }
                 } else {
-                    // Email confirmation required
-                    setEmailConfirmPending(true);
+                    toast.error(res.error || 'Error al crear cuenta');
                 }
-            } else {
-                toast.error(res.error || 'Error al crear cuenta');
             }
-        }
         } catch (err: any) {
             console.error('Auth error:', err);
             toast.error(err?.message || 'Ha ocurrido un error inesperado');
@@ -207,23 +216,6 @@ export default function AuthPage() {
         }
     };
 
-    const handleAppleLogin = async () => {
-        setLoading(true);
-        try {
-            const { error } = await supabase.auth.signInWithOAuth({
-                provider: 'apple',
-                options: {
-                    redirectTo: `${window.location.origin}/auth/callback`
-                }
-            });
-            if (error) throw error;
-        } catch (err: any) {
-            console.error('Apple auth error:', err);
-            toast.error('Error al iniciar sesión con Apple');
-            setLoading(false);
-        }
-    };
-
     if (emailConfirmPending) {
         return (
             <div className="relative min-h-screen flex items-center justify-center p-3.5 sm:p-4 bg-[var(--background)]">
@@ -234,24 +226,23 @@ export default function AuthPage() {
                 >
                     <div className="flex justify-center mb-4 sm:mb-6">
                         <Image src="/landing/klozet-nombre-grande.png" alt="Klozet" width={180} height={56} className="w-32 sm:w-40 h-auto object-contain" priority />
-
                     </div>
                     <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-[var(--brand-pink)]/10 flex items-center justify-center mx-auto mb-3 sm:mb-4">
                         <Mail className="w-6 h-6 sm:w-8 sm:h-8 text-[var(--brand-pink)]" />
                     </div>
-                    <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-2 sm:mb-3">Revisa tu bandeja</h2>
-                    <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mb-4">
-                        Te hemos enviado un enlace de confirmación a <strong className="text-gray-900 dark:text-white">{email}</strong>.
+                    <h2 className="text-xl sm:text-2xl font-bold text-[var(--foreground)] mb-2 sm:mb-3">Revisa tu bandeja</h2>
+                    <p className="text-sm sm:text-base text-[var(--foreground-secondary)] mb-4">
+                        Te hemos enviado un enlace de confirmación a <strong className="text-[var(--foreground)]">{email}</strong>.
                     </p>
-                    <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl px-3.5 py-2.5 sm:px-4 sm:py-3 mb-5 sm:mb-6 text-left">
-                        <p className="text-amber-600 dark:text-amber-400 text-xs font-semibold mb-0.5 sm:mb-1">¿No lo ves?</p>
-                        <p className="text-amber-700/90 dark:text-amber-400/80 text-[11px] sm:text-xs leading-relaxed">
+                    <div className="bg-[var(--background-secondary)] border border-[var(--border-color)] rounded-2xl px-4 py-3 mb-5 sm:mb-6 text-left">
+                        <p className="text-[var(--foreground)] text-xs font-bold mb-1">¿No lo ves?</p>
+                        <p className="text-[var(--foreground-secondary)] text-[11px] sm:text-xs leading-relaxed">
                             Revisa la carpeta de <strong>SPAM o correo no deseado</strong>. A veces los filtros lo mandan ahí.
                         </p>
                     </div>
                     <button
                         onClick={() => { setEmailConfirmPending(false); setIsLogin(true); }}
-                        className="text-xs sm:text-sm font-semibold text-[var(--brand-pink)] hover:underline min-h-[44px] flex items-center justify-center mx-auto"
+                        className="text-xs sm:text-sm font-semibold text-[var(--brand-pink)] hover:underline min-h-[44px] flex items-center justify-center mx-auto cursor-pointer"
                     >
                         Ya lo confirmé, iniciar sesión
                     </button>
@@ -260,90 +251,46 @@ export default function AuthPage() {
         );
     }
 
-    const AmbientOrb = ({ className, delay, duration = 18 }: { className: string, delay: number, duration?: number }) => (
-        <motion.div
-            className={`absolute rounded-full filter blur-[110px] pointer-events-none opacity-30 dark:opacity-50 ${className}`}
-            animate={{
-                x: [0, 50, -40, 0],
-                y: [0, -60, 40, 0],
-                scale: [1, 1.15, 0.9, 1],
-            }}
-            transition={{
-                duration: duration,
-                repeat: Infinity,
-                repeatType: 'reverse',
-                delay: delay,
-                ease: "easeInOut"
-            }}
-        />
-    );
-
     return (
-        <div className="relative min-h-screen flex items-center justify-center p-3.5 sm:p-4 py-6 sm:py-10 bg-gray-50 dark:bg-[#09090c] overflow-hidden selection:bg-[var(--brand-pink)] selection:text-white transition-colors duration-300">
-            {/* Multi-layered Professional Gradient Mesh */}
-            <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-                {/* Radial Glow Centers */}
-                <div className="absolute -top-[25%] left-1/2 -translate-x-1/2 w-[800px] h-[550px] bg-gradient-to-b from-[var(--brand-pink)]/15 via-purple-600/10 to-transparent dark:from-[var(--brand-pink)]/25 dark:via-purple-600/15 rounded-full blur-[120px] opacity-70" />
-                <div className="absolute -bottom-[20%] -right-[10%] w-[600px] h-[600px] bg-gradient-to-tl from-indigo-600/15 via-[var(--brand-pink)]/10 to-transparent dark:from-indigo-600/20 dark:via-[var(--brand-pink)]/15 rounded-full blur-[130px] opacity-60" />
-                <div className="absolute top-[40%] -left-[15%] w-[500px] h-[500px] bg-gradient-to-tr from-violet-600/15 via-pink-500/10 to-transparent dark:from-violet-600/20 dark:via-pink-500/10 rounded-full blur-[120px] opacity-50" />
-
-                {/* Animated Floating Ambient Orbs */}
-                <AmbientOrb className="top-[5%] left-[10%] w-[380px] h-[380px] bg-[var(--brand-pink)]" delay={0} duration={16} />
-                <AmbientOrb className="bottom-[10%] right-[15%] w-[450px] h-[450px] bg-gradient-to-tl from-indigo-500 to-purple-600" delay={2} duration={20} />
-                <AmbientOrb className="top-[45%] right-[25%] w-[300px] h-[300px] bg-gradient-to-r from-fuchsia-500 to-[var(--brand-pink)]" delay={4} duration={18} />
-
-                {/* Subtle Modern Dot-Matrix Grid Overlay */}
-                <div 
-                    className="absolute inset-0 opacity-[0.10] dark:opacity-[0.22] mix-blend-multiply dark:mix-blend-plus-lighter"
-                    style={{
-                        backgroundImage: `radial-gradient(circle at 1px 1px, rgba(0, 0, 0, 0.3) 1px, transparent 0)`,
-                        backgroundSize: '32px 32px'
-                    }}
-                />
-
-                {/* Subtle Vignette */}
-                <div className="absolute inset-0 bg-radial from-transparent via-black/5 dark:via-black/30 to-black/10 dark:to-black/80" />
-            </div>
-
+        <div className="relative min-h-screen flex items-center justify-center p-3.5 sm:p-4 py-6 sm:py-10 bg-[var(--background)] overflow-hidden selection:bg-[var(--brand-pink)] selection:text-white transition-colors duration-300">
             {/* Return to Landing Link */}
             <Link
                 href="/"
-                className="fixed top-3 left-3 sm:top-6 sm:left-6 z-50 px-3 sm:px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold bg-white/80 dark:bg-[#121216]/80 backdrop-blur-md border border-gray-200/70 dark:border-white/10 text-gray-700 dark:text-gray-200 hover:text-[var(--brand-pink)] dark:hover:text-[var(--brand-pink)] transition-all shadow-xs flex items-center gap-1.5 active:scale-95"
+                className="fixed top-3 left-3 sm:top-6 sm:left-6 z-50 px-3.5 py-2 rounded-full text-xs sm:text-sm font-semibold bg-[var(--card-bg)] border border-[var(--border-color)] text-[var(--foreground)] hover:border-[var(--brand-pink)]/50 transition-all shadow-xs flex items-center gap-1.5 active:scale-95"
             >
                 <ArrowLeft className="w-3.5 h-3.5" />
                 <span>Inicio</span>
             </Link>
 
-            {/* Glassmorphic Auth Card Container with Gradient Border */}
+            {/* Clean Apple Auth Card Container */}
             <motion.div
                 initial={{ opacity: 0, y: 20, scale: 0.98 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-                className="relative z-10 w-full max-w-[390px] sm:max-w-[420px] p-[1px] rounded-[24px] sm:rounded-[36px] bg-gradient-to-b from-gray-200 via-gray-100 to-[var(--brand-pink)]/30 dark:from-white/20 dark:via-white/5 dark:to-[var(--brand-pink)]/25 shadow-2xl dark:shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] my-auto"
+                transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                className="relative z-10 w-full max-w-[390px] sm:max-w-[420px] rounded-[28px] sm:rounded-[36px] bg-[var(--card-bg)] border border-[var(--border-color)] shadow-xl my-auto"
             >
-                <div className="w-full bg-white/95 dark:bg-[#0d0d12]/90 backdrop-blur-3xl rounded-[23px] sm:rounded-[35px] p-4 sm:p-8 md:p-9 border border-gray-100 dark:border-white/5 overflow-hidden">
+                <div className="w-full rounded-[28px] sm:rounded-[36px] p-5 sm:p-8 md:p-9 overflow-hidden">
                     <div className="flex justify-center mb-3 sm:mb-5 relative">
-                        <div className="absolute inset-0 bg-[var(--brand-pink)]/15 dark:bg-[var(--brand-pink)]/20 rounded-full blur-xl -z-10 scale-75" />
-                        <Image 
-                            src="/landing/klozet-nombre-grande.png" 
-                            alt="Klozet" 
-                            width={220} 
-                            height={68} 
-                            className="block w-36 sm:w-44 h-auto object-contain" 
+                        <Image
+                            src="/landing/klozet-nombre-grande.png"
+                            alt="Klozet"
+                            width={220}
+                            height={68}
+                            className="block w-36 sm:w-44 h-auto object-contain"
                             priority
                         />
                     </div>
 
-                    {/* Segmented Switcher for Login / Signup */}
+                    {/* Segmented Pill Switcher for Login / Signup */}
                     {!isResetPassword && (
-                        <div className="flex p-1 rounded-xl sm:rounded-2xl bg-gray-100 dark:bg-[#16161c] border border-gray-200/60 dark:border-white/5 mb-3 sm:mb-4">
+                        <div className="flex p-1 rounded-full bg-[var(--background-secondary)] border border-[var(--border-color)] mb-4 sm:mb-5">
                             <button
                                 type="button"
                                 onClick={() => setIsLogin(true)}
-                                className={`flex-1 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
+                                className={`flex-1 py-2 rounded-full text-xs sm:text-sm font-bold transition-all cursor-pointer ${
                                     isLogin
-                                        ? 'bg-white dark:bg-[#22222a] text-gray-900 dark:text-white shadow-xs'
-                                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                                        ? 'bg-[var(--card-bg)] text-[var(--foreground)] shadow-xs'
+                                        : 'text-[var(--foreground-secondary)] hover:text-[var(--foreground)]'
                                 }`}
                             >
                                 Iniciar sesión
@@ -351,10 +298,10 @@ export default function AuthPage() {
                             <button
                                 type="button"
                                 onClick={() => setIsLogin(false)}
-                                className={`flex-1 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
+                                className={`flex-1 py-2 rounded-full text-xs sm:text-sm font-bold transition-all cursor-pointer ${
                                     !isLogin
-                                        ? 'bg-white dark:bg-[#22222a] text-gray-900 dark:text-white shadow-xs'
-                                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                                        ? 'bg-[var(--card-bg)] text-[var(--foreground)] shadow-xs'
+                                        : 'text-[var(--foreground-secondary)] hover:text-[var(--foreground)]'
                                 }`}
                             >
                                 Registrarse
@@ -369,12 +316,12 @@ export default function AuthPage() {
                                 initial={{ opacity: 0, x: 20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: -20 }}
-                                transition={{ duration: 0.3 }}
+                                transition={{ duration: 0.25 }}
                             >
-                                <h2 className="text-xl sm:text-2xl font-extrabold text-gray-900 dark:text-white text-center mb-4 sm:mb-6 tracking-tight">
+                                <h2 className="text-xl sm:text-2xl font-bold text-[var(--foreground)] text-center mb-4 sm:mb-6 tracking-tight">
                                     Recuperar contraseña
                                 </h2>
-                                
+
                                 {resetSent ? (
                                     <div className="text-center">
                                         <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-[var(--brand-pink)]/10 flex items-center justify-center mx-auto mb-3 sm:mb-4">
@@ -385,7 +332,7 @@ export default function AuthPage() {
                                         </p>
                                         <Button
                                             onClick={() => { setIsResetPassword(false); setResetSent(false); setIsLogin(true); }}
-                                            className="w-full h-11 sm:h-12 text-sm font-semibold rounded-xl bg-[var(--background-secondary)] text-[var(--foreground)] hover:bg-[var(--border-color)] transition-colors"
+                                            className="w-full h-11 sm:h-12 text-sm font-semibold rounded-full bg-[var(--background-secondary)] text-[var(--foreground)] hover:bg-[var(--border-color)] transition-colors"
                                         >
                                             Volver a iniciar sesión
                                         </Button>
@@ -396,21 +343,21 @@ export default function AuthPage() {
                                             Introduce tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.
                                         </p>
                                         <div className="relative group">
-                                            <Mail className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-5 sm:h-5 text-[var(--foreground-tertiary)] group-focus-within:text-[var(--foreground)] transition-colors" />
+                                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-[var(--foreground-tertiary)] group-focus-within:text-[var(--foreground)] transition-colors" />
                                             <input
                                                 type="email"
                                                 value={resetEmail}
                                                 onChange={(e) => setResetEmail(e.target.value)}
                                                 placeholder="Correo electrónico"
                                                 required
-                                                className="w-full pl-8.5 sm:pl-12 pr-4 h-10 sm:h-12 text-xs sm:text-sm rounded-xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:border-[var(--foreground-tertiary)] transition-all"
+                                                className="w-full pl-11 sm:pl-12 pr-4 h-11 sm:h-12 text-xs sm:text-sm rounded-full bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:border-[var(--brand-pink)] transition-all"
                                             />
                                         </div>
-                                        
+
                                         <Button
                                             type="submit"
                                             disabled={loading}
-                                            className="w-full h-10 sm:h-12 text-sm sm:text-base font-semibold rounded-xl bg-[var(--brand-pink)] hover:bg-[var(--brand-pink-dark)] text-white shadow-lg shadow-[var(--brand-pink)]/20 disabled:opacity-60"
+                                            className="w-full h-11 sm:h-12 text-sm sm:text-base font-semibold rounded-full bg-[var(--brand-pink)] hover:bg-[var(--brand-pink-dark)] text-white shadow-md disabled:opacity-60"
                                             glow
                                         >
                                             {loading ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Enviar enlace'}
@@ -420,7 +367,7 @@ export default function AuthPage() {
                                             <button
                                                 type="button"
                                                 onClick={() => setIsResetPassword(false)}
-                                                className="text-xs sm:text-sm font-bold text-[var(--foreground)] hover:text-[var(--brand-pink)] transition-colors min-h-[36px] flex items-center justify-center mx-auto"
+                                                className="text-xs sm:text-sm font-bold text-[var(--foreground)] hover:text-[var(--brand-pink)] transition-colors min-h-[36px] flex items-center justify-center mx-auto cursor-pointer"
                                             >
                                                 Volver atrás
                                             </button>
@@ -434,18 +381,18 @@ export default function AuthPage() {
                                 initial={{ opacity: 0, x: isLogin ? -20 : 20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: isLogin ? 20 : -20 }}
-                                transition={{ duration: 0.3 }}
+                                transition={{ duration: 0.25 }}
                             >
-                                <h2 className="text-base sm:text-2xl font-extrabold text-gray-900 dark:text-white text-center mb-2.5 sm:mb-5 tracking-tight">
-                                    {isLogin ? 'Bienvenido de nuevo' : 'Únete a KLOZET'}
+                                <h2 className="text-base sm:text-xl font-bold text-[var(--foreground)] text-center mb-3 sm:mb-5 tracking-tight">
+                                    {isLogin ? 'Bienvenido de nuevo' : 'Crea tu cuenta gratis'}
                                 </h2>
 
-                                <form onSubmit={handleEmailAuth} className="space-y-2 sm:space-y-3.5">
+                                <form onSubmit={handleEmailAuth} className="space-y-2.5 sm:space-y-3.5">
                                     {!isLogin && (
                                         <>
                                             {/* Nombre completo */}
                                             <div className="relative group">
-                                                <User className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-5 sm:h-5 text-gray-400 dark:text-gray-500 group-focus-within:text-gray-900 dark:group-focus-within:text-white transition-colors" />
+                                                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-[var(--foreground-tertiary)] group-focus-within:text-[var(--foreground)] transition-colors" />
                                                 <input
                                                     type="text"
                                                     value={fullName}
@@ -454,28 +401,28 @@ export default function AuthPage() {
                                                     aria-label="Nombre completo"
                                                     autoComplete="name"
                                                     required
-                                                    className="w-full pl-8.5 sm:pl-12 pr-3.5 h-10 sm:h-12 text-xs sm:text-sm rounded-xl bg-gray-50 dark:bg-[#16161c] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-pink)] focus:border-gray-400 dark:focus:border-white/30 transition-all"
+                                                    className="w-full pl-11 sm:pl-12 pr-4 h-11 sm:h-12 text-xs sm:text-sm rounded-full bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:border-[var(--brand-pink)] transition-all"
                                                 />
                                             </div>
 
                                             {/* Nombre de usuario */}
                                             <div className="relative group">
-                                                <AtSign className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-5 sm:h-5 text-gray-400 dark:text-gray-500 group-focus-within:text-gray-900 dark:group-focus-within:text-white transition-colors" />
+                                                <AtSign className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-[var(--foreground-tertiary)] group-focus-within:text-[var(--foreground)] transition-colors" />
                                                 <input
                                                     type="text"
                                                     value={username}
                                                     onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
-                                                    placeholder="Nombre de usuario"
+                                                    placeholder="usuario_unico"
                                                     aria-label="Nombre de usuario"
                                                     autoComplete="username"
                                                     required
                                                     minLength={3}
-                                                    className="w-full pl-8.5 sm:pl-12 pr-9 h-10 sm:h-12 text-xs sm:text-sm rounded-xl bg-gray-50 dark:bg-[#16161c] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-pink)] focus:border-gray-400 dark:focus:border-white/30 transition-all"
+                                                    className="w-full pl-11 sm:pl-12 pr-10 h-11 sm:h-12 text-xs sm:text-sm rounded-full bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:border-[var(--brand-pink)] transition-all"
                                                 />
-                                                <div className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2">
-                                                    {isCheckingUsername && <Loader2 className="w-3.5 h-3.5 animate-spin text-gray-400" />}
-                                                    {!isCheckingUsername && isUsernameAvailable === true && <CheckCircle className="w-3.5 h-3.5 text-green-500" />}
-                                                    {!isCheckingUsername && isUsernameAvailable === false && <XCircle className="w-3.5 h-3.5 text-red-500" />}
+                                                <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                                                    {isCheckingUsername && <Loader2 className="w-4 h-4 animate-spin text-[var(--foreground-tertiary)]" />}
+                                                    {!isCheckingUsername && isUsernameAvailable === true && <CheckCircle className="w-4 h-4 text-emerald-500" />}
+                                                    {!isCheckingUsername && isUsernameAvailable === false && <XCircle className="w-4 h-4 text-red-500" />}
                                                 </div>
                                             </div>
                                         </>
@@ -484,8 +431,8 @@ export default function AuthPage() {
                                     {/* Email / usuario */}
                                     <div className="relative group">
                                         {isLogin
-                                            ? <User className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-5 sm:h-5 text-gray-400 dark:text-gray-500 group-focus-within:text-gray-900 dark:group-focus-within:text-white transition-colors" />
-                                            : <Mail className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-5 sm:h-5 text-gray-400 dark:text-gray-500 group-focus-within:text-gray-900 dark:group-focus-within:text-white transition-colors" />
+                                            ? <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-[var(--foreground-tertiary)] group-focus-within:text-[var(--foreground)] transition-colors" />
+                                            : <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-[var(--foreground-tertiary)] group-focus-within:text-[var(--foreground)] transition-colors" />
                                         }
                                         <input
                                             type={isLogin ? 'text' : 'email'}
@@ -495,20 +442,20 @@ export default function AuthPage() {
                                             aria-label={isLogin ? 'Email o nombre de usuario' : 'Correo electrónico'}
                                             autoComplete={isLogin ? 'username' : 'email'}
                                             required
-                                            className="w-full pl-8.5 sm:pl-12 pr-9 h-10 sm:h-12 text-xs sm:text-sm rounded-xl bg-gray-50 dark:bg-[#16161c] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-pink)] focus:border-gray-400 dark:focus:border-white/30 transition-all"
+                                            className="w-full pl-11 sm:pl-12 pr-10 h-11 sm:h-12 text-xs sm:text-sm rounded-full bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:border-[var(--brand-pink)] transition-all"
                                         />
                                         {!isLogin && (
-                                            <div className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2">
-                                                {isCheckingEmail && <Loader2 className="w-3.5 h-3.5 animate-spin text-gray-400" />}
-                                                {!isCheckingEmail && isEmailAvailable === true && <CheckCircle className="w-3.5 h-3.5 text-green-500" />}
-                                                {!isCheckingEmail && isEmailAvailable === false && <XCircle className="w-3.5 h-3.5 text-red-500" />}
+                                            <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                                                {isCheckingEmail && <Loader2 className="w-4 h-4 animate-spin text-[var(--foreground-tertiary)]" />}
+                                                {!isCheckingEmail && isEmailAvailable === true && <CheckCircle className="w-4 h-4 text-emerald-500" />}
+                                                {!isCheckingEmail && isEmailAvailable === false && <XCircle className="w-4 h-4 text-red-500" />}
                                             </div>
                                         )}
                                     </div>
 
                                     {/* Contraseña */}
                                     <div className="relative group">
-                                        <Lock className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 sm:w-5 sm:h-5 text-gray-400 dark:text-gray-500 group-focus-within:text-gray-900 dark:group-focus-within:text-white transition-colors" />
+                                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-[var(--foreground-tertiary)] group-focus-within:text-[var(--foreground)] transition-colors" />
                                         <input
                                             type={showPassword ? 'text' : 'password'}
                                             value={password}
@@ -517,15 +464,15 @@ export default function AuthPage() {
                                             aria-label="Contraseña"
                                             autoComplete={isLogin ? 'current-password' : 'new-password'}
                                             required
-                                            className="w-full pl-8.5 sm:pl-12 pr-9 h-10 sm:h-12 text-xs sm:text-sm rounded-xl bg-gray-50 dark:bg-[#16161c] border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-pink)] focus:border-gray-400 dark:focus:border-white/30 transition-all"
+                                            className="w-full pl-11 sm:pl-12 pr-11 h-11 sm:h-12 text-xs sm:text-sm rounded-full bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:border-[var(--brand-pink)] transition-all"
                                         />
                                         <button
                                             type="button"
                                             onClick={() => setShowPassword(!showPassword)}
                                             aria-label={showPassword ? 'Ocultar contraseña' : 'Ver contraseña'}
-                                            className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition-colors p-1.5 rounded-lg focus-visible:ring-2 focus-visible:ring-[var(--brand-pink)]"
+                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--foreground-tertiary)] hover:text-[var(--foreground)] transition-colors p-1.5 rounded-full cursor-pointer"
                                         >
-                                            {showPassword ? <EyeOff className="w-3.5 h-3.5 sm:w-5 sm:h-5" /> : <Eye className="w-3.5 h-3.5 sm:w-5 sm:h-5" />}
+                                            {showPassword ? <EyeOff className="w-4 h-4 sm:w-5 sm:h-5" /> : <Eye className="w-4 h-4 sm:w-5 sm:h-5" />}
                                         </button>
                                     </div>
 
@@ -534,7 +481,7 @@ export default function AuthPage() {
                                             <button
                                                 type="button"
                                                 onClick={() => setIsResetPassword(true)}
-                                                className="text-[11px] sm:text-xs font-semibold text-gray-500 dark:text-gray-400 hover:text-[var(--brand-pink)] transition-colors focus-visible:ring-2 focus-visible:ring-[var(--brand-pink)] rounded py-0.5"
+                                                className="text-[11px] sm:text-xs font-semibold text-[var(--foreground-secondary)] hover:text-[var(--brand-pink)] transition-colors rounded py-0.5 cursor-pointer"
                                             >
                                                 ¿Olvidaste tu contraseña?
                                             </button>
@@ -544,28 +491,28 @@ export default function AuthPage() {
                                     <Button
                                         type="submit"
                                         disabled={loading}
-                                        className="w-full h-10 sm:h-12 text-sm sm:text-base font-semibold rounded-xl bg-[var(--brand-pink)] hover:bg-[var(--brand-pink-dark)] text-white shadow-lg shadow-[var(--brand-pink)]/20 disabled:opacity-60 transition-transform active:scale-[0.99]"
+                                        className="w-full h-11 sm:h-12 text-sm sm:text-base font-bold rounded-full bg-[var(--brand-pink)] hover:bg-[var(--brand-pink-dark)] text-white shadow-md disabled:opacity-60 transition-transform active:scale-[0.99]"
                                         glow
                                     >
-                                        {loading ? <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin mx-auto" /> : (isLogin ? 'Entrar' : 'Registrarse')}
+                                        {loading ? <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin mx-auto" /> : (isLogin ? 'Entrar' : 'Continuar')}
                                     </Button>
                                 </form>
 
-                                <div className="mt-3 sm:mt-5 flex items-center justify-between">
-                                    <span className="w-1/5 border-b border-gray-200 dark:border-white/10"></span>
-                                    <span className="text-[10px] sm:text-xs text-center text-gray-500 dark:text-gray-400 uppercase tracking-wider font-medium">o continuar con</span>
-                                    <span className="w-1/5 border-b border-gray-200 dark:border-white/10"></span>
+                                <div className="mt-4 sm:mt-5 flex items-center justify-between">
+                                    <span className="w-1/4 border-b border-[var(--border-color)]"></span>
+                                    <span className="text-[10px] sm:text-xs text-center text-[var(--foreground-tertiary)] uppercase tracking-wider font-medium">o continuar con</span>
+                                    <span className="w-1/4 border-b border-[var(--border-color)]"></span>
                                 </div>
 
-                                <div className="mt-2.5 sm:mt-4 flex flex-col sm:flex-row gap-2 sm:gap-3">
+                                <div className="mt-3 sm:mt-4 flex flex-col sm:flex-row gap-2 sm:gap-3">
                                     <button
                                         type="button"
                                         onClick={handleGoogleLogin}
                                         disabled={loading}
                                         aria-label="Continuar con Google"
-                                        className="w-full flex items-center justify-center gap-2 sm:gap-3 h-10 sm:h-12 rounded-xl bg-gray-50 hover:bg-gray-100 dark:bg-[#16161c] dark:hover:bg-[#1f1f26] text-gray-800 dark:text-gray-100 text-xs sm:text-base font-semibold transition-colors disabled:opacity-60 border border-gray-200 dark:border-white/10 shadow-sm focus-visible:ring-2 focus-visible:ring-[var(--brand-pink)]"
+                                        className="w-full flex items-center justify-center gap-2.5 h-11 sm:h-12 rounded-full bg-[var(--background-secondary)] hover:bg-[var(--border-color)]/40 text-[var(--foreground)] text-xs sm:text-sm font-semibold transition-colors disabled:opacity-60 border border-[var(--border-color)] shadow-xs cursor-pointer"
                                     >
-                                        <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 sm:w-5 sm:h-5 shrink-0" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24" className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" aria-hidden="true">
                                             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
                                             <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
                                             <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
@@ -575,20 +522,20 @@ export default function AuthPage() {
                                     </button>
                                 </div>
 
-                                <div className="mt-3 sm:mt-6 text-center pt-0.5">
-                                    <p className="text-[11px] sm:text-sm text-gray-600 dark:text-gray-400">
+                                <div className="mt-4 sm:mt-6 text-center pt-0.5">
+                                    <p className="text-[11px] sm:text-sm text-[var(--foreground-secondary)]">
                                         {isLogin ? '¿No tienes cuenta? ' : '¿Ya tienes cuenta? '}
                                         <button
                                             type="button"
                                             onClick={() => setIsLogin(!isLogin)}
-                                            className="font-bold text-gray-900 dark:text-white hover:text-[var(--brand-pink)] transition-colors ml-1 focus-visible:ring-2 focus-visible:ring-[var(--brand-pink)] rounded py-0.5"
+                                            className="font-bold text-[var(--foreground)] hover:text-[var(--brand-pink)] transition-colors ml-1 rounded py-0.5 cursor-pointer"
                                         >
                                             {isLogin ? 'Regístrate' : 'Inicia Sesión'}
                                         </button>
                                     </p>
-                                    <p className="text-[9px] sm:text-[11px] text-gray-500 dark:text-gray-400 mt-2 sm:mt-4 max-w-xs mx-auto leading-relaxed">
+                                    <p className="text-[10px] sm:text-[11px] text-[var(--foreground-tertiary)] mt-2.5 sm:mt-4 max-w-xs mx-auto leading-relaxed">
                                         Al continuar, aceptas nuestros <br className="sm:hidden" />
-                                        <Link href="/terms" className="underline hover:text-gray-800 dark:hover:text-gray-200 transition-colors">Términos</Link>, <Link href="/privacy" className="underline hover:text-gray-800 dark:hover:text-gray-200 transition-colors">Privacidad</Link> y <Link href="/cookies" className="underline hover:text-gray-800 dark:hover:text-gray-200 transition-colors">Cookies</Link>.
+                                        <Link href="/terms" className="underline hover:text-[var(--foreground)] transition-colors">Términos</Link>, <Link href="/privacy" className="underline hover:text-[var(--foreground)] transition-colors">Privacidad</Link> y <Link href="/cookies" className="underline hover:text-[var(--foreground)] transition-colors">Cookies</Link>.
                                     </p>
                                 </div>
                             </motion.div>

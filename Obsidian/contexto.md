@@ -3202,3 +3202,50 @@ Ejecución del Consejo de Negocio con 4 subagentes especializados (`business-bel
    - **Causa raíz corregida:** La tabla `likes` en Supabase carecía de restricción única compuesta en `(user_id, post_id)`, por lo que `.upsert(..., { onConflict: 'user_id,post_id' })` fallaba silenciosamente con error PostgreSQL `42P10`, y `/api/likes` usaba un cliente sin sesión (`42501` RLS).
    - Reemplazado `.upsert()` por verificación previa `.select('user_id')` + `.insert({ post_id, user_id })` tanto en `likeManager.ts` como en `app/api/likes/route.ts` (con cliente autenticado `getDbClient(request)`).
    - En `app/(app)/post/[id]/page.tsx`, `fetchData` ahora resuelve `activeUserId` desde `supabase.auth.getSession()` si `useUser()` aún está hidratando, respeta `likeManager.getPendingState(postId)` y auto-sincroniza en segundo plano cualquier like previo guardado en la caché de `useFeedStore`.
+
+
+---
+
+## 192. Auditoría Integral de Aplicación (Visuales, Colores, Interfaces, Textos, Flujos), Benchmark de Redes Sociales 2025–2026 y Veredicto Ronda 3 del Consejo de Negocio (04/11/2026)
+
+1. **Veredicto Ejecutivo del Consejo de Negocio (`business-believer`, `business-hater`, `business-investor`, `business-judge`):**
+   - Documento maestro actualizado en [`Obsidian/business-plan.md`](./business-plan.md).
+   - **Puntuación Actual:** **78 / 100** (Arquitectura e ingeniería 93/100; penalizada por fricción D1 de `1,16 prendas/usuario` y micro-roturas de flujo/UI detectadas en la auditoría). **Puntuación tras Plan de Choque:** **95 / 100**.
+   - **Diagnóstico "¿Se queda o se va el usuario hoy?":** En los primeros 2 minutos se enamora por la fluidez SWR `0ms`, la estética *"un juguete dentro de un iPhone"* y el nuevo Sticker 9:16 en 2K HD copiable al portapapeles estilo Strava. Sin embargo, entre el minuto 3 y el Día 3 el ~80% corre riesgo de irse por el **Muro del Armario Vacío** (media actual en DB: `1,16 prendas/usuario`, insuficiente para armar outfits de 3 piezas si se registran fuera de casa) y por **10 micro-roturas de flujo/UI** listadas en el plan de choque.
+
+2. **Radiografía de Errores Detectados (Flujos, Visuales, Colores y Textos):**
+   - **Flujos rotos críticos:**
+     - `app/(app)/messages/page.tsx:276`: Lista de conversaciones oculta en escritorio por clase `md:hidden`.
+     - `app/(app)/closet/kloe/page.tsx:1149, 1709` vs `KloeProModal.tsx` vs `app/(app)/premium/page.tsx:52`: El botón en Kloe muestra `"desde 1,66 €/mes"` mientras el modal cobra `24,99 €/año (~2,08 €/mes)`, y `/premium` no pasa `selectedPlan` al abrir `KloeProModal`.
+     - `components/OutfitCalendar.tsx:706-739`, `components/ItemDetailModal.tsx:65,72,180`, `app/(app)/create-post/page.tsx:582-584`: Callbacks vacíos `() => {}` que muestran botones de *Editar/Eliminar* sin acción.
+     - `app/(app)/post/[id]/page.tsx:1208, 1280`: Botón `"Responder"` en comentarios sin `onClick`.
+     - `components/Feed/PostCard.tsx:168` y `app/(app)/post/[id]/page.tsx:561`: Redirección a `/login` en vez de `/auth`.
+     - `app/(app)/create-post/page.tsx:317`: Falta invalidar `useFeedStore` tras publicar para que el nuevo post aparezca al instante en `/feed`.
+     - `store/userStore.tsx:120-157`: Falta hidratar `notification_preferences.physical_profile` como fallback.
+   - **Visuales y Colores (`brand_kit.md`):**
+     - *Nota blindada:* El fondo blanco (`bg-white`) del lienzo de outfits en modo oscuro se mantiene intacto por directriz expresa del fundador.
+     - Corregir en `post/[id]/page.tsx:1056-1298` el panel derecho de comentarios (`bg-white dark:bg-black` $\rightarrow$ tokens `var(--background)` / `var(--card-bg)`).
+     - Reducir los 3 FABs rosas simultáneos en `/closet` (`1043-1102`) a 1 único CTA rosa primario; mostrar etiquetas de texto en las 3 pestañas de `/closet` en móvil (`744-765`) y mostrar la tira de prendas del outfit en móvil dentro de `OutfitDetailModal.tsx:237`.
+   - **Copywriting:** Eliminar menciones prohibidas a *"IA"* / *"metadatos"* (`create/page.tsx:1146`, `kloe/page.tsx:498`, `AddItemModal`) y humanizar *"Abrir Hoja de Pago Rápido"* en `premium/page.tsx:181`.
+
+3. **Benchmark de Redes Sociales y Apps Punteras (2025–2026: Whering, Alta Daily, Indyx, Pickle, Pinterest Shuffles, Cosmos, Retro, Strava):**
+   - Seleccionadas las 5 palancas de retención diaria a implementar:
+     1. **Básicos en 1 Toque ("1-Tap Basics")** para usuarios con `<3` prendas (solución Whering al cuello de botella de `1,16 prendas/usuario`).
+     2. **Tarjeta Matutina "Tu Look de Hoy"** según clima en `/closet` sin escribir prompts (estilo Alta Daily).
+     3. **Ruleta "Klozet Shuffle"** por filas en `/create` (estilo Whering / *Clueless*).
+     4. **Estadísticas de Uso y Cost-Per-Wear (`wear_count`, % de armario usado)** conectadas al Calendario (estilo Indyx).
+     5. **"Recrear con mi armario" (Remix en 1 toque)** desde `/post/[id]` y **"Armarle un look a `@usuario`"** (estilo Pinterest Shuffles / Indyx).
+
+
+193. **Refactorización Integral de Registro (`/auth`), Onboarding en 3 Pasos (`/onboarding/preferences`) y Bienvenida Guiada en Armario (`store/tourStore.ts`, `ProfileProgressBar.tsx`, `GuidedTourModal.tsx`, `closet/page.tsx`)**:
+   - **Limpieza Brand Kit en `/auth` (`app/(public)/auth/page.tsx`)**: Eliminados todos los orbes morados/índigo/violeta difuminados (`AmbientOrb`), sustituido el título `"Únete a KLOZET"` por el logo oficial PNG + `"Crea tu cuenta gratis"`, rediseñados inputs y botones en pastilla (`rounded-full`) y corregida la redirección de login para enviar a `/onboarding/preferences` si `styleCompleted === false`.
+   - **Onboarding Ultraligero de 7 pasos a 3 pasos (`app/(public)/onboarding/preferences/page.tsx`)**:
+     - **Eliminado el doble registro de Nombre y `@usuario`**: Si el usuario ya introdujo su nombre y `@usuario` en `/auth` con email/contraseña, el Paso 1 no vuelve a pedírselos (solo se muestran si entró por Google OAuth sin `@usuario` personalizado o si edita desde Ajustes).
+     - **Paso 1 de 3 (Base)**: Enfoque (`Chica` / `Chico` / `Unisex` sin auto-avance brusco) + `Edad` y `Altura` unificadas en una sola tarjeta táctil.
+     - **Paso 2 de 3 (Silueta)**: Selección visual de tipo de cuerpo con sección desplegable opcional para colorimetría (`Ojos` y `Pelo` con valores por defecto inteligentes).
+     - **Paso 3 de 3 (Estilos + Accesorios)**: Muestra los 12 estilos principales de entrada con botón `"Ver los 34 estilos (+22)"` para evitar fatiga de scroll en móvil, e integra el nivel de accesorios en una fila de píldoras compacta.
+   - **Fin de la Colisión de Modales + Efecto Progreso Dotado (`20%`)**:
+     - Al terminar el Paso 3, se marca `style_preferences` como completado automáticamente (`20%`) y se navega limpiamente a `/closet` sin chocar `GuidedTourModal` encima de `AddItemModal`.
+     - Reordenadas las misiones de `TOUR_STEPS` (`store/tourStore.ts`) y `ProfileProgressBar.tsx` por orden de valor real: `1. Estilos (20%)` -> `2. Añade 3 prendas (25%)` -> `3. Crea tu primer outfit en el lienzo (20%)` -> `4. Pídele un look a Kloe (15%)` -> `5. Publica un look (10%)` -> `6. Foto de perfil (10%)`.
+   - **Tarjeta de Bienvenida Anti-"Muro del Sofá" en `/closet` (`app/(app)/closet/page.tsx`)**:
+     - Cuando el armario tiene `0 prendas`, muestra una tarjeta interactiva con botón principal para subir hasta 20 prendas de golpe (cámara, galería o capturas web) y un botón salvavidas **"Cargar 4 básicos para probar Klozet ahora (1 toque)"** que añade 4 prendas PNG transparentes reales (adaptadas a Chica/Chico) para probar el lienzo `/create` y Kloe en 3 segundos.
