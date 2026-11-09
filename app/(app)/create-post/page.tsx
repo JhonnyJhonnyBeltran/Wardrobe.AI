@@ -20,29 +20,86 @@ interface StyleOption {
 }
 
 const DEFAULT_STYLE_LIST: StyleOption[] = [
-    { id: 'casual-moderno', slug: 'casual-moderno', name: 'Casual Moderno' },
+    // Tendencias & Virales
     { id: 'streetwear', slug: 'streetwear', name: 'Streetwear' },
-    { id: 'elegante-clasico', slug: 'elegante-clasico', name: 'Elegante / Clásico' },
-    { id: 'old-money', slug: 'old-money', name: 'Old Money / Quiet Luxury' },
-    { id: 'minimalista', slug: 'minimalista', name: 'Minimalista' },
-    { id: 'deportivo-athleisure', slug: 'deportivo-athleisure', name: 'Deportivo / Athleisure' },
-    { id: 'boho-chic', slug: 'boho-chic', name: 'Boho Chic' },
+    { id: 'old-money', slug: 'old-money', name: 'Old Money' },
     { id: 'y2k', slug: 'y2k', name: 'Y2K' },
-    { id: 'techwear', slug: 'techwear', name: 'Techwear' },
-    { id: 'business-casual', slug: 'business-casual', name: 'Business Casual' },
-    { id: 'grunge-rockero', slug: 'grunge-rockero', name: 'Grunge / Rockero' },
-    { id: 'vintage-retro', slug: 'vintage-retro', name: 'Vintage / Retro' },
-    { id: 'preppy', slug: 'preppy', name: 'Preppy' },
-    { id: 'goth-dark', slug: 'goth-dark', name: 'Goth / Dark' },
-    { id: 'cottagecore', slug: 'cottagecore', name: 'Cottagecore' },
-    { id: 'skater', slug: 'skater', name: 'Skater' },
-    { id: 'indie-alternative', slug: 'indie-alternative', name: 'Indie / Alternative' },
-    { id: 'acubi', slug: 'acubi', name: 'Acubi Style' },
+    { id: 'clean-look', slug: 'clean-look', name: 'Clean Look' },
     { id: 'coquette', slug: 'coquette', name: 'Coquette' },
-    { id: 'cyberpunk', slug: 'cyberpunk', name: 'Cyberpunk / Futurista' },
-    { id: 'urbano-latino', slug: 'urbano-latino', name: 'Urbano' },
-    { id: 'bloquecore', slug: 'bloquecore', name: 'Blokecore' }
+    { id: 'baddie-glam', slug: 'baddie-glam', name: 'Baddie / Glam' },
+    { id: 'k-fashion', slug: 'k-fashion', name: 'K-Fashion' },
+
+    // Casual & Diario
+    { id: 'casual-moderno', slug: 'casual-moderno', name: 'Casual Moderno' },
+    { id: 'minimalista', slug: 'minimalista', name: 'Minimalista' },
+    { id: 'normcore', slug: 'normcore', name: 'Normcore' },
+    { id: 'deportivo-athleisure', slug: 'deportivo-athleisure', name: 'Deportivo / Athleisure' },
+    { id: 'smart-casual', slug: 'smart-casual', name: 'Smart Casual' },
+
+    // Elegante & Formal
+    { id: 'elegante-clasico', slug: 'elegante-clasico', name: 'Elegante / Clásico' },
+    { id: 'business-casual', slug: 'business-casual', name: 'Business Casual' },
+    { id: 'preppy', slug: 'preppy', name: 'Preppy' },
+    { id: 'chic-parisino', slug: 'chic-parisino', name: 'Chic Parisino' },
+
+    // Urbano, Tech & Outdoor
+    { id: 'skater-surf', slug: 'skater-surf', name: 'Skater / Surf' },
+    { id: 'workwear-americana', slug: 'workwear-americana', name: 'Workwear / Americana' },
+    { id: 'techwear', slug: 'techwear', name: 'Techwear' },
+    { id: 'gorpcore', slug: 'gorpcore', name: 'Gorpcore / Outdoor' },
+    { id: 'cyberpunk', slug: 'cyberpunk', name: 'Cyberpunk' },
+
+    // Aesthetic & Subculturas
+    { id: 'dark-academia', slug: 'dark-academia', name: 'Dark Academia' },
+    { id: 'light-academia', slug: 'light-academia', name: 'Light Academia' },
+    { id: 'cottagecore', slug: 'cottagecore', name: 'Cottagecore' },
+    { id: 'soft-girl-boy', slug: 'soft-girl-boy', name: 'Soft Aesthetic' },
+    { id: 'gotico-alt', slug: 'gotico-alt', name: 'Gótico / Alt' },
+    { id: 'harajuku', slug: 'harajuku', name: 'Harajuku / J-Fashion' },
+
+    // Vintage & Ocasiones
+    { id: 'vintage-retro', slug: 'vintage-retro', name: 'Vintage / Retro' },
+    { id: 'rock-grunge', slug: 'rock-grunge', name: 'Rock / Grunge' },
+    { id: 'boho-chic', slug: 'boho-chic', name: 'Boho Chic' },
+    { id: 'western-cowboy', slug: 'western-cowboy', name: 'Western / Cowboy' },
+    { id: 'party-noche', slug: 'party-noche', name: 'Noche / Fiesta' },
+    { id: 'coastal-resort', slug: 'coastal-resort', name: 'Coastal / Resort' },
+    { id: 'maximalista', slug: 'maximalista', name: 'Maximalista' },
 ];
+
+function normalizeOutfit(o: any) {
+    if (!o) return null;
+    const rawItems = o.items || o.outfit_items || [];
+    const items = rawItems.map((oi: any) => {
+        const clothing = oi.clothing_item || oi.clothing_items || (oi.id && oi.image_url ? oi : null);
+        if (!clothing) return null;
+        return {
+            ...clothing,
+            position_x: typeof oi.position_x === 'number' ? oi.position_x : clothing.position_x,
+            position_y: typeof oi.position_y === 'number' ? oi.position_y : clothing.position_y,
+            scale: typeof oi.scale === 'number' ? oi.scale : clothing.scale,
+            rotation: typeof oi.rotation === 'number' ? oi.rotation : clothing.rotation,
+            layer_order: typeof oi.layer_order === 'number' ? oi.layer_order : clothing.layer_order,
+        };
+    }).filter(Boolean);
+
+    return {
+        ...o,
+        items,
+        imageUrl: o.imageUrl || o.image_url || o.preview_image,
+        image_url: o.image_url || o.imageUrl || o.preview_image,
+    };
+}
+
+function getStyleName(idOrSlug: string, stylesList: StyleOption[]) {
+    const clean = (idOrSlug || '').trim();
+    const found = stylesList.find(s => s.id === clean || s.slug === clean);
+    if (found) return found.name;
+    return clean
+        .split('-')
+        .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+        .join(' ');
+}
 
 export default function CreatePostPage() {
     const router = useRouter();
@@ -63,6 +120,7 @@ export default function CreatePostPage() {
     const [availableStyles, setAvailableStyles] = useState<StyleOption[]>(DEFAULT_STYLE_LIST);
     const [selectedStyles, setSelectedStyles] = useState<string[]>([]);
     const [styleSearch, setStyleSearch] = useState('');
+    const [isStylesExpanded, setIsStylesExpanded] = useState(false);
 
     const filteredOutfits = useMemo(() => {
         let filtered = userOutfits;
@@ -188,11 +246,14 @@ export default function CreatePostPage() {
         try {
             const { data, error } = await supabase
                 .from('outfits')
-                .select('*, outfit_items(clothing_item:clothing_items(id, image_url), position_x, position_y, scale, rotation, layer_order)')
+                .select('*, outfit_items(position_x, position_y, scale, rotation, layer_order, clothing_item:clothing_items(*))')
                 .eq('user_id', user.id)
                 .order('created_at', { ascending: false });
 
-            if (data) setUserOutfits(data);
+            if (data) {
+                const formatted = data.map(normalizeOutfit);
+                setUserOutfits(formatted);
+            }
         } catch (err) {
             console.error(err);
         } finally {
@@ -201,20 +262,27 @@ export default function CreatePostPage() {
     };
 
     const fetchSingleOutfit = async (id: string) => {
-        const { data } = await supabase.from('outfits').select('*, outfit_items(clothing_item:clothing_items(id, image_url), position_x, position_y, scale, rotation, layer_order)').eq('id', id).single();
+        const { data } = await supabase
+            .from('outfits')
+            .select('*, outfit_items(position_x, position_y, scale, rotation, layer_order, clothing_item:clothing_items(*))')
+            .eq('id', id)
+            .single();
+
         if (data) {
-            setSelectedOutfit(data);
+            const normalized = normalizeOutfit(data);
+            setSelectedOutfit(normalized);
             // If post has no styles, check if outfit has a style or occasion
-            if (selectedStyles.length === 0 && (data as any).style) {
-                setSelectedStyles([(data as any).style]);
+            if (selectedStyles.length === 0 && (normalized as any).style) {
+                setSelectedStyles([(normalized as any).style]);
             }
         }
     };
 
     const handleOutfitSelect = (outfit: any) => {
-        setSelectedOutfit(outfit);
-        if (selectedStyles.length === 0 && (outfit.style || outfit.occasion)) {
-            const candidate = outfit.style || outfit.occasion;
+        const normalized = normalizeOutfit(outfit);
+        setSelectedOutfit(normalized);
+        if (selectedStyles.length === 0 && (normalized?.style || normalized?.occasion)) {
+            const candidate = normalized.style || normalized.occasion;
             setSelectedStyles([candidate]);
         }
         setMode('compose');
@@ -381,12 +449,106 @@ export default function CreatePostPage() {
                                     <>
                                         <Image src={realImage} alt="Post preview" fill className="object-cover" />
                                         <button
+                                            type="button"
                                             onClick={() => { setRealImage(null); setImageFile(null); }}
-                                            className="absolute top-4 right-4 p-2 bg-black/40 backdrop-blur-md text-white rounded-full hover:bg-black/60 shadow-lg border border-white/10"
+                                            className="absolute top-4 right-4 p-2 bg-black/50 backdrop-blur-md text-white rounded-full hover:bg-black/70 shadow-lg border border-white/10 z-20 cursor-pointer transition-colors"
+                                            title="Eliminar foto"
                                         >
                                             <X className="w-4 h-4" />
                                         </button>
                                     </>
+                                ) : selectedOutfit ? (
+                                    <div className="w-full h-full relative bg-white flex items-center justify-center overflow-hidden">
+                                        {/* Canvas with items */}
+                                        {selectedOutfit.items && selectedOutfit.items.length > 0 ? (
+                                            <div className="relative w-full h-full overflow-hidden p-4">
+                                                {selectedOutfit.items.map((item: any, i: number) => {
+                                                    const imgSrc = item.imageUrl || item.image_url;
+                                                    const total = selectedOutfit.items.length;
+                                                    const hasCoords = selectedOutfit.items.some((it: any) => typeof it.position_x === 'number');
+
+                                                    let posX = typeof item.position_x === 'number' ? item.position_x : 50;
+                                                    let posY = typeof item.position_y === 'number' ? item.position_y : 50;
+                                                    let itemScale = typeof item.scale === 'number' ? item.scale : 1;
+
+                                                    if (!hasCoords) {
+                                                        posX = 50;
+                                                        const startY = total >= 4 ? 16 : 22;
+                                                        const endY = total >= 4 ? 84 : 78;
+                                                        posY = total === 1 ? 50 : startY + (i * (endY - startY)) / (total - 1);
+                                                    }
+
+                                                    const itemZ = item.layer_order || (i + 1);
+
+                                                    return (
+                                                        <div
+                                                            key={item.id || i}
+                                                            style={{
+                                                                position: 'absolute',
+                                                                left: `${posX}%`,
+                                                                top: `${posY}%`,
+                                                                transform: `translate(-50%, -50%) scale(${itemScale * 0.95})`,
+                                                                zIndex: itemZ,
+                                                                width: '42%',
+                                                                maxWidth: '160px',
+                                                            }}
+                                                            className="flex items-center justify-center pointer-events-none select-none"
+                                                        >
+                                                            {imgSrc ? (
+                                                                <img
+                                                                    src={imgSrc}
+                                                                    alt={item.name || 'Prenda'}
+                                                                    className="w-full h-auto object-contain drop-shadow-md"
+                                                                />
+                                                            ) : (
+                                                                <div
+                                                                    className="w-12 h-12 rounded-xl shadow-xs"
+                                                                    style={{ backgroundColor: item.color_hex || '#ccc' }}
+                                                                />
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        ) : (selectedOutfit.imageUrl || selectedOutfit.image_url) ? (
+                                            <Image
+                                                src={selectedOutfit.imageUrl || selectedOutfit.image_url}
+                                                alt={selectedOutfit.name || 'Outfit'}
+                                                fill
+                                                className="object-contain p-4"
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex flex-col items-center justify-center text-zinc-400 gap-2">
+                                                <Layers className="w-12 h-12 stroke-[1.5] text-[var(--brand-pink)]" />
+                                                <span className="text-sm font-semibold text-zinc-700">{selectedOutfit.name}</span>
+                                            </div>
+                                        )}
+
+                                        {/* Top Badge: Outfit name */}
+                                        <div className="absolute top-4 left-4 z-20">
+                                            <span className="px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md text-white text-xs font-bold border border-white/10 flex items-center gap-1.5 shadow-md">
+                                                <Layers className="w-3.5 h-3.5 text-[var(--brand-pink)]" />
+                                                {selectedOutfit.name || 'Outfit vinculado'}
+                                            </span>
+                                        </div>
+
+                                        {/* Top Right: Unlink button */}
+                                        <button
+                                            type="button"
+                                            onClick={() => setSelectedOutfit(null)}
+                                            className="absolute top-4 right-4 p-2 bg-black/50 backdrop-blur-md text-white rounded-full hover:bg-black/70 shadow-lg border border-white/10 z-20 cursor-pointer transition-colors"
+                                            title="Desvincular outfit"
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </button>
+
+                                        {/* Bottom Action: Upload real photo optionally */}
+                                        <label className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 px-4 py-2 rounded-full bg-black/60 backdrop-blur-md text-white hover:bg-black/80 text-xs font-bold border border-white/10 cursor-pointer flex items-center gap-1.5 shadow-md transition-all active:scale-95">
+                                            <Camera className="w-3.5 h-3.5 text-[var(--brand-pink)]" />
+                                            <span>Subir foto real (opcional)</span>
+                                            <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+                                        </label>
+                                    </div>
                                 ) : (
                                     <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer hover:bg-[var(--background-secondary)] transition-colors gap-3">
                                         <div className="w-16 h-16 rounded-full bg-[var(--background-secondary)] flex items-center justify-center">
@@ -409,19 +571,20 @@ export default function CreatePostPage() {
                                 <label className="text-xs font-bold tracking-wider text-[var(--foreground-tertiary)] uppercase ml-1">Outfit vinculado</label>
                                 {selectedOutfit ? (
                                     <div className="flex items-center gap-4 p-4 bg-[var(--card-bg)] rounded-2xl border border-[var(--border-color)] shadow-sm">
-                                        <div className="w-14 h-14 bg-[var(--background-secondary)] rounded-xl relative overflow-hidden shrink-0">
-                                            {selectedOutfit.outfit_items?.[0]?.clothing_items?.image_url ? (
-                                                <Image
-                                                    src={selectedOutfit.outfit_items[0].clothing_items.image_url}
-                                                    alt={selectedOutfit.name}
-                                                    fill
-                                                    className="object-cover"
-                                                />
-                                            ) : (
-                                                <div className="w-full h-full flex items-center justify-center">
-                                                    <Shirt className="w-6 h-6 opacity-40" />
-                                                </div>
-                                            )}
+                                        <div className="w-14 h-14 bg-[var(--background-secondary)] rounded-xl relative overflow-hidden shrink-0 border border-[var(--border-color)]/60 flex items-center justify-center">
+                                            {(() => {
+                                                const thumb = selectedOutfit.items?.[0]?.imageUrl || selectedOutfit.items?.[0]?.image_url || selectedOutfit.imageUrl || selectedOutfit.image_url;
+                                                return thumb ? (
+                                                    <Image
+                                                        src={thumb}
+                                                        alt={selectedOutfit.name || 'Outfit'}
+                                                        fill
+                                                        className="object-contain p-1"
+                                                    />
+                                                ) : (
+                                                    <Layers className="w-6 h-6 text-[var(--brand-pink)] opacity-80" />
+                                                );
+                                            })()}
                                         </div>
                                         <div className="flex-1 min-w-0">
                                             <p className="font-bold text-[var(--foreground)] truncate text-base">{selectedOutfit.name}</p>
@@ -446,7 +609,8 @@ export default function CreatePostPage() {
                                         </div>
                                         <button
                                             onClick={() => setSelectedOutfit(null)}
-                                            className="p-2 text-[var(--foreground-tertiary)] hover:text-red-500 transition-colors"
+                                            className="p-2 text-[var(--foreground-tertiary)] hover:text-red-500 transition-colors cursor-pointer"
+                                            title="Desvincular outfit"
                                         >
                                             <X className="w-5 h-5" />
                                         </button>
@@ -455,7 +619,7 @@ export default function CreatePostPage() {
                                     <>
                                         <button
                                             onClick={() => { setMode('select-outfit'); fetchOutfits(); }}
-                                            className="w-full p-4 flex items-center justify-between bg-[var(--card-bg)] rounded-2xl border border-[var(--border-color)] hover:bg-[var(--background-secondary)] transition-all group shadow-sm"
+                                            className="w-full p-4 flex items-center justify-between bg-[var(--card-bg)] rounded-2xl border border-[var(--border-color)] hover:bg-[var(--background-secondary)] transition-all group shadow-sm cursor-pointer"
                                         >
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 rounded-full bg-[var(--brand-pink)]/10 flex items-center justify-center text-[var(--brand-pink)]">
@@ -478,8 +642,9 @@ export default function CreatePostPage() {
                                     </label>
                                     {selectedStyles.length > 0 && (
                                         <button
+                                            type="button"
                                             onClick={() => setSelectedStyles([])}
-                                            className="text-[11px] text-[var(--foreground-tertiary)] hover:text-[var(--brand-pink)] transition-colors"
+                                            className="text-[11px] text-[var(--foreground-tertiary)] hover:text-[var(--brand-pink)] transition-colors cursor-pointer"
                                         >
                                             Limpiar
                                         </button>
@@ -490,26 +655,113 @@ export default function CreatePostPage() {
                                     Elige los estilos que definen este look para que aparezca en el buscador a personas afines.
                                 </p>
 
-                                <div className="flex flex-wrap gap-2 max-h-36 overflow-y-auto p-1 custom-scrollbar">
-                                    {availableStyles.map(s => {
-                                        const isSelected = selectedStyles.includes(s.slug) || selectedStyles.includes(s.id);
+                                {/* Main Collapsed View: Only chosen styles + Pink '+' button */}
+                                <div className="flex flex-wrap items-center gap-2 pt-0.5">
+                                    {selectedStyles.map((styleKey) => {
+                                        const styleName = getStyleName(styleKey, availableStyles);
                                         return (
-                                            <button
-                                                key={s.id || s.slug}
-                                                type="button"
-                                                onClick={() => toggleStyleTag(s.slug || s.id)}
-                                                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 border ${
-                                                    isSelected
-                                                        ? 'bg-[var(--brand-pink)] text-white border-[var(--brand-pink)] shadow-sm scale-105'
-                                                        : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)] border-[var(--border-color)] hover:border-[var(--brand-pink)]/50'
-                                                }`}
+                                            <span
+                                                key={styleKey}
+                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--brand-pink)] text-white text-xs font-bold shadow-xs select-none"
                                             >
-                                                {isSelected && <Check className="w-3 h-3" />}
-                                                {s.name}
-                                            </button>
+                                                <Check className="w-3 h-3 stroke-[3]" />
+                                                <span>{styleName}</span>
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        toggleStyleTag(styleKey);
+                                                    }}
+                                                    className="p-0.5 hover:bg-white/20 rounded-full transition-colors cursor-pointer ml-0.5"
+                                                    aria-label={`Eliminar ${styleName}`}
+                                                >
+                                                    <X className="w-3 h-3" />
+                                                </button>
+                                            </span>
                                         );
                                     })}
+
+                                    {/* Botón de + rosita para añadir o desplegar estilos */}
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsStylesExpanded(prev => !prev)}
+                                        className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--brand-pink)] hover:bg-[#ff3377] text-white text-xs font-bold shadow-xs transition-all active:scale-95 cursor-pointer"
+                                        aria-label={isStylesExpanded ? "Cerrar selector de estilos" : "Añadir más estilos"}
+                                    >
+                                        <Plus className={`w-3.5 h-3.5 stroke-[2.5] transition-transform duration-200 ${isStylesExpanded ? 'rotate-45' : ''}`} />
+                                        <span>{isStylesExpanded ? 'Cerrar' : 'Añadir'}</span>
+                                    </button>
                                 </div>
+
+                                {/* Expandable Catalogue View */}
+                                <AnimatePresence>
+                                    {isStylesExpanded && (
+                                        <motion.div
+                                            initial={{ opacity: 0, height: 0 }}
+                                            animate={{ opacity: 1, height: 'auto' }}
+                                            exit={{ opacity: 0, height: 0 }}
+                                            transition={{ duration: 0.2 }}
+                                            className="overflow-hidden space-y-2.5 pt-2"
+                                        >
+                                            {/* Search input + Done button */}
+                                            <div className="flex items-center gap-2">
+                                                <div className="relative flex-1">
+                                                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--foreground-tertiary)]" />
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Buscar estilos..."
+                                                        value={styleSearch}
+                                                        onChange={(e) => setStyleSearch(e.target.value)}
+                                                        className="w-full pl-9 pr-8 py-2 bg-[var(--background-secondary)] text-[var(--foreground)] rounded-full text-xs outline-none border border-[var(--border-color)] focus:border-[var(--brand-pink)] transition-all font-medium"
+                                                        autoFocus
+                                                    />
+                                                    {styleSearch && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setStyleSearch('')}
+                                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--foreground-tertiary)] hover:text-[var(--foreground)] p-0.5 cursor-pointer"
+                                                        >
+                                                            <X className="w-3 h-3" />
+                                                        </button>
+                                                    )}
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setIsStylesExpanded(false);
+                                                        setStyleSearch('');
+                                                    }}
+                                                    className="px-3.5 py-2 rounded-full bg-[var(--brand-pink)] text-white text-xs font-bold hover:bg-[#ff3377] transition-all cursor-pointer shrink-0 shadow-xs"
+                                                >
+                                                    Listo
+                                                </button>
+                                            </div>
+
+                                            {/* Styles Catalogue to Pick from */}
+                                            <div className="flex flex-wrap gap-2 max-h-44 overflow-y-auto p-2.5 custom-scrollbar bg-[var(--background-secondary)]/60 rounded-2xl border border-[var(--border-color)]">
+                                                {filteredStyles.map((s) => {
+                                                    const key = s.slug || s.id;
+                                                    const isSelected = selectedStyles.includes(s.slug) || selectedStyles.includes(s.id);
+                                                    return (
+                                                        <button
+                                                            key={s.id || s.slug}
+                                                            type="button"
+                                                            onClick={() => toggleStyleTag(key)}
+                                                            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 border cursor-pointer active:scale-95 ${
+                                                                isSelected
+                                                                    ? 'bg-[var(--brand-pink)] text-white border-[var(--brand-pink)] shadow-xs font-bold scale-102'
+                                                                    : 'bg-[var(--card-bg)] text-[var(--foreground-secondary)] border-[var(--border-color)] hover:border-[var(--brand-pink)]/50 hover:text-[var(--foreground)]'
+                            }`}
+                                                        >
+                                                            {isSelected && <Check className="w-3 h-3 stroke-[2.5]" />}
+                                                            <span>{s.name}</span>
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
                             </div>
 
                             {/* Caption Section */}

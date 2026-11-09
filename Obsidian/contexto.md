@@ -3347,3 +3347,13 @@ Ejecución del Consejo de Negocio con 4 subagentes especializados (`business-bel
   - El botón de cierre (`X`) adopta también el acabado rosa `bg-[var(--brand-pink)] text-white`.
 - **Banner de Kloe en Armario (`app/(app)/closet/page.tsx`)**:
   - Añadido texto explícito *"Charla conmigo"* junto al logo/mascota animada de Kloe en el banner superior de `/closet`.
+
+### 50. Vista Previa de Outfit y Selector Colapsable de Estilos en /create-post (Noviembre 2026)
+- **Previsualización de Outfit Vinculado en el Lienzo Principal (`app/(app)/create-post/page.tsx`)**:
+  - Al enlazar un outfit, el contenedor multimedia izquierdo (`aspect-[4/5]`) renderiza automáticamente el look con sus prendas posicionadas sobre el lienzo blanco limpio (`bg-white`), drop shadows y proporciones idénticas a `OutfitCard`.
+  - Incluye badge con el nombre del outfit, botón para desvincular (`X`) y selector flotante inferior para *"Subir foto real (opcional)"* si el usuario prefiere su propia foto.
+  - Corrección de la miniatura en la tarjeta lateral para resolver la URL real de la primera prenda o imagen del look.
+- **Estilos Colapsados con Botón de + Rosita (`app/(app)/create-post/page.tsx`)**:
+  - Por defecto, la sección de estilos se muestra colapsada, renderizando únicamente las pastillas de los estilos elegidos por el usuario (en rosa oficial `bg-[var(--brand-pink)] text-white` con opción de borrado rápido en cada pastilla).
+  - Integrado botón de pastilla rosa *"Añadir (+)"* al final de la fila.
+  - Al hacer clic en el botón de "+", se despliega suavemente un buscador reactivo y el catálogo completo de estilos para alternar etiquetas, con botón de cierre *"Listo"*.
