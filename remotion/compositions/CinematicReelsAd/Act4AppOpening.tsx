@@ -16,52 +16,55 @@ export const Act4AppOpening: React.FC = () => {
   const { fps } = useVideoConfig();
 
   // Scene transition
-  const sceneOpacity = interpolate(frame, [0, 15, 215, 230], [0, 1, 1, 0], {
+  const sceneOpacity = interpolate(frame, [0, 12, 205, 220], [0, 1, 1, 0], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
 
-  // Device rise and settle
+  // Device rise
   const deviceSpring = spring({
     frame,
     fps,
     config: THEME.springs.heavyDevice,
   });
-  const deviceY = interpolate(deviceSpring, [0, 1], [600, 0]);
-  const deviceScale = interpolate(deviceSpring, [0, 1], [0.85, 1]);
+  const deviceY = interpolate(deviceSpring, [0, 1], [500, 0]);
+  const deviceScale = interpolate(deviceSpring, [0, 1], [0.88, 1]);
 
-  // Tap on Klozet Icon (Frames 35 - 55)
-  const tapScale = interpolate(frame, [38, 45, 52], [1, 0.9, 1], {
+  // Tap on Klozet Icon (Frames 28 - 48)
+  const tapScale = interpolate(frame, [30, 38, 46], [1, 0.88, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
-  const tapRingOpacity = interpolate(frame, [42, 58], [0.8, 0], {
+  const tapRingOpacity = interpolate(frame, [34, 48], [0.8, 0], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
-  const tapRingScale = interpolate(frame, [42, 58], [1, 2.2], {
+  const tapRingScale = interpolate(frame, [34, 48], [1, 2.2], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
 
-  // iOS App Opening Zoom (Frames 50 - 90)
+  // iOS App Opening Zoom (Frames 45 - 85)
   const appOpenSpring = spring({
-    frame: frame - 50,
+    frame: frame - 45,
     fps,
-    config: { damping: 16, stiffness: 100, mass: 0.9 },
+    config: { damping: 17, stiffness: 95, mass: 0.9 },
   });
-  const homeScreenOpacity = interpolate(appOpenSpring, [0, 0.6], [1, 0]);
+  const homeScreenOpacity = interpolate(appOpenSpring, [0, 0.5], [1, 0]);
   const appScreenOpacity = interpolate(appOpenSpring, [0.3, 1], [0, 1]);
-  const appScale = interpolate(appOpenSpring, [0, 1], [0.4, 1]);
+  const appScale = interpolate(appOpenSpring, [0, 1], [0.35, 1]);
 
-  // Section title
+  // Single Headline (Frames 15 - 210): "En tu móvil."
   const titleSpring = spring({
     frame: frame - 15,
     fps,
     config: THEME.springs.appleSnappy,
   });
   const titleY = interpolate(titleSpring, [0, 1], [30, 0]);
-  const titleOpacity = interpolate(titleSpring, [0, 1], [0, 1]);
+  const titleOpacity = interpolate(frame, [15, 26, 200, 215], [0, 1, 1, 0], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  });
 
   return (
     <AbsoluteFill
@@ -74,58 +77,46 @@ export const Act4AppOpening: React.FC = () => {
     >
       <CinematicBackground accentIntensity={0.2} glowY={55} />
 
-      {/* Top Header */}
+      {/* SINGLE HEADLINE (Zero Pills, Pure Apple) */}
       <div
         style={{
           position: 'absolute',
-          top: 130,
+          top: 150,
           width: '100%',
           textAlign: 'center',
-          zIndex: 30,
+          zIndex: 40,
           opacity: titleOpacity,
           transform: `translateY(${titleY}px)`,
         }}
       >
-        <p
+        <h1
           style={{
-            fontSize: 16,
-            fontWeight: 700,
-            color: THEME.colors.brandPink,
-            letterSpacing: THEME.typography.trackingBadge,
-            textTransform: 'uppercase',
-            margin: '0 0 10px 0',
-          }}
-        >
-          Experiencia Nativa
-        </p>
-        <h2
-          style={{
-            fontSize: 54,
+            fontSize: 72,
             fontWeight: 800,
             color: THEME.colors.textPrimary,
-            letterSpacing: THEME.typography.trackingHeadline,
+            letterSpacing: THEME.typography.trackingTight,
             margin: 0,
           }}
         >
-          Tu armario entero en tu mano.
-        </h2>
+          En tu móvil.
+        </h1>
       </div>
 
-      {/* iPhone 16 Pro Vertical Centerpiece */}
+      {/* iPhone 16 Pro Vertical Mockup */}
       <div
         style={{
           position: 'absolute',
-          top: '56%',
+          top: '58%',
           left: '50%',
           transform: `translate(-50%, -50%) translateY(${deviceY}px) scale(${deviceScale})`,
-          width: 580,
-          height: 1180,
-          borderRadius: 68,
+          width: 600,
+          height: 1220,
+          borderRadius: 72,
           padding: 14,
           background:
             'linear-gradient(150deg, #44444a 0%, #1e1e22 50%, #34343a 100%)',
           boxShadow:
-            '0 60px 140px rgba(0, 0, 0, 0.95), 0 0 0 2px rgba(255, 255, 255, 0.14) inset, 0 0 60px rgba(255, 102, 196, 0.15)',
+            '0 70px 150px rgba(0, 0, 0, 0.95), 0 0 0 2px rgba(255, 255, 255, 0.14) inset, 0 0 60px rgba(255, 102, 196, 0.15)',
           display: 'flex',
           flexDirection: 'column',
           zIndex: 20,
@@ -135,10 +126,10 @@ export const Act4AppOpening: React.FC = () => {
         <div
           style={{
             position: 'absolute',
-            top: 30,
+            top: 28,
             left: '50%',
             transform: 'translateX(-50%)',
-            width: 140,
+            width: 145,
             height: 38,
             backgroundColor: '#000000',
             borderRadius: 20,
@@ -175,12 +166,12 @@ export const Act4AppOpening: React.FC = () => {
             position: 'relative',
             width: '100%',
             height: '100%',
-            borderRadius: 56,
+            borderRadius: 58,
             backgroundColor: '#09090b',
             overflow: 'hidden',
           }}
         >
-          {/* Layer A: iOS Home Screen (Before App Opens) */}
+          {/* Layer A: iOS Home Screen */}
           <div
             style={{
               position: 'absolute',
@@ -191,14 +182,14 @@ export const Act4AppOpening: React.FC = () => {
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              paddingTop: 120,
-              paddingLeft: 30,
-              paddingRight: 30,
+              paddingTop: 130,
+              paddingLeft: 36,
+              paddingRight: 36,
               pointerEvents: homeScreenOpacity <= 0 ? 'none' : 'auto',
             }}
           >
-            {/* Clock & Date Widget */}
-            <div style={{ textAlign: 'center', marginBottom: 60 }}>
+            {/* Clock & Date */}
+            <div style={{ textAlign: 'center', marginBottom: 70 }}>
               <div
                 style={{
                   fontSize: 18,
@@ -210,7 +201,7 @@ export const Act4AppOpening: React.FC = () => {
               </div>
               <div
                 style={{
-                  fontSize: 84,
+                  fontSize: 88,
                   fontWeight: 300,
                   color: '#FFFFFF',
                   letterSpacing: '-0.03em',
@@ -226,11 +217,10 @@ export const Act4AppOpening: React.FC = () => {
               style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(4, 1fr)',
-                gap: 24,
+                gap: 26,
                 width: '100%',
               }}
             >
-              {/* Other dummy iOS icons */}
               {['Fotos', 'Cámara', 'Mapas'].map((name) => (
                 <div
                   key={name}
@@ -239,14 +229,14 @@ export const Act4AppOpening: React.FC = () => {
                     flexDirection: 'column',
                     alignItems: 'center',
                     gap: 8,
-                    opacity: 0.6,
+                    opacity: 0.5,
                   }}
                 >
                   <div
                     style={{
-                      width: 72,
-                      height: 72,
-                      borderRadius: 18,
+                      width: 76,
+                      height: 76,
+                      borderRadius: 20,
                       backgroundColor: '#252530',
                       border: '1px solid rgba(255,255,255,0.08)',
                     }}
@@ -255,7 +245,7 @@ export const Act4AppOpening: React.FC = () => {
                 </div>
               ))}
 
-              {/* The Hero Klozet Icon with Tap Feedback */}
+              {/* The Klozet App Icon */}
               <div
                 style={{
                   position: 'relative',
@@ -266,14 +256,14 @@ export const Act4AppOpening: React.FC = () => {
                   transform: `scale(${tapScale})`,
                 }}
               >
-                {/* Tap Ripple Ring */}
+                {/* Haptic Tap Ring */}
                 <div
                   style={{
                     position: 'absolute',
                     top: 0,
-                    width: 72,
-                    height: 72,
-                    borderRadius: 20,
+                    width: 76,
+                    height: 76,
+                    borderRadius: 22,
                     border: `2px solid ${THEME.colors.brandPink}`,
                     opacity: tapRingOpacity,
                     transform: `scale(${tapRingScale})`,
@@ -283,12 +273,12 @@ export const Act4AppOpening: React.FC = () => {
 
                 <div
                   style={{
-                    width: 72,
-                    height: 72,
-                    borderRadius: 20,
+                    width: 76,
+                    height: 76,
+                    borderRadius: 22,
                     backgroundColor: '#121216',
                     border: `1.5px solid ${THEME.colors.brandPink}`,
-                    boxShadow: '0 10px 25px rgba(255, 102, 196, 0.4)',
+                    boxShadow: '0 12px 30px rgba(255, 102, 196, 0.5)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -302,7 +292,7 @@ export const Act4AppOpening: React.FC = () => {
                 </div>
                 <span
                   style={{
-                    fontSize: 12,
+                    fontSize: 13,
                     fontWeight: 700,
                     color: '#FFFFFF',
                   }}
@@ -313,7 +303,7 @@ export const Act4AppOpening: React.FC = () => {
             </div>
           </div>
 
-          {/* Layer B: Real Klozet App Interface (After Opening) */}
+          {/* Layer B: Klozet Native App Interface (App Opened) */}
           <div
             style={{
               position: 'absolute',
@@ -324,10 +314,10 @@ export const Act4AppOpening: React.FC = () => {
               backgroundColor: '#09090b',
               display: 'flex',
               flexDirection: 'column',
-              paddingTop: 85,
-              paddingLeft: 22,
-              paddingRight: 22,
-              paddingBottom: 20,
+              paddingTop: 90,
+              paddingLeft: 24,
+              paddingRight: 24,
+              paddingBottom: 24,
             }}
           >
             {/* App Nav Header */}
@@ -336,41 +326,28 @@ export const Act4AppOpening: React.FC = () => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                paddingBottom: 16,
+                paddingBottom: 18,
                 borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
               }}
             >
               <Img
                 src={staticFile('klozet-logo-dark.png')}
-                style={{ height: 24, objectFit: 'contain' }}
+                style={{ height: 26, objectFit: 'contain' }}
               />
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  padding: '6px 14px',
-                  borderRadius: 999,
-                  backgroundColor: 'rgba(255, 102, 196, 0.15)',
-                  color: THEME.colors.brandPink,
-                  fontSize: 13,
-                  fontWeight: 700,
-                }}
-              >
-                <span>✦</span>
-                <span>Look Listo</span>
-              </div>
+              <span style={{ fontSize: 13, fontWeight: 700, color: THEME.colors.brandPink }}>
+                Outfit Activo
+              </span>
             </div>
 
-            {/* Main App Content: Outfit Canvas */}
+            {/* Main App Content: Real Outfit inside Mobile */}
             <div
               style={{
                 flex: 1,
-                marginTop: 18,
-                backgroundColor: '#121217',
-                borderRadius: 28,
+                marginTop: 20,
+                backgroundColor: '#131318',
+                borderRadius: 32,
                 border: '1px solid rgba(255, 255, 255, 0.08)',
-                padding: 16,
+                padding: 18,
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'space-between',
@@ -385,16 +362,15 @@ export const Act4AppOpening: React.FC = () => {
                   alignSelf: 'flex-start',
                 }}
               >
-                Lienzo Inteligente · Cena Casual
+                Cena de Hoy
               </div>
 
-              {/* Outfit stacked inside the mobile app */}
+              {/* Realistic Outfit stack inside the phone */}
               <div
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
-                  gap: 10,
                   width: '100%',
                   flex: 1,
                   justifyContent: 'center',
@@ -402,33 +378,33 @@ export const Act4AppOpening: React.FC = () => {
               >
                 <Img
                   src={staticFile('sudadera.png')}
-                  style={{ height: 160, objectFit: 'contain' }}
+                  style={{ height: 165, objectFit: 'contain', zIndex: 2 }}
                 />
                 <Img
                   src={staticFile('pantalon.png')}
-                  style={{ height: 180, objectFit: 'contain', marginTop: -20 }}
+                  style={{ height: 190, objectFit: 'contain', marginTop: -25, zIndex: 1 }}
                 />
                 <Img
                   src={staticFile('new balance.png')}
-                  style={{ height: 95, objectFit: 'contain', marginTop: -15 }}
+                  style={{ height: 105, objectFit: 'contain', marginTop: -20, zIndex: 3 }}
                 />
               </div>
 
-              {/* Action Button inside app */}
+              {/* Bottom CTA button in app */}
               <div
                 style={{
                   width: '100%',
-                  padding: '14px',
-                  borderRadius: 18,
+                  padding: '16px',
+                  borderRadius: 20,
                   backgroundColor: THEME.colors.brandPink,
                   color: '#FFFFFF',
                   fontWeight: 700,
                   fontSize: 16,
                   textAlign: 'center',
-                  boxShadow: '0 8px 25px rgba(255, 102, 196, 0.4)',
+                  boxShadow: '0 10px 30px rgba(255, 102, 196, 0.4)',
                 }}
               >
-                Guardar en Calendario de Outfits
+                Guardar en Calendario
               </div>
             </div>
           </div>

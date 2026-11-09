@@ -21,20 +21,20 @@ export const Act5AppleOutro: React.FC = () => {
     fps,
     config: THEME.springs.appleSnappy,
   });
-  const logoScale = interpolate(logoSpring, [0, 1], [0.82, 1]);
+  const logoScale = interpolate(logoSpring, [0, 1], [0.85, 1]);
   const logoOpacity = interpolate(logoSpring, [0, 1], [0, 1]);
 
   // CTA button spring
   const ctaSpring = spring({
-    frame: frame - 35,
+    frame: frame - 30,
     fps,
     config: THEME.springs.appleSnappy,
   });
-  const ctaScale = interpolate(ctaSpring, [0, 1], [0.88, 1]);
+  const ctaScale = interpolate(ctaSpring, [0, 1], [0.9, 1]);
   const ctaOpacity = interpolate(ctaSpring, [0, 1], [0, 1]);
 
   // Specular light sweep across CTA button
-  const sweepX = interpolate(frame, [45, 95], [-300, 480], {
+  const sweepX = interpolate(frame, [40, 85], [-300, 480], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
@@ -53,7 +53,7 @@ export const Act5AppleOutro: React.FC = () => {
     >
       <CinematicBackground accentIntensity={0.24} glowY={48} />
 
-      {/* Main Brand Hub */}
+      {/* Brand Hub */}
       <div
         style={{
           opacity: logoOpacity,
@@ -68,50 +68,38 @@ export const Act5AppleOutro: React.FC = () => {
         <Img
           src={staticFile('klozet-bubble-pink.png')}
           style={{
-            width: 140,
-            height: 140,
+            width: 150,
+            height: 150,
             objectFit: 'contain',
-            filter: 'drop-shadow(0 20px 50px rgba(255, 102, 196, 0.6))',
+            filter: 'drop-shadow(0 25px 60px rgba(255, 102, 196, 0.65))',
           }}
         />
 
         <Img
           src={staticFile('klozet-logo-dark.png')}
           style={{
-            height: 64,
+            height: 68,
             objectFit: 'contain',
           }}
         />
-
-        <p
-          style={{
-            fontSize: 32,
-            fontWeight: 600,
-            color: THEME.colors.textSecondary,
-            margin: '8px 0 0 0',
-            letterSpacing: THEME.typography.trackingTight,
-          }}
-        >
-          El armario inteligente que viste tu día.
-        </p>
       </div>
 
-      {/* Apple-style CTA pill button */}
+      {/* Pure Apple CTA (Zero Pills, Elegant Minimal Button) */}
       <div
         style={{
           marginTop: 64,
           opacity: ctaOpacity,
           transform: `scale(${ctaScale})`,
           position: 'relative',
-          padding: '22px 56px',
+          padding: '24px 64px',
           borderRadius: 999,
           backgroundColor: '#FFFFFF',
           color: '#000000',
-          fontSize: 24,
+          fontSize: 28,
           fontWeight: 800,
           letterSpacing: '-0.02em',
           boxShadow:
-            '0 25px 60px rgba(0, 0, 0, 0.9), 0 0 50px rgba(255, 102, 196, 0.35)',
+            '0 25px 65px rgba(0, 0, 0, 0.95), 0 0 50px rgba(255, 102, 196, 0.35)',
           overflow: 'hidden',
           display: 'flex',
           alignItems: 'center',
@@ -128,27 +116,13 @@ export const Act5AppleOutro: React.FC = () => {
             left: sweepX,
             width: 80,
             background:
-              'linear-gradient(90deg, transparent, rgba(255,255,255,0.9), transparent)',
+              'linear-gradient(90deg, transparent, rgba(255,255,255,0.95), transparent)',
             transform: 'skewX(-25deg)',
             pointerEvents: 'none',
           }}
         />
-        <span>Comienza gratis en</span>
+        <span>Comienza en</span>
         <span style={{ color: '#E11D48', fontWeight: 900 }}>klozet.es</span>
-      </div>
-
-      <div
-        style={{
-          position: 'absolute',
-          bottom: 70,
-          fontSize: 16,
-          fontWeight: 500,
-          color: THEME.colors.textMuted,
-          letterSpacing: '0.06em',
-          zIndex: 20,
-        }}
-      >
-        Disponible en Web, iOS y Android PWA
       </div>
     </AbsoluteFill>
   );

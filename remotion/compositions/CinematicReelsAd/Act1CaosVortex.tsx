@@ -23,51 +23,57 @@ interface FloatingGarment {
 }
 
 const VORTEX_ITEMS: FloatingGarment[] = [
-  { src: 'sudadera.png', initialAngle: 0, radiusX: 380, radiusY: 520, speed: 0.035, size: 220, depthZ: 100, rotSpeed: 1.2 },
-  { src: 'pantalon.png', initialAngle: 45, radiusX: 340, radiusY: 460, speed: -0.028, size: 210, depthZ: -50, rotSpeed: -1.5 },
-  { src: 'new balance.png', initialAngle: 90, radiusX: 420, radiusY: 560, speed: 0.032, size: 180, depthZ: 50, rotSpeed: 1.8 },
-  { src: 'reloj.png', initialAngle: 135, radiusX: 300, radiusY: 400, speed: -0.04, size: 130, depthZ: 150, rotSpeed: -2.2 },
-  { src: 'sudadera.png', initialAngle: 180, radiusX: 400, radiusY: 500, speed: 0.026, size: 240, depthZ: -100, rotSpeed: 1.1 },
-  { src: 'pantalon.png', initialAngle: 225, radiusX: 360, radiusY: 480, speed: -0.034, size: 195, depthZ: 80, rotSpeed: -1.6 },
-  { src: 'new balance.png', initialAngle: 270, radiusX: 440, radiusY: 540, speed: 0.03, size: 175, depthZ: -80, rotSpeed: 1.4 },
-  { src: 'reloj.png', initialAngle: 315, radiusX: 320, radiusY: 420, speed: -0.038, size: 140, depthZ: 120, rotSpeed: 2.0 },
+  { src: 'sudadera.png', initialAngle: 0, radiusX: 380, radiusY: 540, speed: 0.04, size: 260, depthZ: 120, rotSpeed: 1.4 },
+  { src: 'pantalon.png', initialAngle: 50, radiusX: 340, radiusY: 480, speed: -0.035, size: 240, depthZ: -60, rotSpeed: -1.8 },
+  { src: 'new balance.png', initialAngle: 100, radiusX: 420, radiusY: 580, speed: 0.038, size: 200, depthZ: 60, rotSpeed: 2.1 },
+  { src: 'reloj.png', initialAngle: 145, radiusX: 290, radiusY: 420, speed: -0.045, size: 140, depthZ: 160, rotSpeed: -2.5 },
+  { src: 'sudadera.png', initialAngle: 190, radiusX: 390, radiusY: 510, speed: 0.032, size: 270, depthZ: -120, rotSpeed: 1.3 },
+  { src: 'pantalon.png', initialAngle: 240, radiusX: 350, radiusY: 490, speed: -0.04, size: 220, depthZ: 90, rotSpeed: -1.9 },
+  { src: 'new balance.png', initialAngle: 285, radiusX: 430, radiusY: 550, speed: 0.035, size: 190, depthZ: -90, rotSpeed: 1.6 },
+  { src: 'reloj.png', initialAngle: 330, radiusX: 310, radiusY: 430, speed: -0.042, size: 150, depthZ: 130, rotSpeed: 2.3 },
 ];
 
 export const Act1CaosVortex: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  // Scene entrance & exit
-  const sceneOpacity = interpolate(frame, [0, 15, 190, 210], [0, 1, 1, 0], {
+  // Scene fade out right before Act 2
+  const sceneOpacity = interpolate(frame, [0, 15, 205, 220], [0, 1, 1, 0], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
 
-  // Camera push
-  const cameraZoom = interpolate(frame, [0, 210], [1, 1.12]);
+  // Camera continuous push-in for mounting tension
+  const cameraZoom = interpolate(frame, [0, 220], [1, 1.15]);
 
-  // Accelerating vortex speed
-  const speedMultiplier = interpolate(frame, [0, 140, 210], [1, 1.4, 2.8]);
+  // Accelerating rotational velocity (centrifugal tension)
+  const speedMultiplier = interpolate(frame, [0, 120, 220], [1, 1.6, 3.2]);
 
-  // Kinetic Text Springs
-  // Phrase 1: "Tengo muchas prendas"
-  const line1Spring = spring({
+  // Phase 1 (Frames 0 - 105): "Tengo muchas prendas."
+  const showText1 = frame < 105;
+  const text1Spring = spring({
     frame: frame - 10,
     fps,
     config: THEME.springs.kineticPunch,
   });
-  const line1Y = interpolate(line1Spring, [0, 1], [40, 0]);
-  const line1Opacity = interpolate(line1Spring, [0, 1], [0, 1]);
+  const text1Y = interpolate(text1Spring, [0, 1], [45, 0]);
+  const text1Opacity = interpolate(frame, [10, 25, 92, 105], [0, 1, 1, 0], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  });
 
-  // Phrase 2: "Pero no sé qué ponerme."
-  const line2Spring = spring({
-    frame: frame - 55,
+  // Phase 2 (Frames 105 - 220): "Pero no sé qué ponerme."
+  const showText2 = frame >= 105;
+  const text2Spring = spring({
+    frame: frame - 105,
     fps,
     config: THEME.springs.kineticPunch,
   });
-  const line2Y = interpolate(line2Spring, [0, 1], [40, 0]);
-  const line2Opacity = interpolate(line2Spring, [0, 1], [0, 1]);
-  const line2Scale = interpolate(line2Spring, [0, 1], [0.9, 1]);
+  const text2Y = interpolate(text2Spring, [0, 1], [45, 0]);
+  const text2Opacity = interpolate(frame, [105, 118, 205, 220], [0, 1, 1, 0], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  });
 
   return (
     <AbsoluteFill
@@ -78,9 +84,9 @@ export const Act1CaosVortex: React.FC = () => {
         fontFamily: THEME.typography.fontFamily,
       }}
     >
-      <CinematicBackground accentIntensity={0.16} glowY={52} />
+      <CinematicBackground accentIntensity={0.18} glowY={50} />
 
-      {/* 3D Vortex Container */}
+      {/* 3D Vortex of Swirling Clothing */}
       <div
         style={{
           position: 'absolute',
@@ -97,10 +103,8 @@ export const Act1CaosVortex: React.FC = () => {
           const x = Math.cos(angle) * item.radiusX;
           const y = Math.sin(angle) * item.radiusY;
           const rotation = frame * item.rotSpeed * speedMultiplier;
-
-          // Scale according to simulated depth
-          const depthScale = interpolate(item.depthZ, [-100, 150], [0.8, 1.15]);
-          const depthOpacity = interpolate(item.depthZ, [-100, 150], [0.65, 0.95]);
+          const depthScale = interpolate(item.depthZ, [-120, 160], [0.75, 1.2]);
+          const depthOpacity = interpolate(item.depthZ, [-120, 160], [0.6, 0.95]);
 
           return (
             <div
@@ -115,8 +119,8 @@ export const Act1CaosVortex: React.FC = () => {
                 opacity: depthOpacity,
                 filter:
                   item.depthZ < 0
-                    ? 'blur(2px) drop-shadow(0 20px 30px rgba(0,0,0,0.8))'
-                    : 'drop-shadow(0 25px 45px rgba(0,0,0,0.9))',
+                    ? 'blur(2.5px) drop-shadow(0 20px 30px rgba(0,0,0,0.85))'
+                    : 'drop-shadow(0 30px 50px rgba(0,0,0,0.95))',
                 pointerEvents: 'none',
               }}
             >
@@ -133,18 +137,18 @@ export const Act1CaosVortex: React.FC = () => {
         })}
       </div>
 
-      {/* Dark Translucent Central Overlay for Typography Readability */}
+      {/* Radial vignette for high contrast typography */}
       <div
         style={{
           position: 'absolute',
           inset: 0,
           background:
-            'radial-gradient(circle at center, rgba(0, 0, 0, 0.82) 0%, rgba(0, 0, 0, 0.45) 55%, transparent 100%)',
+            'radial-gradient(circle at center, rgba(0, 0, 0, 0.88) 0%, rgba(0, 0, 0, 0.5) 60%, transparent 100%)',
           pointerEvents: 'none',
         }}
       />
 
-      {/* Hero Typography Container (Safe Vertical Area) */}
+      {/* MONOLITHIC SINGLE TEXT DISPLAY (Zero Pills, Pure Typography) */}
       <div
         style={{
           position: 'absolute',
@@ -152,103 +156,45 @@ export const Act1CaosVortex: React.FC = () => {
           left: '50%',
           transform: 'translate(-50%, -50%)',
           width: '88%',
-          maxWidth: 920,
+          maxWidth: 960,
           textAlign: 'center',
           zIndex: 40,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: 20,
         }}
       >
-        {/* Pill Label */}
-        <div
-          style={{
-            padding: '10px 24px',
-            borderRadius: 999,
-            backgroundColor: 'rgba(255, 255, 255, 0.06)',
-            border: `1px solid ${THEME.colors.borderGlass}`,
-            backdropFilter: 'blur(25px)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-            opacity: interpolate(frame, [5, 22], [0, 1], {
-              extrapolateLeft: 'clamp',
-              extrapolateRight: 'clamp',
-            }),
-          }}
-        >
-          <span
+        {showText1 && (
+          <h1
             style={{
-              width: 8,
-              height: 8,
-              borderRadius: '50%',
-              backgroundColor: THEME.colors.brandPink,
-              boxShadow: `0 0 12px ${THEME.colors.brandPink}`,
-            }}
-          />
-          <span
-            style={{
-              fontSize: 15,
-              fontWeight: 700,
-              letterSpacing: THEME.typography.trackingBadge,
-              textTransform: 'uppercase',
-              color: THEME.colors.textSecondary,
+              fontSize: 88,
+              fontWeight: 800,
+              lineHeight: 1.05,
+              letterSpacing: THEME.typography.trackingTight,
+              color: THEME.colors.textPrimary,
+              margin: 0,
+              opacity: text1Opacity,
+              transform: `translateY(${text1Y}px)`,
             }}
           >
-            El dilema cotidiano
-          </span>
-        </div>
+            Tengo muchas prendas.
+          </h1>
+        )}
 
-        {/* Line 1: "Tengo muchas prendas" */}
-        <h1
-          style={{
-            fontSize: 74,
-            fontWeight: 700,
-            lineHeight: 1.08,
-            letterSpacing: THEME.typography.trackingTight,
-            color: THEME.colors.textPrimary,
-            margin: 0,
-            opacity: line1Opacity,
-            transform: `translateY(${line1Y}px)`,
-          }}
-        >
-          Tengo muchas prendas
-        </h1>
-
-        {/* Line 2: "pero no sé qué ponerme." */}
-        <h2
-          style={{
-            fontSize: 82,
-            fontWeight: 800,
-            lineHeight: 1.05,
-            letterSpacing: THEME.typography.trackingTight,
-            color: THEME.colors.brandPink,
-            textShadow: '0 0 50px rgba(255, 102, 196, 0.5)',
-            margin: 0,
-            opacity: line2Opacity,
-            transform: `translateY(${line2Y}px) scale(${line2Scale})`,
-          }}
-        >
-          pero no sé qué ponerme.
-        </h2>
-
-        {/* Subtitle */}
-        <p
-          style={{
-            marginTop: 10,
-            fontSize: 24,
-            fontWeight: 400,
-            color: THEME.colors.textSecondary,
-            maxWidth: 640,
-            opacity: interpolate(frame, [75, 100], [0, 1], {
-              extrapolateLeft: 'clamp',
-              extrapolateRight: 'clamp',
-            }),
-          }}
-        >
-          El 80% de tu armario se queda sin usar. Hasta ahora.
-        </p>
+        {showText2 && (
+          <h1
+            style={{
+              fontSize: 92,
+              fontWeight: 800,
+              lineHeight: 1.05,
+              letterSpacing: THEME.typography.trackingTight,
+              color: THEME.colors.brandPink,
+              textShadow: '0 0 60px rgba(255, 102, 196, 0.6)',
+              margin: 0,
+              opacity: text2Opacity,
+              transform: `translateY(${text2Y}px)`,
+            }}
+          >
+            Pero nunca sé qué ponerme.
+          </h1>
+        )}
       </div>
     </AbsoluteFill>
   );

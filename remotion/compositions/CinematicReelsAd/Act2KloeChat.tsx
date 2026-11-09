@@ -16,7 +16,7 @@ export const Act2KloeChat: React.FC = () => {
   const { fps } = useVideoConfig();
 
   // Scene transition
-  const sceneOpacity = interpolate(frame, [0, 15, 210, 230], [0, 1, 1, 0], {
+  const sceneOpacity = interpolate(frame, [0, 12, 210, 225], [0, 1, 1, 0], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
@@ -28,35 +28,34 @@ export const Act2KloeChat: React.FC = () => {
     config: THEME.springs.kloeBouncy,
   });
   const mascotScale = interpolate(mascotSpring, [0, 1], [0, 1]);
-  const mascotY = interpolate(mascotSpring, [0, 1], [60, 0]);
-
-  // Mascot organic idle float (sine wave)
+  const mascotY = interpolate(mascotSpring, [0, 1], [80, 0]);
   const idleY = Math.sin(frame * 0.08) * 8;
 
-  // User Message Spring (comes in from the right)
-  const userMsgSpring = spring({
-    frame: frame - 40,
+  // Single Text 1 (Frames 20 - 105): "Kloe, no sé qué ponerme hoy."
+  const showText1 = frame >= 20 && frame < 110;
+  const text1Spring = spring({
+    frame: frame - 25,
     fps,
     config: THEME.springs.appleSnappy,
   });
-  const userMsgX = interpolate(userMsgSpring, [0, 1], [80, 0]);
-  const userMsgOpacity = interpolate(userMsgSpring, [0, 1], [0, 1]);
+  const text1Y = interpolate(text1Spring, [0, 1], [35, 0]);
+  const text1Opacity = interpolate(frame, [20, 32, 98, 110], [0, 1, 1, 0], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  });
 
-  // Thinking dots animation (frame 80 - 120)
-  const isThinking = frame >= 80 && frame < 125;
-  const dot1 = Math.sin(frame * 0.3) * 6;
-  const dot2 = Math.sin((frame + 3) * 0.3) * 6;
-  const dot3 = Math.sin((frame + 6) * 0.3) * 6;
-
-  // Kloe Reply Bubble Spring
-  const replySpring = spring({
-    frame: frame - 125,
+  // Single Text 2 (Frames 115 - 220): "Tengo tu look. En 3 segundos."
+  const showText2 = frame >= 110;
+  const text2Spring = spring({
+    frame: frame - 118,
     fps,
     config: THEME.springs.appleSnappy,
   });
-  const replyY = interpolate(replySpring, [0, 1], [40, 0]);
-  const replyScale = interpolate(replySpring, [0, 1], [0.92, 1]);
-  const replyOpacity = interpolate(replySpring, [0, 1], [0, 1]);
+  const text2Y = interpolate(text2Spring, [0, 1], [35, 0]);
+  const text2Opacity = interpolate(frame, [110, 124, 205, 220], [0, 1, 1, 0], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  });
 
   return (
     <AbsoluteFill
@@ -67,213 +66,85 @@ export const Act2KloeChat: React.FC = () => {
         fontFamily: THEME.typography.fontFamily,
       }}
     >
-      <CinematicBackground accentIntensity={0.22} glowY={42} />
+      <CinematicBackground accentIntensity={0.22} glowY={44} />
 
-      {/* Top Header */}
+      {/* Central Area: Kloe Mascot + Monolithic Dialogue */}
       <div
         style={{
           position: 'absolute',
-          top: 140,
-          width: '100%',
-          textAlign: 'center',
-          zIndex: 10,
-        }}
-      >
-        <p
-          style={{
-            fontSize: 16,
-            fontWeight: 700,
-            color: THEME.colors.brandPink,
-            letterSpacing: THEME.typography.trackingBadge,
-            textTransform: 'uppercase',
-            margin: '0 0 10px 0',
-          }}
-        >
-          Tu estilista personal
-        </p>
-        <h2
-          style={{
-            fontSize: 54,
-            fontWeight: 800,
-            color: THEME.colors.textPrimary,
-            letterSpacing: THEME.typography.trackingHeadline,
-            margin: 0,
-          }}
-        >
-          Solo habla con Kloe.
-        </h2>
-      </div>
-
-      {/* Center Chat Container */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '46%',
+          top: '48%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
-          width: '90%',
-          maxWidth: 820,
+          width: '88%',
+          maxWidth: 920,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          gap: 28,
+          gap: 48,
           zIndex: 30,
         }}
       >
-        {/* Kloe Floating Avatar */}
+        {/* Kloe Floating Bubble Avatar */}
         <div
           style={{
             transform: `scale(${mascotScale}) translateY(${mascotY + idleY}px)`,
-            filter: 'drop-shadow(0 20px 45px rgba(255, 102, 196, 0.55))',
+            filter: 'drop-shadow(0 25px 55px rgba(255, 102, 196, 0.6))',
           }}
         >
           <Img
             src={staticFile('kloe-avatar-v2.png')}
-            style={{ width: 140, height: 140, objectFit: 'contain' }}
+            style={{ width: 180, height: 180, objectFit: 'contain' }}
           />
         </div>
 
-        {/* User Message Bubble (Right aligned) */}
-        <div
-          style={{
-            alignSelf: 'flex-end',
-            maxWidth: '85%',
-            opacity: userMsgOpacity,
-            transform: `translateX(${userMsgX}px)`,
-            padding: '22px 30px',
-            borderRadius: '32px 32px 8px 32px',
-            backgroundColor: '#1E1E26',
-            border: `1px solid ${THEME.colors.borderGlass}`,
-            boxShadow: '0 25px 50px rgba(0, 0, 0, 0.6)',
-          }}
-        >
-          <p
-            style={{
-              margin: 0,
-              fontSize: 28,
-              lineHeight: 1.35,
-              fontWeight: 500,
-              color: THEME.colors.textPrimary,
-            }}
-          >
-            “Kloe, tengo cena hoy y no sé qué ponerme.”
-          </p>
-        </div>
-
-        {/* Thinking Indicator */}
-        {isThinking && (
+        {/* Text 1: The User's Dilemma */}
+        {showText1 && (
           <div
             style={{
-              alignSelf: 'flex-start',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 12,
-              padding: '16px 26px',
-              borderRadius: 999,
-              backgroundColor: 'rgba(30, 30, 38, 0.7)',
-              backdropFilter: 'blur(20px)',
-              border: `1px solid ${THEME.colors.borderSubtle}`,
+              textAlign: 'center',
+              opacity: text1Opacity,
+              transform: `translateY(${text1Y}px)`,
             }}
           >
-            <span
+            <p
               style={{
-                width: 10,
-                height: 10,
-                borderRadius: '50%',
-                backgroundColor: THEME.colors.brandPink,
-                transform: `translateY(${dot1}px)`,
-              }}
-            />
-            <span
-              style={{
-                width: 10,
-                height: 10,
-                borderRadius: '50%',
-                backgroundColor: THEME.colors.brandPink,
-                transform: `translateY(${dot2}px)`,
-              }}
-            />
-            <span
-              style={{
-                width: 10,
-                height: 10,
-                borderRadius: '50%',
-                backgroundColor: THEME.colors.brandPink,
-                transform: `translateY(${dot3}px)`,
-              }}
-            />
-            <span
-              style={{
-                marginLeft: 8,
-                fontSize: 16,
-                fontWeight: 600,
-                color: THEME.colors.textSecondary,
+                margin: 0,
+                fontSize: 64,
+                lineHeight: 1.15,
+                fontWeight: 700,
+                color: THEME.colors.textPrimary,
+                letterSpacing: THEME.typography.trackingTight,
               }}
             >
-              Kloe está analizando tu armario...
-            </span>
+              “Kloe, no sé qué ponerme hoy.”
+            </p>
           </div>
         )}
 
-        {/* Kloe Reply Bubble (Left aligned) */}
-        <div
-          style={{
-            alignSelf: 'flex-start',
-            maxWidth: '92%',
-            opacity: replyOpacity,
-            transform: `translateY(${replyY}px) scale(${replyScale})`,
-            padding: '26px 32px',
-            borderRadius: '32px 32px 32px 8px',
-            backgroundColor: 'rgba(25, 25, 32, 0.92)',
-            backdropFilter: 'blur(35px)',
-            border: `1px solid ${THEME.colors.borderPink}`,
-            boxShadow:
-              '0 30px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(255, 102, 196, 0.25)',
-          }}
-        >
+        {/* Text 2: Kloe's Instant Solution */}
+        {showText2 && (
           <div
             style={{
-              fontSize: 14,
-              fontWeight: 700,
-              color: THEME.colors.brandPink,
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
-              marginBottom: 8,
+              textAlign: 'center',
+              opacity: text2Opacity,
+              transform: `translateY(${text2Y}px)`,
             }}
           >
-            Kloe AI · Recomendación de Estilo
+            <p
+              style={{
+                margin: 0,
+                fontSize: 68,
+                lineHeight: 1.12,
+                fontWeight: 800,
+                color: THEME.colors.brandPink,
+                letterSpacing: THEME.typography.trackingTight,
+                textShadow: '0 0 50px rgba(255, 102, 196, 0.5)',
+              }}
+            >
+              “Tengo tu look.<br />En 3 segundos.”
+            </p>
           </div>
-          <p
-            style={{
-              margin: 0,
-              fontSize: 30,
-              lineHeight: 1.4,
-              fontWeight: 600,
-              color: '#FFFFFF',
-            }}
-          >
-            “Tranquilo. Tengo la combinación exacta con tu ropa de siempre. Mira esto:”
-          </p>
-
-          <div
-            style={{
-              marginTop: 18,
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 10,
-              padding: '10px 20px',
-              borderRadius: 999,
-              backgroundColor: 'rgba(255, 102, 196, 0.15)',
-              border: `1px solid ${THEME.colors.brandPink}`,
-              color: THEME.colors.brandPink,
-              fontSize: 16,
-              fontWeight: 700,
-            }}
-          >
-            <span>✦</span>
-            <span>Ensamblando outfit personalizado</span>
-          </div>
-        </div>
+        )}
       </div>
     </AbsoluteFill>
   );
