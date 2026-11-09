@@ -3372,3 +3372,25 @@ Ejecución del Consejo de Negocio con 4 subagentes especializados (`business-bel
   - `app/(app)/create/page.tsx`: bloqueo inmediato `if (loading) return; setLoading(true);` y propiedad `disabled={loading}` en `handleSave` y `handleSaveWithoutRedirect`.
   - `app/(app)/messages/[id]/page.tsx`: cerrojo `isSendingRef` para impedir duplicados al enviar mensajes rápidamente.
   - `app/(app)/post/[id]/page.tsx`: control de envío y reporte mediante `showDatabaseError` en comentarios.
+
+### 52. Vídeo Publicitario Cinemático Spotify 3D + Apple Motion Graphics (Noviembre 2026)
+- **Metodología y Storyboard Técnico (`storyboard_spotify_apple_klozet.md`)**:
+  - Estructurado siguiendo la descomposición de planos del anuncio 3D de Spotify analizado en el vídeo de referencia, adaptado al lenguaje de diseño de producto de Apple Keynote y Remotion (TypeScript).
+  - Formato vertical nativo 9:16 (1080×1920 a 60 fps, 1140 frames / 19.0 segundos exactos).
+- **Diseño Sonoro y Tensión Acústica (`public/ad-assets/soundtrack-spotify-apple.wav`)**:
+  - Banda sonora sintetizada en estéreo a 48 kHz con estructura de tráiler cinematográfico: sub-drone continuo a 42 Hz, latido de tensión (*heartbeat kicks*) a 120 BPM, caída a silencio absoluto previo al drop a los 7.1s, y sub-boom explosivo a 48 Hz coordinado al frame exacto con el ensamblaje de prendas.
+  - Efectos foley y SFX sincronizados: `whoosh.wav`, `swish.wav`, `hit.wav`, `click.wav` y `riser.wav`.
+- **Estructura Cinemática en 7 Planos (`remotion/compositions/SpotifyAppleAd/`)**:
+  1. **Shot 1 · Logo in the Dark (F0–F160)**: Moneda 3D gruesa de Klozet orbitando sobre suelo reflectante brillante (*glossy floor*) con halo rosa radial de fondo. Titular único: *"Tu armario."*
+  2. **Shot 2 · Vórtice del Dilema (F140–F300)**: Torbellino 3D de prendas flotantes desordenadas con física orbital. Titular único: *"Tengo muchas prendas pero no sé qué ponerme."*
+  3. **Shot 3 · Kloe Interviene / The Freeze (F280–F460)**: Congelación espacial de las prendas suspendidas. Llegada elástica de la mascota Kloe con aura radiante rosa. Titular único: *"Déjamelo a mí."*
+  4. **Shot 4 · Mix & Match / Bifurcación (F440–F630)**: Despeje del caos y protagonismo de las dos prendas clave (`prenda-top-negro.png` y `prenda-vaquero.png`). Bifurcación cinética hacia dos estilos distintos con impacto de sub-graves. Titular único: *"Dos estilos. Tus mismas prendas."*
+  5. **Shot 5 · Carrusel de Tarjetas 3D Revista / Spotify Cards (F610–F810)**: Dos tarjetas 3D en perspectiva orbital con los collages anatómicos reales (`collage-casual-chic.jpg` y `collage-quiet-luxury.jpg`), sombras de contacto profundas y barrido especular. Titular único: *"Outfits de revista con tu ropa."*
+  6. **Shot 6 · Integración en el Lienzo del iPhone 16 Pro (F790–F990)**: Chasis de titanio con Dynamic Island y barra inferior `.apple-glass-bar`; el collage se acopla magnéticamente en el canvas de Kloe con respuesta háptica. Titular único: *"En tu móvil. Cada mañana."*
+  7. **Shot 7 · Logo Returns y Outro (F970–F1140)**: Ascenso frontal de la moneda 3D sobre el suelo brillante, anillos de pulso rosa, destello especular en el logotipo bubble, claim *"Tu estilo. Tu Klozet."* y llamada a la acción hacia `klozet.es`.
+- **Reglas de Calidad y Anti-Slop Aplicadas**:
+  - Exactamente un único titular tipográfico monolítico por pantalla (sin pastillas, chips genéricos de IA ni insignias artificiales).
+  - Proporción anatómica realista y sombras de contacto volumétricas en prendas y collages.
+- **Comandos de Exportación y Pipeline**:
+  - `npm run remotion:render-spotify` $\rightarrow$ Exporta directamente el archivo de vídeo `out/klozet-spotify-apple.mp4`.
+  - Script de utilidad `scripts/patch-next.js` para corregir la interpolación de rutas con comillas en el loader de metadata de Next.js (`next-metadata-route-loader.js`) en Windows.
