@@ -6,10 +6,15 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "remotion:preview": "remotion preview remotion/index.ts",
+    "remotion:render": "remotion render remotion/index.ts KlozetAppleAd out/klozet-ad.mp4",
+    "remotion:render-vertical": "remotion render remotion/index.ts KlozetAppleAdVertical out/klozet-ad-vertical.mp4"
   },
   "dependencies": {
     "@imgly/background-removal": "^1.7.0",
+    "@remotion/cli": "^4.0.542",
+    "@remotion/player": "^4.0.542",
     "@stripe/react-stripe-js": "^7.0.0",
     "@stripe/stripe-js": "^10.1.0",
     "@supabase/auth-helpers-nextjs": "^0.15.0",
@@ -24,6 +29,7 @@
     "puppeteer": "^24.34.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "remotion": "^4.0.542",
     "sonner": "^2.0.7",
     "stripe": "^22.5.0",
     "zustand": "^5.0.9"

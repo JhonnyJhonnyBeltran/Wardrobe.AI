@@ -3280,3 +3280,21 @@ Ejecución del Consejo de Negocio con 4 subagentes especializados (`business-bel
 
 2. **Lienzo Blanco Permanente en Tarjetas del Grid (`components/OutfitCard.tsx`):**
    - En `components/OutfitCard.tsx`, se prioriza la composición interactiva (`hasPositionedItems && items.length > 0`) sobre `outfitPreviewImage`, garantizando que outfits antiguos creados con fondos negros se rendericen con prendas transparentes sobre el lienzo blanco limpio (`bg-white`) sin ningún fondo oscuro.
+
+
+### 47. Entorno de Producción de Vídeo Publicitario y Motion Graphics con Remotion (Noviembre 2026)
+- **Framework de Vídeo Programático**:
+  - Instalado y configurado **Remotion** (`remotion`, `@remotion/cli`, `@remotion/player`).
+  - Permite generar anuncios publicitarios cinemáticos estilo Apple Keynote a 60 fps basados en código React y TypeScript.
+- **Estructura de Animación (`remotion/`)**:
+  - `remotion/index.ts`: Punto de entrada registrado con `registerRoot`.
+  - `remotion/Root.tsx`: Composiciones multiformato (`KlozetAppleAd` 1920x1080 16:9 y `KlozetAppleAdVertical` 1080x1920 9:16).
+  - `remotion/constants.ts`: Paleta cromática oficial y presets físicos de muelles (`spring()`).
+  - `remotion/components/`: Primitivas reutilizables (`DeviceMockup` iPhone 16 Pro con Dynamic Island y CSS 3D, `KineticText` con entrada palabra por palabra).
+  - `remotion/compositions/KlozetAppleAd/`: Coreografía por escenas (`Scene1Hook`, `Scene2DeviceRise`, `Scene3KloeAI`, `Scene4Outro`).
+- **Skill de Motion Design**:
+  - Creada `.agents/skills/remotion-motion-expert/SKILL.md` para estandarizar el diseño de anuncios Apple, física spring y directrices de renderizado.
+- **Scripts de NPM**:
+  - Previsualización en navegador en tiempo real: `npm run remotion:preview`
+  - Renderizado MP4 (Landscape): `npm run remotion:render`
+  - Renderizado MP4 (Vertical para Shorts/Reels/TikTok): `npm run remotion:render-vertical`
