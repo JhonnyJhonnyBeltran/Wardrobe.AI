@@ -12,6 +12,7 @@ import { useMessageStore } from '@/store/messageStore';
 import { useUiStore } from '@/store/uiStore';
 import { realtimeManager } from '@/lib/realtime/RealtimeManager';
 import { deleteConversationForUser } from '@/lib/services/messageService';
+import { showDatabaseError } from '@/lib/errorModal';
 
 // Types
 interface Message {
@@ -73,6 +74,7 @@ export default function ChatPage() {
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const typingTimeoutRef = useRef<any>(null);
     const channelRef = useRef<any>(null);
+    const isSendingRef = useRef(false);
     const menuRef = useRef<HTMLDivElement>(null);
     const [showMenu, setShowMenu] = useState(false);
     
@@ -258,7 +260,8 @@ export default function ChatPage() {
 
     const sendMessage = async () => {
         const partnerId = resolvedTargetId;
-        if (!newMessage.trim() || !user || !partnerId) return;
+        if (isSendingRef.current || !newMessage.trim() || !user || !partnerId) return;
+        isSendingRef.current = true;
 
         const content = newMessage.trim();
         setNewMessage(''); // Optimistic clear
@@ -340,6 +343,9 @@ export default function ChatPage() {
             setNewMessage(content);
             // Remove optimistic message
             setMessages((prev: Message[]) => prev.filter(m => m.id !== tempId));
+            showDatabaseError(error, 'No se pudo enviar el mensaje.');
+        } finally {
+            isSendingRef.current = false;
         }
     };
 

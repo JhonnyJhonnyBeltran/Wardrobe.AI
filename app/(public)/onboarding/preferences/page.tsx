@@ -33,6 +33,7 @@ import { useUser } from '@/store/userStore';
 import { useTourStore } from '@/store/tourStore';
 import { useSocial } from '@/lib/hooks/useSocial';
 import { supabase } from '@/lib/supabase/client';
+import { showDatabaseError } from '@/lib/errorModal';
 import {
     BODY_TYPES_BY_GENDER,
     EYE_COLOR_OPTIONS,
@@ -396,7 +397,7 @@ function PreferencesContent() {
     };
 
     const handleComplete = async () => {
-        if (!user) return;
+        if (!user || isSaving) return;
         setIsSaving(true);
 
         const ageRangeComputed = getAgeRangeFromAge(age);
@@ -501,6 +502,7 @@ function PreferencesContent() {
             }
         } catch (err: any) {
             console.error('Error saving onboarding preferences:', err);
+            showDatabaseError(err, 'No pudimos guardar tus preferencias. Por favor, inténtalo de nuevo.');
             setIsSaving(false);
         }
     };

@@ -14,7 +14,16 @@ export default function SystemModal() {
 
     if (!modal) return null;
 
-    const { title, message, type, onConfirm, onCancel, confirmText = 'Aceptar', cancelText = 'Cancelar' } = modal;
+    const {
+        title,
+        message,
+        type,
+        onConfirm,
+        onCancel,
+        confirmText = 'Aceptar',
+        cancelText = 'Cancelar',
+        confirmVariant,
+    } = modal;
 
     const getIcon = () => {
         switch (type) {
@@ -82,7 +91,7 @@ export default function SystemModal() {
                             )}
 
                             <Button
-                                variant={type === 'error' ? 'destructive' : 'primary'}
+                                variant={confirmVariant || 'primary'}
                                 onClick={handleConfirm}
                                 className={type !== 'confirm' && !onCancel ? "col-span-2 w-full" : "w-full"}
                             >

@@ -49,6 +49,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useUiStore } from '@/store/uiStore';
 import { useTourStore } from '@/store/tourStore';
+import { showDatabaseError } from '@/lib/errorModal';
 
 const OUTFIT_OCCASIONS = [
     { id: 'everyday', label: 'Diario', icon: Sun },
@@ -468,7 +469,8 @@ export default function CreateOutfitPage() {
 
     // Helper to save outfit without redirecting (for publish flow)
     const handleSaveWithoutRedirect = async (): Promise<string | null> => {
-        if (isEmpty || !outfitName.trim()) return null;
+        if (loading || isEmpty || !outfitName.trim()) return null;
+        setLoading(true);
 
         try {
             const { data: { user } } = await supabase.auth.getUser();
@@ -538,12 +540,16 @@ export default function CreateOutfitPage() {
             return newOutfitId;
         } catch (error) {
             console.error('Error saving outfit:', error);
+            showDatabaseError(error, 'No se pudo guardar el outfit.');
             return null;
+        } finally {
+            setLoading(false);
         }
     };
 
     // Save outfit
     const handleSave = async () => {
+        if (loading) return;
         if (isEmpty) {
             toast.error('No puedes guardar un outfit sin prendas');
             return;
@@ -553,14 +559,15 @@ export default function CreateOutfitPage() {
             return;
         }
 
+        setLoading(true);
+
         try {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) {
                 toast.error('Debes iniciar sesión para guardar outfits');
+                setLoading(false);
                 return;
             }
-
-            setLoading(true);
 
             // 1. Generate Image
             const finalImage = await canvasRef.current?.exportToImage() || null;
@@ -692,6 +699,7 @@ export default function CreateOutfitPage() {
         } catch (error) {
             console.error('Error saving outfit:', error);
             toast.error('Error al guardar el outfit. Inténtalo de nuevo.');
+            showDatabaseError(error, 'No se pudo guardar el outfit.');
         } finally {
             setLoading(false);
         }
@@ -951,6 +959,7 @@ export default function CreateOutfitPage() {
                                                 onClick={handleSave}
                                                 glow={true}
                                                 loading={loading}
+                                                disabled={loading}
                                                 className="w-full rounded-2xl py-3.5 text-sm font-semibold shadow-xl"
                                             >
                                                 <Save className="w-5 h-5 mr-2" />
@@ -1198,6 +1207,7 @@ export default function CreateOutfitPage() {
                                         <Button
                                             onClick={handleSave}
                                             loading={loading}
+                                            disabled={loading}
                                             className="flex-1 py-3 bg-[var(--brand-pink)] hover:bg-[#ff3377] text-white rounded-xl shadow-lg shadow-[var(--brand-pink)]/20 transition-all font-medium"
                                         >
                                             <Save className="w-4 h-4 mr-2" />

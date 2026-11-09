@@ -12,6 +12,7 @@ import { useTourStore } from '@/store/tourStore';
 import { Button } from '@/components';
 import OutfitCard from '@/components/OutfitCard';
 import { haptics } from '@/lib/haptic';
+import { showDatabaseError } from '@/lib/errorModal';
 
 interface StyleOption {
     id: string;
@@ -307,7 +308,7 @@ export default function CreatePostPage() {
     };
 
     const handlePublish = async () => {
-        if (!validatePost() || !user) return;
+        if (publishing || !validatePost() || !user) return;
         setPublishing(true);
         setErrorMessage(null);
 
@@ -388,6 +389,7 @@ export default function CreatePostPage() {
         } catch (err: any) {
             console.error('Error publishing:', err);
             setErrorMessage(err?.message || 'Error al publicar. Por favor intenta de nuevo.');
+            showDatabaseError(err, 'No se pudo publicar. Por favor intenta de nuevo.');
         } finally {
             setPublishing(false);
         }

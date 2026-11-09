@@ -22,6 +22,7 @@ import { useFeedStore } from '@/store/feedStore';
 import { useSearchStore } from '@/store/searchStore';
 import { likeManager } from '@/lib/services/likeManager';
 import { interestManager } from '@/lib/services/interestManager';
+import { showDatabaseError } from '@/lib/errorModal';
 
 interface Comment {
     id: string;
@@ -708,6 +709,7 @@ export default function PostDetailPage() {
 
         } catch (error) {
             console.error('Error adding comment:', error);
+            showDatabaseError(error, 'No se pudo publicar el comentario.');
         } finally {
             setSubmittingComment(false);
         }

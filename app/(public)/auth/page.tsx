@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
@@ -12,6 +12,7 @@ import { useSocial } from '@/lib/hooks/useSocial';
 import { supabase } from '@/lib/supabase/client';
 import { useUser } from '@/store/userStore';
 import { toast } from 'sonner';
+import { showDatabaseError } from '@/lib/errorModal';
 
 export default function AuthPage() {
     const router = useRouter();
@@ -44,6 +45,7 @@ export default function AuthPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [emailConfirmPending, setEmailConfirmPending] = useState(false);
+    const isSubmittingRef = useRef(false);
 
     // Reset password state
     const [isResetPassword, setIsResetPassword] = useState(false);
@@ -108,6 +110,8 @@ export default function AuthPage() {
 
     const handleResetPassword = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (loading || isSubmittingRef.current) return;
+        isSubmittingRef.current = true;
         setLoading(true);
         try {
             const res = await resetPasswordForEmail(resetEmail);
@@ -118,14 +122,18 @@ export default function AuthPage() {
                 toast.error(res.error || 'Error al enviar enlace de recuperación');
             }
         } catch (err: any) {
-            toast.error(err?.message || 'Error inesperado');
+            console.error('Reset password error:', err);
+            showDatabaseError(err, 'No se pudo enviar el enlace de recuperación.');
         } finally {
             setLoading(false);
+            isSubmittingRef.current = false;
         }
     };
 
     const handleEmailAuth = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (loading || isSubmittingRef.current) return;
+        isSubmittingRef.current = true;
         setLoading(true);
 
         try {
@@ -165,7 +173,7 @@ export default function AuthPage() {
                     } else if (msg.toLowerCase().includes('invalid login') || msg.toLowerCase().includes('invalid credentials') || msg.toLowerCase().includes('invalid email')) {
                         toast.error('Email o contraseña incorrectos');
                     } else {
-                        toast.error(msg);
+                        showDatabaseError(res.error || msg, msg);
                     }
                 }
             } else {
@@ -184,18 +192,21 @@ export default function AuthPage() {
                         setEmailConfirmPending(true);
                     }
                 } else {
-                    toast.error(res.error || 'Error al crear cuenta');
+                    showDatabaseError(res.error, res.error || 'Error al crear cuenta');
                 }
             }
         } catch (err: any) {
             console.error('Auth error:', err);
-            toast.error(err?.message || 'Ha ocurrido un error inesperado');
+            showDatabaseError(err, 'Ha ocurrido un error inesperado al procesar tu cuenta');
         } finally {
             setLoading(false);
+            isSubmittingRef.current = false;
         }
     };
 
     const handleGoogleLogin = async () => {
+        if (loading || isSubmittingRef.current) return;
+        isSubmittingRef.current = true;
         setLoading(true);
         try {
             const { error } = await supabase.auth.signInWithOAuth({
@@ -211,8 +222,9 @@ export default function AuthPage() {
             if (error) throw error;
         } catch (err: any) {
             console.error('Google auth error:', err);
-            toast.error('Error al iniciar sesión con Google');
+            showDatabaseError(err, 'Error al iniciar sesión con Google');
             setLoading(false);
+            isSubmittingRef.current = false;
         }
     };
 

@@ -21,6 +21,7 @@ import { Button, AdvisorModal } from '@/components';
 import { useBodyScrollLock } from '@/lib/hooks';
 import { useUiStore } from '@/store/uiStore';
 import { normalizeBrand, generateSlug } from '@/lib/utils/string';
+import { showDatabaseError } from '@/lib/errorModal';
 
 // Local imports
 import { useAddItemForm } from './hooks/useAddItemForm';
@@ -157,6 +158,7 @@ export default function AddItemModal({
                 onClose();
             } catch (err) {
                 console.error('[AddItemModal] Error in batch handleSubmit:', err);
+                showDatabaseError(err, 'No se pudieron guardar las prendas. Inténtalo de nuevo.');
             } finally {
                 setIsSubmitting(false);
                 setSavingProgress(null);
@@ -246,6 +248,7 @@ export default function AddItemModal({
             onClose();
         } catch (err) {
             console.error('[AddItemModal] Error in handleSubmit:', err);
+            showDatabaseError(err, 'No se pudo guardar la prenda. Inténtalo de nuevo.');
         } finally {
             setIsSubmitting(false);
         }

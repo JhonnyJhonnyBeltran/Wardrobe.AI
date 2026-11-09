@@ -12,7 +12,9 @@
     "remotion:render-vertical": "remotion render remotion/index.ts KlozetAppleAdVertical out/klozet-ad-vertical.mp4",
     "remotion:render-armario": "remotion render remotion/index.ts KlozetArmarioLleno out/klozet-armario-ad.mp4",
     "remotion:render-armario-vertical": "remotion render remotion/index.ts KlozetArmarioLlenoVertical out/klozet-armario-vertical.mp4",
-    "remotion:render-reels": "remotion render remotion/index.ts CinematicReelsAd out/klozet-reels-cinematic.mp4"
+    "remotion:render-reels": "remotion render remotion/index.ts CinematicReelsAd out/klozet-reels-cinematic.mp4",
+    "remotion:render-spotify": "remotion render remotion/index.ts SpotifyAppleAd out/klozet-spotify-apple.mp4",
+    "postinstall": "node scripts/patch-next.js"
   },
   "dependencies": {
     "@imgly/background-removal": "^1.7.0",

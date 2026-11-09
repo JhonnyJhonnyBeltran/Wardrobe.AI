@@ -3357,3 +3357,18 @@ Ejecución del Consejo de Negocio con 4 subagentes especializados (`business-bel
   - Por defecto, la sección de estilos se muestra colapsada, renderizando únicamente las pastillas de los estilos elegidos por el usuario (en rosa oficial `bg-[var(--brand-pink)] text-white` con opción de borrado rápido en cada pastilla).
   - Integrado botón de pastilla rosa *"Añadir (+)"* al final de la fila.
   - Al hacer clic en el botón de "+", se despliega suavemente un buscador reactivo y el catálogo completo de estilos para alternar etiquetas, con botón de cierre *"Listo"*.
+
+### 51. Modal Personalizado de Errores de Base de Datos y Blindaje Anti-Spam en Formularios (Noviembre 2026)
+- **Modal de Errores de BD y HTTP (`lib/errorModal.ts` & `components/SystemModal.tsx`)**:
+  - Detección y normalización inteligente de códigos de estado HTTP y Supabase (`401`, `403`, `404`, `429`, `500`, `PGRST116`, etc.).
+  - Interfaz no intrusiva adaptada a la estética oficial de Klozet: botón rosa `primary` en lugar de advertencias rojas destructivas alarmantes, textos comprensibles y respetuosos ("Sesión no iniciada", "Elemento no encontrado", "Demasiadas solicitudes", "Problema de conexión").
+  - Redirección automática a `/auth` al pulsar *"Iniciar sesión"* en caso de sesión caducada (`401`).
+- **Blindaje Anti-Doble Clic y Anti-Spam en Accesos a BD**:
+  - `app/(public)/auth/page.tsx`: bloqueo con `isSubmittingRef` y estado `loading` en login, registro, recuperación y Google OAuth para evitar duplicación de cuentas y colisiones concurrentes.
+  - `app/(public)/onboarding/preferences/page.tsx`: guardia `if (!user || isSaving) return;` en `handleComplete`.
+  - `app/(public)/onboarding/username/page.tsx`: guardia `if (!isAvailable || username.length < 3 || !user || isSaving) return;` en `handleSave`.
+  - `components/AddItemModal/index.tsx`: protección de concurrencia `isSubmitting` en subida individual y por lotes, integrando `showDatabaseError`.
+  - `app/(app)/create-post/page.tsx`: guardia `if (publishing || !validatePost() || !user) return;` en `handlePublish`.
+  - `app/(app)/create/page.tsx`: bloqueo inmediato `if (loading) return; setLoading(true);` y propiedad `disabled={loading}` en `handleSave` y `handleSaveWithoutRedirect`.
+  - `app/(app)/messages/[id]/page.tsx`: cerrojo `isSendingRef` para impedir duplicados al enviar mensajes rápidamente.
+  - `app/(app)/post/[id]/page.tsx`: control de envío y reporte mediante `showDatabaseError` en comentarios.

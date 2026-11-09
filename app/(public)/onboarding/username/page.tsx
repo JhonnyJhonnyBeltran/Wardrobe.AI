@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase/client';
 import { motion } from 'framer-motion';
 import { AtSign, ArrowRight, Loader2, User } from 'lucide-react';
 import Image from 'next/image';
+import { showDatabaseError } from '@/lib/errorModal';
 
 export default function UsernameOnboardingPage() {
     const router = useRouter();
@@ -54,7 +55,7 @@ export default function UsernameOnboardingPage() {
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!isAvailable || username.length < 3 || !user) return;
+        if (!isAvailable || username.length < 3 || !user || isSaving) return;
 
         setIsSaving(true);
         try {
@@ -76,6 +77,7 @@ export default function UsernameOnboardingPage() {
         } catch (error: any) {
             console.error('Error saving username:', error);
             setErrorMsg('Error al guardar. Inténtalo de nuevo.');
+            showDatabaseError(error, 'No se pudo guardar el nombre de usuario.');
             setIsSaving(false);
         }
     };

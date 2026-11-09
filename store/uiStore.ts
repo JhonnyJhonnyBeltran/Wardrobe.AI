@@ -10,6 +10,7 @@ interface SystemMessage {
     onCancel?: () => void;
     confirmText?: string;
     cancelText?: string;
+    confirmVariant?: 'primary' | 'secondary' | 'destructive';
 }
 
 export interface PendingUploadItem {
