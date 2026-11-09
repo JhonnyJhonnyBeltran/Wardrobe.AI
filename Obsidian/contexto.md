@@ -3328,3 +3328,22 @@ Ejecución del Consejo de Negocio con 4 subagentes especializados (`business-bel
   - **Acto 5 · Outro Apple (13.4s – 16.0s)**: Logo bubble oficial de Klozet con brillo de titanio, claim *"El armario inteligente que viste tu día"* y botón CTA con barrido de luz especular a `klozet.es`.
 - **Comando de Renderizado**:
   - `npm run remotion:render-reels` (Exporta directamente `out/klozet-reels-cinematic.mp4` a 1080x1920 60fps).
+
+
+### 49. Rediseño del Onboarding, Botones Flotantes del Feed y Banner Kloe (Noviembre 2026)
+- **Modo Claro Obligatorio en Onboarding (`app/(public)/onboarding/preferences/page.tsx`)**:
+  - Forzado el modo claro permanente mediante `useEffect` (`root.classList.remove('dark')` y `colorScheme = 'light'`) para mantener la coherencia con la landing page.
+  - Fondo limpio `#FBFBFD`, bordes sutiles y textos de alto contraste.
+- **Líneas y Relleno Dinámico de los Sliders de Edad y Altura**:
+  - Implementado gradiente dinámico en el track (`linear-gradient(to right, #FF66C4 0%, #FF66C4 ${pct}%, #E4E4E7 ${pct}%, #E4E4E7 100%)`) con borde gris visible `border border-zinc-300`, garantizando contraste nítido y visibilidad de las barras.
+- **Centrado del Botón Continuar**:
+  - Corregido el alineamiento del botón `Continuar >` en el Paso 0: cuando no hay botón "Atrás", se posiciona centrado (`w-full max-w-sm mx-auto`).
+- **Privacidad y Modal de Aviso en Silueta**:
+  - Añadido distintivo de privacidad: *"100% privado · Esta información nunca será visible en tu perfil público"*.
+  - Añadido enlace *"Prefiero no decirlo"*.
+  - Creado modal de alerta reactivo (`showSkipSilhouetteModal`): informa al usuario de que Kloe requiere su silueta para equilibrar caídas, tiros y proporciones, ofreciendo la opción de volver a elegir su silueta o saltárselo de todos modos (`no_specified`).
+- **Botones Flotantes del Feed con Estilo de /closet (`components/FloatingCreateButton.tsx`)**:
+  - Todos los botones de acción (`Nuevo Post`, `Nuevo Outfit`, `Nueva Prenda`) tanto en escritorio como en móvil pasan a ser pastillas rosas `bg-[var(--brand-pink)] text-white shadow-lg` con icono blanco, idénticos a los botones de `/closet`.
+  - El botón de cierre (`X`) adopta también el acabado rosa `bg-[var(--brand-pink)] text-white`.
+- **Banner de Kloe en Armario (`app/(app)/closet/page.tsx`)**:
+  - Añadido texto explícito *"Charla conmigo"* junto al logo/mascota animada de Kloe en el banner superior de `/closet`.

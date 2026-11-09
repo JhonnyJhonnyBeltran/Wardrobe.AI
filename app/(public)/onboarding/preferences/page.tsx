@@ -25,6 +25,8 @@ import {
     Palette,
     Search,
     SlidersHorizontal,
+    ShieldCheck,
+    AlertCircle,
 } from 'lucide-react';
 import { Button, LogoMark } from '@/components';
 import { useUser } from '@/store/userStore';
@@ -194,6 +196,22 @@ function PreferencesContent() {
     const [selectedAccessory, setSelectedAccessory] = useState<string>('minimalista');
     const [styleSearch, setStyleSearch] = useState('');
     const [showAllGenderStyles, setShowAllGenderStyles] = useState(false);
+    const [showSkipSilhouetteModal, setShowSkipSilhouetteModal] = useState(false);
+
+    // Force light mode on Onboarding (never dark)
+    useEffect(() => {
+        const root = document.documentElement;
+        const wasDark = root.classList.contains('dark');
+        root.classList.remove('dark');
+        root.style.colorScheme = 'light';
+        return () => {
+            const savedTheme = localStorage.getItem('klozet_theme');
+            if (savedTheme === 'dark' || (wasDark && !savedTheme)) {
+                root.classList.add('dark');
+                root.style.colorScheme = 'dark';
+            }
+        };
+    }, []);
 
     // DB state
     const [dbStyles, setDbStyles] = useState<any[]>([]);
@@ -284,7 +302,7 @@ function PreferencesContent() {
 
     useEffect(() => {
         const validIds = currentBodyOptions.map(o => o.id);
-        if (!validIds.includes(bodyType)) {
+        if (bodyType !== 'no_specified' && !validIds.includes(bodyType)) {
             setBodyType(currentBodyOptions[0].id);
         }
         if (!user?.height && (height === 168 || height === 165 || height === 178)) {
@@ -363,7 +381,10 @@ function PreferencesContent() {
             }
             if (!gender || !age || !height) return;
         }
-        if (step === 1 && !bodyType) return;
+        if (step === 1 && (!bodyType || bodyType === '')) {
+            setShowSkipSilhouetteModal(true);
+            return;
+        }
         if (step === 2 && selectedStyles.length === 0) return;
 
         if (step < maxStepIndex) {
@@ -499,11 +520,13 @@ function PreferencesContent() {
     }
 
     const firstName = (fullName || user?.name || '').trim().split(' ')[0];
+    const agePercent = Math.max(0, Math.min(100, ((age - 14) / (80 - 14)) * 100));
+    const heightPercent = Math.max(0, Math.min(100, ((height - 145) / (210 - 145)) * 100));
 
     return (
-        <div className="min-h-screen bg-[var(--background)] pb-28 md:pb-32 overflow-hidden flex flex-col selection:bg-[var(--brand-pink)] selection:text-white">
+        <div className="min-h-screen bg-[#FBFBFD] text-zinc-900 pb-28 md:pb-32 overflow-hidden flex flex-col selection:bg-[var(--brand-pink)] selection:text-white">
             {/* Minimal Header with 3 Step Indicators */}
-            <header className="px-6 py-4 flex items-center justify-between sticky top-0 z-50 bg-[var(--background)]/85 backdrop-blur-md border-b border-[var(--border-color)]/30">
+            <header className="px-6 py-4 flex items-center justify-between sticky top-0 z-50 bg-[#FBFBFD]/90 backdrop-blur-md border-b border-zinc-200/80">
                 <div className="flex gap-2 items-center">
                     {Array.from({ length: totalSteps }).map((_, s) => (
                         <button
@@ -682,7 +705,10 @@ function PreferencesContent() {
                                             step={1}
                                             value={age}
                                             onChange={(e) => setAge(Number(e.target.value))}
-                                            className="w-full h-2.5 bg-[var(--background-secondary)] rounded-full appearance-none cursor-pointer accent-[var(--brand-pink)]"
+                                            className="w-full h-2.5 rounded-full appearance-none cursor-pointer accent-[var(--brand-pink)] border border-zinc-300 dark:border-zinc-700 shadow-xs"
+                                            style={{
+                                                background: `linear-gradient(to right, #FF66C4 0%, #FF66C4 ${agePercent}%, #E4E4E7 ${agePercent}%, #E4E4E7 100%)`,
+                                            }}
                                         />
                                         <button
                                             type="button"
@@ -738,7 +764,10 @@ function PreferencesContent() {
                                             step={1}
                                             value={height}
                                             onChange={(e) => setHeight(Number(e.target.value))}
-                                            className="w-full h-2.5 bg-[var(--background-secondary)] rounded-full appearance-none cursor-pointer accent-[var(--brand-pink)]"
+                                            className="w-full h-2.5 rounded-full appearance-none cursor-pointer accent-[var(--brand-pink)] border border-zinc-300 dark:border-zinc-700 shadow-xs"
+                                            style={{
+                                                background: `linear-gradient(to right, #FF66C4 0%, #FF66C4 ${heightPercent}%, #E4E4E7 ${heightPercent}%, #E4E4E7 100%)`,
+                                            }}
                                         />
                                         <button
                                             type="button"
@@ -780,12 +809,21 @@ function PreferencesContent() {
                             transition={{ duration: 0.22 }}
                             className="flex flex-col gap-6 pb-6"
                         >
-                            <div className="space-y-1.5">
-                                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[var(--foreground)]">
-                                    ¿Cuál es tu silueta?
-                                </h1>
+                            <div className="space-y-2">
+                                <div className="flex flex-wrap items-center justify-between gap-2">
+                                    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[var(--foreground)]">
+                                        ¿Cuál es tu silueta?
+                                    </h1>
+                                    <span className="text-xs font-semibold px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 flex items-center gap-1.5">
+                                        <ShieldCheck className="w-3.5 h-3.5" />
+                                        100% privado
+                                    </span>
+                                </div>
                                 <p className="text-sm sm:text-base text-[var(--foreground-secondary)]">
                                     Así Kloe equilibra tiros de pantalón, caídas y volúmenes ideales.
+                                </p>
+                                <p className="text-xs text-[var(--foreground-tertiary)] flex items-center gap-1">
+                                    Esta información es confidencial y nunca será visible en tu perfil público.
                                 </p>
                             </div>
 
@@ -800,8 +838,8 @@ function PreferencesContent() {
                                                 onClick={() => setBodyType(opt.id)}
                                                 className={`text-left p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
                                                     active
-                                                        ? 'bg-[var(--brand-pink)]/10 border-[var(--brand-pink)] text-[var(--foreground)] shadow-xs'
-                                                        : 'bg-[var(--background-secondary)] border-[var(--border-color)] text-[var(--foreground)] hover:border-[var(--foreground-tertiary)]'
+                                                        ? 'bg-[var(--brand-pink)]/10 border-[var(--brand-pink)] text-[var(--foreground)] shadow-xs ring-1 ring-[var(--brand-pink)]'
+                                                        : 'bg-[var(--background-secondary)] border-[var(--border-color)] text-[var(--foreground)] hover:border-[var(--brand-pink)]/40'
                                                 }`}
                                             >
                                                 <div className="min-w-0">
@@ -822,6 +860,17 @@ function PreferencesContent() {
                                             </button>
                                         );
                                     })}
+                                </div>
+
+                                {/* Prefiero no decirlo */}
+                                <div className="pt-2 flex justify-center">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowSkipSilhouetteModal(true)}
+                                        className="text-xs sm:text-sm font-semibold text-[var(--foreground-secondary)] hover:text-[var(--brand-pink)] transition-colors underline decoration-dotted underline-offset-4 cursor-pointer py-1 px-3"
+                                    >
+                                        Prefiero no decirlo
+                                    </button>
                                 </div>
 
                                 {/* Collapsible Optional Colorimetry */}
@@ -1072,13 +1121,13 @@ function PreferencesContent() {
             </main>
 
             {/* Bottom Floating Navigation */}
-            <div className="fixed bottom-0 left-0 right-0 p-4 sm:p-6 bg-gradient-to-t from-[var(--background)] via-[var(--background)] to-transparent z-40 pointer-events-none">
-                <div className="max-w-xl mx-auto flex justify-between gap-3 sm:gap-4 pointer-events-auto">
+            <div className="fixed bottom-0 left-0 right-0 p-4 sm:p-6 bg-gradient-to-t from-[#FBFBFD] via-[#FBFBFD]/95 to-transparent z-40 pointer-events-none">
+                <div className={`max-w-xl mx-auto flex items-center gap-3 sm:gap-4 pointer-events-auto ${step === 0 ? 'justify-center' : 'justify-between'}`}>
                     {step > 0 && (
                         <Button
                             variant="secondary"
                             size="lg"
-                            className="w-14 sm:w-auto sm:px-6 h-13 rounded-full flex items-center justify-center gap-2 cursor-pointer"
+                            className="w-14 sm:w-auto sm:px-6 h-13 rounded-full flex items-center justify-center gap-2 cursor-pointer shrink-0"
                             onClick={() => setStep(prev => prev - 1)}
                             type="button"
                         >
@@ -1089,7 +1138,9 @@ function PreferencesContent() {
 
                     <Button
                         size="lg"
-                        className="flex-1 h-13 rounded-full text-[15px] font-bold max-w-sm ml-auto disabled:opacity-40 disabled:cursor-not-allowed shadow-lg cursor-pointer"
+                        className={`h-13 rounded-full text-[15px] font-bold disabled:opacity-40 disabled:cursor-not-allowed shadow-lg cursor-pointer ${
+                            step === 0 ? 'w-full max-w-sm mx-auto' : 'flex-1 max-w-sm ml-auto'
+                        }`}
                         onClick={handleNext}
                         disabled={
                             (step === 0 && (
@@ -1098,7 +1149,6 @@ function PreferencesContent() {
                                 !height ||
                                 (needsIdentityInput && (!fullName.trim() || fullName.trim().length < 2 || username.length < 3 || isUsernameAvailable === false || isCheckingUsername))
                             )) ||
-                            (step === 1 && !bodyType) ||
                             (step === 2 && selectedStyles.length === 0) ||
                             isSaving
                         }
@@ -1113,6 +1163,67 @@ function PreferencesContent() {
                     </Button>
                 </div>
             </div>
+
+            {/* Modal: Aviso al omitir silueta */}
+            <AnimatePresence>
+                {showSkipSilhouetteModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setShowSkipSilhouetteModal(false)}
+                            className="absolute inset-0 bg-black/60 backdrop-blur-xs"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 15 }}
+                            transition={{ type: "spring", stiffness: 350, damping: 25 }}
+                            className="relative w-full max-w-md bg-white rounded-3xl p-6 sm:p-7 shadow-2xl border border-zinc-200 z-10 text-center space-y-4"
+                        >
+                            <div className="w-14 h-14 rounded-full bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] mx-auto flex items-center justify-center">
+                                <AlertCircle className="w-7 h-7 stroke-[2.3]" />
+                            </div>
+
+                            <div className="space-y-2">
+                                <h3 className="text-xl font-bold text-zinc-900 tracking-tight">
+                                    ¿Omitir tu silueta?
+                                </h3>
+                                <p className="text-sm text-zinc-600 leading-relaxed">
+                                    Kloe necesita conocer tu silueta para calcular tiros de pantalón, caídas de tejido y proporciones a tu medida.
+                                </p>
+                                <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-xs text-amber-800 text-left font-medium leading-normal">
+                                    ⚠️ Sin esta información, las recomendaciones de outfits de Kloe perderán precisión.
+                                </div>
+                            </div>
+
+                            <div className="pt-2 flex flex-col gap-2.5">
+                                <Button
+                                    size="lg"
+                                    className="w-full h-12 rounded-full font-bold text-sm bg-[var(--brand-pink)] hover:bg-[#ff3377] text-white shadow-lg cursor-pointer"
+                                    onClick={() => setShowSkipSilhouetteModal(false)}
+                                    type="button"
+                                >
+                                    Elegir mi silueta
+                                </Button>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setBodyType('no_specified');
+                                        setShowSkipSilhouetteModal(false);
+                                        setStep(2);
+                                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                                    }}
+                                    className="w-full py-2.5 text-xs sm:text-sm font-semibold text-zinc-500 hover:text-zinc-800 transition-colors cursor-pointer"
+                                >
+                                    Omitir de todos modos
+                                </button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

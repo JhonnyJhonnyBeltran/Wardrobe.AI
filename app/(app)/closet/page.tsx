@@ -70,7 +70,7 @@ function KloeButtonAnimatedLogo() {
   };
 
   return (
-    <div className="relative flex items-center justify-center select-none overflow-visible w-full h-8 sm:h-9">
+    <div className="relative flex items-center justify-center select-none overflow-visible h-8 sm:h-9 min-w-[36px]">
       <AnimatePresence mode="wait">
         {logoVariant === 'avatar' ? (
           <motion.div
@@ -713,17 +713,22 @@ export default function ClosetPage() {
       <header className="sticky top-0 z-40 bg-[var(--background)]/95 backdrop-blur-md pb-2 supports-[ios]:pt-safe-top">
         <div className="max-w-7xl mx-auto px-4 pt-4 space-y-4">
 
-          {/* Kloe Action Banner (ancho completo, sin sombra redundante ni botón duplicado de crear outfit) */}
+          {/* Kloe Action Banner */}
           <div className="w-full">
             <Link href="/closet/kloe" className="block w-full">
               <motion.div 
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.98 }}
                 transition={{ type: 'spring', stiffness: 500, damping: 24 }}
-                className="w-full py-2.5 sm:py-3 px-4 rounded-2xl bg-[var(--background-secondary)] flex items-center justify-center border border-black/[0.06] dark:border-white/[0.08] hover:border-[var(--brand-pink)]/40 transition-all cursor-pointer group"
-                aria-label="Kloe"
+                className="w-full py-2.5 sm:py-3 px-5 rounded-2xl bg-[var(--background-secondary)] flex items-center justify-center gap-3 border border-black/[0.06] dark:border-white/[0.08] hover:border-[var(--brand-pink)]/40 transition-all cursor-pointer group shadow-xs"
+                aria-label="Charla conmigo"
               >
-                <KloeButtonAnimatedLogo />
+                <div className="shrink-0 flex items-center justify-center">
+                  <KloeButtonAnimatedLogo />
+                </div>
+                <span className="font-bold text-sm sm:text-base text-[var(--foreground)] group-hover:text-[var(--brand-pink)] transition-colors select-none">
+                  Charla conmigo
+                </span>
               </motion.div>
             </Link>
           </div>

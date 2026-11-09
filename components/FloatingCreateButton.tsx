@@ -110,16 +110,12 @@ export default function FloatingCreateButton() {
                                         key={action.id}
                                         variants={itemVariants}
                                         onClick={() => handleActionClick(action.path)}
-                                        className="group flex items-center gap-3.5 cursor-pointer focus:outline-none"
+                                        className="group h-12 px-5 rounded-full bg-[var(--brand-pink)] flex items-center justify-center gap-2.5 text-white shadow-lg shadow-[var(--brand-pink)]/35 hover:shadow-[0_0_22px_rgba(255,102,196,0.5)] transition-all hover:scale-105 active:scale-95 cursor-pointer border border-white/20 select-none pointer-events-auto"
                                     >
-                                        {/* Label Tag (No blur) */}
-                                        <span className="px-4 py-2 bg-[var(--card-bg)] text-[var(--foreground)] text-sm font-bold rounded-2xl shadow-xl border border-[var(--border-color)] group-hover:border-[var(--brand-pink)] group-hover:text-[var(--brand-pink)] transition-colors select-none">
+                                        <Icon className="w-5 h-5 flex-shrink-0" strokeWidth={2.4} />
+                                        <span className="text-sm font-bold whitespace-nowrap">
                                             {action.label}
                                         </span>
-                                        {/* Option Bubble - Exactly 56px (w-14 h-14) with 28px (w-7 h-7) Icon */}
-                                        <div className="w-14 h-14 rounded-full flex items-center justify-center bg-black text-white dark:bg-white dark:text-black shadow-2xl border border-white/15 dark:border-black/15 transition-transform group-hover:scale-110 group-active:scale-95 group-hover:shadow-[0_10px_25px_rgba(255,45,120,0.35)]">
-                                            <Icon className="w-7 h-7" strokeWidth={2.2} />
-                                        </div>
                                     </motion.button>
                                 );
                             })}
@@ -150,10 +146,10 @@ export default function FloatingCreateButton() {
                             exit={{ scale: 0.4, opacity: 0, transition: { duration: 0.15 } }}
                             whileTap={{ scale: 0.9 }}
                             onClick={handleToggle}
-                            className="w-14 h-14 rounded-full bg-[var(--background-secondary)] border border-[var(--border-color)] flex items-center justify-center text-[var(--foreground)] shadow-xl cursor-pointer hover:scale-105 hover:text-red-500 transition-all pointer-events-auto"
+                            className="w-14 h-14 rounded-full bg-[var(--brand-pink)] border border-white/20 flex items-center justify-center text-white shadow-xl shadow-[var(--brand-pink)]/35 cursor-pointer hover:scale-105 transition-all pointer-events-auto"
                             aria-label="Cerrar opciones"
                         >
-                            <X className="w-7 h-7" strokeWidth={2.2} />
+                            <X className="w-7 h-7" strokeWidth={2.4} />
                         </motion.button>
                     )}
                 </AnimatePresence>
@@ -185,7 +181,7 @@ export default function FloatingCreateButton() {
                         >
                             <div className="w-12 h-1.5 bg-[var(--border-color)] rounded-full mx-auto my-3" />
                             <div className="px-4 pb-[calc(var(--tabbar-height)+32px)]">
-                                <h3 className="text-xl font-bold text-center text-[var(--foreground)] mb-6">Crear Nuevo</h3>
+                                <h3 className="text-lg font-bold text-center text-[var(--foreground)] mb-5">Crear Nuevo</h3>
                                 <div className="space-y-3">
                                     {actions.map((action) => {
                                         const Icon = action.icon;
@@ -193,12 +189,10 @@ export default function FloatingCreateButton() {
                                             <button
                                                 key={action.id}
                                                 onClick={() => handleActionClick(action.path)}
-                                                className="w-full bg-black text-white dark:bg-white dark:text-black hover:opacity-90 transition-opacity p-4 rounded-2xl flex items-center gap-4 shadow-md border border-white/10 dark:border-black/10 active:scale-[0.98]"
+                                                className="w-full bg-[var(--brand-pink)] text-white hover:opacity-95 p-3.5 rounded-full flex items-center justify-center gap-3 shadow-lg shadow-[var(--brand-pink)]/25 border border-white/20 active:scale-[0.98] transition-all cursor-pointer font-bold text-sm"
                                             >
-                                                <div className="w-12 h-12 rounded-full flex items-center justify-center bg-white/10 text-white dark:bg-black/10 dark:text-black">
-                                                    <Icon className="w-6 h-6" strokeWidth={2.2} />
-                                                </div>
-                                                <span className="font-semibold text-base text-white dark:text-black">
+                                                <Icon className="w-5 h-5 flex-shrink-0" strokeWidth={2.3} />
+                                                <span className="font-bold text-sm text-white">
                                                     {action.label}
                                                 </span>
                                             </button>
