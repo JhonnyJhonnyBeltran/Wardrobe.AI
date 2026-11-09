@@ -3313,3 +3313,18 @@ Ejecución del Consejo de Negocio con 4 subagentes especializados (`business-bel
 - **Scripts**:
   - `npm run remotion:render-armario` (1080p 60fps horizontal).
   - `npm run remotion:render-armario-vertical` (Reels/TikTok/Shorts).
+
+
+### 49. Producción Cinemática Vertical 9:16 (Reels/TikTok) con Remotion y Nuevas Skills de Vídeo (Noviembre 2026)
+- **Nuevas Skills Integradas en `.agents/skills/`**:
+  - `remotion-motion-graphics` (de `haidrrrry/claude-remotion-skill`): Reglas estrictas de diseño de movimiento (cero interpolación lineal, pilas de 5 capas con viñeta y mesh, entradas multi-propiedad `scale + translateY + opacity`, micro-movimiento orgánico en elementos estáticos, áreas de seguridad verticales 9:16).
+  - `remotion-dev/skills` (de `remotion-dev/skills`): Directrices oficiales de arquitectura, multimedia, rendering y buenas prácticas de Remotion.
+- **Nuevo Anuncio Cinemático Vertical 9:16 (`CinematicReelsAd`)**:
+  - Duración: 960 frames (16 segundos a 60 fps).
+  - **Acto 1 · El Caos del Armario (0s – 3.3s)**: Vórtice 3D de prendas del proyecto (`sudadera.png`, `pantalon.png`, `new balance.png`, `reloj.png`) girando en torbellino orbital con perspectiva continua, acompañado del titular de impacto *"Tengo muchas prendas pero no sé qué ponerme"*.
+  - **Acto 2 · Kloe AI: La Interacción (3.1s – 6.8s)**: Colapso del vórtice hacia el avatar bubble de Kloe. Diálogo interactivo en burbujas translúcidas de cristal ahumado: *"Kloe, tengo cena hoy y no sé qué ponerme"* $\rightarrow$ Kloe procesa con ondas de pensamiento y responde: *"Tranquilo. Tengo la combinación exacta con tu ropa de siempre."*
+  - **Acto 3 · Selección y Ensamblaje (6.6s – 10.3s)**: Las 4 prendas clave emergen volando y se encajan anatómicamente con física magnética (`magneticSnap`) al compás del hit musical con destello de flash blanco y badge *"Look Street Minimal · Afinidad 100%"*.
+  - **Acto 4 · Apertura de la App en iPhone 16 Pro (10.1s – 13.6s)**: El iPhone vertical muestra la pantalla de inicio iOS, se pulsa el icono rosa de Klozet y la app se abre con zoom fluido mostrando el outfit cargado en el lienzo interactivo.
+  - **Acto 5 · Outro Apple (13.4s – 16.0s)**: Logo bubble oficial de Klozet con brillo de titanio, claim *"El armario inteligente que viste tu día"* y botón CTA con barrido de luz especular a `klozet.es`.
+- **Comando de Renderizado**:
+  - `npm run remotion:render-reels` (Exporta directamente `out/klozet-reels-cinematic.mp4` a 1080x1920 60fps).
