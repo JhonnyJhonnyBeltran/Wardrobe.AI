@@ -3298,3 +3298,18 @@ Ejecución del Consejo de Negocio con 4 subagentes especializados (`business-bel
   - Previsualización en navegador en tiempo real: `npm run remotion:preview`
   - Renderizado MP4 (Landscape): `npm run remotion:render`
   - Renderizado MP4 (Vertical para Shorts/Reels/TikTok): `npm run remotion:render-vertical`
+
+
+### 48. Integración de la Skill Apple-Motion y Anuncio Cinemático "Armario Lleno" (Noviembre 2026)
+- **Integración de la Skill Oficial `apple-motion` (`IskakovDamir/apple-motion`)**:
+  - Instalada en `.agents/skills/apple-motion/` y plantillas de Remotion en `remotion/apple-motion/`.
+  - Proporciona métricas forenses calibradas sobre keynotes reales de Apple: constantes físicas `tokens.ts` (`damping: 15.3`, `stiffness: 115.0`), tipografía cinética medida, tempos a 120 BPM y transiciones fluidas.
+  - Generador de audio procedural `synth_audio.py` que crea la pista musical con hit de cierre en el compás 12 (`public/music.wav`) y el kit de efectos de sonido (`public/sfx/`).
+- **Composición del Anuncio `KlozetArmarioLlenoAd` (`remotion/compositions/KlozetArmarioLleno/`)**:
+  - **Escena 1 (Dilema)**: *"Tu armario está lleno... pero no encuentras qué te encaje."* con tipografía de alto impacto en SF Pro / Inter y contraste negro absoluto.
+  - **Escena 2 (iPhone 16 Pro)**: *"Entra Klozet. Tu armario en tu iPhone."* con 3D device rise, Dynamic Island y escaneo de prendas con la IA Kloe.
+  - **Escena 3 (Prendas sueltas ensamblándose)**: Las prendas reales del proyecto (`sudadera.png`, `pantalon.png`, `new balance.png`, `reloj.png`) entran volando rotando desde los bordes y convergen magnéticamente con resorte elástico en un outfit completo estructurado por capas (Top + Pantalón + Calzado + Reloj) con destello de impacto y badge *"Look Completo: Street Minimal"*.
+  - **Escena 4 (Outro)**: Logotipo bubble rosa de Klozet, claim *"Tu armario entero. Resuelto con IA."* y botón CTA con barrido de luz especular.
+- **Scripts**:
+  - `npm run remotion:render-armario` (1080p 60fps horizontal).
+  - `npm run remotion:render-armario-vertical` (Reels/TikTok/Shorts).
