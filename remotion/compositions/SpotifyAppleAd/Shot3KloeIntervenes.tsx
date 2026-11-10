@@ -8,118 +8,54 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from 'remotion';
-import { THEME } from '../../theme';
+import { KLOZET_BRAND } from './klozetTokens';
 
-interface FrozenItem {
-  src: string;
-  x: number;
-  y: number;
-  z: number;
-  rotateZ: number;
-  scale: number;
-  size: number;
-}
-
-const FROZEN_ITEMS: FrozenItem[] = [
-  {
-    src: 'ad-assets/prenda-top-negro.png',
-    x: -240,
-    y: -140,
-    z: 20,
-    rotateZ: -12,
-    scale: 0.95,
-    size: 240,
-  },
-  {
-    src: 'ad-assets/prenda-vaquero.png',
-    x: 230,
-    y: 130,
-    z: -30,
-    rotateZ: 14,
-    scale: 0.95,
-    size: 260,
-  },
-  {
-    src: 'sudadera.png',
-    x: 210,
-    y: -220,
-    z: 60,
-    rotateZ: 18,
-    scale: 0.85,
-    size: 220,
-  },
-  {
-    src: 'pantalon.png',
-    x: -220,
-    y: 220,
-    z: 10,
-    rotateZ: -16,
-    scale: 0.85,
-    size: 230,
-  },
-  {
-    src: 'new balance.png',
-    x: -90,
-    y: 350,
-    z: 100,
-    rotateZ: 8,
-    scale: 0.75,
-    size: 180,
-  },
-  {
-    src: 'reloj.png',
-    x: 140,
-    y: -40,
-    z: 140,
-    rotateZ: -22,
-    scale: 0.7,
-    size: 150,
-  },
+const FROZEN_GARMENTS = [
+  { src: 'ad-assets/real/zara-jersey-crema.png', x: -310, y: -230, w: 230, h: 260, rot: -10 },
+  { src: 'ad-assets/real/jeans-recto-azul.png', x: 310, y: -150, w: 190, h: 420, rot: 12 },
+  { src: 'ad-assets/real/adidas-gazelle-marron.png', x: -290, y: 240, w: 260, h: 160, rot: -15 },
+  { src: 'ad-assets/real/zuecos-tachuelas.png', x: 290, y: 260, w: 210, h: 240, rot: 14 },
+  { src: 'ad-assets/real/gafas-blancas.png', x: -160, y: -400, w: 210, h: 120, rot: 8 },
+  { src: 'ad-assets/real/pendientes-aros-oro.png', x: 200, y: -390, w: 170, h: 170, rot: -12 },
 ];
 
 export const Shot3KloeIntervenes: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  // Scene fade transition
-  const sceneOpacity = interpolate(frame, [0, 15, 165, 180], [0, 1, 1, 0], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-  });
-
-  // Clothes freeze & gentle suspension float
+  // Garments smoothly settle & dim into depth
   const freezeSpring = spring({
     frame,
     fps,
-    config: { damping: 18, stiffness: 90, mass: 1 },
+    config: KLOZET_BRAND.springs.appleSnappy,
   });
-  const clothesBlur = interpolate(freezeSpring, [0, 1], [8, 0]);
+  const bgOpacity = interpolate(freezeSpring, [0, 1], [0.75, 0.25]);
+  const bgScale = interpolate(freezeSpring, [0, 1], [1.05, 0.92]);
 
-  // Kloe entrance spring: descends with confidence from top
-  const kloeSpring = spring({
-    frame: frame - 15,
-    fps,
-    config: THEME.springs.kloeBouncy,
-  });
-  const kloeY = interpolate(kloeSpring, [0, 1], [-300, 0]);
-  const kloeScale = interpolate(kloeSpring, [0, 1], [0.4, 1]);
-  const kloeIdleHover = Math.sin(frame * 0.08) * 8;
-
-  // Single monolithic text: "Déjamelo a mí."
-  const textSpring = spring({
-    frame: frame - 35,
-    fps,
-    config: THEME.springs.kineticPunch,
-  });
-  const textY = interpolate(textSpring, [0, 1], [40, 0]);
-  const textOpacity = interpolate(frame, [35, 50, 160, 175], [0, 1, 1, 0], {
+  // Tension compression right before Beat 11 drop (frames 96..120 = 0.4s vacuum drop)
+  const dropCompression = interpolate(frame, [94, 118, 120], [1, 0.94, 0.92], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
 
-  // Aura pulse
-  const auraScale = interpolate(frame, [0, 180], [0.85, 1.15]);
-  const auraOpacity = interpolate(frame, [15, 45], [0, 0.45], {
+  // Standalone Kloe avatar + wordmark — NO circle container
+  const kloeSpring = spring({
+    frame: frame - 6,
+    fps,
+    config: KLOZET_BRAND.springs.kloeBouncy,
+  });
+  const kloeScale = interpolate(kloeSpring, [0, 1], [0.5, 1]) * dropCompression;
+  const kloeY = interpolate(kloeSpring, [0, 1], [-120, 0]);
+  const hoverY = Math.sin(frame * 0.08) * 6;
+
+  // Monolithic single text: "Pregúntale a Kloe."
+  const textSpring = spring({
+    frame: frame - 18,
+    fps,
+    config: KLOZET_BRAND.springs.kineticPunch,
+  });
+  const textY = interpolate(textSpring, [0, 1], [36, 0]);
+  const textOpacity = interpolate(frame, [18, 28, 108, 120], [0, 1, 1, 0.85], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
@@ -127,73 +63,42 @@ export const Shot3KloeIntervenes: React.FC = () => {
   return (
     <AbsoluteFill
       style={{
-        backgroundColor: THEME.colors.black,
-        opacity: sceneOpacity,
+        backgroundColor: KLOZET_BRAND.colors.nightBg,
         overflow: 'hidden',
-        fontFamily: THEME.typography.fontFamily,
+        fontFamily: KLOZET_BRAND.fonts.sans,
       }}
     >
-      {/* Dynamic Pink Mascot Aura */}
+      {/* Frozen Garments Suspended in Depth */}
       <div
         style={{
           position: 'absolute',
-          top: '40%',
-          left: '50%',
-          transform: `translate(-50%, -50%) scale(${auraScale})`,
-          width: 850,
-          height: 850,
-          borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(255, 102, 196, 0.3) 0%, rgba(255, 102, 196, 0.08) 50%, transparent 70%)',
-          filter: 'blur(100px)',
-          opacity: auraOpacity,
-          pointerEvents: 'none',
-        }}
-      />
-
-      {/* Glossy dark floor (Spotify 3D signature) */}
-      <div
-        style={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: '42%',
-          background: 'linear-gradient(to bottom, transparent, rgba(12, 12, 16, 0.96))',
-          borderTop: '1px solid rgba(255, 255, 255, 0.04)',
-          pointerEvents: 'none',
-        }}
-      />
-
-      {/* Suspended Clothes in Frozen 3D Space */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '42%',
+          top: '44%',
           left: '50%',
           width: 0,
           height: 0,
-          transform: 'perspective(1200px) rotateX(8deg)',
-          transformStyle: 'preserve-3d',
+          transform: `scale(${bgScale})`,
+          opacity: bgOpacity,
         }}
       >
-        {FROZEN_ITEMS.map((item, idx) => {
-          const itemHover = Math.sin(frame * 0.05 + idx) * 12;
+        {FROZEN_GARMENTS.map((g, i) => {
+          const floatOffset = Math.sin(frame * 0.04 + i) * 6;
           return (
             <div
-              key={idx}
+              key={i}
               style={{
                 position: 'absolute',
-                left: item.x - item.size / 2,
-                top: item.y - item.size / 2 + itemHover,
-                transform: `translateZ(${item.z}px) rotateZ(${item.rotateZ}deg) scale(${item.scale})`,
-                width: item.size,
-                height: item.size,
-                filter: `blur(${clothesBlur}px) drop-shadow(0 30px 40px rgba(0, 0, 0, 0.9))`,
-                opacity: 0.75,
+                left: g.x - g.w / 2,
+                top: g.y - g.h / 2 + floatOffset,
+                width: g.w,
+                height: g.h,
+                transform: `rotate(${g.rot}deg)`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
               }}
             >
               <Img
-                src={staticFile(item.src)}
+                src={staticFile(g.src)}
                 style={{
                   maxWidth: '100%',
                   maxHeight: '100%',
@@ -205,68 +110,61 @@ export const Shot3KloeIntervenes: React.FC = () => {
         })}
       </div>
 
-      {/* Kloe Mascot Hero Centerpiece */}
+      {/* Standalone Kloe Hero Logo & Character — Strictly WITHOUT any circle */}
       <div
         style={{
           position: 'absolute',
-          top: '42%',
+          top: '39%',
           left: '50%',
-          transform: `translate(-50%, -50%) translateY(${kloeY + kloeIdleHover}px) scale(${kloeScale})`,
-          zIndex: 40,
+          transform: `translate(-50%, -50%) translateY(${kloeY + hoverY}px) scale(${kloeScale})`,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          justifyContent: 'center',
+          gap: 28,
+          zIndex: 40,
         }}
       >
-        <div
+        <Img
+          src={staticFile('kloe-avatar-v2.png')}
           style={{
-            position: 'relative',
-            width: 260,
-            height: 260,
-            borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(255, 102, 196, 0.22) 0%, transparent 75%)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
+            width: 240,
+            height: 240,
+            objectFit: 'contain',
           }}
-        >
-          <Img
-            src={staticFile('kloe-avatar.png')}
-            style={{
-              width: 220,
-              height: 220,
-              objectFit: 'contain',
-              filter: 'drop-shadow(0 25px 50px rgba(255, 102, 196, 0.55)) drop-shadow(0 10px 20px rgba(0, 0, 0, 0.9))',
-            }}
-          />
-        </div>
+        />
+        <Img
+          src={staticFile('kloe-logo-large.png')}
+          style={{
+            width: 260,
+            height: 'auto',
+            objectFit: 'contain',
+          }}
+        />
       </div>
 
-      {/* Single Monolithic Text: "Déjamelo a mí." */}
+      {/* Single Headline Block */}
       <div
         style={{
           position: 'absolute',
-          bottom: THEME.layout.safeBottom,
-          left: THEME.layout.safePaddingX,
-          right: THEME.layout.safePaddingX,
+          bottom: 240,
+          left: 64,
+          right: 64,
           textAlign: 'center',
-          zIndex: 50,
           opacity: textOpacity,
           transform: `translateY(${textY}px)`,
+          zIndex: 50,
         }}
       >
         <h2
           style={{
-            fontSize: 78,
-            fontWeight: 800,
-            letterSpacing: THEME.typography.trackingTight,
-            color: THEME.colors.textPrimary,
             margin: 0,
-            textShadow: '0 10px 35px rgba(0,0,0,0.9)',
+            fontSize: 70,
+            fontWeight: 700,
+            letterSpacing: '-0.03em',
+            color: KLOZET_BRAND.colors.textPrimary,
           }}
         >
-          Déjamelo a mí.
+          Pregúntale a Kloe.
         </h2>
       </div>
     </AbsoluteFill>

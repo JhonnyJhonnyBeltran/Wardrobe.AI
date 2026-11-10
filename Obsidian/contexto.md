@@ -3405,3 +3405,19 @@ Ejecución del Consejo de Negocio con 4 subagentes especializados (`business-bel
   - Aplicando `Obsidian/brand_kit.md` (*"Un juguete dentro de un iPhone"*), rediseño en modo claro puro (`#FFFFFF` + `#F5F5F7` + `#F2F2F7`, un único CTA `#FF66C4`, cero degradados/morados/orbes).
   - **Vitrina Interactiva de Looks (Escritorio)**: Selector de 4 looks reales (`Casual`, `Urbano`, `Clásico`, `Monocromo`) con cambio suave y overlay de prendas.
   - **Kloe Interactiva y Reactiva**: Mascota oficial `/kloe-avatar.png` integrada en un diálogo vivo que reacciona al foco de contraseña (promete no mirar), al registro de `@usuario`, a la selección de looks o al toque directo con rebote elástico `--ease-bounce`.
+
+### 54. Anuncio SpotifyAppleAd v2: Logos Sueltos, Prendas Reales y Walkthrough Real `/closet` + `/post` (Noviembre 2026)
+- **Cumplimiento Estricto de `Obsidian/brand_kit.md` y Directivas Visuales**:
+  - **Logos sin Círculos ni Contenedores**: Eliminada por completo la moneda/círculo envolvente del logotipo. Se utilizan los wordmarks PNG oficiales sueltos en primer plano (`/landing/klozet-nombre-grande.png`, `/kloe-logo-large.png`, `/kloe-avatar-v2.png` y `/k-bubble-pink.png` en el TabBar) sobre fondo oscuro `#111113` sin orbes borrosos, sin morado y sin sombras de color artificiales.
+  - **Activos Reales de `/descargas` Recortados Limpiamente (`public/ad-assets/real/`)**: Extraídos recortes RGBA limpios de estudio (`zara-jersey-crema.png`, `jeans-recto-azul.png`, `adidas-gazelle-marron.png`, `zuecos-tachuelas.png`, `gafas-blancas.png`, `pendientes-aros-oro.png`, `camiseta-blanca-larga.png`, `bolso-ante-beige.png`) junto a los outfits completos (`outfit-cream-gazelle.png`, `outfit-blazer-clogs.png`).
+- **Flujo Real de Producto en 7 Planos Sincronizados a 120 BPM (`remotion/compositions/SpotifyAppleAd/`)**:
+  - `Shot1LogoDark.tsx` (`F0–F90`): Wordmark oficial `Klozet` suelto + *"Tu armario."*
+  - `Shot2DilemaVortex.tsx` (`F90–F210`): Vórtice 3D con los recortes reales de Descargas + *"Muchas prendas. ¿Qué te pones hoy?"*
+  - `Shot3KloeIntervenes.tsx` (`F210–F330`): Llegada elástica de `Kloe` (`kloe-avatar-v2.png` + `kloe-logo-large.png` sueltos) congelando las prendas en profundidad + silencio de tensión previo al drop (*"Pregúntale a Kloe."*).
+  - `Shot4ClosetRealApp.tsx` (`F330–F570`): Drop al compás entrando en `IPhoneShell` con la vista fiel de `/closet` (barra *"Charla conmigo"*, tabs Shirt/Layers/Calendar, cuadrícula 2×2 sobre tarjetas blancas, botones rosas flotantes, TabBar `.apple-glass-bar`) $\rightarrow$ tap interactivo en Card 1 $\rightarrow$ apertura de `OutfitDetailModal` (*"Listo"*, *TOCA UNA PRENDA PARA VER DETALLES*, *Editar look*, *Publicar*, *Generar sticker*).
+  - `Shot5GarmentInspector.tsx` (`F570–F750`): Toque directo sobre el jersey crema dentro de `OutfitDetailModal` $\rightarrow$ apertura de `ProductModal` fiel (*Zara · Jersey de punto básico color crema*, tabla *Tipo / Marca / Color / Tejido / Temporada*).
+  - `Shot6PostFeedScreen.tsx` (`F750–F960`): Vista real de `/post` (`@clara.style`, botón *Seguir*, lienzo interactivo del look con blazer/zuecos, animación de doble toque con corazón rosa `#FF66C4` y scroll fluido mostrando la cuadrícula 2×2 *Prendas del look (4)*).
+  - `Shot7OutroLogo.tsx` (`F960–F1140`): Cierre con `Klozet` + `Kloe` sueltos sin círculos, claim *"Tu estilo, en tu móvil."* y dominio `klozet.es`.
+- **Audio Master Sincronizado (`public/ad-assets/soundtrack-klozet-v2.wav`)**:
+  - Pista estéreo sintetizada a 120 BPM (1 beat = 30 frames a 60 fps, 48 kHz, `-17.4 dBFS`), con drop en F330, hit final en F960 y efectos foley UI sincronizados al toque (`click.wav`, `swish.wav`, `whoosh.wav`).
+  - Render verificado: `npm run remotion:render-spotify` $\rightarrow$ `out/klozet-spotify-apple.mp4` (6.8 MB, 1140 frames, 1080×1920 60fps).

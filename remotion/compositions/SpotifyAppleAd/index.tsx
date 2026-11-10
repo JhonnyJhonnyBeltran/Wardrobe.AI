@@ -8,85 +8,93 @@ import {
 import { Shot1LogoDark } from './Shot1LogoDark';
 import { Shot2DilemaVortex } from './Shot2DilemaVortex';
 import { Shot3KloeIntervenes } from './Shot3KloeIntervenes';
-import { Shot4MixAndMatch } from './Shot4MixAndMatch';
-import { Shot5CollageCards } from './Shot5CollageCards';
-import { Shot6IPhoneCanvas } from './Shot6IPhoneCanvas';
+import { Shot4ClosetRealApp } from './Shot4ClosetRealApp';
+import { Shot5GarmentInspector } from './Shot5GarmentInspector';
+import { Shot6PostFeedScreen } from './Shot6PostFeedScreen';
 import { Shot7OutroLogo } from './Shot7OutroLogo';
 
+/**
+ * SpotifyAppleAd (120 BPM · 19.0s · 1140 frames @ 60fps · 1080x1920 Vertical)
+ * Strictly obeys Obsidian/brand_kit.md & real /closet + /post UI screenshots:
+ * - Zero enclosing circles around Klozet / Kloe logos
+ * - Real /descargas garments & outfits cleanly integrated
+ * - Real /closet -> OutfitDetailModal -> ProductModal -> /post UI flow
+ * - Beat-locked cuts every 30 frames (0.5s per beat) with -17.4 LUFS master bed
+ */
 export const SpotifyAppleAd: React.FC = () => {
   return (
-    <AbsoluteFill style={{ backgroundColor: '#000000' }}>
-      {/* Primary Soundtrack: Sub-drone 42Hz + Heartbeat 120BPM + Silence drop + Sub-boom hits */}
+    <AbsoluteFill style={{ backgroundColor: '#111113' }}>
+      {/* Beat-locked 120 BPM master soundtrack (drop exact at F330, finale hit at F960) */}
       <Audio
-        src={staticFile('ad-assets/soundtrack-spotify-apple.wav')}
+        src={staticFile('ad-assets/soundtrack-klozet-v2.wav')}
         volume={0.95}
       />
 
-      {/* Synchronized SFX Layers */}
-      {/* F135: Whoosh into clothes vortex */}
-      <Sequence from={135} durationInFrames={50}>
-        <Audio src={staticFile('sfx/whoosh.wav')} volume={0.45} />
+      {/* Synchronized UI Foley & Motion Transitions */}
+      {/* Beat 3 (F90): Transition whoosh into swirling garments */}
+      <Sequence from={86} durationInFrames={36}>
+        <Audio src={staticFile('sfx/whoosh.wav')} volume={0.38} />
       </Sequence>
 
-      {/* F275: Swish freeze when Kloe intervenes */}
-      <Sequence from={275} durationInFrames={40}>
-        <Audio src={staticFile('sfx/swish.wav')} volume={0.4} />
+      {/* Beat 7 (F210): Soft freeze swish when Kloe enters */}
+      <Sequence from={208} durationInFrames={30}>
+        <Audio src={staticFile('sfx/swish.wav')} volume={0.35} />
       </Sequence>
 
-      {/* F448: Sub-impact hit on Mix & Match bifurcation */}
-      <Sequence from={448} durationInFrames={70}>
-        <Audio src={staticFile('sfx/hit.wav')} volume={0.65} />
+      {/* Tap Card 1 in /closet (F410) */}
+      <Sequence from={408} durationInFrames={20}>
+        <Audio src={staticFile('sfx/click.wav')} volume={0.68} />
       </Sequence>
 
-      {/* F628: Impact hit on 3D magazine cards arrival */}
-      <Sequence from={628} durationInFrames={70}>
-        <Audio src={staticFile('sfx/hit.wav')} volume={0.55} />
+      {/* Tap cream sweater in OutfitDetailModal (F582) */}
+      <Sequence from={580} durationInFrames={20}>
+        <Audio src={staticFile('sfx/click.wav')} volume={0.68} />
       </Sequence>
 
-      {/* F820: Tactile click when outfit docks into iPhone canvas */}
-      <Sequence from={820} durationInFrames={30}>
-        <Audio src={staticFile('sfx/click.wav')} volume={0.7} />
+      {/* Transition swipe into /post (F746) */}
+      <Sequence from={745} durationInFrames={28}>
+        <Audio src={staticFile('sfx/swish.wav')} volume={0.35} />
       </Sequence>
 
-      {/* F940: Subtle riser leading to final logo return */}
-      <Sequence from={940} durationInFrames={55}>
-        <Audio src={staticFile('sfx/riser.wav')} volume={0.35} />
+      {/* Double-tap heart burst in /post (F818) */}
+      <Sequence from={818} durationInFrames={22}>
+        <Audio src={staticFile('sfx/click.wav')} volume={0.72} />
       </Sequence>
 
-      {/* Visual Sequence Shots with 20-frame cross-dissolve overlaps */}
+      {/* Beat-Locked Contiguous Shots (1 beat = 30 frames @ 60fps) */}
 
-      {/* Shot 1: Logo in the dark (F0 - F160) */}
-      <Sequence from={0} durationInFrames={160}>
+      {/* Shot 1: Standalone Klozet Wordmark + Hook (Beats 0..3 · F0–F90) */}
+      <Sequence from={0} durationInFrames={90}>
         <Shot1LogoDark />
       </Sequence>
 
-      {/* Shot 2: Clothes Vortex Dilemma (F140 - F300) */}
-      <Sequence from={140} durationInFrames={160}>
+      {/* Shot 2: Real Garments Vortex from /descargas (Beats 3..7 · F90–F210) */}
+      <Sequence from={90} durationInFrames={120}>
         <Shot2DilemaVortex />
       </Sequence>
 
-      {/* Shot 3: Kloe Intervenes / The Freeze (F280 - F460) */}
-      <Sequence from={280} durationInFrames={180}>
+      {/* Shot 3: Standalone Kloe + Vacuum Tension Drop (Beats 7..11 · F210–F330) */}
+      <Sequence from={210} durationInFrames={120}>
         <Shot3KloeIntervenes />
       </Sequence>
 
-      {/* Shot 4: Mix & Match bifurcation (F440 - F630) */}
-      <Sequence from={440} durationInFrames={190}>
-        <Shot4MixAndMatch />
+      {/* Shot 4: Real /closet Grid -> Tap -> OutfitDetailModal (Beats 11..19 · F330–F570) */}
+      <Sequence from={330} durationInFrames={240}>
+        <Shot4ClosetRealApp />
       </Sequence>
 
-      {/* Shot 5: 3D Spotify Cards / Collages (F610 - F810) */}
-      <Sequence from={610} durationInFrames={200}>
-        <Shot5CollageCards />
+      {/* Shot 5: Tap Sweater -> Real Zara ProductModal (Beats 19..25 · F570–F750) */}
+      <Sequence from={570} durationInFrames={180}>
+        <Shot5GarmentInspector />
       </Sequence>
 
-      {/* Shot 6: Real App Canvas inside iPhone 16 Pro (F790 - F990) */}
-      <Sequence from={790} durationInFrames={200}>
-        <Shot6IPhoneCanvas />
+      {/* Shot 6: Real /post Feed -> Double-Tap Heart + Prendas del look (Beats 25..32 · F750–F960) */}
+      <Sequence from={750} durationInFrames={210}>
+        <Shot6PostFeedScreen />
       </Sequence>
 
-      {/* Shot 7: Logo returns + Outro Specular CTA (F970 - F1140) */}
-      <Sequence from={970} durationInFrames={170}>
+      {/* Shot 7: Finale Standalone Klozet & Kloe Logos + CTA (Beats 32..38 · F960–F1140) */}
+      <Sequence from={960} durationInFrames={180}>
         <Shot7OutroLogo />
       </Sequence>
     </AbsoluteFill>

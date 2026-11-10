@@ -8,9 +8,9 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from 'remotion';
-import { THEME } from '../../theme';
+import { KLOZET_BRAND } from './klozetTokens';
 
-interface FloatingItem {
+interface VortexPiece {
   src: string;
   x: number;
   y: number;
@@ -18,76 +18,107 @@ interface FloatingItem {
   zEnd: number;
   rotStart: number;
   rotEnd: number;
-  scale: number;
-  size: number;
+  width: number;
+  height: number;
+  delay: number;
 }
 
-const ITEMS: FloatingItem[] = [
+const REAL_PIECES: VortexPiece[] = [
   {
-    src: 'ad-assets/prenda-top-negro.png',
-    x: -220,
-    y: -180,
-    zStart: -250,
-    zEnd: 80,
-    rotStart: -18,
-    rotEnd: 12,
-    scale: 1.1,
-    size: 260,
+    src: 'ad-assets/real/zara-jersey-crema.png',
+    x: -230,
+    y: -250,
+    zStart: -320,
+    zEnd: 70,
+    rotStart: -16,
+    rotEnd: 8,
+    width: 300,
+    height: 340,
+    delay: 0,
   },
   {
-    src: 'ad-assets/prenda-vaquero.png',
-    x: 200,
-    y: 120,
-    zStart: -400,
+    src: 'ad-assets/real/jeans-recto-azul.png',
+    x: 245,
+    y: -140,
+    zStart: -260,
     zEnd: 40,
-    rotStart: 25,
-    rotEnd: -10,
-    scale: 1.05,
-    size: 280,
+    rotStart: 18,
+    rotEnd: -9,
+    width: 240,
+    height: 520,
+    delay: 4,
   },
   {
-    src: 'sudadera.png',
-    x: 190,
-    y: -240,
-    zStart: -180,
-    zEnd: 120,
-    rotStart: -30,
-    rotEnd: 20,
-    scale: 0.95,
-    size: 240,
-  },
-  {
-    src: 'pantalon.png',
-    x: -210,
-    y: 200,
-    zStart: -350,
-    zEnd: 60,
-    rotStart: 15,
-    rotEnd: -25,
-    scale: 0.9,
-    size: 250,
-  },
-  {
-    src: 'new balance.png',
-    x: -80,
-    y: 340,
+    src: 'ad-assets/real/adidas-gazelle-marron.png',
+    x: -245,
+    y: 170,
     zStart: -200,
-    zEnd: 150,
-    rotStart: -45,
-    rotEnd: 15,
-    scale: 0.85,
-    size: 200,
+    zEnd: 110,
+    rotStart: -24,
+    rotEnd: 11,
+    width: 320,
+    height: 200,
+    delay: 8,
   },
   {
-    src: 'reloj.png',
-    x: 120,
-    y: -60,
-    zStart: -120,
-    zEnd: 200,
-    rotStart: 40,
-    rotEnd: -20,
-    scale: 0.75,
-    size: 160,
+    src: 'ad-assets/real/zuecos-tachuelas.png',
+    x: 235,
+    y: 230,
+    zStart: -300,
+    zEnd: 95,
+    rotStart: 22,
+    rotEnd: -12,
+    width: 250,
+    height: 280,
+    delay: 10,
+  },
+  {
+    src: 'ad-assets/real/gafas-blancas.png',
+    x: 20,
+    y: -360,
+    zStart: -180,
+    zEnd: 160,
+    rotStart: -12,
+    rotEnd: 6,
+    width: 260,
+    height: 150,
+    delay: 14,
+  },
+  {
+    src: 'ad-assets/real/pendientes-aros-oro.png',
+    x: -40,
+    y: -20,
+    zStart: -140,
+    zEnd: 190,
+    rotStart: 28,
+    rotEnd: -14,
+    width: 210,
+    height: 210,
+    delay: 18,
+  },
+  {
+    src: 'ad-assets/real/camiseta-blanca-larga.png',
+    x: 245,
+    y: -380,
+    zStart: -350,
+    zEnd: 20,
+    rotStart: -14,
+    rotEnd: 7,
+    width: 260,
+    height: 260,
+    delay: 12,
+  },
+  {
+    src: 'ad-assets/real/bolso-ante-beige.png',
+    x: -10,
+    y: 125,
+    zStart: -240,
+    zEnd: 130,
+    rotStart: 15,
+    rotEnd: -8,
+    width: 210,
+    height: 240,
+    delay: 16,
   },
 ];
 
@@ -95,24 +126,18 @@ export const Shot2DilemaVortex: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  // Scene transition
-  const sceneOpacity = interpolate(frame, [0, 15, 145, 160], [0, 1, 1, 0], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-  });
+  const progress = Math.min(1, frame / 120);
+  const cameraRotateY = interpolate(frame, [0, 120], [-10, 12]);
+  const cameraRotateX = interpolate(frame, [0, 120], [8, -4]);
 
-  // Camera swirl rotation and drift
-  const cameraRotateY = interpolate(frame, [0, 160], [-12, 16]);
-  const cameraRotateX = interpolate(frame, [0, 160], [10, -5]);
-
-  // Monolithic text animation: "Tengo muchas prendas pero no sé qué ponerme."
+  // Monolithic single headline
   const textSpring = spring({
-    frame: frame - 10,
+    frame: frame - 8,
     fps,
-    config: THEME.springs.kineticPunch,
+    config: KLOZET_BRAND.springs.kineticPunch,
   });
-  const textY = interpolate(textSpring, [0, 1], [50, 0]);
-  const textOpacity = interpolate(frame, [10, 25, 140, 155], [0, 1, 1, 0], {
+  const textY = interpolate(textSpring, [0, 1], [36, 0]);
+  const textOpacity = interpolate(frame, [8, 18], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
@@ -120,47 +145,30 @@ export const Shot2DilemaVortex: React.FC = () => {
   return (
     <AbsoluteFill
       style={{
-        backgroundColor: THEME.colors.black,
-        opacity: sceneOpacity,
+        backgroundColor: KLOZET_BRAND.colors.nightBg,
         overflow: 'hidden',
-        fontFamily: THEME.typography.fontFamily,
+        fontFamily: KLOZET_BRAND.fonts.sans,
       }}
     >
-      {/* Background radial ambient aura */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '46%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: 900,
-          height: 900,
-          borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(255, 102, 196, 0.16) 0%, rgba(30, 30, 42, 0.3) 40%, transparent 70%)',
-          filter: 'blur(130px)',
-          pointerEvents: 'none',
-        }}
-      />
-
-      {/* Glossy dark floor (Spotify 3D signature) */}
+      {/* Subtle glossy studio horizon */}
       <div
         style={{
           position: 'absolute',
           bottom: 0,
           left: 0,
           right: 0,
-          height: '40%',
-          background: 'linear-gradient(to bottom, transparent, rgba(10, 10, 14, 0.96))',
-          borderTop: '1px solid rgba(255, 255, 255, 0.04)',
+          height: '38%',
+          background: 'linear-gradient(to bottom, rgba(24,24,27,0.35), rgba(0,0,0,0.92))',
+          borderTop: '1px solid rgba(255, 255, 255, 0.05)',
           pointerEvents: 'none',
         }}
       />
 
-      {/* 3D Clothing Vortex Canvas */}
+      {/* 3D Orbiting Garments Stage */}
       <div
         style={{
           position: 'absolute',
-          top: '44%',
+          top: '43%',
           left: '50%',
           width: 0,
           height: 0,
@@ -168,37 +176,38 @@ export const Shot2DilemaVortex: React.FC = () => {
           transformStyle: 'preserve-3d',
         }}
       >
-        {ITEMS.map((item, idx) => {
-          // Dynamic swirling orbit per item
-          const progress = frame / 160;
-          const currentZ = interpolate(progress, [0, 1], [item.zStart, item.zEnd]);
-          const currentRot = interpolate(progress, [0, 1], [item.rotStart, item.rotEnd]);
-          const swirlAngle = progress * Math.PI * 1.5 + (idx * Math.PI) / 3;
-          const swirlRadiusX = 140;
-          const swirlRadiusY = 90;
-          const orbitX = item.x + Math.cos(swirlAngle) * swirlRadiusX;
-          const orbitY = item.y + Math.sin(swirlAngle) * swirlRadiusY;
-          const itemShadow = Math.max(15, 45 + currentZ * 0.1);
+        {REAL_PIECES.map((piece, idx) => {
+          const itemSpring = spring({
+            frame: Math.max(0, frame - piece.delay),
+            fps,
+            config: KLOZET_BRAND.springs.appleSnappy,
+          });
+          const swirlAngle = progress * Math.PI * 0.9 + idx * 0.8;
+          const orbitX = piece.x + Math.cos(swirlAngle) * 70;
+          const orbitY = piece.y + Math.sin(swirlAngle) * 52;
+          const curZ = interpolate(progress, [0, 1], [piece.zStart, piece.zEnd]);
+          const curRot = interpolate(progress, [0, 1], [piece.rotStart, piece.rotEnd]);
+          const itemScale = interpolate(itemSpring, [0, 1], [0.45, 1]);
 
           return (
             <div
               key={idx}
               style={{
                 position: 'absolute',
-                left: orbitX - item.size / 2,
-                top: orbitY - item.size / 2,
-                transform: `translateZ(${currentZ}px) rotateZ(${currentRot}deg) scale(${item.scale})`,
-                transformStyle: 'preserve-3d',
-                width: item.size,
-                height: item.size,
+                left: orbitX - piece.width / 2,
+                top: orbitY - piece.height / 2,
+                width: piece.width,
+                height: piece.height,
+                transform: `translateZ(${curZ}px) rotateZ(${curRot}deg) scale(${itemScale})`,
+                opacity: itemSpring,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                filter: `drop-shadow(0 ${itemShadow}px ${itemShadow * 1.2}px rgba(0, 0, 0, 0.85)) drop-shadow(0 0 25px rgba(255, 102, 196, 0.15))`,
+                filter: 'drop-shadow(0 28px 34px rgba(0, 0, 0, 0.85))',
               }}
             >
               <Img
-                src={staticFile(item.src)}
+                src={staticFile(piece.src)}
                 style={{
                   maxWidth: '100%',
                   maxHeight: '100%',
@@ -210,31 +219,46 @@ export const Shot2DilemaVortex: React.FC = () => {
         })}
       </div>
 
-      {/* Single Monolithic Text: "Tengo muchas prendas pero no sé qué ponerme." */}
+      {/* Clean legibility scrim behind text only */}
       <div
         style={{
           position: 'absolute',
-          bottom: THEME.layout.safeBottom,
-          left: THEME.layout.safePaddingX,
-          right: THEME.layout.safePaddingX,
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: 460,
+          background: 'linear-gradient(to top, rgba(0,0,0,0.92) 35%, transparent)',
+          pointerEvents: 'none',
+          zIndex: 35,
+        }}
+      />
+
+      {/* Single Headline Block */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 220,
+          left: 64,
+          right: 64,
           textAlign: 'center',
-          zIndex: 50,
           opacity: textOpacity,
           transform: `translateY(${textY}px)`,
+          zIndex: 50,
         }}
       >
         <h2
           style={{
-            fontSize: 66,
-            fontWeight: 800,
-            lineHeight: 1.15,
-            letterSpacing: THEME.typography.trackingTight,
-            color: THEME.colors.textPrimary,
             margin: 0,
-            textShadow: '0 8px 30px rgba(0,0,0,0.85)',
+            fontSize: 64,
+            fontWeight: 700,
+            lineHeight: 1.12,
+            letterSpacing: '-0.03em',
+            color: KLOZET_BRAND.colors.textPrimary,
           }}
         >
-          Tengo muchas prendas pero no sé qué ponerme.
+          Muchas prendas.
+          <br />
+          ¿Qué te pones hoy?
         </h2>
       </div>
     </AbsoluteFill>

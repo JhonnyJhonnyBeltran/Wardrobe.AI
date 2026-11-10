@@ -8,74 +8,54 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from 'remotion';
-import { THEME } from '../../theme';
+import { KLOZET_BRAND } from './klozetTokens';
 
 export const Shot7OutroLogo: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  // Scene fade in / fade out to black at the end
-  const sceneOpacity = interpolate(frame, [0, 15, 145, 170], [0, 1, 1, 0], {
+  // Gentle fade out at tail (155..180)
+  const sceneOpacity = interpolate(frame, [0, 8, 155, 180], [0.9, 1, 1, 0], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
 
-  // 3D Coin rises from depth to front-on (Spotify Shot 7/8)
-  const coinSpring = spring({
+  // Standalone Logos Entrance (NO circles around either logo!)
+  const klozetSpring = spring({
     frame,
     fps,
-    config: { damping: 20, stiffness: 70, mass: 1 },
+    config: KLOZET_BRAND.springs.kloeBouncy,
   });
-  const coinY = interpolate(coinSpring, [0, 1], [180, 0]);
-  const coinRotateY = interpolate(coinSpring, [0, 1], [25, 0]);
-  const coinRotateX = interpolate(coinSpring, [0, 1], [15, 0]);
-  const coinScale = interpolate(coinSpring, [0, 1], [0.8, 1]);
-
-  // Pulse wave rings emitting from the logo
-  const ring1Scale = interpolate(frame, [20, 90], [1, 2.4], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-  });
-  const ring1Opacity = interpolate(frame, [20, 35, 90], [0, 0.45, 0], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
+  const kloeSpring = spring({
+    frame: frame - 8,
+    fps,
+    config: KLOZET_BRAND.springs.kloeBouncy,
   });
 
-  const ring2Scale = interpolate(frame, [45, 115], [1, 2.4], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-  });
-  const ring2Opacity = interpolate(frame, [45, 60, 115], [0, 0.35, 0], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-  });
+  const klozetScale = interpolate(klozetSpring, [0, 1], [0.76, 1]);
+  const kloeScale = interpolate(kloeSpring, [0, 1], [0.76, 1]);
+  const kloeFloat = Math.sin(frame * 0.06) * 4;
 
-  // Specular sweep across the bubble logo
-  const sheenProgress = interpolate(frame, [30, 90], [-100, 200], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-  });
-
-  // Monolithic Text Spring: "Tu estilo. Tu Klozet."
+  // Claim entrance
   const textSpring = spring({
-    frame: frame - 25,
+    frame: frame - 18,
     fps,
-    config: THEME.springs.kineticPunch,
+    config: KLOZET_BRAND.springs.kineticPunch,
   });
-  const textY = interpolate(textSpring, [0, 1], [40, 0]);
-  const textOpacity = interpolate(frame, [25, 40, 145, 165], [0, 1, 1, 0], {
+  const textY = interpolate(textSpring, [0, 1], [32, 0]);
+  const textOpacity = interpolate(frame, [16, 28], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
 
-  // Subtitle / URL spring: "klozet.es"
+  // URL CTA entrance
   const urlSpring = spring({
-    frame: frame - 45,
+    frame: frame - 32,
     fps,
-    config: THEME.springs.appleSnappy,
+    config: KLOZET_BRAND.springs.appleSnappy,
   });
-  const urlY = interpolate(urlSpring, [0, 1], [30, 0]);
-  const urlOpacity = interpolate(frame, [45, 60, 145, 165], [0, 1, 1, 0], {
+  const urlY = interpolate(urlSpring, [0, 1], [24, 0]);
+  const urlOpacity = interpolate(frame, [30, 44], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
@@ -83,172 +63,120 @@ export const Shot7OutroLogo: React.FC = () => {
   return (
     <AbsoluteFill
       style={{
-        backgroundColor: THEME.colors.black,
+        backgroundColor: KLOZET_BRAND.colors.nightBg,
         opacity: sceneOpacity,
-        overflow: 'hidden',
-        fontFamily: THEME.typography.fontFamily,
+        fontFamily: KLOZET_BRAND.fonts.sans,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
       }}
     >
-      {/* Background ambient lighting */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '38%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: 900,
-          height: 900,
-          borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(255, 102, 196, 0.22) 0%, rgba(20, 20, 30, 0.35) 50%, transparent 70%)',
-          filter: 'blur(110px)',
-          pointerEvents: 'none',
-        }}
-      />
+      {/* Pure seamless Apple dark studio canvas */}
 
-      {/* Glossy dark floor reflection */}
+      {/* Standalone Klozet & Kloe Wordmarks Lockup — ZERO circles, NO coins */}
       <div
         style={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: '42%',
-          background: 'linear-gradient(to bottom, transparent, rgba(10, 10, 14, 0.98))',
-          borderTop: '1px solid rgba(255, 255, 255, 0.05)',
-          pointerEvents: 'none',
-        }}
-      />
-
-      {/* 3D Coin & Pulse Stage */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '40%',
-          left: '50%',
-          transform: `translate(-50%, -50%) perspective(1200px) translateY(${coinY}px) rotateY(${coinRotateY}deg) rotateX(${coinRotateX}deg) scale(${coinScale})`,
-          transformStyle: 'preserve-3d',
-          width: 320,
-          height: 320,
           display: 'flex',
+          flexDirection: 'column',
           alignItems: 'center',
-          justifyContent: 'center',
+          gap: 44,
+          transform: 'translateY(-110px)',
+          zIndex: 20,
         }}
       >
-        {/* Pulse Ring 1 */}
+        {/* Official Klozet Wordmark */}
         <div
           style={{
-            position: 'absolute',
-            width: 300,
-            height: 300,
-            borderRadius: '50%',
-            border: '2px solid rgba(255, 102, 196, 0.7)',
-            transform: `scale(${ring1Scale})`,
-            opacity: ring1Opacity,
-            pointerEvents: 'none',
-          }}
-        />
-
-        {/* Pulse Ring 2 */}
-        <div
-          style={{
-            position: 'absolute',
-            width: 300,
-            height: 300,
-            borderRadius: '50%',
-            border: '2px solid rgba(255, 102, 196, 0.5)',
-            transform: `scale(${ring2Scale})`,
-            opacity: ring2Opacity,
-            pointerEvents: 'none',
-          }}
-        />
-
-        {/* Thick 3D Coin Body */}
-        <div
-          style={{
-            position: 'relative',
-            width: 270,
-            height: 270,
-            borderRadius: '50%',
-            background: 'linear-gradient(135deg, #22222a 0%, #0d0d12 60%, #1a1a24 100%)',
-            boxShadow:
-              '0 40px 90px rgba(0, 0, 0, 0.95), 0 0 60px rgba(255, 102, 196, 0.4), inset 0 0 0 3px rgba(255, 255, 255, 0.16)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            overflow: 'hidden',
+            transform: `scale(${klozetScale})`,
+            opacity: klozetSpring,
           }}
         >
           <Img
-            src={staticFile('klozet-bubble-pink.png')}
+            src={staticFile('landing/klozet-nombre-grande.png')}
             style={{
-              width: 180,
-              height: 180,
+              width: 520,
+              height: 'auto',
               objectFit: 'contain',
-              filter: 'drop-shadow(0 15px 35px rgba(255, 102, 196, 0.6))',
             }}
           />
+        </div>
 
-          {/* Specular light sweep */}
+        {/* Hairline divider + Official Pink Kloe Wordmark */}
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 28,
+            transform: `translateY(${kloeFloat}px) scale(${kloeScale})`,
+            opacity: kloeSpring,
+          }}
+        >
           <div
             style={{
-              position: 'absolute',
-              inset: 0,
-              background: 'linear-gradient(115deg, transparent 40%, rgba(255, 255, 255, 0.35) 50%, transparent 60%)',
-              transform: `translateX(${sheenProgress}%)`,
-              pointerEvents: 'none',
+              width: 96,
+              height: 1.5,
+              backgroundColor: 'rgba(255, 255, 255, 0.16)',
+            }}
+          />
+          <Img
+            src={staticFile('kloe-logo-large.png')}
+            style={{
+              width: 220,
+              height: 'auto',
+              objectFit: 'contain',
             }}
           />
         </div>
       </div>
 
-      {/* Monolithic Typography: "Tu estilo. Tu Klozet." */}
+      {/* Single Clean Claim */}
       <div
         style={{
           position: 'absolute',
-          bottom: THEME.layout.safeBottom + 40,
-          left: THEME.layout.safePaddingX,
-          right: THEME.layout.safePaddingX,
+          bottom: 390,
+          left: 64,
+          right: 64,
           textAlign: 'center',
-          zIndex: 50,
           opacity: textOpacity,
           transform: `translateY(${textY}px)`,
+          zIndex: 30,
         }}
       >
-        <h1
+        <h2
           style={{
-            fontSize: 78,
-            fontWeight: 800,
-            letterSpacing: THEME.typography.trackingTight,
-            color: THEME.colors.textPrimary,
             margin: 0,
-            textShadow: '0 10px 40px rgba(0,0,0,0.95)',
+            fontSize: 66,
+            fontWeight: 700,
+            letterSpacing: '-0.03em',
+            color: KLOZET_BRAND.colors.textPrimary,
           }}
         >
-          Tu estilo. Tu Klozet.
-        </h1>
+          Tu estilo, en tu móvil.
+        </h2>
       </div>
 
-      {/* Subtitle / CTA: "klozet.es" */}
+      {/* Brand Pink Domain Link */}
       <div
         style={{
           position: 'absolute',
-          bottom: THEME.layout.safeBottom - 50,
-          left: THEME.layout.safePaddingX,
-          right: THEME.layout.safePaddingX,
+          bottom: 305,
+          left: 64,
+          right: 64,
           textAlign: 'center',
-          zIndex: 50,
           opacity: urlOpacity,
           transform: `translateY(${urlY}px)`,
+          zIndex: 30,
         }}
       >
         <p
           style={{
-            fontSize: 34,
-            fontWeight: 600,
-            letterSpacing: '0.04em',
-            color: THEME.colors.brandPink,
             margin: 0,
-            textShadow: '0 0 25px rgba(255, 102, 196, 0.45)',
+            fontSize: 36,
+            fontWeight: 600,
+            letterSpacing: '0.02em',
+            color: KLOZET_BRAND.colors.pink,
           }}
         >
           klozet.es
