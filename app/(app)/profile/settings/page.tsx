@@ -45,7 +45,7 @@ export default function SettingsPage() {
     const { user } = useUser();
     const { signOut } = useAuth();
     const router = useRouter();
-    const { theme, setTheme } = useTheme();
+    const { theme, themePreference, setTheme } = useTheme();
     const { language, setLanguage } = useLanguageStore();
     const { t } = useTranslation();
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -321,8 +321,18 @@ export default function SettingsPage() {
                                 <div className="text-sm font-medium text-[var(--foreground)] mb-2">{t.profile.theme}</div>
                                 <div className="flex gap-2">
                                     <button
+                                        onClick={() => setTheme('auto')}
+                                        className={`flex-1 px-3 py-3 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-1.5 ${themePreference === 'auto'
+                                            ? 'bg-[var(--brand-pink)] text-white'
+                                            : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:bg-[var(--background-tertiary)]'
+                                            }`}
+                                    >
+                                        <Smartphone className="w-4 h-4" />
+                                        Auto
+                                    </button>
+                                    <button
                                         onClick={() => setTheme('light')}
-                                        className={`flex-1 px-4 py-3 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2 ${theme === 'light'
+                                        className={`flex-1 px-3 py-3 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-1.5 ${themePreference === 'light'
                                             ? 'bg-[var(--brand-pink)] text-white'
                                             : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:bg-[var(--background-tertiary)]'
                                             }`}
@@ -332,7 +342,7 @@ export default function SettingsPage() {
                                     </button>
                                     <button
                                         onClick={() => setTheme('dark')}
-                                        className={`flex-1 px-4 py-3 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2 ${theme === 'dark'
+                                        className={`flex-1 px-3 py-3 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-1.5 ${themePreference === 'dark'
                                             ? 'bg-[var(--brand-pink)] text-white'
                                             : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:bg-[var(--background-tertiary)]'
                                             }`}

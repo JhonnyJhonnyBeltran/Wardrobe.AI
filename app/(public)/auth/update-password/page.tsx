@@ -50,11 +50,11 @@ export default function UpdatePasswordPage() {
 
     if (success) {
         return (
-            <div className="relative min-h-screen flex items-center justify-center p-4 bg-[var(--background)]">
+            <div style={{ colorScheme: 'light' }} className="relative min-h-screen flex items-center justify-center p-4 bg-white text-black">
                 <motion.div
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="relative z-10 w-full max-w-md bg-[var(--card-bg)] border border-[var(--border-color)] rounded-[32px] shadow-2xl p-10 text-center"
+                    className="relative z-10 w-full max-w-md bg-white border border-black/[0.08] rounded-[32px] shadow-xl p-10 text-center"
                 >
                     <div className="flex justify-center mb-6">
                         <LogoExtended size="xl" className="text-[var(--foreground)] drop-shadow-sm" />
@@ -79,12 +79,12 @@ export default function UpdatePasswordPage() {
     }
 
     return (
-        <div className="relative min-h-screen flex items-center justify-center p-4 bg-[var(--background)] overflow-hidden">
+        <div style={{ colorScheme: 'light' }} className="relative min-h-screen flex items-center justify-center p-4 bg-white text-black overflow-hidden">
             <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, ease: "easeOut" }}
-                className="relative z-10 w-full max-w-md bg-[var(--card-bg)] border border-[var(--border-color)] rounded-[32px] shadow-2xl overflow-hidden"
+                className="relative z-10 w-full max-w-md bg-white border border-black/[0.08] rounded-[32px] shadow-xl overflow-hidden"
             >
                 <div className="p-8 md:p-10">
                     <div className="flex justify-center mb-12">

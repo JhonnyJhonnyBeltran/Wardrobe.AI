@@ -7,7 +7,7 @@
 
 import { useEffect } from "react";
 import dynamic from "next/dynamic";
-import { UserProvider, ThemeProvider } from "@/store";
+import { UserProvider, ThemeProvider, useTheme } from "@/store";
 import RealtimeProvider from "@/components/RealtimeProvider";
 import MessageProvider from "@/components/MessageProvider";
 import GlobalErrorBoundary from "@/components/GlobalErrorBoundary";
@@ -40,6 +40,25 @@ const CookiesBanner = dynamic(() => import("@/components/CookiesBanner"), {
   ssr: false,
   loading: () => null,
 });
+
+function ThemedToaster() {
+  const { isDark } = useTheme();
+  return (
+    <Toaster 
+      position="top-center" 
+      theme={isDark ? 'dark' : 'light'} 
+      expand={true} 
+      toastOptions={{
+        style: {
+          background: 'var(--brand-pink)',
+          color: 'white',
+          border: 'none',
+        },
+        className: 'font-sans font-medium shadow-xl rounded-2xl',
+      }}
+    />
+  );
+}
 
 interface RootLayoutClientProps {
   children: React.ReactNode;
@@ -83,19 +102,7 @@ export default function RootLayoutClient({ children }: RootLayoutClientProps) {
               {/* UI overlays - loaded on-demand */}
               <NotificationToastContainer position="top-right" />
               <CookiesBanner />
-              <Toaster 
-                position="top-center" 
-                theme="system" 
-                expand={true} 
-                toastOptions={{
-                  style: {
-                    background: 'var(--brand-pink)',
-                    color: 'white',
-                    border: 'none',
-                  },
-                  className: 'font-sans font-medium shadow-xl rounded-2xl',
-                }}
-              />
+              <ThemedToaster />
               <SystemModal />
             </MessageProvider>
           </RealtimeProvider>

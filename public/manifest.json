@@ -4,8 +4,8 @@
   "description": "Digitaliza tus prendas, organiza tu armario cápsula, descubre inspiración estilo Pinterest y genera combinaciones con IA.",
   "start_url": "/feed",
   "display": "standalone",
-  "background_color": "#09090b",
-  "theme_color": "#FF2D78",
+  "background_color": "#ffffff",
+  "theme_color": "#FF66C4",
   "orientation": "portrait-primary",
   "categories": ["fashion", "social", "lifestyle", "shopping"],
   "icons": [

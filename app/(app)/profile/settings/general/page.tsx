@@ -17,7 +17,7 @@ import { toast } from 'sonner';
 
 export default function GeneralSettingsPage() {
   const router = useRouter();
-  const { theme, setTheme } = useTheme();
+  const { theme, themePreference, setTheme } = useTheme();
   const { user } = useUser();
   const { language, setLanguage } = useLanguageStore();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -77,8 +77,20 @@ export default function GeneralSettingsPage() {
                 </div>
                 <div className="flex gap-2">
                   <button
+                    onClick={() => setTheme('auto')}
+                    title="Automático"
+                    className={`px-3 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-1.5 ${themePreference === 'auto'
+                      ? 'bg-[var(--brand-pink)] text-white'
+                      : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:bg-[var(--background-tertiary)]'
+                      }`}
+                  >
+                    <Smartphone className="w-4 h-4" />
+                    <span className="text-xs">Auto</span>
+                  </button>
+                  <button
                     onClick={() => setTheme('light')}
-                    className={`px-3 py-2 rounded-xl text-sm font-medium transition-all ${theme === 'light'
+                    title="Claro"
+                    className={`px-3 py-2 rounded-xl text-sm font-medium transition-all ${themePreference === 'light'
                       ? 'bg-[var(--brand-pink)] text-white'
                       : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:bg-[var(--background-tertiary)]'
                       }`}
@@ -87,7 +99,8 @@ export default function GeneralSettingsPage() {
                   </button>
                   <button
                     onClick={() => setTheme('dark')}
-                    className={`px-3 py-2 rounded-xl text-sm font-medium transition-all ${theme === 'dark'
+                    title="Oscuro"
+                    className={`px-3 py-2 rounded-xl text-sm font-medium transition-all ${themePreference === 'dark'
                       ? 'bg-[var(--brand-pink)] text-white'
                       : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:bg-[var(--background-tertiary)]'
                       }`}

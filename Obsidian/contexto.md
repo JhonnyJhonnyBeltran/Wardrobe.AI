@@ -3394,3 +3394,14 @@ Ejecución del Consejo de Negocio con 4 subagentes especializados (`business-bel
 - **Comandos de Exportación y Pipeline**:
   - `npm run remotion:render-spotify` $\rightarrow$ Exporta directamente el archivo de vídeo `out/klozet-spotify-apple.mp4`.
   - Script de utilidad `scripts/patch-next.js` para corregir la interpolación de rutas con comillas en el loader de metadata de Next.js (`next-metadata-route-loader.js`) en Windows.
+
+### 53. Política de Tema Claro por Defecto (iPhone Adaptativo) y Rediseño de Login con Personalidad (Noviembre 2026)
+- **Motor de Tema Inteligente (`store/themeStore.tsx`, `app/layout.tsx`, `app/RootLayoutClient.tsx`, `public/manifest.json`)**:
+  - **Por defecto claro universal**: Desktop (Windows, macOS, Linux), Android e iPad inician siempre en modo claro (`light`) aunque el sistema operativo esté en modo oscuro.
+  - **Excepción nativa para iPhone**: Si el usuario accede desde un iPhone (`isIPhoneDevice()`) y tiene activado el modo oscuro en iOS (`prefers-color-scheme: dark`), la app se adapta automáticamente a modo oscuro y escucha cambios en vivo (y en Ajustes se ofrece selector `Auto | Claro | Oscuro` mediante `themePreference`).
+  - **Rutas Bloqueadas en Modo Claro (`isForceLightRoute`)**: Landing (`/`), Login/Auth (`/auth`, `/login`, `/auth/update-password`) y Onboarding (`/onboarding/*`) se mantienen estrictamente en modo claro independientemente del dispositivo o tema configurado.
+  - **Cromo y PWA claros**: `viewport.themeColor` y `manifest.json` actualizados a `#ffffff` / `statusBarStyle: "default"`, actualizando dinámicamente `<meta name="theme-color">` y `<Toaster theme={isDark ? 'dark' : 'light'} />`.
+- **Personalidad de Marca en Login (`app/(public)/auth/page.tsx`)**:
+  - Aplicando `Obsidian/brand_kit.md` (*"Un juguete dentro de un iPhone"*), rediseño en modo claro puro (`#FFFFFF` + `#F5F5F7` + `#F2F2F7`, un único CTA `#FF66C4`, cero degradados/morados/orbes).
+  - **Vitrina Interactiva de Looks (Escritorio)**: Selector de 4 looks reales (`Casual`, `Urbano`, `Clásico`, `Monocromo`) con cambio suave y overlay de prendas.
+  - **Kloe Interactiva y Reactiva**: Mascota oficial `/kloe-avatar.png` integrada en un diálogo vivo que reacciona al foco de contraseña (promete no mirar), al registro de `@usuario`, a la selección de looks o al toque directo con rebote elástico `--ease-bounce`.

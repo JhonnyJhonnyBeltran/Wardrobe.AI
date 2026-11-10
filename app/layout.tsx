@@ -107,7 +107,7 @@ export const metadata: Metadata = {
   },
   appleWebApp: {
     capable: true,
-    statusBarStyle: "black-translucent",
+    statusBarStyle: "default",
     title: "Klozet"
   },
   category: "fashion",
@@ -120,7 +120,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
-  themeColor: "#09090b",
+  themeColor: "#ffffff",
   viewportFit: "cover",
 };
 

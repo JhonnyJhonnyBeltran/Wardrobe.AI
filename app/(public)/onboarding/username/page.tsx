@@ -83,20 +83,10 @@ export default function UsernameOnboardingPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[var(--background)] flex flex-col items-center justify-center p-6 selection:bg-[var(--brand-pink)] selection:text-white relative overflow-hidden">
-            {/* Background elements */}
-            <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-                <motion.div
-                    className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-[var(--brand-pink)] rounded-full mix-blend-screen filter blur-[100px] opacity-20"
-                    animate={{ x: [0, 20, 0], y: [0, -20, 0] }}
-                    transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
-                />
-            </div>
-
+        <div style={{ colorScheme: 'light' }} className="min-h-screen bg-white text-black flex flex-col items-center justify-center p-6 selection:bg-[var(--brand-pink)] selection:text-white relative overflow-hidden">
             <div className="relative z-10 w-full max-w-md">
                 <div className="flex justify-center mb-10">
-                    <Image src="/klozet-logo.png" alt="Klozet" width={120} height={36} className="dark:hidden block object-contain" />
-                    <Image src="/klozet-logo-dark.png" alt="Klozet" width={120} height={36} className="hidden dark:block object-contain" />
+                    <Image src="/landing/klozet-nombre-grande.png" alt="Klozet" width={140} height={42} className="object-contain" priority />
                 </div>
 
                 <motion.div

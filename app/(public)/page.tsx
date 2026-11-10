@@ -133,19 +133,11 @@ export default function LandingPage() {
     },
   });
 
-  // Force light mode on Landing Page (never dark)
+  // Force light mode on Landing Page (never dark); ThemeProvider manages restoration on other routes
   useEffect(() => {
     const root = document.documentElement;
-    const wasDark = root.classList.contains('dark');
     root.classList.remove('dark');
     root.style.colorScheme = 'light';
-    return () => {
-      const savedTheme = localStorage.getItem('klozet_theme');
-      if (savedTheme === 'dark' || (wasDark && !savedTheme)) {
-        root.classList.add('dark');
-        root.style.colorScheme = 'dark';
-      }
-    };
   }, []);
 
   return (

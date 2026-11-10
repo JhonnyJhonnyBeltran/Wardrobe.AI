@@ -199,19 +199,11 @@ function PreferencesContent() {
     const [showAllGenderStyles, setShowAllGenderStyles] = useState(false);
     const [showSkipSilhouetteModal, setShowSkipSilhouetteModal] = useState(false);
 
-    // Force light mode on Onboarding (never dark)
+    // Force light mode on Onboarding (never dark); ThemeProvider restores on app routes
     useEffect(() => {
         const root = document.documentElement;
-        const wasDark = root.classList.contains('dark');
         root.classList.remove('dark');
         root.style.colorScheme = 'light';
-        return () => {
-            const savedTheme = localStorage.getItem('klozet_theme');
-            if (savedTheme === 'dark' || (wasDark && !savedTheme)) {
-                root.classList.add('dark');
-                root.style.colorScheme = 'dark';
-            }
-        };
     }, []);
 
     // DB state
