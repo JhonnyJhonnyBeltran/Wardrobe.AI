@@ -45,3 +45,22 @@ scratch/
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# video studio & media renders (kept isolated in Downloads studio, never commit)
+/remotion/
+/out/
+/public/ad-assets/
+/public/sfx/
+remotion.config.ts
+*.mp4
+*.wav
+.agents/skills/remotion*
+.agents/skills/demovie/
+.agents/skills/apple-motion/
+
+# Capacitor / Xcode native build artifacts
+ios/App/Pods/
+ios/App/build/
+ios/DerivedData/
+*.ipa
+*.xcarchive

@@ -1,18 +1,29 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Crown, Check, X, ShieldCheck, Zap } from 'lucide-react';
+import { Crown, Check, X, ShieldCheck, Zap, RotateCcw, Loader2 } from 'lucide-react';
 import { LogoMark } from '@/components';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { useUiStore } from '@/store/uiStore';
+import { useUser } from '@/store/userStore';
+import { haptics } from '@/lib/haptic';
+import {
+    isNativeCapacitor,
+    presentNativePaywall,
+    restoreKlozetPurchases,
+} from '@/lib/revenuecat/client';
 
 export default function PremiumPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('yearly');
+    const [loadingPaywall, setLoadingPaywall] = useState(false);
+    const [restoring, setRestoring] = useState(false);
     const { openPremiumModal } = useUiStore();
+    const { user, refreshProfile } = useUser();
+    const isNative = isNativeCapacitor();
 
     useEffect(() => {
         if (searchParams.get('subscribed') === 'success' || searchParams.get('success') === 'true') {
@@ -49,8 +60,47 @@ export default function PremiumPage() {
         };
     }, [router]);
 
-    const handleOpenPaymentModal = () => {
-        openPremiumModal();
+    const handleOpenPaymentModal = async () => {
+        if (loadingPaywall) return;
+        if (isNative) {
+            setLoadingPaywall(true);
+            try {
+                haptics.tap();
+                const res = await presentNativePaywall(user?.id);
+                if (res.purchasedOrRestored) {
+                    haptics.success();
+                    await refreshProfile();
+                    toast.success('¡Bienvenido a Klozet Pro!');
+                    router.push('/closet/kloe');
+                } else if (res.error) {
+                    toast.error(res.error);
+                }
+            } finally {
+                setLoadingPaywall(false);
+            }
+            return;
+        }
+        openPremiumModal(selectedPlan);
+    };
+
+    const handleRestore = async () => {
+        if (restoring || loadingPaywall) return;
+        setRestoring(true);
+        try {
+            const restored = await restoreKlozetPurchases(user?.id);
+            if (restored) {
+                haptics.success();
+                await refreshProfile();
+                toast.success('¡Suscripción Klozet Pro restaurada!');
+                router.push('/closet/kloe');
+            } else {
+                toast.info('No encontramos suscripciones activas previas.');
+            }
+        } catch (err: any) {
+            toast.error(err?.message || 'Error al restaurar compras.');
+        } finally {
+            setRestoring(false);
+        }
     };
 
     const benefits = [
@@ -174,13 +224,32 @@ export default function PremiumPage() {
                 >
                     <button
                         onClick={handleOpenPaymentModal}
-                        className="w-full py-4 px-6 rounded-full bg-[var(--brand-pink)] text-white font-bold text-base hover:opacity-95 active:scale-[0.98] transition-all shadow-xl shadow-[var(--brand-pink)]/25 flex items-center justify-center gap-2 cursor-pointer"
+                        disabled={loadingPaywall || restoring}
+                        className="w-full py-4 px-6 rounded-full bg-[var(--brand-pink)] text-white font-bold text-base hover:opacity-95 active:scale-[0.98] transition-all shadow-xl shadow-[var(--brand-pink)]/25 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70"
                     >
-                        <Zap className="w-5 h-5 fill-white" />
+                        {loadingPaywall ? (
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                            <Zap className="w-5 h-5 fill-white" />
+                        )}
                         <span>
-                            Abrir Hoja de Pago Rápido ({selectedPlan === 'yearly' ? '24,99 €/año · ~2,08 €/mes' : '2,99 €/mes'})
+                            {isNative
+                                ? 'Continuar con App Store'
+                                : `Abrir Hoja de Pago Rápido (${selectedPlan === 'yearly' ? '24,99 €/año · ~2,08 €/mes' : '2,99 €/mes'})`}
                         </span>
                     </button>
+
+                    {isNative && (
+                        <button
+                            type="button"
+                            onClick={handleRestore}
+                            disabled={restoring || loadingPaywall}
+                            className="w-full py-3 px-6 rounded-full bg-[var(--background-secondary)] text-[var(--foreground)] text-sm font-semibold flex items-center justify-center gap-2 hover:bg-[var(--background-tertiary)] transition-all active:scale-[0.98] cursor-pointer disabled:opacity-60"
+                        >
+                            {restoring ? <Loader2 className="w-4 h-4 animate-spin" /> : <RotateCcw className="w-4 h-4" />}
+                            <span>Restaurar compras</span>
+                        </button>
+                    )}
 
                     <div className="flex items-center justify-center gap-4 text-xs text-[var(--foreground-tertiary)]">
                         <span className="flex items-center gap-1">

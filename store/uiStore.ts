@@ -37,7 +37,8 @@ interface UiStore {
     messageRequestsCount: number;
     setMessageRequestsCount: (count: number) => void;
     isPremiumModalOpen: boolean;
-    openPremiumModal: () => void;
+    premiumDefaultPlan: 'monthly' | 'yearly';
+    openPremiumModal: (plan?: 'monthly' | 'yearly') => void;
     closePremiumModal: () => void;
 
     // Closet State
@@ -137,7 +138,8 @@ export const useUiStore = create<UiStore>((set) => ({
     messageRequestsCount: 0,
     setMessageRequestsCount: (count) => set({ messageRequestsCount: count }),
     isPremiumModalOpen: false,
-    openPremiumModal: () => set({ isPremiumModalOpen: true }),
+    premiumDefaultPlan: 'yearly',
+    openPremiumModal: (plan) => set({ isPremiumModalOpen: true, ...(plan ? { premiumDefaultPlan: plan } : {}) }),
     closePremiumModal: () => set({ isPremiumModalOpen: false }),
 
     // Closet State

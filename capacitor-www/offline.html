@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Sin conexión — Klozet</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      height: 100%;
+      width: 100%;
+      background: #ffffff;
+      color: #000000;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", Inter, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+    .card {
+      padding: 32px 24px;
+      max-width: 340px;
+      width: 100%;
+    }
+    .badge {
+      width: 56px;
+      height: 56px;
+      border-radius: 18px;
+      background: #FFB3DE;
+      color: #ED4C9E;
+      font-weight: 700;
+      font-size: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 18px;
+    }
+    h1 { font-size: 20px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.02em; }
+    p { font-size: 14px; color: #636366; line-height: 1.5; margin-bottom: 24px; }
+    button {
+      width: 100%;
+      height: 48px;
+      border: none;
+      border-radius: 9999px;
+      background: #FF66C4;
+      color: #ffffff;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button:active { transform: scale(0.97); opacity: 0.9; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="badge">K</div>
+    <h1>Sin conexión a internet</h1>
+    <p>Parece que ahora mismo no tienes cobertura. Comprueba tu red para volver a abrir tu armario.</p>
+    <button onclick="window.location.href='https://klozet.es'">Reintentar</button>
+  </div>
+</body>
+</html>

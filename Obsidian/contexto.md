@@ -3421,3 +3421,32 @@ Ejecución del Consejo de Negocio con 4 subagentes especializados (`business-bel
 - **Audio Master Sincronizado (`public/ad-assets/soundtrack-klozet-v2.wav`)**:
   - Pista estéreo sintetizada a 120 BPM (1 beat = 30 frames a 60 fps, 48 kHz, `-17.4 dBFS`), con drop en F330, hit final en F960 y efectos foley UI sincronizados al toque (`click.wav`, `swish.wav`, `whoosh.wav`).
   - Render verificado: `npm run remotion:render-spotify` $\rightarrow$ `out/klozet-spotify-apple.mp4` (6.8 MB, 1140 frames, 1080×1920 60fps).
+
+### 55. Arquitectura Híbrida iOS Nativa (Capacitor) y Monetización Unificada con RevenueCat (`klozet_pro`) (Noviembre 2026)
+- **Contenedor Nativo iOS (`capacitor.config.ts`, `ios/`, `capacitor-www/`)**:
+  - Integrado **Capacitor 8** (`@capacitor/core`, `@capacitor/ios`, `@capacitor/haptics`, `@capacitor/status-bar`, `@capacitor/splash-screen`) con esquema Xcode generado en `ios/` mediante Swift Package Manager (`es.klozet.app`).
+  - Modo de carga configurado sobre `CAPACITOR_SERVER_URL` (`https://klozet.es` por defecto) con pantalla de respaldo local offline (`capacitor-www/offline.html`) y permisos iOS de cámara y galería (`NSCameraUsageDescription`, `NSPhotoLibraryUsageDescription`, `NSPhotoLibraryAddUsageDescription`) configurados en `ios/App/App/Info.plist`.
+  - Háptica nativa Taptic Engine integrada en `lib/haptic.ts` cuando corre bajo Capacitor nativo.
+- **SDK Unificado de RevenueCat (`lib/revenuecat/client.ts` & `components/RevenueCatProvider.tsx`)**:
+  - **En iOS Nativo (`@revenuecat/purchases-capacitor` + `@revenuecat/purchases-capacitor-ui`)**:
+    - Configura `Purchases.configure(...)` con clave Test Store (`test_XZNJUZgtJPHbnONEWbcAQHnxNxC` o `NEXT_PUBLIC_REVENUECAT_IOS_API_KEY` en producción `appl_...`), vincula `appUserID` al UUID de Supabase mediante `logIn`, verifica el entitlement `'klozet_pro'`, lanza la paywall remota mediante `RevenueCatUI.presentPaywall()` y expone **"Restaurar compras"** (`restorePurchases()`, obligatorio App Store 3.1.1). Dentro de la app iOS nunca se muestra pasarela Stripe externa.
+  - **En Web (`@revenuecat/purchases-js`)**:
+    - Configura el SDK web para intentar `presentPaywall({ htmlTarget })` de RevenueCat y hace fallback transparente a **Stripe Embedded Checkout** en `components/KloeProModal.tsx` y `/premium` si Web Billing no está activo todavía en el dashboard.
+- **Sincronización Segura con Supabase (`app/api/webhooks/revenuecat/route.ts` & `app/api/revenuecat/sync/route.ts`)**:
+  - Webhook oficial `/api/webhooks/revenuecat` validado por `REVENUECAT_WEBHOOK_SECRET` que consulta `/v1/subscribers/{id}` (si existe `REVENUECAT_SECRET_KEY`) o eventos de RevenueCat para actualizar `profiles.is_premium`, `subscription_tier`, `subscription_plan`, `subscription_status` y `subscription_period_end`.
+  - Endpoint autenticado `/api/revenuecat/sync` para reconciliación instantánea tras compra o restauración desde el cliente iOS/Web.
+
+---
+
+## 56. Estudio de Vídeo Publicitario Separado y Repertorio Motion/Audio (`C:\Users\EthanCurro\Downloads\klozet-video-studio`)
+Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio principal de Klozet, el estudio de Remotion quedó completamente separado en `C:\Users\EthanCurro\Downloads\klozet-video-studio`:
+- **Aislamiento en el repo principal**:
+  - `.env` enlaza el workspace externo con `VIDEO_STUDIO_DIR=C:\Users\EthanCurro\Downloads\klozet-video-studio` y `VIDEO_OUTPUT_DIR=C:\Users\EthanCurro\Downloads\klozet-video-studio\out`.
+  - `.gitignore` bloquea cualquier archivo residual de vídeo/estudio (`/remotion/`, `/out/`, `/public/ad-assets/`, `/public/sfx/`, `remotion.config.ts`, `*.mp4`, `*.wav`, `.agents/skills/remotion*`, `.agents/skills/demovie/`, `.agents/skills/apple-motion/`).
+  - `package.json` sin dependencias ni scripts de `remotion` / `@remotion/*`.
+- **Repertorio global de skills y repos de referencia**:
+  - Skills globales añadidas en `C:\Users\EthanCurro\.gemini\config\skills\`: `video-shotcraft`, `opus-video-prompts`, `awesome-opus5-5-videos`, `librosa-beat-sync` (respaldadas por los repos clonados en `klozet-video-studio\references\` y entorno Python con `librosa 0.11.0` + `soundfile 0.14.0`).
+- **Producción `KlozetRunwayPromo` (`out/klozet-promo-v3.mp4`)**:
+  - Formato vertical `1080×1920` a `60 fps` (`1140` frames / `19.0 s`), texto reducido a 6 palabras externas (`¿Qué te pones?`, `Tu armario.`, `klozet.es`) y logos PNG oficiales de **Klozet** y **Kloe** sueltos sobre `#111113` (sin círculos contenedores).
+  - Banda sonora real `Cat Walk` (`Arulo`, Mixkit Free License) masterizada a `-15.3 dBFS`, sincronizada al frame mediante `librosa` HPSS + regresión de kicks (`130.002 BPM`, `max_res=5.57ms`) y diseño SFX compensado por pico (`beatF` / `sfxFrom`).
+  - Flujo móvil a escala gigante basado en las capturas reales de la app: `/closet` → `OutfitDetailModal` (`Toca una prenda para ver detalles`) → `ProductModal` (`Jersey de punto básico color crema`) → `/post` (`Prendas del look (4)`).

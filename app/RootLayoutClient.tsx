@@ -10,6 +10,7 @@ import dynamic from "next/dynamic";
 import { UserProvider, ThemeProvider, useTheme } from "@/store";
 import RealtimeProvider from "@/components/RealtimeProvider";
 import MessageProvider from "@/components/MessageProvider";
+import RevenueCatProvider from "@/components/RevenueCatProvider";
 import GlobalErrorBoundary from "@/components/GlobalErrorBoundary";
 import SmartModelPreloader from "@/components/SmartModelPreloader";
 import LanguageDomTranslator from "@/components/LanguageDomTranslator";
@@ -86,26 +87,28 @@ export default function RootLayoutClient({ children }: RootLayoutClientProps) {
     <GlobalErrorBoundary>
       <ThemeProvider>
         <UserProvider>
-          <RealtimeProvider>
-            <MessageProvider>
-              {/* Critical components */}
-              <LanguageDomTranslator />
-              <SmartModelPreloader />
-              <AppLifecycleManager />
-              
-              {/* Non-critical components - loaded dynamically */}
-              <SocialListener />
-              
-              {/* Main content directly (layouts handled by Route Groups) */}
-              {children}
-              
-              {/* UI overlays - loaded on-demand */}
-              <NotificationToastContainer position="top-right" />
-              <CookiesBanner />
-              <ThemedToaster />
-              <SystemModal />
-            </MessageProvider>
-          </RealtimeProvider>
+          <RevenueCatProvider>
+            <RealtimeProvider>
+              <MessageProvider>
+                {/* Critical components */}
+                <LanguageDomTranslator />
+                <SmartModelPreloader />
+                <AppLifecycleManager />
+                
+                {/* Non-critical components - loaded dynamically */}
+                <SocialListener />
+                
+                {/* Main content directly (layouts handled by Route Groups) */}
+                {children}
+                
+                {/* UI overlays - loaded on-demand */}
+                <NotificationToastContainer position="top-right" />
+                <CookiesBanner />
+                <ThemedToaster />
+                <SystemModal />
+              </MessageProvider>
+            </RealtimeProvider>
+          </RevenueCatProvider>
         </UserProvider>
       </ThemeProvider>
     </GlobalErrorBoundary>
