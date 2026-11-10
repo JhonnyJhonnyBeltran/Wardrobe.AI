@@ -292,14 +292,6 @@ export default function AddItemModal({
         }
     };
 
-    const handleCancelButtonClick = () => {
-        if (!isEditing && (isBatch || image || formData.name.trim() !== '')) {
-            setShowCancelConfirm(true);
-        } else {
-            onClose();
-        }
-    };
-
     const handleAdvisorConfirm = () => {
         setShowAdvisor(false);
     };
@@ -487,7 +479,7 @@ export default function AddItemModal({
                                                 }))
                                             }
                                             options={brands}
-                                            placeholder="Seleccionar marca (o detectada por IA)..."
+                                            placeholder="Seleccionar o escribir marca..."
                                         />
 
                                         {/* Color — always visible */}
@@ -606,38 +598,26 @@ export default function AddItemModal({
                                 )}
                             </div>
 
-                            {/* ── Bottom Action Buttons ── */}
+                            {/* ── Bottom Action Buttons (Zero duplicate Cancel button; X header handles dismiss) ── */}
                             <div className="flex-shrink-0 p-4 pt-3 pb-6 md:pb-4 bg-[var(--background)] border-t border-[var(--border-color)] safe-bottom space-y-2.5">
-                                {/* Top Row: Cancelar & Añadir más prendas */}
-                                <div className="flex items-center gap-2.5 w-full">
+                                {!isEditing && (
                                     <button
                                         type="button"
-                                        onClick={handleCancelButtonClick}
-                                        className="flex-1 py-3 rounded-2xl bg-[var(--background-secondary)] hover:bg-[var(--border-color)] text-[var(--foreground-secondary)] hover:text-[var(--foreground)] font-semibold text-xs sm:text-sm transition-all cursor-pointer text-center border border-transparent hover:border-[var(--border-color)] active:scale-[0.98]"
+                                        onClick={() => setShowAddMore(true)}
+                                        disabled={isSubmitting || (isBatch && batchItems.length >= 20)}
+                                        className="w-full py-2.5 rounded-full bg-[var(--background-secondary)] hover:bg-[var(--border-color)] text-[var(--foreground)] font-semibold text-xs sm:text-sm transition-all cursor-pointer flex items-center justify-center gap-1.5 border border-[var(--border-color)] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                                        title="Añadir más fotos de prendas"
                                     >
-                                        Cancelar
+                                        <Plus className="w-4 h-4 text-[var(--brand-pink)] stroke-[2.5]" />
+                                        <span>Añadir más prendas</span>
                                     </button>
+                                )}
 
-                                    {!isEditing && (
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowAddMore(true)}
-                                            disabled={isSubmitting || (isBatch && batchItems.length >= 20)}
-                                            className="flex-1 py-3 rounded-2xl bg-[var(--background-secondary)] hover:bg-[var(--border-color)] text-[var(--foreground)] font-semibold text-xs sm:text-sm transition-all cursor-pointer flex items-center justify-center gap-1.5 border border-[var(--border-color)] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
-                                            title="Añadir más fotos de prendas"
-                                        >
-                                            <Plus className="w-4 h-4 text-[var(--brand-pink)] stroke-[2.5]" />
-                                            <span>Añadir prendas</span>
-                                        </button>
-                                    )}
-                                </div>
-
-                                {/* Bottom Row: Guardar (Full width) */}
+                                {/* Primary Save CTA */}
                                 <Button
                                     onClick={handleSubmit}
                                     disabled={!canSubmit}
-                                    className="w-full py-3.5 rounded-2xl text-xs sm:text-sm font-semibold shadow-md"
-                                    glow={canSubmit}
+                                    className="w-full py-3.5 rounded-full text-xs sm:text-sm font-semibold kz-pink-surface border-0 text-white"
                                 >
                                     {isSubmitting ? (
                                         <>
@@ -645,7 +625,7 @@ export default function AddItemModal({
                                             <span>
                                                 {isBatch 
                                                     ? (savingProgress ? `Guardando ${savingProgress.current} de ${savingProgress.total}...` : 'Guardando...') 
-                                                    : (isEditing ? 'Guardando...' : 'Guardando...')
+                                                    : 'Guardando...'
                                                 }
                                             </span>
                                         </>
@@ -671,14 +651,6 @@ export default function AddItemModal({
                                         </>
                                     )}
                                 </Button>
-                                {isProcessing && (
-                                    <p className="text-xs text-center text-[var(--foreground-tertiary)] mt-1.5">
-                                        {isBatch 
-                                            ? 'Puedes ir revisando y personalizando cada prenda mientras se procesan las demás'
-                                            : 'Puedes seguir rellenando el formulario mientras se procesa'
-                                        }
-                                    </p>
-                                )}
                             </div>
                         </motion.div>
                     </motion.div>

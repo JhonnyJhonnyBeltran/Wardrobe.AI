@@ -15,7 +15,6 @@ import {
     Save, 
     ArrowRight, 
     Shirt, 
-    Wand2, 
     Eye, 
     X, 
     Share2, 
@@ -35,7 +34,8 @@ import {
     Snowflake,
     Calendar
 } from 'lucide-react';
-import { Button } from '@/components';
+import { Button, KloeMascot } from '@/components';
+import { haptics } from '@/lib/haptic';
 import { useWardrobe } from '@/lib/hooks/useWardrobe';
 import { ClothingItem } from '@/types/clothing';
 import { CarouselSlot } from '@/components/Creator/CarouselSlot';
@@ -1133,30 +1133,22 @@ export default function CreateOutfitPage() {
                             </div>
                         </div>
 
-                        {/* Kloe AI Assistant Banner (Omitted if coming from Kloe recommendation) */}
+                        {/* Kloe Assistant Banner (Omitted if coming from Kloe recommendation) */}
                         {!isFromKloe && (
                             <Link href="/closet/kloe" className="block group">
-                                <div className="relative overflow-hidden bg-gradient-to-r from-[var(--brand-pink)]/10 via-[var(--brand-pink)]/5 to-transparent border border-[var(--brand-pink)]/25 hover:border-[var(--brand-pink)]/50 rounded-2xl p-3.5 flex items-center justify-between transition-all duration-300 shadow-xs hover:shadow-md hover:shadow-[var(--brand-pink)]/5 active:scale-[0.99]">
+                                <div className="relative overflow-hidden kz-kloe-hero rounded-[20px] p-3.5 flex items-center justify-between transition-all duration-300 active:scale-[0.98]">
                                     <div className="flex items-center gap-3 min-w-0">
-                                        <div className="relative w-14 h-9 flex-shrink-0 flex items-center justify-center">
-                                            <Image 
-                                                src="/kloe-logo-large.png" 
-                                                alt="Kloe" 
-                                                fill 
-                                                className="object-contain drop-shadow-xs group-hover:scale-105 transition-transform" 
-                                            />
-                                        </div>
+                                        <KloeMascot mood="happy" size="sm" />
                                         <div className="min-w-0">
-                                            <p className="text-xs font-bold text-[var(--foreground)] flex items-center gap-1 truncate">
+                                            <p className="font-kloe text-sm font-bold text-[var(--foreground)] truncate">
                                                 ¿Quieres que Kloe te ayude?
-                                                <Sun className="w-3 h-3 text-[var(--brand-pink)] shrink-0" />
                                             </p>
-                                            <p className="text-[11px] text-[var(--foreground-secondary)] truncate">
-                                                Combina tus prendas con IA en segundos
+                                            <p className="kz-caption text-[var(--foreground-secondary)] truncate">
+                                                Combina tus prendas en segundos
                                             </p>
                                         </div>
                                     </div>
-                                    <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-[var(--brand-pink)] text-white flex items-center gap-1 shadow-xs group-hover:opacity-95 shrink-0 ml-2 transition-all">
+                                    <span className="font-kloe text-xs font-semibold px-3 py-1.5 rounded-full kz-pink-surface text-white shrink-0 ml-2">
                                         Abrir
                                     </span>
                                 </div>
@@ -1312,7 +1304,7 @@ export default function CreateOutfitPage() {
                 )}
             </AnimatePresence>
 
-            {/* Success Modal */}
+            {/* Success Modal with Kloe celebration */}
             <AnimatePresence>
                 {successModalConfig.isOpen && (
                     <motion.div
@@ -1322,20 +1314,24 @@ export default function CreateOutfitPage() {
                         className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
                     >
                          <motion.div
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.9, opacity: 0 }}
-                            className="bg-[var(--card-bg)] border border-[var(--border-color)] p-6 rounded-3xl shadow-xl w-full max-w-sm flex flex-col items-center text-center"
+                            initial={{ scale: 0.84, opacity: 0, y: 18 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 12 }}
+                            transition={{ type: 'spring', stiffness: 420, damping: 24 }}
+                            className="kz-surface-card p-6 rounded-[20px] w-full max-w-sm flex flex-col items-center text-center relative overflow-hidden"
                          >
-                              <div className="w-16 h-16 bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] rounded-full flex items-center justify-center mb-4">
-                                  <Check className="w-8 h-8" />
+                              <div className="relative w-20 h-20 rounded-[20px] kz-kloe-hero flex items-center justify-center mb-4">
+                                  <KloeMascot mood="excited" size="lg" />
                               </div>
-                              <h3 className="text-xl font-bold text-[var(--foreground)] mb-2">¡Outfit {successModalConfig.isUpdate ? 'actualizado' : 'creado'}!</h3>
-                              <p className="text-[var(--foreground-secondary)] text-sm mb-6">
-                                  El outfit "{successModalConfig.outfitName}" se ha {successModalConfig.isUpdate ? 'actualizado' : 'guardado'} correctamente.
+                              <h3 className="kz-title text-[var(--foreground)] mb-2">
+                                  ¡Outfit {successModalConfig.isUpdate ? 'actualizado' : 'creado'}!
+                              </h3>
+                              <p className="kz-body text-[var(--foreground-secondary)] mb-6">
+                                  El look &quot;{successModalConfig.outfitName}&quot; ya está en tu armario.
                               </p>
                               <Button
                                   onClick={() => {
+                                      try { haptics.success(); } catch {}
                                       setSuccessModalConfig({ ...successModalConfig, isOpen: false });
                                       const rTo = successModalConfig.returnTo;
                                       if (rTo) {
@@ -1345,8 +1341,7 @@ export default function CreateOutfitPage() {
                                           router.push('/closet?tab=outfits');
                                       }
                                   }}
-                                  className="w-full rounded-xl py-3 font-semibold"
-                                  glow
+                                  className="w-full rounded-full py-3 font-semibold kz-pink-surface border-0 text-white"
                               >
                                   Ir al Armario
                               </Button>

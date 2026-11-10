@@ -191,45 +191,19 @@ export function OutfitDetailModal({
                                         isActive={isOpen}
                                     />
                                 </div>
-                                <div className="absolute bottom-2.5 inset-x-0 flex justify-center pointer-events-none">
-                                    <span className="text-[10px] tracking-wider uppercase font-semibold text-zinc-500 bg-zinc-100/90 backdrop-blur-xs px-3 py-1 rounded-full border border-black/[0.06] shadow-2xs">
-                                        Toca una prenda para ver detalles
-                                    </span>
-                                </div>
                             </div>
 
                             {/* Bottom Info Section (Clean & Compact) */}
                             <div className="relative z-10 w-full shrink-0 md:flex-1 md:shrink flex flex-col justify-between bg-[var(--background)] p-4 sm:p-5 md:p-8 md:pt-14 gap-4 md:gap-6 border-t border-[var(--border-color)]/60 md:border-t-0 md:overflow-y-auto">
-                                {/* Title & Metadata Tags */}
+                                {/* Title & Clean Subtitle (no redundant informational pills) */}
                                 <div className="flex flex-col gap-1">
-                                    <div className="flex items-center gap-1.5 flex-wrap">
-                                        {outfit.occasion && config && (
-                                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[var(--background-secondary)] text-[var(--foreground-secondary)] border border-[var(--border-color)]">
-                                                {config.icon}
-                                                {config.label}
-                                            </span>
-                                        )}
-                                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[var(--background-secondary)] text-[var(--foreground-secondary)] border border-[var(--border-color)]">
-                                            <Layers className="w-3 h-3 text-[var(--brand-pink,#FF66C4)]" />
-                                            {items.length} {items.length === 1 ? 'prenda' : 'prendas'}
-                                        </span>
-                                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[var(--background-secondary)] text-[var(--foreground-secondary)] border border-[var(--border-color)]">
-                                            {outfit.is_public ? (
-                                                <>
-                                                    <LockOpen className="w-3 h-3 text-[var(--brand-pink,#FF66C4)]" />
-                                                    Público
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <Lock className="w-3 h-3 text-[var(--foreground-tertiary)]" />
-                                                    Privado
-                                                </>
-                                            )}
-                                        </span>
-                                    </div>
-                                    <h2 data-no-translate={outfit.name ? "true" : undefined} className="text-xl md:text-2xl font-bold text-[var(--foreground)] tracking-tight leading-tight mt-0.5">
+                                    <h2 data-no-translate={outfit.name ? "true" : undefined} className="kz-title md:text-2xl text-[var(--foreground)] leading-tight">
                                         {outfit.name || 'Outfit sin título'}
                                     </h2>
+                                    <p className="kz-caption text-[var(--foreground-secondary)]">
+                                        {outfit.occasion && config ? `${config.label} · ` : ''}
+                                        {items.length} {items.length === 1 ? 'prenda' : 'prendas'}
+                                    </p>
                                 </div>
 
                                 {/* Desktop Garment Cards Grid (Prendas del outfit) */}

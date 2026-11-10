@@ -21,15 +21,44 @@ export function Skeleton({ className = '', style }: SkeletonProps) {
 }
 
 /**
- * Card skeleton with wave shimmer
+ * Card skeleton with wave shimmer and optional contextual caption lines
  */
-export function SkeletonCard({ className = '', height = 260 }: { className?: string; height?: number | string }) {
+export function SkeletonCard({
+  className = '',
+  height = 260,
+  withContext = false,
+}: {
+  className?: string;
+  height?: number | string;
+  withContext?: boolean;
+}) {
   return (
-    <div className={`w-full overflow-hidden rounded-2xl ${className}`}>
-      <div 
-        className="w-full skeleton-wave rounded-2xl" 
-        style={{ height: typeof height === 'number' ? `${height}px` : height }} 
+    <div className={`w-full overflow-hidden rounded-[20px] kz-surface-card flex flex-col ${className}`}>
+      <div
+        className="w-full skeleton-wave rounded-t-[20px] rounded-b-none"
+        style={{ height: typeof height === 'number' ? `${height}px` : height }}
       />
+      {withContext && (
+        <div className="p-2.5 space-y-1.5">
+          <div className="h-3.5 w-3/4 rounded-full skeleton-wave" />
+          <div className="h-2.5 w-1/2 rounded-full skeleton-wave opacity-65" />
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Full Closet Skeleton mirroring Header + Kloe Hero Pill + Tabs + Context Grid
+ */
+export function SkeletonCloset({ count = 6, className = '' }: { count?: number; className?: string }) {
+  return (
+    <div className={`w-full space-y-6 ${className}`}>
+      <div className="px-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4">
+        {[...Array(count)].map((_, i) => (
+          <SkeletonCard key={i} height={190} withContext />
+        ))}
+      </div>
     </div>
   );
 }

@@ -8,7 +8,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Wand2 } from 'lucide-react';
+import KloeMascot from '@/components/KloeMascot';
 
 export interface SlotMachineItem {
     id: string;
@@ -115,15 +115,15 @@ export const SlotMachineGenerator: React.FC<SlotMachineGeneratorProps> = ({
                 </AnimatePresence>
             </div>
 
-            {/* Sparkle effect when stopped */}
+            {/* Kloe mascot celebratory reveal when stopped */}
             {!isSpinning && (
                 <motion.div
-                    initial={{ scale: 0, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ delay: 0.2, duration: 0.6, ease: [0.68, -0.55, 0.265, 1.55] }}
-                    className="absolute top-4 right-4 z-20"
+                    initial={{ scale: 0, opacity: 0, rotate: -15 }}
+                    animate={{ scale: 1, opacity: 1, rotate: 0 }}
+                    transition={{ delay: 0.15, duration: 0.55, ease: [0.34, 1.56, 0.64, 1] }}
+                    className="absolute top-3.5 right-3.5 z-20"
                 >
-                    <Wand2 className="w-6 h-6 text-[var(--brand-pink)]" />
+                    <KloeMascot mood="excited" size="sm" />
                 </motion.div>
             )}
         </div>
@@ -166,15 +166,20 @@ export const MultiSlotMachineGenerator: React.FC<MultiSlotMachineGeneratorProps>
         <div className="space-y-6">
             {/* Title */}
             <motion.div
-                initial={{ opacity: 0, y: -20 }}
+                initial={{ opacity: 0, y: -16 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="text-center"
+                className="text-center flex flex-col items-center"
             >
-                <h2 className="text-2xl font-bold text-[var(--brand-pink)] mb-2">
-                    Generando tu outfit perfecto
+                <KloeMascot
+                    mood={completedSlots === slots.length ? 'excited' : 'thinking'}
+                    size="md"
+                    className="mb-3"
+                />
+                <h2 className="kz-title text-[var(--foreground)] mb-1">
+                    {completedSlots === slots.length ? '¡Look listo para ti!' : 'Preparando tu combinación'}
                 </h2>
-                <p className="text-sm text-[var(--foreground-tertiary)]">
-                    Analizando tu armario...
+                <p className="kz-caption text-[var(--foreground-secondary)]">
+                    {completedSlots === slots.length ? 'Elegido con tus prendas reales' : 'Buscando armonía en tu armario...'}
                 </p>
             </motion.div>
 

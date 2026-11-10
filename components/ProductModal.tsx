@@ -122,16 +122,28 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
                             onClick={(e) => e.stopPropagation()}
                             className="relative w-full max-w-md max-h-[calc(100dvh-var(--tabbar-height)-48px)] md:max-h-[85vh] bg-[var(--background)] rounded-3xl md:rounded-[32px] overflow-hidden shadow-2xl flex flex-col border border-[var(--border-color)] pointer-events-auto"
                         >
-                            {/* Close Button */}
-                            <motion.button
-                                initial={{ opacity: 0, scale: 0 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ delay: 0.2 }}
-                                onClick={onClose}
-                                className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-black/20 dark:bg-white/20 backdrop-blur-md flex items-center justify-center hover:bg-black/30 dark:hover:bg-white/30 transition-colors"
-                            >
-                                <X className="w-5 h-5 text-white" />
-                            </motion.button>
+                            {/* Top Actions: Optional Favorite + Close */}
+                            <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+                                {onFavoriteToggle && (
+                                    <motion.button
+                                        whileTap={{ scale: 0.85 }}
+                                        onClick={() => onFavoriteToggle(displayItem.id)}
+                                        aria-label={isFavorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
+                                        className="w-10 h-10 rounded-full bg-black/15 dark:bg-white/15 backdrop-blur-md flex items-center justify-center hover:bg-black/25 transition-colors cursor-pointer"
+                                    >
+                                        <Heart className={`w-5 h-5 transition-colors ${isFavorite ? 'fill-[var(--brand-pink)] text-[var(--brand-pink)]' : 'text-zinc-700'}`} />
+                                    </motion.button>
+                                )}
+                                <motion.button
+                                    initial={{ opacity: 0, scale: 0.8 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    onClick={onClose}
+                                    aria-label="Cerrar"
+                                    className="w-10 h-10 rounded-full bg-black/20 dark:bg-white/20 backdrop-blur-md flex items-center justify-center hover:bg-black/30 dark:hover:bg-white/30 transition-colors cursor-pointer"
+                                >
+                                    <X className="w-5 h-5 text-white" />
+                                </motion.button>
+                            </div>
 
                             {/* Product Image */}
                             <div className="relative aspect-[4/3] sm:aspect-square max-h-[40vh] bg-white overflow-hidden flex-shrink-0 flex items-center justify-center p-6 sm:p-8">
@@ -157,66 +169,46 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
                                     </div>
                                 )}
 
-                                {/* Trending Badge */}
-                                {displayItem.trending && (
-                                    <motion.div
-                                        initial={{ x: -100, opacity: 0 }}
-                                        animate={{ x: 0, opacity: 1 }}
-                                        transition={{ delay: 0.3, type: 'spring' }}
-                                        className="absolute top-4 left-4 px-3 py-1.5 bg-[var(--brand-pink)] rounded-full flex items-center gap-1.5 shadow-lg"
-                                    >
-                                        <Tag className="w-4 h-4 text-white" />
-                                        <span className="text-white text-xs font-bold leading-none">Tendencia</span>
-                                    </motion.div>
-                                )}
-
                                 {/* Price Badge */}
                                 {displayItem.price && (
                                     <motion.div
-                                        initial={{ y: 50, opacity: 0 }}
+                                        initial={{ y: 20, opacity: 0 }}
                                         animate={{ y: 0, opacity: 1 }}
-                                        transition={{ delay: 0.25, type: 'spring' }}
-                                        className="absolute bottom-4 right-4 px-4 py-2 bg-white/95 dark:bg-gray-800/95 backdrop-blur-md rounded-2xl shadow-lg"
+                                        transition={{ delay: 0.2, type: 'spring' }}
+                                        className="absolute bottom-4 right-4 px-4 py-1.5 bg-white/95 dark:bg-gray-800/95 backdrop-blur-md rounded-full shadow-[var(--shadow-card)] border border-black/[0.06]"
                                     >
-                                        <span className="text-lg font-bold text-gray-900 dark:text-white">{displayItem.price}</span>
+                                        <span className="text-base font-bold text-gray-900 dark:text-white">{displayItem.price}</span>
                                     </motion.div>
                                 )}
                             </div>
 
                             {/* Product Info */}
                             <motion.div
-                                initial={{ y: 20, opacity: 0 }}
+                                initial={{ y: 16, opacity: 0 }}
                                 animate={{ y: 0, opacity: 1 }}
-                                transition={{ delay: 0.2 }}
+                                transition={{ delay: 0.15 }}
                                 className="p-6 overflow-y-auto flex-1 custom-scrollbar"
                             >
                                 {/* Brand & Name */}
                                 <div className="mb-4">
-                                    <p data-no-translate="true" className="text-sm font-medium text-pink-500 mb-1">{displayItem.brand}</p>
-                                    <h3 data-no-translate="true" className="text-xl font-bold text-gray-900 dark:text-white">{displayItem.name}</h3>
+                                    {(displayItem.brand || displayItem.source) && displayItem.brand !== 'Unknown' && displayItem.source !== 'Unknown' && (
+                                        <p data-no-translate="true" className="text-xs font-semibold uppercase tracking-wider text-[var(--brand-pink-dark,#ED4C9E)] mb-1">
+                                            {displayItem.brand || displayItem.source}
+                                        </p>
+                                    )}
+                                    <h3 data-no-translate="true" className="kz-title text-[var(--foreground)]">{displayItem.name}</h3>
                                 </div>
 
-                                {/* Details Grid */}
+                                {/* Details Grid (without duplicating Brand card) */}
                                 <div className="grid grid-cols-2 gap-3 mb-6">
                                     {/* Type */}
-                                    <div className="flex items-center gap-2 p-3 bg-[var(--background-secondary)] rounded-xl">
-                                        <Shirt className="w-4 h-4 text-[var(--brand-pink)]" />
+                                    <div className="flex items-center gap-2.5 p-3 bg-[var(--background-secondary)] rounded-[20px]">
+                                        <Shirt className="w-4 h-4 text-[var(--brand-pink)] shrink-0" />
                                         <div>
-                                            <p className="text-xs text-[var(--foreground-tertiary)]">Tipo</p>
+                                            <p className="kz-caption text-[var(--foreground-tertiary)]">Tipo</p>
                                             <p className="text-sm font-medium text-[var(--foreground)] capitalize">{displayType}</p>
                                         </div>
                                     </div>
-
-                                    {/* Brand */}
-                                    {(displayItem.brand || displayItem.source) && (displayItem.brand !== 'Unknown' && displayItem.source !== 'Unknown') && (
-                                        <div className="flex items-center gap-2 p-3 bg-[var(--background-secondary)] rounded-xl">
-                                            <Tag className="w-4 h-4 text-[var(--brand-pink)]" />
-                                            <div>
-                                                <p className="text-xs text-[var(--foreground-tertiary)]">Marca</p>
-                                                <p className="text-sm font-medium text-[var(--foreground)]">{displayItem.brand || displayItem.source}</p>
-                                            </div>
-                                        </div>
-                                    )}
 
                                     {/* Color */}
                                     {displayItem.color && (

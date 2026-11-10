@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, Check, ChevronDown, ChevronUp, Plus, Camera, Layers, Bot, Share2, HelpCircle } from 'lucide-react';
+import { Check, ChevronDown, ChevronUp, Plus, HelpCircle } from 'lucide-react';
+import KloeMascot from '@/components/KloeMascot';
 import { useUser } from '@/store/userStore';
 import { useWardrobeStore } from '@/store/wardrobeStore';
 import { useProfileStore } from '@/store/profileStore';
@@ -248,8 +249,8 @@ export default function ProfileProgressBar() {
         {/* Header with percentage & toggle */}
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 min-w-0 flex-1">
-            <div className="w-7 h-7 rounded-full bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] flex items-center justify-center shrink-0">
-              <Zap className="w-4 h-4" />
+            <div className="w-8 h-8 rounded-full bg-[var(--brand-pink)]/10 flex items-center justify-center shrink-0">
+              <KloeMascot mood="happy" size="xs" />
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">

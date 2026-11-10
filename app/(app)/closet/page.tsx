@@ -10,15 +10,15 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import { useRef } from 'react';
 import {
-  Heart, Grid3x3, List, Search, Filter, Plus, Wand2, X, Shirt, Layers, Share2, Trash2, Check, CalendarDays, Camera
+  Heart, Grid3x3, List, Search, Filter, Plus, X, Shirt, Layers, Share2, Trash2, Check, CalendarDays, Camera, ChevronRight
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { Button, Card, FloatingCreateButton, OutfitCard, ClothingItem, NotificationToastContainer, WardrobeSelectionModal, OutfitDetailModal, EmptyState, SkeletonCard, ProfileProgressBar } from '@/components';
+import { Button, Card, FloatingCreateButton, OutfitCard, ClothingItem, NotificationToastContainer, WardrobeSelectionModal, OutfitDetailModal, EmptyState, SkeletonCard, SkeletonCloset, ProfileProgressBar, KloeMascot } from '@/components';
 import AddItemModal from '@/components/AddItemModal';
 import ProductModal from '@/components/ProductModal';
 import KloeProModal from '@/components/KloeProModal';
-import BubbleToggle from '@/components/BubbleToggle';
 import OutfitCalendar from '@/components/OutfitCalendar';
+import { haptics } from '@/lib/haptic';
 import type { Outfit } from '@/types/outfit';
 import type { ClothingItem as ClothingItemType } from '@/types/clothing';
 import { useUser } from '@/store';
@@ -31,84 +31,58 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';
 import Image from 'next/image';
 
-function KloeButtonAnimatedLogo() {
-  const [logoVariant, setLogoVariant] = useState<'avatar' | 'wordmark'>('avatar');
+const KLOE_PROMPTS = [
+  'Charla conmigo',
+  '¿Qué me pongo hoy?',
+  'Crea un look conmigo',
+];
+
+function KloeHeroBanner() {
+  const [promptIndex, setPromptIndex] = useState(0);
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setLogoVariant((prev) => (prev === 'avatar' ? 'wordmark' : 'avatar'));
-    }, 10000); // 10 segundos exactos
+      setPromptIndex((prev) => (prev + 1) % KLOE_PROMPTS.length);
+    }, 5500);
     return () => clearInterval(timer);
   }, []);
 
-  const variants: Variants = {
-    initial: {
-      scale: 1.45,
-      opacity: 0,
-      filter: 'blur(3px)',
-    },
-    animate: {
-      scale: 1,
-      opacity: 1,
-      filter: 'blur(0px)',
-      transition: {
-        type: 'spring' as const,
-        stiffness: 440,
-        damping: 24,
-        mass: 0.65,
-      },
-    },
-    exit: {
-      scale: 0,
-      opacity: 0,
-      filter: 'blur(2px)',
-      transition: {
-        duration: 0.3,
-        ease: [0.4, 0, 0.7, -0.4],
-      },
-    },
-  };
-
   return (
-    <div className="relative flex items-center justify-center select-none overflow-visible h-8 sm:h-9 min-w-[36px]">
-      <AnimatePresence mode="wait">
-        {logoVariant === 'avatar' ? (
-          <motion.div
-            key="kloe-avatar"
-            variants={variants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            className="relative w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center"
-          >
-            <Image
-              src="/kloe-avatar-v2.png"
-              alt="Kloe"
-              fill
-              className="object-contain group-hover:scale-105 transition-transform"
-              priority
-            />
-          </motion.div>
-        ) : (
-          <motion.div
-            key="kloe-wordmark"
-            variants={variants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            className="relative w-20 sm:w-24 h-7 sm:h-8 flex items-center justify-center"
-          >
-            <Image
-              src="/kloe-logo-large.png"
-              alt="Kloe"
-              fill
-              className="object-contain group-hover:scale-105 transition-transform"
-              priority
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+    <Link href="/closet/kloe" className="block w-full" onClick={() => { try { haptics.tap(); } catch {} }}>
+      <motion.div
+        whileHover={{ y: -1.5, scale: 1.005 }}
+        whileTap={{ scale: 0.98 }}
+        transition={{ type: 'spring', stiffness: 460, damping: 24 }}
+        className="w-full py-3 px-4 sm:px-5 rounded-[20px] kz-kloe-hero flex items-center justify-between gap-3 cursor-pointer group"
+        aria-label="Charla conmigo"
+      >
+        <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+          <KloeMascot mood="happy" size="md" />
+          <div className="min-w-0">
+            <AnimatePresence mode="wait">
+              <motion.p
+                key={promptIndex}
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -5 }}
+                transition={{ duration: 0.25 }}
+                className="font-kloe text-[17px] sm:text-[19px] font-bold text-[var(--foreground)] group-hover:text-[var(--brand-pink-dark,#ED4C9E)] transition-colors truncate leading-tight select-none"
+              >
+                {KLOE_PROMPTS[promptIndex]}
+              </motion.p>
+            </AnimatePresence>
+            <p className="kz-caption text-[var(--foreground-secondary)] truncate mt-0.5 select-none">
+              Tu estilista lista para combinar tu ropa
+            </p>
+          </div>
+        </div>
+
+        <span className="shrink-0 inline-flex items-center gap-1 px-3.5 py-1.5 rounded-full kz-pink-surface text-white font-kloe text-xs font-semibold tracking-tight group-hover:scale-105 transition-transform">
+          <span>Hablar</span>
+          <ChevronRight className="w-3.5 h-3.5" strokeWidth={2.6} />
+        </span>
+      </motion.div>
+    </Link>
   );
 }
 
@@ -249,6 +223,67 @@ export default function ClosetPage() {
   const [outfitsLoadingMore, setOutfitsLoadingMore] = useState(false);
   const [outfitsHasMore, setOutfitsHasMore] = useState(true);
   const outfitsPageRef = useRef(0);
+  const [outfitsTotalCount, setOutfitsTotalCount] = useState<number | null>(null);
+  const [itemUsageStats, setItemUsageStats] = useState<Record<string, { wears: number; looks: number }>>({});
+  const [recentlyAddedId, setRecentlyAddedId] = useState<string | null>(null);
+  const [recentlyFavoritedId, setRecentlyFavoritedId] = useState<string | null>(null);
+
+  // Compute real wear counts (from calendar_outfits) and outfit appearance counts (from outfit_items)
+  useEffect(() => {
+    if (!user?.id) return;
+    let active = true;
+
+    const loadClosetContext = async () => {
+      try {
+        const [outfitsRes, calendarRes] = await Promise.all([
+          supabase
+            .from('outfits')
+            .select('id, outfit_items(clothing_item_id)')
+            .eq('user_id', user.id),
+          (supabase as any)
+            .from('calendar_outfits')
+            .select('outfit_id')
+            .eq('user_id', user.id),
+        ]);
+
+        if (!active) return;
+
+        const outfitsRows = (outfitsRes.data as any[]) || [];
+        setOutfitsTotalCount(outfitsRows.length);
+
+        // How many calendar entries exist per outfit_id
+        const outfitWearCounts: Record<string, number> = {};
+        ((calendarRes.data as any[]) || []).forEach((row) => {
+          if (row.outfit_id) {
+            outfitWearCounts[row.outfit_id] = (outfitWearCounts[row.outfit_id] || 0) + 1;
+          }
+        });
+
+        const nextStats: Record<string, { wears: number; looks: number }> = {};
+        outfitsRows.forEach((outfit) => {
+          const wearIncrement = outfitWearCounts[outfit.id] || 0;
+          const seenInOutfit = new Set<string>();
+          (outfit.outfit_items || []).forEach((oi: any) => {
+            const cid = oi.clothing_item_id;
+            if (!cid) return;
+            if (!nextStats[cid]) nextStats[cid] = { wears: 0, looks: 0 };
+            if (!seenInOutfit.has(cid)) {
+              nextStats[cid].looks += 1;
+              seenInOutfit.add(cid);
+            }
+            nextStats[cid].wears += wearIncrement;
+          });
+        });
+
+        setItemUsageStats(nextStats);
+      } catch (err) {
+        console.warn('[Closet] Failed loading garment usage stats:', err);
+      }
+    };
+
+    loadClosetContext();
+    return () => { active = false; };
+  }, [user?.id, outfits.length]);
 
   // 🗄️ Dependency Checking Helpers for Safe Delete
   const checkItemUsage = async (ids: string[]) => {
@@ -430,6 +465,17 @@ export default function ClosetPage() {
   const handleFavoriteToggle = async (id: string) => {
     const isFav = favorites.has(id);
     const newFavStatus = !isFav;
+
+    try {
+      haptics.tap();
+    } catch {}
+
+    if (newFavStatus) {
+      setRecentlyFavoritedId(id);
+      setTimeout(() => {
+        setRecentlyFavoritedId((prev) => (prev === id ? null : prev));
+      }, 650);
+    }
 
     // Optimistic update
     setFavorites(prev => {
@@ -710,63 +756,68 @@ export default function ClosetPage() {
       >
 
       {/* Header Sticky */}
-      <header className="sticky top-0 z-40 bg-[var(--background)]/95 backdrop-blur-md pb-2 supports-[ios]:pt-safe-top">
-        <div className="max-w-7xl mx-auto px-4 pt-4 space-y-4">
+      <header className="sticky top-0 z-40 apple-glass-bar pt-safe">
+        <div className="max-w-7xl mx-auto px-4 pt-4 pb-1 space-y-4">
 
-          {/* Kloe Action Banner */}
+          {/* Display Hierarchy Header */}
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <h1 className="kz-display text-[var(--foreground)]">Tu armario</h1>
+              <p className="kz-caption text-[var(--foreground-secondary)] mt-1 tabular-nums">
+                {items.length} {items.length === 1 ? 'prenda' : 'prendas'}
+                {outfitsTotalCount !== null && ` · ${outfitsTotalCount} ${outfitsTotalCount === 1 ? 'look' : 'looks'}`}
+              </p>
+            </div>
+          </div>
+
+          {/* Kloe Hero Action Banner */}
           <div className="w-full">
-            <Link href="/closet/kloe" className="block w-full">
-              <motion.div 
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.98 }}
-                transition={{ type: 'spring', stiffness: 500, damping: 24 }}
-                className="w-full py-2.5 sm:py-3 px-5 rounded-2xl bg-[var(--background-secondary)] flex items-center justify-center gap-3 border border-black/[0.06] dark:border-white/[0.08] hover:border-[var(--brand-pink)]/40 transition-all cursor-pointer group shadow-xs"
-                aria-label="Charla conmigo"
-              >
-                <div className="shrink-0 flex items-center justify-center">
-                  <KloeButtonAnimatedLogo />
-                </div>
-                <span className="font-bold text-sm sm:text-base text-[var(--foreground)] group-hover:text-[var(--brand-pink)] transition-colors select-none">
-                  Charla conmigo
-                </span>
-              </motion.div>
-            </Link>
+            <KloeHeroBanner />
           </div>
 
           {/* Progress / Tutorial Bar (disappears permanently at 100%) */}
           <ProfileProgressBar />
 
-          {/* Profile-Style Tabs */}
-          <div className="flex border-b border-[var(--border-color)]">
+          {/* Clear Labeled Top Tabs across Mobile & Desktop */}
+          <div className="flex gap-1 border-b border-[var(--border-color)]/60">
             <button
-              onClick={() => setActiveTab('items')}
-              className={`flex-1 flex items-center justify-center py-3 border-b-2 transition-colors gap-2 ${activeTab === 'items'
-                ? 'border-[var(--brand-pink)] text-[var(--foreground)]'
-                : 'border-transparent text-[var(--foreground-tertiary)]'
+              onClick={() => {
+                try { haptics.selection(); } catch {}
+                setActiveTab('items');
+              }}
+              className={`flex-1 flex items-center justify-center py-3 border-b-2 transition-colors gap-1.5 cursor-pointer ${activeTab === 'items'
+                ? 'border-[var(--brand-pink)] text-[var(--foreground)] font-semibold'
+                : 'border-transparent text-[var(--foreground-tertiary)] hover:text-[var(--foreground-secondary)] font-medium'
                 }`}
             >
-              <Shirt className={`w-5 h-5 ${activeTab === 'items' ? 'text-[var(--brand-pink)]' : ''}`} />
-              <span className="font-medium hidden sm:inline">Prendas</span>
+              <Shirt className={`w-4 h-4 sm:w-5 sm:h-5 ${activeTab === 'items' ? 'text-[var(--brand-pink)]' : ''}`} />
+              <span className="text-[13px] sm:text-sm">Prendas</span>
             </button>
             <button
-              onClick={() => setActiveTab('outfits')}
-              className={`flex-1 flex items-center justify-center py-3 border-b-2 transition-colors gap-2 ${activeTab === 'outfits'
-                ? 'border-[var(--brand-pink)] text-[var(--foreground)]'
-                : 'border-transparent text-[var(--foreground-tertiary)]'
+              onClick={() => {
+                try { haptics.selection(); } catch {}
+                setActiveTab('outfits');
+              }}
+              className={`flex-1 flex items-center justify-center py-3 border-b-2 transition-colors gap-1.5 cursor-pointer ${activeTab === 'outfits'
+                ? 'border-[var(--brand-pink)] text-[var(--foreground)] font-semibold'
+                : 'border-transparent text-[var(--foreground-tertiary)] hover:text-[var(--foreground-secondary)] font-medium'
                 }`}
             >
-              <Layers className={`w-5 h-5 ${activeTab === 'outfits' ? 'text-[var(--brand-pink)]' : ''}`} />
-              <span className="font-medium hidden sm:inline">Outfits</span>
+              <Layers className={`w-4 h-4 sm:w-5 sm:h-5 ${activeTab === 'outfits' ? 'text-[var(--brand-pink)]' : ''}`} />
+              <span className="text-[13px] sm:text-sm">Outfits</span>
             </button>
             <button
-              onClick={() => setActiveTab('calendar')}
-              className={`flex-1 flex items-center justify-center py-3 border-b-2 transition-colors gap-2 ${activeTab === 'calendar'
-                ? 'border-[var(--brand-pink)] text-[var(--foreground)]'
-                : 'border-transparent text-[var(--foreground-tertiary)]'
+              onClick={() => {
+                try { haptics.selection(); } catch {}
+                setActiveTab('calendar');
+              }}
+              className={`flex-1 flex items-center justify-center py-3 border-b-2 transition-colors gap-1.5 cursor-pointer ${activeTab === 'calendar'
+                ? 'border-[var(--brand-pink)] text-[var(--foreground)] font-semibold'
+                : 'border-transparent text-[var(--foreground-tertiary)] hover:text-[var(--foreground-secondary)] font-medium'
                 }`}
             >
-              <CalendarDays className={`w-5 h-5 ${activeTab === 'calendar' ? 'text-[var(--brand-pink)]' : ''}`} />
-              <span className="font-medium hidden sm:inline">Calendario</span>
+              <CalendarDays className={`w-4 h-4 sm:w-5 sm:h-5 ${activeTab === 'calendar' ? 'text-[var(--brand-pink)]' : ''}`} />
+              <span className="text-[13px] sm:text-sm">Calendario</span>
             </button>
           </div>
 
@@ -794,20 +845,14 @@ export default function ClosetPage() {
               transition={{ duration: 0.2 }}
             >
               {loading ? (
-                <div className={`px-4 ${viewMode === 'grid'
-                  ? 'grid grid-cols-3 md:grid-cols-5 gap-3'
-                  : 'space-y-3'
-                  }`}>
-                  {[...Array(8)].map((_, i) => (
-                    <SkeletonCard key={i} />
-                  ))}
-                </div>
+                <SkeletonCloset count={viewMode === 'grid' ? 6 : 4} />
               ) : (!items || items.length === 0) ? (
                 <EmptyState
                   icon={Shirt}
+                  mascotMood="curious"
                   title="Tu armario está vacío"
-                  description="Haz fotos a tus prendas o sube capturas de tiendas online. Recortamos el fondo automáticamente."
-                  actionLabel="Subir prendas (hasta 20 de golpe)"
+                  description="Haz fotos a tus prendas o sube capturas de tiendas. Recortamos el fondo automáticamente."
+                  actionLabel="Subir prendas"
                   actionIcon={Camera}
                   actionOnClick={() => setShowAddModal(true)}
                   fullHeight={false}
@@ -815,22 +860,36 @@ export default function ClosetPage() {
               ) : (filteredContent as ClothingItemType[]).length === 0 ? (
                 <EmptyState
                   icon={Search}
-                  title="No se encontraron prendas"
-                  description="No hay resultados para tu búsqueda. Prueba otros filtros o términos."
+                  mascotMood="curious"
+                  title="Nada por aquí"
+                  description="Prueba cambiando la búsqueda o quitando alguno de los filtros."
                   fullHeight={false}
                 />
               ) : (
                 <div className={`px-4 ${viewMode === 'grid'
-                  ? 'grid grid-cols-3 md:grid-cols-5 gap-3'
+                  ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4'
                   : 'space-y-3' // List View
                   }`}>
-                  {(filteredContent as ClothingItemType[]).map((item) => (
+                  {(filteredContent as ClothingItemType[]).map((item) => {
+                    const stats = itemUsageStats[item.id] || { wears: 0, looks: 0 };
+                    const isJustAdded = recentlyAddedId === item.id;
+                    const isJustFav = recentlyFavoritedId === item.id;
+                    const usageContext = stats.wears > 0
+                      ? `${stats.wears} ${stats.wears === 1 ? 'uso' : 'usos'}`
+                      : stats.looks > 0
+                      ? `${stats.looks} ${stats.looks === 1 ? 'look' : 'looks'}`
+                      : 'Sin estrenar';
+                    const contextLabel = item.brand
+                      ? `${item.brand} · ${usageContext}`
+                      : usageContext;
+
+                    return (
                     <div key={item.id} className={viewMode === 'grid' ? '' : 'flex items-center gap-2'}>
                       {viewMode === 'list' ? (
                         <>
                           <div onClick={() => setSelectedItem(item)} className="flex-1">
-                            <div className="flex items-center gap-4 bg-[var(--card-bg)] p-3 rounded-2xl shadow-sm border border-[var(--border)]">
-                              <div className="w-16 h-16 rounded-xl bg-[var(--background-secondary)] relative overflow-hidden flex-shrink-0">
+                            <div className="flex items-center gap-4 kz-surface-card p-3 cursor-pointer hover:shadow-[var(--shadow-card-hover)] transition-shadow">
+                              <div className="w-16 h-16 rounded-[14px] bg-white relative overflow-hidden flex-shrink-0 border border-black/[0.05]">
                                 {item.imageUrl ? (
                                   <img src={item.imageUrl} alt={item.name} className="w-full h-full object-contain scale-[0.85]" />
                                 ) : (
@@ -840,8 +899,8 @@ export default function ClosetPage() {
                                 )}
                               </div>
                               <div className="flex-1 min-w-0">
-                                <h3 className="font-medium text-[var(--foreground)] truncate">{item.name}</h3>
-                                <p className="text-sm text-[var(--foreground-secondary)] capitalize">{item.category} • {item.brand || 'Sin marca'}</p>
+                                <h3 className="font-semibold text-[15px] text-[var(--foreground)] truncate">{item.name}</h3>
+                                <p className="kz-caption text-[var(--foreground-secondary)] truncate">{contextLabel}</p>
                               </div>
                             </div>
                           </div>
@@ -855,8 +914,10 @@ export default function ClosetPage() {
                         </>
                       ) : (
                         <motion.div
-                          whileHover={{ scale: 1.03 }}
-                          transition={{ duration: 0.2 }}
+                          initial={isJustAdded ? { scale: 0.72, opacity: 0, y: 16 } : false}
+                          animate={{ scale: 1, opacity: 1, y: 0 }}
+                          whileHover={{ y: -3 }}
+                          transition={{ type: 'spring', stiffness: 420, damping: 24 }}
                           className="relative"
                           onTouchStart={() => handleTouchStart(item.id)}
                           onTouchMove={handleTouchEnd}
@@ -866,7 +927,13 @@ export default function ClosetPage() {
                           <Card
                             key={item.id}
                             variant="default"
-                            className={`group relative overflow-hidden bg-[#f8f9fa] dark:bg-[#111] border border-[var(--border-color)] shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer ${selectionMode && selectedIds.has(item.id) ? 'ring-4 ring-[var(--brand-pink)] ring-inset' : ''}`}
+                            className={`group relative overflow-hidden rounded-[20px] kz-surface-card hover:shadow-[var(--shadow-card-hover)] transition-all duration-300 cursor-pointer flex flex-col ${
+                              selectionMode && selectedIds.has(item.id)
+                                ? 'ring-4 ring-[var(--brand-pink)] ring-inset'
+                                : isJustAdded
+                                ? 'ring-2 ring-[var(--brand-pink)]'
+                                : ''
+                            }`}
                             onClick={() => {
                               if (selectionMode) {
                                 toggleSelection(item.id);
@@ -885,12 +952,12 @@ export default function ClosetPage() {
                               </>
                             )}
 
-                            <div className="relative aspect-[3/4] overflow-hidden bg-transparent">
+                            <div className="relative aspect-[4/5] overflow-hidden bg-white dark:bg-zinc-900/50">
                               {item.imageUrl ? (
                                 <img
                                   src={item.imageUrl}
                                   alt={item.name}
-                                  className="w-full h-full object-contain scale-[0.85]"
+                                  className="w-full h-full object-contain scale-[0.86] group-hover:scale-[0.9] transition-transform duration-300"
                                   loading="lazy"
                                 />
                               ) : (
@@ -899,37 +966,58 @@ export default function ClosetPage() {
                                 </div>
                               )}
 
-                              {/* Favorite Button Overlay */}
+                              {/* Favorite Button Overlay with celebratory bounce */}
                               <motion.button
-                                whileTap={{ scale: 0.9 }}
+                                whileTap={{ scale: 0.78 }}
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleFavoriteToggle(item.id);
                                 }}
-                                className="absolute top-3 right-3 p-1 z-20 focus:outline-none"
+                                aria-label={item.favorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
+                                className="absolute top-2.5 right-2.5 p-1.5 rounded-full bg-white/85 dark:bg-zinc-900/75 backdrop-blur-sm border border-black/[0.06] dark:border-white/10 shadow-xs z-20 focus:outline-none cursor-pointer"
                               >
-                                <Heart className={`w-5 h-5 transition-colors duration-300 ${item.favorite ? 'fill-[var(--brand-pink)] text-[var(--brand-pink)]' : 'fill-[#d1d5db] text-[#d1d5db]'}`} />
+                                <motion.div
+                                  animate={isJustFav ? { scale: [1, 1.45, 0.9, 1.1, 1] } : { scale: 1 }}
+                                  transition={{ type: 'spring', stiffness: 520, damping: 18 }}
+                                >
+                                  <Heart className={`w-4 h-4 transition-colors duration-200 ${item.favorite ? 'fill-[var(--brand-pink)] text-[var(--brand-pink)]' : 'fill-none text-zinc-400'}`} />
+                                </motion.div>
                               </motion.button>
 
-                              {/* Delete Button - Always visible on desktop */}
+                              {/* Delete Button - Desktop hover */}
                               <motion.button
                                 whileTap={{ scale: 0.9 }}
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleDeleteItem(item.id);
                                 }}
-                                className="absolute top-2 left-2 p-2 rounded-full bg-black/40 backdrop-blur-sm text-white hover:bg-red-500 transition-colors hidden md:block"
+                                className="absolute top-2.5 left-2.5 p-1.5 rounded-full bg-black/40 backdrop-blur-sm text-white hover:bg-red-500 transition-colors hidden md:block md:opacity-0 md:group-hover:opacity-100 cursor-pointer"
                               >
-                                <Trash2 className="w-4 h-4" />
+                                <Trash2 className="w-3.5 h-3.5" />
                               </motion.button>
                             </div>
 
+                            {/* Smart Garment Context Strip */}
+                            <div className="px-2.5 py-2 border-t border-[var(--border-color)]/60 flex flex-col gap-0.5">
+                              <p data-no-translate="true" className="text-[13px] font-semibold text-[var(--foreground)] truncate leading-tight">
+                                {item.name}
+                              </p>
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                {stats.wears === 0 && stats.looks === 0 && (
+                                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--brand-pink)] shrink-0" />
+                                )}
+                                <p className="kz-caption text-[var(--foreground-secondary)] truncate leading-tight">
+                                  {contextLabel}
+                                </p>
+                              </div>
+                            </div>
 
                           </Card>
                         </motion.div>
                       )}
                     </div>
-                  ))}
+                  );
+                  })}
                   {/* Infinite Scroll Trigger - Items */}
                   {items.length > 0 && !loading && (
                     <div ref={itemsObserverElement} className="h-10 w-full flex items-center justify-center pt-4">
@@ -949,16 +1037,17 @@ export default function ClosetPage() {
             >
               {outfitsLoading ? (
                 <div className={`px-4 ${viewMode === 'grid'
-                  ? 'grid grid-cols-3 md:grid-cols-5 gap-4'
+                  ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4'
                   : 'space-y-4'
                   }`}>
                   {[...Array(6)].map((_, i) => (
-                    <SkeletonCard key={i} />
+                    <SkeletonCard key={i} height={220} withContext />
                   ))}
                 </div>
               ) : (!outfits || outfits.length === 0 || (filteredContent as Outfit[]).length === 0) ? (
                 <EmptyState
                   icon={Layers}
+                  mascotMood="happy"
                   title={(!outfits || outfits.length === 0) ? 'Crea tu primer outfit' : 'No hay resultados'}
                   description={(!outfits || outfits.length === 0) ? 'Combina prendas de tu armario y guarda tus looks favoritos.' : 'Prueba con otra búsqueda.'}
                   actionLabel={(!outfits || outfits.length === 0) ? 'Crear primer outfit' : 'Crear outfit'}
@@ -974,7 +1063,7 @@ export default function ClosetPage() {
                 />
               ) : (
                 <div className={`px-4 ${viewMode === 'grid'
-                  ? 'grid grid-cols-3 md:grid-cols-5 gap-4'
+                  ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4'
                   : 'space-y-4' // List for outfits
                   }`}>
                   {(filteredContent as Outfit[]).map((outfit) => (
@@ -1409,7 +1498,14 @@ export default function ClosetPage() {
           if (editingItem && editingItem.id) {
             await updateItem(editingItem.id, partial as any);
           } else {
-            await addItem(partial as any);
+            const created = await addItem(partial as any);
+            if (created?.id) {
+              try { haptics.success(); } catch {}
+              setRecentlyAddedId(created.id);
+              setTimeout(() => {
+                setRecentlyAddedId((prev) => (prev === created.id ? null : prev));
+              }, 2600);
+            }
           }
           setEditingItem(null); // Reset after save
         }}
@@ -1426,6 +1522,8 @@ export default function ClosetPage() {
         } as any : null}
         isOpen={!!selectedItem}
         onClose={() => setSelectedItem(null)}
+        isFavorite={selectedItem ? favorites.has(selectedItem.id) : false}
+        onFavoriteToggle={handleFavoriteToggle}
         onEdit={handleEditItem}
         onDelete={async (id: string) => {
           await deleteItem(id);

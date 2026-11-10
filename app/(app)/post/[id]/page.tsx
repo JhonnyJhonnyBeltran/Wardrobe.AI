@@ -17,6 +17,7 @@ import InteractiveOutfitViewer from '@/components/InteractiveOutfitViewer';
 import ProductModal from '@/components/ProductModal';
 import { ClothingItem } from '@/components/ClothingItem';
 import { SkeletonPostDetail, ExportStoryModal } from '@/components';
+import LikeBurstOverlay, { useLikeBurst } from '@/components/LikeBurstOverlay';
 import { haptics } from '@/lib/haptic';
 import { useFeedStore } from '@/store/feedStore';
 import { useSearchStore } from '@/store/searchStore';
@@ -86,7 +87,8 @@ export default function PostDetailPage() {
     const [showOptions, setShowOptions] = useState(false);
     const [deleting, setDeleting] = useState(false);
     const [replyingTo, setReplyingTo] = useState<{ id: string, username: string } | null>(null);
-    const [showHeartAnim, setShowHeartAnim] = useState(false);
+    const { burst: likeBurst, triggerBurst: triggerLikeBurst } = useLikeBurst();
+    const lastPhotoTapRef = useRef<number>(0);
     const [selectedItem, setSelectedItem] = useState<any | null>(null);
 
     // Caption Translation States
@@ -559,7 +561,7 @@ export default function PostDetailPage() {
     // Handle Interactions
     const toggleLike = () => {
         if (!user) {
-            router.push('/login');
+            router.push('/auth');
             return;
         }
 
@@ -570,6 +572,25 @@ export default function PostDetailPage() {
         const res = likeManager.toggleLike(postId, isLiked, likesCount);
         setIsLiked(res.isLiked);
         setLikesCount(res.likesCount);
+        if (res.isLiked) {
+            triggerLikeBurst();
+        }
+    };
+
+    const handleDoubleLikeTrigger = () => {
+        if (!isLiked) {
+            if (!user) {
+                router.push('/auth');
+                return;
+            }
+            const res = likeManager.toggleLike(postId, false, likesCount);
+            setIsLiked(res.isLiked);
+            setLikesCount(res.likesCount);
+        }
+        try {
+            haptics.tap();
+        } catch {}
+        triggerLikeBurst();
     };
 
     const toggleSave = async () => {
@@ -859,26 +880,19 @@ export default function PostDetailPage() {
                 {/* IMAGE CAROUSEL - Native smooth scroll snap track */}
                 <div 
                     className="relative w-full h-auto md:flex-1 md:h-screen bg-[var(--background)] md:bg-[var(--background-secondary)]/30 flex-shrink-0 overflow-hidden flex items-center justify-center select-none"
-                    onDoubleClick={() => {
-                        if (!isLiked) toggleLike();
-                        setShowHeartAnim(true);
-                        setTimeout(() => setShowHeartAnim(false), 1000);
+                    onDoubleClick={handleDoubleLikeTrigger}
+                    onTouchEnd={() => {
+                        const now = Date.now();
+                        if (now - lastPhotoTapRef.current < 280) {
+                            lastPhotoTapRef.current = 0;
+                            handleDoubleLikeTrigger();
+                        } else {
+                            lastPhotoTapRef.current = now;
+                        }
                     }}
                 >
-                    {/* Heart double-click animation */}
-                    <AnimatePresence>
-                        {showHeartAnim && (
-                            <motion.div
-                                initial={{ scale: 0, opacity: 0 }}
-                                animate={{ scale: 1.5, opacity: 1 }}
-                                exit={{ scale: 0, opacity: 0 }}
-                                transition={{ type: "spring", damping: 15 }}
-                                className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none"
-                            >
-                                <Heart className="w-32 h-32 text-white fill-white drop-shadow-[0_0_20px_rgba(0,0,0,0.5)]" />
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
+                    {/* Instagram / Pinterest style Like Heart + occasional Kloe Mascot */}
+                    <LikeBurstOverlay burst={likeBurst} size="lg" />
 
                     {/* Sliding track: native CSS scroll snap with real-time 1:1 smooth swipe */}
                     <div 

@@ -588,7 +588,7 @@ export default function ExportStoryModal({
               </div>
               <div>
                 <h3 className="text-sm sm:text-base font-bold leading-tight">Generar sticker HD</h3>
-                <p className="text-[11px] text-[var(--foreground-secondary)]">Copia el sticker para pegarlo en Instagram o descárgalo en HD</p>
+                <p className="text-[11px] text-[var(--foreground-secondary)]">Sticker 9:16 listo para Stories</p>
               </div>
             </div>
             <button

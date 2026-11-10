@@ -33,6 +33,7 @@ import { haptics } from '@/lib/haptic';
 import ProductModal from '@/components/ProductModal';
 import KloeProModal from '@/components/KloeProModal';
 import AvatarCalibrationModal from '@/components/AvatarCalibrationModal';
+import KloeMascot from '@/components/KloeMascot';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { resolveImageUrl } from '@/lib/imageUtils';
 
@@ -495,10 +496,10 @@ export default function KloePage() {
 
   // Cycling thinking messages with realistic AI Stylist reasoning stages
   const thinkingMessages = [
-    'Revisando los metadatos de tu armario...',
-    'Analizando armonía de colores, tejidos y tu perfil físico...',
-    'Equilibrando capas, proporciones y código de vestimenta...',
-    'Estructurando el look y redactando tu asesoría de estilo...'
+    'Buscando combinaciones en tu armario...',
+    'Equilibrando colores, tejidos y proporciones...',
+    'Preparando el look ideal para ti...',
+    'Ultimando tu recomendación...'
   ];
 
   useEffect(() => {
@@ -985,7 +986,7 @@ export default function KloePage() {
     <div className="min-h-screen bg-[var(--background)] flex flex-col justify-between max-w-5xl mx-auto">
       
       {/* DESKTOP HEADER */}
-      <header className="hidden md:flex fixed top-0 md:left-[72px] left-0 right-0 z-30 h-16 bg-[var(--background)]/85 backdrop-blur-xl border-b border-[var(--border-color)]/50 px-8 items-center justify-between">
+      <header className="hidden md:flex fixed top-0 md:left-[82px] left-0 right-0 z-30 h-16 bg-[var(--background)]/85 backdrop-blur-xl border-b border-[var(--border-color)]/50 px-8 items-center justify-between">
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.push('/closet')}
@@ -1160,12 +1161,11 @@ export default function KloePage() {
             className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             {msg.role === 'assistant' && (
-              <div className="relative w-9 h-9 flex-shrink-0 flex items-center justify-center mt-1">
-                <Image
-                  src="/kloe-avatar-v2.png"
-                  alt="Kloe"
-                  fill
-                  className="object-contain"
+              <div className="mt-1 shrink-0">
+                <KloeMascot
+                  mood={msg.recommended_outfit ? 'excited' : 'happy'}
+                  size="sm"
+                  interactive
                 />
               </div>
             )}
@@ -1421,18 +1421,7 @@ export default function KloePage() {
               transition={{ type: 'spring', damping: 20, stiffness: 300 }}
               className="flex gap-3 items-center justify-start"
             >
-              <motion.div 
-                animate={{ y: [0, -4, 0] }}
-                transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-                className="relative w-9 h-9 flex-shrink-0 flex items-center justify-center"
-              >
-                <Image
-                  src="/kloe-avatar-v2.png"
-                  alt="Kloe"
-                  fill
-                  className="object-contain drop-shadow-sm"
-                />
-              </motion.div>
+              <KloeMascot mood="thinking" size="sm" />
 
               <div className="bg-[var(--card-bg)] border border-[var(--border-color)] px-4 py-3 rounded-2xl rounded-tl-xs shadow-xs flex items-center gap-3">
                 <div className="flex items-center gap-1.5">

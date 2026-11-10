@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { Loader2, Bookmark, Heart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase/client';
+import LikeBurstOverlay, { useLikeBurst } from '@/components/LikeBurstOverlay';
 
 interface PostPreviewModalProps {
   isOpen: boolean;
@@ -42,6 +43,8 @@ export default function PostPreviewModal({
   const [loading, setLoading] = useState<boolean>(true);
   const [isSavedState, setIsSavedState] = useState<boolean>(isSaved);
   const [isLikedState, setIsLikedState] = useState<boolean>(isLiked);
+  const { burst: likeBurst, triggerBurst: triggerLikeBurst } = useLikeBurst();
+  const lastTapRef = useRef<number>(0);
 
   const touchStartX = useRef<number | null>(null);
   const touchEndX = useRef<number | null>(null);
@@ -162,21 +165,39 @@ export default function PostPreviewModal({
     touchEndX.current = e.targetTouches[0].clientX;
   };
 
-  const handleTouchEnd = () => {
-    if (touchStartX.current === null || touchEndX.current === null) return;
-    const distanceX = touchStartX.current - touchEndX.current;
-    const minSwipeDistance = 35;
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current !== null && touchEndX.current !== null) {
+      const distanceX = touchStartX.current - touchEndX.current;
+      const minSwipeDistance = 35;
 
-    if (Math.abs(distanceX) > minSwipeDistance) {
-      hasSwiped.current = true;
-      if (distanceX > 0 && outfitImage) {
-        // Deslizar a la izquierda: Ir al outfit
-        setActiveSlide(1);
-      } else if (distanceX < 0) {
-        // Deslizar a la derecha: Volver a la foto del post
-        setActiveSlide(0);
+      if (Math.abs(distanceX) > minSwipeDistance) {
+        hasSwiped.current = true;
+        if (distanceX > 0 && outfitImage) {
+          setActiveSlide(1);
+        } else if (distanceX < 0) {
+          setActiveSlide(0);
+        }
+        touchStartX.current = null;
+        touchEndX.current = null;
+        return;
       }
     }
+    touchStartX.current = null;
+    touchEndX.current = null;
+
+    // Support double-tap to like on touchscreen preview
+    const now = Date.now();
+    if (now - lastTapRef.current < 280) {
+      lastTapRef.current = 0;
+      hasSwiped.current = true; // prevent card tap navigation
+      triggerLikeBurst();
+      if (!isLikedState) {
+        setIsLikedState(true);
+        onToggleLike?.(e as unknown as React.MouseEvent);
+      }
+      return;
+    }
+    lastTapRef.current = now;
   };
 
   const handleCardClick = (e: React.MouseEvent) => {
@@ -202,7 +223,11 @@ export default function PostPreviewModal({
   const handleQuickLike = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
-    setIsLikedState(!isLikedState);
+    const nextLiked = !isLikedState;
+    setIsLikedState(nextLiked);
+    if (nextLiked) {
+      triggerLikeBurst();
+    }
     if (onToggleLike) {
       onToggleLike(e);
     }
@@ -244,7 +269,18 @@ export default function PostPreviewModal({
             className="relative z-10 w-full max-w-[340px] sm:max-w-[380px] aspect-[3/4] sm:aspect-[4/5] rounded-[36px] overflow-hidden shadow-[0_25px_70px_-15px_rgba(0,0,0,0.6)] border border-white/20 dark:border-white/15 bg-[#121216] cursor-pointer group"
           >
             {/* Sliding Image Container without foggy vignette */}
-            <div className="relative w-full h-full overflow-hidden select-none">
+            <div
+              onDoubleClick={(e) => {
+                e.stopPropagation();
+                triggerLikeBurst();
+                if (!isLikedState) {
+                  setIsLikedState(true);
+                  onToggleLike?.(e);
+                }
+              }}
+              className="relative w-full h-full overflow-hidden select-none"
+            >
+              <LikeBurstOverlay burst={likeBurst} size="lg" />
               <AnimatePresence initial={false} mode="wait">
                 {activeSlide === 0 ? (
                   <motion.div

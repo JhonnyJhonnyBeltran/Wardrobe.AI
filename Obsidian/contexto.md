@@ -3446,7 +3446,25 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
   - `package.json` sin dependencias ni scripts de `remotion` / `@remotion/*`.
 - **Repertorio global de skills y repos de referencia**:
   - Skills globales añadidas en `C:\Users\EthanCurro\.gemini\config\skills\`: `video-shotcraft`, `opus-video-prompts`, `awesome-opus5-5-videos`, `librosa-beat-sync` (respaldadas por los repos clonados en `klozet-video-studio\references\` y entorno Python con `librosa 0.11.0` + `soundfile 0.14.0`).
-- **Producción `KlozetRunwayPromo` (`out/klozet-promo-v3.mp4`)**:
-  - Formato vertical `1080×1920` a `60 fps` (`1140` frames / `19.0 s`), texto reducido a 6 palabras externas (`¿Qué te pones?`, `Tu armario.`, `klozet.es`) y logos PNG oficiales de **Klozet** y **Kloe** sueltos sobre `#111113` (sin círculos contenedores).
-  - Banda sonora real `Cat Walk` (`Arulo`, Mixkit Free License) masterizada a `-15.3 dBFS`, sincronizada al frame mediante `librosa` HPSS + regresión de kicks (`130.002 BPM`, `max_res=5.57ms`) y diseño SFX compensado por pico (`beatF` / `sfxFrom`).
-  - Flujo móvil a escala gigante basado en las capturas reales de la app: `/closet` → `OutfitDetailModal` (`Toca una prenda para ver detalles`) → `ProductModal` (`Jersey de punto básico color crema`) → `/post` (`Prendas del look (4)`).
+- **Producción `KlozetRunwayPromo` V4 (`out/klozet-promo-v4.mp4`)**:
+  - Formato vertical `1080×1920` a `60 fps` (`990` frames / `16.5 s`), cero frases narrativas ("show, don't tell": prendas sueltas imantan al look en vivo) y un único wordmark `Klozet` (`klozet-nombre-grande.png`) + `klozet.es` en el cierre sin duplicación de logos ni círculos.
+  - Perspectivas diagonales 3D con bisel de titanio extruido (`IPhoneShell`) y showcase multi-dispositivo real en ordenador portátil (`MacBookShell` Space Black con Safari `klozet.es/closet` → `/post` split-screen y cursor macOS).
+  - Banda sonora real `Cat Walk` (`Arulo`, Mixkit Free License) recortada directamente en el drop de coro (`-9.4 dB`, normalizada a `-14.25 dBFS`), sincronizada al frame mediante `librosa` HPSS (`129.984 BPM`, `max_res=5.31ms`) y diseño SFX compensado por pico (`beatF` / `sfxFrom`).
+
+---
+
+## 57. Mini Sistema de Diseño, Mascota Kloe Viva, Likes Estilo Instagram con "K" de Kloe y Fix de Compilación en Vercel (Noviembre 2026)
+- **Fix Crítico de Build en Vercel (`remotion.config.ts`)**:
+  - Rastreados heredados de vídeo ya eliminados en disco (`remotion.config.ts`, `remotion/*`, `public/ad-assets/*`, `public/sfx/*`, `public/*.wav`, `.agents/skills/(apple-motion|demovie|remotion*)`) eliminados del índice Git (`git add -u`) para impedir que Vercel intente compilar `remotion.config.ts` sin `@remotion/cli`.
+- **Mini Sistema de Diseño (4 Escalas · Rejilla 8pt · 2 Radios · Sombras/Degradados Monocromáticos)**:
+  - Añadida fuente bubble OFL autohospedada **`DynaPuff`** (`--font-kloe` en `app/layout.tsx`, clase `.font-kloe`) para los textos y píldoras de Kloe (nota: `Meila` no está en Google Fonts ni en el sistema local al ser fuente comercial; lista para intercambio si se aporta el archivo).
+  - Definidos en `app/globals.css`: `.kz-display` (`28–36px` `Outfit`), `.kz-title` (`20px`), `.kz-body` (`15px`), `.kz-caption` (`12px`), 2 radios estrictos (`--radius-card: 20px`, `--radius-pill: 9999px`) y superficies táctiles con sombra sutil y profundidad monocromática (`.kz-surface-card`, `.kz-pink-surface`, `.kz-kloe-hero`).
+  - Restaurado shimmer GPU suave en `.skeleton-wave` con soporte `prefers-reduced-motion`, añadido `SkeletonCloset` contextual en `components/Skeleton.tsx` y actualizado `EmptyState.tsx` con la mascota viva.
+- **Mascota Kloe Viva y Likes con Easter Egg (`components/KloeMascot.tsx`, `components/LikeBurstOverlay.tsx`)**:
+  - `<KloeMascot />` envuelve el activo oficial `/k-bubble-pink.png` con animaciones orgánicas de personaje (`idle`, `happy`, `thinking`, `excited`, `curious`, rebote al tocar) y reemplaza todos los iconos `<Bot />` / `<Wand2 />` en tour guiado (`GuidedTourModal.tsx`, `ProfileProgressBar.tsx`) y ruleta/creación (`SlotMachineGenerator.tsx`, `app/(app)/create/page.tsx`).
+  - `<LikeBurstOverlay />` (`useLikeBurst()`) despliega un corazón brillante estilo Instagram/Pinterest sobre la foto al dar like o hacer doble toque (táctil y ratón) en `PostCard.tsx`, `PostPreviewModal.tsx` y `app/(app)/post/[id]/page.tsx`, revelando periódicamente la **"K" de Kloe** en el centro del corazón con micro-corazones flotantes.
+- **Armario Inteligente y Navegación Clara (`app/(app)/closet/page.tsx`, `components/TabBar.tsx`, `components/Sidebar.tsx`, `components/OutfitCard.tsx`)**:
+  - Añadido título display `"Tu armario"` con conteo en vivo (`prendas · looks`), banner protagonista de Kloe `.kz-kloe-hero` en `font-kloe` (`"Charla conmigo"` / prompts rotativos), pestañas superiores etiquetadas en móvil y escritorio (`Prendas`, `Outfits`, `Calendario`), y contexto real por prenda calculado desde `calendar_outfits` y `outfit_items` (`Marca · X usos` / `En X looks` / `Sin estrenar`), además de animación de entrada al añadir prenda y rebote al marcar favorito.
+  - Barra inferior móvil (`TabBar.tsx`) y barra lateral (`Sidebar.tsx`) ahora muestran etiquetas de texto claras de una palabra (`Inicio`, `Buscar`, `Armario`, `Actividad`, `Perfil`).
+- **Limpieza de Modales (`OutfitDetailModal.tsx`, `ProductModal.tsx`, `AddItemModal/index.tsx`, `ExportStoryModal.tsx`)**:
+  - Eliminados botones redundantes (`Cancelar` duplicado en `AddItemModal`) y píldoras informativas obvias (*"Toca una prenda para ver detalles"*, píldora *"Tendencia"*, bloque duplicado de marca en `ProductModal`, píldoras repetidas de conteo/privacidad en `OutfitDetailModal` y menciones artificiales a *"metadatos"*/*"IA"*).

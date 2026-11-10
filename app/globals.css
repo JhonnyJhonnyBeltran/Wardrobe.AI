@@ -113,9 +113,16 @@ html {
   --radius-xl: 24px;
   --radius-2xl: 32px;
   --radius-full: 9999px;
+  --radius-card: 20px;
+  --radius-pill: 9999px;
+
+  /* Subtle depth & monochromatic pink elevation */
+  --shadow-card: 0 2px 6px rgba(0, 0, 0, 0.03), 0 12px 28px -8px rgba(0, 0, 0, 0.07);
+  --shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.05), 0 16px 36px -8px rgba(0, 0, 0, 0.11);
+  --shadow-pink-soft: 0 8px 24px -6px rgba(255, 102, 196, 0.34), 0 2px 6px -1px rgba(237, 76, 158, 0.16);
 
   /* ===== MOBILE SIZING ===== */
-  --tabbar-height: 72px;
+  --tabbar-height: 76px;
 }
 
 /* ===== UTILITIES & SAFE AREAS ===== */
@@ -136,6 +143,73 @@ html {
 
 .safe-bottom {
   padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem);
+}
+
+/* ===== MINI DESIGN SYSTEM (4 Type Scales · 8pt Rhythm · 2 Radii · Tactile Depth) ===== */
+.font-display {
+  font-family: var(--font-outfit), var(--font-inter), -apple-system, sans-serif;
+}
+
+.font-kloe {
+  font-family: var(--font-kloe), var(--font-outfit), var(--font-inter), sans-serif;
+}
+
+.kz-display {
+  font-family: var(--font-outfit), var(--font-inter), -apple-system, sans-serif;
+  font-size: clamp(1.75rem, 4vw, 2.25rem);
+  line-height: 1.05;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.kz-title {
+  font-family: var(--font-outfit), var(--font-inter), -apple-system, sans-serif;
+  font-size: 1.25rem;
+  line-height: 1.25;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+.kz-body {
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  font-weight: 400;
+}
+
+.kz-caption {
+  font-size: 0.75rem;
+  line-height: 1.35;
+  font-weight: 500;
+}
+
+.kz-surface-card {
+  background: linear-gradient(180deg, #FFFFFF 0%, #F7F7FA 100%);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-card);
+  border-radius: var(--radius-card);
+}
+
+.dark .kz-surface-card {
+  background: linear-gradient(180deg, #1D1D22 0%, #16161A 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35), 0 14px 32px -8px rgba(0, 0, 0, 0.5);
+}
+
+.kz-pink-surface {
+  background: linear-gradient(135deg, #FF7CD0 0%, #FF66C4 55%, #ED4C9E 100%);
+  box-shadow: var(--shadow-pink-soft), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+.kz-kloe-hero {
+  background: linear-gradient(135deg, #FFF5FA 0%, #FFE4F3 100%);
+  border: 1px solid rgba(255, 102, 196, 0.28);
+  box-shadow: 0 6px 22px -6px rgba(255, 102, 196, 0.24), 0 2px 6px rgba(0, 0, 0, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.85);
+}
+
+.dark .kz-kloe-hero {
+  background: linear-gradient(135deg, #271521 0%, #1C1118 100%);
+  border: 1px solid rgba(255, 102, 196, 0.34);
+  box-shadow: 0 8px 26px -6px rgba(255, 102, 196, 0.26), 0 4px 12px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 /* ===== APPLE HIG ERGONOMICS & MATERIALS ===== */
@@ -2243,41 +2317,18 @@ select option:checked {
    Smooth color breathing transition without spatial translation
    ============================================ */
 
-@keyframes skeleton-color-pulse {
-  0%, 100% {
-    background-color: rgba(229, 231, 235, 0.95);
-  }
-  50% {
-    background-color: rgba(243, 244, 246, 0.45);
-  }
-}
-
-@keyframes skeleton-color-pulse-dark {
-  0%, 100% {
-    background-color: rgba(38, 38, 44, 0.9);
-  }
-  50% {
-    background-color: rgba(60, 60, 72, 0.55);
-  }
-}
-
 .skeleton,
 .skeleton-wave {
   position: relative;
-  background-color: rgba(229, 231, 235, 0.95);
-  border-radius: var(--radius-md);
-  animation: skeleton-color-pulse 1.8s ease-in-out infinite !important;
+  border-radius: var(--radius-card);
+  will-change: background-position;
 }
 
-.skeleton::after,
-.skeleton-wave::after {
-  display: none !important;
-}
-
-.dark .skeleton,
-.dark .skeleton-wave {
-  background-color: rgba(38, 38, 44, 0.9);
-  animation: skeleton-color-pulse-dark 1.8s ease-in-out infinite !important;
+@media (prefers-reduced-motion: reduce) {
+  .skeleton,
+  .skeleton-wave {
+    animation: none !important;
+  }
 }
 
 /* ============================================

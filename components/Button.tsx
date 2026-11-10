@@ -39,11 +39,9 @@ export default function Button({
 
   const variants = {
     primary: `
-      bg-[var(--brand-pink)] text-white
-      shadow-[var(--shadow-float)]
-      hover:bg-[var(--brand-pink-dark)]
-      hover:shadow-[var(--shadow-float-hover)]
-      active:shadow-[var(--shadow-float)]
+      kz-pink-surface text-white
+      hover:brightness-[1.03]
+      active:brightness-95
     `,
     destructive: `
       bg-red-500 text-white

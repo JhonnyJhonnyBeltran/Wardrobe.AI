@@ -26,7 +26,7 @@ export default function NotificationsPage() {
       className="min-h-screen bg-[var(--background)] pb-24 flex flex-col w-full"
     >
       <header className="sticky top-0 z-30 apple-glass-bar pt-safe px-4 h-14 flex items-center justify-center">
-        <h1 className="text-lg font-bold text-[var(--foreground)] select-none">Actividad</h1>
+        <h1 className="font-display text-xl font-bold tracking-tight text-[var(--foreground)] select-none">Actividad</h1>
       </header>
 
       {/* Full width container for the list */}

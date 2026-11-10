@@ -369,7 +369,7 @@ export default function FeedPage() {
             <Plus className="w-6 h-6" strokeWidth={1.9} />
           </button>
 
-          <h1 className="text-lg font-bold tracking-tight text-[var(--foreground)] absolute left-1/2 -translate-x-1/2 select-none">
+          <h1 className="font-display text-xl font-bold tracking-tight text-[var(--foreground)] absolute left-1/2 -translate-x-1/2 select-none">
             Para ti
           </h1>
 

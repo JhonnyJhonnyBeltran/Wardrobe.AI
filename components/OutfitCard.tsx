@@ -105,11 +105,12 @@ const OutfitCard = ({ outfit, isLocked = false, onClick, onEdit, onDelete, onSha
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: index * 0.08 }}
             whileHover={!isLocked ? {
-                scale: 1.03,
-                transition: { duration: 0.2 }
+                y: -3,
+                transition: { type: 'spring', stiffness: 420, damping: 24 }
             } : {}}
+            whileTap={!isLocked ? { scale: 0.97 } : {}}
             onClick={!isLocked && onClick ? () => onClick(outfit) : undefined}
-            className={`group relative overflow-hidden rounded-[20px] bg-[var(--card-bg)] shadow-sm border border-[var(--border-color)] select-none ${isLocked ? 'cursor-not-allowed' : 'cursor-pointer'
+            className={`group relative overflow-hidden rounded-[20px] kz-surface-card hover:shadow-[var(--shadow-card-hover)] transition-shadow duration-300 select-none flex flex-col ${isLocked ? 'cursor-not-allowed' : 'cursor-pointer'
                 }`}
         >
             {/* Clickable Area */}
@@ -220,6 +221,17 @@ const OutfitCard = ({ outfit, isLocked = false, onClick, onEdit, onDelete, onSha
                         </div>
                     )}
                 </div>
+
+                {/* Smart Context Footer */}
+                <div className="px-3 py-2.5 border-t border-[var(--border-color)]/60 flex flex-col gap-0.5 bg-transparent">
+                    <p data-no-translate={outfit.name ? 'true' : undefined} className="text-[13px] font-semibold text-[var(--foreground)] truncate leading-tight">
+                        {outfit.name || 'Look sin título'}
+                    </p>
+                    <p className="kz-caption text-[var(--foreground-secondary)] truncate leading-tight">
+                        {outfit.occasion ? `${outfit.occasion} · ` : ''}
+                        {items.length} {items.length === 1 ? 'prenda' : 'prendas'}
+                    </p>
+                </div>
             </div>
 
             {/* Right Overlay Actions - Always visible */}
@@ -233,27 +245,27 @@ const OutfitCard = ({ outfit, isLocked = false, onClick, onEdit, onDelete, onSha
                             e.stopPropagation();
                             onToggleFavorite(outfit, outfit.favorite ?? false);
                         }}
-                        className="p-1.5 focus:outline-none cursor-pointer"
+                        className="p-1.5 rounded-full bg-white/85 dark:bg-zinc-900/75 backdrop-blur-sm border border-black/[0.06] dark:border-white/10 shadow-xs focus:outline-none cursor-pointer"
                     >
                         <motion.div
-                            animate={outfit.favorite ? { scale: [1, 1.35, 0.92, 1] } : { scale: 1 }}
+                            animate={outfit.favorite ? { scale: [1, 1.38, 0.92, 1] } : { scale: 1 }}
                             transition={{ type: 'spring', stiffness: 500, damping: 20 }}
                         >
-                            <Heart className={`w-5 h-5 transition-colors duration-200 ${outfit.favorite ? 'fill-[var(--brand-pink)] text-[var(--brand-pink)]' : 'fill-none text-zinc-400 hover:text-zinc-600'}`} />
+                            <Heart className={`w-4 h-4 transition-colors duration-200 ${outfit.favorite ? 'fill-[var(--brand-pink)] text-[var(--brand-pink)]' : 'fill-none text-zinc-400 hover:text-zinc-600'}`} />
                         </motion.div>
                     </motion.button>
                 )}
                 {!outfit.is_public && (
                     <div className="p-1" title="Outfit privado">
-                        <Lock className="w-5 h-5 text-[#d1d5db]" />
+                        <Lock className="w-4 h-4 text-zinc-400" />
                     </div>
                 )}
             </div>
 
-            {/* Shop indicator */}
+            {/* Shop indicator moved to top-left so it never overlaps favorite button */}
             {
                 hasShopLinks && !isLocked && (
-                    <div className="absolute top-2 right-2 bg-[var(--card-bg)]/90 backdrop-blur-sm border border-[var(--border-color)] rounded-full p-1.5 shadow-sm">
+                    <div className="absolute top-3 left-3 bg-white/90 dark:bg-zinc-900/80 backdrop-blur-sm border border-black/[0.06] dark:border-white/10 rounded-full p-1.5 shadow-xs z-20">
                         <ShoppingBag className="w-3.5 h-3.5 text-[var(--brand-pink)]" />
                     </div>
                 )

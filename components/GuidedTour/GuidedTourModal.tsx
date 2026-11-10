@@ -11,7 +11,6 @@ import {
   Camera, 
   Layers, 
   Calendar, 
-  Bot, 
   Share2, 
   Search, 
   Plus, 
@@ -19,17 +18,20 @@ import {
   CheckCircle2, 
   Trophy 
 } from 'lucide-react';
+import KloeMascot from '@/components/KloeMascot';
 import { useTourStore, TOUR_STEPS, TourStepId, calculateTourProgress } from '@/store/tourStore';
 import { useWardrobeStore } from '@/store/wardrobeStore';
 import { useUser } from '@/store/userStore';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+
+const KloeStepIcon = () => <KloeMascot mood="happy" size="sm" />;
 
 const STEP_ICONS: Record<TourStepId, React.ElementType> = {
   style_preferences: Palette,
   avatar: Camera,
   upload_clothes: Plus,
   create_outfit: Layers,
-  talk_to_kloe: Bot,
+  talk_to_kloe: KloeStepIcon,
   create_post: Share2,
   schedule_outfit: Calendar,
   explore_like: Search

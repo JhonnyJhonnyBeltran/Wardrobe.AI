@@ -12,6 +12,7 @@ import { supabase } from '@/lib/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { haptics } from '@/lib/haptic';
 import PostPreviewModal from './PostPreviewModal';
+import LikeBurstOverlay, { useLikeBurst } from '@/components/LikeBurstOverlay';
 import { likeManager } from '@/lib/services/likeManager';
 import { interestManager } from '@/lib/services/interestManager';
 
@@ -54,6 +55,7 @@ export default function PostCard({
     const [likesCountState, setLikesCountState] = useState(post.likes || 0);
     const [showPreviewModal, setShowPreviewModal] = useState(false);
     const { showSaveToast, openFolderModal, triggerRefetch } = useUiStore();
+    const { burst: likeBurst, triggerBurst: triggerLikeBurst } = useLikeBurst();
     const router = useRouter();
 
     const cardRef = useRef<HTMLDivElement>(null);
@@ -165,7 +167,7 @@ export default function PostCard({
         e.stopPropagation();
 
         if (!user) {
-            router.push('/login');
+            router.push('/auth');
             return;
         }
 
@@ -176,6 +178,9 @@ export default function PostCard({
         const res = likeManager.toggleLike(post.id, isLikedState, likesCountState);
         setIsLikedState(res.isLiked);
         setLikesCountState(res.likesCount);
+        if (res.isLiked) {
+            triggerLikeBurst();
+        }
     };
 
     // If no image, show text card
@@ -217,10 +222,12 @@ export default function PostCard({
                 className="w-full h-full relative z-10 apple-tap-feedback"
             >
                 <div
-                    className="group relative rounded-[22px] overflow-hidden bg-[var(--card-bg)] shadow-[0_4px_20px_-2px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_32px_-4px_rgba(0,0,0,0.08)] border border-black/[0.04] dark:border-white/[0.06] transition-all duration-300 cursor-pointer h-full w-full"
+                    className="group relative rounded-[20px] overflow-hidden bg-[var(--card-bg)] shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] border border-black/[0.05] dark:border-white/[0.07] transition-all duration-300 cursor-pointer h-full w-full"
                     onMouseEnter={() => setIsHovered(true)}
                     onMouseLeave={() => setIsHovered(false)}
                 >
+                    <LikeBurstOverlay burst={likeBurst} size="md" />
+
                     <div className="relative w-full h-full flex flex-col pointer-events-none">
                         <Image
                             src={post.imageUrl}
@@ -240,15 +247,20 @@ export default function PostCard({
 
                         {!hideAuthorOverlay && (
                             <div className={cn(
-                                "absolute bottom-3 left-3 right-3 hidden md:flex items-center justify-between transition-opacity duration-300",
+                                "absolute bottom-3 left-3 right-3 hidden md:flex items-center justify-between transition-opacity duration-300 pointer-events-auto",
                                 isLikedState && !hideLikeButton ? "opacity-100" : "opacity-0 group-hover:opacity-100"
                             )}>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 pointer-events-none">
                                     <Avatar src={post.author.avatar || null} alt={post.author.name || "Foto de perfil"} size="sm" />
                                     <span className="text-xs font-semibold text-white truncate max-w-[120px] drop-shadow-md">{post.author.name}</span>
                                 </div>
                                 {!hideLikeButton && (
-                                    <div className="flex items-center gap-1 text-white text-xs drop-shadow-md">
+                                    <button
+                                        type="button"
+                                        onClick={toggleQuickLike}
+                                        aria-label={isLikedState ? "Quitar me gusta" : "Me gusta"}
+                                        className="w-8 h-8 rounded-full bg-black/35 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:scale-110 active:scale-90 transition-transform cursor-pointer"
+                                    >
                                         <motion.div
                                             key={isLikedState ? 'liked' : 'unliked'}
                                             animate={isLikedState ? { scale: [1, 1.38, 0.92, 1.05, 1] } : { scale: 1 }}
@@ -256,9 +268,27 @@ export default function PostCard({
                                         >
                                             <Heart className={cn("w-4 h-4 transition-colors", isLikedState ? "fill-[var(--brand-pink)] text-[var(--brand-pink)]" : "text-white")} />
                                         </motion.div>
-                                    </div>
+                                    </button>
                                 )}
                             </div>
+                        )}
+
+                        {/* Mobile 1-Tap Quick Like Pill (zero navigation delay) */}
+                        {!hideLikeButton && (
+                            <button
+                                type="button"
+                                onClick={toggleQuickLike}
+                                aria-label={isLikedState ? "Quitar me gusta" : "Me gusta"}
+                                className="md:hidden absolute bottom-2.5 right-2.5 z-30 w-9 h-9 rounded-full bg-black/35 backdrop-blur-md border border-white/20 flex items-center justify-center pointer-events-auto active:scale-90 transition-transform cursor-pointer"
+                            >
+                                <motion.div
+                                    key={isLikedState ? 'm-liked' : 'm-unliked'}
+                                    animate={isLikedState ? { scale: [1, 1.38, 0.92, 1.05, 1] } : { scale: 1 }}
+                                    transition={{ type: 'spring', stiffness: 550, damping: 20 }}
+                                >
+                                    <Heart className={cn("w-4 h-4 transition-colors", isLikedState ? "fill-[var(--brand-pink)] text-[var(--brand-pink)]" : "text-white")} />
+                                </motion.div>
+                            </button>
                         )}
                     </div>
                     
