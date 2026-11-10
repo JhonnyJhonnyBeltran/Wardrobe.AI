@@ -1,9 +1,8 @@
 'use client';
 
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { Heart } from 'lucide-react';
-import Image from 'next/image';
 
 // Shared session sequence so Kloe peeks out consistently every ~3rd like burst (and randomly)
 let globalBurstCounter = 0;
@@ -51,6 +50,46 @@ const KLOE_SIZES = {
   md: 'w-10 h-12',
   lg: 'w-14 h-16',
 } as const;
+
+function KloeBurstBlinker() {
+  const [frame, setFrame] = useState<'open' | 'half' | 'closed'>('open');
+
+  useEffect(() => {
+    const t1 = setTimeout(() => setFrame('half'), 180);
+    const t2 = setTimeout(() => setFrame('closed'), 230);
+    const t3 = setTimeout(() => setFrame('half'), 340);
+    const t4 = setTimeout(() => setFrame('open'), 390);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+      clearTimeout(t4);
+    };
+  }, []);
+
+  const srcs = {
+    open: '/kloe-blink-open.png',
+    half: '/kloe-blink-half.png',
+    closed: '/kloe-blink-closed.png',
+  };
+
+  return (
+    <div className="relative w-full h-full drop-shadow-[0_2px_6px_rgba(237,76,158,0.35)]">
+      {(['open', 'half', 'closed'] as const).map((k) => (
+        <img
+          key={k}
+          src={srcs[k]}
+          alt={k === 'open' ? 'Kloe Like' : ''}
+          aria-hidden={k !== 'open'}
+          draggable={false}
+          className={`absolute inset-0 w-full h-full object-contain pointer-events-none select-none ${
+            frame === k ? 'opacity-100' : 'opacity-0'
+          }`}
+        />
+      ))}
+    </div>
+  );
+}
 
 /**
  * LikeBurstOverlay
@@ -109,7 +148,7 @@ export default function LikeBurstOverlay({
               strokeWidth={burst.withKloe ? 1.8 : 1.5}
             />
 
-            {/* Kloe Bubble Mascot peeking inside center of the heart */}
+            {/* Kloe Bubble Mascot peeking & blinking inside center of the heart */}
             {burst.withKloe && (
               <motion.div
                 initial={{ scale: 0.2, rotate: -16 }}
@@ -117,13 +156,7 @@ export default function LikeBurstOverlay({
                 transition={{ duration: 0.42, delay: 0.06, ease: [0.34, 1.56, 0.64, 1] }}
                 className={`absolute ${KLOE_SIZES[size]} -mt-0.5 flex items-center justify-center`}
               >
-                <Image
-                  src="/k-bubble-pink.png"
-                  alt="Kloe Like"
-                  fill
-                  sizes="72px"
-                  className="object-contain drop-shadow-[0_2px_6px_rgba(237,76,158,0.35)]"
-                />
+                <KloeBurstBlinker />
               </motion.div>
             )}
 

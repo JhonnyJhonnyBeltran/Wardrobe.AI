@@ -285,15 +285,9 @@ function KloeAnimatedLogo() {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.92 }}
             transition={{ duration: 0.35, ease: 'easeInOut' }}
-            className="relative w-7 md:w-8 h-7 md:h-8 flex items-center justify-center flex-shrink-0"
+            className="flex items-center justify-center flex-shrink-0"
           >
-            <Image
-              src="/kloe-avatar-v2.png"
-              alt="Kloe Avatar"
-              fill
-              className="object-contain"
-              priority
-            />
+            <KloeMascot mood="happy" size="sm" />
           </motion.div>
         )}
       </AnimatePresence>

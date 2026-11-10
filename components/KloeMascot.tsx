@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
-import Image from 'next/image';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { haptics } from '@/lib/haptic';
 
 export type KloeMood = 'idle' | 'happy' | 'thinking' | 'wink' | 'excited' | 'curious';
+type BlinkFrame = 'open' | 'half' | 'closed';
 
 interface KloeMascotProps {
   mood?: KloeMood;
@@ -23,10 +23,16 @@ const SIZE_MAP = {
   xl: 'w-20 h-24',
 } as const;
 
+const FRAME_SRCS: Record<BlinkFrame, string> = {
+  open: '/kloe-blink-open.png',
+  half: '/kloe-blink-half.png',
+  closed: '/kloe-blink-closed.png',
+};
+
 /**
- * KloeMascot - Living character wrapper around the official /k-bubble-pink.png artwork.
- * Gives Kloe Duolingo-style organic presence (breathing, thinking tilt, happy jump,
- * tap squish) while keeping the official PNG brand mark untouched.
+ * KloeMascot - Living character driven by the 3 custom blink frames
+ * (/kloe-blink-open.png, /kloe-blink-half.png, /kloe-blink-closed.png)
+ * stacked in DOM for zero-flicker 60fps blinking + Duolingo-style body physics.
  */
 export default function KloeMascot({
   mood = 'idle',
@@ -37,12 +43,75 @@ export default function KloeMascot({
 }: KloeMascotProps) {
   const prefersReducedMotion = useReducedMotion();
   const [tapKey, setTapKey] = useState(0);
+  const [frame, setFrame] = useState<BlinkFrame>('open');
+  const timersRef = useRef<NodeJS.Timeout[]>([]);
+
+  const clearAllTimers = useCallback(() => {
+    timersRef.current.forEach(clearTimeout);
+    timersRef.current = [];
+  }, []);
+
+  const triggerBlink = useCallback(
+    (doubleBlink = false) => {
+      if (prefersReducedMotion) return;
+      clearAllTimers();
+
+      const t1 = setTimeout(() => setFrame('half'), 0);
+      const t2 = setTimeout(() => setFrame('closed'), 48);
+      const t3 = setTimeout(() => setFrame('half'), 138);
+      const t4 = setTimeout(() => setFrame('open'), 188);
+      timersRef.current.push(t1, t2, t3, t4);
+
+      if (doubleBlink) {
+        const t5 = setTimeout(() => setFrame('half'), 290);
+        const t6 = setTimeout(() => setFrame('closed'), 335);
+        const t7 = setTimeout(() => setFrame('half'), 415);
+        const t8 = setTimeout(() => setFrame('open'), 460);
+        timersRef.current.push(t5, t6, t7, t8);
+      }
+    },
+    [prefersReducedMotion, clearAllTimers]
+  );
+
+  // Organic periodic eye-blink loop (every 2.8s – 5.2s)
+  useEffect(() => {
+    if (prefersReducedMotion) return;
+
+    let loopTimer: NodeJS.Timeout;
+    let isMounted = true;
+
+    const scheduleNext = (initialDelay?: number) => {
+      const delay = initialDelay ?? 2800 + Math.random() * 2400;
+      loopTimer = setTimeout(() => {
+        if (!isMounted) return;
+        const doDouble = mood === 'happy' || mood === 'excited' ? Math.random() < 0.35 : Math.random() < 0.2;
+        triggerBlink(doDouble);
+        scheduleNext();
+      }, delay);
+    };
+
+    // Initial greeting blink shortly after mount
+    scheduleNext(900 + Math.random() * 1400);
+
+    return () => {
+      isMounted = false;
+      clearTimeout(loopTimer);
+      clearAllTimers();
+    };
+  }, [prefersReducedMotion, mood, triggerBlink, clearAllTimers]);
+
+  // Trigger joyful double-blink when mood changes to excited or wink
+  useEffect(() => {
+    if (mood === 'excited' || mood === 'wink') {
+      triggerBlink(mood === 'excited');
+    }
+  }, [mood, triggerBlink]);
 
   const handleTap = () => {
-    if (!interactive && !onTap) return;
     try {
       haptics.tap();
     } catch {}
+    triggerBlink(true);
     setTapKey((prev) => prev + 1);
     onTap?.();
   };
@@ -111,29 +180,34 @@ export default function KloeMascot({
   return (
     <motion.div
       key={tapKey}
-      onClick={handleTap}
+      onClick={interactive || onTap ? handleTap : undefined}
       whileHover={interactive ? { scale: 1.1, rotate: -4 } : undefined}
       whileTap={interactive ? { scale: 0.88, rotate: 6 } : undefined}
       initial={tapKey > 0 ? { scale: 0.85, rotate: -10 } : false}
       animate={{ scale: 1, rotate: 0 }}
       transition={{ type: 'spring', stiffness: 460, damping: 18 }}
       className={`relative inline-flex items-center justify-center select-none shrink-0 ${SIZE_MAP[size]} ${
-        interactive ? 'cursor-pointer' : ''
+        interactive || onTap ? 'cursor-pointer' : ''
       } ${className}`}
     >
       <motion.div
         animate={getMoodAnimate()}
         transition={getMoodTransition()}
-        className="relative w-full h-full flex items-center justify-center"
+        className="relative w-full h-full flex items-center justify-center drop-shadow-[0_4px_10px_rgba(255,102,196,0.28)]"
       >
-        <Image
-          src="/k-bubble-pink.png"
-          alt="Kloe"
-          fill
-          sizes="80px"
-          className="object-contain drop-shadow-[0_4px_10px_rgba(255,102,196,0.28)]"
-          priority={size === 'md' || size === 'lg'}
-        />
+        {/* All 3 frames pre-mounted & aligned identically so blinking swaps cleanly with 0 network lag */}
+        {(['open', 'half', 'closed'] as BlinkFrame[]).map((key) => (
+          <img
+            key={key}
+            src={FRAME_SRCS[key]}
+            alt={key === 'open' ? 'Kloe' : ''}
+            aria-hidden={key !== 'open'}
+            draggable={false}
+            className={`absolute inset-0 w-full h-full object-contain pointer-events-none select-none ${
+              frame === key ? 'opacity-100' : 'opacity-0'
+            }`}
+          />
+        ))}
       </motion.div>
 
       {/* Subtle living thinking dots when Kloe is thinking */}
