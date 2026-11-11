@@ -104,45 +104,44 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
                         className="fixed inset-0 bg-black/60 shadow-2xl backdrop-blur-sm z-[6030]"
                     />
 
-                    {/* Modal Content Wrapper - Standardized Bottom Offset */}
+                    {/* Modal Content Wrapper - Standardized Bottom Offset matching OutfitDetailModal */}
                     <motion.div
                         key="product-wrapper"
-                        initial={{ opacity: 0, y: 100 }}
+                        initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 100 }}
+                        exit={{ opacity: 0, y: 30 }}
                         transition={{ 
                             type: 'spring',
                             damping: 28,
-                            stiffness: 300,
+                            stiffness: 340,
                         }}
-                        className="fixed inset-0 z-[6040] flex items-end md:items-center justify-center px-4 pb-[calc(var(--tabbar-height)+16px)] md:pb-0 md:p-4 pointer-events-none"
+                        className="fixed inset-0 z-[6040] flex items-end md:items-center justify-center px-3 sm:px-6 pb-[calc(var(--tabbar-height)+8px)] md:pb-0 pointer-events-none"
                     >
                         {/* Modal Content */}
                         <motion.div
                             onClick={(e) => e.stopPropagation()}
-                            className="relative w-full max-w-md max-h-[calc(100dvh-var(--tabbar-height)-48px)] md:max-h-[85vh] bg-[var(--background)] rounded-3xl md:rounded-[32px] overflow-hidden shadow-2xl flex flex-col border border-[var(--border-color)] pointer-events-auto"
+                            className="relative w-full max-w-md max-h-[calc(100dvh-var(--tabbar-height)-16px)] md:max-h-[85vh] bg-[var(--background)] rounded-[32px] md:rounded-[36px] overflow-hidden shadow-2xl flex flex-col border border-[var(--border-color)] pointer-events-auto"
                         >
-                            {/* Top Actions: Optional Favorite + Close */}
-                            <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+                            {/* Top Right Controls (Favorite + Close matching OutfitDetailModal) */}
+                            <div className="absolute top-3 right-3 md:top-4 md:right-4 z-30 flex items-center gap-2">
                                 {onFavoriteToggle && (
-                                    <motion.button
-                                        whileTap={{ scale: 0.85 }}
+                                    <button
+                                        type="button"
                                         onClick={() => onFavoriteToggle(displayItem.id)}
                                         aria-label={isFavorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
-                                        className="w-10 h-10 rounded-full bg-black/15 dark:bg-white/15 backdrop-blur-md flex items-center justify-center hover:bg-black/25 transition-colors cursor-pointer"
+                                        className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-white/90 dark:bg-zinc-800/90 backdrop-blur-md border border-black/10 dark:border-white/15 flex items-center justify-center text-zinc-700 dark:text-zinc-200 hover:text-[var(--brand-pink,#FF66C4)] transition-all shadow-xs cursor-pointer active:scale-90"
                                     >
-                                        <Heart className={`w-5 h-5 transition-colors ${isFavorite ? 'fill-[var(--brand-pink)] text-[var(--brand-pink)]' : 'text-zinc-700'}`} />
-                                    </motion.button>
+                                        <Heart className={`w-4 h-4 transition-colors ${isFavorite ? 'fill-[var(--brand-pink,#FF66C4)] text-[var(--brand-pink,#FF66C4)]' : 'fill-none'}`} />
+                                    </button>
                                 )}
-                                <motion.button
-                                    initial={{ opacity: 0, scale: 0.8 }}
-                                    animate={{ opacity: 1, scale: 1 }}
+                                <button
+                                    type="button"
                                     onClick={onClose}
                                     aria-label="Cerrar"
-                                    className="w-10 h-10 rounded-full bg-black/20 dark:bg-white/20 backdrop-blur-md flex items-center justify-center hover:bg-black/30 dark:hover:bg-white/30 transition-colors cursor-pointer"
+                                    className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-white/90 dark:bg-zinc-800/90 backdrop-blur-md border border-black/10 dark:border-white/15 flex items-center justify-center text-zinc-700 dark:text-zinc-200 hover:text-black dark:hover:text-white transition-all shadow-xs cursor-pointer active:scale-90"
                                 >
-                                    <X className="w-5 h-5 text-white" />
-                                </motion.button>
+                                    <X className="w-4 h-4" />
+                                </button>
                             </div>
 
                             {/* Product Image */}
@@ -183,76 +182,71 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
                             </div>
 
                             {/* Product Info */}
-                            <motion.div
-                                initial={{ y: 16, opacity: 0 }}
-                                animate={{ y: 0, opacity: 1 }}
-                                transition={{ delay: 0.15 }}
-                                className="p-6 overflow-y-auto flex-1 custom-scrollbar"
-                            >
+                            <div className="p-4 sm:p-5 md:p-6 overflow-y-auto flex-1 custom-scrollbar bg-[var(--background)] border-t border-[var(--border-color)]/60 flex flex-col gap-4">
                                 {/* Brand & Name */}
-                                <div className="mb-4">
+                                <div className="flex flex-col gap-0.5">
                                     {(displayItem.brand || displayItem.source) && displayItem.brand !== 'Unknown' && displayItem.source !== 'Unknown' && (
-                                        <p data-no-translate="true" className="text-xs font-semibold uppercase tracking-wider text-[var(--brand-pink-dark,#ED4C9E)] mb-1">
+                                        <p data-no-translate="true" className="text-[11px] font-bold uppercase tracking-wider text-[var(--brand-pink,#FF66C4)]">
                                             {displayItem.brand || displayItem.source}
                                         </p>
                                     )}
-                                    <h3 data-no-translate="true" className="kz-title text-[var(--foreground)]">{displayItem.name}</h3>
+                                    <h3 data-no-translate="true" className="kz-title text-[var(--foreground)] leading-tight">{displayItem.name}</h3>
                                 </div>
 
-                                {/* Details Grid (without duplicating Brand card) */}
-                                <div className="grid grid-cols-2 gap-3 mb-6">
+                                {/* Details Grid */}
+                                <div className="grid grid-cols-2 gap-2.5">
                                     {/* Type */}
-                                    <div className="flex items-center gap-2.5 p-3 bg-[var(--background-secondary)] rounded-[20px]">
+                                    <div className="flex items-center gap-2.5 p-3 bg-[var(--background-secondary)] rounded-2xl border border-[var(--border-color)]/60">
                                         <Shirt className="w-4 h-4 text-[var(--brand-pink)] shrink-0" />
-                                        <div>
+                                        <div className="min-w-0">
                                             <p className="kz-caption text-[var(--foreground-tertiary)]">Tipo</p>
-                                            <p className="text-sm font-medium text-[var(--foreground)] capitalize">{displayType}</p>
+                                            <p className="text-xs sm:text-sm font-semibold text-[var(--foreground)] capitalize truncate">{displayType}</p>
                                         </div>
                                     </div>
 
                                     {/* Color */}
                                     {displayItem.color && (
-                                        <div className="flex items-center gap-2 p-3 bg-[var(--background-secondary)] rounded-xl">
+                                        <div className="flex items-center gap-2.5 p-3 bg-[var(--background-secondary)] rounded-2xl border border-[var(--border-color)]/60">
                                             <div
-                                                className="w-4 h-4 rounded-full border-2 border-[var(--border-color)] shadow-sm flex-shrink-0"
+                                                className="w-4 h-4 rounded-full border border-black/15 dark:border-white/20 shadow-xs shrink-0"
                                                 style={{ backgroundColor: displayItem.colorHex || '#ccc' }}
                                             />
-                                            <div>
-                                                <p className="text-xs text-[var(--foreground-tertiary)]">Color</p>
-                                                <p className="text-sm font-medium text-[var(--foreground)] capitalize">{displayItem.color}</p>
+                                            <div className="min-w-0">
+                                                <p className="kz-caption text-[var(--foreground-tertiary)]">Color</p>
+                                                <p className="text-xs sm:text-sm font-semibold text-[var(--foreground)] capitalize truncate">{displayItem.color}</p>
                                             </div>
                                         </div>
                                     )}
 
                                     {/* Size */}
                                     {(displayItem as any).size && (
-                                        <div className="flex items-center gap-2 p-3 bg-[var(--background-secondary)] rounded-xl">
-                                            <Ruler className="w-4 h-4 text-[var(--brand-pink)]" />
-                                            <div>
-                                                <p className="text-xs text-[var(--foreground-tertiary)]">Talla</p>
-                                                <p className="text-sm font-medium text-[var(--foreground)]">{(displayItem as any).size}</p>
+                                        <div className="flex items-center gap-2.5 p-3 bg-[var(--background-secondary)] rounded-2xl border border-[var(--border-color)]/60">
+                                            <Ruler className="w-4 h-4 text-[var(--brand-pink)] shrink-0" />
+                                            <div className="min-w-0">
+                                                <p className="kz-caption text-[var(--foreground-tertiary)]">Talla</p>
+                                                <p className="text-xs sm:text-sm font-semibold text-[var(--foreground)] truncate">{(displayItem as any).size}</p>
                                             </div>
                                         </div>
                                     )}
 
                                     {/* Fabric */}
                                     {(displayItem as any).fabric && (
-                                        <div className="flex items-center gap-2 p-3 bg-[var(--background-secondary)] rounded-xl">
-                                            <Layers className="w-4 h-4 text-[var(--brand-pink)]" />
-                                            <div>
-                                                <p className="text-xs text-[var(--foreground-tertiary)]">Tejido</p>
-                                                <p className="text-sm font-medium text-[var(--foreground)] capitalize">{(displayItem as any).fabric}</p>
+                                        <div className="flex items-center gap-2.5 p-3 bg-[var(--background-secondary)] rounded-2xl border border-[var(--border-color)]/60">
+                                            <Layers className="w-4 h-4 text-[var(--brand-pink)] shrink-0" />
+                                            <div className="min-w-0">
+                                                <p className="kz-caption text-[var(--foreground-tertiary)]">Tejido</p>
+                                                <p className="text-xs sm:text-sm font-semibold text-[var(--foreground)] capitalize truncate">{(displayItem as any).fabric}</p>
                                             </div>
                                         </div>
                                     )}
 
                                     {/* Season */}
                                     {(displayItem as any).season && (displayItem as any).season.length > 0 && (
-                                        <div className="flex items-center gap-2 p-3 bg-[var(--background-secondary)] rounded-xl">
-                                            <CalendarDays className="w-4 h-4 text-[var(--brand-pink)]" />
-                                            <div>
-                                                <p className="text-xs text-[var(--foreground-tertiary)]">Temporada</p>
-                                                <p className="text-sm font-medium text-[var(--foreground)] capitalize">
+                                        <div className="flex items-center gap-2.5 p-3 bg-[var(--background-secondary)] rounded-2xl border border-[var(--border-color)]/60">
+                                            <CalendarDays className="w-4 h-4 text-[var(--brand-pink)] shrink-0" />
+                                            <div className="min-w-0">
+                                                <p className="kz-caption text-[var(--foreground-tertiary)]">Temporada</p>
+                                                <p className="text-xs sm:text-sm font-semibold text-[var(--foreground)] capitalize truncate">
                                                     {Array.isArray((displayItem as any).season) ? (displayItem as any).season.join(', ') : (displayItem as any).season}
                                                 </p>
                                             </div>
@@ -260,54 +254,64 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
                                     )}
                                 </div>
 
-                                {/* Action Buttons */}
-                                <div className="flex flex-col gap-3">
-                                    {/* View in Store Button - Only show if storeLink exists */}
-                                    {storeLink && (
-                                        <motion.button
-                                            whileHover={{ scale: 1.02 }}
-                                            whileTap={{ scale: 0.98 }}
-                                            onClick={handleViewInStore}
-                                            className="w-full flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl font-medium transition-all duration-300 bg-[var(--brand-pink)] text-white shadow-lg hover:shadow-xl hover:shadow-pink-500/25"
-                                        >
-                                            <ExternalLink className="w-5 h-5" />
-                                            <span>Ver en tienda</span>
-                                        </motion.button>
-                                    )}
+                                {/* Action Buttons matching OutfitDetailModal */}
+                                {(onEdit || storeLink || onDelete) && (
+                                    <div className="flex flex-col gap-2.5 pt-1">
+                                        <div className="flex items-center gap-2.5">
+                                            {onEdit && (
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        e.preventDefault();
+                                                        if (onClose) onClose();
+                                                        setTimeout(() => onEdit(displayItem.id), 100);
+                                                    }}
+                                                    className="flex-1 h-11 px-4 rounded-2xl bg-[var(--foreground)] text-[var(--background)] font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 hover:opacity-90 active:scale-[0.98] transition-all shadow-xs cursor-pointer"
+                                                >
+                                                    <Edit2 className="w-4 h-4 shrink-0" />
+                                                    <span className="truncate">Editar</span>
+                                                </button>
+                                            )}
 
-                                    <div className="flex gap-3 items-center">
+                                            {storeLink && (
+                                                <button
+                                                    type="button"
+                                                    onClick={handleViewInStore}
+                                                    className="flex-1 h-11 px-4 rounded-2xl bg-[var(--brand-pink,#FF66C4)]/12 dark:bg-[var(--brand-pink,#FF66C4)]/20 text-[var(--brand-pink,#FF66C4)] border border-[var(--brand-pink,#FF66C4)]/25 dark:border-[var(--brand-pink,#FF66C4)]/35 hover:bg-[var(--brand-pink,#FF66C4)]/20 dark:hover:bg-[var(--brand-pink,#FF66C4)]/30 font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 active:scale-[0.98] transition-all shadow-xs cursor-pointer"
+                                                >
+                                                    <ExternalLink className="w-4 h-4 shrink-0" />
+                                                    <span className="truncate">Ver en tienda</span>
+                                                </button>
+                                            )}
 
-                                        {onEdit && (
-                                            <motion.button
-                                                whileHover={{ scale: 1.02 }}
-                                                whileTap={{ scale: 0.98 }}
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    e.preventDefault();
-                                                    if (onClose) onClose();
-                                                    setTimeout(() => onEdit(displayItem.id), 100);
-                                                }}
-                                                className="flex-1 flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl font-medium transition-all duration-300 bg-[var(--background-secondary)] text-[var(--foreground)] border border-[var(--border-color)] hover:bg-[var(--foreground)] hover:text-[var(--background)] min-w-[90px] h-[52px]"
-                                            >
-                                                <Edit2 className="w-5 h-5" />
-                                                <span className="text-center">Editar</span>
-                                            </motion.button>
-                                        )}
+                                            {onDelete && !storeLink && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => onDelete(displayItem.id)}
+                                                    className="h-11 px-3.5 rounded-2xl bg-red-500/10 hover:bg-red-500/15 text-red-500 border border-red-500/20 font-medium text-xs flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all cursor-pointer"
+                                                    title="Eliminar"
+                                                    aria-label="Eliminar prenda"
+                                                >
+                                                    <Trash2 className="w-4 h-4 shrink-0" />
+                                                </button>
+                                            )}
+                                        </div>
 
-                                        {onDelete && (
-                                            <motion.button
-                                                whileHover={{ scale: 1.02 }}
-                                                whileTap={{ scale: 0.98 }}
+                                        {onDelete && storeLink && (
+                                            <button
+                                                type="button"
                                                 onClick={() => onDelete(displayItem.id)}
-                                                className="flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl font-medium transition-all duration-300 border-2 border-transparent bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/20 h-[56px]"
+                                                className="w-full h-9 px-3 rounded-xl bg-red-500/10 hover:bg-red-500/15 text-red-500 border border-red-500/20 font-medium text-xs flex items-center justify-center gap-1.5 active:scale-[0.98] transition-all cursor-pointer"
                                                 title="Eliminar"
                                             >
-                                                <Trash2 className="w-5 h-5" />
-                                            </motion.button>
+                                                <Trash2 className="w-3.5 h-3.5 shrink-0" />
+                                                <span>Eliminar prenda</span>
+                                            </button>
                                         )}
                                     </div>
-                                </div>
-                            </motion.div>
+                                )}
+                            </div>
                         </motion.div>
                     </motion.div>
                 </>

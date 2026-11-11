@@ -53,7 +53,6 @@ class RealtimeManager {
 
   async initialize(userId: string, userInfo?: { username?: string; avatar_url?: string }): Promise<void> {
     if (this.isInitialized && this.userId === userId) {
-      console.log('[RealtimeManager] Already initialized for user:', userId);
       return;
     }
 
@@ -65,7 +64,6 @@ class RealtimeManager {
     this.userId = userId;
     this.sessionStartTime = Date.now();
     this.lastPollTime = Date.now();
-    console.log('[RealtimeManager] Initializing for user:', userId);
 
     try {
       // 0. Mark existing DB notifications as read so they never re-trigger
@@ -88,9 +86,7 @@ class RealtimeManager {
       this.pollInterval = setInterval(() => this.pollRecentActivity(), 15000);
 
       this.isInitialized = true;
-      console.log('[RealtimeManager] Initialization complete');
     } catch (error) {
-      console.error('[RealtimeManager] Initialization error:', error);
       throw error;
     }
   }
@@ -167,9 +163,7 @@ class RealtimeManager {
         this.emitNotification(payload.payload as Notification);
       });
 
-    await channel.subscribe((status: any) => {
-      console.log('[RealtimeManager] Global channel status:', status);
-    });
+    await channel.subscribe();
 
     this.channels.set(channelName, channel);
   }
@@ -196,19 +190,16 @@ class RealtimeManager {
       })
       .on('presence', { event: 'join' }, (payload: any) => {
         const key = payload.key;
-        console.log('[RealtimeManager] User joined:', key);
         this.onlineUsers.add(key);
         this.emitOnlineUsers();
       })
       .on('presence', { event: 'leave' }, (payload: any) => {
         const key = payload.key;
-        console.log('[RealtimeManager] User left:', key);
         this.onlineUsers.delete(key);
         this.emitOnlineUsers();
       });
 
     await channel.subscribe(async (status: any) => {
-      console.log('[RealtimeManager] Presence channel status:', status);
       if (status === 'SUBSCRIBED') {
         await channel.track({
           user_id: this.userId,
@@ -603,7 +594,6 @@ class RealtimeManager {
   // ============================================
 
   private emitNotification(notification: Notification): void {
-    console.log('[RealtimeManager] New notification:', notification.type);
     this.notificationCallbacks.forEach(cb => cb(notification));
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('klozet:new_notification', { detail: notification }));
@@ -664,8 +654,6 @@ class RealtimeManager {
   // ============================================
 
   async cleanup(): Promise<void> {
-    console.log('[RealtimeManager] Cleaning up...');
-    
     // Clear all timeouts
     this.typingTimeouts.forEach(timeout => clearTimeout(timeout));
     this.typingTimeouts.clear();
@@ -677,9 +665,8 @@ class RealtimeManager {
     }
 
     // Unsubscribe from all channels
-    for (const [name, channel] of this.channels) {
+    for (const [, channel] of this.channels) {
       await supabase.removeChannel(channel);
-      console.log('[RealtimeManager] Removed channel:', name);
     }
     
     this.channels.clear();
@@ -691,8 +678,6 @@ class RealtimeManager {
     
     this.userId = null;
     this.isInitialized = false;
-    
-    console.log('[RealtimeManager] Cleanup complete');
   }
 }
 

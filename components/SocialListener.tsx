@@ -18,7 +18,6 @@ export default function SocialListener() {
     // 1. Initial fetch of count
     const fetchCount = async () => {
       const count = await getPendingRequestsCount(userId);
-      console.log('[SocialListener] Pending requests count:', count);
       setRequestsCount(count);
     };
 
@@ -38,14 +37,11 @@ export default function SocialListener() {
           table: 'follows',
           filter: `following_id=eq.${userId}`
         },
-        (payload: any) => {
-          console.log('[SocialListener] Realtime event:', payload.eventType);
+        () => {
           fetchCount();
         }
       )
-      .subscribe((status: any) => {
-        console.log('[SocialListener] Subscription status:', status);
-      });
+      .subscribe();
 
     return () => {
       clearInterval(pollInterval);

@@ -7,13 +7,15 @@
 
 import React, { memo, useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Lock, Sun, Star, Crown, Briefcase, Heart, Zap, Flower2, PartyPopper, Circle, Snowflake, ShoppingBag, Layers } from 'lucide-react';
+import { Lock, Sun, Star, Crown, Briefcase, Heart, Zap, Flower2, PartyPopper, Circle, Snowflake, ShoppingBag, Layers, Check } from 'lucide-react';
 import type { Outfit } from '@/types/outfit';
 import { resolveImageUrl } from '@/lib/imageUtils';
 
 interface OutfitCardProps {
     outfit: Outfit;
     isLocked?: boolean;
+    selectionMode?: boolean;
+    isSelected?: boolean;
     onClick?: (outfit: Outfit) => void;
     onEdit?: (outfit: Outfit) => void;
     onShare?: (outfit: Outfit) => void;
@@ -56,7 +58,7 @@ function getCardCategoryVerticalRank(category?: string | null, name?: string | n
     return 3.5;
 }
 
-const OutfitCard = ({ outfit, isLocked = false, onClick, onEdit, onDelete, onShare, onToggleFavorite, onToggleVisibility, index = 0 }: OutfitCardProps) => {
+const OutfitCard = ({ outfit, isLocked = false, selectionMode = false, isSelected = false, onClick, onEdit, onDelete, onShare, onToggleFavorite, onToggleVisibility, index = 0 }: OutfitCardProps) => {
     const [imageError, setImageError] = useState(false);
     const styleKey = outfit.occasion || outfit.style || 'everyday';
     const config = styleConfig[styleKey] || { icon: <Layers className="w-3 h-3" />, gradient: 'from-pink-400 to-rose-500' };
@@ -104,15 +106,26 @@ const OutfitCard = ({ outfit, isLocked = false, onClick, onEdit, onDelete, onSha
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: index * 0.08 }}
-            whileHover={!isLocked ? {
+            whileHover={!isLocked && !selectionMode ? {
                 y: -3,
                 transition: { type: 'spring', stiffness: 420, damping: 24 }
             } : {}}
             whileTap={!isLocked ? { scale: 0.97 } : {}}
             onClick={!isLocked && onClick ? () => onClick(outfit) : undefined}
-            className={`group relative overflow-hidden rounded-[20px] kz-surface-card hover:shadow-[var(--shadow-card-hover)] transition-shadow duration-300 select-none flex flex-col ${isLocked ? 'cursor-not-allowed' : 'cursor-pointer'
-                }`}
+            className={`group relative overflow-hidden rounded-[20px] kz-surface-card hover:shadow-[var(--shadow-card-hover)] transition-shadow duration-300 select-none ${
+                selectionMode && isSelected ? 'ring-4 ring-[var(--brand-pink)] ring-inset' : ''
+            } ${isLocked ? 'cursor-not-allowed' : 'cursor-pointer'}`}
         >
+            {/* Full-card selection tint & checkmark clipped flush inside rounded-[20px] */}
+            {selectionMode && isSelected && (
+                <>
+                    <div className="absolute inset-0 z-[25] bg-[var(--brand-pink)]/20 pointer-events-none transition-opacity" />
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 bg-[var(--brand-pink)] rounded-full p-3 text-white shadow-xl shadow-[var(--brand-pink)]/30 backdrop-blur-sm pointer-events-none">
+                        <Check className="w-8 h-8" strokeWidth={3} />
+                    </div>
+                </>
+            )}
+
             {/* Clickable Area */}
             <div className="cursor-pointer w-full">
                 {/* Outfit Preview - Always White Canvas */}
@@ -220,17 +233,18 @@ const OutfitCard = ({ outfit, isLocked = false, onClick, onEdit, onDelete, onSha
                             </div>
                         </div>
                     )}
-                </div>
 
-                {/* Smart Context Footer */}
-                <div className="px-3 py-2.5 border-t border-[var(--border-color)]/60 flex flex-col gap-0.5 bg-transparent">
-                    <p data-no-translate={outfit.name ? 'true' : undefined} className="text-[13px] font-semibold text-[var(--foreground)] truncate leading-tight">
-                        {outfit.name || 'Look sin título'}
-                    </p>
-                    <p className="kz-caption text-[var(--foreground-secondary)] truncate leading-tight">
-                        {outfit.occasion ? `${outfit.occasion} · ` : ''}
-                        {items.length} {items.length === 1 ? 'prenda' : 'prendas'}
-                    </p>
+                    {/* Hover-only black outfit name directly over clean canvas (no black strip) */}
+                    {!isLocked && !selectionMode && (
+                        <div className="absolute inset-x-0 bottom-2.5 px-3 z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex justify-center">
+                            <p
+                                data-no-translate={outfit.name ? 'true' : undefined}
+                                className="text-xs font-semibold text-zinc-900 truncate [text-shadow:0_1px_3px_rgba(255,255,255,0.95)]"
+                            >
+                                {outfit.name || 'Look sin título'}
+                            </p>
+                        </div>
+                    )}
                 </div>
             </div>
 

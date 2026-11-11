@@ -49,6 +49,7 @@ export default function NavbarKlozetLogo({ isActive, className = '' }: NavbarKlo
         stiffness: 440,
         damping: 24,
         mass: 0.65,
+        filter: { duration: 0.24, ease: 'easeOut' },
       },
     },
     exit: {
@@ -58,6 +59,7 @@ export default function NavbarKlozetLogo({ isActive, className = '' }: NavbarKlo
       transition: {
         duration: 0.3,
         ease: [0.4, 0, 0.7, -0.4], // Aceleración centrípeta hacia el centro
+        filter: { duration: 0.25, ease: 'easeIn' },
       },
     },
   };

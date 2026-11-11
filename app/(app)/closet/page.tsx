@@ -934,8 +934,8 @@ export default function ClosetPage() {
                             {/* Selection Checkmark & Overlay */}
                             {selectionMode && selectedIds.has(item.id) && (
                               <>
-                                <div className="absolute inset-0 z-10 bg-[var(--brand-pink)]/20 pointer-events-none transition-opacity" />
-                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 bg-[var(--brand-pink)] rounded-full p-3 text-white shadow-xl shadow-[var(--brand-pink)]/30 backdrop-blur-sm">
+                                <div className="absolute inset-0 z-[25] bg-[var(--brand-pink)]/20 pointer-events-none transition-opacity" />
+                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 bg-[var(--brand-pink)] rounded-full p-3 text-white shadow-xl shadow-[var(--brand-pink)]/30 backdrop-blur-sm pointer-events-none">
                                   <Check className="w-8 h-8" strokeWidth={3} />
                                 </div>
                               </>
@@ -1042,7 +1042,7 @@ export default function ClosetPage() {
                   {(filteredContent as Outfit[]).map((outfit) => (
                     <div
                       key={outfit.id}
-                      className="relative"
+                      className="relative rounded-[20px]"
                       onTouchStart={() => handleTouchStart(outfit.id)}
                       onTouchMove={handleTouchEnd}
                       onTouchEnd={handleTouchEnd}
@@ -1051,22 +1051,15 @@ export default function ClosetPage() {
                       {/* Interceptor overlay during multi-select mode */}
                       {selectionMode && (
                         <div
-                          className="absolute inset-0 z-30 cursor-pointer"
+                          className="absolute inset-0 z-40 rounded-[20px] cursor-pointer"
                           onClick={() => toggleSelection(outfit.id)}
                         />
-                      )}
-                      {/* Selection Checkmark & Overlay */}
-                      {selectionMode && selectedIds.has(outfit.id) && (
-                        <>
-                          <div className="absolute inset-0 z-10 bg-[var(--brand-pink)]/20 pointer-events-none rounded-[32px] transition-opacity" />
-                          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 bg-[var(--brand-pink)] rounded-full p-3 text-white shadow-xl shadow-[var(--brand-pink)]/30 backdrop-blur-sm">
-                            <Check className="w-8 h-8" strokeWidth={3} />
-                          </div>
-                        </>
                       )}
                       <OutfitCard
                         outfit={outfit}
                         index={0}
+                        selectionMode={selectionMode}
+                        isSelected={selectionMode && selectedIds.has(outfit.id)}
                         onClick={handleOutfitClick}
                         onEdit={handleOutfitEdit}
                         onShare={handleOutfitShare}
@@ -1371,88 +1364,97 @@ export default function ClosetPage() {
             initial={{ y: 100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
-            className="fixed bottom-[calc(var(--tabbar-height)+env(safe-area-inset-bottom,0px)+36px)] md:bottom-[42px] left-1/2 -translate-x-1/2 z-[4995] bg-[var(--card-bg)] border border-[var(--border-color)] rounded-full shadow-2xl flex items-center p-2 gap-4 whitespace-nowrap"
+            className="fixed bottom-[calc(var(--tabbar-height)+env(safe-area-inset-bottom,0px)+20px)] md:bottom-8 left-3 right-3 md:left-[calc(72px+16px)] md:right-4 z-[4995] flex justify-center pointer-events-none"
           >
-            <div className="flex items-center gap-2 pl-4 mr-2">
-              <span className="font-semibold text-[var(--foreground)]">{selectedIds.size} seleccionados</span>
-              <button 
-                onClick={() => {
-                  const allVisibleIds = filteredContent.map(i => i.id);
-                  if (selectedIds.size === allVisibleIds.length) {
-                    setSelectedIds(new Set());
-                  } else {
-                    setSelectedIds(new Set(allVisibleIds));
-                  }
-                }}
-                className="text-xs text-[var(--brand-pink)] font-bold hover:underline"
-              >
-                {selectedIds.size === filteredContent.length ? 'Desmarcar todo' : 'Seleccionar todo'}
-              </button>
+            <div className="pointer-events-auto w-full max-w-md bg-[var(--card-bg)]/95 dark:bg-[#16161b]/95 backdrop-blur-2xl border border-[var(--border-color)] rounded-full shadow-2xl flex items-center justify-between gap-2 px-3 py-1.5 sm:px-4 sm:py-2">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                <span className="text-xs sm:text-sm font-semibold text-[var(--foreground)] whitespace-nowrap">
+                  {selectedIds.size}{' '}
+                  <span className="hidden sm:inline">seleccionados</span>
+                  <span className="sm:hidden">selec.</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const allVisibleIds = filteredContent.map(i => i.id);
+                    if (selectedIds.size === allVisibleIds.length) {
+                      setSelectedIds(new Set());
+                    } else {
+                      setSelectedIds(new Set(allVisibleIds));
+                    }
+                  }}
+                  className="text-xs text-[var(--brand-pink)] font-bold hover:underline whitespace-nowrap shrink-0 cursor-pointer"
+                >
+                  <span className="hidden sm:inline">
+                    {selectedIds.size === filteredContent.length ? 'Desmarcar todo' : 'Seleccionar todo'}
+                  </span>
+                  <span className="sm:hidden">
+                    {selectedIds.size === filteredContent.length ? 'Ninguno' : 'Todos'}
+                  </span>
+                </button>
+              </div>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (selectedIds.size === 0) return;
+
+                    try {
+                      const idsArray = Array.from(selectedIds);
+                      if (activeTab === 'items') {
+                        const results = await Promise.all(idsArray.map(id => deleteItem(id)));
+                        const failures = results.filter(r => !r).length;
+
+                        if (failures > 0) {
+                          console.warn(`Falló la eliminación de ${failures} prendas.`);
+                        }
+                        refresh();
+                      } else {
+                        const { error: unlinkError } = await supabase
+                          .from('posts')
+                          .update({ outfit_id: null })
+                          .in('outfit_id', idsArray);
+
+                        if (unlinkError) {
+                          console.warn('Advertencia al desvincular posts:', unlinkError);
+                        }
+
+                        const { error: itemsError } = await supabase
+                          .from('outfit_items')
+                          .delete()
+                          .in('outfit_id', idsArray);
+
+                        if (itemsError) {
+                          console.warn('Advertencia al borrar items de outfits:', itemsError);
+                        }
+
+                        const { error } = await supabase.from('outfits').delete().in('id', idsArray);
+                        if (error) throw error;
+
+                        setOutfits(prev => prev.filter(o => !selectedIds.has(o.id)));
+                        fetchOutfits(false);
+                      }
+
+                      setSelectionMode(false);
+                      setSelectedIds(new Set());
+                    } catch (err: any) {
+                      console.error('Error in bulk delete:', err);
+                    }
+                  }}
+                  className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer ${selectedIds.size > 0 ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-[var(--background-secondary)] text-[var(--foreground-tertiary)] cursor-not-allowed'}`}
+                >
+                  Eliminar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setSelectionMode(false); setSelectedIds(new Set()); }}
+                  aria-label="Cancelar selección"
+                  className="p-1.5 sm:p-2 text-[var(--foreground-secondary)] hover:text-[var(--foreground)] bg-[var(--background-secondary)] rounded-full shrink-0 cursor-pointer"
+                >
+                  <X className="w-4 h-4 sm:w-5 sm:h-5" />
+                </button>
+              </div>
             </div>
-            <button
-              onClick={async () => {
-                if (selectedIds.size === 0) return;
-                
-                try {
-                  const idsArray = Array.from(selectedIds);
-                  if (activeTab === 'items') {
-                    // Borrado en paralelo para mayor velocidad
-                    const results = await Promise.all(idsArray.map(id => deleteItem(id)));
-                    const failures = results.filter(r => !r).length;
-                    
-                    if (failures > 0) {
-                      console.warn(`Falló la eliminación de ${failures} prendas.`);
-                    }
-                    refresh();
-                  } else {
-                    // 1. Unlink posts from outfits to prevent CASCADE delete
-                    const { error: unlinkError } = await supabase
-                      .from('posts')
-                      .update({ outfit_id: null })
-                      .in('outfit_id', idsArray);
-                    
-                    if (unlinkError) {
-                      console.warn('Advertencia al desvincular posts:', unlinkError);
-                    }
-
-                    // 1.5 Borrar primero las relaciones en outfit_items para evitar errores de FK
-                    const { error: itemsError } = await supabase
-                      .from('outfit_items')
-                      .delete()
-                      .in('outfit_id', idsArray);
-                    
-                    if (itemsError) {
-                      console.warn('Advertencia al borrar items de outfits:', itemsError);
-                    }
-
-                    // 2. Borrado de los outfits por lote
-                    const { error } = await supabase.from('outfits').delete().in('id', idsArray);
-                    if (error) throw error;
-                    
-                    // Actualización optimista del estado local
-                    setOutfits(prev => prev.filter(o => !selectedIds.has(o.id)));
-                    
-                    // Sincronización real con el servidor
-                    fetchOutfits(false);
-                  }
-                  
-                  // Limpiar selección después del éxito
-                  setSelectionMode(false);
-                  setSelectedIds(new Set());
-                } catch (err: any) {
-                  console.error('Error in bulk delete:', err);
-                }
-              }}
-              className={`px-4 py-2 rounded-full font-medium transition-colors ${selectedIds.size > 0 ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-[var(--background-secondary)] text-[var(--foreground-tertiary)] cursor-not-allowed'}`}
-            >
-              Eliminar
-            </button>
-            <button
-              onClick={() => { setSelectionMode(false); setSelectedIds(new Set()); }}
-              className="p-2 text-[var(--foreground-secondary)] hover:text-[var(--foreground)] bg-[var(--background-secondary)] rounded-full"
-            >
-              <X className="w-5 h-5" />
-            </button>
           </motion.div>
         )}
       </AnimatePresence>

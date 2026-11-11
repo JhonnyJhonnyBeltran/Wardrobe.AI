@@ -3487,3 +3487,16 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
 - **Header e Input Bar limpios en `/closet/kloe` (`app/(app)/closet/kloe/page.tsx`)**:
   - Header centrado únicamente con el wordmark estático `/kloe-logo-large.png` (sin doble logo ni mascota animada en la cabecera, dejando el parpadeo en `<KloeMascot />` dentro de las burbujas de texto del chat) y eliminados los accesos duplicados de guardados (`Bookmark`) y prendas (`Shirt`) de ambas cabeceras (móvil/escritorio) al estar ya integrados en la barra de entrada.
   - Barra de entrada inferior alineada al ancho del `TabBar` en móvil (`max-w-sm` y `md:max-w-2xl` centrada con `md:left-[72px]`), separación limpia sobre el `TabBar` (`bottom-[calc(82px+...)] sm:bottom-[calc(88px+...)]`), `<input>` con `min-w-0 w-full` y `text-base sm:text-sm` sin zoom accidental en iOS.
+
+---
+
+## 59. Unificación Modal Prenda/Outfit, Tarjetas Outfit Hover Limpias, Selección y Silenciado de Consola (Noviembre 2026)
+- **Modal de detalle de prenda homologado (`components/ProductModal.tsx`)**:
+  - Alineado visualmente al lenguaje de [`OutfitDetailModal`](file:///c:/Users/EthanCurro/Desktop/Ethan's%20Project/Wardobre.ai/Wardrobe.AI/components/OutfitDetailModal.tsx): bordes `rounded-[32px] md:rounded-[36px]`, botones circulares esquinados en `top-3 right-3 md:top-4 md:right-4` (`Heart` + `X` esmerilados `w-8 h-8 md:w-9 md:h-9`), separador `border-t`, rejilla uniforme `rounded-2xl` y jerarquía de acciones coherente (`Editar` sólido monocromo, `Ver en tienda` en tinte rosa si aplica y `Eliminar` rojo compacto).
+- **Tarjetas de Outfit limpias + Hover solo texto negro (`components/OutfitCard.tsx`)**:
+  - Eliminada la franja inferior oscura y el contador permanente de prendas; el nombre del outfit aparece únicamente al hacer hover, sin fondo ni caja negra y con texto en negro (`text-zinc-900`) sobre el lienzo limpio.
+- **Selección múltiple completa y barra flotante responsiva (`app/(app)/closet/page.tsx`, `components/OutfitCard.tsx`)**:
+  - Tinte rosa (`z-[25]`) y anillo `ring-4 ring-inset` movidos dentro del propio `OutfitCard` con `rounded-[20px]` exacto para cubrir el card de esquina a esquina sin esquinas blancas expuestas al mantener pulsado.
+  - Barra flotante de borrado masivo contenida dentro de la pantalla (`left-3 right-3 max-w-md`) con etiquetas compactas (`selec.` / `Todos`) evitando desbordamientos horizontales en móvil.
+- **Limpieza de DevTools y animaciones (`next.config.ts`, `components/NavbarKlozetLogo.tsx`, `SocialListener.tsx`, `AppLifecycleManager.tsx`, `RealtimeManager.ts`, `userStore.tsx`, `wardrobeStore.ts`)**:
+  - Eliminados logs de diagnóstico `[SocialListener]`, `[UserStore]`, `[RealtimeManager]`, `[Lifecycle]` y `[WardrobeStore]`, activado `compiler.removeConsole` en producción en `next.config.ts`, y aislada la transición tween en `filter: blur(...)` de `NavbarKlozetLogo` para eliminar el warning de keyframe negativo (`blur(-0.02881px)`).

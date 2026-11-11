@@ -52,10 +52,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
           userIdRef.current = parsed.id;
           hadCachedUserRef.current = true; // Mark that we had a cached session
           setIsLoading(false);
-          console.log('[UserStore] Instantly hydrated user from cache');
         }
-      } catch (e) {
-        console.error('[UserStore] Failed to parse cached user', e);
+      } catch {
+        // Ignore corrupted cache
       }
     }
   }, []);
@@ -325,14 +324,12 @@ export function UserProvider({ children }: { children: ReactNode }) {
     // This will synchronously fire INITIAL_SESSION if a session exists in localStorage.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event: string, session: Session | null) => {
       if (!isMounted) return;
-      console.log(`[UserStore] Supabase Auth event: ${event}`);
       handleSession(session, event);
     });
 
     // Fallback: Just in case INITIAL_SESSION fails to fire due to a bug in Supabase client
     const fallbackTimer = setTimeout(() => {
       if (isMounted) {
-        console.warn('[UserStore] Auth listener fallback timeout. Forcing loading false.');
         setIsLoading(false);
       }
     }, 5000);

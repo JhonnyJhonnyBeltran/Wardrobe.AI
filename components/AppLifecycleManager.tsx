@@ -34,7 +34,6 @@ export default function AppLifecycleManager() {
             const timeSinceLastFocus = now - lastFocusTimestamp;
             
             if (timeSinceLastFocus > 2 * 60 * 1000) {
-                console.log(`[Lifecycle] App wake-up detected after ${Math.round(timeSinceLastFocus / 1000)}s`);
                 isWakingRef.current = true;
                 
                 try {
@@ -45,8 +44,8 @@ export default function AppLifecycleManager() {
                     if (user) {
                         await refreshProfile();
                     }
-                } catch (e) {
-                    console.error('[Lifecycle] Wake-up sync failed:', e);
+                } catch {
+                    // Silent wake-up recovery
                 } finally {
                     isWakingRef.current = false;
                 }

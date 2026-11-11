@@ -255,7 +255,6 @@ export const useWardrobeStore = create<WardrobeState>((set, get) => ({
 
       // Only proceed if there are actual updates to perform
       if (Object.keys(dbUpdates).length === 0) {
-        console.log('[WardrobeStore] No changes detected, skipping database update');
         return true;
       }
 
