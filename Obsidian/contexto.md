@@ -3483,7 +3483,7 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
   - Desacoplado el parpadeo ocular por intercambio de fotogramas (`open -> half -> closed -> half -> open`, `loading="eager"`, `decoding="sync"`) de `prefersReducedMotion` (que ahora solo frena el balanceo corporal) con ráfagas aleatorias de 1 o 2 parpadeos seguidas de ~10 s de pausa (`9.5–10.7 s`).
   - En `/closet/kloe`, `KloeAnimatedLogo` muestra permanentemente `<KloeMascot mood="happy" size="sm" interactive />` junto al wordmark para que el parpadeo sea visible al instante desde el encabezado además de los mensajes del chat.
 - **Banner Kloe minimalista en `/closet` (`KloeHeroBanner`, `.kz-kloe-banner` en `app/globals.css`)**:
-  - Eliminado el subtítulo (*"Tu estilista lista para combinar tu ropa"*), el botón píldora *"Hablar"* y cualquier degradado; fondo sólido limpio (`#FFFFFF` en claro, `#18181B` en oscuro) con mascota `<KloeMascot variant="black" />` (`/kloe-black-*.png`, silueta `#111113` con ojos blancos parpadeantes), texto de frases rotativas (`KLOE_PROMPTS`) en `font-display` `Outfit` en negro (`text-zinc-950`) y `<ChevronRight />` en negro.
+  - Eliminado el subtítulo (*"Tu estilista lista para combinar tu ropa"*), el botón píldora *"Hablar"* y cualquier degradado; fondo rosita suave plano sólido (`#FFEBF5` en claro, `#271622` en oscuro) con mascota `<KloeMascot variant="black" />` (`/kloe-black-*.png`, silueta `#111113` con ojos blancos parpadeantes), texto de frases rotativas (`KLOE_PROMPTS`) en `font-display` `Outfit` en negro (`text-zinc-950`) y `<ChevronRight />` en rosita `#FF66C4`.
 - **Header e Input Bar limpios en `/closet/kloe` (`app/(app)/closet/kloe/page.tsx`)**:
   - Header centrado únicamente con el wordmark estático `/kloe-logo-large.png` (sin doble logo ni mascota animada en la cabecera, dejando el parpadeo en `<KloeMascot />` dentro de las burbujas de texto del chat) y eliminados los accesos duplicados de guardados (`Bookmark`) y prendas (`Shirt`) de ambas cabeceras (móvil/escritorio) al estar ya integrados en la barra de entrada.
   - Barra de entrada inferior alineada al ancho del `TabBar` en móvil (`max-w-sm` y `md:max-w-2xl` centrada con `md:left-[72px]`), separación limpia sobre el `TabBar` (`bottom-[calc(82px+...)] sm:bottom-[calc(88px+...)]`), `<input>` con `min-w-0 w-full` y `text-base sm:text-sm` sin zoom accidental en iOS.
@@ -3504,10 +3504,10 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
 ---
 
 ## 60. Previsión Meteorológica por Ciudad en Calendario y Modales Deslizables (Noviembre 2026)
-- **Endpoint de clima por ciudad (`app/api/weather/route.ts`)**:
-  - Resuelve ciudad vía geocodificación Open-Meteo (`es`) y obtiene previsión diaria extendida (16 días + recientes) mapeando códigos WMO a `sunny` (soleado), `cloudy` (nublado), `rain` (lluvia) y `snow` (nieve), con respaldo automático en `wttr.in/?format=j1` y cacheo HTTP (`revalidate: 1800`).
+- **Endpoint de clima por ciudad (`app/api/weather/route.ts` + `middleware.ts`)**:
+  - Soporta `?city=...`, `?lat=...&lon=...` (geolocalización) y `?auto=1` (detección automática vía cabecera `x-vercel-ip-city` con respaldo `Madrid`), marcado como `force-dynamic` y exento de espera auth en `middleware.ts`. Mapea códigos WMO de Open-Meteo (16 días) a `sunny`, `cloudy`, `rain` y `snow`, con respaldo en `wttr.in/?format=j1`.
 - **Calendario inteligente con clima (`components/OutfitCalendar.tsx`)**:
-  - Píldora + modal compacto de ciudad sobre el encabezado del mes (`Añadir ciudad` o `{Ciudad} · {Icono} {Temp}°`) persistido en `localStorage` (`klozet_calendar_weather`).
+  - Carga automática del tiempo al abrir el calendario si no hay ciudad cacheada y botón `"Usar mi ubicación actual"` en el modal de ciudad; píldora sobre el mes (`{Ciudad} · {Icono} {Temp}°`) y formateo local exacto (`formatDateToSQL`).
   - Celdas diarias con icono meteorológico (`Sun`, `Cloud`, `CloudRain`, `CloudSnow`) y temperatura en grados directamente debajo del número del día.
 - **Modales del calendario y detalles (`components/OutfitCalendar.tsx`, `components/OutfitDetailModal.tsx`)**:
   - Modal del día con gesto táctil/ratón deslizable hacia abajo desde el borde superior (`useDragControls` en tirador y cabecera), mostrando previsión de temperatura y estado debajo junto al botón de ciudad en la zona inferior.

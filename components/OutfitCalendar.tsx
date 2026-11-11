@@ -15,11 +15,12 @@ import { Button } from '@/components';
 import { useUiStore } from '@/store/uiStore';
 import { useTourStore } from '@/store/tourStore';
 
-// Helper to format date as YYYY-MM-DD local time
+// Helper to format date as YYYY-MM-DD in exact local calendar timezone
 const formatDateToSQL = (date: Date) => {
-  const d = new Date(date);
-  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-  return d.toISOString().split('T')[0];
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
 };
 
 const WEATHER_CACHE_KEY = 'klozet_calendar_weather';
@@ -262,19 +263,19 @@ export default function OutfitCalendar() {
     }
   };
 
-  const fetchWeather = useCallback(async (cityName: string) => {
-    const clean = cityName.trim();
-    if (!clean) return false;
+  const fetchWeatherUrl = useCallback(async (url: string, fallbackLabel?: string) => {
     setWeatherLoading(true);
     setWeatherError(null);
     try {
-      const res = await fetch(`/api/weather?city=${encodeURIComponent(clean)}`);
+      const res = await fetch(url);
       const data = await res.json();
-      if (!res.ok) {
-        setWeatherError(data?.error || 'No encontramos esa ciudad.');
+      if (!res.ok || !data?.days || Object.keys(data.days).length === 0) {
+        if (fallbackLabel !== undefined) {
+          setWeatherError(data?.error || 'No encontramos esa ciudad.');
+        }
         return false;
       }
-      const resolvedCity = data.city || clean;
+      const resolvedCity = data.city || fallbackLabel || 'Madrid';
       const resolvedDays = data.days || {};
       setWeatherCity(resolvedCity);
       setWeatherDays(resolvedDays);
@@ -286,30 +287,66 @@ export default function OutfitCalendar() {
       } catch {}
       return true;
     } catch {
-      setWeatherError('Error de conexión al consultar el tiempo.');
+      if (fallbackLabel !== undefined) {
+        setWeatherError('Error de conexión al consultar el tiempo.');
+      }
       return false;
     } finally {
       setWeatherLoading(false);
     }
   }, []);
 
+  const fetchWeather = useCallback(async (cityName: string) => {
+    const clean = cityName.trim();
+    if (!clean) return false;
+    return fetchWeatherUrl(`/api/weather?city=${encodeURIComponent(clean)}`, clean);
+  }, [fetchWeatherUrl]);
+
+  const fetchWeatherByLocation = useCallback(() => {
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      setWeatherError('Tu navegador no permite detectar la ubicación.');
+      return;
+    }
+    setWeatherLoading(true);
+    setWeatherError(null);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude, longitude } = pos.coords;
+        const ok = await fetchWeatherUrl(`/api/weather?lat=${latitude}&lon=${longitude}`, 'Tu ubicación');
+        if (ok) setShowCityModal(false);
+      },
+      () => {
+        setWeatherLoading(false);
+        setWeatherError('Permiso de ubicación denegado. Escribe tu ciudad manualmente.');
+      },
+      { timeout: 8000 }
+    );
+  }, [fetchWeatherUrl]);
+
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    const todayKey = formatDateToSQL(new Date());
     try {
       const raw = localStorage.getItem(WEATHER_CACHE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
         if (parsed?.city) {
           setWeatherCity(parsed.city);
-          if (parsed.days) setWeatherDays(parsed.days);
+          if (parsed.days && Object.keys(parsed.days).length > 0) {
+            setWeatherDays(parsed.days);
+          }
           const age = Date.now() - (parsed.updatedAt || 0);
-          if (age > 30 * 60 * 1000) {
+          const hasToday = Boolean(parsed.days && parsed.days[todayKey]);
+          if (!hasToday || age > 30 * 60 * 1000) {
             fetchWeather(parsed.city);
           }
+          return;
         }
       }
     } catch {}
-  }, [fetchWeather]);
+    // First visit with no saved city: auto-load city forecast (Vercel IP city or Madrid fallback)
+    fetchWeatherUrl('/api/weather?auto=1');
+  }, [fetchWeather, fetchWeatherUrl]);
 
   useEffect(() => {
     if (window.innerWidth < 768) {
@@ -1003,6 +1040,16 @@ export default function OutfitCalendar() {
                   className="w-full py-2.5 rounded-full bg-[var(--brand-pink)] text-white text-sm font-bold shadow-md shadow-[var(--brand-pink)]/20 disabled:opacity-50 cursor-pointer transition-opacity flex items-center justify-center gap-2"
                 >
                   {weatherLoading ? 'Consultando...' : 'Ver previsión'}
+                </button>
+
+                <button
+                  type="button"
+                  disabled={weatherLoading}
+                  onClick={fetchWeatherByLocation}
+                  className="w-full py-2 rounded-full bg-[var(--background-secondary)] hover:bg-[var(--background-tertiary)] text-[var(--foreground-secondary)] hover:text-[var(--foreground)] text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                >
+                  <MapPin className="w-3.5 h-3.5 text-[var(--brand-pink)]" />
+                  <span>Usar mi ubicación actual</span>
                 </button>
               </form>
             </motion.div>

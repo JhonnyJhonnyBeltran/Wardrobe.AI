@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 export type WeatherCondition = 'sunny' | 'cloudy' | 'rain' | 'snow';
 
 export interface DailyWeatherEntry {
@@ -45,6 +47,38 @@ function mapWttrDescToCondition(desc: string): { condition: WeatherCondition; la
   return { condition: 'sunny', label: 'Soleado' };
 }
 
+async function fetchOpenMeteoForecast(latitude: number, longitude: number) {
+  const forecastRes = await fetch(
+    `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&past_days=2&forecast_days=16`,
+    { next: { revalidate: 1800 } }
+  );
+
+  if (!forecastRes.ok) return null;
+
+  const forecast = await forecastRes.json();
+  const times: string[] = forecast?.daily?.time || [];
+  const codes: number[] = forecast?.daily?.weather_code || [];
+  const maxTemps: number[] = forecast?.daily?.temperature_2m_max || [];
+  const minTemps: number[] = forecast?.daily?.temperature_2m_min || [];
+
+  const days: Record<string, DailyWeatherEntry> = {};
+  times.forEach((date, idx) => {
+    const tempMax = Math.round(Number(maxTemps[idx] ?? 0));
+    const tempMin = Math.round(Number(minTemps[idx] ?? tempMax));
+    const code = Number(codes[idx] ?? 0);
+    const { condition, label } = mapWmoToCondition(code);
+    days[date] = {
+      temp: tempMax,
+      tempMax,
+      tempMin,
+      condition,
+      label,
+    };
+  });
+
+  return days;
+}
+
 async function fetchWttrFallback(city: string) {
   const res = await fetch(`https://wttr.in/${encodeURIComponent(city)}?format=j1`, {
     headers: { 'User-Agent': 'KlozetCalendar/1.0' },
@@ -76,15 +110,61 @@ async function fetchWttrFallback(city: string) {
 }
 
 export async function GET(req: NextRequest) {
-  const rawCity = req.nextUrl.searchParams.get('city')?.trim() || '';
-  if (!rawCity || rawCity.length < 2 || rawCity.length > 80) {
-    return NextResponse.json(
-      { error: 'Introduce un nombre de ciudad válido' },
-      { status: 400 }
-    );
-  }
+  const latParam = req.nextUrl.searchParams.get('lat');
+  const lonParam = req.nextUrl.searchParams.get('lon');
+  const isAuto = req.nextUrl.searchParams.get('auto') === '1';
 
   try {
+    // Mode A: Direct coordinates (browser geolocation)
+    if (latParam && lonParam) {
+      const lat = Number(latParam);
+      const lon = Number(lonParam);
+      if (!Number.isFinite(lat) || !Number.isFinite(lon)) {
+        return NextResponse.json({ error: 'Coordenadas inválidas' }, { status: 400 });
+      }
+
+      const days = await fetchOpenMeteoForecast(lat, lon);
+      if (!days || Object.keys(days).length === 0) {
+        return NextResponse.json({ error: 'No se pudo obtener la previsión' }, { status: 502 });
+      }
+
+      let resolvedCity = 'Tu ubicación';
+      try {
+        const rev = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&accept-language=es`,
+          { headers: { 'User-Agent': 'KlozetCalendar/1.0' }, next: { revalidate: 86400 } }
+        );
+        if (rev.ok) {
+          const revJson = await rev.json();
+          const addr = revJson?.address;
+          resolvedCity = addr?.city || addr?.town || addr?.village || addr?.municipality || resolvedCity;
+        }
+      } catch {}
+
+      return NextResponse.json({ city: resolvedCity, country: '', days });
+    }
+
+    // Mode B: City name (explicit or auto-detected from Vercel IP header / Madrid fallback)
+    let rawCity = req.nextUrl.searchParams.get('city')?.trim() || '';
+    if (!rawCity && isAuto) {
+      const headerCity = req.headers.get('x-vercel-ip-city') || '';
+      if (headerCity) {
+        try {
+          rawCity = decodeURIComponent(headerCity).trim();
+        } catch {
+          rawCity = headerCity.trim();
+        }
+      }
+      if (!rawCity) rawCity = 'Madrid';
+    }
+
+    if (!rawCity || rawCity.length < 2 || rawCity.length > 80) {
+      return NextResponse.json(
+        { error: 'Introduce un nombre de ciudad válido' },
+        { status: 400 }
+      );
+    }
+
     // 1. Resolve city coordinates cleanly
     const geoRes = await fetch(
       `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(rawCity)}&count=1&language=es&format=json`,
@@ -96,33 +176,8 @@ export async function GET(req: NextRequest) {
       const place = geoData?.results?.[0];
 
       if (place && typeof place.latitude === 'number' && typeof place.longitude === 'number') {
-        const forecastRes = await fetch(
-          `https://api.open-meteo.com/v1/forecast?latitude=${place.latitude}&longitude=${place.longitude}&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&past_days=2&forecast_days=16`,
-          { next: { revalidate: 1800 } }
-        );
-
-        if (forecastRes.ok) {
-          const forecast = await forecastRes.json();
-          const times: string[] = forecast?.daily?.time || [];
-          const codes: number[] = forecast?.daily?.weather_code || [];
-          const maxTemps: number[] = forecast?.daily?.temperature_2m_max || [];
-          const minTemps: number[] = forecast?.daily?.temperature_2m_min || [];
-
-          const days: Record<string, DailyWeatherEntry> = {};
-          times.forEach((date, idx) => {
-            const tempMax = Math.round(Number(maxTemps[idx] ?? 0));
-            const tempMin = Math.round(Number(minTemps[idx] ?? tempMax));
-            const code = Number(codes[idx] ?? 0);
-            const { condition, label } = mapWmoToCondition(code);
-            days[date] = {
-              temp: tempMax,
-              tempMax,
-              tempMin,
-              condition,
-              label,
-            };
-          });
-
+        const days = await fetchOpenMeteoForecast(place.latitude, place.longitude);
+        if (days && Object.keys(days).length > 0) {
           return NextResponse.json({
             city: place.name || rawCity,
             country: place.country || '',
@@ -132,7 +187,7 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // 2. Fallback to wttr.in HTML/JSON endpoint if Open-Meteo returned no match
+    // 2. Fallback to wttr.in endpoint if Open-Meteo returned no match
     const fallback = await fetchWttrFallback(rawCity);
     if (fallback && Object.keys(fallback.days).length > 0) {
       return NextResponse.json(fallback);

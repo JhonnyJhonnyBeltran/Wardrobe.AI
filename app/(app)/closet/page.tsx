@@ -80,8 +80,8 @@ function KloeHeroBanner() {
         </div>
 
         <ChevronRight
-          className="w-5 h-5 shrink-0 text-zinc-900 dark:text-white group-hover:translate-x-0.5 transition-transform"
-          strokeWidth={2.4}
+          className="w-5 h-5 shrink-0 text-[var(--brand-pink)] group-hover:translate-x-0.5 transition-transform"
+          strokeWidth={2.6}
           aria-hidden="true"
         />
       </motion.div>
@@ -115,6 +115,9 @@ export default function ClosetPage() {
       router.replace('/closet', { scroll: false });
     } else if (tab === 'outfits') {
       setActiveTab('outfits');
+      router.replace('/closet', { scroll: false });
+    } else if (tab === 'calendar') {
+      setActiveTab('calendar');
       router.replace('/closet', { scroll: false });
     }
   }, [searchParams, router]);

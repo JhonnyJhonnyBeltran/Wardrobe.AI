@@ -51,7 +51,8 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/auth') ||
     pathname.startsWith('/login') ||
     pathname.startsWith('/api/cron') ||
-    pathname.startsWith('/api/webhooks');
+    pathname.startsWith('/api/webhooks') ||
+    pathname.startsWith('/api/weather');
 
   // Only refresh session if we are navigating protected routes AND there is a potential session cookie
   const hasAuthCookie = request.cookies.getAll().some(c => c.name.includes('wardrobe-auth') || c.name.includes('sb-'));
