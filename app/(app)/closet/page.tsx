@@ -60,8 +60,7 @@ function KloeHeroBanner() {
           <KloeMascot
             mood="happy"
             size="md"
-            variant="black"
-            className="dark:invert"
+            variant="pink"
           />
           <div className="min-w-0 flex-1">
             <AnimatePresence mode="wait">
@@ -71,7 +70,7 @@ function KloeHeroBanner() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -5 }}
                 transition={{ duration: 0.25 }}
-                className="font-display text-[17px] sm:text-[19px] font-semibold tracking-[-0.02em] text-zinc-950 dark:text-white truncate leading-tight select-none"
+                className="font-display text-[17px] sm:text-[19px] font-semibold tracking-[-0.02em] text-[var(--brand-pink)] truncate leading-tight select-none"
               >
                 {KLOE_PROMPTS[promptIndex]}
               </motion.p>
