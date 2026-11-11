@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Shirt, Layers, Camera, Check, Plus, Image as ImageIcon, X, ChevronRight, Edit2, Search, Heart, Tag } from 'lucide-react';
+import { ArrowLeft, Shirt, Layers, Camera, Check, Plus, Image as ImageIcon, X, ChevronLeft, ChevronRight, Edit2, Search, Heart } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';
 import Image from 'next/image';
@@ -187,9 +187,46 @@ export default function CreatePostPage() {
         }
     };
 
-    // Image State
+    // Image & Carousel State
     const [realImage, setRealImage] = useState<string | null>(null);
     const [imageFile, setImageFile] = useState<File | Blob | null>(null);
+    const carouselScrollRef = useRef<HTMLDivElement>(null);
+    const [activeSlide, setActiveSlide] = useState(0);
+
+    const slides = useMemo(() => {
+        const list: Array<{ type: 'photo'; url: string } | { type: 'outfit'; outfit: any }> = [];
+        if (realImage) list.push({ type: 'photo', url: realImage });
+        if (selectedOutfit) list.push({ type: 'outfit', outfit: selectedOutfit });
+        return list;
+    }, [realImage, selectedOutfit]);
+
+    const goToSlide = (index: number) => {
+        setActiveSlide(index);
+        if (carouselScrollRef.current) {
+            const width = carouselScrollRef.current.clientWidth;
+            carouselScrollRef.current.scrollTo({
+                left: index * width,
+                behavior: 'smooth',
+            });
+        }
+    };
+
+    const handleCarouselScroll = (e: React.UIEvent<HTMLDivElement>) => {
+        const el = e.currentTarget;
+        if (!el.clientWidth) return;
+        const newIdx = Math.round(el.scrollLeft / el.clientWidth);
+        if (newIdx !== activeSlide && newIdx >= 0 && newIdx < slides.length) {
+            setActiveSlide(newIdx);
+        }
+    };
+
+    useEffect(() => {
+        if (activeSlide >= slides.length && slides.length > 0) {
+            goToSlide(slides.length - 1);
+        } else if (slides.length === 0) {
+            setActiveSlide(0);
+        }
+    }, [slides.length]);
 
     const [caption, setCaption] = useState('');
     const [publishing, setPublishing] = useState(false);
@@ -296,6 +333,10 @@ export default function CreatePostPage() {
             reader.onloadend = () => {
                 setRealImage(reader.result as string);
                 setImageFile(file);
+                setActiveSlide(0);
+                requestAnimationFrame(() => {
+                    carouselScrollRef.current?.scrollTo({ left: 0, behavior: 'smooth' });
+                });
             };
             reader.readAsDataURL(file);
         }
@@ -330,7 +371,7 @@ export default function CreatePostPage() {
                     .getPublicUrl(fileName);
 
                 finalImageUrl = publicUrl;
-            } else if (editingPostId && originalPost?.image_url) {
+            } else if (realImage && editingPostId && originalPost?.image_url) {
                 finalImageUrl = originalPost.image_url;
             }
 
@@ -445,125 +486,193 @@ export default function CreatePostPage() {
                 {mode === 'compose' && (
                     <div className="p-4 flex flex-col md:grid md:grid-cols-2 md:gap-10">
                         {/* LEFT COLUMN: Media Section */}
-                        <div className="space-y-6">
+                        <div className="space-y-3">
                             <div className="w-full aspect-[4/5] bg-[var(--card-bg)] rounded-3xl overflow-hidden border border-[var(--border-color)] relative group shadow-sm transition-all hover:shadow-md">
-                                {realImage ? (
+                                {slides.length > 0 ? (
                                     <>
-                                        <Image src={realImage} alt="Post preview" fill className="object-cover" />
-                                        <button
-                                            type="button"
-                                            onClick={() => { setRealImage(null); setImageFile(null); }}
-                                            className="absolute top-4 right-4 p-2 bg-black/50 backdrop-blur-md text-white rounded-full hover:bg-black/70 shadow-lg border border-white/10 z-20 cursor-pointer transition-colors"
-                                            title="Eliminar foto"
+                                        {/* Sliding track: native horizontal snap-scroll on touchscreens */}
+                                        <div
+                                            ref={carouselScrollRef}
+                                            onScroll={handleCarouselScroll}
+                                            className="flex w-full h-full overflow-x-auto snap-x snap-mandatory no-scrollbar select-none overscroll-x-contain"
+                                            style={{ WebkitOverflowScrolling: 'touch' }}
                                         >
-                                            <X className="w-4 h-4" />
-                                        </button>
-                                    </>
-                                ) : selectedOutfit ? (
-                                    <div className="w-full h-full relative bg-white flex items-center justify-center overflow-hidden">
-                                        {/* Canvas with items */}
-                                        {selectedOutfit.items && selectedOutfit.items.length > 0 ? (
-                                            <div className="relative w-full h-full overflow-hidden p-4">
-                                                {selectedOutfit.items.map((item: any, i: number) => {
-                                                    const imgSrc = item.imageUrl || item.image_url;
-                                                    const total = selectedOutfit.items.length;
-                                                    const hasCoords = selectedOutfit.items.some((it: any) => typeof it.position_x === 'number');
+                                            {slides.map((slide) => (
+                                                <div
+                                                    key={slide.type}
+                                                    className="w-full h-full flex-shrink-0 snap-center snap-always relative flex items-center justify-center overflow-hidden select-none"
+                                                >
+                                                    {slide.type === 'photo' ? (
+                                                        <>
+                                                            <Image
+                                                                src={slide.url}
+                                                                alt="Post preview"
+                                                                fill
+                                                                className="object-cover pointer-events-none"
+                                                                draggable={false}
+                                                            />
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => { setRealImage(null); setImageFile(null); }}
+                                                                className="absolute top-4 right-4 p-2 bg-black/50 backdrop-blur-md text-white rounded-full hover:bg-black/70 shadow-lg border border-white/10 z-20 cursor-pointer transition-colors"
+                                                                title="Eliminar imagen"
+                                                                aria-label="Eliminar imagen"
+                                                            >
+                                                                <X className="w-4 h-4" />
+                                                            </button>
+                                                        </>
+                                                    ) : (
+                                                        <div className="w-full h-full relative bg-white flex items-center justify-center overflow-hidden">
+                                                            {slide.outfit.items && slide.outfit.items.length > 0 ? (
+                                                                <div className="relative w-full h-full overflow-hidden p-4">
+                                                                    {slide.outfit.items.map((item: any, i: number) => {
+                                                                        const imgSrc = item.imageUrl || item.image_url;
+                                                                        const total = slide.outfit.items.length;
+                                                                        const hasCoords = slide.outfit.items.some((it: any) => typeof it.position_x === 'number');
 
-                                                    let posX = typeof item.position_x === 'number' ? item.position_x : 50;
-                                                    let posY = typeof item.position_y === 'number' ? item.position_y : 50;
-                                                    let itemScale = typeof item.scale === 'number' ? item.scale : 1;
+                                                                        let posX = typeof item.position_x === 'number' ? item.position_x : 50;
+                                                                        let posY = typeof item.position_y === 'number' ? item.position_y : 50;
+                                                                        let itemScale = typeof item.scale === 'number' ? item.scale : 1;
 
-                                                    if (!hasCoords) {
-                                                        posX = 50;
-                                                        const startY = total >= 4 ? 16 : 22;
-                                                        const endY = total >= 4 ? 84 : 78;
-                                                        posY = total === 1 ? 50 : startY + (i * (endY - startY)) / (total - 1);
-                                                    }
+                                                                        if (!hasCoords) {
+                                                                            posX = 50;
+                                                                            const startY = total >= 4 ? 16 : 22;
+                                                                            const endY = total >= 4 ? 84 : 78;
+                                                                            posY = total === 1 ? 50 : startY + (i * (endY - startY)) / (total - 1);
+                                                                        }
 
-                                                    const itemZ = item.layer_order || (i + 1);
+                                                                        const itemZ = item.layer_order || (i + 1);
 
-                                                    return (
-                                                        <div
-                                                            key={item.id || i}
-                                                            style={{
-                                                                position: 'absolute',
-                                                                left: `${posX}%`,
-                                                                top: `${posY}%`,
-                                                                transform: `translate(-50%, -50%) scale(${itemScale * 0.95})`,
-                                                                zIndex: itemZ,
-                                                                width: '42%',
-                                                                maxWidth: '160px',
-                                                            }}
-                                                            className="flex items-center justify-center pointer-events-none select-none"
-                                                        >
-                                                            {imgSrc ? (
-                                                                <img
-                                                                    src={imgSrc}
-                                                                    alt={item.name || 'Prenda'}
-                                                                    className="w-full h-auto object-contain drop-shadow-md"
+                                                                        return (
+                                                                            <div
+                                                                                key={item.id || i}
+                                                                                style={{
+                                                                                    position: 'absolute',
+                                                                                    left: `${posX}%`,
+                                                                                    top: `${posY}%`,
+                                                                                    transform: `translate(-50%, -50%) scale(${itemScale * 0.95})`,
+                                                                                    zIndex: itemZ,
+                                                                                    width: '42%',
+                                                                                    maxWidth: '160px',
+                                                                                }}
+                                                                                className="flex items-center justify-center pointer-events-none select-none"
+                                                                            >
+                                                                                {imgSrc ? (
+                                                                                    <img
+                                                                                        src={imgSrc}
+                                                                                        alt={item.name || 'Prenda'}
+                                                                                        className="w-full h-auto object-contain drop-shadow-md"
+                                                                                    />
+                                                                                ) : (
+                                                                                    <div
+                                                                                        className="w-12 h-12 rounded-xl shadow-xs"
+                                                                                        style={{ backgroundColor: item.color_hex || '#ccc' }}
+                                                                                    />
+                                                                                )}
+                                                                            </div>
+                                                                        );
+                                                                    })}
+                                                                </div>
+                                                            ) : (slide.outfit.imageUrl || slide.outfit.image_url) ? (
+                                                                <Image
+                                                                    src={slide.outfit.imageUrl || slide.outfit.image_url}
+                                                                    alt={slide.outfit.name || 'Outfit'}
+                                                                    fill
+                                                                    className="object-contain p-4"
                                                                 />
                                                             ) : (
-                                                                <div
-                                                                    className="w-12 h-12 rounded-xl shadow-xs"
-                                                                    style={{ backgroundColor: item.color_hex || '#ccc' }}
-                                                                />
+                                                                <div className="w-full h-full flex flex-col items-center justify-center text-zinc-400 gap-2">
+                                                                    <Layers className="w-12 h-12 stroke-[1.5] text-[var(--brand-pink)]" />
+                                                                    <span className="text-sm font-semibold text-zinc-700">{slide.outfit.name}</span>
+                                                                </div>
                                                             )}
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
-                                        ) : (selectedOutfit.imageUrl || selectedOutfit.image_url) ? (
-                                            <Image
-                                                src={selectedOutfit.imageUrl || selectedOutfit.image_url}
-                                                alt={selectedOutfit.name || 'Outfit'}
-                                                fill
-                                                className="object-contain p-4"
-                                            />
-                                        ) : (
-                                            <div className="w-full h-full flex flex-col items-center justify-center text-zinc-400 gap-2">
-                                                <Layers className="w-12 h-12 stroke-[1.5] text-[var(--brand-pink)]" />
-                                                <span className="text-sm font-semibold text-zinc-700">{selectedOutfit.name}</span>
-                                            </div>
-                                        )}
 
-                                        {/* Top Badge: Outfit name */}
-                                        <div className="absolute top-4 left-4 z-20">
-                                            <span className="px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md text-white text-xs font-bold border border-white/10 flex items-center gap-1.5 shadow-md">
-                                                <Layers className="w-3.5 h-3.5 text-[var(--brand-pink)]" />
-                                                {selectedOutfit.name || 'Outfit vinculado'}
-                                            </span>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setSelectedOutfit(null)}
+                                                                className="absolute top-4 right-4 p-2 bg-black/50 backdrop-blur-md text-white rounded-full hover:bg-black/70 shadow-lg border border-white/10 z-20 cursor-pointer transition-colors"
+                                                                title="Desvincular outfit"
+                                                                aria-label="Desvincular outfit"
+                                                            >
+                                                                <X className="w-4 h-4" />
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
                                         </div>
 
-                                        {/* Top Right: Unlink button */}
-                                        <button
-                                            type="button"
-                                            onClick={() => setSelectedOutfit(null)}
-                                            className="absolute top-4 right-4 p-2 bg-black/50 backdrop-blur-md text-white rounded-full hover:bg-black/70 shadow-lg border border-white/10 z-20 cursor-pointer transition-colors"
-                                            title="Desvincular outfit"
-                                        >
-                                            <X className="w-4 h-4" />
-                                        </button>
+                                        {/* Desktop Left/Right Arrows & Pagination Dots */}
+                                        {slides.length > 1 && (
+                                            <>
+                                                {activeSlide > 0 && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            goToSlide(Math.max(0, activeSlide - 1));
+                                                        }}
+                                                        className="hidden md:flex items-center justify-center w-9 h-9 rounded-full bg-black/45 hover:bg-black/65 backdrop-blur-md text-white shadow-md border border-white/15 absolute left-3 top-1/2 -translate-y-1/2 z-30 transition-all duration-200 hover:scale-110 active:scale-95 focus:outline-none cursor-pointer"
+                                                        aria-label="Anterior"
+                                                    >
+                                                        <ChevronLeft className="w-5 h-5" strokeWidth={2.5} />
+                                                    </button>
+                                                )}
 
-                                        {/* Bottom Action: Upload real photo optionally */}
-                                        <label className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 px-4 py-2 rounded-full bg-black/60 backdrop-blur-md text-white hover:bg-black/80 text-xs font-bold border border-white/10 cursor-pointer flex items-center gap-1.5 shadow-md transition-all active:scale-95">
-                                            <Camera className="w-3.5 h-3.5 text-[var(--brand-pink)]" />
-                                            <span>Subir foto real (opcional)</span>
-                                            <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-                                        </label>
-                                    </div>
+                                                {activeSlide < slides.length - 1 && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            goToSlide(Math.min(slides.length - 1, activeSlide + 1));
+                                                        }}
+                                                        className="hidden md:flex items-center justify-center w-9 h-9 rounded-full bg-black/45 hover:bg-black/65 backdrop-blur-md text-white shadow-md border border-white/15 absolute right-3 top-1/2 -translate-y-1/2 z-30 transition-all duration-200 hover:scale-110 active:scale-95 focus:outline-none cursor-pointer"
+                                                        aria-label="Siguiente"
+                                                    >
+                                                        <ChevronRight className="w-5 h-5" strokeWidth={2.5} />
+                                                    </button>
+                                                )}
+
+                                                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 z-30 pointer-events-auto">
+                                                    {slides.map((s, idx) => (
+                                                        <button
+                                                            key={s.type}
+                                                            type="button"
+                                                            onClick={() => goToSlide(idx)}
+                                                            aria-label={`Diapositiva ${idx + 1}`}
+                                                            className={`rounded-full transition-all cursor-pointer ${
+                                                                activeSlide === idx
+                                                                    ? 'w-2 h-2 bg-[var(--brand-pink)] shadow-xs'
+                                                                    : 'w-1.5 h-1.5 bg-zinc-400/70 hover:bg-zinc-400'
+                                                            }`}
+                                                        />
+                                                    ))}
+                                                </div>
+                                            </>
+                                        )}
+                                    </>
                                 ) : (
                                     <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer hover:bg-[var(--background-secondary)] transition-colors gap-3">
                                         <div className="w-16 h-16 rounded-full bg-[var(--background-secondary)] flex items-center justify-center">
                                             <Camera className="w-8 h-8 text-[var(--foreground-secondary)]" />
                                         </div>
                                         <div className="text-center">
-                                            <p className="font-bold text-[var(--foreground)]">Añadir Foto</p>
+                                            <p className="font-bold text-[var(--foreground)]">Añadir imagen</p>
                                             <p className="text-sm text-[var(--foreground-tertiary)]">Opcional si usas Outfit</p>
                                         </div>
                                         <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
                                     </label>
                                 )}
                             </div>
+
+                            {/* Clean Add Image action below frame when outfit is selected without image */}
+                            {selectedOutfit && !realImage && (
+                                <label className="w-full py-3 px-4 rounded-2xl bg-[var(--card-bg)] border border-[var(--border-color)] hover:bg-[var(--background-secondary)] transition-colors flex items-center justify-center gap-2 text-sm font-semibold text-[var(--foreground)] cursor-pointer shadow-sm">
+                                    <Camera className="w-4 h-4 text-[var(--brand-pink)]" />
+                                    <span>Añadir imagen</span>
+                                    <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
+                                </label>
+                            )}
                         </div>
 
                         {/* RIGHT COLUMN: Form & Logic */}
@@ -637,49 +746,21 @@ export default function CreatePostPage() {
 
                             {/* Style Tags Section */}
                             <div className="space-y-2">
-                                <div className="flex items-center justify-between ml-1">
-                                    <label className="text-xs font-bold tracking-wider text-[var(--foreground-tertiary)] uppercase flex items-center gap-1.5">
-                                        <Tag className="w-3.5 h-3.5 text-[var(--brand-pink)]" />
-                                        Estilos del Look ({selectedStyles.length})
-                                    </label>
-                                    {selectedStyles.length > 0 && (
-                                        <button
-                                            type="button"
-                                            onClick={() => setSelectedStyles([])}
-                                            className="text-[11px] text-[var(--foreground-tertiary)] hover:text-[var(--brand-pink)] transition-colors cursor-pointer"
-                                        >
-                                            Limpiar
-                                        </button>
-                                    )}
-                                </div>
-                                
-                                <p className="text-xs text-[var(--foreground-tertiary)] ml-1">
-                                    Elige los estilos que definen este look para que aparezca en el buscador a personas afines.
-                                </p>
-
-                                {/* Main Collapsed View: Only chosen styles + Pink '+' button */}
+                                {/* Main Collapsed View: Only chosen monochrome pills (tap to remove) + Pink '+' button */}
                                 <div className="flex flex-wrap items-center gap-2 pt-0.5">
                                     {selectedStyles.map((styleKey) => {
                                         const styleName = getStyleName(styleKey, availableStyles);
                                         return (
-                                            <span
+                                            <button
                                                 key={styleKey}
-                                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--brand-pink)] text-white text-xs font-bold shadow-xs select-none"
+                                                type="button"
+                                                onClick={() => toggleStyleTag(styleKey)}
+                                                title={`Quitar ${styleName}`}
+                                                aria-label={`Quitar ${styleName}`}
+                                                className="inline-flex items-center px-3.5 py-1.5 rounded-full bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200 text-xs font-semibold shadow-xs transition-all active:scale-95 cursor-pointer select-none"
                                             >
-                                                <Check className="w-3 h-3 stroke-[3]" />
-                                                <span>{styleName}</span>
-                                                <button
-                                                    type="button"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        toggleStyleTag(styleKey);
-                                                    }}
-                                                    className="p-0.5 hover:bg-white/20 rounded-full transition-colors cursor-pointer ml-0.5"
-                                                    aria-label={`Eliminar ${styleName}`}
-                                                >
-                                                    <X className="w-3 h-3" />
-                                                </button>
-                                            </span>
+                                                {styleName}
+                                            </button>
                                         );
                                     })}
 
@@ -687,7 +768,7 @@ export default function CreatePostPage() {
                                     <button
                                         type="button"
                                         onClick={() => setIsStylesExpanded(prev => !prev)}
-                                        className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--brand-pink)] hover:bg-[#ff3377] text-white text-xs font-bold shadow-xs transition-all active:scale-95 cursor-pointer"
+                                        className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[var(--brand-pink)] hover:bg-[#ff3377] text-white text-xs font-bold shadow-xs transition-all active:scale-95 cursor-pointer"
                                         aria-label={isStylesExpanded ? "Cerrar selector de estilos" : "Añadir más estilos"}
                                     >
                                         <Plus className={`w-3.5 h-3.5 stroke-[2.5] transition-transform duration-200 ${isStylesExpanded ? 'rotate-45' : ''}`} />
@@ -751,9 +832,9 @@ export default function CreatePostPage() {
                                                             onClick={() => toggleStyleTag(key)}
                                                             className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 border cursor-pointer active:scale-95 ${
                                                                 isSelected
-                                                                    ? 'bg-[var(--brand-pink)] text-white border-[var(--brand-pink)] shadow-xs font-bold scale-102'
-                                                                    : 'bg-[var(--card-bg)] text-[var(--foreground-secondary)] border-[var(--border-color)] hover:border-[var(--brand-pink)]/50 hover:text-[var(--foreground)]'
-                            }`}
+                                                                    ? 'bg-zinc-900 text-white border-zinc-900 dark:bg-white dark:text-zinc-950 dark:border-white shadow-xs font-semibold'
+                                                                    : 'bg-[var(--card-bg)] text-[var(--foreground-secondary)] border-[var(--border-color)] hover:border-zinc-400 hover:text-[var(--foreground)]'
+                                                            }`}
                                                         >
                                                             {isSelected && <Check className="w-3 h-3 stroke-[2.5]" />}
                                                             <span>{s.name}</span>

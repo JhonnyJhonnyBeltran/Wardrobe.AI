@@ -53,52 +53,49 @@ export default function KloeMascot({
 
   const triggerBlink = useCallback(
     (doubleBlink = false) => {
-      if (prefersReducedMotion) return;
       clearAllTimers();
 
       const t1 = setTimeout(() => setFrame('half'), 0);
-      const t2 = setTimeout(() => setFrame('closed'), 48);
-      const t3 = setTimeout(() => setFrame('half'), 138);
-      const t4 = setTimeout(() => setFrame('open'), 188);
+      const t2 = setTimeout(() => setFrame('closed'), 55);
+      const t3 = setTimeout(() => setFrame('half'), 185);
+      const t4 = setTimeout(() => setFrame('open'), 245);
       timersRef.current.push(t1, t2, t3, t4);
 
       if (doubleBlink) {
-        const t5 = setTimeout(() => setFrame('half'), 290);
-        const t6 = setTimeout(() => setFrame('closed'), 335);
-        const t7 = setTimeout(() => setFrame('half'), 415);
-        const t8 = setTimeout(() => setFrame('open'), 460);
+        const t5 = setTimeout(() => setFrame('half'), 350);
+        const t6 = setTimeout(() => setFrame('closed'), 395);
+        const t7 = setTimeout(() => setFrame('half'), 500);
+        const t8 = setTimeout(() => setFrame('open'), 555);
         timersRef.current.push(t5, t6, t7, t8);
       }
     },
-    [prefersReducedMotion, clearAllTimers]
+    [clearAllTimers]
   );
 
-  // Organic periodic eye-blink loop (every 2.8s – 5.2s)
+  // Organic periodic eye-blink loop (runs reliably even when OS reduces motion)
   useEffect(() => {
-    if (prefersReducedMotion) return;
-
     let loopTimer: NodeJS.Timeout;
     let isMounted = true;
 
     const scheduleNext = (initialDelay?: number) => {
-      const delay = initialDelay ?? 2800 + Math.random() * 2400;
+      const delay = initialDelay ?? 2000 + Math.random() * 1400;
       loopTimer = setTimeout(() => {
         if (!isMounted) return;
-        const doDouble = mood === 'happy' || mood === 'excited' ? Math.random() < 0.35 : Math.random() < 0.2;
+        const doDouble = mood === 'happy' || mood === 'excited' ? Math.random() < 0.35 : Math.random() < 0.25;
         triggerBlink(doDouble);
         scheduleNext();
       }, delay);
     };
 
-    // Initial greeting blink shortly after mount
-    scheduleNext(900 + Math.random() * 1400);
+    // Quick greeting blink right after mount so Kloe feels alive immediately
+    scheduleNext(450 + Math.random() * 350);
 
     return () => {
       isMounted = false;
       clearTimeout(loopTimer);
       clearAllTimers();
     };
-  }, [prefersReducedMotion, mood, triggerBlink, clearAllTimers]);
+  }, [mood, triggerBlink, clearAllTimers]);
 
   // Trigger joyful double-blink when mood changes to excited or wink
   useEffect(() => {
@@ -203,6 +200,8 @@ export default function KloeMascot({
             alt={key === 'open' ? 'Kloe' : ''}
             aria-hidden={key !== 'open'}
             draggable={false}
+            loading="eager"
+            decoding="sync"
             className={`absolute inset-0 w-full h-full object-contain pointer-events-none select-none ${
               frame === key ? 'opacity-100' : 'opacity-0'
             }`}

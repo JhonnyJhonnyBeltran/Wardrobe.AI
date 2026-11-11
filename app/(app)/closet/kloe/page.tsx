@@ -249,48 +249,18 @@ function FormattedMessageText({ content, isUser }: { content: string; isUser?: b
 }
 
 function KloeAnimatedLogo() {
-  const [logoVariant, setLogoVariant] = useState<0 | 1>(0);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setLogoVariant(prev => (prev === 0 ? 1 : 0));
-    }, 10000);
-    return () => clearInterval(interval);
-  }, []);
-
   return (
-    <div className="relative h-10 w-36 md:w-44 flex items-center justify-center cursor-pointer select-none">
-      <AnimatePresence mode="wait">
-        {logoVariant === 0 ? (
-          <motion.div
-            key="logo-text"
-            initial={{ opacity: 0, scale: 0.92 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.92 }}
-            transition={{ duration: 0.35, ease: 'easeInOut' }}
-            className="relative w-24 md:w-28 h-7 md:h-8 flex items-center justify-center"
-          >
-            <Image
-              src="/kloe-logo-large.png"
-              alt="Kloe"
-              fill
-              className="object-contain"
-              priority
-            />
-          </motion.div>
-        ) : (
-          <motion.div
-            key="logo-character"
-            initial={{ opacity: 0, scale: 0.92 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.92 }}
-            transition={{ duration: 0.35, ease: 'easeInOut' }}
-            className="flex items-center justify-center flex-shrink-0"
-          >
-            <KloeMascot mood="happy" size="sm" />
-          </motion.div>
-        )}
-      </AnimatePresence>
+    <div className="relative h-10 flex items-center justify-center gap-2 select-none">
+      <KloeMascot mood="happy" size="sm" interactive />
+      <div className="relative w-20 md:w-24 h-6 md:h-7 flex items-center justify-center">
+        <Image
+          src="/kloe-logo-large.png"
+          alt="Kloe"
+          fill
+          className="object-contain"
+          priority
+        />
+      </div>
     </div>
   );
 }

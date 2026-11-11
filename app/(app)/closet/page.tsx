@@ -939,7 +939,7 @@ export default function ClosetPage() {
                               </>
                             )}
 
-                            <div className="relative aspect-[4/5] overflow-hidden bg-white dark:bg-zinc-900/50">
+                            <div className="relative aspect-[3/4] overflow-hidden bg-white dark:bg-zinc-900/50">
                               {item.imageUrl ? (
                                 <img
                                   src={item.imageUrl}
@@ -983,22 +983,6 @@ export default function ClosetPage() {
                                 <Trash2 className="w-3.5 h-3.5" />
                               </motion.button>
                             </div>
-
-                            {/* Smart Garment Context Strip */}
-                            <div className="px-2.5 py-2 border-t border-[var(--border-color)]/60 flex flex-col gap-0.5">
-                              <p data-no-translate="true" className="text-[13px] font-semibold text-[var(--foreground)] truncate leading-tight">
-                                {item.name}
-                              </p>
-                              <div className="flex items-center gap-1.5 min-w-0">
-                                {stats.wears === 0 && stats.looks === 0 && (
-                                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--brand-pink)] shrink-0" />
-                                )}
-                                <p className="kz-caption text-[var(--foreground-secondary)] truncate leading-tight">
-                                  {contextLabel}
-                                </p>
-                              </div>
-                            </div>
-
                           </Card>
                         </motion.div>
                       )}

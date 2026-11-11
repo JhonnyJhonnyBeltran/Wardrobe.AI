@@ -3468,3 +3468,17 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
   - Barra inferior móvil (`TabBar.tsx`) y barra lateral (`Sidebar.tsx` `72px`) se mantienen icon-only limpias como en el diseño base.
 - **Limpieza de Modales (`OutfitDetailModal.tsx`, `ProductModal.tsx`, `AddItemModal/index.tsx`, `ExportStoryModal.tsx`)**:
   - Eliminados botones redundantes (`Cancelar` duplicado en `AddItemModal`) y píldoras informativas obvias (*"Toca una prenda para ver detalles"*, píldora *"Tendencia"*, bloque duplicado de marca en `ProductModal`, píldoras repetidas de conteo/privacidad en `OutfitDetailModal` y menciones artificiales a *"metadatos"*/*"IA"*).
+
+---
+
+## 58. Pulido de Tarjetas en `/closet`, Carrusel Foto+Outfit y Estilos en `/create-post`, y Parpadeo Universal de Kloe (Noviembre 2026)
+- **Tarjetas limpias de prendas en `/closet` (`app/(app)/closet/page.tsx`)**:
+  - Eliminada la franja inferior de detalle textual en la vista en cuadrícula de prendas (`aspect-[3/4]` mostrando exclusivamente el recorte de prenda, botón de favorito con rebote y papelera hover en escritorio).
+- **Carrusel Dual Foto + Outfit y Pills de Estilo en `/create-post` (`app/(app)/create-post/page.tsx`)**:
+  - Eliminadas las píldoras flotantes sobre el lienzo del outfit (*"Subir foto real (opcional)"* y badge superior izquierdo de nombre).
+  - La acción de carga pasa a denominarse **"Añadir imagen"** (tanto en el lienzo vacío como en el botón inferior limpio cuando hay un outfit vinculado sin foto).
+  - Soporte simultáneo para **imagen real + outfit vinculado** dentro de un carrusel deslizable `snap-x snap-mandatory` estilo `/post/[id]`, con gesto táctil horizontal en móvil y botones laterales `<ChevronLeft />` / `<ChevronRight />` (`hidden md:flex`) + indicadores de puntos en escritorio.
+  - Sección de estilos simplificada: eliminados encabezado *"ESTILOS DEL LOOK"*, subtítulo e icono `<Tag />`; píldoras seleccionadas en alto contraste monocromo (`bg-zinc-900 text-white dark:bg-white dark:text-zinc-950`) diferenciadas de la píldora rosa `+ Añadir`, tocando directamente sobre cada píldora para quitarla sin necesidad de botón `<X />`.
+- **Parpadeo Garantizado de Kloe en `/closet` y `/closet/kloe` (`components/KloeMascot.tsx`, `app/(app)/closet/kloe/page.tsx`)**:
+  - Desacoplado el parpadeo ocular por intercambio de fotogramas (`open -> half -> closed -> half -> open`, `loading="eager"`, `decoding="sync"`) de `prefersReducedMotion` (que ahora solo frena el balanceo corporal) para que Kloe parpadee de forma orgánica incluso cuando el sistema operativo desactiva animaciones.
+  - En `/closet/kloe`, `KloeAnimatedLogo` muestra permanentemente `<KloeMascot mood="happy" size="sm" interactive />` junto al wordmark para que el parpadeo sea visible al instante desde el encabezado además de los mensajes del chat.
