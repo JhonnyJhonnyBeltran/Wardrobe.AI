@@ -10,6 +10,7 @@ type BlinkFrame = 'open' | 'half' | 'closed';
 interface KloeMascotProps {
   mood?: KloeMood;
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  variant?: 'pink' | 'black';
   interactive?: boolean;
   onTap?: () => void;
   className?: string;
@@ -23,24 +24,32 @@ const SIZE_MAP = {
   xl: 'w-20 h-24',
 } as const;
 
-const FRAME_SRCS: Record<BlinkFrame, string> = {
-  open: '/kloe-blink-open.png',
-  half: '/kloe-blink-half.png',
-  closed: '/kloe-blink-closed.png',
+const FRAME_SRCS: Record<'pink' | 'black', Record<BlinkFrame, string>> = {
+  pink: {
+    open: '/kloe-blink-open.png',
+    half: '/kloe-blink-half.png',
+    closed: '/kloe-blink-closed.png',
+  },
+  black: {
+    open: '/kloe-black-open.png',
+    half: '/kloe-black-half.png',
+    closed: '/kloe-black-closed.png',
+  },
 };
 
 /**
  * KloeMascot - Living character driven by the 3 custom blink frames
- * (/kloe-blink-open.png, /kloe-blink-half.png, /kloe-blink-closed.png)
  * stacked in DOM for zero-flicker 60fps blinking + Duolingo-style body physics.
  */
 export default function KloeMascot({
   mood = 'idle',
   size = 'md',
+  variant = 'pink',
   interactive = false,
   onTap,
   className = '',
 }: KloeMascotProps) {
+  const frameSrcs = FRAME_SRCS[variant];
   const prefersReducedMotion = useReducedMotion();
   const [tapKey, setTapKey] = useState(0);
   const [frame, setFrame] = useState<BlinkFrame>('open');
@@ -190,13 +199,17 @@ export default function KloeMascot({
       <motion.div
         animate={getMoodAnimate()}
         transition={getMoodTransition()}
-        className="relative w-full h-full flex items-center justify-center drop-shadow-[0_4px_10px_rgba(255,102,196,0.28)]"
+        className={`relative w-full h-full flex items-center justify-center ${
+          variant === 'black'
+            ? 'drop-shadow-[0_2px_6px_rgba(0,0,0,0.08)]'
+            : 'drop-shadow-[0_4px_10px_rgba(255,102,196,0.28)]'
+        }`}
       >
         {/* All 3 frames pre-mounted & aligned identically so blinking swaps cleanly with 0 network lag */}
         {(['open', 'half', 'closed'] as BlinkFrame[]).map((key) => (
           <img
             key={key}
-            src={FRAME_SRCS[key]}
+            src={frameSrcs[key]}
             alt={key === 'open' ? 'Kloe' : ''}
             aria-hidden={key !== 'open'}
             draggable={false}

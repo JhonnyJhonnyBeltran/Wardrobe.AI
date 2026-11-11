@@ -213,15 +213,15 @@ html {
 }
 
 .kz-kloe-banner {
-  background: linear-gradient(135deg, #FFA3DB 0%, #FF77CC 55%, #F25CB8 100%);
-  border: 1px solid rgba(255, 255, 255, 0.45);
-  box-shadow: 0 8px 24px -6px rgba(255, 102, 196, 0.38), 0 2px 8px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  background: #FFFFFF;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
 }
 
 .dark .kz-kloe-banner {
-  background: linear-gradient(135deg, #EE6FC0 0%, #D94CA7 100%);
-  border: 1px solid rgba(255, 179, 222, 0.35);
-  box-shadow: 0 10px 28px -6px rgba(255, 102, 196, 0.32), 0 4px 14px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  background: #18181B;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
 }
 
 /* ===== APPLE HIG ERGONOMICS & MATERIALS ===== */
