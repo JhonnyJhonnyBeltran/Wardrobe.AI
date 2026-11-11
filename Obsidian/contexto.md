@@ -3540,3 +3540,5 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
   - Eliminado el doble manejador `onClick` en los resultados de `"Selecciona un Outfit"` pasando la acción únicamente al `<OutfitCard />`.
   - Movida la píldora de ciudad/tiempo (`{Ciudad} · {Icono} {Temp}°`) debajo de la barra del mes en el calendario.
   - Eliminado el círculo contenedor del botón de corazón en las tarjetas de prenda (`app/(app)/closet/page.tsx`) y outfit (`components/OutfitCard.tsx`), dejando solo el icono `<Heart />` esquinado sin fondo ni borde.
+  - Título en hover de tarjetas de outfit (`OutfitCard.tsx` y `OutfitCalendar.tsx`) alineado abajo a la izquierda (`justify-start`) sobre degradado inferior sutil (`from-black/[0.09] to-transparent`).
+  - En ordenador (`lg:`+), tarjeta de ciudad y tiempo situada encima de `"Outfit de Hoy"` replicando el estilo exacto de la cabecera de mes (`bg-[var(--card-bg)] p-4 rounded-3xl border shadow-sm`); icono de lluvia (`CloudRain`) unificado a rosa de marca (`--brand-pink`) e iconos meteorológicos y de prenda ampliados manteniendo altura/rejilla uniforme en móvil y escritorio.

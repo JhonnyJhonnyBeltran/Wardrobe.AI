@@ -234,12 +234,12 @@ const OutfitCard = ({ outfit, isLocked = false, selectionMode = false, isSelecte
                         </div>
                     )}
 
-                    {/* Hover-only black outfit name directly over clean canvas (no black strip) */}
+                    {/* Hover-only black outfit name anchored bottom-left with subtle bottom shadow */}
                     {!isLocked && !selectionMode && (
-                        <div className="absolute inset-x-0 bottom-2.5 px-3 z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex justify-center">
+                        <div className="absolute inset-x-0 bottom-0 pt-7 pb-3 px-3.5 z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-gradient-to-t from-black/[0.09] via-black/[0.03] to-transparent flex items-end justify-start">
                             <p
                                 data-no-translate={outfit.name ? 'true' : undefined}
-                                className="text-xs font-semibold text-zinc-900 truncate [text-shadow:0_1px_3px_rgba(255,255,255,0.95)]"
+                                className="text-xs font-semibold text-zinc-900 truncate text-left [text-shadow:0_1px_2px_rgba(255,255,255,0.85)]"
                             >
                                 {outfit.name || 'Look sin título'}
                             </p>

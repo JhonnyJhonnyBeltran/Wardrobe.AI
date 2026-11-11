@@ -38,7 +38,7 @@ function WeatherIcon({
     case 'snow':
       return <CloudSnow className={`${className} ${onPink ? 'text-white' : 'text-sky-400'}`} />;
     case 'rain':
-      return <CloudRain className={`${className} ${onPink ? 'text-white' : 'text-blue-500'}`} />;
+      return <CloudRain className={`${className} ${onPink ? 'text-white' : 'text-[var(--brand-pink)]'}`} />;
     case 'cloudy':
       return <Cloud className={`${className} ${onPink ? 'text-white/95' : 'text-zinc-400'}`} />;
     case 'sunny':
@@ -508,11 +508,11 @@ export default function OutfitCalendar() {
           className="w-full h-full"
         />
 
-        {/* Hover-only black outfit name directly over clean canvas (matches Outfits tab) */}
-        <div className="absolute inset-x-0 bottom-2.5 px-3 z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex justify-center">
+        {/* Hover-only black outfit name anchored bottom-left with subtle bottom shadow */}
+        <div className="absolute inset-x-0 bottom-0 pt-7 pb-3 px-3.5 z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-gradient-to-t from-black/[0.09] via-black/[0.03] to-transparent flex items-end justify-start">
           <p
             data-no-translate={outfit.name ? 'true' : undefined}
-            className="text-xs font-semibold text-zinc-900 truncate [text-shadow:0_1px_3px_rgba(255,255,255,0.95)]"
+            className="text-xs font-semibold text-zinc-900 truncate text-left [text-shadow:0_1px_2px_rgba(255,255,255,0.85)]"
           >
             {outfit.name || 'Look sin título'}
           </p>
@@ -534,6 +534,38 @@ export default function OutfitCalendar() {
               exit={{ opacity: 0, scale: 0.9, width: 0 }}
               className="lg:w-1/3 lg:max-w-sm shrink-0 w-full mb-8 lg:mb-0"
             >
+              {/* Desktop City & Weather Card above Outfit de Hoy (same style as Month header) */}
+              <button
+                type="button"
+                onClick={() => {
+                  setCityInput(weatherCity);
+                  setWeatherError(null);
+                  setShowCityModal(true);
+                }}
+                className="hidden lg:flex w-full items-center justify-between mb-6 bg-[var(--card-bg)] p-4 rounded-3xl shadow-sm border border-[var(--border-color)] hover:border-[var(--brand-pink)]/45 transition-all cursor-pointer active:scale-[0.99] text-left"
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <span className="p-2 rounded-full bg-[var(--background-secondary)] text-[var(--brand-pink)] shrink-0">
+                    <MapPin className="w-5 h-5" />
+                  </span>
+                  <span className="text-lg font-bold text-[var(--foreground)] truncate">
+                    {weatherCity || 'Añadir ciudad'}
+                  </span>
+                </div>
+                {weatherCity && todayWeather ? (
+                  <div className="flex items-center gap-2 shrink-0 pl-2">
+                    <WeatherIcon condition={todayWeather.condition} className="w-7 h-7 shrink-0" />
+                    <span className="text-lg font-bold tabular-nums text-[var(--foreground)]">
+                      {todayWeather.temp}°
+                    </span>
+                  </div>
+                ) : (
+                  <span className="text-xs font-medium text-[var(--foreground-secondary)] shrink-0 pl-2">
+                    Cambiar
+                  </span>
+                )}
+              </button>
+
               <div className="flex justify-between items-center mb-4">
                 <h3 className="font-bold text-[var(--foreground)] text-xl flex items-center gap-2">
                   <Shirt className="w-6 h-6 text-[var(--brand-pink)]" />
@@ -554,7 +586,7 @@ export default function OutfitCalendar() {
         {/* Calendar Section */}
         <motion.div layout className="flex-1 w-full flex flex-col">
           {/* Header */}
-          <div className="flex items-center justify-between mb-3 bg-[var(--card-bg)] p-4 rounded-3xl shadow-sm border border-[var(--border-color)]">
+          <div className={`flex items-center justify-between ${todayOutfits.length > 0 ? 'mb-3 lg:mb-6' : 'mb-3'} bg-[var(--card-bg)] p-4 rounded-3xl shadow-sm border border-[var(--border-color)]`}>
             <button onClick={handlePrevMonth} className="p-2 rounded-full hover:bg-[var(--background-secondary)] text-[var(--foreground)] transition-colors cursor-pointer">
               <ChevronLeft className="w-6 h-6" />
             </button>
@@ -567,8 +599,8 @@ export default function OutfitCalendar() {
             </button>
           </div>
 
-          {/* City Weather Trigger below Month */}
-          <div className="flex items-center justify-center mb-4">
+          {/* City Weather Trigger below Month (mobile, and desktop when no Today Outfit card) */}
+          <div className={`flex items-center justify-center mb-4 ${todayOutfits.length > 0 ? 'lg:hidden' : ''}`}>
             <button
               type="button"
               onClick={() => {
@@ -578,14 +610,14 @@ export default function OutfitCalendar() {
               }}
               className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--card-bg)] border border-[var(--border-color)] hover:border-[var(--brand-pink)]/45 text-xs font-semibold text-[var(--foreground)] shadow-xs transition-all cursor-pointer active:scale-95"
             >
-              <MapPin className="w-3.5 h-3.5 text-[var(--brand-pink)] shrink-0" />
+              <MapPin className="w-4 h-4 text-[var(--brand-pink)] shrink-0" />
               {weatherCity ? (
                 <>
                   <span>{weatherCity}</span>
                   {todayWeather && (
                     <>
                       <span className="text-[var(--foreground-tertiary)]">·</span>
-                      <WeatherIcon condition={todayWeather.condition} className="w-3.5 h-3.5" />
+                      <WeatherIcon condition={todayWeather.condition} className="w-4 h-4 shrink-0" />
                       <span className="tabular-nums">{todayWeather.temp}°</span>
                     </>
                   )}
@@ -611,7 +643,7 @@ export default function OutfitCalendar() {
           <div className="grid grid-cols-7 gap-1 sm:gap-2">
             {/* Empty Offset Days */}
             {Array.from({ length: startOffset }).map((_, i) => (
-              <div key={`empty-${i}`} className="min-h-[66px] sm:aspect-[4/3] rounded-xl opacity-0" />
+              <div key={`empty-${i}`} className="min-h-[76px] sm:min-h-[92px] sm:aspect-[4/3] rounded-xl opacity-0" />
             ))}
             
             {/* Actual Days */}
@@ -627,7 +659,7 @@ export default function OutfitCalendar() {
                 <button
                   key={`day-${i}`}
                   onClick={() => setSelectedDate(dayDate)}
-                  className={`relative min-h-[66px] sm:aspect-[4/3] rounded-xl sm:rounded-2xl flex flex-col items-center justify-start gap-0.5 sm:gap-1 py-1.5 px-1 sm:p-2 transition-all cursor-pointer ${
+                  className={`relative min-h-[76px] sm:min-h-[92px] sm:aspect-[4/3] rounded-xl sm:rounded-2xl flex flex-col items-center justify-start gap-0.5 sm:gap-1 py-1.5 px-0.5 sm:p-2 min-w-0 transition-all cursor-pointer ${
                     isToday 
                       ? 'bg-[var(--brand-pink)] text-white shadow-lg' 
                       : 'hover:bg-[var(--background-secondary)] text-[var(--foreground)]'
@@ -639,13 +671,13 @@ export default function OutfitCalendar() {
 
                   {/* Weather Icon + Temperature below number */}
                   {dayWeather && (
-                    <div className="flex items-center justify-center gap-0.5 leading-none mt-0.5">
+                    <div className="flex items-center justify-center gap-0.5 sm:gap-1 leading-none mt-0.5 max-w-full">
                       <WeatherIcon
                         condition={dayWeather.condition}
-                        className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0"
+                        className="w-4 h-4 sm:w-5 sm:h-5 shrink-0"
                         onPink={isToday}
                       />
-                      <span className={`text-[10px] sm:text-[11px] font-medium tabular-nums ${isToday ? 'text-white/95' : 'text-[var(--foreground-secondary)]'}`}>
+                      <span className={`text-[10px] sm:text-xs font-medium tabular-nums ${isToday ? 'text-white/95' : 'text-[var(--foreground-secondary)]'}`}>
                         {dayWeather.temp}°
                       </span>
                     </div>
@@ -655,7 +687,7 @@ export default function OutfitCalendar() {
                   {hasOutfits && (
                     <div className="relative flex items-center justify-center mt-0.5">
                       <div className={`rounded-full shadow-sm p-1 sm:p-1.5 z-10 ${isToday ? 'bg-white text-[var(--brand-pink)]' : 'bg-[var(--brand-pink)] text-white'}`}>
-                         <Shirt className={`w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 ${isToday ? 'fill-current' : ''}`} />
+                         <Shirt className={`w-3 h-3 sm:w-4 sm:h-4 ${isToday ? 'fill-current' : ''}`} />
                       </div>
                       {dayOutfits.length > 1 && (
                         <div className={`absolute -top-1.5 -right-1.5 sm:-top-2 sm:-right-2 w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center text-[9px] sm:text-[11px] font-bold z-20 shadow-sm border border-white dark:border-[#111] ${isToday ? 'bg-black text-white dark:bg-white dark:text-black' : 'bg-[var(--foreground)] text-[var(--background)]'}`}>
@@ -760,7 +792,7 @@ export default function OutfitCalendar() {
                   {selectedDayWeather ? (
                     <>
                       <div className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--foreground)]">
-                        <WeatherIcon condition={selectedDayWeather.condition} className="w-4 h-4" />
+                        <WeatherIcon condition={selectedDayWeather.condition} className="w-5 h-5" />
                         <span className="tabular-nums">{selectedDayWeather.temp}°</span>
                         <span className="text-[var(--foreground-secondary)] font-normal">· {selectedDayWeather.label}</span>
                       </div>
