@@ -92,11 +92,15 @@ export default function SponsoredAdCard({
   className = '',
 }: SponsoredAdCardProps) {
   const router = useRouter();
-  const { user } = useUser();
+  const { user, isPremium } = useUser();
 
   const variant = useMemo(() => {
     return KLOE_PROMO_VARIANTS[index % KLOE_PROMO_VARIANTS.length] || KLOE_PROMO_VARIANTS[0];
   }, [index]);
+
+  if (isPremium()) {
+    return null;
+  }
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();

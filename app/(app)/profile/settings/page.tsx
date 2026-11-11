@@ -31,6 +31,7 @@ import {
     User,
     ChevronRight,
     HelpCircle,
+    LayoutGrid,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import FeedbackModal from '@/components/FeedbackModal';
@@ -584,7 +585,22 @@ export default function SettingsPage() {
                     <h2 className="text-sm font-semibold text-[var(--foreground-secondary)] uppercase tracking-wider mb-4">
                         Soporte y Ayuda
                     </h2>
-                    <Card className="overflow-hidden">
+                    <Card className="overflow-hidden divide-y divide-[var(--border-color)]">
+                        <Link
+                            href="/widgets"
+                            className="w-full flex items-center gap-4 p-4 cursor-pointer hover:bg-[var(--background-secondary)] transition-colors text-left"
+                        >
+                            <div className="w-10 h-10 rounded-xl bg-[var(--brand-pink)]/10 flex items-center justify-center shrink-0">
+                                <LayoutGrid className="w-5 h-5 text-[var(--brand-pink)]" />
+                            </div>
+                            <div className="flex-1">
+                                <div className="font-medium text-[var(--foreground)]">Widgets de iOS</div>
+                                <div className="text-xs text-[var(--foreground-tertiary)]">
+                                    Vista previa de tu outfit de hoy y temperatura para la pantalla de inicio
+                                </div>
+                            </div>
+                            <ChevronRight className="w-4 h-4 text-[var(--foreground-tertiary)] shrink-0" />
+                        </Link>
                         <button
                             type="button"
                             onClick={() => setShowFeedbackModal(true)}

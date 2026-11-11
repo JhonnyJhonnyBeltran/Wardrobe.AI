@@ -16,8 +16,8 @@ const userLimits = new Map<string, RateLimitRecord>();
 const ipLimits = new Map<string, number[]>();
 
 // Configuration Limits
-export const MAX_PER_DAY_FREE = 3;        // 3 daily queries for free tier
-export const MAX_PER_DAY_PREMIUM = 35;    // 35 daily queries for Kloe Pro
+export const MAX_PER_DAY_FREE = 4;        // 4 daily queries for free tier
+export const MAX_PER_DAY_PREMIUM = 35;    // 35 daily queries for Kloe Pro (mathematical daily ceiling)
 const MAX_PER_MINUTE_USER = 8;            // Max 8 requests/minute per user (anti-burst)
 const MAX_TOKENS_PER_DAY_FREE = 18000;    // Max token budget free
 const MAX_TOKENS_PER_DAY_PREMIUM = 80000; // Max token budget premium

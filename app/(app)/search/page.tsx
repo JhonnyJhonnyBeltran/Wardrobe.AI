@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useRef, useCallback, Fragment } from 'react';
-import { Search as SearchIcon, X, Users, Image as ImageIcon, UserPlus, Check, Clock, Trash2, Star } from 'lucide-react';
+import { Search as SearchIcon, X, Users, Image as ImageIcon, UserPlus, Check, Clock, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import PostCard, { type Post } from '@/components/Feed/PostCard';
 import SponsoredAdCard from '@/components/Feed/SponsoredAdCard';
 import { EmptyState, InfiniteScrollFooter, PullToRefresh, SkeletonSearch, SkeletonUserList } from '@/components';
@@ -41,8 +41,10 @@ export default function SearchPage() {
 
   const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
   const [pendingRequestIds, setPendingRequestIds] = useState<Set<string>>(new Set());
-  const { user } = useUser();
+  const { user, isPremium } = useUser();
   const { showModal } = useUiStore();
+
+  const chipsScrollRef = useRef<HTMLDivElement | null>(null);
 
   // Pagination states
   const [postsLoadingMore, setPostsLoadingMore] = useState(false);
@@ -682,18 +684,24 @@ export default function SearchPage() {
       });
     }
 
-    // 3. Add default curated categories / popular brands
+    // 3. Add curated popular & most-searched categories / brands
     const defaultPopular = [
       'Sudaderas',
       'Scuffers',
+      'Nike',
       'Zapatos',
       'Chaquetas',
       'Pantalones',
-      'Nike',
       'Blazer',
       'Oversized',
       'Zara',
-      'Accesorios'
+      'Accesorios',
+      'Básicos',
+      'Denim',
+      'Sneakers',
+      'Vintage',
+      'Cargo',
+      'Camisas',
     ];
 
     defaultPopular.forEach(tag => {
@@ -705,6 +713,57 @@ export default function SearchPage() {
 
     return chips;
   }, [history, user?.preferredStyles]);
+
+  const loopedChips = useMemo(() => {
+    if (recommendationChips.length === 0) return [];
+    return [0, 1, 2].flatMap((loopIndex) =>
+      recommendationChips.map((chip) => ({
+        ...chip,
+        loopKey: `${loopIndex}-${chip.text}`,
+      }))
+    );
+  }, [recommendationChips]);
+
+  useEffect(() => {
+    const el = chipsScrollRef.current;
+    if (!el || recommendationChips.length === 0) return;
+    const raf = requestAnimationFrame(() => {
+      const oneLoop = el.scrollWidth / 3;
+      if (oneLoop > 0 && el.scrollLeft < 10) {
+        el.scrollLeft = oneLoop;
+      }
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [recommendationChips.length]);
+
+  const handleChipsInfiniteScroll = () => {
+    const el = chipsScrollRef.current;
+    if (!el) return;
+    const oneLoop = el.scrollWidth / 3;
+    if (oneLoop <= 0) return;
+    if (el.scrollLeft < oneLoop * 0.25) {
+      el.scrollLeft += oneLoop;
+    } else if (el.scrollLeft > oneLoop * 2.25) {
+      el.scrollLeft -= oneLoop;
+    }
+  };
+
+  const scrollChipsCarousel = (direction: 'left' | 'right') => {
+    const el = chipsScrollRef.current;
+    if (!el) return;
+    const oneLoop = el.scrollWidth / 3;
+    if (oneLoop > 0) {
+      if (direction === 'left' && el.scrollLeft < oneLoop * 0.45) {
+        el.scrollLeft += oneLoop;
+      } else if (direction === 'right' && el.scrollLeft > oneLoop * 1.95) {
+        el.scrollLeft -= oneLoop;
+      }
+    }
+    el.scrollBy({
+      left: direction === 'left' ? -260 : 260,
+      behavior: 'smooth',
+    });
+  };
 
   return (
     <div className="min-h-[100dvh] w-full bg-[var(--background)] pb-24">
@@ -741,37 +800,60 @@ export default function SearchPage() {
       {/* Search Content with inline Pull-to-Refresh above results */}
       <PullToRefresh onRefresh={handleRefresh} className="pt-[70px] sm:pt-[74px] md:pt-[78px]">
         <div className="w-full max-w-7xl mx-auto px-3 md:px-6 pt-2 pb-6 flex flex-col gap-6 min-w-0">
-          {/* Horizontally Scrollable Dynamic Recommendation Chips (Scrolls with page, NOT sticky) */}
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1 px-0.5">
-            {recommendationChips.map((chip) => {
-              const isSelected = query.toLowerCase() === chip.text.toLowerCase();
-              return (
-                <button
-                  key={chip.text}
-                  onClick={() => {
-                    if (isSelected) {
-                      setQuery('');
-                      setDebouncedQuery('');
-                    } else {
-                      setQuery(chip.text);
-                      setDebouncedQuery(chip.text);
-                      addSearch(chip.text);
-                    }
-                  }}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all border shrink-0 flex items-center gap-1.5 ${
-                    isSelected
-                      ? 'bg-[var(--brand-pink)] text-white border-[var(--brand-pink)] shadow-sm'
-                      : chip.isHistory
-                      ? 'bg-[var(--background-secondary)] text-[var(--foreground)] border-[var(--border-color)] hover:border-[var(--brand-pink)]/40 hover:bg-[var(--card-bg)]'
-                      : 'bg-[var(--card-bg)] text-[var(--foreground-secondary)] hover:text-[var(--foreground)] border-[var(--border-color)] hover:border-[var(--brand-pink)]/40 active:scale-95'
-                  }`}
-                >
-                  {chip.isHistory && <Clock className="w-3 h-3 text-[var(--brand-pink)] shrink-0" />}
-                  {chip.isPreferred && !chip.isHistory && <Star className="w-3 h-3 text-amber-400 shrink-0" />}
-                  <span>{chip.text}</span>
-                </button>
-              );
-            })}
+          {/* Infinite Horizontal Suggestion Pills Carousel with Edge Fades (No icons inside pills) */}
+          <div className="relative w-full flex items-center gap-2 min-w-0">
+            <button
+              type="button"
+              onClick={() => scrollChipsCarousel('left')}
+              aria-label="Deslizar sugerencias a la izquierda"
+              className="hidden md:flex items-center justify-center w-8 h-8 rounded-full bg-[var(--card-bg)] border border-[var(--border-color)] text-[var(--foreground-secondary)] hover:text-[var(--foreground)] hover:border-[var(--brand-pink)]/50 shadow-xs transition-all active:scale-90 shrink-0 cursor-pointer"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+
+            <div
+              ref={chipsScrollRef}
+              onScroll={handleChipsInfiniteScroll}
+              className="flex-1 min-w-0 flex items-center gap-2 overflow-x-auto no-scrollbar py-1.5 px-6 sm:px-8 touch-pan-x [mask-image:linear-gradient(to_right,transparent_0%,black_28px,black_calc(100%-28px),transparent_100%)] md:[mask-image:linear-gradient(to_right,transparent_0%,black_40px,black_calc(100%-40px),transparent_100%)]"
+            >
+              {loopedChips.map((chip) => {
+                const isSelected = query.toLowerCase() === chip.text.toLowerCase();
+                return (
+                  <button
+                    key={chip.loopKey}
+                    type="button"
+                    onClick={() => {
+                      if (isSelected) {
+                        setQuery('');
+                        setDebouncedQuery('');
+                      } else {
+                        setQuery(chip.text);
+                        setDebouncedQuery(chip.text);
+                        addSearch(chip.text);
+                      }
+                    }}
+                    className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all border shrink-0 cursor-pointer active:scale-95 ${
+                      isSelected
+                        ? 'bg-[var(--brand-pink)] text-white border-[var(--brand-pink)] shadow-xs'
+                        : chip.isHistory
+                        ? 'bg-[var(--background-secondary)] text-[var(--foreground)] border-[var(--border-color)] hover:border-[var(--brand-pink)]/40 hover:bg-[var(--card-bg)]'
+                        : 'bg-[var(--card-bg)] text-[var(--foreground-secondary)] hover:text-[var(--foreground)] border-[var(--border-color)] hover:border-[var(--brand-pink)]/40'
+                    }`}
+                  >
+                    <span>{chip.text}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => scrollChipsCarousel('right')}
+              aria-label="Deslizar sugerencias a la derecha"
+              className="hidden md:flex items-center justify-center w-8 h-8 rounded-full bg-[var(--card-bg)] border border-[var(--border-color)] text-[var(--foreground-secondary)] hover:text-[var(--foreground)] hover:border-[var(--brand-pink)]/50 shadow-xs transition-all active:scale-90 shrink-0 cursor-pointer"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
           </div>
         {loading ? (
           query ? (
@@ -926,7 +1008,7 @@ export default function SearchPage() {
                           <div className="break-inside-avoid mb-6">
                             <PostCard post={post} />
                           </div>
-                          {(index + 1) % 10 === 0 && (
+                          {!isPremium() && (index + 1) % 10 === 0 && (
                             <div key={`search-sponsored-ad-${index}`} className="break-inside-avoid mb-6">
                               <SponsoredAdCard index={index} />
                             </div>

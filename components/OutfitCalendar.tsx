@@ -523,7 +523,7 @@ export default function OutfitCalendar() {
 
   return (
     <div className="w-full flex flex-col pt-2 pb-12">
-      <div className="px-4 max-w-6xl mx-auto w-full flex flex-col lg:flex-row gap-6 lg:gap-8 items-start">
+      <div className="px-3 sm:px-4 max-w-7xl mx-auto w-full flex flex-col lg:flex-row gap-6 lg:gap-8 items-start">
         {/* Today's Outfit Highlight */}
         <AnimatePresence mode="popLayout">
           {todayOutfits.length > 0 && (
@@ -532,7 +532,7 @@ export default function OutfitCalendar() {
               initial={{ opacity: 0, scale: 0.9, width: '100%' }}
               animate={{ opacity: 1, scale: 1, width: '100%' }}
               exit={{ opacity: 0, scale: 0.9, width: 0 }}
-              className="lg:w-1/3 lg:max-w-sm shrink-0 w-full mb-8 lg:mb-0"
+              className="lg:w-[310px] xl:w-[340px] shrink-0 w-full mb-6 lg:mb-0"
             >
               {/* Desktop City & Weather Card above Outfit de Hoy (same style as Month header) */}
               <button
@@ -584,7 +584,7 @@ export default function OutfitCalendar() {
         </AnimatePresence>
 
         {/* Calendar Section */}
-        <motion.div layout className="flex-1 w-full flex flex-col">
+        <motion.div layout className="flex-1 min-w-0 w-full flex flex-col">
           {/* Header */}
           <div className={`flex items-center justify-between ${todayOutfits.length > 0 ? 'mb-3 lg:mb-6' : 'mb-3'} bg-[var(--card-bg)] p-4 rounded-3xl shadow-sm border border-[var(--border-color)]`}>
             <button onClick={handlePrevMonth} className="p-2 rounded-full hover:bg-[var(--background-secondary)] text-[var(--foreground)] transition-colors cursor-pointer">
@@ -629,9 +629,9 @@ export default function OutfitCalendar() {
           </div>
 
           {/* Calendar Grid */}
-          <div className="bg-[var(--card-bg)] rounded-3xl p-4 sm:p-6 shadow-sm border border-[var(--border-color)]">
+          <div className="bg-[var(--card-bg)] rounded-3xl p-3 sm:p-6 shadow-sm border border-[var(--border-color)]">
           {/* Days Header */}
-          <div className="grid grid-cols-7 mb-4">
+          <div className="grid grid-cols-7 gap-1 sm:gap-2 mb-3 sm:mb-4">
             {dayNames.map((day, i) => (
               <div key={i} className="text-center text-xs sm:text-sm font-semibold text-[var(--foreground-tertiary)] uppercase">
                 {day}
@@ -643,7 +643,7 @@ export default function OutfitCalendar() {
           <div className="grid grid-cols-7 gap-1 sm:gap-2">
             {/* Empty Offset Days */}
             {Array.from({ length: startOffset }).map((_, i) => (
-              <div key={`empty-${i}`} className="min-h-[76px] sm:min-h-[92px] sm:aspect-[4/3] rounded-xl opacity-0" />
+              <div key={`empty-${i}`} className="w-full min-h-[72px] sm:min-h-[88px] lg:min-h-[94px] rounded-xl opacity-0 pointer-events-none" />
             ))}
             
             {/* Actual Days */}
@@ -659,9 +659,9 @@ export default function OutfitCalendar() {
                 <button
                   key={`day-${i}`}
                   onClick={() => setSelectedDate(dayDate)}
-                  className={`relative min-h-[76px] sm:min-h-[92px] sm:aspect-[4/3] rounded-xl sm:rounded-2xl flex flex-col items-center justify-start gap-0.5 sm:gap-1 py-1.5 px-0.5 sm:p-2 min-w-0 transition-all cursor-pointer ${
+                  className={`relative w-full min-h-[72px] sm:min-h-[88px] lg:min-h-[94px] min-w-0 rounded-xl sm:rounded-2xl flex flex-col items-center justify-start gap-0.5 sm:gap-1 py-1.5 px-0.5 sm:p-2 transition-colors cursor-pointer ${
                     isToday 
-                      ? 'bg-[var(--brand-pink)] text-white shadow-lg' 
+                      ? 'bg-[var(--brand-pink)] text-white shadow-md' 
                       : 'hover:bg-[var(--background-secondary)] text-[var(--foreground)]'
                   } ${hasOutfits && !isToday ? 'border-2 border-[var(--brand-pink)]/30' : 'border border-transparent'}`}
                 >

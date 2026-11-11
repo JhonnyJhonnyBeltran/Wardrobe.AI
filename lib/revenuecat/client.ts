@@ -202,7 +202,248 @@ export interface PaywallPresentationResult {
   purchasedOrRestored: boolean;
   cancelled: boolean;
   error?: string;
-  fallbackToStripe?: boolean;
+}
+
+export interface RevenueCatPlanPricing {
+  yearlyPrice: string;
+  yearlyMonthlyPrice: string;
+  monthlyPrice: string;
+  hasLiveOffering: boolean;
+}
+
+const DEFAULT_PLAN_PRICING: RevenueCatPlanPricing = {
+  yearlyPrice: '24,99 €',
+  yearlyMonthlyPrice: '~2,08 €/mes',
+  monthlyPrice: '2,99 €',
+  hasLiveOffering: false,
+};
+
+function selectNativePackage(offering: any, plan: 'monthly' | 'yearly') {
+  if (!offering) return null;
+  if (plan === 'yearly') {
+    if (offering.annual) return offering.annual;
+  } else {
+    if (offering.monthly) return offering.monthly;
+  }
+  const pkgs: any[] = Array.isArray(offering.availablePackages) ? offering.availablePackages : [];
+  return (
+    pkgs.find((p) => {
+      const id = String(p?.identifier || '').toLowerCase();
+      const type = String(p?.packageType || '').toLowerCase();
+      return plan === 'yearly'
+        ? type === 'annual' || id.includes('annual') || id.includes('year')
+        : type === 'monthly' || id.includes('month');
+    }) || null
+  );
+}
+
+function selectWebPackage(offering: any, plan: 'monthly' | 'yearly') {
+  if (!offering) return null;
+  if (plan === 'yearly' && offering.annual) return offering.annual;
+  if (plan === 'monthly' && offering.monthly) return offering.monthly;
+  const pkgs: any[] = Array.isArray(offering.availablePackages) ? offering.availablePackages : [];
+  return (
+    pkgs.find((p) => {
+      const id = String(p?.identifier || '').toLowerCase();
+      const type = String(p?.packageType || '').toLowerCase();
+      return plan === 'yearly'
+        ? type.includes('annual') || id.includes('annual') || id.includes('year')
+        : type.includes('month') || id.includes('month');
+    }) || null
+  );
+}
+
+/**
+ * Fetches active RevenueCat offerings & localized plan prices for our custom Kloe paywall,
+ * and records a custom paywall impression on Web.
+ */
+export async function fetchRevenueCatOfferings(appUserId?: string): Promise<RevenueCatPlanPricing> {
+  if (typeof window === 'undefined') return DEFAULT_PLAN_PRICING;
+
+  try {
+    await initRevenueCat(appUserId);
+
+    if (isNativeCapacitor()) {
+      const { Purchases } = await import('@revenuecat/purchases-capacitor');
+      const offerings = await Purchases.getOfferings();
+      const current = offerings?.current;
+      if (!current) return DEFAULT_PLAN_PRICING;
+
+      const annualPkg = selectNativePackage(current, 'yearly');
+      const monthlyPkg = selectNativePackage(current, 'monthly');
+      const rawAnnual = annualPkg?.product?.priceString;
+      const rawMonthly = monthlyPkg?.product?.priceString;
+      const annualPriceNumber = typeof annualPkg?.product?.price === 'number' ? annualPkg.product.price : null;
+
+      return {
+        yearlyPrice: rawAnnual || DEFAULT_PLAN_PRICING.yearlyPrice,
+        yearlyMonthlyPrice: annualPriceNumber
+          ? `~${(annualPriceNumber / 12).toFixed(2).replace('.', ',')} €/mes`
+          : DEFAULT_PLAN_PRICING.yearlyMonthlyPrice,
+        monthlyPrice: rawMonthly || DEFAULT_PLAN_PRICING.monthlyPrice,
+        hasLiveOffering: Boolean(annualPkg || monthlyPkg),
+      };
+    }
+
+    const { Purchases } = await import('@revenuecat/purchases-js');
+    if (!Purchases.isConfigured()) return DEFAULT_PLAN_PRICING;
+
+    const shared = Purchases.getSharedInstance();
+    const offerings = await shared.getOfferings();
+    const current = offerings?.current;
+    if (!current) return DEFAULT_PLAN_PRICING;
+
+    try {
+      shared.trackCustomPaywallImpression({
+        paywallId: 'klozet_kloe_custom_paywall',
+        offering: current,
+      });
+    } catch {
+      // Telemetry failure never blocks paywall presentation
+    }
+
+    const annualPkg = selectWebPackage(current, 'yearly');
+    const monthlyPkg = selectWebPackage(current, 'monthly');
+
+    const annualPriceObj = annualPkg?.product?.currentPrice;
+    const monthlyPriceObj = monthlyPkg?.product?.currentPrice;
+    const perMonthFromAnnual = annualPkg?.product?.defaultSubscriptionOption?.base?.pricePerMonth?.formattedPrice;
+
+    return {
+      yearlyPrice: annualPriceObj?.formattedPrice || DEFAULT_PLAN_PRICING.yearlyPrice,
+      yearlyMonthlyPrice: perMonthFromAnnual
+        ? `~${perMonthFromAnnual}/mes`
+        : annualPriceObj?.amountMicros
+          ? `~${(annualPriceObj.amountMicros / 1_000_000 / 12).toFixed(2).replace('.', ',')} €/mes`
+          : DEFAULT_PLAN_PRICING.yearlyMonthlyPrice,
+      monthlyPrice: monthlyPriceObj?.formattedPrice || DEFAULT_PLAN_PRICING.monthlyPrice,
+      hasLiveOffering: Boolean(annualPkg || monthlyPkg),
+    };
+  } catch (err) {
+    console.warn('[RevenueCat] fetchRevenueCatOfferings fallback to default prices:', err);
+    return DEFAULT_PLAN_PRICING;
+  }
+}
+
+/**
+ * Purchases the chosen Klozet Pro plan directly via RevenueCat (Native StoreKit / Play Store or Web Billing).
+ * Powers our custom Kloe paywall UI with zero Stripe involvement.
+ */
+export async function purchaseRevenueCatPlan(params: {
+  plan: 'monthly' | 'yearly';
+  appUserId?: string;
+  customerEmail?: string;
+  htmlTarget?: HTMLElement | null;
+}): Promise<PaywallPresentationResult> {
+  if (typeof window === 'undefined') {
+    return { purchasedOrRestored: false, cancelled: false, error: 'Compras disponibles solo en cliente.' };
+  }
+
+  try {
+    await initRevenueCat(params.appUserId);
+
+    // 1. Native iOS (App Store / StoreKit) or Android via Capacitor
+    if (isNativeCapacitor()) {
+      const { Purchases } = await import('@revenuecat/purchases-capacitor');
+      const offerings = await Purchases.getOfferings();
+      const targetPkg = selectNativePackage(offerings?.current, params.plan);
+
+      if (targetPkg) {
+        try {
+          const { customerInfo } = await Purchases.purchasePackage({ aPackage: targetPkg });
+          const entitlement = customerInfo?.entitlements?.active?.[REVENUECAT_ENTITLEMENT_ID];
+          const apiKey = getRevenueCatApiKey(Capacitor.getPlatform() === 'android' ? 'android' : 'ios');
+          const isTestKey = apiKey.startsWith('test_');
+
+          await syncRevenueCatEntitlementToBackend({
+            source: 'native',
+            isTestStorePurchase: isTestKey || Boolean(entitlement?.isSandbox),
+            productIdentifier: entitlement?.productIdentifier || targetPkg?.product?.identifier,
+          });
+
+          return { purchasedOrRestored: true, cancelled: false };
+        } catch (err: any) {
+          if (err?.userCancelled === true || err?.code === 1 || String(err?.code) === '1') {
+            return { purchasedOrRestored: false, cancelled: true };
+          }
+          throw err;
+        }
+      }
+
+      // Fallback to native RevenueCat sheet if package wasn't mapped directly
+      return await presentNativePaywall(params.appUserId);
+    }
+
+    // 2. Web Browser via @revenuecat/purchases-js
+    const { Purchases, ErrorCode } = await import('@revenuecat/purchases-js');
+    if (!Purchases.isConfigured()) {
+      return {
+        purchasedOrRestored: false,
+        cancelled: false,
+        error: 'RevenueCat no está inicializado todavía. Recarga e inténtalo de nuevo.',
+      };
+    }
+
+    const shared = Purchases.getSharedInstance();
+    const offerings = await shared.getOfferings();
+    const targetPkg = selectWebPackage(offerings?.current, params.plan);
+
+    if (!targetPkg) {
+      return {
+        purchasedOrRestored: false,
+        cancelled: false,
+        error: 'No se encontró el paquete seleccionado en tu Offering activo de RevenueCat.',
+      };
+    }
+
+    const purchaseResult = await shared.purchase({
+      rcPackage: targetPkg,
+      customerEmail: params.customerEmail,
+      htmlTarget: params.htmlTarget ?? undefined,
+      selectedLocale: 'es',
+    });
+
+    const entitlement = purchaseResult?.customerInfo?.entitlements?.active?.[REVENUECAT_ENTITLEMENT_ID];
+    const isTestKey = getRevenueCatApiKey('web').startsWith('test_');
+
+    if (entitlement || purchaseResult?.storeTransaction) {
+      await syncRevenueCatEntitlementToBackend({
+        source: 'web',
+        isTestStorePurchase: isTestKey || shared.isSandbox(),
+        productIdentifier: entitlement?.productIdentifier || targetPkg.product.identifier,
+      });
+      return { purchasedOrRestored: true, cancelled: false };
+    }
+
+    return { purchasedOrRestored: false, cancelled: true };
+  } catch (err: any) {
+    const msg = String(err?.message || '').toLowerCase();
+    const code = err?.errorCode ?? err?.code;
+    if (
+      err?.userCancelled === true ||
+      code === 1 ||
+      msg.includes('cancel') ||
+      msg.includes('closed') ||
+      msg.includes('abort')
+    ) {
+      return { purchasedOrRestored: false, cancelled: true };
+    }
+
+    // Dynamic check for purchases-js ErrorCode.UserCancelledError (value 1)
+    try {
+      const { ErrorCode } = await import('@revenuecat/purchases-js');
+      if (code === ErrorCode.UserCancelledError) {
+        return { purchasedOrRestored: false, cancelled: true };
+      }
+    } catch {}
+
+    console.error('[RevenueCat] purchaseRevenueCatPlan error:', err);
+    return {
+      purchasedOrRestored: false,
+      cancelled: false,
+      error: err?.underlyingErrorMessage || err?.message || 'No se pudo iniciar la compra con RevenueCat.',
+    };
+  }
 }
 
 /**
@@ -210,7 +451,7 @@ export interface PaywallPresentationResult {
  */
 export async function presentNativePaywall(appUserId?: string): Promise<PaywallPresentationResult> {
   if (typeof window === 'undefined' || !isNativeCapacitor()) {
-    return { purchasedOrRestored: false, cancelled: false, fallbackToStripe: true };
+    return { purchasedOrRestored: false, cancelled: false, error: 'Paywall nativa disponible solo en la app iOS/Android.' };
   }
 
   try {
@@ -238,7 +479,6 @@ export async function presentNativePaywall(appUserId?: string): Promise<PaywallP
     }
 
     if (result === PAYWALL_RESULT.CANCELLED) {
-      // Double-check if user tapped "Restore" inside the sheet before closing
       const hasPro = await checkKlozetProEntitlement();
       if (hasPro) {
         const apiKey = getRevenueCatApiKey(Capacitor.getPlatform() === 'android' ? 'android' : 'ios');
@@ -268,7 +508,6 @@ export async function presentNativePaywall(appUserId?: string): Promise<PaywallP
 
 /**
  * Presents a RevenueCat Web Paywall inside an HTML target container (@revenuecat/purchases-js).
- * Falls back cleanly if Web Billing is not yet linked in the RevenueCat Dashboard.
  */
 export async function presentWebPaywall(params: {
   htmlTarget: HTMLElement;
@@ -277,7 +516,7 @@ export async function presentWebPaywall(params: {
   onBack?: () => void;
 }): Promise<PaywallPresentationResult> {
   if (typeof window === 'undefined') {
-    return { purchasedOrRestored: false, cancelled: false, fallbackToStripe: true };
+    return { purchasedOrRestored: false, cancelled: false, error: 'Disponible solo en navegador.' };
   }
 
   try {
@@ -285,7 +524,7 @@ export async function presentWebPaywall(params: {
     const { Purchases } = await import('@revenuecat/purchases-js');
 
     if (!Purchases.isConfigured()) {
-      return { purchasedOrRestored: false, cancelled: false, fallbackToStripe: true };
+      return { purchasedOrRestored: false, cancelled: false, error: 'RevenueCat Web no configurado.' };
     }
 
     const purchaseResult = await Purchases.getSharedInstance().presentPaywall({
@@ -313,17 +552,13 @@ export async function presentWebPaywall(params: {
     return { purchasedOrRestored: false, cancelled: true };
   } catch (err: any) {
     const msg = String(err?.message || '').toLowerCase();
-    // If user closed / cancelled, respect cancellation
     if (msg.includes('cancel') || msg.includes('closed') || msg.includes('abort')) {
       return { purchasedOrRestored: false, cancelled: true };
     }
-    // Otherwise signal fallback to existing Stripe Embedded Checkout on web
-    console.warn('[RevenueCat] Web paywall unavailable, falling back to Stripe:', err?.message || err);
     return {
       purchasedOrRestored: false,
       cancelled: false,
-      fallbackToStripe: true,
-      error: err?.message,
+      error: err?.message || 'RevenueCat Web Billing no disponible todavía en el proyecto.',
     };
   }
 }

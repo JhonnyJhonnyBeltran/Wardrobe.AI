@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { checkRateLimit, checkIpRateLimit, getUserQuotaStatus, getMadridDayKey } from '@/lib/closy/rateLimiter';
+import {
+  checkRateLimit,
+  checkIpRateLimit,
+  getUserQuotaStatus,
+  getMadridDayKey,
+  MAX_PER_DAY_FREE,
+  MAX_PER_DAY_PREMIUM,
+} from '@/lib/closy/rateLimiter';
 import { buildUserStylingContext } from '@/lib/closy/contextIndexer';
 import { getFastCourtesyResponse } from '@/lib/closy/fastResponses';
 import { resolveImageUrl } from '@/lib/imageUtils';
@@ -253,25 +260,25 @@ export async function POST(request: NextRequest) {
       userProfile?.subscription_status === 'active'
     );
 
-    // 5. Apply Persistent Database + Memory Rate Limiting (Free: 3 daily, Premium: 35 daily, reset 00:00 Madrid)
+    // 5. Apply Persistent Database + Memory Rate Limiting (Free: 4 daily, Premium: 35 daily, reset 00:00 Madrid)
     const todayKey = getMadridDayKey();
     const dbDailyCount = ((userProfile as any)?.ai_daily_usage_date === todayKey)
       ? Number((userProfile as any)?.ai_daily_usage_count || 0)
       : 0;
 
-    const FREE_CHAT_LIMIT = 3;
-    const PREMIUM_CHAT_LIMIT = 35;
+    const FREE_CHAT_LIMIT = MAX_PER_DAY_FREE;
+    const PREMIUM_CHAT_LIMIT = MAX_PER_DAY_PREMIUM;
     const activeLimit = isPremium ? PREMIUM_CHAT_LIMIT : FREE_CHAT_LIMIT;
 
     if (dbDailyCount >= activeLimit) {
       return NextResponse.json(
         { 
           error: isPremium 
-            ? 'Has agotado tus 35 consultas diarias con Kloe. Tu límite se restablecerá a las 00:00 (hora peninsular).' 
-            : 'Has agotado tus 3 consultas gratuitas de hoy con Kloe. Tu límite se restablecerá a las 00:00 (hora peninsular) o desbloquea Kloe Pro para 35 consultas diarias.',
+            ? `Has agotado tus ${PREMIUM_CHAT_LIMIT} consultas diarias con Kloe. Tu límite se restablecerá a las 00:00 (hora peninsular).` 
+            : `Has agotado tus ${FREE_CHAT_LIMIT} consultas gratuitas de hoy con Kloe. Tu límite se restablecerá a las 00:00 (hora peninsular) o desbloquea Kloe Pro para ${PREMIUM_CHAT_LIMIT} consultas diarias.`,
           message: isPremium 
-            ? 'Has agotado tus 35 consultas diarias con Kloe. Tu límite se restablecerá a las 00:00 (hora peninsular).' 
-            : 'Has agotado tus 3 consultas gratuitas de hoy con Kloe. Tu límite se restablecerá a las 00:00 (hora peninsular) o desbloquea Kloe Pro para 35 consultas diarias.',
+            ? `Has agotado tus ${PREMIUM_CHAT_LIMIT} consultas diarias con Kloe. Tu límite se restablecerá a las 00:00 (hora peninsular).` 
+            : `Has agotado tus ${FREE_CHAT_LIMIT} consultas gratuitas de hoy con Kloe. Tu límite se restablecerá a las 00:00 (hora peninsular) o desbloquea Kloe Pro para ${PREMIUM_CHAT_LIMIT} consultas diarias.`,
           limitReached: true,
           isDailyLimit: true,
           isPremium,
@@ -460,7 +467,7 @@ export async function GET() {
 
     const { data: userProfile } = await supabase
       .from('profiles')
-      .select('id, is_premium, subscription_tier, subscription_status, username, full_name')
+      .select('id, is_premium, subscription_tier, subscription_status, username, full_name, ai_daily_usage_date, ai_daily_usage_count')
       .eq('id', user.id)
       .maybeSingle();
 
@@ -476,15 +483,20 @@ export async function GET() {
       userProfile?.subscription_status === 'active'
     );
 
-    const { getUserQuotaStatus } = await import('@/lib/closy/rateLimiter');
     const quota = getUserQuotaStatus(user.id, isPremium);
+    const todayKey = getMadridDayKey();
+    const dbDailyCount = ((userProfile as any)?.ai_daily_usage_date === todayKey)
+      ? Number((userProfile as any)?.ai_daily_usage_count || 0)
+      : 0;
+    const usedToday = Math.max(quota.usedToday, dbDailyCount);
+    const remainingDay = Math.max(0, quota.dailyLimit - usedToday);
 
     return NextResponse.json({
       isPremium,
       dailyLimit: quota.dailyLimit,
-      usedToday: quota.usedToday,
-      remainingDay: quota.remainingDay,
-      limitReached: quota.remainingDay <= 0
+      usedToday,
+      remainingDay,
+      limitReached: remainingDay <= 0
     });
   } catch (err: any) {
     return NextResponse.json({ error: err?.message || 'Error checking quota' }, { status: 500 });

@@ -3543,3 +3543,24 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
   - Título en hover de tarjetas de outfit (`OutfitCard.tsx` y `OutfitCalendar.tsx`) alineado abajo a la izquierda (`justify-start`) sobre degradado inferior sutil (`from-black/[0.09] to-transparent`).
   - En ordenador (`lg:`+), tarjeta de ciudad y tiempo situada encima de `"Outfit de Hoy"` replicando el estilo exacto de la cabecera de mes (`bg-[var(--card-bg)] p-4 rounded-3xl border shadow-sm`); icono de lluvia (`CloudRain`) unificado a rosa de marca (`--brand-pink`) e iconos meteorológicos y de prenda ampliados manteniendo altura/rejilla uniforme en móvil y escritorio.
   - Botón banner de Kloe en `/closet` (`KloeHeroBanner`): logo `KloeMascot` (`variant="pink"`) y texto del prompt en rosa de marca (`text-[var(--brand-pink)]`).
+
+---
+
+## 64. Paywall Personalizada RevenueCat con Kloe, Cuota Free a 4, Widgets iOS, Fix Calendario y Carrusel de Búsqueda (Noviembre 2026)
+- **Paywall Personalizada con RevenueCat (`lib/revenuecat/client.ts`, `components/KloeProModal.tsx`, `app/(app)/premium/page.tsx`)**:
+  - Eliminado Stripe de `KloeProModal` y `/premium`: compra directa de paquetes `Offering` mediante RevenueCat (`purchaseRevenueCatPlan` via `@revenuecat/purchases-capacitor` `purchasePackage` en iOS/Android nativo y `@revenuecat/purchases-js` `purchase` en Web) + `fetchRevenueCatOfferings` con precios dinámicos y `trackCustomPaywallImpression`.
+  - Rediseñada con mascota animada `KloeMascot` y las 4 ventajas reales de Klozet Pro:
+    1. Widgets personalizados iOS (cuadrado y alargado).
+    2. Hasta `35` conversaciones diarias con Kloe (`MAX_PER_DAY_PREMIUM`, máximo matemático diario del sistema).
+    3. Envío de prendas del armario y posts guardados a Kloe para asesoría directa.
+    4. Feed y búsqueda 100% libres de anuncios (`SponsoredAdCard` oculta tarjetas para `isPremium()` en `app/(app)/feed/page.tsx` y `app/(app)/search/page.tsx`).
+- **Límite Free de Kloe fijado en 4 y disparo automático de Paywall (`lib/closy/rateLimiter.ts`, `app/api/closy/chat/route.ts`, `app/(app)/closet/kloe/page.tsx`)**:
+  - Actualizado `MAX_PER_DAY_FREE` / `MAX_TRIAL_MESSAGES` de `3` a `4` (y en `GET /api/closy/chat` sincronizada la lectura de `ai_daily_usage_date` + `ai_daily_usage_count` desde Supabase para evitar desfase por cold start).
+  - Disparo automático de `KloeProModal` (`setShowProModal(true)`) en respuestas `429`, al llegar a `remainingDay <= 0` en cuenta Free y al tocar la barra bloqueada inferior.
+- **Widgets iOS Apple (`Obsidian/ios_widgets.md`, `ios/App/KlozetWidgets/`, `app/api/widgets/today/route.ts`, `components/IosWidgetPreview.tsx`, `app/(app)/widgets/page.tsx`)**:
+  - Guardada la referencia `https://github.com/sarahstreza/awesome-ios-widgets` en `Obsidian/ios_widgets.md`.
+  - Creados endpoint `/api/widgets/today`, previsualizador web interactivo (`/widgets` y enlace en Ajustes y Paywall) y extensión SwiftUI/WidgetKit nativa en `ios/App/KlozetWidgets/` (`KlozetWidgetModels.swift`, `KlozetTodayWidget.swift`, App Group `group.es.klozet.app`) en formatos **Cuadrado (`systemSmall`)** y **Alargado (`systemMedium`)** con logo de Kloe, solo temperatura y lugar, outfit de hoy o estado vacío con mascota Kloe + `"Crea un outfit hoy"`.
+- **Corrección de superposición en Calendario (`components/OutfitCalendar.tsx`)**:
+  - Eliminado `sm:aspect-[4/3]` junto a `min-h` que ensanchaba las celdas por encima de su columna `1/7`; aplicado `w-full min-h-[72px] sm:min-h-[88px] lg:min-h-[94px]` y ensanchado contenedor escritorio a `max-w-7xl` con panel izquierdo fijo `lg:w-[310px] xl:w-[340px]`.
+- **Carrusel Infinito de Sugerencias en `/search` (`app/(app)/search/page.tsx`)**:
+  - Eliminados iconos de reloj/estrella dentro de las píldoras, combinadas búsquedas recientes y populares en bucle horizontal infinito (3 copias con reposición continua en `onScroll`), máscara de difuminado alpha en ambos bordes (`mask-image`) y botones carrusel izquierda/derecha visibles solo en escritorio (`md:`+).

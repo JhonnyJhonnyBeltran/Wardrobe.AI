@@ -24,7 +24,7 @@ export default function FeedPage() {
   const [loading, setLoading] = useState(posts.length === 0);
   const [loadingMore, setLoadingMore] = useState(false);
   const [loadError, setLoadError] = useState(false);
-  const { user } = useUser();
+  const { user, isPremium } = useUser();
   const { toggleCreateMenu } = useUiStore();
   const router = useRouter();
 
@@ -412,7 +412,7 @@ export default function FeedPage() {
                       <div className="w-full">
                         <PostCard post={post} />
                       </div>
-                      {(index + 1) % 5 === 0 && (
+                      {!isPremium() && (index + 1) % 5 === 0 && (
                         <div key={`ad-col0-${index}`} className="w-full">
                           <SponsoredAdCard index={index} />
                         </div>
@@ -426,7 +426,7 @@ export default function FeedPage() {
                       <div className="w-full">
                         <PostCard post={post} />
                       </div>
-                      {(index + 1) % 6 === 0 && (
+                      {!isPremium() && (index + 1) % 6 === 0 && (
                         <div key={`ad-col1-${index}`} className="w-full">
                           <SponsoredAdCard index={index + 2} />
                         </div>
@@ -443,7 +443,7 @@ export default function FeedPage() {
                     <div className="break-inside-avoid mb-6">
                       <PostCard post={post} />
                     </div>
-                    {(index + 1) % 8 === 0 && (
+                    {!isPremium() && (index + 1) % 8 === 0 && (
                       <div key={`sponsored-ad-${index}`} className="break-inside-avoid mb-6">
                         <SponsoredAdCard index={index} />
                       </div>

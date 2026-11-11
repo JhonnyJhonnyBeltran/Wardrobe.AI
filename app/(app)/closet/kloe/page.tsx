@@ -89,7 +89,7 @@ interface Conversation {
 
 const getStorageKey = (userId?: string) => userId ? `kloe_conversations_${userId}` : null;
 const MAX_CONVERSATIONS = 5;
-const MAX_TRIAL_MESSAGES = 3;
+const MAX_TRIAL_MESSAGES = 4;
 
 /**
  * Robust thumbnail component that gracefully displays "Prenda borrada"
@@ -770,7 +770,7 @@ export default function KloePage() {
     if (quotaInfo && quotaInfo.remainingDay <= 0) {
       if (!isPremium()) {
         setShowProModal(true);
-        toast.info('Has completado tus 3 consultas gratuitas de hoy');
+        toast.info('Has completado tus 4 consultas gratuitas de hoy');
       } else {
         toast.info('Has alcanzado tus 35 consultas diarias. Se recarga a las 00:00.');
       }
@@ -847,17 +847,18 @@ export default function KloePage() {
           return;
         }
         if (res.status === 429) {
+          const hitPremium = Boolean(data.isPremium ?? isPremium());
           setQuotaInfo({
-            isPremium: data.isPremium ?? isPremium(),
-            dailyLimit: data.dailyLimit ?? (isPremium() ? 35 : MAX_TRIAL_MESSAGES),
-            usedToday: data.usedToday ?? (isPremium() ? 35 : MAX_TRIAL_MESSAGES),
+            isPremium: hitPremium,
+            dailyLimit: data.dailyLimit ?? (hitPremium ? 35 : MAX_TRIAL_MESSAGES),
+            usedToday: data.usedToday ?? (hitPremium ? 35 : MAX_TRIAL_MESSAGES),
             remainingDay: 0,
             limitReached: true
           });
 
-          const limitMsg = data.message || (isPremium()
+          const limitMsg = data.message || (hitPremium
             ? 'Has alcanzado tus 35 consultas diarias con Kloe. Tu límite se restablecerá hoy a las 00:00 (hora peninsular).'
-            : 'Has completado tus 3 consultas gratuitas de hoy. Tu límite se restablecerá hoy a las 00:00 (hora peninsular) o desbloquea Kloe Pro para 35 consultas diarias.');
+            : 'Has completado tus 4 consultas gratuitas de hoy. Tu límite se restablecerá hoy a las 00:00 (hora peninsular) o desbloquea Kloe Pro para 35 consultas diarias.');
 
           const botMsg: ChatMessage = {
             id: `kloe_${Date.now()}`,
@@ -866,6 +867,9 @@ export default function KloePage() {
             timestamp: new Date()
           };
           setMessages(prev => [...prev, botMsg]);
+          if (!hitPremium) {
+            setShowProModal(true);
+          }
           toast.info('Límite de consultas diarias alcanzado');
           return;
         }
@@ -873,13 +877,17 @@ export default function KloePage() {
       }
 
       if (typeof data.remainingDay === 'number') {
+        const hitPremium = Boolean(data.isPremium ?? isPremium());
         setQuotaInfo({
-          isPremium: data.isPremium ?? isPremium(),
-          dailyLimit: data.dailyLimit ?? (isPremium() ? 35 : MAX_TRIAL_MESSAGES),
+          isPremium: hitPremium,
+          dailyLimit: data.dailyLimit ?? (hitPremium ? 35 : MAX_TRIAL_MESSAGES),
           usedToday: data.usedToday ?? 1,
           remainingDay: data.remainingDay,
           limitReached: data.remainingDay <= 0
         });
+        if (data.remainingDay <= 0 && !hitPremium) {
+          setShowProModal(true);
+        }
       }
 
       const botMsg: ChatMessage = {
@@ -1060,7 +1068,7 @@ export default function KloePage() {
               <Crown className="w-5 h-5 text-[var(--brand-pink)] flex-shrink-0" />
               <div className="min-w-0">
                 <p className="text-xs text-[var(--foreground-secondary)] leading-relaxed">
-                  Has completado tus <strong className="text-[var(--brand-pink)]">3 consultas gratuitas de hoy</strong>. Pásate a Pro para disfrutar de 35 consultas diarias.
+                  Has completado tus <strong className="text-[var(--brand-pink)]">4 consultas gratuitas de hoy</strong>. Pásate a Pro para disfrutar de 35 consultas diarias.
                 </p>
                 <div className="w-full max-w-[200px] h-1.5 bg-black/10 dark:bg-white/10 rounded-full mt-1.5 overflow-hidden">
                   <div 
@@ -1074,7 +1082,7 @@ export default function KloePage() {
               onClick={() => setShowProModal(true)}
               className="text-xs font-bold px-3.5 py-2 bg-[var(--brand-pink)] text-white rounded-full hover:opacity-90 transition-opacity flex-shrink-0 shadow-sm cursor-pointer self-start sm:self-auto"
             >
-              Kloe Pro (desde 1,66 €/mes)
+              Kloe Pro (desde 2,08 €/mes)
             </button>
           </motion.div>
         )}
@@ -1602,7 +1610,10 @@ export default function KloePage() {
             </button>
           </form>
         ) : (
-          <div className="pointer-events-auto flex items-center justify-between gap-3 bg-white/95 dark:bg-[#131317]/95 backdrop-blur-2xl border border-[var(--brand-pink)]/40 rounded-3xl p-3.5 shadow-xl w-full max-w-sm md:max-w-2xl">
+          <div
+            onClick={() => { if (!isPremium()) setShowProModal(true); }}
+            className={`pointer-events-auto flex items-center justify-between gap-3 bg-white/95 dark:bg-[#131317]/95 backdrop-blur-2xl border border-[var(--brand-pink)]/40 rounded-3xl p-3.5 shadow-xl w-full max-w-sm md:max-w-2xl ${!isPremium() ? 'cursor-pointer' : ''}`}
+          >
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="w-8 h-8 rounded-full bg-[var(--brand-pink)] text-white flex items-center justify-center flex-shrink-0 shadow-xs">
                 <Crown className="w-4 h-4" />
@@ -1611,7 +1622,7 @@ export default function KloePage() {
                 <p className="text-xs text-[var(--foreground)] font-semibold truncate">
                   {isPremium()
                     ? 'Has completado tus 35 consultas diarias.'
-                    : 'Has completado tus 3 consultas gratuitas de hoy.'}
+                    : 'Has completado tus 4 consultas gratuitas de hoy.'}
                 </p>
                 <p className="text-[10px] text-[var(--foreground-secondary)] truncate">
                   Se recargan automáticamente hoy a las 00:00 (hora peninsular).
@@ -1620,10 +1631,13 @@ export default function KloePage() {
             </div>
             {!isPremium() && (
               <button
-                onClick={() => setShowProModal(true)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowProModal(true);
+                }}
                 className="px-3.5 py-2 bg-[var(--brand-pink)] hover:opacity-95 text-white font-bold text-xs rounded-full shadow-sm transition-all flex-shrink-0 cursor-pointer"
               >
-                Kloe Pro (desde 1,66 €/mes)
+                Kloe Pro (desde 2,08 €/mes)
               </button>
             )}
           </div>
