@@ -464,6 +464,63 @@ export default function OutfitCalendar() {
 
   const todayOutfits = getDayOutfits(new Date());
 
+  const renderAssignedOutfitCard = (outfit: any, singleInModal = false) => (
+    <div
+      key={`${singleInModal ? 'modal' : 'cal'}-${outfit.calendar_id}`}
+      onClick={() => setSelectedOutfitDetail(outfit)}
+      className={`group relative overflow-hidden rounded-[20px] kz-surface-card hover:shadow-[var(--shadow-card-hover)] transition-all duration-300 select-none cursor-pointer ${
+        singleInModal ? 'w-full max-w-[320px] mx-auto' : 'w-full'
+      }`}
+    >
+      <div className="relative w-full aspect-[4/5] bg-white overflow-hidden">
+        <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setOutfitToSwap(outfit.calendar_id);
+              loadUserOutfits();
+              setShowPicker(true);
+            }}
+            className="w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm border border-black/[0.06] text-zinc-700 hover:text-[var(--brand-pink)] flex items-center justify-center shadow-xs transition-colors cursor-pointer"
+            title="Cambiar outfit"
+            aria-label="Cambiar outfit"
+          >
+            <ArrowLeftRight className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleRemoveAssignment(outfit.calendar_id);
+            }}
+            className="w-8 h-8 rounded-full bg-red-50/95 backdrop-blur-sm border border-red-200/70 text-red-500 hover:bg-red-500 hover:text-white flex items-center justify-center shadow-xs transition-colors cursor-pointer"
+            title="Quitar de este día"
+            aria-label="Quitar de este día"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        </div>
+
+        <InteractiveOutfitViewer
+          outfit={outfit}
+          disableInteraction={true}
+          className="w-full h-full"
+        />
+
+        {/* Hover-only black outfit name directly over clean canvas (matches Outfits tab) */}
+        <div className="absolute inset-x-0 bottom-2.5 px-3 z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex justify-center">
+          <p
+            data-no-translate={outfit.name ? 'true' : undefined}
+            className="text-xs font-semibold text-zinc-900 truncate [text-shadow:0_1px_3px_rgba(255,255,255,0.95)]"
+          >
+            {outfit.name || 'Look sin título'}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="w-full flex flex-col pt-2 pb-12">
       <div className="px-4 max-w-6xl mx-auto w-full flex flex-col lg:flex-row gap-6 lg:gap-8 items-start">
@@ -488,50 +545,7 @@ export default function OutfitCalendar() {
                 </Button>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
-                {todayOutfits.map((outfit) => (
-                  <div key={`today-${outfit.calendar_id}`} className="bg-[var(--card-bg)] rounded-3xl border border-[var(--border-color)] p-4 shadow-sm relative overflow-hidden flex flex-col gap-4 hover:shadow-md transition-shadow">
-                    <div 
-                      onClick={() => setSelectedOutfitDetail(outfit)}
-                      className="cursor-pointer hover:opacity-90 transition-opacity shrink-0 flex items-center justify-center bg-white rounded-2xl border border-[var(--border-color)] overflow-hidden w-full aspect-[4/5] relative"
-                    >
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setOutfitToSwap(outfit.calendar_id);
-                            loadUserOutfits();
-                            setShowPicker(true);
-                          }}
-                          className="absolute top-3 right-14 z-10 p-2 bg-white/90 dark:bg-black/90 backdrop-blur-sm text-[var(--foreground)] rounded-full hover:bg-[var(--background-secondary)] transition-colors shadow-sm cursor-pointer"
-                          title="Cambiar outfit"
-                        >
-                          <ArrowLeftRight className="w-4 h-4" />
-                        </button>
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleRemoveAssignment(outfit.calendar_id);
-                          }}
-                          className="absolute top-3 right-3 z-10 p-2 bg-red-100/90 backdrop-blur-sm text-red-500 rounded-full hover:bg-red-500 hover:text-white transition-colors shadow-sm cursor-pointer"
-                          title="Quitar de hoy"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                        <InteractiveOutfitViewer
-                          outfit={outfit}
-                          disableInteraction={true}
-                          className="w-full h-full"
-                        />
-                    </div>
-                    <div className="flex flex-col justify-center flex-1 text-center mt-2">
-                      <h4 
-                          className="font-bold text-[var(--foreground)] text-lg md:text-xl mb-1 cursor-pointer hover:text-[var(--brand-pink)] transition-colors"
-                          onClick={() => setSelectedOutfitDetail(outfit)}
-                      >
-                          {outfit.name || 'Outfit sin nombre'}
-                      </h4>
-                    </div>
-                  </div>
-                ))}
+                {todayOutfits.map((outfit) => renderAssignedOutfitCard(outfit))}
               </div>
             </motion.div>
           )}
@@ -737,50 +751,7 @@ export default function OutfitCalendar() {
                   </div>
                 ) : (
                   <div className={`grid ${selectedDayOutfits.length > 1 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'} gap-4`}>
-                    {selectedDayOutfits.map((outfit) => (
-                      <div key={outfit.calendar_id} className="bg-[var(--card-bg)] rounded-3xl border border-[var(--border-color)] p-4 shadow-sm relative overflow-hidden flex flex-col gap-3">
-                        <div 
-                            onClick={() => setSelectedOutfitDetail(outfit)}
-                            className="cursor-pointer hover:opacity-90 transition-opacity shrink-0 flex items-center justify-center bg-white rounded-2xl border border-[var(--border-color)]/60 overflow-hidden w-full aspect-[3/4] max-h-[260px] sm:max-h-[300px] relative p-2"
-                        >
-                            <button 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setOutfitToSwap(outfit.calendar_id);
-                                loadUserOutfits();
-                                setShowPicker(true);
-                              }}
-                              className="absolute top-2.5 right-11 z-10 p-1.5 bg-white/90 dark:bg-black/80 backdrop-blur-sm text-[var(--foreground)] rounded-full hover:bg-[var(--background-secondary)] transition-colors shadow-sm cursor-pointer"
-                              title="Cambiar outfit"
-                            >
-                              <ArrowLeftRight className="w-3.5 h-3.5" />
-                            </button>
-                            <button 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleRemoveAssignment(outfit.calendar_id);
-                              }}
-                              className="absolute top-2.5 right-2.5 z-10 p-1.5 bg-red-100/90 dark:bg-red-950/80 backdrop-blur-sm text-red-500 rounded-full hover:bg-red-500 hover:text-white transition-colors shadow-sm cursor-pointer"
-                              title="Quitar de hoy"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                            <InteractiveOutfitViewer
-                              outfit={outfit}
-                              disableInteraction={true}
-                              className="w-full h-full"
-                            />
-                        </div>
-                        <div className="flex flex-col justify-center flex-1 text-center">
-                            <h4 
-                                className="font-bold text-[var(--foreground)] text-base cursor-pointer hover:text-[var(--brand-pink)] transition-colors"
-                                onClick={() => setSelectedOutfitDetail(outfit)}
-                            >
-                                {outfit.name || 'Outfit sin nombre'}
-                            </h4>
-                        </div>
-                      </div>
-                    ))}
+                    {selectedDayOutfits.map((outfit) => renderAssignedOutfitCard(outfit, selectedDayOutfits.length === 1))}
                   </div>
                 )}
 
@@ -953,17 +924,16 @@ export default function OutfitCalendar() {
               ) : (
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                   {filteredPickerOutfits.map(outfit => (
-                    <div key={outfit.id} onClick={() => handleAssignOutfit(outfit.id)} className="cursor-pointer">
-                        <OutfitCard
-                          outfit={outfit}
-                          index={0}
-                          onClick={() => handleAssignOutfit(outfit.id)}
-                          onEdit={() => {}}
-                          onShare={() => {}}
-                          onDelete={() => {}}
-                          onToggleFavorite={toggleOutfitFavorite}
-                        />
-                    </div>
+                    <OutfitCard
+                      key={outfit.id}
+                      outfit={outfit}
+                      index={0}
+                      onClick={() => handleAssignOutfit(outfit.id)}
+                      onEdit={() => {}}
+                      onShare={() => {}}
+                      onDelete={() => {}}
+                      onToggleFavorite={toggleOutfitFavorite}
+                    />
                   ))}
                 </div>
               )}

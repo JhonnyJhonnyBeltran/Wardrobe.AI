@@ -3530,3 +3530,11 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
   - `app/globals.css`: actualizada `.kz-kloe-banner` (claro/oscuro) de `#FFEBF5`/`#271622` a `rgba(255, 102, 196, 0.12)` / `rgba(255, 102, 196, 0.14)` con borde al 30–32%, alineada con las pestañas activas de `/closet`.
   - `app/(app)/closet/page.tsx`: unificadas las etiquetas de pestañas activas (`Prendas`, `Outfits`, `Calendario`) de `--brand-pink-dark` (`#ED4C9E`) a `text-[var(--brand-pink)]`, el filtro `pink` de `#EC4899` a `#FF66C4`, y los botones flotantes (`Seleccionar`, `Filtrar`, `Nueva Prenda`/`Nuevo Outfit`/`Añadir outfit para hoy`) a `shadow-[var(--brand-pink)]/35 hover:shadow-[0_0_22px_rgba(255,102,196,0.5)]` (idénticos a `FloatingCreateButton`).
   - `components/Button.tsx`, `components/OutfitCalendar.tsx` y `components/OutfitCard.tsx`: eliminada la superficie degradada `kz-pink-surface` en `Button` (`variant="primary"`) usando color plano `bg-[var(--brand-pink)]` con sombra/glow `#FF66C4`, actualizadas las sombras `rgba(236,72,153,...)` de los botones del calendario a `#FF66C4`, y sustituido `text-pink-500` del candado en `OutfitCard` por `text-[var(--brand-pink)]`.
+
+---
+
+## 63. Tarjeta Única de Outfit en Calendario sin Nombre Visible (`OutfitCalendar.tsx`) (Noviembre 2026)
+- **`components/OutfitCalendar.tsx` (`renderAssignedOutfitCard`)**:
+  - Unificadas las tarjetas asignadas en `"Outfit de Hoy"` y en el modal de detalle del día usando una única tarjeta (`rounded-[20px] kz-surface-card`) con lienzo blanco `aspect-[4/5]` de borde a borde, eliminando la doble tarjeta anidada (`rounded-3xl p-4` envolviendo `rounded-2xl border`) para igualar el estilo de `OutfitCard` en la pestaña `Outfits` y `"Selecciona un Outfit"`.
+  - Eliminado el título visible fijo debajo de la imagen (`<h4>`); el nombre del outfit ahora solo aparece en negro al hacer hover (`opacity-0 group-hover:opacity-100`) sin fondo oscuro, igual que en `OutfitCard`.
+  - Eliminado el doble manejador `onClick` en los resultados de `"Selecciona un Outfit"` pasando la acción únicamente al `<OutfitCard />`.
