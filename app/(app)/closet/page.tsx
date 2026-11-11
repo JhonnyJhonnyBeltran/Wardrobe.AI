@@ -714,7 +714,7 @@ export default function ClosetPage() {
     blue: '#3B82F6',
     red: '#EF4444',
     green: '#10B981',
-    pink: '#EC4899',
+    pink: '#FF66C4',
     yellow: '#F59E0B',
     purple: '#8B5CF6',
     orange: '#FB923C',
@@ -779,7 +779,7 @@ export default function ClosetPage() {
                 setActiveTab('items');
               }}
               className={`flex-1 flex items-center justify-center py-2.5 px-3 rounded-full transition-all gap-1.5 cursor-pointer ${activeTab === 'items'
-                ? 'bg-[var(--brand-pink)]/12 text-[var(--brand-pink-dark,#ED4C9E)] font-semibold'
+                ? 'bg-[var(--brand-pink)]/12 text-[var(--brand-pink)] font-semibold'
                 : 'text-[var(--foreground-tertiary)] hover:text-[var(--foreground-secondary)] hover:bg-[var(--background-secondary)]/60 font-medium'
                 }`}
             >
@@ -792,7 +792,7 @@ export default function ClosetPage() {
                 setActiveTab('outfits');
               }}
               className={`flex-1 flex items-center justify-center py-2.5 px-3 rounded-full transition-all gap-1.5 cursor-pointer ${activeTab === 'outfits'
-                ? 'bg-[var(--brand-pink)]/12 text-[var(--brand-pink-dark,#ED4C9E)] font-semibold'
+                ? 'bg-[var(--brand-pink)]/12 text-[var(--brand-pink)] font-semibold'
                 : 'text-[var(--foreground-tertiary)] hover:text-[var(--foreground-secondary)] hover:bg-[var(--background-secondary)]/60 font-medium'
                 }`}
             >
@@ -805,7 +805,7 @@ export default function ClosetPage() {
                 setActiveTab('calendar');
               }}
               className={`flex-1 flex items-center justify-center py-2.5 px-3 rounded-full transition-all gap-1.5 cursor-pointer ${activeTab === 'calendar'
-                ? 'bg-[var(--brand-pink)]/12 text-[var(--brand-pink-dark,#ED4C9E)] font-semibold'
+                ? 'bg-[var(--brand-pink)]/12 text-[var(--brand-pink)] font-semibold'
                 : 'text-[var(--foreground-tertiary)] hover:text-[var(--foreground-secondary)] hover:bg-[var(--background-secondary)]/60 font-medium'
                 }`}
             >
@@ -1114,7 +1114,7 @@ export default function ClosetPage() {
               className={`h-12 px-5 rounded-full hidden md:flex items-center justify-center gap-2 shadow-lg transition-all cursor-pointer ${
                 selectionMode
                   ? 'bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 shadow-md'
-                  : 'bg-[var(--brand-pink)] text-white hover:shadow-[0_0_20px_rgba(236,72,153,0.4)]'
+                  : 'bg-[var(--brand-pink)] text-white shadow-[var(--brand-pink)]/35 hover:shadow-[0_0_22px_rgba(255,102,196,0.5)]'
               }`}
               aria-label={selectionMode ? 'Cancelar selección' : 'Seleccionar prendas'}
             >
@@ -1131,7 +1131,7 @@ export default function ClosetPage() {
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
               onClick={() => setShowFilters(prev => !prev)}
-              className="h-12 min-w-[48px] px-0 md:px-5 rounded-full bg-[var(--brand-pink)] flex items-center justify-center gap-2 text-white shadow-lg hover:shadow-[0_0_20px_rgba(236,72,153,0.4)] transition-all cursor-pointer relative"
+              className="h-12 min-w-[48px] px-0 md:px-5 rounded-full bg-[var(--brand-pink)] flex items-center justify-center gap-2 text-white shadow-lg shadow-[var(--brand-pink)]/35 hover:shadow-[0_0_22px_rgba(255,102,196,0.5)] transition-all cursor-pointer relative"
               aria-label="Buscar y filtrar"
             >
               <Search className="w-5 h-5 flex-shrink-0" strokeWidth={2.4} />
@@ -1168,7 +1168,7 @@ export default function ClosetPage() {
                     }
                   }
                 }}
-                className="h-12 min-w-[48px] px-0 md:px-5 rounded-full bg-[var(--brand-pink)] flex items-center justify-center gap-2 text-white shadow-lg hover:shadow-[0_0_20px_rgba(236,72,153,0.4)] transition-all cursor-pointer group"
+                className="h-12 min-w-[48px] px-0 md:px-5 rounded-full bg-[var(--brand-pink)] flex items-center justify-center gap-2 text-white shadow-lg shadow-[var(--brand-pink)]/35 hover:shadow-[0_0_22px_rgba(255,102,196,0.5)] transition-all cursor-pointer group"
                 aria-label={activeTab === 'items' ? 'Nueva Prenda' : activeTab === 'outfits' ? 'Nuevo Outfit' : 'Añadir outfit para hoy'}
               >
                 <Plus className="w-5 h-5 flex-shrink-0" strokeWidth={2.5} />

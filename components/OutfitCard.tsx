@@ -300,7 +300,7 @@ const OutfitCard = ({ outfit, isLocked = false, selectionMode = false, isSelecte
                                 transition={{ type: 'spring', delay: 0.2 }}
                                 className="w-12 h-12 rounded-2xl bg-white/90 backdrop-blur-sm flex items-center justify-center mb-2 mx-auto shadow-lg"
                             >
-                                <Lock className="w-5 h-5 text-pink-500" />
+                                <Lock className="w-5 h-5 text-[var(--brand-pink)]" />
                             </motion.div>
                             <p className="text-white font-medium text-xs">Premium</p>
                         </div>

@@ -3522,3 +3522,11 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
   - Movidos `<Analytics />`, `<SpeedInsights />`, `SystemModal`, `SocialListener`, `AppLifecycleManager` y `NotificationToastContainer` a cargas `dynamic(..., { ssr: false })` dentro de `RootLayoutClient` (bajo `GlobalErrorBoundary` y `ThemeProvider`) evitando los límites `<Suspense>` `BAILOUT_TO_CLIENT_SIDE_RENDERING` fuera de error boundary que detonaban `Minified React error #418`.
 - **Estado inicial determinista SSR (`store/languageStore.ts`, `components/MessageBadge.tsx`)**:
   - Inicializado `useLanguageStore` con valores deterministas (`language: 'es'`, `isManual: false`) hasta `initLanguage()` en `useEffect`, y reemplazada la lectura directa `window.innerWidth` en render dentro de `MessageBadge` por estado sincronizado en `useEffect`.
+
+---
+
+## 62. Unificación de Rosas en `/closet` al Rosa de Marca (`#FF66C4`) (Noviembre 2026)
+- **Consistencia exacta con barra de navegación y botones flotantes (`--brand-pink: #FF66C4`)**:
+  - `app/globals.css`: actualizada `.kz-kloe-banner` (claro/oscuro) de `#FFEBF5`/`#271622` a `rgba(255, 102, 196, 0.12)` / `rgba(255, 102, 196, 0.14)` con borde al 30–32%, alineada con las pestañas activas de `/closet`.
+  - `app/(app)/closet/page.tsx`: unificadas las etiquetas de pestañas activas (`Prendas`, `Outfits`, `Calendario`) de `--brand-pink-dark` (`#ED4C9E`) a `text-[var(--brand-pink)]`, el filtro `pink` de `#EC4899` a `#FF66C4`, y los botones flotantes (`Seleccionar`, `Filtrar`, `Nueva Prenda`/`Nuevo Outfit`/`Añadir outfit para hoy`) a `shadow-[var(--brand-pink)]/35 hover:shadow-[0_0_22px_rgba(255,102,196,0.5)]` (idénticos a `FloatingCreateButton`).
+  - `components/Button.tsx`, `components/OutfitCalendar.tsx` y `components/OutfitCard.tsx`: eliminada la superficie degradada `kz-pink-surface` en `Button` (`variant="primary"`) usando color plano `bg-[var(--brand-pink)]` con sombra/glow `#FF66C4`, actualizadas las sombras `rgba(236,72,153,...)` de los botones del calendario a `#FF66C4`, y sustituido `text-pink-500` del candado en `OutfitCard` por `text-[var(--brand-pink)]`.

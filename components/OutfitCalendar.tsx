@@ -663,7 +663,7 @@ export default function OutfitCalendar() {
                 loadUserOutfits();
                 setShowPicker(true);
               }}
-              className="w-full py-3.5 px-4 rounded-2xl bg-[var(--brand-pink)] text-white font-bold text-[15px] flex items-center justify-center gap-2 shadow-[0_4px_20px_rgba(236,72,153,0.35)] active:opacity-90 transition-all cursor-pointer"
+              className="w-full py-3.5 px-4 rounded-2xl bg-[var(--brand-pink)] text-white font-bold text-[15px] flex items-center justify-center gap-2 shadow-lg shadow-[var(--brand-pink)]/35 hover:shadow-[0_0_22px_rgba(255,102,196,0.5)] active:opacity-90 transition-all cursor-pointer"
             >
               <Plus className="w-5 h-5 stroke-[2.5]" />
               Añadir outfit para hoy
@@ -842,7 +842,7 @@ export default function OutfitCalendar() {
                     loadUserOutfits();
                     setShowPicker(true);
                   }} 
-                  className="w-full py-4 text-lg rounded-2xl flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(236,72,153,0.3)]"
+                  className="w-full py-4 text-lg rounded-2xl flex items-center justify-center gap-2 shadow-[var(--brand-pink)]/35 hover:shadow-[0_0_22px_rgba(255,102,196,0.5)]"
                 >
                   {selectedDayOutfits.length > 0 ? (
                     <>

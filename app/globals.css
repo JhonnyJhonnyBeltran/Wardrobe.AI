@@ -213,14 +213,14 @@ html {
 }
 
 .kz-kloe-banner {
-  background: #FFEBF5;
-  border: 1px solid rgba(255, 102, 196, 0.34);
-  box-shadow: 0 4px 14px -4px rgba(255, 102, 196, 0.18);
+  background: rgba(255, 102, 196, 0.12);
+  border: 1px solid rgba(255, 102, 196, 0.3);
+  box-shadow: 0 4px 14px -4px rgba(255, 102, 196, 0.22);
 }
 
 .dark .kz-kloe-banner {
-  background: #271622;
-  border: 1px solid rgba(255, 102, 196, 0.34);
+  background: rgba(255, 102, 196, 0.14);
+  border: 1px solid rgba(255, 102, 196, 0.32);
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
 }
 

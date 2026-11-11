@@ -39,8 +39,9 @@ export default function Button({
 
   const variants = {
     primary: `
-      kz-pink-surface text-white
-      hover:brightness-[1.03]
+      bg-[var(--brand-pink)] text-white
+      shadow-lg shadow-[var(--brand-pink)]/35
+      hover:shadow-[0_0_22px_rgba(255,102,196,0.5)]
       active:brightness-95
     `,
     destructive: `
