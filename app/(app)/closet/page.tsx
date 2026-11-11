@@ -56,9 +56,9 @@ function KloeHeroBanner() {
         className="w-full py-3 px-4 sm:px-5 rounded-[20px] kz-kloe-hero flex items-center justify-between gap-3 cursor-pointer group"
         aria-label="Charla conmigo"
       >
-        <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+        <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
           <KloeMascot mood="happy" size="md" />
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <AnimatePresence mode="wait">
               <motion.p
                 key={promptIndex}
@@ -66,21 +66,19 @@ function KloeHeroBanner() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -5 }}
                 transition={{ duration: 0.25 }}
-                className="font-kloe text-[17px] sm:text-[19px] font-bold text-[var(--foreground)] group-hover:text-[var(--brand-pink-dark,#ED4C9E)] transition-colors truncate leading-tight select-none"
+                className="font-kloe text-[16px] sm:text-[18px] font-bold text-[var(--foreground)] group-hover:text-[var(--brand-pink-dark,#ED4C9E)] transition-colors truncate leading-tight select-none"
               >
                 {KLOE_PROMPTS[promptIndex]}
               </motion.p>
             </AnimatePresence>
-            <p className="kz-caption text-[var(--foreground-secondary)] truncate mt-0.5 select-none">
-              Tu estilista lista para combinar tu ropa
-            </p>
           </div>
         </div>
 
-        <span className="shrink-0 inline-flex items-center gap-1 px-3.5 py-1.5 rounded-full kz-pink-surface text-white font-kloe text-xs font-semibold tracking-tight group-hover:scale-105 transition-transform">
-          <span>Hablar</span>
-          <ChevronRight className="w-3.5 h-3.5" strokeWidth={2.6} />
-        </span>
+        <ChevronRight
+          className="w-5 h-5 shrink-0 text-[var(--brand-pink)] group-hover:translate-x-0.5 transition-transform"
+          strokeWidth={2.6}
+          aria-hidden="true"
+        />
       </motion.div>
     </Link>
   );
