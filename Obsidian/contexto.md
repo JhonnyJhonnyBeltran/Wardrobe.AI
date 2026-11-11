@@ -3538,3 +3538,4 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
   - Unificadas las tarjetas asignadas en `"Outfit de Hoy"` y en el modal de detalle del día usando una única tarjeta (`rounded-[20px] kz-surface-card`) con lienzo blanco `aspect-[4/5]` de borde a borde, eliminando la doble tarjeta anidada (`rounded-3xl p-4` envolviendo `rounded-2xl border`) para igualar el estilo de `OutfitCard` en la pestaña `Outfits` y `"Selecciona un Outfit"`.
   - Eliminado el título visible fijo debajo de la imagen (`<h4>`); el nombre del outfit ahora solo aparece en negro al hacer hover (`opacity-0 group-hover:opacity-100`) sin fondo oscuro, igual que en `OutfitCard`.
   - Eliminado el doble manejador `onClick` en los resultados de `"Selecciona un Outfit"` pasando la acción únicamente al `<OutfitCard />`.
+  - Movida la píldora de ciudad/tiempo (`{Ciudad} · {Icono} {Temp}°`) debajo de la barra del mes en el calendario.

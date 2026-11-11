@@ -553,8 +553,22 @@ export default function OutfitCalendar() {
 
         {/* Calendar Section */}
         <motion.div layout className="flex-1 w-full flex flex-col">
-          {/* City Weather Trigger above Month */}
-          <div className="flex items-center justify-center mb-3">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-3 bg-[var(--card-bg)] p-4 rounded-3xl shadow-sm border border-[var(--border-color)]">
+            <button onClick={handlePrevMonth} className="p-2 rounded-full hover:bg-[var(--background-secondary)] text-[var(--foreground)] transition-colors cursor-pointer">
+              <ChevronLeft className="w-6 h-6" />
+            </button>
+            <h2 className="text-xl font-bold text-[var(--foreground)] capitalize flex items-center gap-2">
+              <CalendarDays className="w-5 h-5 text-[var(--brand-pink)]" />
+              {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+            </h2>
+            <button onClick={handleNextMonth} className="p-2 rounded-full hover:bg-[var(--background-secondary)] text-[var(--foreground)] transition-colors cursor-pointer">
+              <ChevronRight className="w-6 h-6" />
+            </button>
+          </div>
+
+          {/* City Weather Trigger below Month */}
+          <div className="flex items-center justify-center mb-4">
             <button
               type="button"
               onClick={() => {
@@ -579,20 +593,6 @@ export default function OutfitCalendar() {
               ) : (
                 <span className="text-[var(--foreground-secondary)]">Añadir ciudad</span>
               )}
-            </button>
-          </div>
-
-          {/* Header */}
-          <div className="flex items-center justify-between mb-6 bg-[var(--card-bg)] p-4 rounded-3xl shadow-sm border border-[var(--border-color)]">
-            <button onClick={handlePrevMonth} className="p-2 rounded-full hover:bg-[var(--background-secondary)] text-[var(--foreground)] transition-colors cursor-pointer">
-              <ChevronLeft className="w-6 h-6" />
-            </button>
-            <h2 className="text-xl font-bold text-[var(--foreground)] capitalize flex items-center gap-2">
-              <CalendarDays className="w-5 h-5 text-[var(--brand-pink)]" />
-              {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
-            </h2>
-            <button onClick={handleNextMonth} className="p-2 rounded-full hover:bg-[var(--background-secondary)] text-[var(--foreground)] transition-colors cursor-pointer">
-              <ChevronRight className="w-6 h-6" />
             </button>
           </div>
 
