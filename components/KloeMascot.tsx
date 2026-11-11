@@ -72,7 +72,7 @@ export default function KloeMascot({
     [clearAllTimers]
   );
 
-  // Organic eye-blink loop: 1 or 2 blinks, then ~5s pause before next blink
+  // Organic eye-blink loop: random 1 or 2 blinks, then ~10s pause before next blink
   useEffect(() => {
     let loopTimer: NodeJS.Timeout;
     let isMounted = true;
@@ -83,11 +83,11 @@ export default function KloeMascot({
         const doDouble = Math.random() < 0.5;
         triggerBlink(doDouble);
         const blinkDuration = doDouble ? 555 : 245;
-        scheduleNext(blinkDuration + 4800 + Math.random() * 600);
+        scheduleNext(blinkDuration + 9500 + Math.random() * 1200);
       }, delay);
     };
 
-    // Quick greeting blink right after mount, then ~5s cadence
+    // Quick greeting blink right after mount, then ~10s cadence
     scheduleNext(500);
 
     return () => {
