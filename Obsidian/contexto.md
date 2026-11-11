@@ -3539,3 +3539,4 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
   - Eliminado el título visible fijo debajo de la imagen (`<h4>`); el nombre del outfit ahora solo aparece en negro al hacer hover (`opacity-0 group-hover:opacity-100`) sin fondo oscuro, igual que en `OutfitCard`.
   - Eliminado el doble manejador `onClick` en los resultados de `"Selecciona un Outfit"` pasando la acción únicamente al `<OutfitCard />`.
   - Movida la píldora de ciudad/tiempo (`{Ciudad} · {Icono} {Temp}°`) debajo de la barra del mes en el calendario.
+  - Eliminado el círculo contenedor del botón de corazón en las tarjetas de prenda (`app/(app)/closet/page.tsx`) y outfit (`components/OutfitCard.tsx`), dejando solo el icono `<Heart />` esquinado sin fondo ni borde.

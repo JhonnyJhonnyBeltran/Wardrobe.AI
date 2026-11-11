@@ -962,18 +962,20 @@ export default function ClosetPage() {
                               {/* Favorite Button Overlay with celebratory bounce */}
                               <motion.button
                                 whileTap={{ scale: 0.78 }}
+                                whileHover={{ scale: 1.15 }}
+                                transition={{ type: 'spring', stiffness: 500, damping: 20 }}
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleFavoriteToggle(item.id);
                                 }}
                                 aria-label={item.favorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
-                                className="absolute top-2.5 right-2.5 p-1.5 rounded-full bg-white/85 dark:bg-zinc-900/75 backdrop-blur-sm border border-black/[0.06] dark:border-white/10 shadow-xs z-20 focus:outline-none cursor-pointer"
+                                className="absolute top-2 right-2 p-1.5 z-20 bg-transparent focus:outline-none cursor-pointer"
                               >
                                 <motion.div
                                   animate={isJustFav ? { scale: [1, 1.45, 0.9, 1.1, 1] } : { scale: 1 }}
                                   transition={{ type: 'spring', stiffness: 520, damping: 18 }}
                                 >
-                                  <Heart className={`w-4 h-4 transition-colors duration-200 ${item.favorite ? 'fill-[var(--brand-pink)] text-[var(--brand-pink)]' : 'fill-none text-zinc-400'}`} />
+                                  <Heart className={`w-[18px] h-[18px] transition-colors duration-200 drop-shadow-[0_1px_2px_rgba(0,0,0,0.12)] ${item.favorite ? 'fill-[var(--brand-pink)] text-[var(--brand-pink)]' : 'fill-none text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200'}`} />
                                 </motion.div>
                               </motion.button>
 

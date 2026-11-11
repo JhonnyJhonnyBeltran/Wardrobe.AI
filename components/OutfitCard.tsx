@@ -249,7 +249,7 @@ const OutfitCard = ({ outfit, isLocked = false, selectionMode = false, isSelecte
             </div>
 
             {/* Right Overlay Actions - Always visible */}
-            <div className="absolute top-3 right-3 flex flex-col items-center gap-2 z-20">
+            <div className="absolute top-2 right-2 flex flex-col items-center gap-1.5 z-20">
                 {onToggleFavorite && !isLocked && (
                     <motion.button
                         whileTap={{ scale: 0.8 }}
@@ -259,13 +259,14 @@ const OutfitCard = ({ outfit, isLocked = false, selectionMode = false, isSelecte
                             e.stopPropagation();
                             onToggleFavorite(outfit, outfit.favorite ?? false);
                         }}
-                        className="p-1.5 rounded-full bg-white/85 dark:bg-zinc-900/75 backdrop-blur-sm border border-black/[0.06] dark:border-white/10 shadow-xs focus:outline-none cursor-pointer"
+                        aria-label={outfit.favorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
+                        className="p-1.5 bg-transparent focus:outline-none cursor-pointer"
                     >
                         <motion.div
                             animate={outfit.favorite ? { scale: [1, 1.38, 0.92, 1] } : { scale: 1 }}
                             transition={{ type: 'spring', stiffness: 500, damping: 20 }}
                         >
-                            <Heart className={`w-4 h-4 transition-colors duration-200 ${outfit.favorite ? 'fill-[var(--brand-pink)] text-[var(--brand-pink)]' : 'fill-none text-zinc-400 hover:text-zinc-600'}`} />
+                            <Heart className={`w-[18px] h-[18px] transition-colors duration-200 drop-shadow-[0_1px_2px_rgba(0,0,0,0.12)] ${outfit.favorite ? 'fill-[var(--brand-pink)] text-[var(--brand-pink)]' : 'fill-none text-zinc-400 hover:text-zinc-600'}`} />
                         </motion.div>
                     </motion.button>
                 )}
