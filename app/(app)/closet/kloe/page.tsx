@@ -250,9 +250,8 @@ function FormattedMessageText({ content, isUser }: { content: string; isUser?: b
 
 function KloeAnimatedLogo() {
   return (
-    <div className="relative h-10 flex items-center justify-center gap-2 select-none">
-      <KloeMascot mood="happy" size="sm" interactive />
-      <div className="relative w-20 md:w-24 h-6 md:h-7 flex items-center justify-center">
+    <div className="relative h-10 flex items-center justify-center select-none">
+      <div className="relative w-24 md:w-28 h-7 md:h-8 flex items-center justify-center">
         <Image
           src="/kloe-logo-large.png"
           alt="Kloe"
@@ -995,24 +994,6 @@ export default function KloePage() {
           >
             <User className="w-5 h-5" />
           </button>
-
-          <button
-            onClick={openSaved}
-            className="p-2.5 text-gray-900 dark:text-white hover:text-[var(--brand-pink)] dark:hover:text-[var(--brand-pink)] rounded-full hover:bg-[var(--background-secondary)] transition-colors cursor-pointer"
-            title="Ver looks guardados"
-            aria-label="Ver looks guardados"
-          >
-            <Bookmark className="w-5 h-5" />
-          </button>
-
-          <button
-            onClick={openWardrobe}
-            className="p-2.5 text-gray-900 dark:text-white hover:text-[var(--brand-pink)] dark:hover:text-[var(--brand-pink)] rounded-full hover:bg-[var(--background-secondary)] transition-colors cursor-pointer"
-            title="Ver mis prendas"
-            aria-label="Ver mis prendas"
-          >
-            <Shirt className="w-5 h-5" />
-          </button>
         </div>
       </header>
 
@@ -1027,7 +1008,7 @@ export default function KloePage() {
           <ArrowLeft className="w-6 h-6" />
         </button>
 
-        {/* Center: Animated Logo */}
+        {/* Center: Static Kloe Logo */}
         <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center pointer-events-none">
           <KloeAnimatedLogo />
         </div>
@@ -1060,31 +1041,13 @@ export default function KloePage() {
           >
             <User className="w-4 h-4" />
           </button>
-
-          <button
-            onClick={openSaved}
-            className="p-2 text-[var(--foreground)] hover:text-[var(--brand-pink)] rounded-full transition-colors cursor-pointer"
-            title="Looks guardados"
-            aria-label="Looks guardados"
-          >
-            <Bookmark className="w-4 h-4" />
-          </button>
-
-          <button
-            onClick={openWardrobe}
-            className="p-2 text-[var(--foreground)] hover:text-[var(--brand-pink)] rounded-full transition-colors cursor-pointer"
-            title="Prendas de armario"
-            aria-label="Prendas de armario"
-          >
-            <Shirt className="w-4 h-4" />
-          </button>
         </div>
       </header>
 
       {/* Messages Container */}
       <div 
         onScroll={handleMessagesScroll}
-        className="flex-1 overflow-y-auto px-4 md:px-6 pt-16 md:pt-20 pb-28 md:pb-24 space-y-6 no-scrollbar"
+        className="flex-1 overflow-y-auto px-4 md:px-6 pt-16 md:pt-20 pb-36 md:pb-28 space-y-6 no-scrollbar"
       >
         {/* Free Tier Upgrade Banner - Only shown when limit has been reached */}
         {!isPremium() && remainingToday <= 0 && (
@@ -1416,7 +1379,7 @@ export default function KloePage() {
       </div>
 
       {/* Floating Bottom Input Bar */}
-      <div className="fixed bottom-[calc(72px+env(safe-area-inset-bottom,0px))] md:bottom-0 left-0 right-0 pointer-events-none w-full max-w-3xl md:max-w-4xl mx-auto px-4 md:px-6 pb-2 md:pb-6 pt-2 z-30 flex flex-col items-center">
+      <div className="fixed bottom-[calc(82px+env(safe-area-inset-bottom,0px))] sm:bottom-[calc(88px+env(safe-area-inset-bottom,0px))] md:bottom-0 left-0 md:left-[72px] right-0 pointer-events-none px-4 md:px-6 pb-2 md:pb-6 pt-2 z-30 flex flex-col items-center">
         
         {/* Floating Attachment Cards Strip */}
         <AnimatePresence>
@@ -1425,7 +1388,7 @@ export default function KloePage() {
               initial={{ opacity: 0, y: 10, scale: 0.96 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.96 }}
-              className="mb-2.5 w-full max-w-2xl pointer-events-auto"
+              className="mb-2.5 w-full max-w-sm md:max-w-2xl pointer-events-auto"
             >
               <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 px-1">
                 {/* Attached Custom Image Card */}
@@ -1551,7 +1514,7 @@ export default function KloePage() {
               e.preventDefault();
               handleSend();
             }}
-            className="pointer-events-auto flex items-center gap-2 bg-[var(--card-bg)]/95 dark:bg-[#131317]/95 backdrop-blur-2xl rounded-full px-3.5 py-2.5 border border-[var(--border-color)] shadow-[0_12px_35px_rgba(0,0,0,0.15)] dark:shadow-[0_16px_45px_rgba(0,0,0,0.5)] focus-within:border-[var(--brand-pink)]/60 focus-within:ring-2 focus-within:ring-[var(--brand-pink)]/20 transition-all w-full"
+            className="pointer-events-auto flex items-center gap-1.5 bg-white/90 dark:bg-[#131317]/90 backdrop-blur-2xl rounded-full pl-2 pr-1.5 py-1.5 min-h-[48px] border border-black/[0.08] dark:border-white/[0.12] shadow-[0_8px_28px_rgba(0,0,0,0.12)] dark:shadow-[0_12px_36px_rgba(0,0,0,0.5)] focus-within:border-[var(--brand-pink)]/60 focus-within:ring-2 focus-within:ring-[var(--brand-pink)]/15 transition-all w-full max-w-sm md:max-w-2xl"
           >
             {/* Hidden file input for custom image upload */}
             <input
@@ -1563,29 +1526,29 @@ export default function KloePage() {
             />
 
             {/* Quick Attach Buttons */}
-            <div className="flex items-center gap-0.5 shrink-0">
+            <div className="flex items-center shrink-0">
               <button
                 type="button"
                 onClick={() => chatImageInputRef.current?.click()}
-                className="relative p-2 rounded-full text-gray-900 dark:text-white hover:text-[var(--brand-pink)] dark:hover:text-[var(--brand-pink)] transition-colors cursor-pointer"
+                className="relative p-2 rounded-full text-zinc-700 dark:text-zinc-200 hover:text-[var(--brand-pink)] dark:hover:text-[var(--brand-pink)] transition-colors cursor-pointer"
                 title="Subir foto para que Kloe la analice"
                 aria-label="Subir foto"
               >
-                <Camera className="w-4 h-4" />
+                <Camera className="w-[18px] h-[18px]" />
                 {attachedImage && (
-                  <span className="absolute top-0 right-0 w-2 h-2 rounded-full bg-[var(--brand-pink)]" />
+                  <span className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-[var(--brand-pink)]" />
                 )}
               </button>
               <button
                 type="button"
                 onClick={openWardrobe}
-                className="relative p-2 rounded-full text-gray-900 dark:text-white hover:text-[var(--brand-pink)] dark:hover:text-[var(--brand-pink)] transition-colors cursor-pointer group"
+                className="relative p-2 rounded-full text-zinc-700 dark:text-zinc-200 hover:text-[var(--brand-pink)] dark:hover:text-[var(--brand-pink)] transition-colors cursor-pointer group"
                 title="Adjuntar prendas de tu armario"
                 aria-label="Adjuntar prendas"
               >
-                <Shirt className="w-4 h-4" />
+                <Shirt className="w-[18px] h-[18px]" />
                 {attachedItems.length > 0 && (
-                  <span className="absolute top-0 right-0 w-4 h-4 rounded-full bg-[var(--brand-pink)] text-white text-[9px] font-bold flex items-center justify-center">
+                  <span className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-[var(--brand-pink)] text-white text-[9px] font-bold flex items-center justify-center">
                     {attachedItems.length}
                   </span>
                 )}
@@ -1593,13 +1556,13 @@ export default function KloePage() {
               <button
                 type="button"
                 onClick={openSaved}
-                className="relative p-2 rounded-full text-gray-900 dark:text-white hover:text-[var(--brand-pink)] dark:hover:text-[var(--brand-pink)] transition-colors cursor-pointer group"
+                className="relative p-2 rounded-full text-zinc-700 dark:text-zinc-200 hover:text-[var(--brand-pink)] dark:hover:text-[var(--brand-pink)] transition-colors cursor-pointer group"
                 title="Adjuntar look o post guardado"
                 aria-label="Adjuntar look guardado"
               >
-                <Bookmark className="w-4 h-4" />
+                <Bookmark className="w-[18px] h-[18px]" />
                 {attachedPost && (
-                  <span className="absolute top-0 right-0 w-2 h-2 rounded-full bg-[var(--brand-pink)]" />
+                  <span className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-[var(--brand-pink)]" />
                 )}
               </button>
             </div>
@@ -1611,24 +1574,24 @@ export default function KloePage() {
               onChange={(e) => setInputMessage(e.target.value)}
               placeholder={
                 attachedImage
-                  ? `Pregúntale a Kloe sobre tu foto adjunta...`
+                  ? `Pregúntale a Kloe sobre tu foto...`
                   : (attachedItems.length > 0 && attachedPost
-                    ? `Pregúntale a Kloe sobre este look y tus ${attachedItems.length} prenda${attachedItems.length === 1 ? '' : 's'}...`
+                    ? `Pregúntale sobre este look y tus ${attachedItems.length} prenda${attachedItems.length === 1 ? '' : 's'}...`
                     : (attachedItems.length === 1
-                      ? `Pregúntale a Kloe sobre "${attachedItems[0].name}"...`
+                      ? `Pregúntale sobre "${attachedItems[0].name}"...`
                       : (attachedItems.length > 1
-                        ? `Pregúntale a Kloe sobre estas ${attachedItems.length} prendas...`
+                        ? `Pregúntale sobre estas ${attachedItems.length} prendas...`
                         : (attachedPost 
-                          ? `Pregúntale qué lleva en este look o cómo recrearlo...` 
+                          ? `Pregúntale sobre este look...` 
                           : `Pregúntale a Kloe...`))))
               }
               disabled={isTyping || !isInputUnlocked}
-              className="flex-1 bg-transparent text-sm text-[var(--foreground)] outline-none placeholder:text-[var(--foreground-tertiary)] px-1"
+              className="min-w-0 w-full flex-1 bg-transparent text-base sm:text-sm text-[var(--foreground)] outline-none placeholder:text-[var(--foreground-tertiary)] px-1"
             />
             <button
               type="submit"
               disabled={(!inputMessage.trim() && attachedItems.length === 0 && !attachedPost && !attachedImage) || isTyping || !isInputUnlocked}
-              className={`p-2.5 rounded-full transition-all shrink-0 ${
+              className={`w-9 h-9 flex items-center justify-center rounded-full transition-all shrink-0 ${
                 (inputMessage.trim() || attachedItems.length > 0 || attachedPost || attachedImage) && !isTyping && isInputUnlocked
                   ? 'bg-[var(--brand-pink)] text-white hover:scale-105 shadow-md shadow-[var(--brand-pink)]/25 cursor-pointer'
                   : 'text-[var(--foreground-tertiary)] opacity-40 cursor-not-allowed'
@@ -1639,7 +1602,7 @@ export default function KloePage() {
             </button>
           </form>
         ) : (
-          <div className="pointer-events-auto flex items-center justify-between gap-3 bg-[var(--card-bg)]/95 dark:bg-[#131317]/95 backdrop-blur-2xl border border-[var(--brand-pink)]/40 rounded-3xl p-3.5 shadow-xl w-full">
+          <div className="pointer-events-auto flex items-center justify-between gap-3 bg-white/95 dark:bg-[#131317]/95 backdrop-blur-2xl border border-[var(--brand-pink)]/40 rounded-3xl p-3.5 shadow-xl w-full max-w-sm md:max-w-2xl">
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="w-8 h-8 rounded-full bg-[var(--brand-pink)] text-white flex items-center justify-center flex-shrink-0 shadow-xs">
                 <Crown className="w-4 h-4" />

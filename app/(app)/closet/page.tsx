@@ -66,7 +66,7 @@ function KloeHeroBanner() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -5 }}
                 transition={{ duration: 0.25 }}
-                className="font-kloe text-[16px] sm:text-[18px] font-bold text-[var(--foreground)] group-hover:text-[var(--brand-pink-dark,#ED4C9E)] transition-colors truncate leading-tight select-none"
+                className="font-display text-[17px] sm:text-[19px] font-semibold tracking-[-0.02em] text-[var(--foreground)] group-hover:text-[var(--brand-pink-dark,#ED4C9E)] transition-colors truncate leading-tight select-none"
               >
                 {KLOE_PROMPTS[promptIndex]}
               </motion.p>
