@@ -3513,3 +3513,12 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
   - Modal del día con gesto táctil/ratón deslizable hacia abajo desde el borde superior (`useDragControls` en tirador y cabecera), mostrando previsión de temperatura y estado debajo junto al botón de ciudad en la zona inferior.
   - Modal `Selecciona un Outfit` ampliado en altura (`h-[88dvh] sm:h-[84vh]`) y también deslizable hacia abajo desde el borde superior.
   - Eliminado el contador de prendas/outfits de los modales del calendario y `OutfitDetailModal`, e icono de intercambio `<ArrowLeftRight />` en los botones de cambiar outfit.
+
+---
+
+## 61. Fix Error de Hidratación React #418 (Suspense / Root Layout) (Noviembre 2026)
+- **`app/layout.tsx` y `app/RootLayoutClient.tsx`**:
+  - Eliminado `<head>` manual redundante en `app/layout.tsx` (que duplicaba `<meta name="google-adsense-account">` junto a `export const metadata`) desplazando el `<script type="application/ld+json">` dentro de `<body>`.
+  - Movidos `<Analytics />`, `<SpeedInsights />`, `SystemModal`, `SocialListener`, `AppLifecycleManager` y `NotificationToastContainer` a cargas `dynamic(..., { ssr: false })` dentro de `RootLayoutClient` (bajo `GlobalErrorBoundary` y `ThemeProvider`) evitando los límites `<Suspense>` `BAILOUT_TO_CLIENT_SIDE_RENDERING` fuera de error boundary que detonaban `Minified React error #418`.
+- **Estado inicial determinista SSR (`store/languageStore.ts`, `components/MessageBadge.tsx`)**:
+  - Inicializado `useLanguageStore` con valores deterministas (`language: 'es'`, `isManual: false`) hasta `initLanguage()` en `useEffect`, y reemplazada la lectura directa `window.innerWidth` en render dentro de `MessageBadge` por estado sincronizado en `useEffect`.

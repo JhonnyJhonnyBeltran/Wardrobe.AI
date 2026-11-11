@@ -17,22 +17,26 @@ import LanguageDomTranslator from "@/components/LanguageDomTranslator";
 
 import { Toaster } from 'sonner';
 
-// Dynamic imports for non-critical components - loaded only when needed
+// Dynamic imports for client-only overlays and telemetry - zero SSR hydration mismatch
 const SystemModal = dynamic(() => import("@/components/SystemModal"), {
+  ssr: false,
   loading: () => null,
 });
 
 const SocialListener = dynamic(() => import("@/components/SocialListener"), {
+  ssr: false,
   loading: () => null,
 });
 
 const AppLifecycleManager = dynamic(() => import("@/components/AppLifecycleManager"), {
+  ssr: false,
   loading: () => null,
 });
 
 const NotificationToastContainer = dynamic(
   () => import("@/components/NotificationToast").then(mod => ({ default: mod.NotificationToastContainer })),
   {
+    ssr: false,
     loading: () => null,
   }
 );
@@ -41,6 +45,16 @@ const CookiesBanner = dynamic(() => import("@/components/CookiesBanner"), {
   ssr: false,
   loading: () => null,
 });
+
+const Analytics = dynamic(
+  () => import("@vercel/analytics/next").then(mod => ({ default: mod.Analytics })),
+  { ssr: false, loading: () => null }
+);
+
+const SpeedInsights = dynamic(
+  () => import("@vercel/speed-insights/next").then(mod => ({ default: mod.SpeedInsights })),
+  { ssr: false, loading: () => null }
+);
 
 function ThemedToaster() {
   const { isDark } = useTheme();
@@ -101,11 +115,13 @@ export default function RootLayoutClient({ children }: RootLayoutClientProps) {
                 {/* Main content directly (layouts handled by Route Groups) */}
                 {children}
                 
-                {/* UI overlays - loaded on-demand */}
+                {/* UI overlays & telemetry - loaded client-side */}
                 <NotificationToastContainer position="top-right" />
                 <CookiesBanner />
                 <ThemedToaster />
                 <SystemModal />
+                <Analytics />
+                <SpeedInsights />
               </MessageProvider>
             </RealtimeProvider>
           </RevenueCatProvider>

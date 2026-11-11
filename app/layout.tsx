@@ -3,8 +3,6 @@ import { Inter, Outfit, DynaPuff } from "next/font/google";
 import "./globals.css";
 import RootLayoutClient from "./RootLayoutClient";
 import AdSenseScript from "@/components/AdSenseScript";
-import { Analytics } from "@vercel/analytics/next";
-import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
@@ -245,18 +243,13 @@ export default function RootLayout({
 
   return (
     <html lang="es" suppressHydrationWarning>
-      <head>
-        <meta name="google-adsense-account" content="ca-pub-4628313000953034" />
+      <body className={`${inter.variable} ${outfit.variable} ${dynaPuff.variable} antialiased bg-[var(--background)] text-[var(--foreground)]`}>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-      </head>
-      <body className={`${inter.variable} ${outfit.variable} ${dynaPuff.variable} antialiased bg-[var(--background)] text-[var(--foreground)]`}>
         <AdSenseScript />
         <RootLayoutClient>{children}</RootLayoutClient>
-        <Analytics />
-        <SpeedInsights />
       </body>
     </html>
   );

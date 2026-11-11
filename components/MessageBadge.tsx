@@ -11,7 +11,7 @@
 
 'use client';
 
-import { memo } from 'react';
+import { memo, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMessageStore, selectTotalUnread, selectBadgeVisible } from '@/store/messageStore';
 
@@ -121,6 +121,15 @@ export const MessageBadge = memo(function MessageBadge({
   const badgeVisible = useMessageStore(selectBadgeVisible);
   const count = propCount ?? storeCount;
 
+  const [isMobileViewport, setIsMobileViewport] = useState(false);
+
+  useEffect(() => {
+    const checkViewport = () => setIsMobileViewport(window.innerWidth < 768);
+    checkViewport();
+    window.addEventListener('resize', checkViewport);
+    return () => window.removeEventListener('resize', checkViewport);
+  }, []);
+
   // Don't render if no notifications and not showing zero
   if (count === 0 && !showZero) return null;
 
@@ -128,7 +137,7 @@ export const MessageBadge = memo(function MessageBadge({
   if (!badgeVisible && propCount === undefined) return null;
 
   // Determine if showing dot or count
-  const showDot = variant === 'dot' || (variant === 'auto' && typeof window !== 'undefined' && window.innerWidth < 768);
+  const showDot = variant === 'dot' || (variant === 'auto' && isMobileViewport);
   
   // Format display count
   const displayCount = count > max ? `${max}+` : count.toString();

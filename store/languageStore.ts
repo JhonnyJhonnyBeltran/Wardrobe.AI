@@ -124,8 +124,8 @@ interface LanguageState {
 }
 
 export const useLanguageStore = create<LanguageState>((set, get) => ({
-  language: typeof window !== 'undefined' ? getInitialLanguage() : 'es',
-  isManual: typeof window !== 'undefined' ? localStorage.getItem('klozet_language_manual') === 'true' : false,
+  language: 'es',
+  isManual: false,
 
   initLanguage: () => {
     if (typeof window === 'undefined') return;
