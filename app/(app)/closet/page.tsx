@@ -53,11 +53,15 @@ function KloeHeroBanner() {
         whileHover={{ y: -1.5, scale: 1.005 }}
         whileTap={{ scale: 0.98 }}
         transition={{ type: 'spring', stiffness: 460, damping: 24 }}
-        className="w-full py-3 px-4 sm:px-5 rounded-[20px] kz-kloe-hero flex items-center justify-between gap-3 cursor-pointer group"
+        className="w-full py-3 px-4 sm:px-5 rounded-[20px] kz-kloe-banner flex items-center justify-between gap-3 cursor-pointer group"
         aria-label="Charla conmigo"
       >
         <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
-          <KloeMascot mood="happy" size="md" />
+          <KloeMascot
+            mood="happy"
+            size="md"
+            className="[filter:drop-shadow(0_0_8px_rgba(255,255,255,0.9))_drop-shadow(0_3px_8px_rgba(0,0,0,0.12))]"
+          />
           <div className="min-w-0 flex-1">
             <AnimatePresence mode="wait">
               <motion.p
@@ -66,7 +70,7 @@ function KloeHeroBanner() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -5 }}
                 transition={{ duration: 0.25 }}
-                className="font-display text-[17px] sm:text-[19px] font-semibold tracking-[-0.02em] text-[var(--foreground)] group-hover:text-[var(--brand-pink-dark,#ED4C9E)] transition-colors truncate leading-tight select-none"
+                className="font-display text-[17px] sm:text-[19px] font-semibold tracking-[-0.02em] text-white [text-shadow:0_1px_2px_rgba(140,20,90,0.2)] truncate leading-tight select-none"
               >
                 {KLOE_PROMPTS[promptIndex]}
               </motion.p>
@@ -75,7 +79,7 @@ function KloeHeroBanner() {
         </div>
 
         <ChevronRight
-          className="w-5 h-5 shrink-0 text-[var(--brand-pink)] group-hover:translate-x-0.5 transition-transform"
+          className="w-5 h-5 shrink-0 text-white/95 drop-shadow-[0_1px_2px_rgba(140,20,90,0.2)] group-hover:translate-x-0.5 transition-transform"
           strokeWidth={2.6}
           aria-hidden="true"
         />
