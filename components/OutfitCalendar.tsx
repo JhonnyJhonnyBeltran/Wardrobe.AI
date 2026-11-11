@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, CalendarDays, X, Plus, Trash2, Shirt, Search, Heart, Edit2 } from 'lucide-react';
+import { motion, AnimatePresence, useDragControls } from 'framer-motion';
+import { ChevronLeft, ChevronRight, CalendarDays, X, Plus, Trash2, Shirt, Search, Heart, Edit2, Sun, Cloud, CloudRain, CloudSnow, MapPin, ArrowLeftRight } from 'lucide-react';
+import type { DailyWeatherEntry, WeatherCondition } from '@/app/api/weather/route';
 import { supabase } from '@/lib/supabase/client';
 import { useUser } from '@/store';
 import { OutfitDetailModal } from '@/components/OutfitDetailModal';
@@ -21,6 +22,30 @@ const formatDateToSQL = (date: Date) => {
   return d.toISOString().split('T')[0];
 };
 
+const WEATHER_CACHE_KEY = 'klozet_calendar_weather';
+
+function WeatherIcon({
+  condition,
+  className = 'w-4 h-4',
+  onPink = false,
+}: {
+  condition: WeatherCondition;
+  className?: string;
+  onPink?: boolean;
+}) {
+  switch (condition) {
+    case 'snow':
+      return <CloudSnow className={`${className} ${onPink ? 'text-white' : 'text-sky-400'}`} />;
+    case 'rain':
+      return <CloudRain className={`${className} ${onPink ? 'text-white' : 'text-blue-500'}`} />;
+    case 'cloudy':
+      return <Cloud className={`${className} ${onPink ? 'text-white/95' : 'text-zinc-400'}`} />;
+    case 'sunny':
+    default:
+      return <Sun className={`${className} ${onPink ? 'text-white' : 'text-amber-500'}`} />;
+  }
+}
+
 export default function OutfitCalendar() {
   const { user } = useUser();
   const { showModal, setTabBarHidden } = useUiStore();
@@ -30,10 +55,20 @@ export default function OutfitCalendar() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [calendarData, setCalendarData] = useState<Record<string, any[]>>({});
   const [loading, setLoading] = useState(true);
+
+  // Weather & city state
+  const [weatherCity, setWeatherCity] = useState('');
+  const [weatherDays, setWeatherDays] = useState<Record<string, DailyWeatherEntry>>({});
+  const [showCityModal, setShowCityModal] = useState(false);
+  const [cityInput, setCityInput] = useState('');
+  const [weatherLoading, setWeatherLoading] = useState(false);
+  const [weatherError, setWeatherError] = useState<string | null>(null);
   
   // Modals state
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [showPicker, setShowPicker] = useState(false);
+  const dayDragControls = useDragControls();
+  const pickerDragControls = useDragControls();
   
   // Details Modals state
   const [selectedOutfitDetail, setSelectedOutfitDetail] = useState<Outfit | null>(null);
@@ -227,15 +262,64 @@ export default function OutfitCalendar() {
     }
   };
 
+  const fetchWeather = useCallback(async (cityName: string) => {
+    const clean = cityName.trim();
+    if (!clean) return false;
+    setWeatherLoading(true);
+    setWeatherError(null);
+    try {
+      const res = await fetch(`/api/weather?city=${encodeURIComponent(clean)}`);
+      const data = await res.json();
+      if (!res.ok) {
+        setWeatherError(data?.error || 'No encontramos esa ciudad.');
+        return false;
+      }
+      const resolvedCity = data.city || clean;
+      const resolvedDays = data.days || {};
+      setWeatherCity(resolvedCity);
+      setWeatherDays(resolvedDays);
+      try {
+        localStorage.setItem(
+          WEATHER_CACHE_KEY,
+          JSON.stringify({ city: resolvedCity, days: resolvedDays, updatedAt: Date.now() })
+        );
+      } catch {}
+      return true;
+    } catch {
+      setWeatherError('Error de conexión al consultar el tiempo.');
+      return false;
+    } finally {
+      setWeatherLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const raw = localStorage.getItem(WEATHER_CACHE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed?.city) {
+          setWeatherCity(parsed.city);
+          if (parsed.days) setWeatherDays(parsed.days);
+          const age = Date.now() - (parsed.updatedAt || 0);
+          if (age > 30 * 60 * 1000) {
+            fetchWeather(parsed.city);
+          }
+        }
+      }
+    } catch {}
+  }, [fetchWeather]);
+
   useEffect(() => {
     if (window.innerWidth < 768) {
-      const hasModalOpen = !!selectedOutfitDetail || !!selectedItemDetail || showPicker || !!selectedDate;
+      const hasModalOpen = !!selectedOutfitDetail || !!selectedItemDetail || showPicker || !!selectedDate || showCityModal;
       setTabBarHidden(hasModalOpen);
     }
     return () => {
       setTabBarHidden(false);
     };
-  }, [selectedOutfitDetail, selectedItemDetail, showPicker, selectedDate, setTabBarHidden]);
+  }, [selectedOutfitDetail, selectedItemDetail, showPicker, selectedDate, showCityModal, setTabBarHidden]);
 
   const handleAssignOutfit = async (outfitId: string) => {
     if (!user || !selectedDate) return;
@@ -335,8 +419,11 @@ export default function OutfitCalendar() {
   };
 
   // Day Modal Content
+  const todayStr = formatDateToSQL(new Date());
+  const todayWeather = weatherDays[todayStr];
   const selectedDateStr = selectedDate ? formatDateToSQL(selectedDate) : '';
   const selectedDayOutfits = selectedDate ? getDayOutfits(selectedDate) : [];
+  const selectedDayWeather = selectedDateStr ? weatherDays[selectedDateStr] : undefined;
 
   const todayOutfits = getDayOutfits(new Date());
 
@@ -377,17 +464,17 @@ export default function OutfitCalendar() {
                             loadUserOutfits();
                             setShowPicker(true);
                           }}
-                          className="absolute top-3 right-14 z-10 p-2 bg-white/90 dark:bg-black/90 backdrop-blur-sm text-[var(--foreground)] rounded-full hover:bg-[var(--background-secondary)] transition-colors shadow-sm"
+                          className="absolute top-3 right-14 z-10 p-2 bg-white/90 dark:bg-black/90 backdrop-blur-sm text-[var(--foreground)] rounded-full hover:bg-[var(--background-secondary)] transition-colors shadow-sm cursor-pointer"
                           title="Cambiar outfit"
                         >
-                          <Edit2 className="w-4 h-4" />
+                          <ArrowLeftRight className="w-4 h-4" />
                         </button>
                         <button 
                           onClick={(e) => {
                             e.stopPropagation();
                             handleRemoveAssignment(outfit.calendar_id);
                           }}
-                          className="absolute top-3 right-3 z-10 p-2 bg-red-100/90 backdrop-blur-sm text-red-500 rounded-full hover:bg-red-500 hover:text-white transition-colors shadow-sm"
+                          className="absolute top-3 right-3 z-10 p-2 bg-red-100/90 backdrop-blur-sm text-red-500 rounded-full hover:bg-red-500 hover:text-white transition-colors shadow-sm cursor-pointer"
                           title="Quitar de hoy"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -405,7 +492,6 @@ export default function OutfitCalendar() {
                       >
                           {outfit.name || 'Outfit sin nombre'}
                       </h4>
-                      <p className="text-sm text-[var(--foreground-secondary)] mb-1">{outfit.items?.length || 0} prendas</p>
                     </div>
                   </div>
                 ))}
@@ -416,16 +502,45 @@ export default function OutfitCalendar() {
 
         {/* Calendar Section */}
         <motion.div layout className="flex-1 w-full flex flex-col">
+          {/* City Weather Trigger above Month */}
+          <div className="flex items-center justify-center mb-3">
+            <button
+              type="button"
+              onClick={() => {
+                setCityInput(weatherCity);
+                setWeatherError(null);
+                setShowCityModal(true);
+              }}
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--card-bg)] border border-[var(--border-color)] hover:border-[var(--brand-pink)]/45 text-xs font-semibold text-[var(--foreground)] shadow-xs transition-all cursor-pointer active:scale-95"
+            >
+              <MapPin className="w-3.5 h-3.5 text-[var(--brand-pink)] shrink-0" />
+              {weatherCity ? (
+                <>
+                  <span>{weatherCity}</span>
+                  {todayWeather && (
+                    <>
+                      <span className="text-[var(--foreground-tertiary)]">·</span>
+                      <WeatherIcon condition={todayWeather.condition} className="w-3.5 h-3.5" />
+                      <span className="tabular-nums">{todayWeather.temp}°</span>
+                    </>
+                  )}
+                </>
+              ) : (
+                <span className="text-[var(--foreground-secondary)]">Añadir ciudad</span>
+              )}
+            </button>
+          </div>
+
           {/* Header */}
           <div className="flex items-center justify-between mb-6 bg-[var(--card-bg)] p-4 rounded-3xl shadow-sm border border-[var(--border-color)]">
-            <button onClick={handlePrevMonth} className="p-2 rounded-full hover:bg-[var(--background-secondary)] text-[var(--foreground)] transition-colors">
+            <button onClick={handlePrevMonth} className="p-2 rounded-full hover:bg-[var(--background-secondary)] text-[var(--foreground)] transition-colors cursor-pointer">
               <ChevronLeft className="w-6 h-6" />
             </button>
             <h2 className="text-xl font-bold text-[var(--foreground)] capitalize flex items-center gap-2">
               <CalendarDays className="w-5 h-5 text-[var(--brand-pink)]" />
               {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
             </h2>
-            <button onClick={handleNextMonth} className="p-2 rounded-full hover:bg-[var(--background-secondary)] text-[var(--foreground)] transition-colors">
+            <button onClick={handleNextMonth} className="p-2 rounded-full hover:bg-[var(--background-secondary)] text-[var(--foreground)] transition-colors cursor-pointer">
               <ChevronRight className="w-6 h-6" />
             </button>
           </div>
@@ -445,21 +560,23 @@ export default function OutfitCalendar() {
           <div className="grid grid-cols-7 gap-1 sm:gap-2">
             {/* Empty Offset Days */}
             {Array.from({ length: startOffset }).map((_, i) => (
-              <div key={`empty-${i}`} className="aspect-square sm:aspect-[4/3] rounded-xl opacity-0" />
+              <div key={`empty-${i}`} className="min-h-[66px] sm:aspect-[4/3] rounded-xl opacity-0" />
             ))}
             
             {/* Actual Days */}
             {Array.from({ length: daysInMonth }).map((_, i) => {
               const dayDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), i + 1);
-              const isToday = formatDateToSQL(dayDate) === formatDateToSQL(new Date());
+              const dayDateStr = formatDateToSQL(dayDate);
+              const isToday = dayDateStr === todayStr;
               const dayOutfits = getDayOutfits(dayDate);
               const hasOutfits = dayOutfits.length > 0;
+              const dayWeather = weatherDays[dayDateStr];
               
               return (
                 <button
                   key={`day-${i}`}
                   onClick={() => setSelectedDate(dayDate)}
-                  className={`relative aspect-square sm:aspect-[4/3] rounded-xl sm:rounded-2xl flex flex-col items-center justify-center gap-1 sm:gap-1.5 p-1 sm:p-2 transition-all ${
+                  className={`relative min-h-[66px] sm:aspect-[4/3] rounded-xl sm:rounded-2xl flex flex-col items-center justify-start gap-0.5 sm:gap-1 py-1.5 px-1 sm:p-2 transition-all cursor-pointer ${
                     isToday 
                       ? 'bg-[var(--brand-pink)] text-white shadow-lg' 
                       : 'hover:bg-[var(--background-secondary)] text-[var(--foreground)]'
@@ -468,12 +585,26 @@ export default function OutfitCalendar() {
                   <span className={`text-sm sm:text-base font-medium leading-none ${isToday ? 'font-bold' : ''}`}>
                     {i + 1}
                   </span>
+
+                  {/* Weather Icon + Temperature below number */}
+                  {dayWeather && (
+                    <div className="flex items-center justify-center gap-0.5 leading-none mt-0.5">
+                      <WeatherIcon
+                        condition={dayWeather.condition}
+                        className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0"
+                        onPink={isToday}
+                      />
+                      <span className={`text-[10px] sm:text-[11px] font-medium tabular-nums ${isToday ? 'text-white/95' : 'text-[var(--foreground-secondary)]'}`}>
+                        {dayWeather.temp}°
+                      </span>
+                    </div>
+                  )}
                   
                   {/* Outfit Indicator */}
                   {hasOutfits && (
-                    <div className="relative flex items-center justify-center">
+                    <div className="relative flex items-center justify-center mt-0.5">
                       <div className={`rounded-full shadow-sm p-1 sm:p-1.5 z-10 ${isToday ? 'bg-white text-[var(--brand-pink)]' : 'bg-[var(--brand-pink)] text-white'}`}>
-                         <Shirt className={`w-3 h-3 sm:w-4 sm:h-4 ${isToday ? 'fill-current' : ''}`} />
+                         <Shirt className={`w-2.5 h-2.5 sm:w-3.5 sm:h-3.5 ${isToday ? 'fill-current' : ''}`} />
                       </div>
                       {dayOutfits.length > 1 && (
                         <div className={`absolute -top-1.5 -right-1.5 sm:-top-2 sm:-right-2 w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center text-[9px] sm:text-[11px] font-bold z-20 shadow-sm border border-white dark:border-[#111] ${isToday ? 'bg-black text-white dark:bg-white dark:text-black' : 'bg-[var(--foreground)] text-[var(--background)]'}`}>
@@ -521,34 +652,47 @@ export default function OutfitCalendar() {
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+              drag="y"
+              dragControls={dayDragControls}
+              dragListener={false}
+              dragConstraints={{ top: 0 }}
+              dragElastic={{ top: 0, bottom: 0.45 }}
+              onDragEnd={(_, info) => {
+                if (info.offset.y > 90 || info.velocity.y > 420) {
+                  setSelectedDate(null);
+                }
+              }}
               onClick={(e) => e.stopPropagation()}
               className={`bg-[var(--background)] w-full ${selectedDayOutfits.length > 1 ? 'max-w-xl md:max-w-2xl' : 'max-w-md'} rounded-t-3xl sm:rounded-3xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden`}
             >
-              {/* Handle for mobile */}
-              <div className="w-full flex justify-center py-3 sm:hidden">
-                <div className="w-12 h-1.5 bg-[var(--border-color)] rounded-full" />
-              </div>
+              {/* Drag Zone: Top Edge Handle + Header */}
+              <div
+                onPointerDown={(e) => dayDragControls.start(e)}
+                className="touch-none cursor-grab active:cursor-grabbing sticky top-0 bg-[var(--background)] z-10 border-b border-[var(--border-color)]"
+              >
+                <div className="w-full flex justify-center pt-3 pb-1 sm:hidden">
+                  <div className="w-12 h-1.5 bg-[var(--border-color)] rounded-full" />
+                </div>
 
-              <div className="px-6 py-4 border-b border-[var(--border-color)] flex items-center justify-between sticky top-0 bg-[var(--background)] z-10">
-                <div>
+                <div className="px-6 py-3.5 sm:py-4 flex items-center justify-between">
                   <h3 className="text-xl font-bold text-[var(--foreground)] capitalize">
                     {selectedDate.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
                   </h3>
-                  <p className="text-sm text-[var(--foreground-secondary)]">
-                    {selectedDayOutfits.length} outfit(s) asignado(s)
-                  </p>
+                  <button
+                    type="button"
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={() => setSelectedDate(null)}
+                    aria-label="Cerrar"
+                    className="w-8 h-8 flex items-center justify-center rounded-full bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:text-[var(--foreground)] transition-colors cursor-pointer"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
                 </div>
-                <button
-                  onClick={() => setSelectedDate(null)}
-                  className="w-8 h-8 flex items-center justify-center rounded-full bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:text-[var(--foreground)] transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
               </div>
 
               <div className="p-4 sm:p-6 overflow-y-auto flex-1">
                 {selectedDayOutfits.length === 0 ? (
-                  <div className="text-center py-12">
+                  <div className="text-center py-10">
                     <div className="w-16 h-16 bg-[var(--background-secondary)] rounded-full flex items-center justify-center mx-auto mb-4">
                       <CalendarDays className="w-8 h-8 text-[var(--foreground-tertiary)]" />
                     </div>
@@ -569,17 +713,17 @@ export default function OutfitCalendar() {
                                 loadUserOutfits();
                                 setShowPicker(true);
                               }}
-                              className="absolute top-2.5 right-11 z-10 p-1.5 bg-white/90 dark:bg-black/80 backdrop-blur-sm text-[var(--foreground)] rounded-full hover:bg-[var(--background-secondary)] transition-colors shadow-sm"
+                              className="absolute top-2.5 right-11 z-10 p-1.5 bg-white/90 dark:bg-black/80 backdrop-blur-sm text-[var(--foreground)] rounded-full hover:bg-[var(--background-secondary)] transition-colors shadow-sm cursor-pointer"
                               title="Cambiar outfit"
                             >
-                              <Edit2 className="w-3.5 h-3.5" />
+                              <ArrowLeftRight className="w-3.5 h-3.5" />
                             </button>
                             <button 
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleRemoveAssignment(outfit.calendar_id);
                               }}
-                              className="absolute top-2.5 right-2.5 z-10 p-1.5 bg-red-100/90 dark:bg-red-950/80 backdrop-blur-sm text-red-500 rounded-full hover:bg-red-500 hover:text-white transition-colors shadow-sm"
+                              className="absolute top-2.5 right-2.5 z-10 p-1.5 bg-red-100/90 dark:bg-red-950/80 backdrop-blur-sm text-red-500 rounded-full hover:bg-red-500 hover:text-white transition-colors shadow-sm cursor-pointer"
                               title="Quitar de hoy"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -592,17 +736,67 @@ export default function OutfitCalendar() {
                         </div>
                         <div className="flex flex-col justify-center flex-1 text-center">
                             <h4 
-                                className="font-bold text-[var(--foreground)] text-base mb-0.5 cursor-pointer hover:text-[var(--brand-pink)] transition-colors"
+                                className="font-bold text-[var(--foreground)] text-base cursor-pointer hover:text-[var(--brand-pink)] transition-colors"
                                 onClick={() => setSelectedOutfitDetail(outfit)}
                             >
                                 {outfit.name || 'Outfit sin nombre'}
                             </h4>
-                            <p className="text-xs text-[var(--foreground-secondary)]">{outfit.items?.length || 0} prendas</p>
                         </div>
                       </div>
                     ))}
                   </div>
                 )}
+
+                {/* Weather Forecast + City below */}
+                <div className="mt-5 pt-4 border-t border-[var(--border-color)]/60 flex flex-col items-center justify-center text-center gap-1">
+                  {selectedDayWeather ? (
+                    <>
+                      <div className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--foreground)]">
+                        <WeatherIcon condition={selectedDayWeather.condition} className="w-4 h-4" />
+                        <span className="tabular-nums">{selectedDayWeather.temp}°</span>
+                        <span className="text-[var(--foreground-secondary)] font-normal">· {selectedDayWeather.label}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCityInput(weatherCity);
+                          setWeatherError(null);
+                          setShowCityModal(true);
+                        }}
+                        className="inline-flex items-center gap-1 text-xs text-[var(--foreground-tertiary)] hover:text-[var(--brand-pink)] transition-colors cursor-pointer"
+                      >
+                        <MapPin className="w-3 h-3" />
+                        <span>{weatherCity}</span>
+                      </button>
+                    </>
+                  ) : weatherCity ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCityInput(weatherCity);
+                        setWeatherError(null);
+                        setShowCityModal(true);
+                      }}
+                      className="inline-flex items-center gap-1.5 text-xs text-[var(--foreground-tertiary)] hover:text-[var(--brand-pink)] transition-colors cursor-pointer"
+                    >
+                      <MapPin className="w-3.5 h-3.5" />
+                      <span>{weatherCity} · Previsión no disponible para esta fecha</span>
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCityInput('');
+                        setWeatherError(null);
+                        setShowCityModal(true);
+                      }}
+                      className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--foreground-secondary)] hover:text-[var(--brand-pink)] transition-colors cursor-pointer"
+                    >
+                      <MapPin className="w-3.5 h-3.5 text-[var(--brand-pink)]" />
+                      <span>Añadir ciudad para ver el tiempo</span>
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div className="p-6 border-t border-[var(--border-color)] bg-[var(--background)]">
@@ -631,7 +825,7 @@ export default function OutfitCalendar() {
         )}
       </AnimatePresence>
 
-      {/* Outfit Picker Modal */}
+      {/* Outfit Picker Modal - Taller + Drag-down from top edge */}
       <AnimatePresence>
         {showPicker && (
           <motion.div
@@ -646,23 +840,47 @@ export default function OutfitCalendar() {
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+              drag="y"
+              dragControls={pickerDragControls}
+              dragListener={false}
+              dragConstraints={{ top: 0 }}
+              dragElastic={{ top: 0, bottom: 0.45 }}
+              onDragEnd={(_, info) => {
+                if (info.offset.y > 90 || info.velocity.y > 420) {
+                  setShowPicker(false);
+                  setOutfitToSwap(null);
+                }
+              }}
               onClick={(e) => e.stopPropagation()}
-              className="bg-[var(--background)] w-full max-w-lg md:max-w-4xl rounded-t-3xl sm:rounded-3xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden"
+              className="bg-[var(--background)] w-full max-w-lg md:max-w-4xl rounded-t-3xl sm:rounded-3xl h-[88dvh] sm:h-[84vh] max-h-[92vh] flex flex-col shadow-2xl overflow-hidden"
             >
-            <div className="px-6 py-4 border-b border-[var(--border-color)] flex items-center gap-4 bg-[var(--background)]/90 backdrop-blur-md sticky top-0 z-10 pt-safe-top">
-              <button
-                onClick={() => { setShowPicker(false); setOutfitToSwap(null); }}
-                className="w-10 h-10 flex items-center justify-center rounded-full bg-[var(--background-secondary)] text-[var(--foreground)] transition-colors"
+              {/* Drag Zone: Top Edge Handle + Picker Header */}
+              <div
+                onPointerDown={(e) => pickerDragControls.start(e)}
+                className="touch-none cursor-grab active:cursor-grabbing bg-[var(--background)]/95 backdrop-blur-md sticky top-0 z-10 border-b border-[var(--border-color)]"
               >
-                <ChevronLeft className="w-6 h-6" />
-              </button>
-              <div>
-                  <h3 className="text-xl font-bold text-[var(--foreground)]">{outfitToSwap ? 'Cambiar Outfit' : 'Selecciona un Outfit'}</h3>
-                  <p className="text-sm text-[var(--foreground-secondary)]">Para el {selectedDate?.toLocaleDateString()}</p>
-              </div>
-            </div>
+                <div className="w-full flex justify-center pt-3 pb-1 sm:hidden">
+                  <div className="w-12 h-1.5 bg-[var(--border-color)] rounded-full" />
+                </div>
 
-            <div className="flex-1 overflow-y-auto p-4">
+                <div className="px-6 py-3.5 sm:py-4 flex items-center gap-4">
+                  <button
+                    type="button"
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={() => { setShowPicker(false); setOutfitToSwap(null); }}
+                    className="w-10 h-10 flex items-center justify-center rounded-full bg-[var(--background-secondary)] text-[var(--foreground)] transition-colors cursor-pointer"
+                    aria-label="Volver"
+                  >
+                    <ChevronLeft className="w-6 h-6" />
+                  </button>
+                  <div>
+                    <h3 className="text-xl font-bold text-[var(--foreground)]">{outfitToSwap ? 'Cambiar Outfit' : 'Selecciona un Outfit'}</h3>
+                    <p className="text-sm text-[var(--foreground-secondary)]">Para el {selectedDate?.toLocaleDateString('es-ES')}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-4">
               <div className="mb-6 flex items-center gap-3 relative">
                 <div className="relative flex-1">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--foreground-tertiary)]" />
@@ -713,6 +931,80 @@ export default function OutfitCalendar() {
                 </div>
               )}
               </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Small City Weather Modal */}
+      <AnimatePresence>
+        {showCityModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[6060] bg-black/45 backdrop-blur-sm flex items-center justify-center p-4"
+            onClick={() => setShowCityModal(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.94, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.94, y: 12 }}
+              transition={{ type: 'spring', stiffness: 360, damping: 28 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-sm bg-[var(--background)] border border-[var(--border-color)] rounded-3xl p-5 shadow-2xl"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-[var(--brand-pink)]" />
+                  <h3 className="text-base font-bold text-[var(--foreground)]">Tu ciudad</h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowCityModal(false)}
+                  aria-label="Cerrar"
+                  className="w-8 h-8 rounded-full bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:text-[var(--foreground)] flex items-center justify-center cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  if (!cityInput.trim() || weatherLoading) return;
+                  const ok = await fetchWeather(cityInput);
+                  if (ok) setShowCityModal(false);
+                }}
+                className="space-y-3"
+              >
+                <div className="relative">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--foreground-tertiary)]" />
+                  <input
+                    type="text"
+                    value={cityInput}
+                    onChange={(e) => {
+                      setCityInput(e.target.value);
+                      if (weatherError) setWeatherError(null);
+                    }}
+                    placeholder="Ej. Madrid, Barcelona, París..."
+                    autoFocus
+                    className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-[var(--background-secondary)] border border-[var(--border-color)] focus:border-[var(--brand-pink)] text-base sm:text-sm text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] outline-none transition-colors"
+                  />
+                </div>
+
+                {weatherError && (
+                  <p className="text-xs text-red-500 font-medium px-1">{weatherError}</p>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={!cityInput.trim() || weatherLoading}
+                  className="w-full py-2.5 rounded-full bg-[var(--brand-pink)] text-white text-sm font-bold shadow-md shadow-[var(--brand-pink)]/20 disabled:opacity-50 cursor-pointer transition-opacity flex items-center justify-center gap-2"
+                >
+                  {weatherLoading ? 'Consultando...' : 'Ver previsión'}
+                </button>
+              </form>
             </motion.div>
           </motion.div>
         )}

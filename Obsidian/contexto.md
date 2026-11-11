@@ -3500,3 +3500,16 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
   - Barra flotante de borrado masivo contenida dentro de la pantalla (`left-3 right-3 max-w-md`) con etiquetas compactas (`selec.` / `Todos`) evitando desbordamientos horizontales en móvil.
 - **Limpieza de DevTools y animaciones (`next.config.ts`, `components/NavbarKlozetLogo.tsx`, `SocialListener.tsx`, `AppLifecycleManager.tsx`, `RealtimeManager.ts`, `userStore.tsx`, `wardrobeStore.ts`)**:
   - Eliminados logs de diagnóstico `[SocialListener]`, `[UserStore]`, `[RealtimeManager]`, `[Lifecycle]` y `[WardrobeStore]`, activado `compiler.removeConsole` en producción en `next.config.ts`, y aislada la transición tween en `filter: blur(...)` de `NavbarKlozetLogo` para eliminar el warning de keyframe negativo (`blur(-0.02881px)`).
+
+---
+
+## 60. Previsión Meteorológica por Ciudad en Calendario y Modales Deslizables (Noviembre 2026)
+- **Endpoint de clima por ciudad (`app/api/weather/route.ts`)**:
+  - Resuelve ciudad vía geocodificación Open-Meteo (`es`) y obtiene previsión diaria extendida (16 días + recientes) mapeando códigos WMO a `sunny` (soleado), `cloudy` (nublado), `rain` (lluvia) y `snow` (nieve), con respaldo automático en `wttr.in/?format=j1` y cacheo HTTP (`revalidate: 1800`).
+- **Calendario inteligente con clima (`components/OutfitCalendar.tsx`)**:
+  - Píldora + modal compacto de ciudad sobre el encabezado del mes (`Añadir ciudad` o `{Ciudad} · {Icono} {Temp}°`) persistido en `localStorage` (`klozet_calendar_weather`).
+  - Celdas diarias con icono meteorológico (`Sun`, `Cloud`, `CloudRain`, `CloudSnow`) y temperatura en grados directamente debajo del número del día.
+- **Modales del calendario y detalles (`components/OutfitCalendar.tsx`, `components/OutfitDetailModal.tsx`)**:
+  - Modal del día con gesto táctil/ratón deslizable hacia abajo desde el borde superior (`useDragControls` en tirador y cabecera), mostrando previsión de temperatura y estado debajo junto al botón de ciudad en la zona inferior.
+  - Modal `Selecciona un Outfit` ampliado en altura (`h-[88dvh] sm:h-[84vh]`) y también deslizable hacia abajo desde el borde superior.
+  - Eliminado el contador de prendas/outfits de los modales del calendario y `OutfitDetailModal`, e icono de intercambio `<ArrowLeftRight />` en los botones de cambiar outfit.

@@ -195,15 +195,16 @@ export function OutfitDetailModal({
 
                             {/* Bottom Info Section (Clean & Compact) */}
                             <div className="relative z-10 w-full shrink-0 md:flex-1 md:shrink flex flex-col justify-between bg-[var(--background)] p-4 sm:p-5 md:p-8 md:pt-14 gap-4 md:gap-6 border-t border-[var(--border-color)]/60 md:border-t-0 md:overflow-y-auto">
-                                {/* Title & Clean Subtitle (no redundant informational pills) */}
+                                {/* Title */}
                                 <div className="flex flex-col gap-1">
                                     <h2 data-no-translate={outfit.name ? "true" : undefined} className="kz-title md:text-2xl text-[var(--foreground)] leading-tight">
                                         {outfit.name || 'Outfit sin título'}
                                     </h2>
-                                    <p className="kz-caption text-[var(--foreground-secondary)]">
-                                        {outfit.occasion && config ? `${config.label} · ` : ''}
-                                        {items.length} {items.length === 1 ? 'prenda' : 'prendas'}
-                                    </p>
+                                    {outfit.occasion && config && (
+                                        <p className="kz-caption text-[var(--foreground-secondary)]">
+                                            {config.label}
+                                        </p>
+                                    )}
                                 </div>
 
                                 {/* Desktop Garment Cards Grid (Prendas del outfit) */}
@@ -212,9 +213,6 @@ export function OutfitDetailModal({
                                         <div className="flex items-center justify-between">
                                             <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--foreground-secondary)]">
                                                 Prendas del look
-                                            </span>
-                                            <span className="text-[11px] font-semibold text-[var(--foreground-tertiary)]">
-                                                {items.length} piezas
                                             </span>
                                         </div>
                                         <div className="grid grid-cols-2 gap-2 max-h-[160px] overflow-y-auto pr-1">
