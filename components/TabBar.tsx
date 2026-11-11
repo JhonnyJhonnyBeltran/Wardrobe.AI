@@ -37,12 +37,12 @@ export default function TabBar() {
   const messageBadgeVisible = useMessageStore(selectBadgeVisible);
   const notificationUnreadCount = useRealtimeStore(selectUnreadCount);
 
-  const tabs: (TabItem & { shortLabel: string })[] = [
-    { href: '/feed', labelKey: 'home', shortLabel: t.nav.home || 'Inicio', icon: <Home /> },
-    { href: '/search', labelKey: 'search', shortLabel: t.nav.search || 'Buscar', icon: <Search /> },
-    { href: '/closet', labelKey: 'closet', shortLabel: t.nav.closet || 'Armario', icon: null, isLogoMark: true },
-    { href: '/notifications', labelKey: 'notifications', shortLabel: 'Actividad', icon: <Heart /> },
-    { href: '/profile', labelKey: 'profile', shortLabel: t.nav.profile || 'Perfil', icon: <UserRound /> },
+  const tabs: TabItem[] = [
+    { href: '/feed', labelKey: 'home', icon: <Home /> },
+    { href: '/search', labelKey: 'search', icon: <Search /> },
+    { href: '/closet', labelKey: 'closet', icon: null, isLogoMark: true },
+    { href: '/notifications', labelKey: 'notifications', icon: <Heart /> },
+    { href: '/profile', labelKey: 'profile', icon: <UserRound /> },
   ];
 
   // Hide TabBar on deep flows: Messages, Outfit Canvas, Profile Settings
@@ -73,7 +73,7 @@ export default function TabBar() {
     >
       {/* Floating Apple Glass Capsule */}
       <div
-        className="relative flex justify-between items-center h-[64px] px-2 rounded-full bg-white/88 dark:bg-[#111113]/88 backdrop-blur-2xl border border-black/[0.08] dark:border-white/[0.12] shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_12px_36px_rgba(0,0,0,0.55)] pointer-events-auto select-none"
+        className="relative flex justify-between items-center h-[58px] px-1.5 rounded-full bg-white/85 dark:bg-[#111113]/85 backdrop-blur-2xl border border-black/[0.08] dark:border-white/[0.12] shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_12px_36px_rgba(0,0,0,0.55)] pointer-events-auto select-none"
       >
         {tabs.map((tab) => {
           const isActive =
@@ -92,29 +92,31 @@ export default function TabBar() {
                   triggerHaptic('medium');
                 }
               }}
-              className="flex-1 flex justify-center items-center h-full group touch-manipulation z-10 min-w-[44px]"
+              className="flex-1 flex justify-center items-center h-full group touch-manipulation z-10"
             >
               <motion.div
-                whileTap={{ scale: 0.9 }}
+                whileTap={{ scale: 0.88 }}
                 transition={{ type: 'spring', stiffness: 500, damping: 24 }}
-                className={`relative flex flex-col items-center justify-center gap-0.5 px-2.5 py-1.5 rounded-full transition-colors duration-150 ${
-                  isActive
-                    ? 'bg-[var(--brand-pink,#FF66C4)]/10 text-[var(--brand-pink,#FF66C4)]'
-                    : 'text-zinc-500 dark:text-zinc-400 group-hover:text-black dark:group-hover:text-white'
-                }`}
+                className="relative flex flex-col items-center justify-center p-2 rounded-full"
               >
                 {tab.isLogoMark ? (
-                  // Center Klozet Closet Tab - Clear mark + "Armario" label
-                  <div className="relative z-10 w-[40px] h-[22px] flex items-center justify-center">
+                  // Center Klozet Brand Icon - klzt -> k -> klozet con rotación y zoom in / shrink
+                  <div className="relative z-10 w-[48px] h-[28px] flex items-center justify-center">
                     <NavbarKlozetLogo isActive={isActive} />
                   </div>
                 ) : (
                   // Native Outlined Apple Contour Icons
-                  <div className="relative z-10 flex items-center justify-center">
+                  <div
+                    className={`relative z-10 transition-colors duration-150 ${
+                      isActive
+                        ? 'text-[var(--brand-pink,#FF66C4)]'
+                        : 'text-zinc-500 dark:text-zinc-400 group-hover:text-black dark:group-hover:text-white'
+                    }`}
+                  >
                     {React.cloneElement(tab.icon as React.ReactElement<any>, {
-                      strokeWidth: isActive ? 2.5 : 1.85,
+                      strokeWidth: isActive ? 2.6 : 1.8,
                       fill: 'none',
-                      className: 'w-[21px] h-[21px] transition-[stroke-width] duration-150',
+                      className: 'w-[23px] h-[23px] transition-[stroke-width] duration-150',
                     })}
 
                     {/* Notification Badge with Spring Pop */}
@@ -125,7 +127,7 @@ export default function TabBar() {
                           animate={{ scale: [0, 1.25, 1] }}
                           exit={{ scale: 0 }}
                           transition={{ type: 'spring', stiffness: 550, damping: 20 }}
-                          className="absolute -top-1.5 -right-2 min-w-[16px] h-[16px] px-1 flex items-center justify-center bg-[var(--brand-pink,#FF66C4)] text-white text-[9px] font-bold rounded-full border-2 border-white dark:border-[#111113] shadow-xs pointer-events-none"
+                          className="absolute -top-1.5 -right-1.5 min-w-[16px] h-[16px] px-1 flex items-center justify-center bg-black dark:bg-white text-white dark:text-black text-[9px] font-bold rounded-full border-2 border-white dark:border-[#111113] shadow-xs pointer-events-none"
                         >
                           {badgeCount > 99 ? '+99' : badgeCount}
                         </motion.div>
@@ -133,13 +135,6 @@ export default function TabBar() {
                     </AnimatePresence>
                   </div>
                 )}
-                <span
-                  className={`text-[10px] leading-none tracking-tight ${
-                    isActive ? 'font-bold text-[var(--brand-pink,#FF66C4)]' : 'font-medium'
-                  }`}
-                >
-                  {tab.shortLabel}
-                </span>
               </motion.div>
             </Link>
           );

@@ -122,7 +122,7 @@ html {
   --shadow-pink-soft: 0 8px 24px -6px rgba(255, 102, 196, 0.34), 0 2px 6px -1px rgba(237, 76, 158, 0.16);
 
   /* ===== MOBILE SIZING ===== */
-  --tabbar-height: 76px;
+  --tabbar-height: 72px;
 }
 
 /* ===== UTILITIES & SAFE AREAS ===== */

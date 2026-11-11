@@ -72,58 +72,51 @@ export default function Sidebar() {
 
   return (
     <>
-      <aside className={`hidden md:flex flex-col w-[82px] min-w-[82px] max-w-[82px] shrink-0 h-screen sticky top-0 bg-[var(--background)]/90 backdrop-blur-md border-r border-[var(--border-color)] z-[5001] items-center py-6 will-change-transform isolate transition-all duration-300 ${storeTabBarHidden ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+      <aside className={`hidden md:flex flex-col w-[72px] min-w-[72px] max-w-[72px] shrink-0 h-screen sticky top-0 bg-[var(--background)]/90 backdrop-blur-md border-r border-[var(--border-color)] z-[5001] items-center py-6 will-change-transform isolate transition-all duration-300 ${storeTabBarHidden ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
         {/* Nav Items */}
-        <nav className="flex-1 flex flex-col gap-3.5 w-full items-center px-1.5">
+        <nav className="flex-1 flex flex-col gap-5 w-full items-center">
           {navItems.map((item) => {
             const isActive = item.labelKey === 'notifications'
               ? showNotifications
               : (pathname === item.href || (item.href !== '/feed' && item.href !== '#' && pathname.startsWith(item.href + '/')));
 
             const badgeCount = getBadgeCount(item.labelKey);
-            const shortText =
-              item.labelKey === 'notifications'
-                ? 'Actividad'
-                : t.nav[item.labelKey];
 
             return (
-              <div key={item.labelKey} className="relative group w-full flex justify-center">
+              <div key={item.labelKey} className="relative group">
                 {item.action ? (
                   <button
                     id={item.labelKey === 'notifications' ? 'notifications-nav-btn' : undefined}
                     aria-label={t.nav[item.labelKey]}
                     onClick={item.action}
-                    className={`relative flex flex-col items-center justify-center gap-1 w-full py-2 rounded-[20px] transition-all duration-200 cursor-pointer
+                    className={`relative flex items-center justify-center w-12 h-12 rounded-2xl transition-all duration-200 
                       ${isActive
-                        ? 'bg-[var(--brand-pink,#FF66C4)]/10 text-[var(--brand-pink,#FF66C4)]'
-                        : 'text-zinc-600 dark:text-zinc-400 hover:bg-[var(--background-secondary)] hover:text-black dark:hover:text-white'
+                        ? 'text-[var(--brand-pink,#FF66C4)]'
+                        : 'text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white'
                       }`}
                   >
                     <div className="relative flex items-center justify-center pointer-events-none">
                       {React.cloneElement(item.icon as React.ReactElement<any>, {
-                        strokeWidth: isActive ? 2.5 : 1.8,
+                        strokeWidth: isActive ? 2.6 : 1.8,
                         fill: 'none',
-                        className: `w-[22px] h-[22px] transition-[stroke-width] duration-200 ${(item.icon as any).props.className || ''}`
+                        className: `w-[26px] h-[26px] transition-[stroke-width] duration-200 ${(item.icon as any).props.className || ''}`
                       })}
 
                       {badgeCount > 0 && (
-                        <span className="absolute -top-1.5 -right-2 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-[var(--brand-pink,#FF66C4)] text-white text-[10px] font-bold rounded-full border-2 border-[var(--background)]">
+                        <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1.5 flex items-center justify-center bg-[var(--brand-pink,#FF66C4)] text-white text-[10px] font-bold rounded-full border-2 border-[var(--background)]">
                           {badgeCount > 99 ? '+99' : badgeCount}
                         </span>
                       )}
                     </div>
-                    <span className={`text-[10px] leading-none tracking-tight ${isActive ? 'font-bold' : 'font-medium'}`}>
-                      {shortText}
-                    </span>
                   </button>
                 ) : (
                   <Link
                     href={item.href}
                     aria-label={t.nav[item.labelKey]}
-                    className={`relative flex flex-col items-center justify-center gap-1 w-full py-2 rounded-[20px] transition-all duration-200
+                    className={`relative flex items-center justify-center w-12 h-12 rounded-2xl transition-all duration-200 
                       ${isActive
-                        ? 'bg-[var(--brand-pink,#FF66C4)]/10 text-[var(--brand-pink,#FF66C4)]'
-                        : 'text-zinc-600 dark:text-zinc-400 hover:bg-[var(--background-secondary)] hover:text-black dark:hover:text-white'
+                        ? 'text-[var(--brand-pink,#FF66C4)]'
+                        : 'text-zinc-600 dark:text-zinc-400 hover:text-black dark:hover:text-white'
                       }`}
                   >
                     <div className="relative flex items-center justify-center">
@@ -131,31 +124,33 @@ export default function Sidebar() {
                         <motion.div
                           whileTap={{ scale: 0.86 }}
                           transition={{ type: 'spring', stiffness: 500, damping: 22 }}
-                          className="relative w-[40px] h-[22px] flex items-center justify-center"
+                          className="relative w-[46px] h-[28px] flex items-center justify-center"
                         >
                           <NavbarKlozetLogo isActive={isActive} />
                         </motion.div>
                       ) : (
                         <>
                           {React.cloneElement(item.icon as React.ReactElement<any>, {
-                            strokeWidth: isActive ? 2.5 : 1.8,
+                            strokeWidth: isActive ? 2.6 : 1.8,
                             fill: 'none',
-                            className: `w-[22px] h-[22px] transition-[stroke-width] duration-200 ${(item.icon as any).props.className || ''}`
+                            className: `w-[26px] h-[26px] transition-[stroke-width] duration-200 ${(item.icon as any).props.className || ''}`
                           })}
 
                           {badgeCount > 0 && item.labelKey !== 'search' && (
-                            <span className="absolute -top-1.5 -right-2 min-w-[18px] h-[18px] px-1 flex items-center justify-center bg-[var(--brand-pink,#FF66C4)] text-white text-[10px] font-bold rounded-full border-2 border-[var(--background)]">
+                            <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1.5 flex items-center justify-center bg-[var(--brand-pink,#FF66C4)] text-white text-[10px] font-bold rounded-full border-2 border-[var(--background)]">
                               {badgeCount > 99 ? '+99' : badgeCount}
                             </span>
                           )}
                         </>
                       )}
                     </div>
-                    <span className={`text-[10px] leading-none tracking-tight ${isActive ? 'font-bold' : 'font-medium'}`}>
-                      {shortText}
-                    </span>
                   </Link>
                 )}
+
+                {/* Tooltip */}
+                <div className="absolute left-full ml-3 px-2.5 py-1.5 bg-[var(--background-secondary)] text-[var(--foreground)] border border-[var(--border-color)] text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50">
+                  {t.nav[item.labelKey]}
+                </div>
               </div>
             );
           })}

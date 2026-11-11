@@ -980,7 +980,7 @@ export default function KloePage() {
     <div className="min-h-screen bg-[var(--background)] flex flex-col justify-between max-w-5xl mx-auto">
       
       {/* DESKTOP HEADER */}
-      <header className="hidden md:flex fixed top-0 md:left-[82px] left-0 right-0 z-30 h-16 bg-[var(--background)]/85 backdrop-blur-xl border-b border-[var(--border-color)]/50 px-8 items-center justify-between">
+      <header className="hidden md:flex fixed top-0 md:left-[72px] left-0 right-0 z-30 h-16 bg-[var(--background)]/85 backdrop-blur-xl border-b border-[var(--border-color)]/50 px-8 items-center justify-between">
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.push('/closet')}

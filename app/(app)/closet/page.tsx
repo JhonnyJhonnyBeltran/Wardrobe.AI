@@ -223,7 +223,6 @@ export default function ClosetPage() {
   const [outfitsLoadingMore, setOutfitsLoadingMore] = useState(false);
   const [outfitsHasMore, setOutfitsHasMore] = useState(true);
   const outfitsPageRef = useRef(0);
-  const [outfitsTotalCount, setOutfitsTotalCount] = useState<number | null>(null);
   const [itemUsageStats, setItemUsageStats] = useState<Record<string, { wears: number; looks: number }>>({});
   const [recentlyAddedId, setRecentlyAddedId] = useState<string | null>(null);
   const [recentlyFavoritedId, setRecentlyFavoritedId] = useState<string | null>(null);
@@ -249,7 +248,6 @@ export default function ClosetPage() {
         if (!active) return;
 
         const outfitsRows = (outfitsRes.data as any[]) || [];
-        setOutfitsTotalCount(outfitsRows.length);
 
         // How many calendar entries exist per outfit_id
         const outfitWearCounts: Record<string, number> = {};
@@ -755,20 +753,9 @@ export default function ClosetPage() {
         transition={{ duration: 0.3 }}
       >
 
-      {/* Header Sticky */}
-      <header className="sticky top-0 z-40 apple-glass-bar pt-safe">
-        <div className="max-w-7xl mx-auto px-4 pt-4 pb-1 space-y-4">
-
-          {/* Display Hierarchy Header */}
-          <div className="flex items-end justify-between gap-4">
-            <div>
-              <h1 className="kz-display text-[var(--foreground)]">Tu armario</h1>
-              <p className="kz-caption text-[var(--foreground-secondary)] mt-1 tabular-nums">
-                {items.length} {items.length === 1 ? 'prenda' : 'prendas'}
-                {outfitsTotalCount !== null && ` · ${outfitsTotalCount} ${outfitsTotalCount === 1 ? 'look' : 'looks'}`}
-              </p>
-            </div>
-          </div>
+      {/* Header Sticky (sin ralla divisoria horizontal) */}
+      <header className="sticky top-0 z-40 bg-[var(--background)]/95 backdrop-blur-md pb-2 pt-safe">
+        <div className="max-w-7xl mx-auto px-4 pt-4 space-y-4">
 
           {/* Kloe Hero Action Banner */}
           <div className="w-full">
@@ -778,16 +765,16 @@ export default function ClosetPage() {
           {/* Progress / Tutorial Bar (disappears permanently at 100%) */}
           <ProfileProgressBar />
 
-          {/* Clear Labeled Top Tabs across Mobile & Desktop */}
-          <div className="flex gap-1 border-b border-[var(--border-color)]/60">
+          {/* Clear Labeled Top Tabs without giant dividing line */}
+          <div className="flex items-center gap-2 pt-1">
             <button
               onClick={() => {
                 try { haptics.selection(); } catch {}
                 setActiveTab('items');
               }}
-              className={`flex-1 flex items-center justify-center py-3 border-b-2 transition-colors gap-1.5 cursor-pointer ${activeTab === 'items'
-                ? 'border-[var(--brand-pink)] text-[var(--foreground)] font-semibold'
-                : 'border-transparent text-[var(--foreground-tertiary)] hover:text-[var(--foreground-secondary)] font-medium'
+              className={`flex-1 flex items-center justify-center py-2.5 px-3 rounded-full transition-all gap-1.5 cursor-pointer ${activeTab === 'items'
+                ? 'bg-[var(--brand-pink)]/12 text-[var(--brand-pink-dark,#ED4C9E)] font-semibold'
+                : 'text-[var(--foreground-tertiary)] hover:text-[var(--foreground-secondary)] hover:bg-[var(--background-secondary)]/60 font-medium'
                 }`}
             >
               <Shirt className={`w-4 h-4 sm:w-5 sm:h-5 ${activeTab === 'items' ? 'text-[var(--brand-pink)]' : ''}`} />
@@ -798,9 +785,9 @@ export default function ClosetPage() {
                 try { haptics.selection(); } catch {}
                 setActiveTab('outfits');
               }}
-              className={`flex-1 flex items-center justify-center py-3 border-b-2 transition-colors gap-1.5 cursor-pointer ${activeTab === 'outfits'
-                ? 'border-[var(--brand-pink)] text-[var(--foreground)] font-semibold'
-                : 'border-transparent text-[var(--foreground-tertiary)] hover:text-[var(--foreground-secondary)] font-medium'
+              className={`flex-1 flex items-center justify-center py-2.5 px-3 rounded-full transition-all gap-1.5 cursor-pointer ${activeTab === 'outfits'
+                ? 'bg-[var(--brand-pink)]/12 text-[var(--brand-pink-dark,#ED4C9E)] font-semibold'
+                : 'text-[var(--foreground-tertiary)] hover:text-[var(--foreground-secondary)] hover:bg-[var(--background-secondary)]/60 font-medium'
                 }`}
             >
               <Layers className={`w-4 h-4 sm:w-5 sm:h-5 ${activeTab === 'outfits' ? 'text-[var(--brand-pink)]' : ''}`} />
@@ -811,9 +798,9 @@ export default function ClosetPage() {
                 try { haptics.selection(); } catch {}
                 setActiveTab('calendar');
               }}
-              className={`flex-1 flex items-center justify-center py-3 border-b-2 transition-colors gap-1.5 cursor-pointer ${activeTab === 'calendar'
-                ? 'border-[var(--brand-pink)] text-[var(--foreground)] font-semibold'
-                : 'border-transparent text-[var(--foreground-tertiary)] hover:text-[var(--foreground-secondary)] font-medium'
+              className={`flex-1 flex items-center justify-center py-2.5 px-3 rounded-full transition-all gap-1.5 cursor-pointer ${activeTab === 'calendar'
+                ? 'bg-[var(--brand-pink)]/12 text-[var(--brand-pink-dark,#ED4C9E)] font-semibold'
+                : 'text-[var(--foreground-tertiary)] hover:text-[var(--foreground-secondary)] hover:bg-[var(--background-secondary)]/60 font-medium'
                 }`}
             >
               <CalendarDays className={`w-4 h-4 sm:w-5 sm:h-5 ${activeTab === 'calendar' ? 'text-[var(--brand-pink)]' : ''}`} />
