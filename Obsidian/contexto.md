@@ -3683,3 +3683,14 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
 - **Arreglo de línea divisora de pestañas en `/profile` (`app/(app)/profile/page.tsx`)**:
   - Eliminado `border-b` superior encima del bloque de tabs debajo de `ProfileProgressBar` / `DiscoveredStyleBanner` (que visualmente flotaba por encima de las pestañas).
   - Añadida la línea divisora continua al contenedor de tabs (`border-b border-[var(--border-color)]/60`) y un indicador inferior rosa animado compartido (`layoutId="profile-section-tab-indicator"`) alineado con las pestañas de `/closet`.
+
+---
+
+## 72. Rediseño Copy y Cabecera Modal Onboarding `Primeros pasos` (Noviembre 2026)
+- **Cabecera limpia (`components/GuidedTour/GuidedTourModal.tsx`)**:
+  - Título unificado a **`Primeros pasos`** con círculo rosa sólido `{N}/6`.
+  - Eliminados el badge de porcentaje (`{totalPercent}%`) y el botón **"Saltar"**.
+  - Botón central sin icono `ChevronRight` (`>`).
+- **Copy rehecho y veraz (`store/tourStore.ts`, `components/GuidedTour/GuidedTourModal.tsx`)**:
+  - Eliminadas referencias obsoletas (*"básicos de prueba"*, *"Sticker HD"*, *"91 h ahorradas"* y *"estilista personal 24/7"*).
+  - Redacción directa y fiel al funcionamiento real de `/onboarding/preferences`, subida por fotos/capturas (hasta 20 por lote con recorte de fondo), lienzo de outfits, Kloe, feed y foto de perfil.

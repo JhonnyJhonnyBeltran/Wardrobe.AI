@@ -14,7 +14,6 @@ import {
   Share2, 
   Search, 
   Plus, 
-  Sun, 
   CheckCircle2, 
   Trophy 
 } from 'lucide-react';
@@ -59,7 +58,6 @@ export default function GuidedTourModal() {
     startNewUserTour,
     openTour,
     closeTour,
-    dismissTour,
     nextStep,
     prevStep,
     goToStep,
@@ -167,42 +165,28 @@ export default function GuidedTourModal() {
               onClick={(e) => e.stopPropagation()}
             >
               {/* Top Header */}
-              <div className="p-5 sm:p-6 pb-4 border-b border-[var(--border-color)]/40 flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-full bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] flex items-center justify-center font-bold text-xs shrink-0">
+              <div className="p-5 sm:p-6 pb-4 border-b border-[var(--border-color)]/40 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-8 h-8 rounded-full bg-[var(--brand-pink)] text-white flex items-center justify-center font-bold text-xs shrink-0 tabular-nums shadow-sm shadow-[var(--brand-pink)]/25">
                     {currentStepIndex + 1}/{TOUR_STEPS.length}
                   </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold uppercase tracking-wider text-[var(--brand-pink)]">
-                        Tu Ruta de Estilo
-                      </span>
-                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[var(--brand-pink)]/10 text-[var(--brand-pink)]">
-                        {totalPercent}%
-                      </span>
-                    </div>
-                    <h3 className="text-sm font-semibold text-[var(--foreground)] leading-tight mt-0.5">
+                  <div className="min-w-0">
+                    <span className="text-xs font-bold uppercase tracking-wider text-[var(--brand-pink)] block leading-tight">
+                      Primeros pasos
+                    </span>
+                    <h3 className="text-sm font-semibold text-[var(--foreground)] leading-tight mt-0.5 truncate">
                       {completedCount} de {TOUR_STEPS.length} completados · {currentStep.subtitle}
                     </h3>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={dismissTour}
-                    className="text-xs text-[var(--foreground-tertiary)] hover:text-red-500 px-3 py-1 rounded-full hover:bg-[var(--background-secondary)] transition-colors font-medium cursor-pointer"
-                    title="Saltar y cerrar el tour definitivamente"
-                  >
-                    Saltar
-                  </button>
-                  <button
-                    onClick={closeTour}
-                    className="p-1.5 rounded-full hover:bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:text-[var(--foreground)] transition-colors cursor-pointer"
-                    aria-label="Cerrar"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
+                <button
+                  onClick={closeTour}
+                  className="p-1.5 rounded-full hover:bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:text-[var(--foreground)] transition-colors cursor-pointer shrink-0"
+                  aria-label="Cerrar"
+                >
+                  <X className="w-4 h-4" />
+                </button>
               </div>
 
               {/* Stepper Progress Indicator */}
@@ -262,26 +246,22 @@ export default function GuidedTourModal() {
                   </div>
                 </div>
 
-                {/* Special Photographic Advice Box for Step 3 (upload_clothes) */}
+                {/* Special Advice Box for Step 2 (upload_clothes) */}
                 {currentStep.id === 'upload_clothes' && currentStep.tips && (
                   <div className="bg-[var(--background-secondary)] border border-[var(--border-color)] rounded-2xl p-4 sm:p-5 space-y-3">
                     <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[var(--foreground)]">
-                      <Sun className="w-4 h-4 text-amber-400" />
+                      <Camera className="w-4 h-4 text-[var(--brand-pink)]" />
                       <span>{currentStep.tipTitle}</span>
                     </div>
 
                     <div className="space-y-2.5 text-xs sm:text-[13px] text-[var(--foreground-secondary)] leading-relaxed">
                       <div className="flex items-start gap-2.5">
-                        <span className="w-5 h-5 rounded-full bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">1</span>
-                        <p><strong className="text-[var(--foreground)]">15 min hoy = 91 h ahorradas al año:</strong> Pierdes 5.475 minutos al año decidiendo qué ponerte cada mañana. Digitaliza tu ropa una vez y ahorra casi 4 días al año.</p>
+                        <span className="w-5 h-5 rounded-full bg-[var(--brand-pink)]/15 text-[var(--brand-pink)] flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">1</span>
+                        <p><strong className="text-[var(--foreground)]">Fotos tuyas o de tiendas:</strong> haz foto sobre fondo liso o sube capturas web. Recortamos el fondo al instante.</p>
                       </div>
                       <div className="flex items-start gap-2.5">
-                        <span className="w-5 h-5 rounded-full bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">2</span>
-                        <p><strong className="text-[var(--foreground)]">Fotos tuyas o de webs:</strong> Haz foto con luz natural sobre fondo liso o sube capturas de Zara, Mango, Bershka, Nike o Eme Studios. Borramos el fondo al instante.</p>
-                      </div>
-                      <div className="flex items-start gap-2.5">
-                        <span className="w-5 h-5 rounded-full bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">3</span>
-                        <p><strong className="text-[var(--foreground)]">Hasta 20 prendas de golpe:</strong> Selecciona hasta 20 fotos por lote, sin límite total de prendas en tu armario.</p>
+                        <span className="w-5 h-5 rounded-full bg-[var(--brand-pink)]/15 text-[var(--brand-pink)] flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">2</span>
+                        <p><strong className="text-[var(--foreground)]">Hasta 20 prendas por lote:</strong> sube varias fotos a la vez y revisa categoría, color o marca antes de guardar.</p>
                       </div>
                     </div>
 
@@ -337,10 +317,9 @@ export default function GuidedTourModal() {
                 <button
                   type="button"
                   onClick={handleAction}
-                  className="flex-1 h-11 px-5 rounded-full kz-pink-surface border border-white/25 text-white font-bold text-sm hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  className="flex-1 h-11 px-5 rounded-full kz-pink-surface border border-white/25 text-white font-bold text-sm hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center cursor-pointer"
                 >
                   <span>{currentStep.actionText}</span>
-                  <ChevronRight className="w-4 h-4" />
                 </button>
 
                 <button
