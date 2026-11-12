@@ -3694,3 +3694,14 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
 - **Copy rehecho y veraz (`store/tourStore.ts`, `components/GuidedTour/GuidedTourModal.tsx`)**:
   - Eliminadas referencias obsoletas (*"básicos de prueba"*, *"Sticker HD"*, *"91 h ahorradas"* y *"estilista personal 24/7"*).
   - Redacción directa y fiel al funcionamiento real de `/onboarding/preferences`, subida por fotos/capturas (hasta 20 por lote con recorte de fondo), lienzo de outfits, Kloe, feed y foto de perfil.
+
+---
+
+## 73. Onboarding Compacto en Kloe y Nuevo Paywall Klozet Pro (Noviembre 2026)
+- **Pill de onboarding sobre input de Kloe (`components/GuidedTour/GuidedTourModal.tsx`)**:
+  - En `/closet/kloe`, el banner flotante `Primeros pasos` adopta tamaño compacto y se sitúa centrado directamente encima del input inferior de chat (`bottom-[calc(154px+env(safe-area-inset-bottom,0px))]` en móvil y `md:bottom-[92px]` en escritorio).
+- **Nuevo Paywall Klozet Pro (`components/KlozetPaywallContent.tsx`, `components/KloeProModal.tsx`, `app/(app)/premium/page.tsx`)**:
+  - Implementada vista compartida estilo campaña Black Friday / iOS con cuenta atrás en vivo y selector de planes apilado (`Oferta Black Friday` anual con badge flotante superior y plan mensual).
+  - La mascota `K` de Kloe (`KloeMascot`) aparece completamente libre sin cajas cuadradas ni círculos alrededor, colocada junto al título grande **`Black Friday`**.
+  - Prendas reales de `/public/landing/piezas/` flotando suavemente difuminadas en el fondo detrás del paywall (`PaywallFloatingGarments`).
+  - Vista previa interactiva de Widgets de iOS (`IosWidgetPreview` cuadrado y alargado) integrada dentro del paywall, más apartado desplegable **"Ver todo lo que incluye"** con iconos limpios sin círculos y CTA en pastilla `.kz-pink-surface`.
