@@ -209,37 +209,27 @@ export default function ProfileProgressBar() {
     return null;
   }
 
-  // Dynamic status text & next action matching the value-first milestone order
-  let statusMessage = '';
+  // Dynamic next action matching the value-first milestone order
   let nextActionLabel = '';
   let nextActionHref = '';
   if (!hasStyle) {
-    statusMessage = `Paso 1 · Define tus estilos favoritos`;
     nextActionLabel = 'Personalizar';
     nextActionHref = '/onboarding/preferences';
   } else if (!has3Items) {
-    const needed = Math.max(1, 3 - items.length);
-    statusMessage = `Siguiente paso · Añade ${needed} prenda${needed > 1 ? 's' : ''} (${items.length}/3) para crear tu primer look`;
     nextActionLabel = 'Añadir ropa';
     nextActionHref = '/closet?action=new-item';
   } else if (!hasOutfit) {
-    statusMessage = `Siguiente paso · Monta tu primer outfit en el lienzo blanco`;
     nextActionLabel = 'Crear look';
     nextActionHref = '/create';
   } else if (!hasKloe) {
-    statusMessage = `Siguiente paso · Pídele un look personalizado a Kloe`;
     nextActionLabel = 'Hablar con Kloe';
     nextActionHref = '/closet/kloe';
   } else if (!hasPost) {
-    statusMessage = `Siguiente paso · Publica tu primer look en la comunidad`;
     nextActionLabel = 'Publicar';
     nextActionHref = '/create-post';
   } else if (!hasAvatar) {
-    statusMessage = `Último paso · Añade tu foto de perfil`;
     nextActionLabel = 'Subir foto';
     nextActionHref = '/profile/edit';
-  } else {
-    statusMessage = `Nivel de estilo al ${totalPercent}%`;
   }
 
   return (
@@ -247,18 +237,13 @@ export default function ProfileProgressBar() {
       <div className="bg-[var(--card-bg)] border border-[var(--border-color)]/60 rounded-2xl p-4 shadow-sm transition-all hover:border-[var(--border-color)]">
         {/* Header with percentage & toggle */}
         <div className="flex items-center justify-between gap-3">
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-[var(--brand-pink)]">
-                Tu ruta en Klozet
-              </span>
-              <span className="text-xs font-semibold text-[var(--foreground)] tabular-nums">
-                {totalPercent}%
-              </span>
-            </div>
-            <p className="text-xs text-[var(--foreground-secondary)] font-medium truncate mt-0.5">
-              {statusMessage}
-            </p>
+          <div className="min-w-0 flex-1 flex items-center gap-2">
+            <span className="text-sm font-bold text-[var(--brand-pink)]">
+              Primeros pasos
+            </span>
+            <span className="text-xs font-semibold text-[var(--foreground)] tabular-nums">
+              {totalPercent}%
+            </span>
           </div>
 
           <div className="flex items-center gap-1.5 shrink-0">

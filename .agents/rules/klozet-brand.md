@@ -10,6 +10,7 @@ Toda UI de Klozet (app, landing, legales, trends, emails, exportaciones a Instag
 - Materiales: `.apple-glass-bar` y tarjetas `card-bg/90-95 + backdrop-blur-xl + borde hairline`. Velo `bg-black/40-60` sobre fotos.
 - Forma: todo redondeado, botones/chips en pastilla, tarjetas 20–24px, sheets 32px, táctil ≥44px.
 - Iconografía limpia: **evitar círculos rodeando iconos** salvo que cuadren explícitamente (inputs o botones aislados). En banners, flechas de entrada, tarjetas o badges, mostrar los iconos y logos libres sin contenedor circular alrededor.
+- Copy limpio: **evitar siempre textos repetitivos o subtítulos redundantes** cuando la información o los pasos ya aparecen dentro del mismo bloque o tarjeta.
 - Movimiento: `--ease-apple`; bounce solo en momentos de marca; tap `scale(0.97)`.
 - Usar siempre tokens CSS (`var(--background)`, `var(--foreground)`, `var(--card-bg)`, `var(--border-color)`, `var(--brand-pink)`) para soportar claro/oscuro. No hardcodear paletas `zinc-*` como identidad.
 

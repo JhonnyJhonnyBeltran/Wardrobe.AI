@@ -206,6 +206,7 @@ La blandura del logo se traduce en geometría redonda. **No hay esquinas vivas e
 - Humor permitido en estados vacíos y celebraciones ("Tu armario está más vacío que un lunes por la mañana").
 - Interfaz: literal y clara. Marca: descarada.
 - ❌ Contadores tipo "1 publicación encontrada" como titular, jerga de IA, superlativos vacíos ("revolucionario", "experiencia premium").
+- ❌ **Textos repetitivos o subtítulos inútiles**: no duplicar con subtítulos información o pasos que ya vienen visibles dentro del mismo bloque o botón.
 
 ---
 
