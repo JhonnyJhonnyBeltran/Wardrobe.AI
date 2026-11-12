@@ -354,16 +354,32 @@ export async function purchaseRevenueCatPlan(params: {
         try {
           const { customerInfo } = await Purchases.purchasePackage({ aPackage: targetPkg });
           const entitlement = customerInfo?.entitlements?.active?.[REVENUECAT_ENTITLEMENT_ID];
+          const isEntitlementActive = Boolean(entitlement && (entitlement as any).isActive !== false);
           const apiKey = getRevenueCatApiKey(Capacitor.getPlatform() === 'android' ? 'android' : 'ios');
           const isTestKey = apiKey.startsWith('test_');
 
-          await syncRevenueCatEntitlementToBackend({
-            source: 'native',
-            isTestStorePurchase: isTestKey || Boolean(entitlement?.isSandbox),
-            productIdentifier: entitlement?.productIdentifier || targetPkg?.product?.identifier,
-          });
+          if (isEntitlementActive || isTestKey) {
+            const synced = await syncRevenueCatEntitlementToBackend({
+              source: 'native',
+              isTestStorePurchase: isTestKey || Boolean(entitlement?.isSandbox),
+              hasActiveEntitlement: isEntitlementActive || isTestKey,
+              productIdentifier: entitlement?.productIdentifier || targetPkg?.product?.identifier,
+            });
+            if (!synced) {
+              return {
+                purchasedOrRestored: false,
+                cancelled: false,
+                error: 'Compra completada en App Store, pero no se pudo activar en tu perfil. Pulsa "Restaurar compras".',
+              };
+            }
+            return { purchasedOrRestored: true, cancelled: false };
+          }
 
-          return { purchasedOrRestored: true, cancelled: false };
+          return {
+            purchasedOrRestored: false,
+            cancelled: false,
+            error: 'La compra no activó el entitlement klozet_pro. Verifica en RevenueCat que el producto pertenezca a klozet_pro.',
+          };
         } catch (err: any) {
           if (err?.userCancelled === true || err?.code === 1 || String(err?.code) === '1') {
             return { purchasedOrRestored: false, cancelled: true };

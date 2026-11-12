@@ -116,16 +116,11 @@ export async function POST(request: NextRequest) {
       .eq('id', user.id)
       .maybeSingle();
 
-    const isEthan = Boolean(
-      user.email?.toLowerCase().includes('ethan') ||
-      profile?.username?.toLowerCase() === 'ethan' ||
-      profile?.full_name?.toLowerCase().includes('ethan')
-    );
-
-    const isPremium = isEthan || Boolean(
+    const status = String(profile?.subscription_status || '').toLowerCase();
+    const isInactive = status === 'canceled' || status === 'unpaid' || status === 'incomplete_expired';
+    const isPremium = !isInactive && Boolean(
       profile?.is_premium ||
-      profile?.subscription_tier === 'premium' ||
-      profile?.subscription_status === 'active'
+      profile?.subscription_tier === 'premium'
     );
 
     const todayKey = getMadridDayKey();

@@ -213,10 +213,47 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'El mensaje supera el límite de 500 caracteres' }, { status: 400 });
     }
 
-    // 3.5. Process Custom Attached Image (from Camera / Gallery) with Content Safety Moderation
-    let attachedCustomImagePart: { mimeType: string; data: string } | null = null;
     const rawAttachedImage = (body as any).attached_custom_image || (body as any).attached_image;
+    const hasAttachedGarmentOrPost = Boolean(
+      rawAttachedImage ||
+      body.attached_post ||
+      body.attached_item ||
+      (Array.isArray(body.attached_items) && body.attached_items.length > 0)
+    );
 
+    // 4. Check Subscription (strictly database-backed, zero bypasses)
+    const { data: userProfile } = await supabase
+      .from('profiles')
+      .select('id, is_premium, subscription_tier, subscription_status, username, full_name, ai_daily_usage_date, ai_daily_usage_count, ai_lifetime_chats')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    const subStatus = String(userProfile?.subscription_status || '').toLowerCase();
+    const isStatusInactive =
+      subStatus === 'canceled' ||
+      subStatus === 'unpaid' ||
+      subStatus === 'incomplete_expired';
+
+    const isPremium = !isStatusInactive && Boolean(
+      userProfile?.is_premium ||
+      userProfile?.subscription_tier === 'premium'
+    );
+
+    // 4.5. Gate Kloe Pro attachments (garments, saved posts, custom photos)
+    if (!isPremium && hasAttachedGarmentOrPost) {
+      return NextResponse.json(
+        {
+          error: 'Adjuntar prendas, looks guardados o fotos para que Kloe te asesore es exclusivo de Klozet Pro.',
+          message: 'Adjuntar prendas, looks guardados o fotos para que Kloe te asesore es exclusivo de Klozet Pro.',
+          requiresPremium: true,
+          isPremium: false,
+        },
+        { status: 403 }
+      );
+    }
+
+    // 4.6. Process Custom Attached Image (from Camera / Gallery) with Content Safety Moderation
+    let attachedCustomImagePart: { mimeType: string; data: string } | null = null;
     if (rawAttachedImage && typeof rawAttachedImage === 'string') {
       if (rawAttachedImage.startsWith('data:image/')) {
         const match = rawAttachedImage.match(/^data:(image\/[a-zA-Z0-9+.-]+);base64,(.+)$/);
@@ -248,26 +285,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 4. Check Subscription
-    const { data: userProfile } = await supabase
-      .from('profiles')
-      .select('id, is_premium, subscription_tier, subscription_status, username, full_name, ai_daily_usage_date, ai_daily_usage_count, ai_lifetime_chats')
-      .eq('id', user.id)
-      .maybeSingle();
-
-    const isEthan = Boolean(
-      user.email?.toLowerCase().includes('ethan') ||
-      userProfile?.username?.toLowerCase() === 'ethan' ||
-      userProfile?.full_name?.toLowerCase().includes('ethan')
-    );
-
-    const isPremium = isEthan || Boolean(
-      userProfile?.is_premium ||
-      userProfile?.subscription_tier === 'premium' ||
-      userProfile?.subscription_status === 'active'
-    );
-
-    // 5. Apply Persistent Database + Memory Rate Limiting (Free: 4 daily, Premium: 35 daily, reset 00:00 Madrid)
+    // 5. Apply Persistent Database + Memory Rate Limiting (Free: 2 daily, Premium: 35 daily, reset 00:00 Madrid)
     const todayKey = getMadridDayKey();
     const dbDailyCount = ((userProfile as any)?.ai_daily_usage_date === todayKey)
       ? Number((userProfile as any)?.ai_daily_usage_count || 0)
@@ -508,16 +526,15 @@ export async function GET() {
       .eq('id', user.id)
       .maybeSingle();
 
-    const isEthan = Boolean(
-      user.email?.toLowerCase().includes('ethan') ||
-      userProfile?.username?.toLowerCase() === 'ethan' ||
-      userProfile?.full_name?.toLowerCase().includes('ethan')
-    );
+    const subStatus = String(userProfile?.subscription_status || '').toLowerCase();
+    const isStatusInactive =
+      subStatus === 'canceled' ||
+      subStatus === 'unpaid' ||
+      subStatus === 'incomplete_expired';
 
-    const isPremium = isEthan || Boolean(
+    const isPremium = !isStatusInactive && Boolean(
       userProfile?.is_premium ||
-      userProfile?.subscription_tier === 'premium' ||
-      userProfile?.subscription_status === 'active'
+      userProfile?.subscription_tier === 'premium'
     );
 
     const quota = getUserQuotaStatus(user.id, isPremium);

@@ -42,7 +42,7 @@ export default function ContactPage() {
     },
     {
       q: '¿Es Klozet gratis?',
-      a: 'Sí. Subir todas las prendas que quieras, montar outfits en el lienzo, usar el calendario semanal y compartir tus looks en el feed es 100% gratis, además de 4 consultas diarias con Kloe.'
+      a: 'Sí. Subir todas las prendas que quieras, montar outfits en el lienzo, usar el calendario semanal y compartir tus looks en el feed es 100% gratis, además de 2 consultas diarias con Kloe.'
     },
     {
       q: '¿Mi armario es público o privado?',

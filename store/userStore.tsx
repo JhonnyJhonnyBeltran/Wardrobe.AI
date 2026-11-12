@@ -109,13 +109,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
       const avatar = profile?.avatar_url || legacyProfile?.avatar || undefined;
       const username = profile?.username;
 
-      // Get subscription tier from profile or legacy
-      const isEthanUser = Boolean(
-        authUser.email?.toLowerCase().includes('ethan') ||
-        username?.toLowerCase() === 'ethan' ||
-        name?.toLowerCase().includes('ethan')
-      );
-
       // Check grace period: 3 days past expiration for non-active statuses
       const periodEndStr = profile?.subscription_period_end || legacyProfile?.subscription_period_end;
       const periodEndMs = periodEndStr ? new Date(periodEndStr).getTime() : 0;
@@ -131,7 +124,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
         legacyProfile?.subscription_tier === 'premium'
       );
 
-      let subscriptionTier = (isPremiumFromDb || isEthanUser ? SubscriptionTier.PREMIUM : SubscriptionTier.FREE);
+      const subscriptionTier = isPremiumFromDb ? SubscriptionTier.PREMIUM : SubscriptionTier.FREE;
 
       // Style preferences & physical profile
       const styleSource = profile || legacyProfile || {};
@@ -365,12 +358,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   const isPremium = useCallback(() => {
     if (!user) return false;
-    const isEthan = Boolean(
-      user.email?.toLowerCase().includes('ethan') ||
-      user.username?.toLowerCase() === 'ethan' ||
-      user.name?.toLowerCase().includes('ethan')
-    );
-    return isEthan || user.subscriptionTier === SubscriptionTier.PREMIUM;
+    return user.subscriptionTier === SubscriptionTier.PREMIUM;
   }, [user]);
 
   const upgradeToPremiun = useCallback(() => {

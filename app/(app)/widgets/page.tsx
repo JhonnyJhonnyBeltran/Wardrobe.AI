@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { ChevronLeft, MapPin, Smartphone, Sun, Moon, Crown, Check, RefreshCw } from 'lucide-react';
+import { ChevronLeft, MapPin, Smartphone, Sun, Moon, Crown, Check, RefreshCw, Lock } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import IosWidgetPreview from '@/components/IosWidgetPreview';
@@ -26,7 +26,14 @@ export default function WidgetsPage() {
   const [previewState, setPreviewState] = useState<'live' | 'empty'>('live');
   const [appearance, setAppearance] = useState<'light' | 'dark'>('light');
 
+  const isProUser = isPremium();
+
   const loadWidgetSnapshot = useCallback(async (requestedCity?: string) => {
+    if (!isProUser) {
+      setRealOutfit(null);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       let targetCity = requestedCity?.trim() || '';
@@ -62,11 +69,11 @@ export default function WidgetsPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isProUser]);
 
   useEffect(() => {
     loadWidgetSnapshot();
-  }, [loadWidgetSnapshot, user?.id]);
+  }, [loadWidgetSnapshot, user?.id, isProUser]);
 
   const effectiveOutfit = previewState === 'empty' ? null : realOutfit;
 
@@ -88,7 +95,13 @@ export default function WidgetsPage() {
           </span>
           <button
             type="button"
-            onClick={() => loadWidgetSnapshot(city)}
+            onClick={() => {
+              if (!isProUser) {
+                openPremiumModal('yearly');
+                return;
+              }
+              loadWidgetSnapshot(city);
+            }}
             className="touch-target-44 flex items-center justify-center -mr-2 text-[var(--foreground-secondary)] hover:text-[var(--brand-pink)] transition-colors cursor-pointer"
             aria-label="Actualizar widget"
           >
@@ -134,11 +147,15 @@ export default function WidgetsPage() {
           )}
         </div>
 
-        {/* Controls Bar: City + State + Theme */}
-        <div className="rounded-3xl bg-[var(--card-bg)] border border-[var(--border-color)] p-4 shadow-xs flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between">
+        {/* Controls Bar: City + State + Theme (Locked if Free) */}
+        <div className={`rounded-3xl bg-[var(--card-bg)] border border-[var(--border-color)] p-4 shadow-xs flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between transition-opacity ${!isProUser ? 'opacity-60' : ''}`}>
           <form
             onSubmit={(e) => {
               e.preventDefault();
+              if (!isProUser) {
+                openPremiumModal('yearly');
+                return;
+              }
               if (cityInput.trim()) loadWidgetSnapshot(cityInput);
             }}
             className="flex items-center gap-2 flex-1"
@@ -148,16 +165,17 @@ export default function WidgetsPage() {
               <input
                 type="text"
                 value={cityInput}
+                disabled={!isProUser}
                 onChange={(e) => setCityInput(e.target.value)}
                 placeholder="Ciudad para el widget..."
-                className="w-full pl-9 pr-3 py-2 rounded-full bg-[var(--background-secondary)] border border-[var(--border-color)] focus:border-[var(--brand-pink)] text-sm text-[var(--foreground)] outline-none"
+                className="w-full pl-9 pr-3 py-2 rounded-full bg-[var(--background-secondary)] border border-[var(--border-color)] focus:border-[var(--brand-pink)] text-sm text-[var(--foreground)] outline-none disabled:cursor-not-allowed"
               />
             </div>
             <button
               type="submit"
               className="h-9 px-4 rounded-full bg-[var(--background-secondary)] hover:bg-[var(--background-tertiary)] text-xs font-semibold text-[var(--foreground)] border border-[var(--border-color)] transition-colors cursor-pointer shrink-0"
             >
-              Aplicar
+              {isProUser ? 'Aplicar' : 'Pro'}
             </button>
           </form>
 
@@ -166,7 +184,10 @@ export default function WidgetsPage() {
             <div className="inline-flex rounded-full p-1 bg-[var(--background-secondary)] border border-[var(--border-color)]">
               <button
                 type="button"
-                onClick={() => setPreviewState('live')}
+                onClick={() => {
+                  if (!isProUser) return openPremiumModal('yearly');
+                  setPreviewState('live');
+                }}
                 className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${
                   previewState === 'live'
                     ? 'bg-[var(--brand-pink)] text-white shadow-xs'
@@ -177,7 +198,10 @@ export default function WidgetsPage() {
               </button>
               <button
                 type="button"
-                onClick={() => setPreviewState('empty')}
+                onClick={() => {
+                  if (!isProUser) return openPremiumModal('yearly');
+                  setPreviewState('empty');
+                }}
                 className={`px-3 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer ${
                   previewState === 'empty'
                     ? 'bg-[var(--brand-pink)] text-white shadow-xs'
@@ -192,7 +216,10 @@ export default function WidgetsPage() {
             <div className="inline-flex rounded-full p-1 bg-[var(--background-secondary)] border border-[var(--border-color)]">
               <button
                 type="button"
-                onClick={() => setAppearance('light')}
+                onClick={() => {
+                  if (!isProUser) return openPremiumModal('yearly');
+                  setAppearance('light');
+                }}
                 aria-label="Modo claro"
                 className={`p-1.5 rounded-full transition-all cursor-pointer ${
                   appearance === 'light'
@@ -204,7 +231,10 @@ export default function WidgetsPage() {
               </button>
               <button
                 type="button"
-                onClick={() => setAppearance('dark')}
+                onClick={() => {
+                  if (!isProUser) return openPremiumModal('yearly');
+                  setAppearance('dark');
+                }}
                 aria-label="Modo oscuro"
                 className={`p-1.5 rounded-full transition-all cursor-pointer ${
                   appearance === 'dark'
@@ -220,39 +250,70 @@ export default function WidgetsPage() {
 
         {/* Widget Formats Showcase: Square (2x2) + Wide / Alargado (4x2) */}
         <div
-          className={`rounded-[32px] border border-[var(--border-color)] p-6 sm:p-8 flex flex-col items-center gap-8 transition-colors ${
+          className={`relative overflow-hidden rounded-[32px] border border-[var(--border-color)] p-6 sm:p-8 flex flex-col items-center gap-8 transition-colors ${
             appearance === 'dark'
               ? 'bg-[#0D0D10]'
               : 'bg-[#F2F2F7] dark:bg-[#141418]'
           }`}
         >
-          {/* Wide / Alargado (systemMedium) */}
-          <div className="w-full flex flex-col items-center gap-2.5">
-            <span className="text-[11px] font-semibold text-[var(--foreground-tertiary)] uppercase tracking-wider">
-              Formato Alargado (4×2)
-            </span>
-            <IosWidgetPreview
-              size="wide"
-              city={city}
-              temp={temp}
-              outfit={effectiveOutfit}
-              appearance={appearance}
-            />
+          <div className={`w-full flex flex-col items-center gap-8 transition-all ${!isProUser ? 'blur-md opacity-45 pointer-events-none select-none' : ''}`}>
+            {/* Wide / Alargado (systemMedium) */}
+            <div className="w-full flex flex-col items-center gap-2.5">
+              <span className="text-[11px] font-semibold text-[var(--foreground-tertiary)] uppercase tracking-wider">
+                Formato Alargado (4×2)
+              </span>
+              <IosWidgetPreview
+                size="wide"
+                city={city}
+                temp={temp}
+                outfit={effectiveOutfit}
+                appearance={appearance}
+              />
+            </div>
+
+            {/* Square (systemSmall) */}
+            <div className="w-full flex flex-col items-center gap-2.5">
+              <span className="text-[11px] font-semibold text-[var(--foreground-tertiary)] uppercase tracking-wider">
+                Formato Cuadrado (2×2)
+              </span>
+              <IosWidgetPreview
+                size="square"
+                city={city}
+                temp={temp}
+                outfit={effectiveOutfit}
+                appearance={appearance}
+              />
+            </div>
           </div>
 
-          {/* Square (systemSmall) */}
-          <div className="w-full flex flex-col items-center gap-2.5">
-            <span className="text-[11px] font-semibold text-[var(--foreground-tertiary)] uppercase tracking-wider">
-              Formato Cuadrado (2×2)
-            </span>
-            <IosWidgetPreview
-              size="square"
-              city={city}
-              temp={temp}
-              outfit={effectiveOutfit}
-              appearance={appearance}
-            />
-          </div>
+          {!isProUser && (
+            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center p-6 text-center bg-white/55 dark:bg-black/55 backdrop-blur-xs">
+              <div className="max-w-xs w-full rounded-3xl bg-[var(--card-bg)]/95 border border-[var(--border-color)] p-5 shadow-xl flex flex-col items-center gap-3">
+                <div className="w-11 h-11 rounded-full bg-[var(--brand-pink)]/12 text-[var(--brand-pink)] flex items-center justify-center">
+                  <Lock className="w-5 h-5" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="text-sm font-bold text-[var(--foreground)]">
+                    Widgets exclusivos de Klozet Pro
+                  </h3>
+                  <p className="text-xs text-[var(--foreground-secondary)] leading-relaxed">
+                    Añade tu outfit del día, temperatura y ciudad a la pantalla de inicio de tu iPhone con Klozet Pro.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    try { haptics.tap(); } catch {}
+                    openPremiumModal('yearly');
+                  }}
+                  className="w-full h-10 px-5 rounded-full bg-[var(--brand-pink)] text-white text-xs font-bold shadow-md shadow-[var(--brand-pink)]/30 hover:opacity-95 active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <Crown className="w-3.5 h-3.5" />
+                  <span>Desbloquear con Klozet Pro</span>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Install Guide Card */}

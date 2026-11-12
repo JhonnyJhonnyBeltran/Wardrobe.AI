@@ -44,18 +44,13 @@ async function resolveUserAndClient(request: NextRequest) {
   return { client, user };
 }
 
-function checkUserIsPremium(profile: any, user: any): boolean {
-  if (!profile && !user) return false;
-  const isEthan = Boolean(
-    user?.email?.toLowerCase().includes('ethan') ||
-    profile?.username?.toLowerCase() === 'ethan' ||
-    profile?.full_name?.toLowerCase().includes('ethan')
-  );
-
-  return isEthan || Boolean(
+function checkUserIsPremium(profile: any, _user: any): boolean {
+  if (!profile) return false;
+  const status = String(profile?.subscription_status || '').toLowerCase();
+  const isInactive = status === 'canceled' || status === 'unpaid' || status === 'incomplete_expired';
+  return !isInactive && Boolean(
     profile?.is_premium ||
-    profile?.subscription_tier === 'premium' ||
-    profile?.subscription_status === 'active'
+    profile?.subscription_tier === 'premium'
   );
 }
 

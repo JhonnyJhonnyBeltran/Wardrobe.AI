@@ -27,7 +27,27 @@ export async function GET(req: NextRequest) {
     const weatherPromise = resolveWeatherByCityName(cityToFetch).catch(() => null);
 
     let todayOutfit: any = null;
+    let isPremium = false;
     if (user) {
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('is_premium, subscription_tier, subscription_status')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      const subStatus = String(userProfile?.subscription_status || '').toLowerCase();
+      const isInactive =
+        subStatus === 'canceled' ||
+        subStatus === 'unpaid' ||
+        subStatus === 'incomplete_expired';
+
+      isPremium = !isInactive && Boolean(
+        userProfile?.is_premium ||
+        userProfile?.subscription_tier === 'premium'
+      );
+    }
+
+    if (user && isPremium) {
       const { data: rows } = await (supabase as any)
         .from('calendar_outfits')
         .select(`
@@ -88,11 +108,14 @@ export async function GET(req: NextRequest) {
       (weatherResult?.days ? Object.values(weatherResult.days)[0] : undefined);
 
     return NextResponse.json({
+      isPremium,
+      requiresPremium: !isPremium,
+      locked: !isPremium,
       date: todayDate,
       city: weatherResult?.city || cityToFetch,
       temp: typeof todayWeatherEntry?.temp === 'number' ? todayWeatherEntry.temp : null,
-      hasOutfit: Boolean(todayOutfit),
-      outfit: todayOutfit,
+      hasOutfit: isPremium && Boolean(todayOutfit),
+      outfit: isPremium ? todayOutfit : null,
       updatedAt: new Date().toISOString(),
     });
   } catch (err: any) {

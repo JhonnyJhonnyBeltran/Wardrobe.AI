@@ -20,6 +20,7 @@ import {
   User,
   Camera,
   Share2,
+  Lock,
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -36,6 +37,7 @@ import AvatarCalibrationModal from '@/components/AvatarCalibrationModal';
 import KloeMascot from '@/components/KloeMascot';
 import { useBodyScrollLock } from '@/lib/hooks/useBodyScrollLock';
 import { resolveImageUrl } from '@/lib/imageUtils';
+import { MAX_PER_DAY_FREE } from '@/lib/closy/rateLimiter';
 
 interface ChatMessage {
   id: string;
@@ -89,7 +91,7 @@ interface Conversation {
 
 const getStorageKey = (userId?: string) => userId ? `kloe_conversations_${userId}` : null;
 const MAX_CONVERSATIONS = 5;
-const MAX_TRIAL_MESSAGES = 4;
+const MAX_TRIAL_MESSAGES = MAX_PER_DAY_FREE;
 
 /**
  * Robust thumbnail component that gracefully displays "Prenda borrada"
@@ -439,6 +441,12 @@ export default function KloePage() {
   const chatImageInputRef = useRef<HTMLInputElement>(null);
 
   const handleChatImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!isPremium()) {
+      if (chatImageInputRef.current) chatImageInputRef.current.value = '';
+      setShowProModal(true);
+      toast.info('Subir fotos para que Kloe te asesore es exclusivo de Klozet Pro');
+      return;
+    }
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 10 * 1024 * 1024) {
@@ -641,12 +649,22 @@ export default function KloePage() {
 
   const openWardrobe = () => {
     haptics.selection();
+    if (!isPremium()) {
+      setShowProModal(true);
+      toast.info('Pasarle prendas de tu armario a Kloe es exclusivo de Klozet Pro');
+      return;
+    }
     setShowWardrobeDrawer(true);
     fetchWardrobe();
   };
 
   const openSaved = () => {
     haptics.selection();
+    if (!isPremium()) {
+      setShowProModal(true);
+      toast.info('Pasarle posts guardados a Kloe es exclusivo de Klozet Pro');
+      return;
+    }
     setShowSavedDrawer(true);
     fetchSavedPosts();
   };
@@ -770,10 +788,19 @@ export default function KloePage() {
     if (quotaInfo && quotaInfo.remainingDay <= 0) {
       if (!isPremium()) {
         setShowProModal(true);
-        toast.info('Has completado tus 4 consultas gratuitas de hoy');
+        toast.info('Has completado tus 2 consultas gratuitas de hoy');
       } else {
         toast.info('Has alcanzado tus 35 consultas diarias. Se recarga a las 00:00.');
       }
+      return;
+    }
+
+    if (!isPremium() && (attachedItems.length > 0 || Boolean(attachedPost) || Boolean(attachedImage))) {
+      setAttachedItems([]);
+      setAttachedPost(null);
+      setAttachedImage(null);
+      setShowProModal(true);
+      toast.info('Pasarle prendas, posts o fotos a Kloe es exclusivo de Klozet Pro');
       return;
     }
 
@@ -868,6 +895,12 @@ export default function KloePage() {
       const data = await res.json();
 
       if (!res.ok) {
+        if (res.status === 403 && data?.requiresPremium) {
+          setMessages(prev => prev.filter(m => m.id !== userMsg.id));
+          setShowProModal(true);
+          toast.info(data.error || 'Exclusivo de Klozet Pro');
+          return;
+        }
         if (data.isModerationViolation) {
           toast.error(data.error || 'Esta imagen no se ha podido subir por infringir las normas comunitarias de la aplicación.');
           setMessages(prev => prev.filter(m => m.id !== userMsg.id));
@@ -885,7 +918,7 @@ export default function KloePage() {
 
           const limitMsg = data.message || (hitPremium
             ? 'Has alcanzado tus 35 consultas diarias con Kloe. Tu límite se restablecerá hoy a las 00:00 (hora peninsular).'
-            : 'Has completado tus 4 consultas gratuitas de hoy. Tu límite se restablecerá hoy a las 00:00 (hora peninsular) o desbloquea Kloe Pro para 35 consultas diarias.');
+            : 'Has completado tus 2 consultas gratuitas de hoy. Tu límite se restablecerá hoy a las 00:00 (hora peninsular) o desbloquea Kloe Pro para 35 consultas diarias.');
 
           const botMsg: ChatMessage = {
             id: `kloe_${Date.now()}`,
@@ -1095,7 +1128,7 @@ export default function KloePage() {
               <Crown className="w-5 h-5 text-[var(--brand-pink)] flex-shrink-0" />
               <div className="min-w-0">
                 <p className="text-xs text-[var(--foreground-secondary)] leading-relaxed">
-                  Has completado tus <strong className="text-[var(--brand-pink)]">4 consultas gratuitas de hoy</strong>. Pásate a Pro para disfrutar de 35 consultas diarias.
+                  Has completado tus <strong className="text-[var(--brand-pink)]">2 consultas gratuitas de hoy</strong>. Pásate a Pro para disfrutar de 35 consultas diarias.
                 </p>
                 <div className="w-full max-w-[200px] h-1.5 bg-black/10 dark:bg-white/10 rounded-full mt-1.5 overflow-hidden">
                   <div 
@@ -1560,45 +1593,65 @@ export default function KloePage() {
               onChange={handleChatImageSelect}
             />
 
-            {/* Quick Attach Buttons */}
+            {/* Quick Attach Buttons (Klozet Pro) */}
             <div className="flex items-center shrink-0">
               <button
                 type="button"
-                onClick={() => chatImageInputRef.current?.click()}
+                onClick={() => {
+                  if (!isPremium()) {
+                    haptics.selection();
+                    setShowProModal(true);
+                    toast.info('Subir fotos para que Kloe te asesore es exclusivo de Klozet Pro');
+                    return;
+                  }
+                  chatImageInputRef.current?.click();
+                }}
                 className="relative p-2 rounded-full text-zinc-700 dark:text-zinc-200 hover:text-[var(--brand-pink)] dark:hover:text-[var(--brand-pink)] transition-colors cursor-pointer"
-                title="Subir foto para que Kloe la analice"
+                title={isPremium() ? 'Subir foto para que Kloe la analice' : 'Subir foto (Klozet Pro)'}
                 aria-label="Subir foto"
               >
-                <Camera className="w-[18px] h-[18px]" />
-                {attachedImage && (
+                <Camera className={`w-[18px] h-[18px] ${!isPremium() ? 'opacity-65' : ''}`} />
+                {!isPremium() ? (
+                  <span className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-zinc-900/80 dark:bg-white/90 text-white dark:text-zinc-900 flex items-center justify-center">
+                    <Lock className="w-2 h-2" />
+                  </span>
+                ) : attachedImage ? (
                   <span className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-[var(--brand-pink)]" />
-                )}
+                ) : null}
               </button>
               <button
                 type="button"
                 onClick={openWardrobe}
                 className="relative p-2 rounded-full text-zinc-700 dark:text-zinc-200 hover:text-[var(--brand-pink)] dark:hover:text-[var(--brand-pink)] transition-colors cursor-pointer group"
-                title="Adjuntar prendas de tu armario"
+                title={isPremium() ? 'Adjuntar prendas de tu armario' : 'Adjuntar prendas (Klozet Pro)'}
                 aria-label="Adjuntar prendas"
               >
-                <Shirt className="w-[18px] h-[18px]" />
-                {attachedItems.length > 0 && (
+                <Shirt className={`w-[18px] h-[18px] ${!isPremium() ? 'opacity-65' : ''}`} />
+                {!isPremium() ? (
+                  <span className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-zinc-900/80 dark:bg-white/90 text-white dark:text-zinc-900 flex items-center justify-center">
+                    <Lock className="w-2 h-2" />
+                  </span>
+                ) : attachedItems.length > 0 ? (
                   <span className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-[var(--brand-pink)] text-white text-[9px] font-bold flex items-center justify-center">
                     {attachedItems.length}
                   </span>
-                )}
+                ) : null}
               </button>
               <button
                 type="button"
                 onClick={openSaved}
                 className="relative p-2 rounded-full text-zinc-700 dark:text-zinc-200 hover:text-[var(--brand-pink)] dark:hover:text-[var(--brand-pink)] transition-colors cursor-pointer group"
-                title="Adjuntar look o post guardado"
+                title={isPremium() ? 'Adjuntar look o post guardado' : 'Adjuntar look guardado (Klozet Pro)'}
                 aria-label="Adjuntar look guardado"
               >
-                <Bookmark className="w-[18px] h-[18px]" />
-                {attachedPost && (
+                <Bookmark className={`w-[18px] h-[18px] ${!isPremium() ? 'opacity-65' : ''}`} />
+                {!isPremium() ? (
+                  <span className="absolute top-0.5 right-0.5 w-3.5 h-3.5 rounded-full bg-zinc-900/80 dark:bg-white/90 text-white dark:text-zinc-900 flex items-center justify-center">
+                    <Lock className="w-2 h-2" />
+                  </span>
+                ) : attachedPost ? (
                   <span className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-[var(--brand-pink)]" />
-                )}
+                ) : null}
               </button>
             </div>
 
@@ -1649,7 +1702,7 @@ export default function KloePage() {
                 <p className="text-xs text-[var(--foreground)] font-semibold truncate">
                   {isPremium()
                     ? 'Has completado tus 35 consultas diarias.'
-                    : 'Has completado tus 4 consultas gratuitas de hoy.'}
+                    : 'Has completado tus 2 consultas gratuitas de hoy.'}
                 </p>
                 <p className="text-[10px] text-[var(--foreground-secondary)] truncate">
                   Se recargan automáticamente hoy a las 00:00 (hora peninsular).

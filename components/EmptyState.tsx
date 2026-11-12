@@ -18,6 +18,7 @@ interface EmptyStateProps {
   fullHeight?: boolean;
   showMascot?: boolean;
   mascotMood?: KloeMood;
+  previewSlot?: React.ReactNode;
 }
 
 export default function EmptyState({
@@ -31,6 +32,7 @@ export default function EmptyState({
   fullHeight = true,
   showMascot = true,
   mascotMood = 'curious',
+  previewSlot,
 }: EmptyStateProps) {
   return (
     <motion.div
@@ -39,21 +41,27 @@ export default function EmptyState({
       transition={{ duration: 0.32, ease: [0.32, 0.72, 0, 1] }}
       className={`flex flex-col items-center justify-center text-center p-6 ${fullHeight ? 'min-h-[50vh] py-16' : 'py-12'}`}
     >
-      {/* Living Kloe Emblem + Context Icon Badge */}
-      <div className="relative mb-6 flex items-center justify-center">
-        <div className="w-24 h-24 rounded-[20px] kz-kloe-hero flex items-center justify-center shadow-[var(--shadow-card)]">
-          {showMascot ? (
-            <KloeMascot mood={mascotMood} size="lg" interactive />
-          ) : (
-            <Icon className="w-10 h-10 text-[var(--brand-pink)]" strokeWidth={1.75} />
+      {previewSlot ? (
+        <div className="mb-6 flex items-center justify-center">
+          {previewSlot}
+        </div>
+      ) : (
+        /* Living Kloe Emblem + Context Icon Badge */
+        <div className="relative mb-6 flex items-center justify-center">
+          <div className="w-24 h-24 rounded-[20px] kz-kloe-hero flex items-center justify-center shadow-[var(--shadow-card)]">
+            {showMascot ? (
+              <KloeMascot mood={mascotMood} size="lg" interactive />
+            ) : (
+              <Icon className="w-10 h-10 text-[var(--brand-pink)]" strokeWidth={1.75} />
+            )}
+          </div>
+          {showMascot && (
+            <div className="absolute -bottom-2 -right-2 w-9 h-9 rounded-full kz-surface-card flex items-center justify-center">
+              <Icon className="w-4 h-4 text-[var(--foreground)]" strokeWidth={2} />
+            </div>
           )}
         </div>
-        {showMascot && (
-          <div className="absolute -bottom-2 -right-2 w-9 h-9 rounded-full kz-surface-card flex items-center justify-center">
-            <Icon className="w-4 h-4 text-[var(--foreground)]" strokeWidth={2} />
-          </div>
-        )}
-      </div>
+      )}
 
       <h3 className="kz-title text-[var(--foreground)] mb-2 max-w-sm">
         {title}

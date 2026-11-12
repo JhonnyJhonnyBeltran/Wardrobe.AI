@@ -3588,3 +3588,24 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
 - **Separación Estilos vs Datos Personales y bloqueo de `@username` (`app/(app)/profile/settings/page.tsx`, `app/(public)/onboarding/preferences/page.tsx`, `app/(app)/profile/settings/personal/page.tsx`, `app/(app)/profile/page.tsx`)**:
   - `"Editar estilo"` abre `/onboarding/preferences?from=settings&step=styles` en modo exclusivo de estilos/accesorios sin tocar ni mostrar rasgos físicos ni `@username` (eliminada tarjeta física duplicada en `settings/page.tsx`).
   - Bloqueada edición de `@username` dentro de `/profile/settings/personal` (solo editable desde `/profile/edit`), con enlace directo allí y botón visible `"Ajustes"` en `/profile`.
+
+---
+
+## 66. Endurecimiento Estricto Free vs Klozet Pro, Límite Free a 2 y Bloqueo de Adjuntos/Widgets (Noviembre 2026)
+- **Eliminación de bypasses `isEthanUser` / `isEthan` (`store/userStore.tsx`, `app/api/closy/chat/route.ts`, `app/api/analyze-clothing/route.ts`, `app/api/closy/generate-avatar/route.ts`)**:
+  - Erradicada la detección automática de cuentas cuyo correo/nombre/username contenía `"ethan"` como Premium, así como el chequeo aislado `subscription_status === 'active'` sin respaldo de `is_premium` o `subscription_tier === 'premium'`.
+  - Todo usuario sin suscripción activa validada en `profiles` queda estrictamente como `FREE`.
+- **Reducción del límite gratuito diario de Kloe a 2 mensajes (`lib/closy/rateLimiter.ts`, `app/api/closy/chat/route.ts`, `app/(app)/closet/kloe/page.tsx`, `lib/i18n/autoTranslate.ts`, `app/(public)/contact/page.tsx`)**:
+  - `MAX_PER_DAY_FREE` y `MAX_TRIAL_MESSAGES` actualizados de `4` a `2`.
+- **Bloqueo de adjuntos de prendas, posts guardados y fotos a Kloe para usuarios Free (`app/api/closy/chat/route.ts`, `app/(app)/closet/kloe/page.tsx`)**:
+  - Backend devuelve HTTP `403` (`requiresPremium: true`) si un usuario Free envía `attached_items`, `attached_item`, `attached_post` o `attached_custom_image`.
+  - Frontend muestra candado en los 3 botones (`Camera`, `Shirt`, `Bookmark`) e intercepta su apertura o envío disparando `KloeProModal`.
+- **Bloqueo de Widgets iOS para usuarios Free (`app/api/widgets/today/route.ts`, `app/(app)/widgets/page.tsx`)**:
+  - `/api/widgets/today` verifica `is_premium`/`subscription_tier` antes de consultar o devolver `calendar_outfits` (responde `isPremium: false, requiresPremium: true, locked: true, outfit: null`).
+  - `/widgets` deshabilita controles y muestra overlay glass bloqueado con CTA *"Desbloquear con Klozet Pro"* (`openPremiumModal('yearly')`) para cuentas Free.
+- **Verificación RevenueCat `entitlement.isActive` en `purchasePackage` (`lib/revenuecat/client.ts`)**:
+  - Comprobación explícita de entitlement activo (`customerInfo?.entitlements?.active?.['klozet_pro']`) antes de sincronizar estado Pro en backend tras `Purchases.purchasePackage`.
+- **Rediseño Botón Kloe Premium Negro, Onboarding sin Kloe y Empty States con Ejemplos (`app/(app)/closet/page.tsx`, `app/globals.css`, `components/EmptyState.tsx`, `components/Profile/ProfileProgressBar.tsx`)**:
+  - `KloeHeroBanner` (`.kz-kloe-banner`) rediseñado sobre píldora negra mate premium (`#0D0D0F`/`#09090B`) con Kloe grande en rosa (`54×62` / `60×68` px, `drop-shadow` rosa `#FF66C4`) sin círculo envolvente.
+  - Eliminada la mascota `KloeMascot` de la cabecera del div de onboarding `ProfileProgressBar`.
+  - Añadido `previewSlot` a `EmptyState`: el estado vacío de Prendas (*"Tu armario está vacío"*) muestra una tarjeta ejemplo de prenda (`Jersey rayas`) junto a Kloe, y el estado vacío de Outfits (*"Crea tu primer outfit"*) muestra una tarjeta ejemplo de look armado con piezas (`Look diario`) junto a Kloe.

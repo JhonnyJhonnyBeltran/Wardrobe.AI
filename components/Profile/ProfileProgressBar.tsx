@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, ChevronDown, ChevronUp, Plus, HelpCircle } from 'lucide-react';
-import KloeMascot from '@/components/KloeMascot';
 import { useUser } from '@/store/userStore';
 import { useWardrobeStore } from '@/store/wardrobeStore';
 import { useProfileStore } from '@/store/profileStore';
@@ -248,23 +247,18 @@ export default function ProfileProgressBar() {
       <div className="bg-[var(--card-bg)] border border-[var(--border-color)]/60 rounded-2xl p-4 shadow-sm transition-all hover:border-[var(--border-color)]">
         {/* Header with percentage & toggle */}
         <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5 min-w-0 flex-1">
-            <div className="w-8 h-8 rounded-full bg-[var(--brand-pink)]/10 flex items-center justify-center shrink-0">
-              <KloeMascot mood="happy" size="xs" />
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-[var(--brand-pink)]">
+                Tu ruta en Klozet
+              </span>
+              <span className="text-xs font-semibold text-[var(--foreground)] tabular-nums">
+                {totalPercent}%
+              </span>
             </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold uppercase tracking-wider text-[var(--brand-pink)]">
-                  Tu ruta en Klozet
-                </span>
-                <span className="text-xs font-semibold text-[var(--foreground)] tabular-nums">
-                  {totalPercent}%
-                </span>
-              </div>
-              <p className="text-xs text-[var(--foreground-secondary)] font-medium truncate mt-0.5">
-                {statusMessage}
-              </p>
-            </div>
+            <p className="text-xs text-[var(--foreground-secondary)] font-medium truncate mt-0.5">
+              {statusMessage}
+            </p>
           </div>
 
           <div className="flex items-center gap-1.5 shrink-0">
