@@ -206,19 +206,53 @@ export interface PaywallPresentationResult {
   error?: string;
 }
 
+export const YEARLY_DISCOUNT_PERCENT = 40;
+export const MONTHLY_DISCOUNT_PERCENT = 30;
+
 export interface RevenueCatPlanPricing {
   yearlyPrice: string;
+  yearlyOriginalPrice: string;
   yearlyMonthlyPrice: string;
+  yearlyDiscountPercent: number;
   monthlyPrice: string;
+  monthlyOriginalPrice: string;
+  monthlyDiscountPercent: number;
   hasLiveOffering: boolean;
 }
 
-const DEFAULT_PLAN_PRICING: RevenueCatPlanPricing = {
+export const DEFAULT_PLAN_PRICING: RevenueCatPlanPricing = {
   yearlyPrice: '24,99 €',
+  yearlyOriginalPrice: '41,99 €',
   yearlyMonthlyPrice: '~2,08 €/mes',
+  yearlyDiscountPercent: YEARLY_DISCOUNT_PERCENT,
   monthlyPrice: '2,99 €',
+  monthlyOriginalPrice: '4,29 €',
+  monthlyDiscountPercent: MONTHLY_DISCOUNT_PERCENT,
   hasLiveOffering: false,
 };
+
+function formatOriginalFromDiscount(
+  discountedAmount: number,
+  discountPercent: number,
+  currencyCode: string | undefined,
+  fallbackFormatted: string
+): string {
+  if (!Number.isFinite(discountedAmount) || discountedAmount <= 0) {
+    return fallbackFormatted;
+  }
+  const rawOriginal = discountedAmount / (1 - discountPercent / 100);
+  const rounded = Number(rawOriginal.toFixed(2));
+  try {
+    return new Intl.NumberFormat('es-ES', {
+      style: 'currency',
+      currency: currencyCode || 'EUR',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(rounded);
+  } catch {
+    return `${rounded.toFixed(2).replace('.', ',')} €`;
+  }
+}
 
 function selectNativePackage(offering: any, plan: 'monthly' | 'yearly') {
   if (!offering) return null;
@@ -265,24 +299,39 @@ export async function fetchRevenueCatOfferings(appUserId?: string): Promise<Reve
   try {
     await initRevenueCat(appUserId);
 
+    const platform = isNativeCapacitor()
+      ? (Capacitor.getPlatform() === 'android' ? 'android' : 'ios')
+      : 'web';
+    const isTestStore = getRevenueCatApiKey(platform).startsWith('test_');
+
     if (isNativeCapacitor()) {
       const { Purchases } = await import('@revenuecat/purchases-capacitor');
       const offerings = await Purchases.getOfferings();
       const current = offerings?.current;
-      if (!current) return DEFAULT_PLAN_PRICING;
+      if (!current || isTestStore) return DEFAULT_PLAN_PRICING;
 
       const annualPkg = selectNativePackage(current, 'yearly');
       const monthlyPkg = selectNativePackage(current, 'monthly');
       const rawAnnual = annualPkg?.product?.priceString;
       const rawMonthly = monthlyPkg?.product?.priceString;
       const annualPriceNumber = typeof annualPkg?.product?.price === 'number' ? annualPkg.product.price : null;
+      const monthlyPriceNumber = typeof monthlyPkg?.product?.price === 'number' ? monthlyPkg.product.price : null;
+      const currency = annualPkg?.product?.currencyCode || monthlyPkg?.product?.currencyCode || 'EUR';
 
       return {
         yearlyPrice: rawAnnual || DEFAULT_PLAN_PRICING.yearlyPrice,
+        yearlyOriginalPrice: annualPriceNumber
+          ? formatOriginalFromDiscount(annualPriceNumber, YEARLY_DISCOUNT_PERCENT, currency, DEFAULT_PLAN_PRICING.yearlyOriginalPrice)
+          : DEFAULT_PLAN_PRICING.yearlyOriginalPrice,
         yearlyMonthlyPrice: annualPriceNumber
           ? `~${(annualPriceNumber / 12).toFixed(2).replace('.', ',')} €/mes`
           : DEFAULT_PLAN_PRICING.yearlyMonthlyPrice,
+        yearlyDiscountPercent: YEARLY_DISCOUNT_PERCENT,
         monthlyPrice: rawMonthly || DEFAULT_PLAN_PRICING.monthlyPrice,
+        monthlyOriginalPrice: monthlyPriceNumber
+          ? formatOriginalFromDiscount(monthlyPriceNumber, MONTHLY_DISCOUNT_PERCENT, currency, DEFAULT_PLAN_PRICING.monthlyOriginalPrice)
+          : DEFAULT_PLAN_PRICING.monthlyOriginalPrice,
+        monthlyDiscountPercent: MONTHLY_DISCOUNT_PERCENT,
         hasLiveOffering: Boolean(annualPkg || monthlyPkg),
       };
     }
@@ -304,21 +353,37 @@ export async function fetchRevenueCatOfferings(appUserId?: string): Promise<Reve
       // Telemetry failure never blocks paywall presentation
     }
 
+    // Keep official business-plan Euro prices when running against RevenueCat Test Store
+    if (isTestStore) {
+      return DEFAULT_PLAN_PRICING;
+    }
+
     const annualPkg = selectWebPackage(current, 'yearly');
     const monthlyPkg = selectWebPackage(current, 'monthly');
 
     const annualPriceObj = annualPkg?.product?.currentPrice;
     const monthlyPriceObj = monthlyPkg?.product?.currentPrice;
     const perMonthFromAnnual = annualPkg?.product?.defaultSubscriptionOption?.base?.pricePerMonth?.formattedPrice;
+    const annualNum = annualPriceObj?.amountMicros ? annualPriceObj.amountMicros / 1_000_000 : null;
+    const monthlyNum = monthlyPriceObj?.amountMicros ? monthlyPriceObj.amountMicros / 1_000_000 : null;
+    const currency = annualPriceObj?.currency || monthlyPriceObj?.currency || 'EUR';
 
     return {
       yearlyPrice: annualPriceObj?.formattedPrice || DEFAULT_PLAN_PRICING.yearlyPrice,
+      yearlyOriginalPrice: annualNum
+        ? formatOriginalFromDiscount(annualNum, YEARLY_DISCOUNT_PERCENT, currency, DEFAULT_PLAN_PRICING.yearlyOriginalPrice)
+        : DEFAULT_PLAN_PRICING.yearlyOriginalPrice,
       yearlyMonthlyPrice: perMonthFromAnnual
         ? `~${perMonthFromAnnual}/mes`
-        : annualPriceObj?.amountMicros
-          ? `~${(annualPriceObj.amountMicros / 1_000_000 / 12).toFixed(2).replace('.', ',')} €/mes`
+        : annualNum
+          ? `~${(annualNum / 12).toFixed(2).replace('.', ',')} €/mes`
           : DEFAULT_PLAN_PRICING.yearlyMonthlyPrice,
+      yearlyDiscountPercent: YEARLY_DISCOUNT_PERCENT,
       monthlyPrice: monthlyPriceObj?.formattedPrice || DEFAULT_PLAN_PRICING.monthlyPrice,
+      monthlyOriginalPrice: monthlyNum
+        ? formatOriginalFromDiscount(monthlyNum, MONTHLY_DISCOUNT_PERCENT, currency, DEFAULT_PLAN_PRICING.monthlyOriginalPrice)
+        : DEFAULT_PLAN_PRICING.monthlyOriginalPrice,
+      monthlyDiscountPercent: MONTHLY_DISCOUNT_PERCENT,
       hasLiveOffering: Boolean(annualPkg || monthlyPkg),
     };
   } catch (err) {

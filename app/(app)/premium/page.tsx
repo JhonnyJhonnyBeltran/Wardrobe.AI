@@ -9,6 +9,7 @@ import { useUser } from '@/store/userStore';
 import { haptics } from '@/lib/haptic';
 import KlozetPaywallContent, { PaywallFloatingGarments } from '@/components/KlozetPaywallContent';
 import {
+  DEFAULT_PLAN_PRICING,
   isNativeCapacitor,
   fetchRevenueCatOfferings,
   purchaseRevenueCatPlan,
@@ -22,12 +23,7 @@ export default function PremiumPage() {
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('yearly');
   const [loadingPaywall, setLoadingPaywall] = useState(false);
   const [restoring, setRestoring] = useState(false);
-  const [pricing, setPricing] = useState<RevenueCatPlanPricing>({
-    yearlyPrice: '24,99 €',
-    yearlyMonthlyPrice: '~2,08 €/mes',
-    monthlyPrice: '2,99 €',
-    hasLiveOffering: false,
-  });
+  const [pricing, setPricing] = useState<RevenueCatPlanPricing>(DEFAULT_PLAN_PRICING);
 
   const { openPremiumModal } = useUiStore();
   const { user, refreshProfile } = useUser();
@@ -128,15 +124,15 @@ export default function PremiumPage() {
   };
 
   return (
-    <div className="relative min-h-screen bg-[var(--background)] overflow-x-hidden pb-[calc(6rem+env(safe-area-inset-bottom,0px))] pt-safe">
-      {/* Animated softly blurred loose clothes floating behind paywall */}
-      <PaywallFloatingGarments className="fixed inset-0 z-0 max-w-2xl mx-auto" />
+    <div className="relative h-[100dvh] w-full bg-[var(--background)] overflow-hidden">
+      {/* Animated softly blurred loose clothes floating behind full-screen paywall */}
+      <PaywallFloatingGarments className="fixed inset-0 z-0" />
 
       <motion.div
-        initial={{ opacity: 0, y: 14 }}
+        initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.25 }}
-        className="relative z-10 max-w-md mx-auto px-4 pt-4 sm:pt-8 pb-8"
+        transition={{ duration: 0.22 }}
+        className="relative z-10 h-full w-full"
       >
         <KlozetPaywallContent
           selectedPlan={selectedPlan}

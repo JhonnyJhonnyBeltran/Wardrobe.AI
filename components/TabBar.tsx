@@ -42,10 +42,11 @@ export default function TabBar() {
     { href: '/profile', labelKey: 'profile', icon: <UserRound /> },
   ];
 
-  // Hide TabBar on deep flows: Outfit Canvas, Profile Settings
+  // Hide TabBar on deep flows: Outfit Canvas, Profile Settings, Full-Screen Paywall
   const hideTabBar =
     storeTabBarHidden ||
     pathname === '/create' ||
+    pathname === '/premium' ||
     pathname.startsWith('/profile/settings');
 
   if (hideTabBar) return null;

@@ -3736,3 +3736,15 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
   - Eliminado el botón redundante `"Ajustes"` junto a `"Editar perfil"`, dejando `"Editar perfil"` a ancho completo (mantiene acceso a ajustes desde el engranaje superior derecho).
 - **Tags de estilo en creación de post (`app/(app)/create-post/page.tsx`, `app/(app)/create/post/page.tsx`)**:
   - Sustituidos los estilos seleccionados de negro/blanco por rosa de marca (`.kz-pink-surface border border-white/25 text-white`) con icono de check para distinguir claramente los estilos elegidos.
+
+---
+
+## 76. Precios Oficiales con Descuento Permanente, Paywall a Pantalla Completa Deslizable y Apertura desde Anuncio en Feed (Noviembre 2026)
+- **Precios oficiales consolidados del Plan de Negocio (`lib/revenuecat/client.ts`, `components/KlozetPaywallContent.tsx`, `components/KloeProModal.tsx`, `app/(app)/premium/page.tsx`, `lib/i18n/autoTranslate.ts`)**:
+  - Consolidados los precios oficiales de `Obsidian/business-plan.md` (**`24,99 €/año`** con `~2,08 €/mes` y **`2,99 €/mes`**) protegiendo las tarifas mostradas frente a valores de plantilla de RevenueCat Test Store cuando se ejecuta con clave `test_*`.
+  - Añadidos precios anteriores tachados y descuentos visibles permanentes entre el 30% y el 40% en ambos planes: **Plan Anual `41,99 €` → `24,99 €/año` (`Ahorra 40%`)** y **Plan Mensual `4,29 €` → `2,99 €/mes` (`-30%`)**, con etiqueta automática de campaña (**Black Friday** en temporada o **Oferta especial** el resto del año manteniendo el descuento permanente del 30%–40%).
+- **Paywall a pantalla completa deslizable sin recortes inferiores (`components/KlozetPaywallContent.tsx`, `components/KloeProModal.tsx`, `app/(app)/premium/page.tsx`, `components/TabBar.tsx`)**:
+  - `KloeProModal` pasa de hoja inferior limitada (`max-h-[92dvh]`) a superposición a **pantalla completa (`fixed inset-0 z-[5020] h-[100dvh]`)** con desplazamiento vertical fluido (`overflow-y-auto overscroll-y-contain`), ocultando el `TabBar` también en `/premium`.
+  - Estructura flexible en 3 franjas (`h-[100dvh] flex-col`): cabecera superior fija `.apple-glass-bar` (`X` + `Restaurar`), cuerpo central deslizable hacia abajo (hero con `K` libre + cuenta atrás + tarjetas de plan + indicador de scroll + preview de Widgets iOS + desplegable `Ver todo lo que incluye` con auto-scroll) y dock inferior fijo con el botón CTA principal (`Continuar · precio anterior tachado + precio final`) y aviso legal de renovación, eliminando por completo los cortes en la parte inferior.
+- **Apertura directa del Paywall al pulsar el anuncio de Klozet en `/feed` (`components/Feed/SponsoredAdCard.tsx`, `components/Feed/PremiumAdCard.tsx`)**:
+  - Al pulsar la tarjeta promocional de Klozet/Kloe en el feed (`SponsoredAdCard`) o `PremiumAdCard` con sesión iniciada, se abre al instante el paywall a pantalla completa (`openPremiumModal('yearly')`) en lugar de salir hacia `/closet/kloe` (manteniendo `/auth` para visitantes sin sesión).

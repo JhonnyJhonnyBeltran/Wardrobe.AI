@@ -9,6 +9,7 @@ import { useUser } from '@/store';
 import { haptics } from '@/lib/haptic';
 import KlozetPaywallContent, { PaywallFloatingGarments } from '@/components/KlozetPaywallContent';
 import {
+  DEFAULT_PLAN_PRICING,
   isNativeCapacitor,
   fetchRevenueCatOfferings,
   purchaseRevenueCatPlan,
@@ -34,12 +35,7 @@ export default function KloeProModal({
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>(defaultPlan);
   const [loading, setLoading] = useState(false);
   const [restoring, setRestoring] = useState(false);
-  const [pricing, setPricing] = useState<RevenueCatPlanPricing>({
-    yearlyPrice: '24,99 €',
-    yearlyMonthlyPrice: '~2,08 €/mes',
-    monthlyPrice: '2,99 €',
-    hasLiveOffering: false,
-  });
+  const [pricing, setPricing] = useState<RevenueCatPlanPricing>(DEFAULT_PLAN_PRICING);
   const isSubmittingRef = useRef(false);
 
   const isNative = isNativeCapacitor();
@@ -143,48 +139,32 @@ export default function KloeProModal({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[5000] flex items-end sm:items-center justify-center p-0 sm:p-4">
-        {/* Backdrop */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={handleDismiss}
-          className="fixed inset-0 bg-black/75 backdrop-blur-md"
+      <motion.div
+        initial={{ opacity: 0, y: 28 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 36 }}
+        transition={{ duration: 0.24, ease: [0.32, 0.72, 0, 1] }}
+        className="fixed inset-0 z-[5020] bg-[var(--background)] overflow-hidden"
+      >
+        {/* Animated softly blurred loose clothes floating behind full-screen paywall */}
+        <PaywallFloatingGarments className="fixed inset-0 z-0" />
+
+        <KlozetPaywallContent
+          selectedPlan={selectedPlan}
+          onSelectPlan={setSelectedPlan}
+          pricing={pricing}
+          loading={loading}
+          restoring={restoring}
+          isNative={isNative}
+          onStartCheckout={handleStartCheckout}
+          onRestorePurchases={handleRestorePurchases}
+          onDismiss={handleDismiss}
+          onOpenWidgetsPage={() => {
+            onClose();
+            router.push('/widgets');
+          }}
         />
-
-        {/* Custom Klozet Pro Paywall Modal */}
-        <motion.div
-          initial={{ opacity: 0, y: 40, scale: 0.98 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 60, scale: 0.96 }}
-          transition={{ type: 'spring', damping: 28, stiffness: 350 }}
-          onClick={(e) => e.stopPropagation()}
-          className="relative w-full max-w-md max-h-[92dvh] sm:max-h-[90vh] overflow-y-auto overflow-x-hidden no-scrollbar bg-[var(--background)] border-t sm:border border-[var(--border-color)] rounded-t-[32px] sm:rounded-3xl p-5 sm:p-6 shadow-2xl z-10 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] sm:pb-6"
-        >
-          {/* Animated softly blurred loose clothes floating behind paywall */}
-          <PaywallFloatingGarments className="absolute inset-0 z-0" />
-
-          {/* iOS Sheet Handle */}
-          <div className="relative z-10 w-12 h-1 bg-[var(--foreground-tertiary)]/30 rounded-full mx-auto mb-3 sm:hidden" />
-
-          <KlozetPaywallContent
-            selectedPlan={selectedPlan}
-            onSelectPlan={setSelectedPlan}
-            pricing={pricing}
-            loading={loading}
-            restoring={restoring}
-            isNative={isNative}
-            onStartCheckout={handleStartCheckout}
-            onRestorePurchases={handleRestorePurchases}
-            onDismiss={handleDismiss}
-            onOpenWidgetsPage={() => {
-              onClose();
-              router.push('/widgets');
-            }}
-          />
-        </motion.div>
-      </div>
+      </motion.div>
     </AnimatePresence>
   );
 }

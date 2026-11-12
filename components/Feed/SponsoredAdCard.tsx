@@ -6,6 +6,8 @@ import { useRouter } from 'next/navigation';
 import { ArrowRight, MessageCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useUser } from '@/store/userStore';
+import { useUiStore } from '@/store/uiStore';
+import { haptics } from '@/lib/haptic';
 
 interface KloeSelfAdVariant {
   id: string;
@@ -93,6 +95,7 @@ export default function SponsoredAdCard({
 }: SponsoredAdCardProps) {
   const router = useRouter();
   const { user, isPremium } = useUser();
+  const { openPremiumModal } = useUiStore();
 
   const variant = useMemo(() => {
     return KLOE_PROMO_VARIANTS[index % KLOE_PROMO_VARIANTS.length] || KLOE_PROMO_VARIANTS[0];
@@ -102,18 +105,31 @@ export default function SponsoredAdCard({
     return null;
   }
 
-  const handleClick = (e: React.MouseEvent) => {
+  const handleClick = (e: React.MouseEvent | React.KeyboardEvent) => {
     e.stopPropagation();
-    router.push(user ? '/closet/kloe' : '/auth');
+    try { haptics.tap(); } catch {}
+    if (user) {
+      openPremiumModal('yearly');
+    } else {
+      router.push('/auth');
+    }
   };
 
   return (
     <motion.div
+      role="button"
+      tabIndex={0}
       whileHover={{ y: -3, transition: { duration: 0.2 } }}
       whileTap={{ scale: 0.97 }}
       transition={{ type: 'spring', stiffness: 420, damping: 28 }}
       className={`w-full relative z-10 apple-tap-feedback ${className}`}
       onClick={handleClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleClick(e);
+        }
+      }}
     >
       <div className="group relative rounded-[24px] overflow-hidden bg-white dark:bg-[#141416] shadow-[0_6px_24px_-4px_rgba(0,0,0,0.08)] hover:shadow-[0_14px_34px_-6px_rgba(255,102,196,0.22)] border border-zinc-200/80 dark:border-zinc-800 transition-all duration-300 cursor-pointer w-full flex flex-col">
         {/* Top Lookbook Canvas Area (Clean White Studio Canvas for Flat-Lay Pieces) */}
@@ -166,7 +182,7 @@ export default function SponsoredAdCard({
             </p>
           </div>
 
-          <div className="w-full py-2 px-3 rounded-full bg-[var(--brand-pink,#FF66C4)] text-white text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1.5 shadow-xs group-hover:opacity-95 transition-opacity">
+          <div className="w-full py-2 px-3 rounded-full kz-pink-surface border border-white/25 text-white text-[11px] sm:text-xs font-bold flex items-center justify-center gap-1.5 group-hover:opacity-95 transition-opacity">
             <MessageCircle className="w-3.5 h-3.5 text-white stroke-[2.2]" />
             <span>{variant.ctaLabel}</span>
             <ArrowRight className="w-3.5 h-3.5 text-white group-hover:translate-x-0.5 transition-transform" />

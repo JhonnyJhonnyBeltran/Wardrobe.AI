@@ -5,13 +5,21 @@ import { MessageCircle, ArrowRight } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/store/userStore';
+import { useUiStore } from '@/store/uiStore';
+import { haptics } from '@/lib/haptic';
 
 export default function PremiumAdCard() {
   const router = useRouter();
   const { user } = useUser();
+  const { openPremiumModal } = useUiStore();
 
   const handleGoToKloe = () => {
-    router.push(user ? '/closet/kloe' : '/auth');
+    try { haptics.tap(); } catch {}
+    if (user) {
+      openPremiumModal('yearly');
+    } else {
+      router.push('/auth');
+    }
   };
 
   return (
