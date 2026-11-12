@@ -421,6 +421,7 @@ export async function POST(request: NextRequest) {
     const clothesMap = new Map(context.wardrobe.items.map(item => [item.id, item]));
 
     let resolvedOutfit = null;
+    let incompleteAiGarments: any[] = [];
     if (aiResult.recommended_outfit && Array.isArray(aiResult.recommended_outfit.item_ids)) {
       const validGarments = aiResult.recommended_outfit.item_ids
         .map((id: string) => {
@@ -435,12 +436,14 @@ export async function POST(request: NextRequest) {
         })
         .filter(Boolean);
 
-      if (validGarments.length > 0) {
+      if (hasCompleteOutfitCombo(validGarments)) {
         resolvedOutfit = {
           name: aiResult.recommended_outfit.name || 'Look recomendado por Kloe',
           occasion: aiResult.recommended_outfit.occasion || null,
           items: validGarments
         };
+      } else if (validGarments.length > 0) {
+        incompleteAiGarments = validGarments;
       }
     }
 
@@ -461,6 +464,18 @@ export async function POST(request: NextRequest) {
         .filter(Boolean);
     }
 
+    if (!resolvedOutfit && resolvedHighlightedItems.length === 0 && incompleteAiGarments.length > 0) {
+      resolvedHighlightedItems = incompleteAiGarments;
+    }
+
+    let finalMessage = aiResult.message || 'Aquí tienes mi recomendación de estilo para ti.';
+    if (
+      incompleteAiGarments.length > 0 &&
+      !/(faltan|sube|subir|comprar|añad|suficientes prendas|no tienes)/i.test(finalMessage)
+    ) {
+      finalMessage = `${finalMessage}\n\n${buildMissingPiecesTip(context.wardrobe.items || incompleteAiGarments, userPrompt, resolvedWeather, (userProfile as any)?.gender)}`;
+    }
+
     // Asynchronously increment persistent usage count in Supabase profile
     (supabase
       .from('profiles')
@@ -474,7 +489,7 @@ export async function POST(request: NextRequest) {
       .catch((e: any) => console.warn('[ChatRoute] Persistent quota update error:', e));
 
     return NextResponse.json({
-      message: aiResult.message || 'Aquí tienes mi recomendación de estilo para ti.',
+      message: finalMessage,
       recommended_outfit: resolvedOutfit,
       highlighted_items: resolvedHighlightedItems,
       follow_up_suggestions: aiResult.follow_up_suggestions || [
@@ -655,6 +670,8 @@ REGLA DE ORO DE CONTEXTO VISUAL Y METADATOS:
 CUANDO SE PIDE UN OUTFIT O QUÉ PONERSE:
 - Selecciona prendas reales de su armario en "recommended_outfit" con sus IDs exactos.
 - No uses más de 1 prenda de cada categoría principal (1 top, 1 bottom, 1 calzado, opcional 1 capa exterior / abrigo).
+- OUTFIT COMPLETO OBLIGATORIO: NUNCA devuelvas "recommended_outfit" con una sola prenda suelta (por ejemplo, una blusa, camisa o pantalón aislado) ni un conjunto sin parte inferior (salvo vestido o mono completo acompañado de calzado o capa).
+- SI FALTAN PRENDAS EN EL ARMARIO PARA LO QUE PIDE (por ejemplo, solo tiene una blusa blanca o le falta parte de abajo, calzado o abrigo para trabajo/reunión/fiesta/frío): pon "recommended_outfit": null, incluye en "highlighted_item_ids" las prendas suyas compatibles que ya tiene, explícale con naturalidad que ahora mismo no salen suficientes combinaciones completas en su armario para esa ocasión y recomiéndale prendas concretas para subir al armario o comprarse (ej. chaquetón o americana, pantalón de pinzas o falda, botas o mocasines).
 - CLIMA REAL: Revisa siempre el bloque PREVISIÓN METEOROLÓGICA REAL proporcionado en el contexto. Adapta las prendas, capas y calzado a esa temperatura exacta y probabilidad de lluvia/frío/calor (si llueve: evita ante delicado y sugiere capa/calzado resistente al agua; si refresca: sugiere abrigo o punto).
 - DÍA / OCASIÓN DEL OUTFIT: Si el usuario aún no ha especificado para cuándo es el outfit, pregúntale con naturalidad al final de tu mensaje si el look es para **hoy** (teniendo en cuenta el tiempo real de hoy), para **un día específico** (y qué fecha/plan tiene) o si busca un **outfit versátil para cualquier día**. Refleja también esas opciones brevemente en "follow_up_suggestions".
 
@@ -1040,77 +1057,230 @@ PETICIÓN DEL USUARIO:
   }
 }
 
+type GarmentLayer = 'shoes' | 'outerwear' | 'bottom' | 'dress' | 'accessory' | 'top';
+
+function categorizeGarmentLayer(item: any): GarmentLayer {
+  const name = (item?.name || '').toLowerCase();
+  const cat = (item?.category || '').toLowerCase();
+  const brand = (item?.brand || '').toLowerCase();
+  const fabric = (item?.fabric || '').toLowerCase();
+  const tags = Array.isArray(item?.tags) ? item.tags.map((t: string) => String(t).toLowerCase()) : [];
+  const text = `${name} ${cat} ${brand} ${fabric} ${tags.join(' ')}`;
+
+  // 1. Footwear
+  if (
+    cat.includes('shoe') || cat.includes('sneaker') || cat.includes('boot') || cat.includes('footwear') ||
+    text.includes('zapatilla') || text.includes('zapato') || text.includes('bota') || text.includes('botin') || text.includes('botín') ||
+    text.includes('bamba') || text.includes('sneaker') || text.includes('jordan') || text.includes('dunk') || text.includes('mocas') ||
+    text.includes('loafer') || text.includes('sandalia') || text.includes('tacón') || text.includes('tacon') || text.includes('salón') ||
+    text.includes('salon') || text.includes('bailarina') || text.includes('chancla') || text.includes('slide') || text.includes('crocs') ||
+    text.includes('yeezy') || text.includes('vans') || text.includes('converse')
+  ) {
+    return 'shoes';
+  }
+
+  // 2. Full-body pieces (dresses, jumpsuits, suits)
+  if (
+    cat.includes('dress') || cat.includes('jumpsuit') || cat.includes('suit') ||
+    text.includes('vestido') || text.includes('dress') || text.includes('mono') || text.includes('jumpsuit') || text.includes('traje') || text.includes('pichi')
+  ) {
+    return 'dress';
+  }
+
+  // 3. Outerwear / Layering / Hoodies / Jackets / Blazers / Sweaters / Coats
+  if (
+    cat.includes('hoodie') || cat.includes('jacket') || cat.includes('outerwear') || cat.includes('sweater') || cat.includes('coat') ||
+    text.includes('sudaca') || text.includes('sudadera') || text.includes('suda') || text.includes('hoodie') || text.includes('crewneck') ||
+    text.includes('chaqueta') || text.includes('chaquetón') || text.includes('chaqueton') || text.includes('cazadora') || text.includes('cazo') ||
+    text.includes('chupa') || text.includes('biker') || text.includes('bomber') || text.includes('abrigo') || text.includes('jersey') ||
+    text.includes('sueter') || text.includes('suéter') || text.includes('blazer') || text.includes('americana') || text.includes('cardigan') ||
+    text.includes('cárdigan') || text.includes('rebeca') || text.includes('rebe') || text.includes('anorak') || text.includes('parka') ||
+    text.includes('polar') || text.includes('fleece') || text.includes('chaleco') || text.includes('gabardina') || text.includes('trench') ||
+    text.includes('windbreaker') || text.includes('cortavientos') || text.includes('scoopers')
+  ) {
+    return 'outerwear';
+  }
+
+  // 4. Bottoms
+  if (
+    cat.includes('bottom') || cat.includes('pant') || cat.includes('jean') || cat.includes('short') || cat.includes('skirt') ||
+    text.includes('pantalon') || text.includes('pantalón') || text.includes('vaquero') || text.includes('tejanos') || text.includes('jean') ||
+    text.includes('pitillo') || text.includes('baggy') || text.includes('cargo') || text.includes('jogger') || text.includes('chandal') ||
+    text.includes('chándal') || text.includes('short') || text.includes('falda') || text.includes('bermuda') || text.includes('legging') ||
+    text.includes('chino') || text.includes('culotte') || text.includes('palazzo')
+  ) {
+    return 'bottom';
+  }
+
+  // 5. Accessories
+  if (
+    cat.includes('bag') || cat.includes('accessor') || cat.includes('other') ||
+    text.includes('bolso') || text.includes('mochila') || text.includes('gorra') || text.includes('gorro') || text.includes('beanie') ||
+    text.includes('gafas') || text.includes('reloj') || text.includes('cinturon') || text.includes('cinturón') || text.includes('bufanda') ||
+    text.includes('collar') || text.includes('anillo') || text.includes('tote') || text.includes('cartera')
+  ) {
+    return 'accessory';
+  }
+
+  // 6. Default Tops (Camisetas, camisas, blusas, polos, tops)
+  return 'top';
+}
+
+function hasCompleteOutfitCombo(garments: any[]): boolean {
+  if (!Array.isArray(garments) || garments.length < 2) return false;
+  const layers = new Set(garments.map(categorizeGarmentLayer));
+  const hasBottom = layers.has('bottom');
+  const hasTopOrOuter = layers.has('top') || layers.has('outerwear');
+  const hasDress = layers.has('dress');
+  return (hasBottom && hasTopOrOuter) || hasDress;
+}
+
+function buildMissingPiecesList(
+  existingItems: any[],
+  userPrompt: string,
+  resolvedWeather?: WeatherContextPayload | null,
+  gender?: string
+): string[] {
+  const lower = userPrompt.toLowerCase();
+  const layers = new Set(existingItems.map(categorizeGarmentLayer));
+  const isFormal = /(formal|trabajo|reunión|reunion|oficina|entrevista|boda|gala|elegante|cena|evento)/.test(lower);
+  const todayKey = getMadridDayKey();
+  const todayTemp = resolvedWeather?.days?.[todayKey]?.tempMax ?? resolvedWeather?.days?.[todayKey]?.temp;
+  const isCold =
+    /(invierno|frío|frio|otoño|lluvia|abrig)/.test(lower) ||
+    (typeof todayTemp === 'number' && todayTemp <= 18);
+  const isMen = gender === 'men';
+
+  const recs: string[] = [];
+
+  if (!layers.has('outerwear')) {
+    if (isFormal) {
+      recs.push(
+        isMen
+          ? '**Chaquetón o americana (blazer)**: En azul marino, gris marengo o negro para estructurar el look al instante.'
+          : '**Un chaquetón estructurado o una americana (blazer)**: En negro, camel o gris marengo para elevar tu prenda superior.'
+      );
+    } else if (isCold) {
+      recs.push('**Un chaquetón o abrigo de paño**: Te aporta calidez y cierra la silueta con equilibrio.');
+    } else {
+      recs.push('**Una sobrecamisa, chaqueta ligera o americana**: Para darle dimensión y juego de capas al conjunto.');
+    }
+  }
+
+  if (!layers.has('bottom') && !layers.has('dress')) {
+    if (isFormal) {
+      recs.push(
+        isMen
+          ? '**Un pantalón de pinzas o chino sastre**: En negro, gris carbón o marino con corte recto.'
+          : '**Un pantalón de pinzas recto/wide leg o una falda midi**: En tono neutro oscuro para mantener un perfil pulido.'
+      );
+    } else {
+      recs.push('**Unos vaqueros rectos o un pantalón fluido**: Una base versátil que combina con prácticamente todo.');
+    }
+  }
+
+  if (!layers.has('top') && !layers.has('dress')) {
+    recs.push(
+      isFormal
+        ? '**Una camisa o blusa lisa de tejido estructurado**: En blanco roto o tono neutro para tener base limpia.'
+        : '**Una camiseta básica de algodón o top neutro**: Imprescindible para armar combinaciones diarias.'
+    );
+  }
+
+  if (!layers.has('shoes')) {
+    if (isFormal) {
+      recs.push(
+        isMen
+          ? '**Unos mocasines de piel o zapatos Oxford**: Elevan cualquier camisa y pantalón al registro formal.'
+          : '**Unas botas de piel, mocasines o salones cómodos**: Cierran el outfit formal sin restar comodidad.'
+      );
+    } else if (isCold) {
+      recs.push('**Unas botas o botines de piel**: Abrigan y estilizan mucho mejor que una zapatilla ligera.');
+    } else {
+      recs.push('**Unas zapatillas limpias, botas o mocasines**: El remate clave para equilibrar todo el look.');
+    }
+  }
+
+  if (recs.length === 0) {
+    recs.push(
+      isFormal
+        ? '**Un chaquetón o blazer sastre y calzado formal (botas o mocasines)**: Para dar el salto definitivo al código de trabajo o reunión.'
+        : '**Un básico neutro complementario (pantalón recto o capa exterior)**: Para multiplicar tus combinaciones reales.'
+    );
+  }
+
+  return recs;
+}
+
+function buildMissingPiecesTip(
+  existingItems: any[],
+  userPrompt: string,
+  resolvedWeather?: WeatherContextPayload | null,
+  gender?: string
+): string {
+  const recs = buildMissingPiecesList(existingItems, userPrompt, resolvedWeather, gender);
+  return `Ahora mismo no hay suficientes piezas en tu armario para cerrar un outfit completo. Te recomiendo subir o hacerte con:\n\n${recs.map(r => `• ${r}`).join('\n')}`;
+}
+
+function buildInsufficientWardrobeReply({
+  userPrompt,
+  items,
+  attachedItems,
+  resolvedWeather,
+  userGender,
+  userName
+}: {
+  userPrompt: string;
+  items: any[];
+  attachedItems: any[];
+  resolvedWeather?: WeatherContextPayload | null;
+  userGender?: string;
+  userName?: string;
+}) {
+  const anchorItems = attachedItems.length > 0 ? attachedItems : items.slice(0, 2);
+  const lower = userPrompt.toLowerCase();
+  const isFormal = /(formal|trabajo|reunión|reunion|oficina|entrevista|boda|gala|elegante|cena|evento)/.test(lower);
+  const recs = buildMissingPiecesList(items, userPrompt, resolvedWeather, userGender);
+  const anchorNames = anchorItems.map((i: any) => `**${i.name}**`).join(' y ');
+  const occasionLabel = isFormal ? 'para un look formal de trabajo o reunión' : 'para montar un outfit completo';
+
+  const intro = anchorItems.length > 0
+    ? `${userName ? `${userName}, v` : 'V'}eo tu ${anchorNames} y es una muy buena base, pero ahora mismo no tienes suficientes prendas en tu armario ${occasionLabel}.`
+    : 'Ahora mismo no hay suficientes prendas combinables en tu armario para armarte un look completo.';
+
+  return {
+    message: `${intro}
+
+Para poder completarlo y sacarle partido de verdad, te recomiendo subir al armario o comprarte estas piezas:
+
+${recs.map(r => `• ${r}`).join('\n')}
+
+Si ya tienes alguna de estas prendas en casa, súbela al armario y te armo el look completo al momento.`,
+    recommended_outfit: null,
+    highlighted_item_ids: anchorItems.map((i: any) => i.id),
+    follow_up_suggestions: [
+      '¿Qué básicos clave debería comprar?',
+      anchorItems[0] ? `¿Qué colores combinan con ${anchorItems[0].name}?` : 'Consejos para empezar mi armario',
+      '¿Qué marcas recomiendas para esto?'
+    ]
+  };
+}
+
 function buildLayeredOutfit(items: any[], targetItem?: any): any[] {
   if (!items || items.length === 0) return [];
 
-  const categorize = (item: any) => {
-    const name = (item.name || '').toLowerCase();
-    const cat = (item.category || '').toLowerCase();
-    const brand = (item.brand || '').toLowerCase();
-    const fabric = (item.fabric || '').toLowerCase();
-    const tags = Array.isArray(item.tags) ? item.tags.map((t: string) => t.toLowerCase()) : [];
-    const text = `${name} ${cat} ${brand} ${fabric} ${tags.join(' ')}`;
-
-    // 1. Footwear
-    if (
-      cat.includes('shoe') || cat.includes('sneaker') || cat.includes('boot') || cat.includes('footwear') ||
-      text.includes('zapatilla') || text.includes('zapato') || text.includes('bota') || text.includes('botin') || text.includes('botín') ||
-      text.includes('bamba') || text.includes('sneaker') || text.includes('jordan') || text.includes('dunk') || text.includes('mocas') ||
-      text.includes('loafer') || text.includes('sandalia') || text.includes('tacón') || text.includes('tacon') || text.includes('chancla') ||
-      text.includes('slide') || text.includes('crocs') || text.includes('yeezy') || text.includes('vans') || text.includes('converse')
-    ) {
-      return 'shoes';
-    }
-
-    // 2. Outerwear / Layering / Hoodies / Jackets / Sweaters / Coats
-    if (
-      cat.includes('hoodie') || cat.includes('jacket') || cat.includes('outerwear') || cat.includes('sweater') || cat.includes('coat') ||
-      text.includes('sudaca') || text.includes('sudadera') || text.includes('suda') || text.includes('hoodie') || text.includes('crewneck') ||
-      text.includes('chaqueta') || text.includes('cazadora') || text.includes('cazo') || text.includes('chupa') || text.includes('biker') ||
-      text.includes('bomber') || text.includes('abrigo') || text.includes('jersey') || text.includes('sueter') || text.includes('suéter') ||
-      text.includes('blazer') || text.includes('cardigan') || text.includes('cárdigan') || text.includes('rebeca') || text.includes('rebe') ||
-      text.includes('anorak') || text.includes('parka') || text.includes('polar') || text.includes('fleece') || text.includes('chaleco') ||
-      text.includes('gabardina') || text.includes('trench') || text.includes('windbreaker') || text.includes('cortavientos') || text.includes('scoopers')
-    ) {
-      return 'outerwear';
-    }
-
-    // 3. Bottoms
-    if (
-      cat.includes('bottom') || cat.includes('pant') || cat.includes('jean') || cat.includes('short') || cat.includes('skirt') ||
-      text.includes('pantalon') || text.includes('pantalón') || text.includes('vaquero') || text.includes('tejanos') || text.includes('jean') ||
-      text.includes('pitillo') || text.includes('baggy') || text.includes('cargo') || text.includes('jogger') || text.includes('chandal') ||
-      text.includes('chándal') || text.includes('short') || text.includes('falda') || text.includes('bermuda') || text.includes('legging') ||
-      text.includes('chino') || text.includes('culotte')
-    ) {
-      return 'bottom';
-    }
-
-    // 4. Accessories
-    if (
-      cat.includes('bag') || cat.includes('accessor') || cat.includes('other') ||
-      text.includes('bolso') || text.includes('mochila') || text.includes('gorra') || text.includes('gorro') || text.includes('beanie') ||
-      text.includes('gafas') || text.includes('reloj') || text.includes('cinturon') || text.includes('cinturón') || text.includes('bufanda') ||
-      text.includes('collar') || text.includes('anillo') || text.includes('tote') || text.includes('cartera')
-    ) {
-      return 'accessory';
-    }
-
-    // 5. Default Tops (Camisetas, camisas, polos, tops)
-    return 'top';
-  };
-
-  const pool = {
-    top: [] as any[],
-    outerwear: [] as any[],
-    bottom: [] as any[],
-    shoes: [] as any[],
-    accessory: [] as any[]
+  const pool: Record<GarmentLayer, any[]> = {
+    top: [],
+    outerwear: [],
+    bottom: [],
+    dress: [],
+    shoes: [],
+    accessory: []
   };
 
   items.forEach(item => {
-    const layer = categorize(item);
-    pool[layer as keyof typeof pool].push(item);
+    const layer = categorizeGarmentLayer(item);
+    pool[layer].push(item);
   });
 
   const selected: any[] = [];
@@ -1121,7 +1291,23 @@ function buildLayeredOutfit(items: any[], targetItem?: any): any[] {
     selectedIds.add(targetItem.id);
   }
 
-  const targetLayer = targetItem ? categorize(targetItem) : null;
+  const targetLayer = targetItem ? categorizeGarmentLayer(targetItem) : null;
+
+  if (targetLayer === 'dress') {
+    if (pool.shoes.length > 0) {
+      const s = pool.shoes.find(i => !selectedIds.has(i.id));
+      if (s) { selected.push(s); selectedIds.add(s.id); }
+    }
+    if (pool.outerwear.length > 0) {
+      const o = pool.outerwear.find(i => !selectedIds.has(i.id));
+      if (o) { selected.push(o); selectedIds.add(o.id); }
+    }
+    if (pool.accessory.length > 0) {
+      const a = pool.accessory.find(i => !selectedIds.has(i.id));
+      if (a) { selected.push(a); selectedIds.add(a.id); }
+    }
+    return selected;
+  }
 
   // Add 1 bottom if not already selected
   if (targetLayer !== 'bottom' && pool.bottom.length > 0) {
@@ -1151,17 +1337,6 @@ function buildLayeredOutfit(items: any[], targetItem?: any): any[] {
   if (targetLayer !== 'accessory' && pool.accessory.length > 0) {
     const a = pool.accessory.find(i => !selectedIds.has(i.id));
     if (a) { selected.push(a); selectedIds.add(a.id); }
-  }
-
-  // If still fewer than 2 items, add any remaining distinct item
-  if (selected.length < 2) {
-    for (const item of items) {
-      if (!selectedIds.has(item.id)) {
-        selected.push(item);
-        selectedIds.add(item.id);
-        if (selected.length >= 3) break;
-      }
-    }
   }
 
   return selected;
@@ -1232,6 +1407,21 @@ Estas piezas te permitirán multiplicar tus opciones de look aprovechando tus pr
     }
 
     const layeredOutfit = buildLayeredOutfit(items, primaryItem);
+    const isFormalReq = /(formal|trabajo|reunión|reunion|oficina|entrevista|boda|gala)/.test(lower);
+    const hasCasualSportyOnly = layeredOutfit.some((i: any) =>
+      /(chandal|chándal|jogger|pijama|chancla|crocs|bermuda)/.test(`${i.name || ''} ${i.category || ''}`.toLowerCase())
+    );
+    if (!hasCompleteOutfitCombo(layeredOutfit) || (isFormalReq && hasCasualSportyOnly)) {
+      return buildInsufficientWardrobeReply({
+        userPrompt,
+        items,
+        attachedItems,
+        resolvedWeather,
+        userGender: context.user?.gender,
+        userName
+      });
+    }
+
     return {
       message: `He creado una combinación en torno a tu selección (${attachedItems.map(i => `**${i.name}**`).join(', ')}) utilizando las prendas de tu armario:
 
@@ -1241,7 +1431,7 @@ Estas piezas te permitirán multiplicar tus opciones de look aprovechando tus pr
 ¿Te gusta esta combinación o te apetece probar con un calzado o una capa diferente?`,
       recommended_outfit: {
         name: `Look con ${primaryItem.name}`,
-        occasion: 'casual',
+        occasion: isFormalReq ? 'formal' : 'casual',
         item_ids: layeredOutfit.map((i: any) => i.id)
       },
       highlighted_item_ids: attachedItems.map(i => i.id),
@@ -1260,6 +1450,16 @@ Estas piezas te permitirán multiplicar tus opciones de look aprovechando tus pr
 
     if (isOutfitRequest && items.length > 0) {
       const layeredOutfit = buildLayeredOutfit(items);
+      if (!hasCompleteOutfitCombo(layeredOutfit)) {
+        return buildInsufficientWardrobeReply({
+          userPrompt,
+          items,
+          attachedItems,
+          resolvedWeather,
+          userGender: context.user?.gender,
+          userName
+        });
+      }
       return {
         message: `Inspirándome en tu look guardado (**${postLabel}**), he seleccionado las prendas más afines de tu armario para replicar su estética y proporciones:
 
@@ -1380,6 +1580,16 @@ Estaba revisando las prendas de tu armario y veo que tenemos piezas estupendas c
 
     const chosenAlternative = candidateItems.length > 0 ? candidateItems[0] : items[0];
     const newOutfit = buildLayeredOutfit(items, chosenAlternative);
+    if (!hasCompleteOutfitCombo(newOutfit)) {
+      return buildInsufficientWardrobeReply({
+        userPrompt,
+        items,
+        attachedItems: chosenAlternative ? [chosenAlternative] : attachedItems,
+        resolvedWeather,
+        userGender: context.user?.gender,
+        userName
+      });
+    }
 
     return {
       message: `¡Entendido! He sustituido ${replacedCategoryName} por tu **${chosenAlternative.name}**, manteniendo el equilibrio con el resto de piezas de tu armario.
@@ -1410,7 +1620,7 @@ Estaba revisando las prendas de tu armario y veo que tenemos piezas estupendas c
       return name.includes('traje') || name.includes('camisa') || name.includes('blazer') || name.includes('vestido') || name.includes('chino') || cat.includes('suit');
     });
 
-    if (formalMatches.length >= 2) {
+    if (formalMatches.length >= 2 && hasCompleteOutfitCombo(formalMatches)) {
       return {
         message: `Para una ocasión formal o boda, la clave es mantener una silueta limpia y elegante:
 
@@ -1436,6 +1646,16 @@ Un cinturón discreto y un reloj clásico completarán el estilismo a la perfecc
         return ['negro', 'black', 'azul', 'gris', 'marino', 'blanco'].some(c => col.includes(c));
       });
       const selectedDark = (darkestItems.length >= 2 ? darkestItems : items).slice(0, 3);
+      if (!hasCompleteOutfitCombo(selectedDark)) {
+        return buildInsufficientWardrobeReply({
+          userPrompt,
+          items,
+          attachedItems: formalMatches.length > 0 ? formalMatches : selectedDark,
+          resolvedWeather,
+          userGender: context.user?.gender,
+          userName
+        });
+      }
 
       return {
         message: `Para un evento de etiqueta, lo canónico es apostar por un traje de corte sastre (azul marino, marengo o negro), camisa de vestir y calzado clásico tipo Oxford o mocasines.
@@ -1464,16 +1684,19 @@ Si tienes oportunidad, te aconsejo añadir una camisa formal o una americana est
     const leatherItem = items.find((i: any) => (i.name || '').toLowerCase().includes('cuero') || (i.fabric || '').toLowerCase().includes('cuero') || (i.name || '').toLowerCase().includes('piel') || (i.name || '').toLowerCase().includes('biker'));
     const complementary = items.filter((i: any) => i.id !== leatherItem?.id).slice(0, 3);
 
+    const leatherCombo = leatherItem ? [leatherItem, ...complementary] : [];
+    const canBuildLeatherOutfit = hasCompleteOutfitCombo(leatherCombo);
+
     return {
       message: `El cuero es un tejido protagonista que añade presencia inmediata a cualquier look:
 
 - **Contraste de texturas**: Combínalo con tejidos suaves y mates (algodón de gramaje medio, denim lavado o punto) para equilibrar el brillo y la rigidez de la piel.
 - **Siluetas**: Si llevas una pieza estructurada arriba, unos pantalones de tiro medio y corte recto crearán una proporción perfecta.
-${leatherItem ? `\n- **En tu armario**: Tienes **${leatherItem.name}**, que combina magníficamente con ${complementary.map((i: any) => `**${i.name}**`).join(', ')}.` : '\n- Si aún no tienes una prenda de cuero en tu armario, una chaqueta biker clásica o unos botines negros son inversiones esenciales.'}`,
-      recommended_outfit: leatherItem ? {
+${leatherItem ? (complementary.length > 0 ? `\n- **En tu armario**: Tienes **${leatherItem.name}**, que combina magníficamente con ${complementary.map((i: any) => `**${i.name}**`).join(', ')}.` : `\n- **En tu armario**: Tienes **${leatherItem.name}** como base, así que te recomiendo subir o sumar un pantalón recto o botas de piel para completar el look.`) : '\n- Si aún no tienes una prenda de cuero en tu armario, una chaqueta biker clásica o unos botines negros son inversiones esenciales.'}`,
+      recommended_outfit: canBuildLeatherOutfit ? {
         name: `Look de Tendencia: ${leatherItem.name}`,
         occasion: 'casual',
-        item_ids: [leatherItem.id, ...complementary.map((i: any) => i.id)]
+        item_ids: leatherCombo.map((i: any) => i.id)
       } : null,
       highlighted_item_ids: leatherItem ? [leatherItem.id] : [],
       follow_up_suggestions: [
@@ -1657,6 +1880,21 @@ El secreto está en incorporar estas tendencias a través de pequeños detalles 
   }
 
   const layeredOutfit = buildLayeredOutfit(items, targetGarment);
+  const isFormalTargetReq = /(formal|trabajo|reunión|reunion|oficina|entrevista|boda|gala)/.test(lower);
+  const hasSportyOnlyInTarget = layeredOutfit.some((i: any) =>
+    /(chandal|chándal|jogger|pijama|chancla|crocs|bermuda)/.test(`${i.name || ''} ${i.category || ''}`.toLowerCase())
+  );
+
+  if (!hasCompleteOutfitCombo(layeredOutfit) || (isFormalTargetReq && hasSportyOnlyInTarget)) {
+    return buildInsufficientWardrobeReply({
+      userPrompt,
+      items,
+      attachedItems: targetGarment ? [targetGarment] : attachedItems,
+      resolvedWeather,
+      userGender: context.user?.gender,
+      userName
+    });
+  }
 
   if (targetGarment) {
     return {

@@ -3709,3 +3709,15 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
 - **Posicionamiento dinámico de onboarding al seleccionar prendas en Kloe (`components/GuidedTour/KloeInlineTourPill.tsx`, `app/(app)/closet/kloe/page.tsx`, `store/uiStore.ts`)**:
   - Cuando el usuario adjunta prendas, posts o imágenes en `/closet/kloe` (`hasKloeAttachments`), el widget flotante centrado desaparece y pasa a mostrarse en línea **a la derecha** de la fila de tarjetas seleccionadas, evitando solaparse encima o debajo.
   - Con `ResizeObserver` sobre el ancho disponible junto a las tarjetas, si no cabe la versión con texto se transforma automáticamente en una píldora mínima con solo el círculo **`X/6`** y el icono **`>`**.
+
+---
+
+## 74. Mascota K Única en Chat, Armario Insuficiente y Botones Unificados en Kloe (Noviembre 2026)
+- **Mascota `K` única, viva e interactiva en `/closet/kloe` (`app/(app)/closet/kloe/page.tsx`)**:
+  - Eliminada la duplicación de múltiples `KloeMascot` en mensajes históricos: en todo momento solo se renderiza **una única `K`**.
+  - Mientras Kloe escribe (`isTyping === true`), la `K` única pasa al globo de escritura con animación de pensamiento (`mood="thinking"`) y conserva `interactive` para parpadear al tocarla; al finalizar la respuesta, regresa al último mensaje del asistente (`!isTyping && isLatestAssistant`), manteniendo espaciadores alineados (`w-8 shrink-0`) en mensajes anteriores.
+- **Validación de armario suficiente y recomendaciones si faltan prendas (`app/api/closy/chat/route.ts`)**:
+  - Extraído clasificador por capas (`categorizeGarmentLayer`) y validador de combinaciones reales completas (`hasCompleteOutfitCombo`), tanto para respuestas de Gemini como para todos los escenarios heurísticos de respaldo.
+  - Si faltan prendas compatibles para montar el outfit pedido (ej. solo hay una blusa o falta parte inferior/calzado/capa para trabajo o reunión), Kloe nunca devuelve una tarjeta `recommended_outfit` de una sola prenda (`recommended_outfit: null`): reconoce las prendas que ya posee el usuario y le recomienda piezas concretas para **subir al armario o comprarse** (chaquetón o americana, pantalón de pinzas/falda, botas/mocasines, etc.).
+- **Botones de `/closet/kloe` unificados al estilo Closet (`app/(app)/closet/kloe/page.tsx`)**:
+  - Aplicada estética de píldora `.kz-pink-surface border border-white/25` con escalado suave (`hover:scale-[1.03] active:scale-[0.97]`) en los CTA de `Kloe Pro`, botón de enviar (`Send`), `"Lienzo"`, `"Nueva conversación"` y `"Listo / Cerrar"`; acciones secundarias de look (`"Guardar look"`, `"Publicar look"`, `"Generar sticker"`) convertidas a píldoras `rounded-full`.

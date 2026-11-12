@@ -1176,14 +1176,20 @@ export default function KloePage() {
             </div>
             <button
               onClick={() => setShowProModal(true)}
-              className="text-xs font-bold px-3.5 py-2 bg-[var(--brand-pink)] text-white rounded-full hover:opacity-90 transition-opacity flex-shrink-0 shadow-sm cursor-pointer self-start sm:self-auto"
+              className="text-xs font-bold px-4 py-2 kz-pink-surface border border-white/25 text-white rounded-full hover:scale-[1.03] active:scale-[0.97] transition-all flex-shrink-0 cursor-pointer self-start sm:self-auto"
             >
               Kloe Pro (desde 2,08 €/mes)
             </button>
           </motion.div>
         )}
 
-        {messages.map((msg) => (
+        {messages.map((msg, msgIndex) => {
+          const isLatestAssistant =
+            msg.role === 'assistant' &&
+            !messages.slice(msgIndex + 1).some((m) => m.role === 'assistant');
+          const showActiveMascotHere = isLatestAssistant && !isTyping;
+
+          return (
           <motion.div
             key={msg.id}
             initial={{ opacity: 0, y: 15, scale: 0.98 }}
@@ -1192,13 +1198,17 @@ export default function KloePage() {
             className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             {msg.role === 'assistant' && (
-              <div className="mt-1 shrink-0">
-                <KloeMascot
-                  mood={msg.recommended_outfit ? 'excited' : 'happy'}
-                  size="sm"
-                  interactive
-                />
-              </div>
+              showActiveMascotHere ? (
+                <div className="mt-1 shrink-0">
+                  <KloeMascot
+                    mood={msg.recommended_outfit ? 'excited' : 'happy'}
+                    size="sm"
+                    interactive
+                  />
+                </div>
+              ) : (
+                <div className="mt-1 w-8 shrink-0" aria-hidden="true" />
+              )
             )}
 
             <div className={`max-w-[85%] sm:max-w-[78%] flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
@@ -1342,7 +1352,7 @@ export default function KloePage() {
                         savedOutfitKeys.has(getOutfitSignature(msg.recommended_outfit)) ||
                         savingOutfitKey === getOutfitSignature(msg.recommended_outfit)
                       }
-                      className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-[var(--background-secondary)] hover:bg-[var(--foreground)] hover:text-[var(--background)] text-[var(--foreground)] text-xs font-semibold border border-[var(--border-color)] transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-full bg-[var(--background-secondary)] hover:bg-[var(--foreground)] hover:text-[var(--background)] text-[var(--foreground)] text-xs font-bold border border-[var(--border-color)] transition-all hover:scale-[1.02] active:scale-[0.97] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {savedOutfitKeys.has(getOutfitSignature(msg.recommended_outfit)) ? (
                         <>
@@ -1366,7 +1376,7 @@ export default function KloePage() {
                     <button
                       onClick={() => handlePublishOutfit(msg.recommended_outfit)}
                       disabled={publishingOutfitKey === getOutfitSignature(msg.recommended_outfit)}
-                      className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-[var(--background-secondary)] hover:bg-[var(--foreground)] hover:text-[var(--background)] text-[var(--foreground)] text-xs font-semibold border border-[var(--border-color)] transition-all active:scale-[0.98] disabled:opacity-50"
+                      className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-full bg-[var(--background-secondary)] hover:bg-[var(--foreground)] hover:text-[var(--background)] text-[var(--foreground)] text-xs font-bold border border-[var(--border-color)] transition-all hover:scale-[1.02] active:scale-[0.97] cursor-pointer disabled:opacity-50"
                     >
                       {publishingOutfitKey === getOutfitSignature(msg.recommended_outfit) ? (
                         <>
@@ -1384,7 +1394,7 @@ export default function KloePage() {
                     {/* 3. Exportar a Instagram Story (Generar sticker) */}
                     <button
                       onClick={() => setExportModalOutfit(msg.recommended_outfit)}
-                      className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-[var(--brand-pink)]/10 hover:bg-[var(--brand-pink)]/20 text-[var(--brand-pink)] text-xs font-semibold border border-[var(--brand-pink)]/30 transition-all active:scale-[0.98]"
+                      className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-full bg-[var(--brand-pink)]/10 hover:bg-[var(--brand-pink)]/20 text-[var(--brand-pink)] text-xs font-bold border border-[var(--brand-pink)]/30 transition-all hover:scale-[1.02] active:scale-[0.97] cursor-pointer"
                     >
                       <Share2 className="w-3.5 h-3.5" />
                       <span className="truncate">Generar sticker</span>
@@ -1393,7 +1403,7 @@ export default function KloePage() {
                     {/* 4. Editar en el Lienzo */}
                     <Link
                       href={`/create?itemIds=${(msg.recommended_outfit.items || []).map((i: any) => i.id).join(',')}&name=${encodeURIComponent(msg.recommended_outfit.name || 'Look Kloe')}&occasion=${encodeURIComponent(msg.recommended_outfit.occasion || '')}&fromKloe=true`}
-                      className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-[var(--brand-pink)] hover:opacity-90 text-white text-xs font-semibold shadow-xs transition-all active:scale-[0.98]"
+                      className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-full kz-pink-surface border border-white/25 text-white text-xs font-bold transition-all hover:scale-[1.02] active:scale-[0.97] cursor-pointer"
                     >
                       <Layers className="w-3.5 h-3.5" />
                       <span className="truncate">Lienzo</span>
@@ -1440,7 +1450,8 @@ export default function KloePage() {
 
             </div>
           </motion.div>
-        ))}
+          );
+        })}
 
         {/* Animated Thinking & Typing Indicator */}
         <AnimatePresence>
@@ -1452,7 +1463,9 @@ export default function KloePage() {
               transition={{ type: 'spring', damping: 20, stiffness: 300 }}
               className="flex gap-3 items-center justify-start"
             >
-              <KloeMascot mood="thinking" size="sm" />
+              <div className="shrink-0">
+                <KloeMascot mood="thinking" size="sm" interactive />
+              </div>
 
               <div className="bg-[var(--card-bg)] border border-[var(--border-color)] px-4 py-3 rounded-2xl rounded-tl-xs shadow-xs flex items-center gap-3">
                 <div className="flex items-center gap-1.5">
@@ -1721,7 +1734,7 @@ export default function KloePage() {
               disabled={(!inputMessage.trim() && attachedItems.length === 0 && !attachedPost && !attachedImage) || isTyping || !isInputUnlocked}
               className={`w-9 h-9 flex items-center justify-center rounded-full transition-all shrink-0 ${
                 (inputMessage.trim() || attachedItems.length > 0 || attachedPost || attachedImage) && !isTyping && isInputUnlocked
-                  ? 'bg-[var(--brand-pink)] text-white hover:scale-105 shadow-md shadow-[var(--brand-pink)]/25 cursor-pointer'
+                  ? 'kz-pink-surface border border-white/25 text-white hover:scale-105 active:scale-95 cursor-pointer'
                   : 'text-[var(--foreground-tertiary)] opacity-40 cursor-not-allowed'
               }`}
               aria-label="Enviar mensaje"
@@ -1755,7 +1768,7 @@ export default function KloePage() {
                   e.stopPropagation();
                   setShowProModal(true);
                 }}
-                className="px-3.5 py-2 bg-[var(--brand-pink)] hover:opacity-95 text-white font-bold text-xs rounded-full shadow-sm transition-all flex-shrink-0 cursor-pointer"
+                className="px-4 py-2 kz-pink-surface border border-white/25 text-white font-bold text-xs rounded-full hover:scale-[1.03] active:scale-[0.97] transition-all flex-shrink-0 cursor-pointer"
               >
                 Kloe Pro (desde 2,08 €/mes)
               </button>
@@ -1798,7 +1811,7 @@ export default function KloePage() {
 
                 <button
                   onClick={handleNewConversation}
-                  className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl bg-[var(--brand-pink)] text-white font-bold text-sm shadow-md shadow-[var(--brand-pink)]/20 hover:opacity-90 active:scale-[0.98] transition-all"
+                  className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-full kz-pink-surface border border-white/25 text-white font-bold text-sm hover:scale-[1.02] active:scale-[0.97] transition-all cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
                   Nueva conversación
@@ -2030,7 +2043,7 @@ export default function KloePage() {
                     setShowWardrobeDrawer(false);
                     setTimeout(() => inputRef.current?.focus(), 150);
                   }}
-                  className="w-full py-2.5 rounded-xl bg-[var(--brand-pink)] text-white font-bold text-xs shadow-md shadow-[var(--brand-pink)]/20 hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer"
+                  className="w-full py-2.5 px-4 rounded-full kz-pink-surface border border-white/25 text-white font-bold text-xs hover:scale-[1.02] active:scale-[0.97] transition-all cursor-pointer"
                 >
                   {attachedItems.length > 0 
                     ? `Listo (${attachedItems.length} seleccionada${attachedItems.length === 1 ? '' : 's'})`
