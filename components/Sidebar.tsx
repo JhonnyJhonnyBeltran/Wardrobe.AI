@@ -1,21 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 import { motion } from 'framer-motion';
 
 import NavbarKlozetLogo from './NavbarKlozetLogo';
-import { Home, Search, Send, UserRound, Heart } from 'lucide-react';
-import { useUser } from '@/store/userStore';
+import { Home, Search, UserRound, Heart } from 'lucide-react';
 import { useUiStore } from '@/store/uiStore';
-import { useMessageStore, selectTotalUnread, selectBadgeVisible } from '@/store/messageStore';
 import { useRealtimeStore, selectUnreadCount } from '@/store/realtimeStore';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import NotificationsPopover from './Notifications/NotificationsPopover';
 
 interface NavItem {
   href: string;
-  labelKey: 'home' | 'closet' | 'create' | 'social' | 'profile' | 'search' | 'messages' | 'notifications';
+  labelKey: 'home' | 'closet' | 'create' | 'social' | 'profile' | 'search' | 'notifications';
   icon: React.ReactNode;
   isLogoMark?: boolean;
   action?: (e?: any) => void;
@@ -23,30 +21,17 @@ interface NavItem {
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const { user } = useUser();
   const { t } = useTranslation();
-  const syncUnreadCount = useMessageStore(state => state.syncUnreadCount);
-
-  // Sync unread count on mount and when user changes
-  useEffect(() => {
-    if (user?.id) {
-      syncUnreadCount(user.id);
-    }
-  }, [user?.id, syncUnreadCount]);
 
   // State for popover
   const [showNotifications, setShowNotifications] = useState(false);
 
-  // Message notifications
-  const messageUnreadCount = useMessageStore(selectTotalUnread);
-  const messageBadgeVisible = useMessageStore(selectBadgeVisible);
   // Notification count
   const notificationUnreadCount = useRealtimeStore(selectUnreadCount);
 
   const navItems: NavItem[] = [
     { href: '/feed', labelKey: 'home', icon: <Home /> },
     { href: '/search', labelKey: 'search', icon: <Search /> },
-    { href: '/messages', labelKey: 'messages', icon: <Send /> },
     { href: '/closet', labelKey: 'closet', icon: null, isLogoMark: true },
     {
       href: '#',
@@ -62,8 +47,6 @@ export default function Sidebar() {
 
   // Helper to get badge count for each nav item
   const getBadgeCount = (labelKey: string): number => {
-    if (labelKey === 'search') return 0;
-    if (labelKey === 'messages') return messageBadgeVisible ? messageUnreadCount : 0;
     if (labelKey === 'notifications') return notificationUnreadCount;
     return 0;
   };

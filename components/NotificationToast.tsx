@@ -64,10 +64,6 @@ const NavbarNotificationPopup = memo(function NavbarNotificationPopup({
 
   const getLink = (): string => {
     switch (notification.type) {
-      case 'new_message':
-        return notification.data?.sender_id
-          ? `/messages/${notification.data.sender_id}`
-          : '/messages';
       case 'follow_request':
       case 'new_follower':
       case 'follow_accepted':

@@ -3625,3 +3625,15 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
   - Listeners nativos (`touchmove` no pasivo) para pellizcar con 2 dedos (`1×` a `3.5×` manteniendo anclado el punto focal entre dedos), pan con 1 dedo mientras está ampliada, bloqueo automático del scroll horizontal del carrusel mientras `scale > 1.02`, reset al cambiar de slide o con doble tap cuando está ampliada / píldora `"Restablecer"` sin romper el doble tap para dar like a `1×`.
 - **Alternancia aleatoria `K` / logo `Kloe` en `KloeHeroBanner` (`app/(app)/closet/page.tsx`)**:
   - El banner intercala de forma aleatoria (`AnimatePresence`) tanto las 8 preguntas como la mascota `KloeMascot` (`K` rosa) y el wordmark completo `/kloe-logo-large-v2.png` (`Kloe` rosa con ojos pintados) manteniendo la altura estable y el halo rosa brillante.
+
+---
+
+## 68. Eliminación Completa de Mensajes Directos y Botón Flotante en `/feed` Móvil (Noviembre 2026)
+- **Eliminación íntegra de mensajería usuario-a-usuario**:
+  - Eliminadas rutas (`app/(app)/messages/*`, `app/(app)/notifications/[id]`, `app/api/messages/*`), componentes (`components/Messages/*`, `MessageBadge`, `MessageProvider`, `ConversationItem`, `OnlineIndicator`, `TypingIndicator`), servicios/hooks/store (`messageService`, `messageStore`, `useUnreadMessages`, `useOnlineStatus`, `useTypingIndicator`) y suscripción realtime `TABLES.MESSAGES` en `RealtimeManager`.
+  - Limpiadas referencias de UI/navegación en `Sidebar`, `TabBar`, `AppLayout`, `RootLayoutClient`, `profile/[id]` (botón Enviar mensaje), `profile/settings/notifications` (opción Mensajes directos), `NotificationToast`, `RealtimeProvider`, `notificationSettingsStore` y `robots.ts`.
+- **Header limpio en `/feed` móvil y botón flotante estilo ordenador (`app/(app)/feed/page.tsx`, `components/FloatingCreateButton.tsx`)**:
+  - Header móvil de `/feed` muestra únicamente `Para ti` centrado (sin botón `+` izquierdo ni icono de mensajes derecho).
+  - `FloatingCreateButton` muestra en `/feed` móvil el Speed Dial flotante de ordenador (`bottom-[calc(env(safe-area-inset-bottom,0px)+88px)] right-4 z-[5010]`) con botón circular `#FF66C4` y cascada de opciones (`Nuevo Post`, `Nuevo Outfit`, `Nueva Prenda`) sobre el `TabBar`.
+- **Variante modo oscuro del botón Kloe (`app/globals.css`, `app/(app)/closet/page.tsx`)**:
+  - En tema oscuro (`.dark .kz-kloe-banner`), la píldora pasa a rosa `#FF66C4` con texto `#09090B`, icono `ChevronRight` negro, mascota `K` (`variant="black"`) y logo completo negro `/landing/kloe-grande-landing.png`, con transición rápida (`0.18s`) para evitar parpadeos vacíos durante el cambio.

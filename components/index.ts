@@ -39,11 +39,11 @@ export { default as SessionSplash } from './SessionSplash';
 export { default as RealtimeProvider } from './RealtimeProvider';
 export { default as NotificationToastContainer } from './NotificationToast';
 export { NotificationBadge, NotificationBadgeWrapper } from './NotificationBadge';
-export { OnlineIndicator, OnlineStatusText, AvatarWithStatus } from './OnlineIndicator';
-export { TypingIndicator, TypingIndicatorInline } from './TypingIndicator';
 
-// Message components
-export { MessageBadge, MessageDot, MessageBadgeWrapper } from './MessageBadge';
+
+
+
+
 export { default as DiscoveredStyleBanner } from './DiscoveredStyleBanner';
 export { default as KloeProModal } from './KloeProModal';
 export { default as AvatarModal } from './AvatarModal';

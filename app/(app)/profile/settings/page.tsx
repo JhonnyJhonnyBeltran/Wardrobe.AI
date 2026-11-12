@@ -37,7 +37,6 @@ import { resetRevenueCatUser } from '@/lib/revenuecat/client';
 import FeedbackModal from '@/components/FeedbackModal';
 import { useNotificationSettingsStore } from '@/store/notificationSettingsStore';
 import { useSearchStore } from '@/store/searchStore';
-import { useMessageStore } from '@/store/messageStore';
 import { useRealtimeStore } from '@/store/realtimeStore';
 
 export default function SettingsPage() {
@@ -134,7 +133,6 @@ export default function SettingsPage() {
 
             try {
                 useSearchStore.getState().resetSearch();
-                useMessageStore.getState().reset();
                 useRealtimeStore.getState().reset();
             } catch (e) {
                 console.warn('Error resetting client stores:', e);

@@ -45,7 +45,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
   
   const hideTabBar =
     storeTabBarHidden ||
-    pathname.startsWith('/messages') ||
+
     pathname === '/create' ||
     pathname.startsWith('/profile/settings');
 
@@ -64,7 +64,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
       {/* Mobile TabBar */}
       <TabBar />
 
-      {/* Floating Create Button (Desktop only) */}
+      {/* Floating Create Button (Desktop + Mobile /feed) */}
       <FloatingCreateButton />
 
       {/* Floating Pending Upload Bubble */}

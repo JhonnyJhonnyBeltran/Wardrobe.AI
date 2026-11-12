@@ -21,7 +21,7 @@ import OutfitCalendar from '@/components/OutfitCalendar';
 import { haptics } from '@/lib/haptic';
 import type { Outfit } from '@/types/outfit';
 import type { ClothingItem as ClothingItemType } from '@/types/clothing';
-import { useUser } from '@/store';
+import { useUser, useTheme } from '@/store';
 import { useUiStore } from '@/store/uiStore';
 import { useWardrobe } from '@/lib/hooks/useWardrobe';
 import { useBodyScrollLock } from '@/lib/hooks';
@@ -45,6 +45,8 @@ const KLOE_PROMPTS = [
 
 function KloeHeroBanner() {
   const { language } = useTranslation();
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const [promptIndex, setPromptIndex] = useState(0);
   const [showWordmark, setShowWordmark] = useState(false);
 
@@ -79,33 +81,41 @@ function KloeHeroBanner() {
       >
         <div className="min-w-0 flex-1 flex items-center gap-4 sm:gap-5">
           <div className="h-[60px] sm:h-[66px] flex items-center shrink-0">
-            <AnimatePresence mode="wait">
+            <AnimatePresence initial={false} mode="wait">
               {showWordmark ? (
                 <motion.img
-                  key="kloe-wordmark"
-                  src="/kloe-logo-large-v2.png"
+                  key={`kloe-wordmark-${isDark ? 'dark' : 'light'}`}
+                  src={isDark ? '/landing/kloe-grande-landing.png' : '/kloe-logo-large-v2.png'}
                   alt="Kloe"
-                  initial={{ opacity: 0, scale: 0.9, rotate: -3 }}
-                  animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                  exit={{ opacity: 0, scale: 0.9, rotate: 3 }}
-                  transition={{ type: 'spring', stiffness: 320, damping: 24 }}
-                  className="h-[48px] sm:h-[54px] w-auto object-contain drop-shadow-[0_0_18px_rgba(255,102,196,0.68)] select-none"
+                  initial={{ opacity: 0, scale: 0.92 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.92 }}
+                  transition={{ duration: 0.18, ease: [0.32, 0.72, 0, 1] }}
+                  className={`h-[48px] sm:h-[54px] w-auto object-contain select-none ${
+                    isDark
+                      ? 'drop-shadow-[0_4px_14px_rgba(0,0,0,0.28)]'
+                      : 'drop-shadow-[0_0_18px_rgba(255,102,196,0.68)]'
+                  }`}
                   draggable={false}
                 />
               ) : (
                 <motion.div
-                  key="kloe-mascot-k"
-                  initial={{ opacity: 0, scale: 0.9, rotate: 3 }}
-                  animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                  exit={{ opacity: 0, scale: 0.9, rotate: -3 }}
-                  transition={{ type: 'spring', stiffness: 320, damping: 24 }}
+                  key={`kloe-mascot-${isDark ? 'dark' : 'light'}`}
+                  initial={{ opacity: 0, scale: 0.92 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.92 }}
+                  transition={{ duration: 0.18, ease: [0.32, 0.72, 0, 1] }}
                   className="flex items-center"
                 >
                   <KloeMascot
                     mood="happy"
                     size="lg"
-                    variant="pink"
-                    className="!w-[52px] !h-[60px] sm:!w-[58px] sm:!h-[66px] drop-shadow-[0_0_18px_rgba(255,102,196,0.68)] shrink-0"
+                    variant={isDark ? 'black' : 'pink'}
+                    className={`!w-[52px] !h-[60px] sm:!w-[58px] sm:!h-[66px] shrink-0 ${
+                      isDark
+                        ? 'drop-shadow-[0_4px_14px_rgba(0,0,0,0.28)]'
+                        : 'drop-shadow-[0_0_18px_rgba(255,102,196,0.68)]'
+                    }`}
                   />
                 </motion.div>
               )}
@@ -113,14 +123,14 @@ function KloeHeroBanner() {
           </div>
 
           <div className="min-w-0 flex-1 overflow-hidden">
-            <AnimatePresence mode="wait">
+            <AnimatePresence initial={false} mode="wait">
               <motion.p
                 key={promptIndex}
-                initial={{ opacity: 0, y: 10, scale: 0.98 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -10, scale: 0.98 }}
-                transition={{ type: 'spring', stiffness: 280, damping: 26, mass: 0.85 }}
-                className="font-display text-[19px] sm:text-[23px] font-bold tracking-[-0.025em] text-[#FF66C4] leading-tight line-clamp-2 select-none"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.18, ease: [0.32, 0.72, 0, 1] }}
+                className="font-display text-[19px] sm:text-[23px] font-bold tracking-[-0.025em] text-[#FF66C4] dark:text-[#09090B] leading-tight line-clamp-2 select-none"
               >
                 {currentPrompt}
               </motion.p>
@@ -129,7 +139,7 @@ function KloeHeroBanner() {
         </div>
 
         <ChevronRight
-          className="w-7 h-7 shrink-0 text-[#FF66C4] drop-shadow-[0_0_10px_rgba(255,102,196,0.45)] group-hover:translate-x-1 transition-transform"
+          className="w-7 h-7 shrink-0 text-[#FF66C4] dark:text-[#09090B] drop-shadow-[0_0_10px_rgba(255,102,196,0.45)] dark:drop-shadow-none group-hover:translate-x-1 transition-transform"
           strokeWidth={2.5}
           aria-hidden="true"
         />

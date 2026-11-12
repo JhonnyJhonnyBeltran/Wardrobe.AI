@@ -17,8 +17,10 @@ export default function FloatingCreateButton() {
         setCreateMenuOpen(false);
     }, [pathname, setCreateMenuOpen]);
 
-    // Only show on feed and the root of profile, hide on other paths
+    // Only show on feed and profile paths
     if (pathname !== '/feed' && !pathname.startsWith('/profile')) return null;
+
+    const isFeed = pathname === '/feed';
 
     const handleToggle = () => {
         triggerHaptic('medium');
@@ -90,14 +92,20 @@ export default function FloatingCreateButton() {
                 />
             )}
 
-            {/* Desktop Speed Dial - Shifted to the left (right-12 md:right-16) */}
-            <div className="hidden md:flex fixed bottom-24 md:bottom-10 right-12 md:right-16 z-50 flex-col items-end pointer-events-none">
+            {/* Speed Dial (Desktop + Mobile /feed adapted above TabBar) */}
+            <div
+                className={`${
+                    isFeed
+                        ? 'flex fixed bottom-[calc(env(safe-area-inset-bottom,0px)+88px)] right-4 md:bottom-10 md:right-16 z-[5010]'
+                        : 'hidden md:flex fixed bottom-24 md:bottom-10 right-12 md:right-16 z-50'
+                } flex-col items-end pointer-events-none`}
+            >
                 
-                {/* Cascade Options (Desktop) */}
+                {/* Cascade Options */}
                 <AnimatePresence>
                     {isCreateMenuOpen && (
                         <motion.div
-                            className="flex flex-col items-end gap-3.5 mb-3.5 origin-bottom pointer-events-auto"
+                            className="flex flex-col items-end gap-3 md:gap-3.5 mb-3 md:mb-3.5 origin-bottom pointer-events-auto"
                             variants={containerVariants}
                             initial="hidden"
                             animate="visible"
@@ -110,9 +118,9 @@ export default function FloatingCreateButton() {
                                         key={action.id}
                                         variants={itemVariants}
                                         onClick={() => handleActionClick(action.path)}
-                                        className="group h-12 px-5 rounded-full bg-[var(--brand-pink)] flex items-center justify-center gap-2.5 text-white shadow-lg shadow-[var(--brand-pink)]/35 hover:shadow-[0_0_22px_rgba(255,102,196,0.5)] transition-all hover:scale-105 active:scale-95 cursor-pointer border border-white/20 select-none pointer-events-auto"
+                                        className="group h-11 md:h-12 px-4 md:px-5 rounded-full bg-[var(--brand-pink)] flex items-center justify-center gap-2.5 text-white shadow-lg shadow-[var(--brand-pink)]/35 hover:shadow-[0_0_22px_rgba(255,102,196,0.5)] transition-all hover:scale-105 active:scale-95 cursor-pointer border border-white/20 select-none pointer-events-auto"
                                     >
-                                        <Icon className="w-5 h-5 flex-shrink-0" strokeWidth={2.4} />
+                                        <Icon className="w-4.5 h-4.5 md:w-5 md:h-5 flex-shrink-0" strokeWidth={2.4} />
                                         <span className="text-sm font-bold whitespace-nowrap">
                                             {action.label}
                                         </span>
@@ -133,10 +141,10 @@ export default function FloatingCreateButton() {
                             exit={{ scale: 0.4, opacity: 0, transition: { duration: 0.15 } }}
                             whileTap={{ scale: 0.9 }}
                             onClick={handleToggle}
-                            className="w-14 h-14 rounded-full bg-[var(--brand-pink)] flex items-center justify-center text-white shadow-2xl shadow-[var(--brand-pink)]/35 cursor-pointer overflow-hidden z-20 transition-all hover:scale-105 pointer-events-auto"
+                            className="w-[52px] h-[52px] md:w-14 md:h-14 rounded-full bg-[var(--brand-pink)] flex items-center justify-center text-white shadow-2xl shadow-[var(--brand-pink)]/35 cursor-pointer overflow-hidden z-20 transition-all hover:scale-105 active:scale-95 pointer-events-auto"
                             aria-label="Crear nuevo"
                         >
-                            <Plus className="w-7 h-7" strokeWidth={2.5} />
+                            <Plus className="w-6.5 h-6.5 md:w-7 md:h-7" strokeWidth={2.5} />
                         </motion.button>
                     ) : (
                         <motion.button
@@ -146,18 +154,18 @@ export default function FloatingCreateButton() {
                             exit={{ scale: 0.4, opacity: 0, transition: { duration: 0.15 } }}
                             whileTap={{ scale: 0.9 }}
                             onClick={handleToggle}
-                            className="w-14 h-14 rounded-full bg-[var(--brand-pink)] border border-white/20 flex items-center justify-center text-white shadow-xl shadow-[var(--brand-pink)]/35 cursor-pointer hover:scale-105 transition-all pointer-events-auto"
+                            className="w-[52px] h-[52px] md:w-14 md:h-14 rounded-full bg-[var(--brand-pink)] border border-white/20 flex items-center justify-center text-white shadow-xl shadow-[var(--brand-pink)]/35 cursor-pointer hover:scale-105 active:scale-95 transition-all pointer-events-auto"
                             aria-label="Cerrar opciones"
                         >
-                            <X className="w-7 h-7" strokeWidth={2.4} />
+                            <X className="w-6.5 h-6.5 md:w-7 md:h-7" strokeWidth={2.4} />
                         </motion.button>
                     )}
                 </AnimatePresence>
             </div>
 
-            {/* Mobile Bottom Sheet Modal */}
+            {/* Mobile Bottom Sheet Modal (solo rutas distintas a /feed, ej. /profile) */}
             <AnimatePresence>
-                {isCreateMenuOpen && (
+                {!isFeed && isCreateMenuOpen && (
                     <motion.div
                         className="fixed inset-0 z-[5990] flex flex-col justify-end items-center md:hidden pb-[110px]"
                         initial={{ opacity: 0 }}

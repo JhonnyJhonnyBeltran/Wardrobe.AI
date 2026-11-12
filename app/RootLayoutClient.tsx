@@ -9,7 +9,6 @@ import { useEffect } from "react";
 import dynamic from "next/dynamic";
 import { UserProvider, ThemeProvider, useTheme } from "@/store";
 import RealtimeProvider from "@/components/RealtimeProvider";
-import MessageProvider from "@/components/MessageProvider";
 import RevenueCatProvider from "@/components/RevenueCatProvider";
 import GlobalErrorBoundary from "@/components/GlobalErrorBoundary";
 import SmartModelPreloader from "@/components/SmartModelPreloader";
@@ -103,26 +102,24 @@ export default function RootLayoutClient({ children }: RootLayoutClientProps) {
         <UserProvider>
           <RevenueCatProvider>
             <RealtimeProvider>
-              <MessageProvider>
-                {/* Critical components */}
-                <LanguageDomTranslator />
-                <SmartModelPreloader />
-                <AppLifecycleManager />
-                
-                {/* Non-critical components - loaded dynamically */}
-                <SocialListener />
-                
-                {/* Main content directly (layouts handled by Route Groups) */}
-                {children}
-                
-                {/* UI overlays & telemetry - loaded client-side */}
-                <NotificationToastContainer position="top-right" />
-                <CookiesBanner />
-                <ThemedToaster />
-                <SystemModal />
-                <Analytics />
-                <SpeedInsights />
-              </MessageProvider>
+              {/* Critical components */}
+              <LanguageDomTranslator />
+              <SmartModelPreloader />
+              <AppLifecycleManager />
+              
+              {/* Non-critical components - loaded dynamically */}
+              <SocialListener />
+              
+              {/* Main content directly (layouts handled by Route Groups) */}
+              {children}
+              
+              {/* UI overlays & telemetry - loaded client-side */}
+              <NotificationToastContainer position="top-right" />
+              <CookiesBanner />
+              <ThemedToaster />
+              <SystemModal />
+              <Analytics />
+              <SpeedInsights />
             </RealtimeProvider>
           </RevenueCatProvider>
         </UserProvider>

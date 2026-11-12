@@ -38,8 +38,6 @@ export default function robots(): MetadataRoute.Robots {
     '/closy',
     '/profile',
     '/profile/*',
-    '/messages',
-    '/messages/*',
     '/notifications',
     '/notifications/*',
     '/admin/*'

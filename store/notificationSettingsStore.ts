@@ -130,7 +130,7 @@ export const useNotificationSettingsStore = create<NotificationSettingsState>()(
           case 'follow_accepted':
             return settings.follows;
           case 'new_message':
-            return settings.messages;
+            return false;
           case 'kloe_reminder':
             return settings.reminders;
           default:

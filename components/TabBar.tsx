@@ -6,7 +6,7 @@
  * - Iconos Apple sobrios en reposo (zinc-500, strokeWidth: 1.8).
  * - Icono activo teñido en rosa de marca (#FF66C4) con mayor grosor de trazo (strokeWidth: 2.6).
  * - Logo central interactivo con ciclo klzt -> k -> klozet cada 15s (NavbarKlozetLogo).
- * - Badges reactivos para mensajes y notificaciones con física spring.
+ * - Badges reactivos para notificaciones con física spring.
  */
 
 import React from 'react';
@@ -15,7 +15,6 @@ import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Home, Search, Heart, UserRound } from 'lucide-react';
 import { useUiStore } from '@/store/uiStore';
-import { useMessageStore, selectTotalUnread, selectBadgeVisible } from '@/store/messageStore';
 import { useRealtimeStore, selectUnreadCount } from '@/store/realtimeStore';
 import { useTranslation } from '@/lib/i18n/useTranslation';
 import { triggerHaptic } from '@/lib/haptic';
@@ -23,7 +22,7 @@ import NavbarKlozetLogo from './NavbarKlozetLogo';
 
 interface TabItem {
   href: string;
-  labelKey: 'home' | 'closet' | 'create' | 'social' | 'profile' | 'search' | 'messages' | 'notifications';
+  labelKey: 'home' | 'closet' | 'create' | 'social' | 'profile' | 'search' | 'notifications';
   icon: React.ReactNode;
   isLogoMark?: boolean;
 }
@@ -33,8 +32,6 @@ export default function TabBar() {
   const { isTabBarHidden: storeTabBarHidden, isCreateMenuOpen } = useUiStore();
   const { t } = useTranslation();
 
-  const messageUnreadCount = useMessageStore(selectTotalUnread);
-  const messageBadgeVisible = useMessageStore(selectBadgeVisible);
   const notificationUnreadCount = useRealtimeStore(selectUnreadCount);
 
   const tabs: TabItem[] = [
@@ -45,19 +42,16 @@ export default function TabBar() {
     { href: '/profile', labelKey: 'profile', icon: <UserRound /> },
   ];
 
-  // Hide TabBar on deep flows: Messages, Outfit Canvas, Profile Settings
+  // Hide TabBar on deep flows: Outfit Canvas, Profile Settings
   const hideTabBar =
     storeTabBarHidden ||
     isCreateMenuOpen ||
-    pathname.startsWith('/messages') ||
     pathname === '/create' ||
     pathname.startsWith('/profile/settings');
 
   if (hideTabBar) return null;
 
   const getBadgeCount = (labelKey: string): number => {
-    if (labelKey === 'search') return 0;
-    if (labelKey === 'messages') return messageBadgeVisible ? messageUnreadCount : 0;
     if (labelKey === 'notifications') return notificationUnreadCount;
     return 0;
   };

@@ -63,9 +63,7 @@ export function RealtimeProvider({
         const targetUrl: string = typeof notification.data?.targetUrl === 'string'
           ? notification.data.targetUrl
           : (
-            notification.type === 'new_message' && notification.data?.sender_id
-              ? `/messages/${notification.data.sender_id}`
-              : notification.type === 'like' || notification.type === 'comment'
+            notification.type === 'like' || notification.type === 'comment'
               ? `/post/${notification.data?.post_id || ''}`
               : '/notifications'
           );

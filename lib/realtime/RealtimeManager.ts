@@ -102,17 +102,6 @@ class RealtimeManager {
     
     const channel = supabase
       .channel(channelName)
-      // Listen for new messages
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: TABLES.MESSAGES,
-          filter: `receiver_id=eq.${this.userId}`,
-        },
-        (payload: any) => this.handleNewMessage(payload)
-      )
       // Listen for follow requests
       .on(
         'postgres_changes',

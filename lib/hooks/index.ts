@@ -12,11 +12,7 @@ export { useCategoriesAndBrands } from './useCategoriesAndBrands';
 // Realtime hooks
 export { useRealtime } from './useRealtime';
 export { useNotifications } from './useNotifications';
-export { useOnlineStatus } from './useOnlineStatus';
-export { useTypingIndicator } from './useTypingIndicator';
 
-// Message hooks
-export { useUnreadMessages } from './useUnreadMessages';
 export { useBodyScrollLock } from './useBodyScrollLock';
 export { useDropdownScrollLock } from './useDropdownScrollLock';
 export { useSearchHistory } from './useSearchHistory';

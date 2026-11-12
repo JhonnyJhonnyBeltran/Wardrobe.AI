@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, Fragment } from 'react';
-import { Plus, PlusSquare, Send } from 'lucide-react';
+import { PlusSquare } from 'lucide-react';
 import PostCard from '@/components/Feed/PostCard';
 import PremiumAdCard from '@/components/Feed/PremiumAdCard';
 import SponsoredAdCard from '@/components/Feed/SponsoredAdCard';
@@ -9,10 +9,8 @@ import { EmptyState, InfiniteScrollFooter, KloeEmptyVisual, PullToRefresh, Skele
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useRef, useCallback } from 'react';
-import { useUiStore } from '@/store/uiStore';
 import { supabase } from '@/lib/supabase/client';
 
-import { useMessageStore, selectTotalUnread, selectBadgeVisible } from '@/store/messageStore';
 import { useUser } from '@/store/userStore';
 import { useFeedStore } from '@/store/feedStore';
 import { getFollowing } from '@/lib/services/followService';
@@ -25,17 +23,12 @@ export default function FeedPage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const { user, isPremium } = useUser();
-  const { toggleCreateMenu } = useUiStore();
   const router = useRouter();
 
   const pageRef = useRef(0);
   // 40 posts per chunk for instant bulk scrolling
   const POSTS_PER_PAGE = 40;
   const observerElement = useRef<HTMLDivElement | null>(null);
-
-  // Message notifications
-  const messageUnreadCount = useMessageStore(selectTotalUnread);
-  const messageBadgeVisible = useMessageStore(selectBadgeVisible);
 
   const fetchPosts = useCallback(async (isLoadMore = false, force = false) => {
     try {
@@ -360,31 +353,10 @@ export default function FeedPage() {
     <div className="min-h-screen bg-[var(--background)] pb-24 md:pb-8">
       {/* Top Header (Mobile Only) */}
       <header className="sticky top-0 z-30 apple-glass-bar pt-safe md:hidden">
-        <div className="px-4 h-14 flex items-center justify-between">
-          <button
-            onClick={toggleCreateMenu}
-            aria-label="Crear publicación"
-            className="touch-target-44 text-[var(--foreground)] hover:text-[var(--brand-pink)] transition-colors active:scale-90 flex items-center justify-center cursor-pointer"
-          >
-            <Plus className="w-6 h-6" strokeWidth={1.9} />
-          </button>
-
-          <h1 className="font-display text-xl font-bold tracking-tight text-[var(--foreground)] absolute left-1/2 -translate-x-1/2 select-none">
+        <div className="px-4 h-14 flex items-center justify-center relative">
+          <h1 className="font-display text-xl font-bold tracking-tight text-[var(--foreground)] select-none">
             Para ti
           </h1>
-
-          <div className="flex items-center gap-1">
-            <Link href="/messages" aria-label="Mensajes directos">
-              <button className="touch-target-44 text-[var(--foreground)] hover:text-[var(--brand-pink)] transition-colors active:scale-90 relative flex items-center justify-center cursor-pointer">
-                <Send className="w-5.5 h-5.5" strokeWidth={1.9} />
-                {messageBadgeVisible && messageUnreadCount > 0 && (
-                  <span className="absolute top-1.5 right-1.5 min-w-[17px] h-[17px] px-1 flex items-center justify-center bg-[var(--brand-pink)] text-white text-[9px] font-black rounded-full border-2 border-[var(--background)] shadow-xs">
-                    {messageUnreadCount > 99 ? '+99' : messageUnreadCount}
-                  </span>
-                )}
-              </button>
-            </Link>
-          </div>
         </div>
       </header>
 

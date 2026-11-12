@@ -214,13 +214,6 @@ export default function NotificationsPage() {
                             onChange={(val) => handleUpdate('comments', val)}
                         />
                         <NotificationOption
-                            icon={<Bell className="w-5 h-5 text-[var(--brand-pink)]" />}
-                            title="Mensajes directos"
-                            description="Avisos de chats y conversaciones"
-                            enabled={settings.messages}
-                            onChange={(val) => handleUpdate('messages', val)}
-                        />
-                        <NotificationOption
                             icon={
                                 <div className="relative w-6 h-6 flex items-center justify-center">
                                     <Image src="/kloe-logo-large.png" alt="Kloe" width={22} height={22} className="object-contain" />

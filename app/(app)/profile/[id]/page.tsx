@@ -29,7 +29,6 @@ import {
   MoreVertical,
   Flag,
   Ban,
-  Send,
   Loader2,
   Lock,
   Shirt
@@ -272,11 +271,6 @@ export default function PublicProfilePage() {
     }
   };
 
-  const navigateToChat = () => {
-    const targetIdentifier = profile?.id || profileId;
-    router.push(`/messages/${targetIdentifier}`);
-  };
-
   const handleBlock = async () => {
     if (!currentUser || !profileId) return;
     
@@ -491,15 +485,6 @@ export default function PublicProfilePage() {
                   Siguiendo
                 </button>
               )}
-
-              <button
-                onClick={navigateToChat}
-                className="flex items-center justify-center p-2.5 rounded-lg bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] hover:bg-[var(--card-hover)] hover:text-[var(--brand-pink)] transition-colors active:scale-95"
-                title="Enviar mensaje"
-                aria-label="Enviar mensaje"
-              >
-                <Send className="w-4 h-4" />
-              </button>
             </div>
           </div>
         </div>
