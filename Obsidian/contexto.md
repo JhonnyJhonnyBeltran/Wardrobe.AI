@@ -3644,3 +3644,15 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
 - **Indicador de notificaciones limpio con punto rosa sobre el corazón (`NotificationToast.tsx`, `Sidebar.tsx`, `TabBar.tsx`)**:
   - Eliminados los popups gigantes con bocadillos PNG (`notif-like-*.png`, `notif-comment-*.png`, `notif-follow-*.png`) de `NotificationToast.tsx`.
   - Sustituidos por un punto rosa limpio (`#FF66C4`) encima del icono de corazón tanto en `Sidebar` (escritorio) como en `TabBar` (móvil) al haber notificaciones sin leer.
+
+---
+
+## 69. Unificación Visual de `/closet`, Limpieza Header `/feed` Móvil y 404 Personalizado (Noviembre 2026)
+- **Unificación de `/closet` (`app/(app)/closet/page.tsx`, `components/Profile/ProfileProgressBar.tsx`)**:
+  - Pestañas de sección (`Prendas`, `Outfits`, `Calendario`) cambiadas de pills a tabs con borde inferior divisor e indicador rosa animado (`layoutId="closet-section-tab-indicator"`).
+  - Botones de acción (`Seleccionar`, `Filtrar`, `Nueva Prenda`/`Nuevo Outfit`/`Añadir outfit para hoy` y CTA de `Primeros pasos`) unificados con `.kz-pink-surface` (degradado rosa + brillo consistente con `Subir prendas` y botón `Kloe`).
+  - `ProfileProgressBar` ("Primeros pasos") ahora aparece siempre expandido tanto en móvil como en escritorio con mayor presencia visual.
+- **Feed móvil sin header `"Para ti"` (`app/(app)/feed/page.tsx`, `components/GuidedTour/GuidedTourModal.tsx`)**:
+  - Eliminado el `<header>` superior móvil `"Para ti"`, manteniendo `pt-safe` y reubicando el widget de onboarding arriba del todo debajo del safe-area (`top-[calc(env(safe-area-inset-top,0px)+12px)]`).
+- **Página `404` personalizada (`app/not-found.tsx`, `components/KloeEmptyVisual.tsx`)**:
+  - Implementado estado visual `KloeEmptyVisual variant="not-found"` (sin degradados morados ni auto-redirección), texto *"Aquí no era."* y botón *"Volver"* (`.kz-pink-surface`).

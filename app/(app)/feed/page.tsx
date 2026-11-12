@@ -350,16 +350,7 @@ export default function FeedPage() {
   }, [loadMorePosts, hasMore, loadingMore, loading, loadError]);
 
   return (
-    <div className="min-h-screen bg-[var(--background)] pb-24 md:pb-8">
-      {/* Top Header (Mobile Only) */}
-      <header className="sticky top-0 z-30 apple-glass-bar pt-safe md:hidden">
-        <div className="px-4 h-14 flex items-center justify-center relative">
-          <h1 className="font-display text-xl font-bold tracking-tight text-[var(--foreground)] select-none">
-            Para ti
-          </h1>
-        </div>
-      </header>
-
+    <div className="min-h-screen bg-[var(--background)] pb-24 md:pb-8 pt-safe md:pt-0">
       {/* Feed Content with inline Pull-To-Refresh above posts */}
       <PullToRefresh onRefresh={() => fetchPosts(false, true)}>
         <div className="px-3 pt-3 md:px-6 md:pt-6">

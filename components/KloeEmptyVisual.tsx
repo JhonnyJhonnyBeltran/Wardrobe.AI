@@ -2,10 +2,10 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Bell, Bookmark, Heart } from 'lucide-react';
+import { Bell, Bookmark, Compass, Heart } from 'lucide-react';
 import KloeMascot from './KloeMascot';
 
-export type KloeEmptyVariant = 'garment' | 'outfit' | 'post' | 'saved' | 'notifications';
+export type KloeEmptyVariant = 'garment' | 'outfit' | 'post' | 'saved' | 'notifications' | 'not-found';
 
 interface KloeEmptyVisualProps {
   variant: KloeEmptyVariant;
@@ -141,6 +141,25 @@ export default function KloeEmptyVisual({ variant }: KloeEmptyVisualProps) {
           <p className="text-[10px] font-medium text-zinc-500 truncate mt-1.5 text-left px-0.5">
             {variant === 'post' ? 'Look de hoy' : 'Ejemplo'}
           </p>
+        </div>
+      )}
+
+      {variant === 'not-found' && (
+        <div className={`w-28 p-2.5 ${CARD_SHELL}`}>
+          <div className="w-full aspect-square rounded-[13px] bg-zinc-50 flex flex-col items-center justify-center gap-1.5">
+            <Compass className="w-7 h-7 text-[#FF66C4]" strokeWidth={2} />
+            <span className="font-display text-lg font-bold tracking-tight text-zinc-900 leading-none">
+              404
+            </span>
+          </div>
+          <div className="w-full pt-1.5 mt-1 border-t border-black/[0.05] text-left">
+            <p className="text-[11px] font-semibold text-zinc-900 truncate leading-tight">
+              Ruta perdida
+            </p>
+            <p className="text-[10px] font-medium text-zinc-500 truncate">
+              Klozet
+            </p>
+          </div>
         </div>
       )}
     </div>

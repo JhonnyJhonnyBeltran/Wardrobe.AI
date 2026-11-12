@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Check, ChevronDown, ChevronUp, Plus, HelpCircle } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Check, Plus, HelpCircle } from 'lucide-react';
 import { useUser } from '@/store/userStore';
 import { useWardrobeStore } from '@/store/wardrobeStore';
 import { useProfileStore } from '@/store/profileStore';
@@ -15,7 +15,6 @@ export default function ProfileProgressBar() {
   const { items } = useWardrobeStore();
   const { profileStats, posts } = useProfileStore();
   const { openTour, completedSteps, markStepComplete, completeTour } = useTourStore();
-  const [isExpanded, setIsExpanded] = useState(false);
 
   const isEthan = useMemo(() => {
     if (!user) return false;
@@ -234,14 +233,14 @@ export default function ProfileProgressBar() {
 
   return (
     <div className="relative z-10 w-full my-3">
-      <div className="bg-[var(--card-bg)] border border-[var(--border-color)]/60 rounded-2xl p-4 shadow-sm transition-all hover:border-[var(--border-color)]">
-        {/* Header with percentage & toggle */}
+      <div className="bg-[var(--card-bg)] border border-[var(--brand-pink)]/25 rounded-2xl p-4 sm:p-5 shadow-sm transition-all">
+        {/* Header with prominent title, percentage & primary CTA */}
         <div className="flex items-center justify-between gap-3">
-          <div className="min-w-0 flex-1 flex items-center gap-2">
-            <span className="text-sm font-bold text-[var(--brand-pink)]">
+          <div className="min-w-0 flex-1 flex items-center gap-2.5">
+            <span className="text-base font-bold tracking-tight text-[var(--brand-pink)]">
               Primeros pasos
             </span>
-            <span className="text-xs font-semibold text-[var(--foreground)] tabular-nums">
+            <span className="text-xs font-bold text-[var(--foreground)] bg-[var(--background-secondary)] px-2 py-0.5 rounded-full tabular-nums">
               {totalPercent}%
             </span>
           </div>
@@ -250,7 +249,7 @@ export default function ProfileProgressBar() {
             {nextActionHref && (
               <Link
                 href={nextActionHref}
-                className="px-3 py-1.5 rounded-full bg-[var(--brand-pink)] text-white text-xs font-bold hover:opacity-90 transition-opacity whitespace-nowrap"
+                className="px-3.5 py-1.5 rounded-full kz-pink-surface border border-white/25 text-white text-xs font-bold hover:scale-[1.03] active:scale-[0.97] transition-transform whitespace-nowrap"
               >
                 {nextActionLabel}
               </Link>
@@ -259,39 +258,25 @@ export default function ProfileProgressBar() {
               onClick={() => openTour()}
               className="text-xs text-[var(--foreground-tertiary)] hover:text-[var(--brand-pink)] p-1.5 rounded-full hover:bg-[var(--background-secondary)] transition-colors cursor-pointer"
               title="Abrir guía paso a paso"
+              aria-label="Abrir guía paso a paso"
             >
               <HelpCircle className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => setIsExpanded(!isExpanded)}
-              className="p-1.5 rounded-full hover:bg-[var(--background-secondary)] text-[var(--foreground-secondary)] transition-colors cursor-pointer"
-              aria-label={isExpanded ? 'Ocultar detalles' : 'Ver detalles'}
-            >
-              {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
             </button>
           </div>
         </div>
 
-        {/* Progress Bar Track: Solid Brand Color */}
-        <div className="w-full h-2 bg-[var(--background-secondary)] rounded-full overflow-hidden mt-3">
+        {/* Progress Bar Track */}
+        <div className="w-full h-2.5 bg-[var(--background-secondary)] rounded-full overflow-hidden mt-3">
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${totalPercent}%` }}
             transition={{ duration: 0.6, ease: 'easeOut' }}
-            className="h-full rounded-full bg-[var(--brand-pink)]"
+            className="h-full rounded-full kz-pink-surface"
           />
         </div>
 
-        {/* Expandable Checklist in Value-First Order */}
-        <AnimatePresence>
-          {isExpanded && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.25 }}
-              className="overflow-hidden pt-4 mt-3 border-t border-[var(--border-color)]/40 space-y-2.5"
-            >
+        {/* Checklist siempre visible en móvil y ordenador */}
+        <div className="pt-3.5 mt-3.5 border-t border-[var(--border-color)]/45 space-y-2.5">
               {/* Task 1: Preferences */}
               <div className="flex items-center justify-between text-xs">
                 <div className="flex items-center gap-2">
@@ -406,9 +391,7 @@ export default function ProfileProgressBar() {
                   </Link>
                 )}
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            </div>
       </div>
     </div>
   );

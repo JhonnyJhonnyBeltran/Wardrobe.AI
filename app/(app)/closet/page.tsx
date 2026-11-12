@@ -813,47 +813,39 @@ export default function ClosetPage() {
           {/* Progress / Tutorial Bar (disappears permanently at 100%) */}
           <ProfileProgressBar />
 
-          {/* Clear Labeled Top Tabs without giant dividing line */}
-          <div className="flex items-center gap-2 pt-1">
-            <button
-              onClick={() => {
-                try { haptics.selection(); } catch {}
-                setActiveTab('items');
-              }}
-              className={`flex-1 flex items-center justify-center py-2.5 px-3 rounded-full transition-all gap-1.5 cursor-pointer ${activeTab === 'items'
-                ? 'bg-[var(--brand-pink)]/12 text-[var(--brand-pink)] font-semibold'
-                : 'text-[var(--foreground-tertiary)] hover:text-[var(--foreground-secondary)] hover:bg-[var(--background-secondary)]/60 font-medium'
-                }`}
-            >
-              <Shirt className={`w-4 h-4 sm:w-5 sm:h-5 ${activeTab === 'items' ? 'text-[var(--brand-pink)]' : ''}`} />
-              <span className="text-[13px] sm:text-sm">Prendas</span>
-            </button>
-            <button
-              onClick={() => {
-                try { haptics.selection(); } catch {}
-                setActiveTab('outfits');
-              }}
-              className={`flex-1 flex items-center justify-center py-2.5 px-3 rounded-full transition-all gap-1.5 cursor-pointer ${activeTab === 'outfits'
-                ? 'bg-[var(--brand-pink)]/12 text-[var(--brand-pink)] font-semibold'
-                : 'text-[var(--foreground-tertiary)] hover:text-[var(--foreground-secondary)] hover:bg-[var(--background-secondary)]/60 font-medium'
-                }`}
-            >
-              <Layers className={`w-4 h-4 sm:w-5 sm:h-5 ${activeTab === 'outfits' ? 'text-[var(--brand-pink)]' : ''}`} />
-              <span className="text-[13px] sm:text-sm">Outfits</span>
-            </button>
-            <button
-              onClick={() => {
-                try { haptics.selection(); } catch {}
-                setActiveTab('calendar');
-              }}
-              className={`flex-1 flex items-center justify-center py-2.5 px-3 rounded-full transition-all gap-1.5 cursor-pointer ${activeTab === 'calendar'
-                ? 'bg-[var(--brand-pink)]/12 text-[var(--brand-pink)] font-semibold'
-                : 'text-[var(--foreground-tertiary)] hover:text-[var(--foreground-secondary)] hover:bg-[var(--background-secondary)]/60 font-medium'
-                }`}
-            >
-              <CalendarDays className={`w-4 h-4 sm:w-5 sm:h-5 ${activeTab === 'calendar' ? 'text-[var(--brand-pink)]' : ''}`} />
-              <span className="text-[13px] sm:text-sm">Calendario</span>
-            </button>
+          {/* Clear Section Tabs Divider */}
+          <div className="flex items-center border-b border-[var(--border-color)]/60 pt-1">
+            {([
+              { id: 'items', label: 'Prendas', Icon: Shirt },
+              { id: 'outfits', label: 'Outfits', Icon: Layers },
+              { id: 'calendar', label: 'Calendario', Icon: CalendarDays },
+            ] as const).map(({ id, label, Icon }) => {
+              const isTabActive = activeTab === id;
+              return (
+                <button
+                  key={id}
+                  onClick={() => {
+                    try { haptics.selection(); } catch {}
+                    setActiveTab(id);
+                  }}
+                  className={`relative flex-1 flex items-center justify-center py-3 px-3 gap-1.5 transition-colors cursor-pointer ${
+                    isTabActive
+                      ? 'text-[var(--brand-pink)] font-semibold'
+                      : 'text-[var(--foreground-tertiary)] hover:text-[var(--foreground-secondary)] font-medium'
+                  }`}
+                >
+                  <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <span className="text-[13px] sm:text-sm">{label}</span>
+                  {isTabActive && (
+                    <motion.span
+                      layoutId="closet-section-tab-indicator"
+                      transition={{ type: 'spring', stiffness: 460, damping: 34 }}
+                      className="absolute bottom-0 left-3 right-3 h-[2.5px] rounded-full bg-[var(--brand-pink)]"
+                    />
+                  )}
+                </button>
+              );
+            })}
           </div>
 
         </div>
@@ -1157,14 +1149,14 @@ export default function ClosetPage() {
                   setSelectionMode(true);
                 }
               }}
-              className={`h-12 px-5 rounded-full hidden md:flex items-center justify-center gap-2 shadow-lg transition-all cursor-pointer ${
+              className={`h-12 px-5 rounded-full hidden md:flex items-center justify-center gap-2 transition-all cursor-pointer ${
                 selectionMode
                   ? 'bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 shadow-md'
-                  : 'bg-[var(--brand-pink)] text-white shadow-[var(--brand-pink)]/35 hover:shadow-[0_0_22px_rgba(255,102,196,0.5)]'
+                  : 'kz-pink-surface text-white border border-white/25 hover:scale-[1.03]'
               }`}
               aria-label={selectionMode ? 'Cancelar selección' : 'Seleccionar prendas'}
             >
-              <Check className="w-5 h-5 text-white flex-shrink-0" strokeWidth={2.5} />
+              <Check className={`w-5 h-5 flex-shrink-0 ${selectionMode ? 'text-white dark:text-zinc-950' : 'text-white'}`} strokeWidth={2.5} />
               <span className="text-sm font-bold whitespace-nowrap">
                 {selectionMode ? 'Cancelar' : 'Seleccionar'}
               </span>
@@ -1177,7 +1169,7 @@ export default function ClosetPage() {
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
               onClick={() => setShowFilters(prev => !prev)}
-              className="h-12 min-w-[48px] px-0 md:px-5 rounded-full bg-[var(--brand-pink)] flex items-center justify-center gap-2 text-white shadow-lg shadow-[var(--brand-pink)]/35 hover:shadow-[0_0_22px_rgba(255,102,196,0.5)] transition-all cursor-pointer relative"
+              className="h-12 min-w-[48px] px-0 md:px-5 rounded-full kz-pink-surface border border-white/25 flex items-center justify-center gap-2 text-white transition-all cursor-pointer relative"
               aria-label="Buscar y filtrar"
             >
               <Search className="w-5 h-5 flex-shrink-0" strokeWidth={2.4} />
@@ -1214,7 +1206,7 @@ export default function ClosetPage() {
                     }
                   }
                 }}
-                className="h-12 min-w-[48px] px-0 md:px-5 rounded-full bg-[var(--brand-pink)] flex items-center justify-center gap-2 text-white shadow-lg shadow-[var(--brand-pink)]/35 hover:shadow-[0_0_22px_rgba(255,102,196,0.5)] transition-all cursor-pointer group"
+                className="h-12 min-w-[48px] px-0 md:px-5 rounded-full kz-pink-surface border border-white/25 flex items-center justify-center gap-2 text-white transition-all cursor-pointer group"
                 aria-label={activeTab === 'items' ? 'Nueva Prenda' : activeTab === 'outfits' ? 'Nuevo Outfit' : 'Añadir outfit para hoy'}
               >
                 <Plus className="w-5 h-5 flex-shrink-0" strokeWidth={2.5} />

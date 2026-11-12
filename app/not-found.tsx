@@ -1,69 +1,49 @@
 ﻿'use client';
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { ArrowRight } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
+import { Button, KloeEmptyVisual } from '@/components';
 
 export default function NotFoundPage() {
   const router = useRouter();
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      router.replace('/feed');
-    }, 1500);
-
-    return () => clearTimeout(timer);
-  }, [router]);
+  const handleBack = () => {
+    if (typeof window !== 'undefined' && window.history.length > 1) {
+      router.back();
+    } else {
+      router.push('/feed');
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-[var(--background)] flex flex-col items-center justify-center p-6 text-center select-none overflow-hidden relative">
-      {/* Ambient background glow */}
-      <div className="absolute w-72 h-72 rounded-full bg-[var(--brand-pink)]/15 blur-3xl pointer-events-none -top-12 -right-12" />
-      <div className="absolute w-72 h-72 rounded-full bg-purple-500/10 blur-3xl pointer-events-none -bottom-12 -left-12" />
-
+    <div className="min-h-screen bg-[var(--background)] flex flex-col items-center justify-center px-6 py-12 text-center select-none">
       <motion.div
-        initial={{ opacity: 0, scale: 0.9, y: 15 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-        className="relative z-10 flex flex-col items-center max-w-sm"
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+        className="flex flex-col items-center max-w-sm"
       >
-        {/* Logo / Mascot Illustration */}
-        <div className="relative w-28 h-20 mb-6 flex items-center justify-center">
-          <Image
-            src="/kloe-logo-large.png"
-            alt="Klozet"
-            fill
-            className="object-contain drop-shadow-md"
-            priority
-          />
+        <div className="mb-6">
+          <KloeEmptyVisual variant="not-found" />
         </div>
 
-        {/* 404 Badge */}
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] text-xs font-extrabold uppercase tracking-wider mb-4 border border-[var(--brand-pink)]/20">
-          <ArrowRight className="w-3.5 h-3.5" />
-          Error 404
-        </span>
-
-        {/* Main Header */}
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-[var(--foreground)] tracking-tight mb-2">
-          Upss te has equivocado
+        <h1 className="kz-title text-[var(--foreground)] mb-2">
+          Aquí no era.
         </h1>
 
-        <p className="text-sm text-[var(--foreground-secondary)] leading-relaxed mb-6">
-          Esta página no existe o ha sido movida. Te estamos redirigiendo al feed automáticamente...
+        <p className="kz-body text-[var(--foreground-secondary)] max-w-xs mx-auto mb-8 leading-relaxed">
+          Esta página no existe o se ha movido de sitio.
         </p>
 
-        {/* Action Button */}
-        <Link
-          href="/feed"
-          className="inline-flex items-center gap-2 py-3 px-6 rounded-2xl bg-[var(--brand-pink)] hover:bg-[#ff3377] text-white text-sm font-bold shadow-lg shadow-[var(--brand-pink)]/25 transition-all active:scale-[0.98] cursor-pointer"
+        <Button
+          onClick={handleBack}
+          className="px-8 h-12 text-[15px] rounded-full font-semibold kz-pink-surface text-white border-0 hover:scale-[1.03] active:scale-[0.97] transition-transform cursor-pointer"
         >
-          <span>Ir al feed ahora</span>
-          <ArrowRight className="w-4 h-4" />
-        </Link>
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Volver
+        </Button>
       </motion.div>
     </div>
   );

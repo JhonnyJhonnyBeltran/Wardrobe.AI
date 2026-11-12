@@ -367,7 +367,7 @@ export default function GuidedTourModal() {
             exit={{ opacity: 0, y: pathname === '/feed' ? -20 : 30, scale: 0.95 }}
             className={
               pathname === '/feed'
-                ? 'fixed top-[calc(3.5rem+env(safe-area-inset-top,0px)+10px)] left-4 right-4 flex justify-center md:justify-end md:top-auto md:left-auto md:bottom-6 md:right-36 z-[4500] pointer-events-none'
+                ? 'fixed top-[calc(env(safe-area-inset-top,0px)+12px)] left-4 right-4 flex justify-center md:justify-end md:top-auto md:left-auto md:bottom-6 md:right-36 z-[4500] pointer-events-none'
                 : 'fixed bottom-[calc(76px+env(safe-area-inset-bottom,0px))] md:bottom-6 right-4 md:right-6 z-[4500]'
             }
           >
