@@ -86,9 +86,13 @@ export default function Sidebar() {
                       })}
 
                       {badgeCount > 0 && (
-                        <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1.5 flex items-center justify-center bg-[var(--brand-pink,#FF66C4)] text-white text-[10px] font-bold rounded-full border-2 border-[var(--background)]">
-                          {badgeCount > 99 ? '+99' : badgeCount}
-                        </span>
+                        <motion.span
+                          initial={{ scale: 0 }}
+                          animate={{ scale: [0, 1.3, 1] }}
+                          transition={{ type: 'spring', stiffness: 550, damping: 20 }}
+                          aria-hidden="true"
+                          className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[var(--brand-pink,#FF66C4)] ring-2 ring-[var(--background)] shadow-[0_0_8px_rgba(255,102,196,0.55)]"
+                        />
                       )}
                     </div>
                   </button>
@@ -120,9 +124,13 @@ export default function Sidebar() {
                           })}
 
                           {badgeCount > 0 && item.labelKey !== 'search' && (
-                            <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1.5 flex items-center justify-center bg-[var(--brand-pink,#FF66C4)] text-white text-[10px] font-bold rounded-full border-2 border-[var(--background)]">
-                              {badgeCount > 99 ? '+99' : badgeCount}
-                            </span>
+                            <motion.span
+                              initial={{ scale: 0 }}
+                              animate={{ scale: [0, 1.3, 1] }}
+                              transition={{ type: 'spring', stiffness: 550, damping: 20 }}
+                              aria-hidden="true"
+                              className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[var(--brand-pink,#FF66C4)] ring-2 ring-[var(--background)] shadow-[0_0_8px_rgba(255,102,196,0.55)]"
+                            />
                           )}
                         </>
                       )}

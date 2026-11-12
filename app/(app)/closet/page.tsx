@@ -61,7 +61,6 @@ function KloeHeroBanner() {
         if (next === prev) next = (prev + 1) % KLOE_PROMPTS.length;
         return next;
       });
-      setShowWordmark((prev) => (Math.random() < 0.75 ? !prev : prev));
     }, 4200);
 
     return () => clearInterval(interval);
@@ -81,45 +80,29 @@ function KloeHeroBanner() {
       >
         <div className="min-w-0 flex-1 flex items-center gap-4 sm:gap-5">
           <div className="h-[60px] sm:h-[66px] flex items-center shrink-0">
-            <AnimatePresence initial={false} mode="wait">
-              {showWordmark ? (
-                <motion.img
-                  key={`kloe-wordmark-${isDark ? 'dark' : 'light'}`}
-                  src={isDark ? '/landing/kloe-grande-landing.png' : '/kloe-logo-large-v2.png'}
-                  alt="Kloe"
-                  initial={{ opacity: 0, scale: 0.92 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.92 }}
-                  transition={{ duration: 0.18, ease: [0.32, 0.72, 0, 1] }}
-                  className={`h-[48px] sm:h-[54px] w-auto object-contain select-none ${
-                    isDark
-                      ? ''
-                      : 'drop-shadow-[0_0_18px_rgba(255,102,196,0.68)]'
-                  }`}
-                  draggable={false}
-                />
-              ) : (
-                <motion.div
-                  key={`kloe-mascot-${isDark ? 'dark' : 'light'}`}
-                  initial={{ opacity: 0, scale: 0.92 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.92 }}
-                  transition={{ duration: 0.18, ease: [0.32, 0.72, 0, 1] }}
-                  className="flex items-center"
-                >
-                  <KloeMascot
-                    mood="happy"
-                    size="lg"
-                    variant={isDark ? 'black' : 'pink'}
-                    className={`!w-[52px] !h-[60px] sm:!w-[58px] sm:!h-[66px] shrink-0 ${
-                      isDark
-                        ? ''
-                        : 'drop-shadow-[0_0_18px_rgba(255,102,196,0.68)]'
-                    }`}
-                  />
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {showWordmark ? (
+              <img
+                src={isDark ? '/landing/kloe-grande-landing.png' : '/kloe-logo-large-v2.png'}
+                alt="Kloe"
+                className={`h-[48px] sm:h-[54px] w-auto object-contain select-none ${
+                  isDark
+                    ? ''
+                    : 'drop-shadow-[0_0_18px_rgba(255,102,196,0.68)]'
+                }`}
+                draggable={false}
+              />
+            ) : (
+              <KloeMascot
+                mood="happy"
+                size="lg"
+                variant={isDark ? 'black' : 'pink'}
+                className={`!w-[52px] !h-[60px] sm:!w-[58px] sm:!h-[66px] shrink-0 ${
+                  isDark
+                    ? ''
+                    : 'drop-shadow-[0_0_18px_rgba(255,102,196,0.68)]'
+                }`}
+              />
+            )}
           </div>
 
           <div className="min-w-0 flex-1 overflow-hidden">

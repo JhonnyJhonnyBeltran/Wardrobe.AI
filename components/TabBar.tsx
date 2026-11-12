@@ -78,7 +78,6 @@ export default function TabBar() {
           const isActive =
             pathname === tab.href ||
             (tab.href !== '/feed' && pathname.startsWith(tab.href + '/'));
-          const badgeCount = getBadgeCount(tab.labelKey);
 
           return (
             <Link
@@ -118,18 +117,17 @@ export default function TabBar() {
                       className: 'w-[23px] h-[23px] transition-[stroke-width] duration-150',
                     })}
 
-                    {/* Notification Badge with Spring Pop */}
+                    {/* Notification Dot with Spring Pop */}
                     <AnimatePresence>
                       {hasBadge(tab.labelKey) && (
-                        <motion.div
+                        <motion.span
                           initial={{ scale: 0 }}
-                          animate={{ scale: [0, 1.25, 1] }}
+                          animate={{ scale: [0, 1.3, 1] }}
                           exit={{ scale: 0 }}
                           transition={{ type: 'spring', stiffness: 550, damping: 20 }}
-                          className="absolute -top-1.5 -right-1.5 min-w-[16px] h-[16px] px-1 flex items-center justify-center bg-black dark:bg-white text-white dark:text-black text-[9px] font-bold rounded-full border-2 border-white dark:border-[#111113] shadow-xs pointer-events-none"
-                        >
-                          {badgeCount > 99 ? '+99' : badgeCount}
-                        </motion.div>
+                          aria-hidden="true"
+                          className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[var(--brand-pink,#FF66C4)] ring-2 ring-white dark:ring-[#111113] shadow-[0_0_8px_rgba(255,102,196,0.55)] pointer-events-none"
+                        />
                       )}
                     </AnimatePresence>
                   </div>

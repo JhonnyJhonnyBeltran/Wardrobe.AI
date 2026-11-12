@@ -3624,7 +3624,7 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
 - **Pinch-to-Zoom táctil móvil en fotos de posts (`components/PinchZoomPhoto.tsx`, `app/(app)/post/[id]/page.tsx`)**:
   - Listeners nativos (`touchmove` no pasivo) para pellizcar con 2 dedos (`1×` a `3.5×` manteniendo anclado el punto focal entre dedos), pan con 1 dedo mientras está ampliada, bloqueo automático del scroll horizontal del carrusel mientras `scale > 1.02`, reset al cambiar de slide o con doble tap cuando está ampliada / píldora `"Restablecer"` sin romper el doble tap para dar like a `1×`.
 - **Alternancia aleatoria `K` / logo `Kloe` en `KloeHeroBanner` (`app/(app)/closet/page.tsx`)**:
-  - El banner intercala de forma aleatoria (`AnimatePresence`) tanto las 8 preguntas como la mascota `KloeMascot` (`K` rosa) y el wordmark completo `/kloe-logo-large-v2.png` (`Kloe` rosa con ojos pintados) manteniendo la altura estable y el halo rosa brillante.
+  - Al montar/entrar en `/closet`, `KloeHeroBanner` elige aleatoriamente entre la mascota `K` (`KloeMascot`) o el wordmark completo `Kloe` y lo mantiene fijo hasta el siguiente cambio de página (mientras las 8 preguntas siguen rotando cada `4.2s`).
 
 ---
 
@@ -3641,3 +3641,6 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
   - En `/feed` móvil, el widget flotante del onboarding se posiciona arriba bajo el header `Para ti` sin colisionar con el botón flotante `+`.
   - Eliminado `isCreateMenuOpen` de `hideTabBar` en `TabBar.tsx` para que el menú inferior no desaparezca al abrir `+`.
   - Línea divisoria derecha del `Sidebar` en tema oscuro de navegador teñida en rosa (`dark:border-[var(--brand-pink)]/50`).
+- **Indicador de notificaciones limpio con punto rosa sobre el corazón (`NotificationToast.tsx`, `Sidebar.tsx`, `TabBar.tsx`)**:
+  - Eliminados los popups gigantes con bocadillos PNG (`notif-like-*.png`, `notif-comment-*.png`, `notif-follow-*.png`) de `NotificationToast.tsx`.
+  - Sustituidos por un punto rosa limpio (`#FF66C4`) encima del icono de corazón tanto en `Sidebar` (escritorio) como en `TabBar` (móvil) al haber notificaciones sin leer.
