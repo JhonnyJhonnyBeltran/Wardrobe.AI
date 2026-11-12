@@ -1122,15 +1122,18 @@ export default function ClosetPage() {
               exit={{ opacity: 0, x: 20 }}
               transition={{ duration: 0.2 }}
             >
-              <OutfitCalendar />
+              <OutfitCalendar hasOutfits={outfits.length > 0} />
             </motion.div>
           )}
         </AnimatePresence>
 
       </main>
 
-      {/* FAB stack: Filter + Add — always stacked, fully responsive */}
+      {/* FAB stack: Filter + Add — hidden until active tab has items/outfits */}
       {!showAddModal && !selectedItem && !selectedOutfit && (
+        (activeTab === 'items' && items.length > 0) ||
+        ((activeTab === 'outfits' || activeTab === 'calendar') && outfits.length > 0)
+      ) && (
         <div className={`fixed right-6 z-[4990] flex flex-col items-end gap-3 transition-all duration-300 ${
           selectionMode 
             ? 'bottom-[calc(var(--tabbar-height)+env(safe-area-inset-bottom,0px)+108px)]' 

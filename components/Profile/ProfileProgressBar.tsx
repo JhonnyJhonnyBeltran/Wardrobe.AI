@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Check, Plus, HelpCircle } from 'lucide-react';
+import { Check, Plus } from 'lucide-react';
 import { useUser } from '@/store/userStore';
 import { useWardrobeStore } from '@/store/wardrobeStore';
 import { useProfileStore } from '@/store/profileStore';
@@ -14,7 +14,7 @@ export default function ProfileProgressBar() {
   const { user } = useUser();
   const { items } = useWardrobeStore();
   const { profileStats, posts } = useProfileStore();
-  const { openTour, completedSteps, markStepComplete, completeTour } = useTourStore();
+  const { completedSteps, markStepComplete, completeTour } = useTourStore();
 
   const isEthan = useMemo(() => {
     if (!user) return false;
@@ -198,6 +198,7 @@ export default function ProfileProgressBar() {
   if (hasAvatar) score += 10;
 
   const totalPercent = Math.min(100, score);
+  const completedCount = [hasStyle, has3Items, hasOutfit, hasKloe, hasPost, hasAvatar].filter(Boolean).length;
 
   // If 100% complete, mark completed forever and do not render (disappears completely and never returns)
   if (totalPercent >= 100) {
@@ -208,61 +209,17 @@ export default function ProfileProgressBar() {
     return null;
   }
 
-  // Dynamic next action matching the value-first milestone order
-  let nextActionLabel = '';
-  let nextActionHref = '';
-  if (!hasStyle) {
-    nextActionLabel = 'Personalizar';
-    nextActionHref = '/onboarding/preferences';
-  } else if (!has3Items) {
-    nextActionLabel = 'Añadir ropa';
-    nextActionHref = '/closet?action=new-item';
-  } else if (!hasOutfit) {
-    nextActionLabel = 'Crear look';
-    nextActionHref = '/create';
-  } else if (!hasKloe) {
-    nextActionLabel = 'Hablar con Kloe';
-    nextActionHref = '/closet/kloe';
-  } else if (!hasPost) {
-    nextActionLabel = 'Publicar';
-    nextActionHref = '/create-post';
-  } else if (!hasAvatar) {
-    nextActionLabel = 'Subir foto';
-    nextActionHref = '/profile/edit';
-  }
-
   return (
     <div className="relative z-10 w-full my-3">
       <div className="bg-[var(--card-bg)] border border-[var(--brand-pink)]/25 rounded-2xl p-4 sm:p-5 shadow-sm transition-all">
-        {/* Header with prominent title, percentage & primary CTA */}
-        <div className="flex items-center justify-between gap-3">
-          <div className="min-w-0 flex-1 flex items-center gap-2.5">
-            <span className="text-base font-bold tracking-tight text-[var(--brand-pink)]">
-              Primeros pasos
-            </span>
-            <span className="text-xs font-bold text-[var(--foreground)] bg-[var(--background-secondary)] px-2 py-0.5 rounded-full tabular-nums">
-              {totalPercent}%
-            </span>
+        {/* Header with prominent completed/6 pink circle + title */}
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-[var(--brand-pink)] text-white flex items-center justify-center font-bold text-xs shrink-0 tabular-nums shadow-sm shadow-[var(--brand-pink)]/25">
+            {completedCount}/6
           </div>
-
-          <div className="flex items-center gap-1.5 shrink-0">
-            {nextActionHref && (
-              <Link
-                href={nextActionHref}
-                className="px-3.5 py-1.5 rounded-full kz-pink-surface border border-white/25 text-white text-xs font-bold hover:scale-[1.03] active:scale-[0.97] transition-transform whitespace-nowrap"
-              >
-                {nextActionLabel}
-              </Link>
-            )}
-            <button
-              onClick={() => openTour()}
-              className="text-xs text-[var(--foreground-tertiary)] hover:text-[var(--brand-pink)] p-1.5 rounded-full hover:bg-[var(--background-secondary)] transition-colors cursor-pointer"
-              title="Abrir guía paso a paso"
-              aria-label="Abrir guía paso a paso"
-            >
-              <HelpCircle className="w-4 h-4" />
-            </button>
-          </div>
+          <span className="text-base font-bold tracking-tight text-[var(--brand-pink)]">
+            Primeros pasos
+          </span>
         </div>
 
         {/* Progress Bar Track */}

@@ -3656,3 +3656,19 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
   - Eliminado el `<header>` superior móvil `"Para ti"`, manteniendo `pt-safe` y reubicando el widget de onboarding arriba del todo debajo del safe-area (`top-[calc(env(safe-area-inset-top,0px)+12px)]`).
 - **Página `404` personalizada (`app/not-found.tsx`, `components/KloeEmptyVisual.tsx`)**:
   - Implementado estado visual `KloeEmptyVisual variant="not-found"` (sin degradados morados ni auto-redirección), texto *"Aquí no era."* y botón *"Volver"* (`.kz-pink-surface`).
+
+---
+
+## 70. Pulido Onboarding, Botones Vacíos en Armario y Spinner GIF de Carga (Noviembre 2026)
+- **Botones flotantes de `/closet` ocultos en vacío (`app/(app)/closet/page.tsx`, `components/OutfitCalendar.tsx`)**:
+  - Los botones flotantes inferiores derechos (`Seleccionar`, `Filtrar`, `Nueva Prenda`, `Nuevo Outfit`, `Añadir outfit para hoy`) permanecen ocultos hasta que la pestaña activa tiene contenido (`items.length > 0` en `Prendas`, `outfits.length > 0` en `Outfits` y `Calendario`), evitando duplicar el CTA principal bajo *"Tu armario está vacío"* / *"Crea tu primer outfit"*.
+  - El botón móvil *"Añadir outfit para hoy"* dentro de `OutfitCalendar` también se oculta cuando `hasOutfits={outfits.length > 0}` es falso.
+- **Widget flotante de onboarding (`components/GuidedTour/GuidedTourModal.tsx`)**:
+  - Oculto en `/profile` y `/profile/*` igual que en `/closet`, evitando duplicarse junto a `ProfileProgressBar`.
+  - En móvil, centrado horizontalmente y más separado de la `TabBar` inferior (`bottom-[calc(94px+env(safe-area-inset-bottom,0px))]`) o superior en `/feed`.
+  - Etiqueta superior unificada a **"Primeros pasos"** sin porcentaje, conservando el círculo rosa `2/6`.
+- **Bloque estático `Primeros pasos` (`components/Profile/ProfileProgressBar.tsx`)**:
+  - Prioridad visual a la izquierda al círculo rosa `{completedCount}/6` junto a *"Primeros pasos"*.
+  - Eliminados el porcentaje blanco (`{totalPercent}%`), el botón rápido (`Añadir ropa`), el botón `?` y la opción de replegar (siempre desplegado).
+- **Spinner GIF animado en modal de subida (`public/loading-spinner.gif`, `components/AddItemModal/components/*`)**:
+  - Generado asset transparente animado `public/loading-spinner.gif` (24 frames, `#FF66C4`) para sustituir `Loader2 animate-spin` en `"Optimizando imagen..."` y overlays de `ImageUploader`, `ImageSelector` y `BatchCarousel`, evitando que el círculo de carga se congele durante el procesado de imagen/IA.

@@ -7,7 +7,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Check, Loader2, RotateCw, RotateCcw } from 'lucide-react';
+import { Check, RotateCw, RotateCcw } from 'lucide-react';
 import type { ImageSelectorProps } from '../types';
 
 export function ImageSelector({
@@ -76,7 +76,7 @@ export function ImageSelector({
                     <div className="aspect-square max-w-[200px] mx-auto rounded-2xl border border-[var(--border-color)] bg-white overflow-hidden relative">
                         {isProcessing ? (
                             <div className="w-full h-full flex flex-col items-center justify-center gap-2">
-                                <Loader2 className="w-8 h-8 text-[var(--brand-pink)] animate-spin" />
+                                <img src="/loading-spinner.gif" alt="Cargando" className="w-8 h-8 object-contain select-none" />
                                 <span className="text-xs text-[var(--brand-pink)] font-semibold animate-pulse">
                                     {processingMessage}
                                 </span>

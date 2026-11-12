@@ -12,7 +12,7 @@
 
 import React, { memo, useRef, useState } from 'react';
 import Image from 'next/image';
-import { Upload, Loader2, Camera, Image as ImageIcon, X, Trash2 } from 'lucide-react';
+import { Upload, Camera, Image as ImageIcon, X, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { ImageUploaderProps } from '../types';
 
@@ -26,7 +26,7 @@ const ProcessingOverlay = memo(function ProcessingOverlay({
 }) {
     return (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-2.5 bg-black/40 backdrop-blur-md z-10 transition-all duration-300 rounded-3xl p-4 [contain:paint]">
-            <Loader2 className="w-9 h-9 text-[var(--brand-pink)] animate-spin transform-gpu will-change-transform" />
+            <img src="/loading-spinner.gif" alt="Cargando" className="w-9 h-9 object-contain select-none" />
             <span className="text-xs text-white font-bold animate-pulse drop-shadow text-center select-none">
                 {message}
             </span>
@@ -47,7 +47,7 @@ const EmptyState = memo(function EmptyState({
     if (isProcessing) {
         return (
             <div className="flex flex-col items-center justify-center gap-3 p-6 [contain:paint]">
-                <Loader2 className="w-9 h-9 text-[var(--brand-pink)] animate-spin transform-gpu will-change-transform" />
+                <img src="/loading-spinner.gif" alt="Cargando" className="w-9 h-9 object-contain select-none" />
                 <span className="text-xs text-[var(--brand-pink)] font-bold animate-pulse text-center select-none">
                     {processingMessage}
                 </span>

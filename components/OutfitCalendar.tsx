@@ -47,7 +47,7 @@ function WeatherIcon({
   }
 }
 
-export default function OutfitCalendar() {
+export default function OutfitCalendar({ hasOutfits = true }: { hasOutfits?: boolean }) {
   const { user } = useUser();
   const { showModal, setTabBarHidden } = useUiStore();
   const [outfitSearchQuery, setOutfitSearchQuery] = useState('');
@@ -700,21 +700,23 @@ export default function OutfitCalendar() {
               );
             })}
           </div>
-          {/* Mobile Button below Calendar */}
-          <div className="mt-4 sm:hidden">
-            <motion.button
-              whileTap={{ scale: 0.98 }}
-              onClick={() => {
-                setSelectedDate(new Date());
-                loadUserOutfits();
-                setShowPicker(true);
-              }}
-              className="w-full py-3.5 px-4 rounded-2xl bg-[var(--brand-pink)] text-white font-bold text-[15px] flex items-center justify-center gap-2 shadow-lg shadow-[var(--brand-pink)]/35 hover:shadow-[0_0_22px_rgba(255,102,196,0.5)] active:opacity-90 transition-all cursor-pointer"
-            >
-              <Plus className="w-5 h-5 stroke-[2.5]" />
-              Añadir outfit para hoy
-            </motion.button>
-          </div>
+          {/* Mobile Button below Calendar (hidden until user has outfits) */}
+          {hasOutfits && (
+            <div className="mt-4 sm:hidden">
+              <motion.button
+                whileTap={{ scale: 0.98 }}
+                onClick={() => {
+                  setSelectedDate(new Date());
+                  loadUserOutfits();
+                  setShowPicker(true);
+                }}
+                className="w-full py-3.5 px-4 rounded-2xl bg-[var(--brand-pink)] text-white font-bold text-[15px] flex items-center justify-center gap-2 shadow-lg shadow-[var(--brand-pink)]/35 hover:shadow-[0_0_22px_rgba(255,102,196,0.5)] active:opacity-90 transition-all cursor-pointer"
+              >
+                <Plus className="w-5 h-5 stroke-[2.5]" />
+                Añadir outfit para hoy
+              </motion.button>
+            </div>
+          )}
         </div>
         </motion.div>
       </div>

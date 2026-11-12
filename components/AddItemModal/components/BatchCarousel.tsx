@@ -10,7 +10,7 @@
 import React, { memo } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Trash2, Loader2, Check, AlertCircle, Plus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Trash2, Check, AlertCircle, Plus } from 'lucide-react';
 import { CustomSelect } from './CustomSelect';
 import { DropdownWithCustom } from './DropdownWithCustom';
 import {
@@ -60,7 +60,7 @@ export const BatchCarousel = memo(function BatchCarousel({
                 </span>
                 {currentItem.isProcessing && (
                     <span className="text-[11px] font-medium text-[var(--foreground-tertiary)] flex items-center gap-1.5 animate-pulse">
-                        <Loader2 className="w-3.5 h-3.5 animate-spin text-[var(--brand-pink)]" />
+                        <img src="/loading-spinner.gif" alt="Cargando" className="w-3.5 h-3.5 object-contain select-none" />
                         <span>Analizando prenda...</span>
                     </span>
                 )}
@@ -104,7 +104,7 @@ export const BatchCarousel = memo(function BatchCarousel({
                                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                                     {item.isProcessing ? (
                                         <div className="w-full h-full bg-black/25 backdrop-blur-[1px] flex items-center justify-center">
-                                            <Loader2 className="w-6 h-6 text-[var(--brand-pink)] animate-spin drop-shadow-md" />
+                                            <img src="/loading-spinner.gif" alt="Cargando" className="w-6 h-6 object-contain drop-shadow-md select-none" />
                                         </div>
                                     ) : item.error ? (
                                         <div className="w-full h-full bg-red-950/30 flex items-center justify-center">
@@ -147,7 +147,7 @@ export const BatchCarousel = memo(function BatchCarousel({
                             </div>
                         ) : (
                             <div className="flex flex-col items-center justify-center gap-2 p-4">
-                                <Loader2 className="w-8 h-8 text-[var(--brand-pink)] animate-spin" />
+                                <img src="/loading-spinner.gif" alt="Cargando" className="w-8 h-8 object-contain select-none" />
                                 <span className="text-xs text-[var(--foreground-tertiary)] font-medium">Cargando foto...</span>
                             </div>
                         )}
@@ -166,7 +166,7 @@ export const BatchCarousel = memo(function BatchCarousel({
                         {/* Processing Badge Overlay */}
                         {currentItem.isProcessing && (
                             <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex flex-col items-center justify-center gap-2.5 p-3 text-center">
-                                <Loader2 className="w-9 h-9 text-[var(--brand-pink)] animate-spin" />
+                                <img src="/loading-spinner.gif" alt="Cargando" className="w-9 h-9 object-contain select-none" />
                                 <span className="text-xs font-bold text-white animate-pulse">
                                     Eliminando fondo con IA...
                                 </span>
