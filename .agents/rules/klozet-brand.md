@@ -9,6 +9,7 @@ Toda UI de Klozet (app, landing, legales, trends, emails, exportaciones a Instag
 - Tipografía: Inter para todo (Outfit solo cifras display). Pesos 400–700. Sentence case.
 - Materiales: `.apple-glass-bar` y tarjetas `card-bg/90-95 + backdrop-blur-xl + borde hairline`. Velo `bg-black/40-60` sobre fotos.
 - Forma: todo redondeado, botones/chips en pastilla, tarjetas 20–24px, sheets 32px, táctil ≥44px.
+- Iconografía limpia: **evitar círculos rodeando iconos** salvo que cuadren explícitamente (inputs o botones aislados). En banners, flechas de entrada, tarjetas o badges, mostrar los iconos y logos libres sin contenedor circular alrededor.
 - Movimiento: `--ease-apple`; bounce solo en momentos de marca; tap `scale(0.97)`.
 - Usar siempre tokens CSS (`var(--background)`, `var(--foreground)`, `var(--card-bg)`, `var(--border-color)`, `var(--brand-pink)`) para soportar claro/oscuro. No hardcodear paletas `zinc-*` como identidad.
 

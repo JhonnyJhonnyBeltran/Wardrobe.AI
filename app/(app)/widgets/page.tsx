@@ -289,9 +289,7 @@ export default function WidgetsPage() {
           {!isProUser && (
             <div className="absolute inset-0 z-10 flex flex-col items-center justify-center p-6 text-center bg-white/55 dark:bg-black/55 backdrop-blur-xs">
               <div className="max-w-xs w-full rounded-3xl bg-[var(--card-bg)]/95 border border-[var(--border-color)] p-5 shadow-xl flex flex-col items-center gap-3">
-                <div className="w-11 h-11 rounded-full bg-[var(--brand-pink)]/12 text-[var(--brand-pink)] flex items-center justify-center">
-                  <Lock className="w-5 h-5" />
-                </div>
+                <Lock className="w-8 h-8 text-[var(--brand-pink)]" strokeWidth={2} aria-hidden="true" />
                 <div className="space-y-1">
                   <h3 className="text-sm font-bold text-[var(--foreground)]">
                     Widgets exclusivos de Klozet Pro

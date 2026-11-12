@@ -10,7 +10,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import { useRef } from 'react';
 import {
-  Heart, Grid3x3, List, Search, Filter, Plus, X, Shirt, Layers, Share2, Trash2, Check, CalendarDays, Camera, ChevronRight
+  Heart, Grid3x3, List, Search, Filter, Plus, X, Shirt, Layers, Share2, Trash2, Check, CalendarDays, Camera, ChevronRight, MessageCircle, Sun
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button, Card, FloatingCreateButton, OutfitCard, ClothingItem, NotificationToastContainer, WardrobeSelectionModal, OutfitDetailModal, EmptyState, SkeletonCard, SkeletonCloset, ProfileProgressBar, KloeMascot } from '@/components';
@@ -32,20 +32,34 @@ import { supabase } from '@/lib/supabase/client';
 import Image from 'next/image';
 
 const KLOE_PROMPTS = [
-  'Charla conmigo',
-  '¿Qué me pongo hoy?',
-  'Crea un look conmigo',
+  { text: '¿Qué me pongo hoy?', icon: Shirt },
+  { text: 'Charla conmigo', icon: MessageCircle },
+  { text: 'Crea un look conmigo', icon: Layers },
+  { text: '¿Look según el tiempo?', icon: Sun },
+  { text: 'Planea tu outfit de hoy', icon: CalendarDays },
 ];
 
 function KloeHeroBanner() {
   const [promptIndex, setPromptIndex] = useState(0);
+  const [showPhrase, setShowPhrase] = useState(false);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setPromptIndex((prev) => (prev + 1) % KLOE_PROMPTS.length);
-    }, 5500);
-    return () => clearInterval(timer);
+    const randomIndex = Math.floor(Math.random() * KLOE_PROMPTS.length);
+    setPromptIndex(randomIndex);
+
+    const initialFlip = setTimeout(() => setShowPhrase(true), 2200);
+    const interval = setInterval(() => {
+      setShowPhrase((prev) => !prev);
+    }, 3600);
+
+    return () => {
+      clearTimeout(initialFlip);
+      clearInterval(interval);
+    };
   }, []);
+
+  const currentPrompt = KLOE_PROMPTS[promptIndex];
+  const PhraseIcon = currentPrompt.icon;
 
   return (
     <Link href="/closet/kloe" className="block w-full" onClick={() => { try { haptics.tap(); } catch {} }}>
@@ -53,42 +67,53 @@ function KloeHeroBanner() {
         whileHover={{ y: -2, scale: 1.006 }}
         whileTap={{ scale: 0.975 }}
         transition={{ type: 'spring', stiffness: 460, damping: 24 }}
-        className="w-full py-3.5 px-4 sm:px-6 rounded-full kz-kloe-banner flex items-center justify-between gap-3.5 sm:gap-4 cursor-pointer group"
-        aria-label="Charla conmigo"
+        className="w-full min-h-[78px] sm:min-h-[86px] py-3.5 px-5 sm:px-7 rounded-full kz-kloe-banner flex items-center justify-between gap-4 cursor-pointer group"
+        aria-label={currentPrompt.text}
       >
-        <div className="flex items-center gap-3.5 sm:gap-4 min-w-0 flex-1">
-          <KloeMascot
-            mood="happy"
-            size="lg"
-            variant="pink"
-            className="!w-[54px] !h-[62px] sm:!w-[60px] sm:!h-[68px] drop-shadow-[0_6px_16px_rgba(255,102,196,0.58)] shrink-0"
-          />
-          <div className="min-w-0 flex-1">
-            <AnimatePresence mode="wait">
-              <motion.p
-                key={promptIndex}
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -5 }}
-                transition={{ duration: 0.25 }}
-                className="font-display text-[17px] sm:text-[19px] font-bold tracking-[-0.025em] text-[#FF66C4] truncate leading-tight select-none"
+        <div className="min-w-0 flex-1 flex items-center">
+          <AnimatePresence mode="wait">
+            {!showPhrase ? (
+              <motion.div
+                key="kloe-brand"
+                initial={{ opacity: 0, y: 8, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -8, scale: 0.97 }}
+                transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
+                className="flex items-center gap-3.5"
               >
-                {KLOE_PROMPTS[promptIndex]}
-              </motion.p>
-            </AnimatePresence>
-            <p className="text-[11px] sm:text-xs font-medium text-zinc-300/90 truncate mt-0.5 select-none">
-              Tu estilista personal · Pregúntame por el tiempo o un look
-            </p>
-          </div>
+                <img
+                  src="/kloe-logo-large.png"
+                  alt="Kloe"
+                  className="h-12 sm:h-14 w-auto object-contain select-none"
+                />
+              </motion.div>
+            ) : (
+              <motion.div
+                key={`phrase-${promptIndex}`}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
+                className="flex items-center gap-3.5 sm:gap-4 min-w-0"
+              >
+                <PhraseIcon
+                  className="w-10 h-10 sm:w-12 sm:h-12 text-[#FF66C4] shrink-0"
+                  strokeWidth={2}
+                  aria-hidden="true"
+                />
+                <p className="font-display text-[19px] sm:text-[23px] font-bold tracking-[-0.025em] text-[#FF66C4] leading-tight line-clamp-2 select-none">
+                  {currentPrompt.text}
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
-        <div className="w-10 h-10 shrink-0 rounded-full bg-white/10 border border-white/15 text-[#FF66C4] group-hover:bg-[#FF66C4] group-hover:text-white group-hover:border-[#FF66C4] shadow-sm flex items-center justify-center group-hover:scale-105 group-hover:translate-x-0.5 transition-all">
-          <ChevronRight
-            className="w-5 h-5"
-            strokeWidth={2.6}
-            aria-hidden="true"
-          />
-        </div>
+        <ChevronRight
+          className="w-7 h-7 shrink-0 text-[#FF66C4] group-hover:translate-x-1 transition-transform"
+          strokeWidth={2.5}
+          aria-hidden="true"
+        />
       </motion.div>
     </Link>
   );
@@ -766,10 +791,10 @@ export default function ClosetPage() {
 
       {/* Header Sticky (sin ralla divisoria horizontal) */}
       <header className="sticky top-0 z-40 apple-glass-bar !border-b-0 pb-2 pt-safe">
-        <div className="max-w-7xl mx-auto px-4 pt-4 space-y-4">
+        <div className="max-w-7xl mx-auto px-4 pt-4 space-y-5">
 
           {/* Kloe Hero Action Banner */}
-          <div className="w-full">
+          <div className="w-full relative z-0">
             <KloeHeroBanner />
           </div>
 

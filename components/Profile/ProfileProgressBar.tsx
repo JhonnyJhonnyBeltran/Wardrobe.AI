@@ -243,7 +243,7 @@ export default function ProfileProgressBar() {
   }
 
   return (
-    <div className="w-full my-3">
+    <div className="relative z-10 w-full my-3">
       <div className="bg-[var(--card-bg)] border border-[var(--border-color)]/60 rounded-2xl p-4 shadow-sm transition-all hover:border-[var(--border-color)]">
         {/* Header with percentage & toggle */}
         <div className="flex items-center justify-between gap-3">

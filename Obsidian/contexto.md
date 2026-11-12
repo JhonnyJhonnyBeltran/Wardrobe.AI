@@ -3605,7 +3605,9 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
   - `/widgets` deshabilita controles y muestra overlay glass bloqueado con CTA *"Desbloquear con Klozet Pro"* (`openPremiumModal('yearly')`) para cuentas Free.
 - **Verificación RevenueCat `entitlement.isActive` en `purchasePackage` (`lib/revenuecat/client.ts`)**:
   - Comprobación explícita de entitlement activo (`customerInfo?.entitlements?.active?.['klozet_pro']`) antes de sincronizar estado Pro en backend tras `Purchases.purchasePackage`.
-- **Rediseño Botón Kloe Premium Negro, Onboarding sin Kloe y Empty States con Ejemplos (`app/(app)/closet/page.tsx`, `app/globals.css`, `components/EmptyState.tsx`, `components/Profile/ProfileProgressBar.tsx`)**:
-  - `KloeHeroBanner` (`.kz-kloe-banner`) rediseñado sobre píldora negra mate premium (`#0D0D0F`/`#09090B`) con Kloe grande en rosa (`54×62` / `60×68` px, `drop-shadow` rosa `#FF66C4`) sin círculo envolvente.
+- **Rediseño Botón Kloe Premium Negro, Onboarding sin Kloe y Empty States con Ejemplos (`app/(app)/closet/page.tsx`, `app/globals.css`, `components/EmptyState.tsx`, `components/Profile/ProfileProgressBar.tsx`, `Obsidian/brand_kit.md`, `.agents/rules/klozet-brand.md`)**:
+  - `KloeHeroBanner` (`.kz-kloe-banner`) rediseñado sobre píldora negra mate (`#0D0D0F`/`#09090B`) sin subtítulo y con sombra compacta (`relative z-0`) para no solapar jamás al onboarding (`relative z-10`, `space-y-5`).
+  - El banner alterna suavemente entre el wordmark oficial **`Kloe`** (`/kloe-logo-large.png`, grande en rosa) y una **frase aleatoria en cada recarga de la app** acompañada de su **icono grande en rosa**, dejando también libre la flecha `<ChevronRight />` sin círculo alrededor.
+  - **Regla general de diseño registrada en `brand_kit.md` y `.agents/rules/klozet-brand.md`**: evitar círculos rodeando iconos salvo que cuadren explícitamente (inputs o botones aislados).
   - Eliminada la mascota `KloeMascot` de la cabecera del div de onboarding `ProfileProgressBar`.
   - Añadido `previewSlot` a `EmptyState`: el estado vacío de Prendas (*"Tu armario está vacío"*) muestra una tarjeta ejemplo de prenda (`Jersey rayas`) junto a Kloe, y el estado vacío de Outfits (*"Crea tu primer outfit"*) muestra una tarjeta ejemplo de look armado con piezas (`Look diario`) junto a Kloe.

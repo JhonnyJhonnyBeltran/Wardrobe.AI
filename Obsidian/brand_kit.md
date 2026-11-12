@@ -163,6 +163,7 @@ La blandura del logo se traduce en geometría redonda. **No hay esquinas vivas e
 - **Listas de ajustes**: `.apple-inset-group` + `.apple-inset-row` (estilo Settings de iOS).
 - **Sheets**: `.apple-sheet-handle` + radio 32px + tarjeta flotante.
 - **Iconos**: `lucide-react`, trazo 1.75–2, 20–24px, color de texto. ❌ `Sparkles`/destellos para "IA".
+- **Sin círculos alrededor de iconos**: intentar evitar círculos rodeando iconos salvo que cuadren explícitamente (inputs o botones aislados). En banners, píldoras compuestas, flechas de entrada o tarjetas, dejar iconos y logos libres sin marco circular.
 
 ---
 
