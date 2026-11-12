@@ -118,7 +118,7 @@ export default function FloatingCreateButton() {
                                         key={action.id}
                                         variants={itemVariants}
                                         onClick={() => handleActionClick(action.path)}
-                                        className="group h-11 md:h-12 px-4 md:px-5 rounded-full bg-[var(--brand-pink)] flex items-center justify-center gap-2.5 text-white shadow-lg shadow-[var(--brand-pink)]/35 hover:shadow-[0_0_22px_rgba(255,102,196,0.5)] transition-all hover:scale-105 active:scale-95 cursor-pointer border border-white/20 select-none pointer-events-auto"
+                                        className="group h-11 md:h-12 px-4 md:px-5 rounded-full kz-pink-surface border border-white/25 flex items-center justify-center gap-2.5 text-white font-bold transition-all hover:scale-[1.03] active:scale-[0.97] cursor-pointer select-none pointer-events-auto"
                                     >
                                         <Icon className="w-4.5 h-4.5 md:w-5 md:h-5 flex-shrink-0" strokeWidth={2.4} />
                                         <span className="text-sm font-bold whitespace-nowrap">
@@ -141,7 +141,7 @@ export default function FloatingCreateButton() {
                             exit={{ scale: 0.4, opacity: 0, transition: { duration: 0.15 } }}
                             whileTap={{ scale: 0.9 }}
                             onClick={handleToggle}
-                            className="w-[52px] h-[52px] md:w-14 md:h-14 rounded-full bg-[var(--brand-pink)] flex items-center justify-center text-white shadow-2xl shadow-[var(--brand-pink)]/35 cursor-pointer overflow-hidden z-20 transition-all hover:scale-105 active:scale-95 pointer-events-auto"
+                            className="w-[52px] h-[52px] md:w-14 md:h-14 rounded-full kz-pink-surface border border-white/25 flex items-center justify-center text-white cursor-pointer overflow-hidden z-20 transition-all hover:scale-[1.03] active:scale-[0.97] pointer-events-auto"
                             aria-label="Crear nuevo"
                         >
                             <Plus className="w-6.5 h-6.5 md:w-7 md:h-7" strokeWidth={2.5} />
@@ -154,7 +154,7 @@ export default function FloatingCreateButton() {
                             exit={{ scale: 0.4, opacity: 0, transition: { duration: 0.15 } }}
                             whileTap={{ scale: 0.9 }}
                             onClick={handleToggle}
-                            className="w-[52px] h-[52px] md:w-14 md:h-14 rounded-full bg-[var(--brand-pink)] border border-white/20 flex items-center justify-center text-white shadow-xl shadow-[var(--brand-pink)]/35 cursor-pointer hover:scale-105 active:scale-95 transition-all pointer-events-auto"
+                            className="w-[52px] h-[52px] md:w-14 md:h-14 rounded-full kz-pink-surface border border-white/25 flex items-center justify-center text-white cursor-pointer hover:scale-[1.03] active:scale-[0.97] transition-all pointer-events-auto"
                             aria-label="Cerrar opciones"
                         >
                             <X className="w-6.5 h-6.5 md:w-7 md:h-7" strokeWidth={2.4} />
@@ -197,7 +197,7 @@ export default function FloatingCreateButton() {
                                             <button
                                                 key={action.id}
                                                 onClick={() => handleActionClick(action.path)}
-                                                className="w-full bg-[var(--brand-pink)] text-white hover:opacity-95 p-3.5 rounded-full flex items-center justify-center gap-3 shadow-lg shadow-[var(--brand-pink)]/25 border border-white/20 active:scale-[0.98] transition-all cursor-pointer font-bold text-sm"
+                                                className="w-full kz-pink-surface border border-white/25 text-white p-3.5 rounded-full flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer font-bold text-sm"
                                             >
                                                 <Icon className="w-5 h-5 flex-shrink-0" strokeWidth={2.3} />
                                                 <span className="font-bold text-sm text-white">

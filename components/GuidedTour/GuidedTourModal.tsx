@@ -190,7 +190,7 @@ export default function GuidedTourModal() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={dismissTour}
-                    className="text-xs text-[var(--foreground-tertiary)] hover:text-red-500 px-2 py-1 rounded-lg hover:bg-[var(--background-secondary)] transition-colors font-medium cursor-pointer"
+                    className="text-xs text-[var(--foreground-tertiary)] hover:text-red-500 px-3 py-1 rounded-full hover:bg-[var(--background-secondary)] transition-colors font-medium cursor-pointer"
                     title="Saltar y cerrar el tour definitivamente"
                   >
                     Saltar
@@ -328,7 +328,7 @@ export default function GuidedTourModal() {
                   type="button"
                   onClick={prevStep}
                   disabled={currentStepIndex === 0}
-                  className="p-3 rounded-xl bg-[var(--background-secondary)] hover:bg-[var(--border-color)] disabled:opacity-30 disabled:cursor-not-allowed text-[var(--foreground)] transition-colors shrink-0 cursor-pointer"
+                  className="w-11 h-11 rounded-full bg-[var(--background-secondary)] border border-[var(--border-color)] hover:border-[var(--brand-pink)]/40 hover:text-[var(--brand-pink)] disabled:opacity-30 disabled:cursor-not-allowed text-[var(--foreground)] transition-all flex items-center justify-center shrink-0 cursor-pointer active:scale-95"
                   aria-label="Paso anterior"
                 >
                   <ChevronLeft className="w-5 h-5" />
@@ -337,7 +337,7 @@ export default function GuidedTourModal() {
                 <button
                   type="button"
                   onClick={handleAction}
-                  className="flex-1 py-3 px-5 rounded-xl bg-[var(--brand-pink)] text-white font-semibold text-sm hover:opacity-90 active:scale-98 transition-all shadow-lg shadow-[var(--brand-pink)]/25 flex items-center justify-center gap-2 cursor-pointer"
+                  className="flex-1 h-11 px-5 rounded-full kz-pink-surface border border-white/25 text-white font-bold text-sm hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <span>{currentStep.actionText}</span>
                   <ChevronRight className="w-4 h-4" />
@@ -347,7 +347,7 @@ export default function GuidedTourModal() {
                   type="button"
                   onClick={nextStep}
                   disabled={currentStepIndex === TOUR_STEPS.length - 1}
-                  className="p-3 rounded-xl bg-[var(--background-secondary)] hover:bg-[var(--border-color)] disabled:opacity-30 disabled:cursor-not-allowed text-[var(--foreground)] transition-colors shrink-0 cursor-pointer"
+                  className="w-11 h-11 rounded-full bg-[var(--background-secondary)] border border-[var(--border-color)] hover:border-[var(--brand-pink)]/40 hover:text-[var(--brand-pink)] disabled:opacity-30 disabled:cursor-not-allowed text-[var(--foreground)] transition-all flex items-center justify-center shrink-0 cursor-pointer active:scale-95"
                   aria-label="Siguiente paso"
                 >
                   <ChevronRight className="w-5 h-5" />
@@ -411,7 +411,7 @@ export default function GuidedTourModal() {
             </div>
             <button
               onClick={handleCelebrationContinue}
-              className="px-3 py-1.5 rounded-lg bg-white text-emerald-700 font-bold text-xs hover:bg-emerald-50 transition-colors shrink-0 cursor-pointer"
+              className="px-3.5 py-1.5 rounded-full bg-white text-emerald-700 font-bold text-xs hover:bg-emerald-50 transition-colors shrink-0 cursor-pointer"
             >
               Continuar
             </button>

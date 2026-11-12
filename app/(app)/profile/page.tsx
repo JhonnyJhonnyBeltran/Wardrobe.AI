@@ -265,14 +265,14 @@ export default function ProfilePage() {
               <div className="p-5 pt-0 flex gap-3">
                 <button
                   onClick={() => { setShowCreateFolder(false); setNewFolderName(''); }}
-                  className="flex-1 py-3 px-4 bg-[var(--background-secondary)] text-[var(--foreground)] rounded-xl font-medium transition-colors hover:bg-[var(--border-color)]"
+                  className="flex-1 py-3 px-4 bg-[var(--background-secondary)] text-[var(--foreground)] rounded-full font-semibold transition-colors hover:bg-[var(--border-color)] cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={createFolder}
                   disabled={isCreatingFolder || !newFolderName.trim()}
-                  className="flex-1 py-3 px-4 bg-[var(--brand-pink)] text-white rounded-xl font-semibold disabled:opacity-50 hover:opacity-90 transition-colors flex items-center justify-center"
+                  className="flex-1 py-3 px-4 kz-pink-surface border border-white/25 text-white rounded-full font-bold disabled:opacity-50 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center cursor-pointer"
                 >
                   {isCreatingFolder ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
@@ -320,7 +320,7 @@ export default function ProfilePage() {
                   type="button"
                   onClick={() => setFolderToDelete(null)}
                   disabled={isDeletingFolder}
-                  className="flex-1 py-3 px-4 bg-[var(--background-secondary)] text-[var(--foreground)] rounded-xl font-medium transition-colors hover:bg-[var(--border-color)] disabled:opacity-50"
+                  className="flex-1 py-3 px-4 bg-[var(--background-secondary)] text-[var(--foreground)] rounded-full font-semibold transition-colors hover:bg-[var(--border-color)] disabled:opacity-50 cursor-pointer"
                 >
                   Cancelar
                 </button>
@@ -328,7 +328,7 @@ export default function ProfilePage() {
                   type="button"
                   onClick={confirmDeleteFolder}
                   disabled={isDeletingFolder}
-                  className="flex-1 py-3 px-4 bg-red-500 text-white rounded-xl font-semibold transition-all hover:bg-red-600 disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-red-500/20 active:scale-95"
+                  className="flex-1 py-3 px-4 bg-red-500 text-white rounded-full font-bold transition-all hover:bg-red-600 disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-red-500/20 active:scale-[0.98] cursor-pointer"
                 >
                   {isDeletingFolder ? (
                     <>
@@ -415,7 +415,7 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <div className="pb-6 border-b border-[var(--border-color)]">
+          <div className="pb-3">
             <h2 className="font-bold text-lg text-[var(--foreground)]">{user.name || user.username}</h2>
             {user.username && (
               <p className="text-sm font-semibold text-[var(--brand-pink)] -mt-0.5 mb-2">
@@ -429,13 +429,13 @@ export default function ProfilePage() {
             <div className="flex items-center gap-2.5 mt-4 mb-4">
               <Link 
                 href="/profile/edit" 
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-[var(--brand-pink)] text-white font-semibold text-sm hover:opacity-95 active:scale-[0.99] transition-all shadow-sm"
+                className="flex-1 h-11 flex items-center justify-center gap-2 px-5 rounded-full kz-pink-surface border border-white/25 text-white font-bold text-sm hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
               >
                 Editar perfil
               </Link>
               <Link 
                 href="/profile/settings" 
-                className="px-4 py-2.5 rounded-full bg-[var(--background-secondary)] text-[var(--foreground)] hover:text-[var(--brand-pink)] border border-[var(--border-color)] hover:border-[var(--brand-pink)]/40 transition-all flex items-center justify-center gap-1.5 text-sm font-semibold active:scale-95 shadow-sm shrink-0"
+                className="h-11 px-5 rounded-full bg-[var(--background-secondary)] text-[var(--foreground)] hover:text-[var(--brand-pink)] border border-[var(--border-color)] hover:border-[var(--brand-pink)]/40 transition-all flex items-center justify-center gap-1.5 text-sm font-bold hover:scale-[1.02] active:scale-[0.98] shadow-sm shrink-0"
                 aria-label="Ajustes"
                 title="Ajustes"
               >
@@ -453,25 +453,41 @@ export default function ProfilePage() {
         </div>
 
         {/* Tabs */}
-        <div className="sticky top-14 md:top-0 z-20 bg-[var(--background)]">
+        <div className="sticky top-14 md:top-0 z-20 bg-[var(--background)] border-b border-[var(--border-color)]/60">
           <div className="flex">
             <button
               onClick={() => { setActiveTab('posts'); setSelectedFolder(null); }}
-              className={`flex-1 flex items-center justify-center py-3 border-b-2 transition-colors ${activeTab === 'posts'
-                ? 'border-[var(--brand-pink)] text-[var(--foreground)]'
-                : 'border-transparent text-[var(--foreground-tertiary)]'
+              className={`relative flex-1 flex items-center justify-center py-3 transition-colors cursor-pointer ${activeTab === 'posts'
+                ? 'text-[var(--brand-pink)]'
+                : 'text-[var(--foreground-tertiary)] hover:text-[var(--foreground-secondary)]'
                 }`}
+              aria-label="Publicaciones"
             >
-              <Grid3x3 className={`w-6 h-6 ${activeTab === 'posts' ? 'text-[var(--brand-pink)]' : ''}`} />
+              <Grid3x3 className="w-6 h-6" />
+              {activeTab === 'posts' && (
+                <motion.span
+                  layoutId="profile-section-tab-indicator"
+                  transition={{ type: 'spring', stiffness: 460, damping: 34 }}
+                  className="absolute bottom-0 left-3 right-3 h-[2.5px] rounded-full bg-[var(--brand-pink)]"
+                />
+              )}
             </button>
             <button
               onClick={() => setActiveTab('saved')}
-              className={`flex-1 flex items-center justify-center py-3 border-b-2 transition-colors ${activeTab === 'saved'
-                ? 'border-[var(--brand-pink)] text-[var(--foreground)]'
-                : 'border-transparent text-[var(--foreground-tertiary)]'
+              className={`relative flex-1 flex items-center justify-center py-3 transition-colors cursor-pointer ${activeTab === 'saved'
+                ? 'text-[var(--brand-pink)]'
+                : 'text-[var(--foreground-tertiary)] hover:text-[var(--foreground-secondary)]'
                 }`}
+              aria-label="Guardados"
             >
-              <Bookmark className={`w-6 h-6 ${activeTab === 'saved' ? 'text-[var(--brand-pink)]' : ''}`} />
+              <Bookmark className="w-6 h-6" />
+              {activeTab === 'saved' && (
+                <motion.span
+                  layoutId="profile-section-tab-indicator"
+                  transition={{ type: 'spring', stiffness: 460, damping: 34 }}
+                  className="absolute bottom-0 left-3 right-3 h-[2.5px] rounded-full bg-[var(--brand-pink)]"
+                />
+              )}
             </button>
           </div>
         </div>
@@ -625,10 +641,10 @@ export default function ProfilePage() {
                         <div key={folder.id} className="relative group">
                           <button
                             onClick={() => setSelectedFolder(selectedFolder?.id === folder.id ? null : folder)}
-                            className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200 text-sm font-medium ${
+                            className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all duration-200 text-sm cursor-pointer ${
                               selectedFolder?.id === folder.id 
-                                ? 'bg-[var(--brand-pink)] text-white shadow-md' 
-                                : 'bg-[var(--background-secondary)] text-[var(--foreground)] hover:bg-[var(--background-secondary)]/80'
+                                ? 'kz-pink-surface border border-white/25 text-white font-bold' 
+                                : 'bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] font-medium hover:border-[var(--brand-pink)]/40'
                             }`}
                           >
                             <Folder className="w-4 h-4" />
@@ -652,12 +668,12 @@ export default function ProfilePage() {
                     </div>
                   </div>
                 ) : (
-                  <div className="px-4 py-3 border-b border-[var(--border-color)] flex items-center justify-between">
+                  <div className="px-4 py-3 border-b border-[var(--border-color)]/60 flex items-center justify-between">
                     <button
                       onClick={() => setShowCreateFolder(true)}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[var(--background-secondary)] hover:bg-[var(--border-color)] text-[var(--foreground)] text-xs font-semibold transition-all active:scale-95 border border-[var(--border-color)]"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full kz-pink-surface border border-white/25 text-white text-xs font-bold hover:scale-[1.03] active:scale-[0.97] transition-all cursor-pointer"
                     >
-                      <Plus className="w-3.5 h-3.5 text-[var(--brand-pink)]" />
+                      <Plus className="w-3.5 h-3.5" />
                       <span>Crear carpeta</span>
                     </button>
                   </div>

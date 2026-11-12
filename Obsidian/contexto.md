@@ -3672,3 +3672,14 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
   - Eliminados el porcentaje blanco (`{totalPercent}%`), el botón rápido (`Añadir ropa`), el botón `?` y la opción de replegar (siempre desplegado).
 - **Spinner GIF animado en modal de subida (`public/loading-spinner.gif`, `components/AddItemModal/components/*`)**:
   - Generado asset transparente animado `public/loading-spinner.gif` (24 frames, `#FF66C4`) para sustituir `Loader2 animate-spin` en `"Optimizando imagen..."` y overlays de `ImageUploader`, `ImageSelector` y `BatchCarousel`, evitando que el círculo de carga se congele durante el procesado de imagen/IA.
+
+---
+
+## 71. Unificación de Botones al Estilo Closet y Línea de Tabs en `/profile` (Noviembre 2026)
+- **Botones unificados con `.kz-pink-surface` + `rounded-full` + `border border-white/25`**:
+  - **`/feed`** (`components/FloatingCreateButton.tsx`, `components/EmptyState.tsx`): botón flotante `+`/`X`, acciones del Speed Dial (`Nuevo Post`, `Nuevo Outfit`, `Nueva Prenda`), opciones móviles y CTA `"Crear publicación"` de `EmptyState`.
+  - **Modal de Onboarding** (`components/GuidedTour/GuidedTourModal.tsx`): botón primario de acción con `.kz-pink-surface` en píldora completa (`rounded-full`) y controles Anterior/Siguiente/Saltar/Continuar redondeados en píldora/círculo.
+  - **`/profile`** (`app/(app)/profile/page.tsx`): botones `"Editar perfil"`, `"Ajustes"`, modal de carpetas (`Crear`, `Cancelar`, `Eliminar`), pildoras de carpeta activa y `"Crear carpeta"`.
+- **Arreglo de línea divisora de pestañas en `/profile` (`app/(app)/profile/page.tsx`)**:
+  - Eliminado `border-b` superior encima del bloque de tabs debajo de `ProfileProgressBar` / `DiscoveredStyleBanner` (que visualmente flotaba por encima de las pestañas).
+  - Añadida la línea divisora continua al contenedor de tabs (`border-b border-[var(--border-color)]/60`) y un indicador inferior rosa animado compartido (`layoutId="profile-section-tab-indicator"`) alineado con las pestañas de `/closet`.

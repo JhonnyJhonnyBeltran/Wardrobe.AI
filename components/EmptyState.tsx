@@ -72,7 +72,7 @@ export default function EmptyState({
 
       {actionLabel && actionHref && (
         <Link href={actionHref}>
-          <Button className="px-8 h-12 text-[15px] rounded-full font-semibold kz-pink-surface text-white border-0 hover:scale-[1.03] active:scale-[0.97] transition-transform">
+          <Button className="px-8 h-12 text-[15px] rounded-full font-bold kz-pink-surface text-white border border-white/25 hover:scale-[1.03] active:scale-[0.97] transition-all">
             {ActionIcon && <ActionIcon className="w-4 h-4 mr-2" />}
             {actionLabel}
           </Button>
@@ -82,7 +82,7 @@ export default function EmptyState({
       {actionLabel && actionOnClick && (
         <Button
           onClick={actionOnClick}
-          className="px-8 h-12 text-[15px] rounded-full font-semibold kz-pink-surface text-white border-0 hover:scale-[1.03] active:scale-[0.97] transition-transform"
+          className="px-8 h-12 text-[15px] rounded-full font-bold kz-pink-surface text-white border border-white/25 hover:scale-[1.03] active:scale-[0.97] transition-all"
         >
           {ActionIcon && <ActionIcon className="w-4 h-4 mr-2" />}
           {actionLabel}
