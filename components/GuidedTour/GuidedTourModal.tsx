@@ -21,6 +21,7 @@ import KloeMascot from '@/components/KloeMascot';
 import { useTourStore, TOUR_STEPS, TourStepId, calculateTourProgress } from '@/store/tourStore';
 import { useWardrobeStore } from '@/store/wardrobeStore';
 import { useUser } from '@/store/userStore';
+import { useUiStore } from '@/store/uiStore';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 
 const KloeStepIcon = () => <KloeMascot mood="happy" size="sm" />;
@@ -42,6 +43,7 @@ export default function GuidedTourModal() {
   const searchParams = useSearchParams();
   const { user } = useUser();
   const { items } = useWardrobeStore();
+  const hasKloeAttachments = useUiStore((s) => s.hasKloeAttachments);
 
   const {
     isOpen,
@@ -337,9 +339,9 @@ export default function GuidedTourModal() {
         )}
       </AnimatePresence>
 
-      {/* Floating Tour Guide Widget (Pill) while tour is active (hidden on /closet and /profile where ProfileProgressBar lives) */}
+      {/* Floating Tour Guide Widget (Pill) while tour is active (hidden on /closet, /profile, and /closet/kloe when attachments move it inline) */}
       <AnimatePresence>
-        {isTourActive && !isOpen && pathname !== '/closet' && !pathname.startsWith('/profile') && (() => {
+        {isTourActive && !isOpen && pathname !== '/closet' && !pathname.startsWith('/profile') && !(pathname.startsWith('/closet/kloe') && hasKloeAttachments) && (() => {
           const isKloePage = pathname.startsWith('/closet/kloe');
           const isFeedPage = pathname === '/feed';
 

@@ -3705,3 +3705,7 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
   - La mascota `K` de Kloe (`KloeMascot`) aparece completamente libre sin cajas cuadradas ni círculos alrededor, colocada junto al título grande **`Black Friday`**.
   - Prendas reales de `/public/landing/piezas/` flotando suavemente difuminadas en el fondo detrás del paywall (`PaywallFloatingGarments`).
   - Vista previa interactiva de Widgets de iOS (`IosWidgetPreview` cuadrado y alargado) integrada dentro del paywall, más apartado desplegable **"Ver todo lo que incluye"** con iconos limpios sin círculos y CTA en pastilla `.kz-pink-surface`.
+
+- **Posicionamiento dinámico de onboarding al seleccionar prendas en Kloe (`components/GuidedTour/KloeInlineTourPill.tsx`, `app/(app)/closet/kloe/page.tsx`, `store/uiStore.ts`)**:
+  - Cuando el usuario adjunta prendas, posts o imágenes en `/closet/kloe` (`hasKloeAttachments`), el widget flotante centrado desaparece y pasa a mostrarse en línea **a la derecha** de la fila de tarjetas seleccionadas, evitando solaparse encima o debajo.
+  - Con `ResizeObserver` sobre el ancho disponible junto a las tarjetas, si no cabe la versión con texto se transforma automáticamente en una píldora mínima con solo el círculo **`X/6`** y el icono **`>`**.

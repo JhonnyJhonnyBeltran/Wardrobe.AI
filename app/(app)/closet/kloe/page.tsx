@@ -27,6 +27,8 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/store/userStore';
 import { useTourStore } from '@/store/tourStore';
+import { useUiStore } from '@/store/uiStore';
+import KloeInlineTourPill from '@/components/GuidedTour/KloeInlineTourPill';
 import { supabase } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 import ExportStoryModal from '@/components/ExportStoryModal';
@@ -439,6 +441,40 @@ export default function KloePage() {
   // Custom Image Upload for AI Vision Styling Advice
   const [attachedImage, setAttachedImage] = useState<string | null>(null);
   const chatImageInputRef = useRef<HTMLInputElement>(null);
+
+  const setHasKloeAttachments = useUiStore((s) => s.setHasKloeAttachments);
+  const attachmentRowRef = useRef<HTMLDivElement>(null);
+  const attachmentCardsInnerRef = useRef<HTMLDivElement>(null);
+  const [tourFitsFullBesideAttachments, setTourFitsFullBesideAttachments] = useState(false);
+
+  const hasAttachments = attachedItems.length > 0 || Boolean(attachedPost) || Boolean(attachedImage);
+
+  useEffect(() => {
+    setHasKloeAttachments(hasAttachments);
+    return () => setHasKloeAttachments(false);
+  }, [hasAttachments, setHasKloeAttachments]);
+
+  useEffect(() => {
+    if (!hasAttachments) return;
+    const measure = () => {
+      const rowW = attachmentRowRef.current?.clientWidth || 0;
+      const cardsW = attachmentCardsInnerRef.current?.scrollWidth || 0;
+      if (rowW > 0) {
+        setTourFitsFullBesideAttachments(rowW - cardsW - 8 >= 200);
+      }
+    };
+    measure();
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(measure) : null;
+    if (ro) {
+      if (attachmentRowRef.current) ro.observe(attachmentRowRef.current);
+      if (attachmentCardsInnerRef.current) ro.observe(attachmentCardsInnerRef.current);
+    }
+    window.addEventListener('resize', measure);
+    return () => {
+      ro?.disconnect();
+      window.removeEventListener('resize', measure);
+    };
+  }, [hasAttachments, attachedItems.length, attachedPost, attachedImage]);
 
   const handleChatImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!isPremium()) {
@@ -1453,12 +1489,14 @@ export default function KloePage() {
         <AnimatePresence>
           {(attachedItems.length > 0 || attachedPost || attachedImage) && (
             <motion.div
+              ref={attachmentRowRef}
               initial={{ opacity: 0, y: 10, scale: 0.96 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 10, scale: 0.96 }}
-              className="mb-2.5 w-full max-w-sm md:max-w-2xl pointer-events-auto"
+              className="mb-2.5 w-full max-w-sm md:max-w-2xl pointer-events-auto flex items-center gap-2"
             >
-              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 px-1">
+              <div className="flex-1 min-w-0 overflow-x-auto no-scrollbar">
+                <div ref={attachmentCardsInnerRef} className="w-max flex items-center gap-2 py-1 px-1">
                 {/* Attached Custom Image Card */}
                 {attachedImage && (
                   <div className="flex items-center gap-2.5 bg-[var(--card-bg)]/95 dark:bg-[#18181f]/95 backdrop-blur-2xl border border-[var(--brand-pink)]/50 rounded-2xl p-2 shadow-lg shrink-0 max-w-[240px]">
@@ -1571,7 +1609,9 @@ export default function KloePage() {
                     </button>
                   </div>
                 ))}
+                </div>
               </div>
+              <KloeInlineTourPill compact={!tourFitsFullBesideAttachments} />
             </motion.div>
           )}
         </AnimatePresence>

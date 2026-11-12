@@ -77,6 +77,10 @@ interface UiStore {
     isSelectionMode: boolean;
     setSelectionMode: (isActive: boolean) => void;
 
+    // Kloe Attachment Coordination
+    hasKloeAttachments: boolean;
+    setHasKloeAttachments: (has: boolean) => void;
+
     // Stability & Lifecycle
     refetchTrigger: number;
     triggerRefetch: () => void;
@@ -232,6 +236,10 @@ export const useUiStore = create<UiStore>((set) => ({
     // Selection State
     isSelectionMode: false,
     setSelectionMode: (isActive) => set({ isSelectionMode: isActive }),
+
+    // Kloe Attachment Coordination
+    hasKloeAttachments: false,
+    setHasKloeAttachments: (has) => set({ hasKloeAttachments: has }),
 
     // Stability & Lifecycle
     refetchTrigger: 0,
