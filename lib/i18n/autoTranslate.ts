@@ -93,6 +93,15 @@ export const EXACT_UI_TRANSLATIONS: Record<string, TranslationTuple> = {
   'Chatea con Kloe': ['Chat with Kloe', 'Discuter avec Kloe', 'Mit Kloe chatten', 'Chatta con Kloe', 'Conversar com a Kloe'],
   'Tu estilista personal al instante': ['Your instant personal stylist', 'Votre styliste personnel instantané', 'Dein persönlicher Sofort-Stylist', 'La tua stilista personale istantanea', 'Sua estilista pessoal instantânea'],
 
+  // Kloe Hero Banner prompts
+  '¿Esto combina?': ['Does this match?', 'Ça va ensemble ?', 'Passt das zusammen?', 'Si abbina bene?', 'Isso combina?'],
+  '¿Esto se lleva?': ['Is this in style?', 'C’est tendance ?', 'Ist das gerade im Trend?', 'Va di moda adesso?', 'Isso está na moda?'],
+  '¿No sabes qué ponerte?': ['Don’t know what to wear?', 'Tu ne sais pas quoi mettre ?', 'Keine Ahnung, was anziehen?', 'Non sai cosa mettere?', 'Não sabe o que vestir?'],
+  '¿Look con lo que ya tienes?': ['An outfit with what you own?', 'Un look avec ton dressing ?', 'Ein Look mit deinen Teilen?', 'Un look con i tuoi capi?', 'Um look com o que você tem?'],
+  '¿Montamos un outfit juntos?': ['Build an outfit together?', 'On crée un look ensemble ?', 'Stellen wir einen Look zusammen?', 'Creiamo un look insieme?', 'Montamos um look juntos?'],
+  '¿Outfit según el tiempo?': ['Outfit for the weather?', 'Un look selon la météo ?', 'Outfit fürs Wetter heute?', 'Look in base al meteo?', 'Look de acordo com o clima?'],
+  '¿Cómo combino esta prenda?': ['How do I style this piece?', 'Comment porter cette pièce ?', 'Wie style ich dieses Teil?', 'Come abbino questo capo?', 'Como combino essa peça?'],
+
   // ============================================================================
   // FEED & SPONSORED KLOE SELF-ADS
   // ============================================================================

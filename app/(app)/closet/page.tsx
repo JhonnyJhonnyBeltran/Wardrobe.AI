@@ -26,23 +26,25 @@ import { useUiStore } from '@/store/uiStore';
 import { useWardrobe } from '@/lib/hooks/useWardrobe';
 import { useBodyScrollLock } from '@/lib/hooks';
 import { useTranslation } from '@/lib/i18n';
+import { translateSpanishString } from '@/lib/i18n/autoTranslate';
 import Link from 'next/link';
 
 import { supabase } from '@/lib/supabase/client';
 import Image from 'next/image';
 
 const KLOE_PROMPTS = [
+  '¿Esto combina?',
+  '¿Esto se lleva?',
+  '¿No sabes qué ponerte?',
   '¿Qué me pongo hoy?',
-  'Charla conmigo',
-  'Crea un look conmigo',
-  '¿Look según el tiempo?',
-  'Planea tu outfit de hoy',
-  'Saca partido a tu armario',
-  'Tu look perfecto te espera',
-  '¿Estrenamos combinación hoy?',
+  '¿Look con lo que ya tienes?',
+  '¿Montamos un outfit juntos?',
+  '¿Outfit según el tiempo?',
+  '¿Cómo combino esta prenda?',
 ];
 
 function KloeHeroBanner() {
+  const { language } = useTranslation();
   const [promptIndex, setPromptIndex] = useState(0);
 
   useEffect(() => {
@@ -55,7 +57,8 @@ function KloeHeroBanner() {
     return () => clearInterval(interval);
   }, []);
 
-  const currentPrompt = KLOE_PROMPTS[promptIndex];
+  const rawPrompt = KLOE_PROMPTS[promptIndex];
+  const currentPrompt = translateSpanishString(rawPrompt, language) || rawPrompt;
 
   return (
     <Link href="/closet/kloe" className="block w-full" onClick={() => { try { haptics.tap(); } catch {} }}>
