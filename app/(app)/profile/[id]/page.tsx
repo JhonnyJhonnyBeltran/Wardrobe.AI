@@ -13,7 +13,7 @@ import * as followService from '@/lib/services/followService';
 import OutfitCard from '@/components/OutfitCard';
 import PostCard, { type Post } from '@/components/Feed/PostCard';
 import AvatarModal from '@/components/AvatarModal';
-import { SkeletonProfile } from '@/components';
+import { EmptyState, KloeEmptyVisual, SkeletonProfile } from '@/components';
 import Link from 'next/link';
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
@@ -552,12 +552,13 @@ export default function PublicProfilePage() {
                 className="p-0.5"
               >
                 {posts.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-16 text-center">
-                    <div className="w-16 h-16 bg-[var(--background-secondary)] rounded-full flex items-center justify-center mb-4">
-                      <Grid3x3 className="w-8 h-8 text-[var(--foreground-tertiary)]" />
-                    </div>
-                    <h3 className="text-lg font-semibold mb-2">Aún no hay publicaciones</h3>
-                  </div>
+                  <EmptyState
+                    icon={Grid3x3}
+                    title="Aún no hay publicaciones"
+                    description="Este usuario aún no ha compartido ninguna publicación."
+                    fullHeight={false}
+                    previewSlot={<KloeEmptyVisual variant="post" />}
+                  />
                 ) : (
                   <div className="p-2 md:p-4">
                     {/* Mobile 2-Column Parallel Layout: Guarantees column 1 & column 2 start at the exact same top height with varied natural Pinterest heights */}
@@ -659,13 +660,13 @@ export default function PublicProfilePage() {
                 className="p-4"
               >
                 {outfits.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-16 text-center">
-                    <div className="w-16 h-16 bg-[var(--background-secondary)] rounded-full flex items-center justify-center mb-4">
-                      <Shirt className="w-8 h-8 text-[var(--foreground-tertiary)]" />
-                    </div>
-                    <h3 className="text-lg font-semibold mb-2">No hay outfits</h3>
-                    <p className="text-[var(--foreground-secondary)]">Este usuario aún no ha creado ningún outfit público.</p>
-                  </div>
+                  <EmptyState
+                    icon={Shirt}
+                    title="No hay outfits"
+                    description="Este usuario aún no ha creado ningún outfit público."
+                    fullHeight={false}
+                    previewSlot={<KloeEmptyVisual variant="outfit" />}
+                  />
                 ) : (
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {outfits.map((outfit) => (

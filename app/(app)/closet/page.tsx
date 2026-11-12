@@ -13,7 +13,7 @@ import {
   Heart, Grid3x3, List, Search, Filter, Plus, X, Shirt, Layers, Share2, Trash2, Check, CalendarDays, Camera, ChevronRight
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { Button, Card, FloatingCreateButton, OutfitCard, ClothingItem, NotificationToastContainer, WardrobeSelectionModal, OutfitDetailModal, EmptyState, SkeletonCard, SkeletonCloset, ProfileProgressBar, KloeMascot } from '@/components';
+import { Button, Card, FloatingCreateButton, OutfitCard, ClothingItem, NotificationToastContainer, WardrobeSelectionModal, OutfitDetailModal, EmptyState, KloeEmptyVisual, SkeletonCard, SkeletonCloset, ProfileProgressBar, KloeMascot } from '@/components';
 import AddItemModal from '@/components/AddItemModal';
 import ProductModal from '@/components/ProductModal';
 import KloeProModal from '@/components/KloeProModal';
@@ -46,12 +46,20 @@ const KLOE_PROMPTS = [
 function KloeHeroBanner() {
   const { language } = useTranslation();
   const [promptIndex, setPromptIndex] = useState(0);
+  const [showWordmark, setShowWordmark] = useState(false);
 
   useEffect(() => {
     setPromptIndex(Math.floor(Math.random() * KLOE_PROMPTS.length));
+    setShowWordmark(Math.random() < 0.5);
 
     const interval = setInterval(() => {
-      setPromptIndex((prev) => (prev + 1) % KLOE_PROMPTS.length);
+      setPromptIndex((prev) => {
+        if (KLOE_PROMPTS.length <= 1) return prev;
+        let next = Math.floor(Math.random() * KLOE_PROMPTS.length);
+        if (next === prev) next = (prev + 1) % KLOE_PROMPTS.length;
+        return next;
+      });
+      setShowWordmark((prev) => (Math.random() < 0.75 ? !prev : prev));
     }, 4200);
 
     return () => clearInterval(interval);
@@ -70,12 +78,39 @@ function KloeHeroBanner() {
         aria-label={currentPrompt}
       >
         <div className="min-w-0 flex-1 flex items-center gap-4 sm:gap-5">
-          <KloeMascot
-            mood="happy"
-            size="lg"
-            variant="pink"
-            className="!w-[52px] !h-[60px] sm:!w-[58px] sm:!h-[66px] drop-shadow-[0_0_18px_rgba(255,102,196,0.68)] shrink-0"
-          />
+          <div className="h-[60px] sm:h-[66px] flex items-center shrink-0">
+            <AnimatePresence mode="wait">
+              {showWordmark ? (
+                <motion.img
+                  key="kloe-wordmark"
+                  src="/kloe-logo-large-v2.png"
+                  alt="Kloe"
+                  initial={{ opacity: 0, scale: 0.9, rotate: -3 }}
+                  animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                  exit={{ opacity: 0, scale: 0.9, rotate: 3 }}
+                  transition={{ type: 'spring', stiffness: 320, damping: 24 }}
+                  className="h-[48px] sm:h-[54px] w-auto object-contain drop-shadow-[0_0_18px_rgba(255,102,196,0.68)] select-none"
+                  draggable={false}
+                />
+              ) : (
+                <motion.div
+                  key="kloe-mascot-k"
+                  initial={{ opacity: 0, scale: 0.9, rotate: 3 }}
+                  animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                  exit={{ opacity: 0, scale: 0.9, rotate: -3 }}
+                  transition={{ type: 'spring', stiffness: 320, damping: 24 }}
+                  className="flex items-center"
+                >
+                  <KloeMascot
+                    mood="happy"
+                    size="lg"
+                    variant="pink"
+                    className="!w-[52px] !h-[60px] sm:!w-[58px] sm:!h-[66px] drop-shadow-[0_0_18px_rgba(255,102,196,0.68)] shrink-0"
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
           <div className="min-w-0 flex-1 overflow-hidden">
             <AnimatePresence mode="wait">
@@ -863,34 +898,7 @@ export default function ClosetPage() {
                   actionIcon={Camera}
                   actionOnClick={() => setShowAddModal(true)}
                   fullHeight={false}
-                  previewSlot={
-                    <div className="flex items-center justify-center gap-4">
-                      <KloeMascot
-                        mood="curious"
-                        size="xl"
-                        variant="pink"
-                        interactive
-                        className="drop-shadow-[0_8px_18px_rgba(255,102,196,0.34)] -rotate-[4deg]"
-                      />
-                      <div className="w-28 rounded-[20px] bg-white border border-black/[0.06] shadow-[0_12px_28px_-8px_rgba(0,0,0,0.16)] p-2.5 flex flex-col items-center gap-1.5 rotate-[4deg]">
-                        <div className="w-full aspect-square flex items-center justify-center overflow-hidden">
-                          <img
-                            src="/landing/piezas/jersey-rayas-hombre.png"
-                            alt="Ejemplo de prenda en Klozet"
-                            className="w-full h-full object-contain scale-95"
-                          />
-                        </div>
-                        <div className="w-full pt-1 border-t border-black/[0.05] text-left">
-                          <p className="text-[11px] font-semibold text-zinc-900 truncate leading-tight">
-                            Jersey rayas
-                          </p>
-                          <p className="text-[10px] font-medium text-zinc-500 truncate">
-                            Ejemplo · Top
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  }
+                  previewSlot={<KloeEmptyVisual variant="garment" />}
                 />
               ) : (filteredContent as ClothingItemType[]).length === 0 ? (
                 <EmptyState
@@ -1081,51 +1089,7 @@ export default function ClosetPage() {
                     }
                   }}
                   fullHeight={false}
-                  previewSlot={(!outfits || outfits.length === 0) ? (
-                    <div className="flex items-center justify-center gap-4">
-                      <KloeMascot
-                        mood="happy"
-                        size="xl"
-                        variant="pink"
-                        interactive
-                        className="drop-shadow-[0_8px_18px_rgba(255,102,196,0.34)] -rotate-[4deg]"
-                      />
-                      <div className="w-32 rounded-[20px] bg-white border border-black/[0.06] shadow-[0_12px_28px_-8px_rgba(0,0,0,0.16)] p-2.5 rotate-[3deg]">
-                        <div className="w-full aspect-[4/5] relative flex flex-col items-center justify-between py-1">
-                          <img
-                            src="/landing/piezas/chaqueta-militar.png"
-                            alt="Chaqueta ejemplo"
-                            className="w-16 h-12 object-contain"
-                          />
-                          <div className="flex items-center justify-center gap-1 -mt-1">
-                            <img
-                              src="/landing/piezas/jeans-wide-mujer.png"
-                              alt="Jeans ejemplo"
-                              className="w-14 h-16 object-contain"
-                            />
-                            <img
-                              src="/landing/piezas/bolso-ante-beige.png"
-                              alt="Bolso ejemplo"
-                              className="w-9 h-9 object-contain -ml-2"
-                            />
-                          </div>
-                          <img
-                            src="/landing/piezas/zapatillas-margiela.png"
-                            alt="Zapatillas ejemplo"
-                            className="w-14 h-9 object-contain -mt-1"
-                          />
-                        </div>
-                        <div className="w-full pt-1 mt-1 border-t border-black/[0.05] text-left">
-                          <p className="text-[11px] font-semibold text-zinc-900 truncate leading-tight">
-                            Look diario
-                          </p>
-                          <p className="text-[10px] font-medium text-zinc-500 truncate">
-                            Ejemplo · 4 prendas
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ) : undefined}
+                  previewSlot={(!outfits || outfits.length === 0) ? <KloeEmptyVisual variant="outfit" /> : undefined}
                 />
               ) : (
                 <div className={`px-4 ${viewMode === 'grid'

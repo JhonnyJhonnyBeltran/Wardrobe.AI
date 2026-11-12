@@ -9,7 +9,7 @@ import Image from 'next/image';
 import { supabase } from '@/lib/supabase/client';
 import { getRecentFollowActivity, followUser, unfollowUser, getMyFollowStatusMap, getFollowStatus, acceptFollowRequest, rejectFollowRequest } from '@/lib/services/followService';
 import { getSmartSuggestions } from '@/lib/services/suggestionService';
-import { LogoMark, Avatar, InfiniteScrollFooter, SkeletonNotifications } from '@/components';
+import { LogoMark, Avatar, InfiniteScrollFooter, SkeletonNotifications, KloeEmptyVisual } from '@/components';
 import Link from 'next/link';
 import { useWardrobe } from '@/lib/hooks/useWardrobe';
 import { useRouter } from 'next/navigation';
@@ -579,11 +579,8 @@ export default function NotificationList({ compact = false, onClose }: Notificat
     if (notifications.length === 0) {
         return (
             <div className={`flex flex-col items-center justify-center text-center ${compact ? 'py-12 px-4' : 'min-h-[55vh] py-16 px-6'} w-full`}>
-                <div className="relative mb-5">
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-[26px] bg-[var(--background-secondary)] border border-[var(--border-color)] flex items-center justify-center shadow-xs">
-                        <Bell className="w-7 h-7 sm:w-8 sm:h-8 text-zinc-400 dark:text-zinc-500" strokeWidth={1.8} />
-                    </div>
-                    <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[var(--brand-pink,#FF66C4)] border-2 border-[var(--background)]" />
+                <div className="mb-5">
+                    <KloeEmptyVisual variant="notifications" />
                 </div>
 
                 <h3 className="text-base sm:text-lg font-bold text-[var(--foreground)] mb-1.5 tracking-tight">

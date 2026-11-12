@@ -52,3 +52,5 @@ export { default as LoadingSpinner } from './LoadingSpinner';
 export { default as ProfileProgressBar } from './Profile/ProfileProgressBar';
 export { default as FeedbackModal } from './FeedbackModal';
 export { default as ExportStoryModal } from './ExportStoryModal';
+export { default as KloeEmptyVisual } from './KloeEmptyVisual';
+export { default as PinchZoomPhoto } from './PinchZoomPhoto';

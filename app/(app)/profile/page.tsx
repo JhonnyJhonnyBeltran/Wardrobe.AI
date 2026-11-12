@@ -27,7 +27,7 @@ import {
   Loader2
 } from 'lucide-react';
 
-import { Avatar, Button as UiButton, OutfitCard, EmptyState, Skeleton, SkeletonProfile, SkeletonProfileGrid, DiscoveredStyleBanner, AvatarModal } from '@/components';
+import { Avatar, Button as UiButton, OutfitCard, EmptyState, KloeEmptyVisual, Skeleton, SkeletonProfile, SkeletonProfileGrid, DiscoveredStyleBanner, AvatarModal } from '@/components';
 import PostCard, { type Post } from '@/components/Feed/PostCard';
 import FolderPreview from '@/components/FolderPreview';
 import ProfileProgressBar from '@/components/Profile/ProfileProgressBar';
@@ -495,7 +495,10 @@ export default function ProfilePage() {
                     icon={Grid3x3}
                     title="Aún no hay publicaciones"
                     description="Comparte tus mejores outfits con la comunidad."
+                    actionLabel="Crear publicación"
+                    actionHref="/create-post"
                     fullHeight={false}
+                    previewSlot={<KloeEmptyVisual variant="post" />}
                   />
                 ) : (
                   <div className="p-2 md:p-4">
@@ -684,7 +687,10 @@ export default function ProfilePage() {
                       icon={Bookmark}
                       title="No hay guardados"
                       description={selectedFolder ? `No hay publicaciones en "${selectedFolder.name}"` : 'Guarda las publicaciones que te inspiren.'}
+                      actionLabel={!selectedFolder ? 'Explorar feed' : undefined}
+                      actionHref={!selectedFolder ? '/feed' : undefined}
                       fullHeight={false}
+                      previewSlot={<KloeEmptyVisual variant="saved" />}
                     />
                   ) : (
                     <div>

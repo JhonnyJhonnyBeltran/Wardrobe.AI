@@ -5,7 +5,7 @@ import { Plus, PlusSquare, Send } from 'lucide-react';
 import PostCard from '@/components/Feed/PostCard';
 import PremiumAdCard from '@/components/Feed/PremiumAdCard';
 import SponsoredAdCard from '@/components/Feed/SponsoredAdCard';
-import { EmptyState, InfiniteScrollFooter, PullToRefresh, SkeletonFeed } from '@/components';
+import { EmptyState, InfiniteScrollFooter, KloeEmptyVisual, PullToRefresh, SkeletonFeed } from '@/components';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useRef, useCallback } from 'react';
@@ -401,6 +401,7 @@ export default function FeedPage() {
               actionLabel="Crear publicación"
               actionHref="/create-post"
               fullHeight={true}
+              previewSlot={<KloeEmptyVisual variant="post" />}
             />
           ) : (
             <>

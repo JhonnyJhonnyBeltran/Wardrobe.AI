@@ -16,7 +16,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import InteractiveOutfitViewer from '@/components/InteractiveOutfitViewer';
 import ProductModal from '@/components/ProductModal';
 import { ClothingItem } from '@/components/ClothingItem';
-import { SkeletonPostDetail, ExportStoryModal } from '@/components';
+import { SkeletonPostDetail, ExportStoryModal, PinchZoomPhoto } from '@/components';
 import LikeBurstOverlay, { useLikeBurst } from '@/components/LikeBurstOverlay';
 import { haptics } from '@/lib/haptic';
 import { useFeedStore } from '@/store/feedStore';
@@ -207,6 +207,7 @@ export default function PostDetailPage() {
     const commentInputRef = useRef<HTMLInputElement>(null);
     const carouselScrollRef = useRef<HTMLDivElement>(null);
     const isAnimatingScrollRef = useRef(false);
+    const [isPhotoZoomed, setIsPhotoZoomed] = useState(false);
 
     // Fetch Post Data
     useEffect(() => {
@@ -898,7 +899,7 @@ export default function PostDetailPage() {
                     <div 
                         ref={carouselScrollRef}
                         onScroll={handleCarouselScroll}
-                        className="flex w-full h-auto md:h-full overflow-x-auto snap-x snap-mandatory no-scrollbar items-center select-none overscroll-x-contain"
+                        className={`flex w-full h-auto md:h-full ${isPhotoZoomed ? 'overflow-x-hidden' : 'overflow-x-auto'} snap-x snap-mandatory no-scrollbar items-center select-none overscroll-x-contain`}
                         style={{ WebkitOverflowScrolling: 'touch' }}
                     >
                         {slides.map((slide, idx) => (
@@ -907,17 +908,23 @@ export default function PostDetailPage() {
                                 className="w-full h-auto md:h-full flex-shrink-0 snap-center snap-always flex items-center justify-center relative select-none"
                             >
                                 {slide.type === 'photo' ? (
-                                    <Image
-                                        src={slide.url || '/placeholder.png'}
-                                        alt="Post"
-                                        width={1400}
-                                        height={1400}
-                                        quality={95}
-                                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
-                                        className="w-full h-auto md:w-auto md:h-full max-h-[85vh] md:max-h-screen object-contain pointer-events-none transform-gpu"
-                                        priority
-                                        draggable={false}
-                                    />
+                                    <PinchZoomPhoto
+                                        className="w-full h-auto md:h-full"
+                                        resetKey={activeSlide}
+                                        onZoomChange={setIsPhotoZoomed}
+                                    >
+                                        <Image
+                                            src={slide.url || '/placeholder.png'}
+                                            alt="Post"
+                                            width={1400}
+                                            height={1400}
+                                            quality={95}
+                                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
+                                            className="w-full h-auto md:w-auto md:h-full max-h-[85vh] md:max-h-screen object-contain pointer-events-none transform-gpu"
+                                            priority
+                                            draggable={false}
+                                        />
+                                    </PinchZoomPhoto>
                                 ) : (
                                     <div className="w-full aspect-[3/4] md:w-auto md:h-full md:aspect-[3/4] max-h-[85vh] md:max-h-screen relative bg-white">
                                         <InteractiveOutfitViewer 

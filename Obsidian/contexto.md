@@ -3612,3 +3612,16 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
   - **Regla general de diseño registrada en `brand_kit.md` y `.agents/rules/klozet-brand.md`**: evitar círculos rodeando iconos salvo que cuadren explícitamente (inputs o botones aislados), y evitar siempre textos/subtítulos repetitivos o redundantes cuando el contenido ya está dentro del mismo bloque.
   - Eliminada la mascota `KloeMascot` de la cabecera del div de onboarding `ProfileProgressBar`, renombrado a **"Primeros pasos"** y suprimido el subtítulo duplicado de progreso.
   - Añadido `previewSlot` a `EmptyState`: el estado vacío de Prendas (*"Tu armario está vacío"*) muestra una tarjeta ejemplo de prenda (`Jersey rayas`) junto a Kloe, y el estado vacío de Outfits (*"Crea tu primer outfit"*) muestra una tarjeta ejemplo de look armado con piezas (`Look diario`) junto a Kloe.
+
+---
+
+## 67. Empty States Kloe en Feed/Notificaciones/Perfil y Pinch-to-Zoom Móvil en Posts (Noviembre 2026)
+- **Componente compartido `KloeEmptyVisual` (`components/KloeEmptyVisual.tsx`, exportado en `components/index.ts`)**:
+  - Unifica en un único componente reutilizable (`variant: 'garment' | 'outfit' | 'post' | 'saved' | 'notifications'`) las ilustraciones de Kloe junto a piezas/tarjetas ejemplo para `closet`, `feed`, `notifications` y `profile`/`profile/[id]` sin duplicar JSX.
+  - **Feed (`/feed` — `app/(app)/feed/page.tsx`)**: estado vacío con `KloeEmptyVisual variant="post"` (Kloe junto a una tarjeta de publicación ejemplo `@klozet`).
+  - **Notificaciones (`components/Notifications/NotificationList.tsx`)**: estado vacío con `KloeEmptyVisual variant="notifications"` (Kloe junto a un icono `<Bell />` animado que oscila sin círculo envolvente).
+  - **Perfil propio y de terceros (`app/(app)/profile/page.tsx`, `app/(app)/profile/[id]/page.tsx`)**: estados vacíos unificados con `EmptyState` y `KloeEmptyVisual` para Posts (`variant="post"`), Guardados (`variant="saved"`) y Outfits (`variant="outfit"`), eliminando círculos grises genéricos.
+- **Pinch-to-Zoom táctil móvil en fotos de posts (`components/PinchZoomPhoto.tsx`, `app/(app)/post/[id]/page.tsx`)**:
+  - Listeners nativos (`touchmove` no pasivo) para pellizcar con 2 dedos (`1×` a `3.5×` manteniendo anclado el punto focal entre dedos), pan con 1 dedo mientras está ampliada, bloqueo automático del scroll horizontal del carrusel mientras `scale > 1.02`, reset al cambiar de slide o con doble tap cuando está ampliada / píldora `"Restablecer"` sin romper el doble tap para dar like a `1×`.
+- **Alternancia aleatoria `K` / logo `Kloe` en `KloeHeroBanner` (`app/(app)/closet/page.tsx`)**:
+  - El banner intercala de forma aleatoria (`AnimatePresence`) tanto las 8 preguntas como la mascota `KloeMascot` (`K` rosa) y el wordmark completo `/kloe-logo-large-v2.png` (`Kloe` rosa con ojos pintados) manteniendo la altura estable y el halo rosa brillante.
