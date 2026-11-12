@@ -93,7 +93,7 @@ function KloeHeroBanner() {
                   transition={{ duration: 0.18, ease: [0.32, 0.72, 0, 1] }}
                   className={`h-[48px] sm:h-[54px] w-auto object-contain select-none ${
                     isDark
-                      ? 'drop-shadow-[0_4px_14px_rgba(0,0,0,0.28)]'
+                      ? ''
                       : 'drop-shadow-[0_0_18px_rgba(255,102,196,0.68)]'
                   }`}
                   draggable={false}
@@ -113,7 +113,7 @@ function KloeHeroBanner() {
                     variant={isDark ? 'black' : 'pink'}
                     className={`!w-[52px] !h-[60px] sm:!w-[58px] sm:!h-[66px] shrink-0 ${
                       isDark
-                        ? 'drop-shadow-[0_4px_14px_rgba(0,0,0,0.28)]'
+                        ? ''
                         : 'drop-shadow-[0_0_18px_rgba(255,102,196,0.68)]'
                     }`}
                   />

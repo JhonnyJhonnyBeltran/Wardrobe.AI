@@ -45,7 +45,6 @@ export default function TabBar() {
   // Hide TabBar on deep flows: Outfit Canvas, Profile Settings
   const hideTabBar =
     storeTabBarHidden ||
-    isCreateMenuOpen ||
     pathname === '/create' ||
     pathname.startsWith('/profile/settings');
 

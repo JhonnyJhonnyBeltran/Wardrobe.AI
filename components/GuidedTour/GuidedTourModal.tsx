@@ -362,14 +362,18 @@ export default function GuidedTourModal() {
       <AnimatePresence>
         {isTourActive && !isOpen && pathname !== '/closet' && (
           <motion.div
-            initial={{ opacity: 0, y: 30, scale: 0.95 }}
+            initial={{ opacity: 0, y: pathname === '/feed' ? -20 : 30, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 30, scale: 0.95 }}
-            className="fixed bottom-[calc(76px+env(safe-area-inset-bottom,0px))] md:bottom-6 right-4 md:right-6 z-[4500]"
+            exit={{ opacity: 0, y: pathname === '/feed' ? -20 : 30, scale: 0.95 }}
+            className={
+              pathname === '/feed'
+                ? 'fixed top-[calc(3.5rem+env(safe-area-inset-top,0px)+10px)] left-4 right-4 flex justify-center md:justify-end md:top-auto md:left-auto md:bottom-6 md:right-36 z-[4500] pointer-events-none'
+                : 'fixed bottom-[calc(76px+env(safe-area-inset-bottom,0px))] md:bottom-6 right-4 md:right-6 z-[4500]'
+            }
           >
             <button
               onClick={openTour}
-              className="flex items-center gap-3 px-4 py-2.5 rounded-full bg-[var(--card-bg)]/95 backdrop-blur-xl border border-[var(--brand-pink)]/40 shadow-xl shadow-[var(--brand-pink)]/15 hover:border-[var(--brand-pink)] transition-all group active:scale-95 cursor-pointer"
+              className="pointer-events-auto flex items-center gap-3 px-4 py-2.5 rounded-full bg-[var(--card-bg)]/95 backdrop-blur-xl border border-[var(--brand-pink)]/40 shadow-xl shadow-[var(--brand-pink)]/15 hover:border-[var(--brand-pink)] transition-all group active:scale-95 cursor-pointer"
             >
               <div className="w-7 h-7 rounded-full bg-[var(--brand-pink)] text-white flex items-center justify-center font-bold text-xs shrink-0">
                 {currentStepIndex + 1}/{TOUR_STEPS.length}

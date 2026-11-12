@@ -3636,4 +3636,8 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
   - Header móvil de `/feed` muestra únicamente `Para ti` centrado (sin botón `+` izquierdo ni icono de mensajes derecho).
   - `FloatingCreateButton` muestra en `/feed` móvil el Speed Dial flotante de ordenador (`bottom-[calc(env(safe-area-inset-bottom,0px)+88px)] right-4 z-[5010]`) con botón circular `#FF66C4` y cascada de opciones (`Nuevo Post`, `Nuevo Outfit`, `Nueva Prenda`) sobre el `TabBar`.
 - **Variante modo oscuro del botón Kloe (`app/globals.css`, `app/(app)/closet/page.tsx`)**:
-  - En tema oscuro (`.dark .kz-kloe-banner`), la píldora pasa a rosa `#FF66C4` con texto `#09090B`, icono `ChevronRight` negro, mascota `K` (`variant="black"`) y logo completo negro `/landing/kloe-grande-landing.png`, con transición rápida (`0.18s`) para evitar parpadeos vacíos durante el cambio.
+  - En tema oscuro (`.dark .kz-kloe-banner`), la píldora usa el degradado rosa de `.kz-pink-surface` (`135deg, #FF7CD0 0%, #FF66C4 55%, #ED4C9E 100%`) con texto `#09090B`, icono `ChevronRight` negro, mascota `K` (`variant="black"`) y logo completo negro `/landing/kloe-grande-landing.png` sin sombra negra detrás, más transición rápida (`0.18s`).
+- **Onboarding en `/feed` móvil arriba, TabBar persistente con `+` y borde rosa del Sidebar en oscuro (`GuidedTourModal.tsx`, `TabBar.tsx`, `Sidebar.tsx`)**:
+  - En `/feed` móvil, el widget flotante del onboarding se posiciona arriba bajo el header `Para ti` sin colisionar con el botón flotante `+`.
+  - Eliminado `isCreateMenuOpen` de `hideTabBar` en `TabBar.tsx` para que el menú inferior no desaparezca al abrir `+`.
+  - Línea divisoria derecha del `Sidebar` en tema oscuro de navegador teñida en rosa (`dark:border-[var(--brand-pink)]/50`).
