@@ -3721,3 +3721,18 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
   - Si faltan prendas compatibles para montar el outfit pedido (ej. solo hay una blusa o falta parte inferior/calzado/capa para trabajo o reunión), Kloe nunca devuelve una tarjeta `recommended_outfit` de una sola prenda (`recommended_outfit: null`): reconoce las prendas que ya posee el usuario y le recomienda piezas concretas para **subir al armario o comprarse** (chaquetón o americana, pantalón de pinzas/falda, botas/mocasines, etc.).
 - **Botones de `/closet/kloe` unificados al estilo Closet (`app/(app)/closet/kloe/page.tsx`)**:
   - Aplicada estética de píldora `.kz-pink-surface border border-white/25` con escalado suave (`hover:scale-[1.03] active:scale-[0.97]`) en los CTA de `Kloe Pro`, botón de enviar (`Send`), `"Lienzo"`, `"Nueva conversación"` y `"Listo / Cerrar"`; acciones secundarias de look (`"Guardar look"`, `"Publicar look"`, `"Generar sticker"`) convertidas a píldoras `rounded-full`.
+
+---
+
+## 75. Notificaciones Instantáneas, Bloqueo de Pinch-Zoom Móvil, Perfil Limpio y Tags de Estilo Rosas (Noviembre 2026)
+- **Notificaciones instantáneas en tiempo real (`lib/server/notificationDispatch.ts`, `app/api/notifications/dispatch/route.ts`, `lib/services/notificationClient.ts`, `app/api/likes/route.ts`, `lib/services/followService.ts`, `app/(app)/post/[id]/page.tsx`, `lib/realtime/RealtimeManager.ts`, `store/realtimeStore.ts`, `lib/hooks/useRealtime.ts`, `components/Notifications/NotificationList.tsx`, `store/notificationSettingsStore.ts`, `sql/01_functions_triggers.sql`)**:
+  - Creado pipeline de despacho directo emisor → receptor mediante Supabase Realtime HTTP Broadcast (`POST /realtime/v1/api/broadcast` sobre el canal `global:${recipientId}`, evento `'notification'`) con deduplicación e inserción de respaldo en `notifications`.
+  - Integrado en likes (`app/api/likes/route.ts`), follows / solicitudes / aceptaciones (`lib/services/followService.ts`) y comentarios (`app/(app)/post/[id]/page.tsx`) vía `POST /api/notifications/dispatch`.
+  - Corregido `RealtimeManager`: eliminada limpieza prematura `read = true` al iniciar sesión, normalizado uniforme (`normalizeNotification`, mapeando `new_follower` → `follow` y enriqueciendo `actor`/`postId`/`image`), corregido polling sin joins rotos (`likes`, `comments` y `follows` cada 10s + foco de ventana) y añadida publicación de `likes`, `comments` y `follows` a `supabase_realtime`.
+  - Deduplicación atómica e incremento exacto de `unreadCount` dentro de `useRealtimeStore.addNotification` para evitar dobles contadores y mantener el punto rosa instantáneo.
+- **Bloqueo global de pinch-to-zoom móvil (`app/layout.tsx`, `app/globals.css`, `app/RootLayoutClient.tsx`)**:
+  - Configurado `viewport` con `maximumScale: 1, userScalable: false`, `touch-action: pan-x pan-y` en `html` y listeners globales (`gesturestart`, `gesturechange`, `gestureend` + `touchmove` multitouch) para impedir zoom con los dedos en `/search`, `/feed`, `/notifications`, `/profile` y toda la app móvil.
+- **Perfil simplificado (`app/(app)/profile/page.tsx`)**:
+  - Eliminado el botón redundante `"Ajustes"` junto a `"Editar perfil"`, dejando `"Editar perfil"` a ancho completo (mantiene acceso a ajustes desde el engranaje superior derecho).
+- **Tags de estilo en creación de post (`app/(app)/create-post/page.tsx`, `app/(app)/create/post/page.tsx`)**:
+  - Sustituidos los estilos seleccionados de negro/blanco por rosa de marca (`.kz-pink-surface border border-white/25 text-white`) con icono de check para distinguir claramente los estilos elegidos.

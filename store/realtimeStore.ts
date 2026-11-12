@@ -19,7 +19,7 @@ interface RealtimeStore {
   // Activity / Notifications (Virtual)
   notifications: Notification[];
   unreadCount: number;
-  addNotification: (notification: Notification) => void;
+  addNotification: (notification: Notification) => boolean;
   markAsRead: (notificationId: string) => void;
   markAllAsRead: () => void;
   removeNotification: (notificationId: string) => void;
@@ -147,7 +147,9 @@ export const useRealtimeStore = create<RealtimeStore>((set, get) => ({
         if (res.count) totalUnread += res.count;
       });
 
-      set({ unreadCount: totalUnread });
+      set(state => ({
+        unreadCount: Math.max(totalUnread, state.notifications.filter(n => !n.read).length),
+      }));
     } catch (err) {
       console.error('Error checking activity:', err);
     }
@@ -200,31 +202,55 @@ export const useRealtimeStore = create<RealtimeStore>((set, get) => ({
 
   incrementUnreadCount: () => set(state => ({ unreadCount: state.unreadCount + 1 })),
 
-  // Add notification with deduplication
-  addNotification: (notification) => set(state => {
-    if (notification.read) return state;
+  // Add notification with atomic deduplication and unread badge increment
+  addNotification: (notification) => {
+    if (notification.read) return false;
     if (notification.created_at) {
       const diff = Date.now() - new Date(notification.created_at).getTime();
-      if (diff > 120 * 1000) return state;
+      if (diff > 120 * 1000) return false;
     }
-    const isDuplicate = state.notifications.some(n => {
-      if (n.id === notification.id) return true;
-      const sameActor = (n.actor_id || n.sender_id) && (n.actor_id || n.sender_id) === (notification.actor_id || notification.sender_id);
-      const sameType = n.type === notification.type;
-      const sameEntity = (n.entity_id || n.resource_id || (n.data as any)?.post_id) === (notification.entity_id || notification.resource_id || (notification.data as any)?.post_id);
-      if (sameActor && sameType && sameEntity) {
-        const timeDiff = Math.abs(new Date(n.created_at || Date.now()).getTime() - new Date(notification.created_at || Date.now()).getTime());
-        if (timeDiff < 60 * 1000) return true;
-      }
-      return false;
+
+    const normType = (t: string | undefined) => (t === 'new_follower' ? 'follow' : (t || ''));
+    const getActor = (n: any) =>
+      n.actor_id || n.sender_id || n.actor?.id || n.data?.actor_id || n.data?.follower_id || '';
+    const getEntity = (n: any) =>
+      n.entity_id || n.resource_id || n.postId || n.data?.post_id || '';
+
+    let added = false;
+
+    set(state => {
+      const incomingType = normType(notification.type);
+      const incomingActor = getActor(notification);
+      const incomingEntity = getEntity(notification);
+
+      const isDuplicate = state.notifications.some(n => {
+        if (n.id === notification.id) return true;
+        const existingActor = getActor(n);
+        const sameActor = Boolean(existingActor && incomingActor && existingActor === incomingActor);
+        const sameType = normType(n.type) === incomingType;
+        const sameEntity = getEntity(n) === incomingEntity;
+
+        if (sameActor && sameType && sameEntity) {
+          const timeDiff = Math.abs(
+            new Date(n.created_at || Date.now()).getTime() -
+              new Date(notification.created_at || Date.now()).getTime()
+          );
+          if (timeDiff < 60 * 1000) return true;
+        }
+        return false;
+      });
+
+      if (isDuplicate) return state;
+
+      added = true;
+      return {
+        notifications: [notification, ...state.notifications].slice(0, 20),
+        unreadCount: state.unreadCount + 1,
+      };
     });
 
-    if (isDuplicate) return state;
-
-    return {
-      notifications: [notification, ...state.notifications].slice(0, 10),
-    };
-  }),
+    return added;
+  },
   markAsRead: (id) => {
     set(state => ({
       notifications: state.notifications.map(n => n.id === id ? { ...n, read: true } : n)

@@ -149,8 +149,8 @@ export default function CreatePostPage() {
                                             onClick={() => toggleTag(tag)}
                                             className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all
                                                 ${tags.includes(tag)
-                                                    ? 'bg-[var(--item-gradient-start)] text-white shadow-md'
-                                                    : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:bg-[var(--background-tertiary)]'}
+                                                    ? 'kz-pink-surface border border-white/25 text-white font-bold'
+                                                    : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)] border border-[var(--border-color)] hover:border-[var(--brand-pink)]/45'}
                                             `}
                                         >
                                             #{tag}

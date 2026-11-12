@@ -426,21 +426,12 @@ export default function ProfilePage() {
               <p className="text-sm text-[var(--foreground-secondary)] whitespace-pre-wrap mb-4">{user.bio}</p>
             )}
             
-            <div className="flex items-center gap-2.5 mt-4 mb-4">
+            <div className="flex items-center mt-4 mb-4">
               <Link 
                 href="/profile/edit" 
-                className="flex-1 h-11 flex items-center justify-center gap-2 px-5 rounded-full kz-pink-surface border border-white/25 text-white font-bold text-sm hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
+                className="w-full h-11 flex items-center justify-center gap-2 px-5 rounded-full kz-pink-surface border border-white/25 text-white font-bold text-sm hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
               >
                 Editar perfil
-              </Link>
-              <Link 
-                href="/profile/settings" 
-                className="h-11 px-5 rounded-full bg-[var(--background-secondary)] text-[var(--foreground)] hover:text-[var(--brand-pink)] border border-[var(--border-color)] hover:border-[var(--brand-pink)]/40 transition-all flex items-center justify-center gap-1.5 text-sm font-bold hover:scale-[1.02] active:scale-[0.98] shadow-sm shrink-0"
-                aria-label="Ajustes"
-                title="Ajustes"
-              >
-                <Settings className="w-4 h-4 text-[var(--brand-pink)]" />
-                <span>Ajustes</span>
               </Link>
             </div>
 

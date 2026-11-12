@@ -15,6 +15,7 @@
  */
 
 import { supabase } from '@/lib/supabase/client';
+import { dispatchClientNotification } from '@/lib/services/notificationClient';
 import type {
   FollowRecord,
   FollowStatus,
@@ -82,6 +83,15 @@ export async function followUser(
     );
 
   if (error) return { success: false, status: 'none', error: error.message };
+
+  if (followerId !== followingId) {
+    dispatchClientNotification({
+      type: targetStatus === 'pending' ? 'follow_request' : 'follow',
+      recipientId: followingId,
+      followStatus: targetStatus,
+    });
+  }
+
   return { success: true, status: targetStatus };
 }
 
@@ -118,6 +128,15 @@ export async function acceptFollowRequest(
     .eq('following_id', followingId);
 
   if (error) return { success: false, error: error.message };
+
+  if (followerId !== followingId) {
+    dispatchClientNotification({
+      type: 'follow_accepted',
+      recipientId: followerId,
+      followStatus: 'accepted',
+    });
+  }
+
   return { success: true };
 }
 

@@ -723,6 +723,21 @@ export default function PostDetailPage() {
             }]);
             setNewComment('');
 
+            // Notify post author immediately (Realtime broadcast + persistent row)
+            // @ts-ignore
+            if (post?.user_id && post.user_id !== user.id) {
+                import('@/lib/services/notificationClient').then(({ dispatchClientNotification }) => {
+                    dispatchClientNotification({
+                        type: 'comment',
+                        // @ts-ignore
+                        recipientId: post.user_id,
+                        postId,
+                        commentId: data.id,
+                        commentContent: data.content,
+                    });
+                }).catch(() => {});
+            }
+
             // Sync total comments count in the 'posts' table
             const newCommentCount = (post?.comments_count || 0) + 1;
             await (supabase.from('posts') as any)

@@ -1,71 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { createClient as createAdminClient } from '@supabase/supabase-js';
+import {
+  dispatchUserNotification,
+  getAuthenticatedServerClients,
+} from '@/lib/server/notificationDispatch';
 
 export const dynamic = 'force-dynamic';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-
-// Helper to authenticate user and select an RLS-authenticated (or service-role) database client
-async function getDbClient(request: NextRequest) {
-  let user: any = null;
-  let client: any = null;
-
-  // 1. Check Bearer token from header
-  const authHeader = request.headers.get('authorization') || request.headers.get('Authorization');
-  let token: string | null = null;
-  if (authHeader?.startsWith('Bearer ')) {
-    token = authHeader.replace('Bearer ', '').trim();
-  }
-
-  if (token) {
-    try {
-      const anonClient = createAdminClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
-        auth: { persistSession: false, autoRefreshToken: false }
-      });
-      const { data } = await anonClient.auth.getUser(token);
-      if (data?.user) {
-        user = data.user;
-        client = createAdminClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
-          global: { headers: { Authorization: `Bearer ${token}` } },
-          auth: { persistSession: false, autoRefreshToken: false }
-        });
-      }
-    } catch (e) {
-      console.warn('[api/likes] Error authenticating with Bearer token:', e);
-    }
-  }
-
-  // 2. If no user from token, check cookies via SSR createClient()
-  if (!user) {
-    try {
-      const supabaseServer = await createClient();
-      const { data } = await supabaseServer.auth.getUser();
-      if (data?.user) {
-        user = data.user;
-        client = supabaseServer;
-      }
-    } catch (e) {
-      console.warn('[api/likes] Error authenticating with server cookies:', e);
-    }
-  }
-
-  // 3. If service role key is available, also provide an admin client for count sync / notifications
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
-  const adminClient = serviceKey
-    ? createAdminClient(supabaseUrl, serviceKey, {
-        auth: { persistSession: false, autoRefreshToken: false }
-      })
-    : null;
-
-  if (!client) {
-    client = adminClient || createAdminClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, {
-      auth: { persistSession: false, autoRefreshToken: false }
-    });
-  }
-
-  return { client: adminClient || client, userClient: client, user };
-}
+const getDbClient = getAuthenticatedServerClients;
 
 export async function GET(request: NextRequest) {
   try {
@@ -147,43 +88,13 @@ export async function POST(request: NextRequest) {
       console.warn('[API /api/likes POST] Insert exception:', insertErr);
     }
 
-    // 2. Fetch post to get author and image for safe notification
-    try {
-      const { data: postData } = await client
-        .from('posts')
-        .select('user_id, image_url')
-        .eq('id', postId)
-        .maybeSingle();
-
-      if (postData && postData.user_id && postData.user_id !== user.id) {
-        const { data: senderProfile } = await client
-          .from('profiles')
-          .select('username, full_name, avatar_url')
-          .eq('id', user.id)
-          .maybeSingle();
-
-        const senderName = senderProfile?.full_name || senderProfile?.username || 'Alguien';
-
-        await client
-          .from('notifications')
-          .insert({
-            user_id: postData.user_id,
-            sender_id: user.id,
-            type: 'like',
-            title: 'Nuevo me gusta',
-            message: `${senderName} le gustó tu publicación`,
-            entity_id: postId,
-            data: {
-              post_id: postId,
-              image_url: postData.image_url,
-              actor_id: user.id,
-              sender_avatar: senderProfile?.avatar_url || null
-            }
-          });
-      }
-    } catch (notifErr) {
-      console.warn('[API /api/likes POST] Notification creation warning (ignored):', notifErr);
-    }
+    // 2. Dispatch persistent notification + instant Realtime broadcast to post author
+    await dispatchUserNotification({
+      client,
+      actorUserId: user.id,
+      type: 'like',
+      postId,
+    });
 
     // 3. Recalculate exact real count from `likes` table and persist on `posts`
     let safeLikesCount = 1;

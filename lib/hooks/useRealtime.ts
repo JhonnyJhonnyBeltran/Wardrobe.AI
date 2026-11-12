@@ -53,13 +53,14 @@ export function useRealtime(options: UseRealtimeOptions = {}) {
           checkActivity(user.id).catch(console.error);
         }
 
-        // Subscribe to notifications
+        // Subscribe to notifications (atomic dedup + unread increment handled in store)
         const unsubNotifications = realtimeManager.onNotification((notification) => {
-          useRealtimeStore.getState().addNotification(notification);
-          useRealtimeStore.getState().incrementUnreadCount();
-          onNotificationRef.current?.(notification);
-          // Optionally trigger a re-check if it's a relevant type
-          if ((notification as any).type === 'follow') {
+          const added = useRealtimeStore.getState().addNotification(notification);
+          if (added) {
+            onNotificationRef.current?.(notification);
+          }
+          // Optionally trigger a re-check if it's a relevant follow/request type
+          if ((notification as any).type === 'follow' || (notification as any).type === 'follow_request') {
             if (checkActivity) checkActivity(user.id).catch(console.error);
           }
         });
@@ -69,10 +70,25 @@ export function useRealtime(options: UseRealtimeOptions = {}) {
           setOnlineUsers(users);
         });
 
+        // Refresh unread activity when app/tab returns to foreground
+        const handleVisibilityOrFocus = () => {
+          if (typeof document !== 'undefined' && document.visibilityState === 'visible' && checkActivity) {
+            checkActivity(user.id).catch(console.error);
+          }
+        };
+        if (typeof window !== 'undefined') {
+          window.addEventListener('focus', handleVisibilityOrFocus);
+          document.addEventListener('visibilitychange', handleVisibilityOrFocus);
+        }
+
         // Store cleanup functions
         return () => {
           unsubNotifications();
           unsubOnline();
+          if (typeof window !== 'undefined') {
+            window.removeEventListener('focus', handleVisibilityOrFocus);
+            document.removeEventListener('visibilitychange', handleVisibilityOrFocus);
+          }
         };
       } catch (error) {
         console.error('[useRealtime] Initialization error:', error);

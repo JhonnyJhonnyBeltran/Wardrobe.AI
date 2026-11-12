@@ -7,6 +7,18 @@
 ALTER PUBLICATION supabase_realtime ADD TABLE public.notifications;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.messages;
 ALTER PUBLICATION supabase_realtime ADD TABLE public.posts;
+DO $$ BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE public.likes;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+DO $$ BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE public.comments;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+DO $$ BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE public.follows;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- 2. TRIGGER PARA CREACIÓN AUTOMÁTICA DE PERFIL (auth.users -> public.profiles)
 CREATE OR REPLACE FUNCTION public.handle_new_user()

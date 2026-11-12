@@ -380,9 +380,18 @@ export default function NotificationList({ compact = false, onClose }: Notificat
 
         if (!user?.id) return;
 
+        let syncTimer: ReturnType<typeof setTimeout> | null = null;
+        const scheduleSync = () => {
+            if (syncTimer) clearTimeout(syncTimer);
+            syncTimer = setTimeout(() => {
+                fetchNotifications(false);
+            }, 400);
+        };
+
         // 1. Listen for global notification custom event from RealtimeManager
+        // (realtimeNotifications from Zustand already renders instantaneously; debounce DB reconciliation)
         const handleNewNotificationEvent = () => {
-            fetchNotifications(false);
+            scheduleSync();
         };
         window.addEventListener('klozet:new_notification', handleNewNotificationEvent);
 
@@ -397,9 +406,7 @@ export default function NotificationList({ compact = false, onClose }: Notificat
                     table: 'notifications',
                     filter: `user_id=eq.${user.id}`
                 },
-                () => {
-                    fetchNotifications(false);
-                }
+                scheduleSync
             )
             .on(
                 'postgres_changes',
@@ -409,9 +416,7 @@ export default function NotificationList({ compact = false, onClose }: Notificat
                     table: 'follows',
                     filter: `following_id=eq.${user.id}`
                 },
-                () => {
-                    fetchNotifications(false);
-                }
+                scheduleSync
             )
             .on(
                 'postgres_changes',
@@ -420,9 +425,7 @@ export default function NotificationList({ compact = false, onClose }: Notificat
                     schema: 'public',
                     table: 'likes'
                 },
-                () => {
-                    fetchNotifications(false);
-                }
+                scheduleSync
             )
             .on(
                 'postgres_changes',
@@ -431,9 +434,7 @@ export default function NotificationList({ compact = false, onClose }: Notificat
                     schema: 'public',
                     table: 'comments'
                 },
-                () => {
-                    fetchNotifications(false);
-                }
+                scheduleSync
             )
             .subscribe();
 
@@ -444,6 +445,7 @@ export default function NotificationList({ compact = false, onClose }: Notificat
         window.addEventListener('focus', handleFocus);
 
         return () => {
+            if (syncTimer) clearTimeout(syncTimer);
             window.removeEventListener('klozet:new_notification', handleNewNotificationEvent);
             window.removeEventListener('focus', handleFocus);
             supabase.removeChannel(channel);
@@ -653,29 +655,36 @@ export default function NotificationList({ compact = false, onClose }: Notificat
                         {activityNotifications.map((notif) => {
                             const isNew = notif.timestamp > lastViewedAt;
                             const bgClass = isNew ? "bg-[var(--brand-pink)]/10" : "";
+                            const actor = notif.actor || {
+                                id: (notif as any).sender_id || (notif as any).actor_id || 'unknown',
+                                username: (notif as any).sender?.username || '',
+                                name: (notif as any).sender?.username || 'Alguien',
+                                avatar: (notif as any).sender?.avatar_url || null,
+                            };
+                            const actorHref = `/profile/${actor.username || actor.id}`;
                             
                             if (notif.type === 'follow_request') {
                                 return (
                                     <div key={notif.id} className={`flex items-center gap-3 group p-3 rounded-2xl transition-colors bg-[var(--brand-pink)]/10 border border-[var(--brand-pink)]/20`}>
-                                        <Link href={`/profile/${notif.actor!.username || notif.actor!.id}`} className="relative shrink-0" onClick={onClose}>
-                                            <Avatar src={notif.actor?.avatar || null} alt={notif.actor!.name} size="md" />
+                                        <Link href={actorHref} className="relative shrink-0" onClick={onClose}>
+                                            <Avatar src={actor.avatar || null} alt={actor.name} size="md" />
                                         </Link>
                                         <div className="flex-1 text-sm min-w-0">
-                                            <Link href={`/profile/${notif.actor!.username || notif.actor!.id}`} onClick={onClose} className="font-semibold text-[var(--foreground)] hover:underline truncate">
-                                                {notif.actor!.name}
+                                            <Link href={actorHref} onClick={onClose} className="font-semibold text-[var(--foreground)] hover:underline truncate">
+                                                {actor.name}
                                             </Link>
                                             <span className="text-[var(--foreground-secondary)]"> quiere seguirte.</span>
                                             <span className="text-[var(--foreground-tertiary)] text-xs ml-2 block sm:inline">{notif.time}</span>
                                         </div>
                                         <div className="flex items-center gap-2 shrink-0">
                                             <button
-                                                onClick={() => handleAcceptFollow(notif.actor!.id, notif.id)}
+                                                onClick={() => handleAcceptFollow(actor.id, notif.id)}
                                                 className="px-3 py-1.5 rounded-full text-xs font-bold bg-[var(--brand-pink)] text-white hover:bg-[var(--brand-pink-dark)] transition-colors shadow-sm"
                                             >
                                                 Aceptar
                                             </button>
                                             <button
-                                                onClick={() => handleRejectFollow(notif.actor!.id, notif.id)}
+                                                onClick={() => handleRejectFollow(actor.id, notif.id)}
                                                 className="px-3 py-1.5 rounded-full text-xs font-semibold bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:bg-[var(--border-color)] transition-colors"
                                             >
                                                 Rechazar
@@ -688,26 +697,43 @@ export default function NotificationList({ compact = false, onClose }: Notificat
                             if (notif.type === 'follow') {
                                 return (
                                     <div key={notif.id} className={`flex items-center gap-3 group p-3 rounded-2xl transition-colors ${bgClass}`}>
-                                        <Link href={`/profile/${notif.actor!.username || notif.actor!.id}`} className="relative shrink-0" onClick={onClose}>
-                                            <Avatar src={notif.actor?.avatar || null} alt={notif.actor!.name} size="md" />
+                                        <Link href={actorHref} className="relative shrink-0" onClick={onClose}>
+                                            <Avatar src={actor.avatar || null} alt={actor.name} size="md" />
                                         </Link>
                                         <div className="flex-1 text-sm min-w-0">
-                                            <Link href={`/profile/${notif.actor!.username || notif.actor!.id}`} onClick={onClose} className="font-semibold text-[var(--foreground)] hover:underline truncate">
-                                                {notif.actor!.name}
+                                            <Link href={actorHref} onClick={onClose} className="font-semibold text-[var(--foreground)] hover:underline truncate">
+                                                {actor.name}
                                             </Link>
                                             <span className="text-[var(--foreground-secondary)]"> comenzó a seguirte.</span>
                                             <span className="text-[var(--foreground-tertiary)] text-xs ml-2 block sm:inline">{notif.time}</span>
                                         </div>
                                         <button
-                                            onClick={() => handleFollow(notif.actor!.id)}
+                                            onClick={() => handleFollow(actor.id)}
                                             className={`px-3 py-1 rounded-full text-xs font-semibold hover:opacity-90 transition-opacity shrink-0
-                                                ${(followMap[notif.actor!.id] === 'accepted' || followMap[notif.actor!.id] === 'pending')
+                                                ${(followMap[actor.id] === 'accepted' || followMap[actor.id] === 'pending')
                                                     ? 'bg-[var(--background-secondary)] text-[var(--foreground)] border border-[var(--border-color)]'
                                                     : 'bg-[var(--brand-pink)] text-white'}`}
                                         >
-                                            {followMap[notif.actor!.id] === 'accepted' ? 'Siguiendo' :
-                                                followMap[notif.actor!.id] === 'pending' ? 'Solicitado' : 'Seguir'}
+                                            {followMap[actor.id] === 'accepted' ? 'Siguiendo' :
+                                                followMap[actor.id] === 'pending' ? 'Solicitado' : 'Seguir'}
                                         </button>
+                                    </div>
+                                );
+                            }
+
+                            if ((notif.type as string) === 'follow_accepted') {
+                                return (
+                                    <div key={notif.id} className={`flex items-center gap-3 group p-3 rounded-2xl transition-colors ${bgClass}`}>
+                                        <Link href={actorHref} className="relative shrink-0" onClick={onClose}>
+                                            <Avatar src={actor.avatar || null} alt={actor.name} size="md" />
+                                        </Link>
+                                        <div className="flex-1 text-sm min-w-0">
+                                            <Link href={actorHref} onClick={onClose} className="font-semibold text-[var(--foreground)] hover:underline truncate">
+                                                {actor.name}
+                                            </Link>
+                                            <span className="text-[var(--foreground-secondary)]"> aceptó tu solicitud de seguimiento.</span>
+                                            <span className="text-[var(--foreground-tertiary)] text-xs ml-2 block sm:inline">{notif.time}</span>
+                                        </div>
                                     </div>
                                 );
                             }
@@ -715,12 +741,12 @@ export default function NotificationList({ compact = false, onClose }: Notificat
                             if (notif.type === 'like') {
                                 return (
                                     <div key={notif.id} className={`flex items-center gap-3 group p-3 rounded-2xl transition-colors ${bgClass}`}>
-                                        <Link href={`/profile/${notif.actor!.username || notif.actor!.id}`} className="relative shrink-0" onClick={onClose}>
-                                            <Avatar src={notif.actor?.avatar || null} alt={notif.actor!.name} size="md" />
+                                        <Link href={actorHref} className="relative shrink-0" onClick={onClose}>
+                                            <Avatar src={actor.avatar || null} alt={actor.name} size="md" />
                                         </Link>
                                         <div className="flex-1 text-sm min-w-0">
-                                            <Link href={`/profile/${notif.actor!.username || notif.actor!.id}`} onClick={onClose} className="font-semibold text-[var(--foreground)] hover:underline truncate">
-                                                {notif.actor!.name}
+                                            <Link href={actorHref} onClick={onClose} className="font-semibold text-[var(--foreground)] hover:underline truncate">
+                                                {actor.name}
                                             </Link>
                                             <span className="text-[var(--foreground-secondary)]"> le gustó tu post.</span>
                                             <span className="text-[var(--foreground-tertiary)] text-xs ml-2 block sm:inline">{notif.time}</span>
@@ -737,12 +763,12 @@ export default function NotificationList({ compact = false, onClose }: Notificat
                             if (notif.type === 'comment') {
                                 return (
                                     <div key={notif.id} className={`flex items-center gap-3 group p-3 rounded-2xl transition-colors ${bgClass}`}>
-                                        <Link href={`/profile/${notif.actor!.username || notif.actor!.id}`} className="relative shrink-0" onClick={onClose}>
-                                            <Avatar src={notif.actor?.avatar || null} alt={notif.actor!.name} size="md" />
+                                        <Link href={actorHref} className="relative shrink-0" onClick={onClose}>
+                                            <Avatar src={actor.avatar || null} alt={actor.name} size="md" />
                                         </Link>
                                         <div className="flex-1 text-sm min-w-0">
-                                            <Link href={`/profile/${notif.actor!.username || notif.actor!.id}`} onClick={onClose} className="font-semibold text-[var(--foreground)] hover:underline truncate">
-                                                {notif.actor!.name}
+                                            <Link href={actorHref} onClick={onClose} className="font-semibold text-[var(--foreground)] hover:underline truncate">
+                                                {actor.name}
                                             </Link>
                                             <span className="text-[var(--foreground-secondary)] text-wrap break-words">
                                                 {notif.content && notif.content.trim() 

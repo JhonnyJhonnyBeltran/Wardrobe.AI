@@ -746,7 +746,7 @@ export default function CreatePostPage() {
 
                             {/* Style Tags Section */}
                             <div className="space-y-2">
-                                {/* Main Collapsed View: Only chosen monochrome pills (tap to remove) + Pink '+' button */}
+                                {/* Main View: Selected style pills in brand pink (tap to remove) + Add/Close button */}
                                 <div className="flex flex-wrap items-center gap-2 pt-0.5">
                                     {selectedStyles.map((styleKey) => {
                                         const styleName = getStyleName(styleKey, availableStyles);
@@ -757,21 +757,22 @@ export default function CreatePostPage() {
                                                 onClick={() => toggleStyleTag(styleKey)}
                                                 title={`Quitar ${styleName}`}
                                                 aria-label={`Quitar ${styleName}`}
-                                                className="inline-flex items-center px-3.5 py-1.5 rounded-full bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200 text-xs font-semibold shadow-xs transition-all active:scale-95 cursor-pointer select-none"
+                                                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full kz-pink-surface border border-white/25 text-white text-xs font-bold hover:scale-[1.03] active:scale-95 transition-all cursor-pointer select-none"
                                             >
-                                                {styleName}
+                                                <Check className="w-3 h-3 stroke-[2.5]" />
+                                                <span>{styleName}</span>
                                             </button>
                                         );
                                     })}
 
-                                    {/* Botón de + rosita para añadir o desplegar estilos */}
+                                    {/* Botón para añadir o desplegar estilos */}
                                     <button
                                         type="button"
                                         onClick={() => setIsStylesExpanded(prev => !prev)}
-                                        className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[var(--brand-pink)] hover:bg-[#ff3377] text-white text-xs font-bold shadow-xs transition-all active:scale-95 cursor-pointer"
+                                        className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[var(--background-secondary)] hover:border-[var(--brand-pink)]/50 text-[var(--foreground)] border border-[var(--border-color)] text-xs font-bold transition-all active:scale-95 cursor-pointer"
                                         aria-label={isStylesExpanded ? "Cerrar selector de estilos" : "Añadir más estilos"}
                                     >
-                                        <Plus className={`w-3.5 h-3.5 stroke-[2.5] transition-transform duration-200 ${isStylesExpanded ? 'rotate-45' : ''}`} />
+                                        <Plus className={`w-3.5 h-3.5 stroke-[2.5] text-[var(--brand-pink)] transition-transform duration-200 ${isStylesExpanded ? 'rotate-45' : ''}`} />
                                         <span>{isStylesExpanded ? 'Cerrar' : 'Añadir'}</span>
                                     </button>
                                 </div>
@@ -814,7 +815,7 @@ export default function CreatePostPage() {
                                                         setIsStylesExpanded(false);
                                                         setStyleSearch('');
                                                     }}
-                                                    className="px-3.5 py-2 rounded-full bg-[var(--brand-pink)] text-white text-xs font-bold hover:bg-[#ff3377] transition-all cursor-pointer shrink-0 shadow-xs"
+                                                    className="px-4 py-2 rounded-full kz-pink-surface border border-white/25 text-white text-xs font-bold hover:scale-[1.03] active:scale-95 transition-all cursor-pointer shrink-0"
                                                 >
                                                     Listo
                                                 </button>
@@ -830,10 +831,10 @@ export default function CreatePostPage() {
                                                             key={s.id || s.slug}
                                                             type="button"
                                                             onClick={() => toggleStyleTag(key)}
-                                                            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 border cursor-pointer active:scale-95 ${
+                                                            className={`px-3 py-1.5 rounded-full text-xs transition-all flex items-center gap-1.5 border cursor-pointer active:scale-95 ${
                                                                 isSelected
-                                                                    ? 'bg-zinc-900 text-white border-zinc-900 dark:bg-white dark:text-zinc-950 dark:border-white shadow-xs font-semibold'
-                                                                    : 'bg-[var(--card-bg)] text-[var(--foreground-secondary)] border-[var(--border-color)] hover:border-zinc-400 hover:text-[var(--foreground)]'
+                                                                    ? 'kz-pink-surface text-white border-white/25 font-bold'
+                                                                    : 'bg-[var(--card-bg)] text-[var(--foreground-secondary)] border-[var(--border-color)] hover:border-[var(--brand-pink)]/45 hover:text-[var(--foreground)] font-medium'
                                                             }`}
                                                         >
                                                             {isSelected && <Check className="w-3 h-3 stroke-[2.5]" />}

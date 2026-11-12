@@ -125,6 +125,7 @@ export const useNotificationSettingsStore = create<NotificationSettingsState>()(
             return settings.likes;
           case 'comment':
             return settings.comments;
+          case 'follow':
           case 'new_follower':
           case 'follow_request':
           case 'follow_accepted':

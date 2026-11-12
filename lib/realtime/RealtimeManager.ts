@@ -26,6 +26,8 @@ class RealtimeManager {
   private isInitialized = false;
   private lastPollTime: number = Date.now();
   private pollInterval: any = null;
+  private isPolling = false;
+  private focusCleanup: (() => void) | null = null;
 
   // Callbacks
   private presenceCallbacks: Set<PresenceCallback> = new Set();
@@ -66,24 +68,29 @@ class RealtimeManager {
     this.lastPollTime = Date.now();
 
     try {
-      // 0. Mark existing DB notifications as read so they never re-trigger
-      supabase
-        .from('notifications')
-        .update({ read: true })
-        .eq('user_id', userId)
-        .eq('read', false)
-        .then(() => {})
-        .catch(() => {});
-
       // 1. Setup global notifications channel
       await this.setupGlobalChannel();
 
       // 2. Setup presence channel
       await this.setupPresenceChannel(userInfo);
       
-      // Configure robust polling fallback in case PostgreSQL triggers or replication are disabled
+      // Configure polling fallback (every 10s + on window focus/visibility) in case DB triggers or replication lag
       if (this.pollInterval) clearInterval(this.pollInterval);
-      this.pollInterval = setInterval(() => this.pollRecentActivity(), 15000);
+      this.pollInterval = setInterval(() => this.pollRecentActivity(), 10000);
+
+      if (typeof window !== 'undefined') {
+        const triggerPoll = () => {
+          if (document.visibilityState === 'visible') {
+            this.pollRecentActivity();
+          }
+        };
+        window.addEventListener('focus', triggerPoll);
+        document.addEventListener('visibilitychange', triggerPoll);
+        this.focusCleanup = () => {
+          window.removeEventListener('focus', triggerPoll);
+          document.removeEventListener('visibilitychange', triggerPoll);
+        };
+      }
 
       this.isInitialized = true;
     } catch (error) {
@@ -149,7 +156,10 @@ class RealtimeManager {
       )
       // Listen for broadcast notifications
       .on('broadcast', { event: EVENTS.NOTIFICATION }, (payload: any) => {
-        this.emitNotification(payload.payload as Notification);
+        const raw = payload?.payload ?? payload;
+        if (raw) {
+          this.emitNotification(this.normalizeNotification(raw));
+        }
       });
 
     await channel.subscribe();
@@ -304,91 +314,194 @@ class RealtimeManager {
     const compositeId = `${follow.follower_id}::${follow.following_id}`;
 
     // Get the other user's info
-    const otherUserId = eventType === 'new' ? follow.follower_id : follow.following_id;
+    const otherUserId = (eventType === 'new' ? follow.follower_id : follow.following_id) as string;
+    if (!otherUserId || otherUserId === this.userId) return;
     
     const { data: otherUser } = await supabase
       .from('profiles')
-      .select('username, avatar_url')
-      .eq('id', otherUserId as string)
+      .select('id, username, full_name, avatar_url')
+      .eq('id', otherUserId)
       .single();
 
-    const otherUserData = otherUser as { username: string; avatar_url: string | null } | null;
-    let notification: Notification;
+    const otherUserData = otherUser as { id: string; username: string; full_name?: string | null; avatar_url: string | null } | null;
+    const displayName = otherUserData?.username || otherUserData?.full_name || 'Alguien';
+    const createdAt = (follow.created_at as string) || new Date().toISOString();
 
     if (eventType === 'new' && follow.status === 'pending') {
-      notification = {
+      this.emitNotification(this.normalizeNotification({
         id: `follow_req_${compositeId}`,
         type: 'follow_request',
         title: 'Nueva solicitud',
-        message: `${otherUserData?.username || 'Alguien'} quiere seguirte`,
-        data: { follower_id: follow.follower_id, following_id: follow.following_id },
-        sender_id: otherUserId as string,
+        message: `@${displayName} quiere seguirte`,
+        data: { follower_id: follow.follower_id, following_id: follow.following_id, actor_id: otherUserId },
+        sender_id: otherUserId,
+        actor_id: otherUserId,
+        entity_id: otherUserId,
         sender: otherUserData || undefined,
         read: false,
-        created_at: new Date().toISOString(),
-      };
+        created_at: createdAt,
+      }));
     } else if (eventType === 'new' && follow.status === 'accepted') {
-      notification = {
+      this.emitNotification(this.normalizeNotification({
         id: `follow_${compositeId}`,
-        type: 'new_follower',
+        type: 'follow',
         title: 'Nuevo seguidor',
-        message: `${otherUserData?.username || 'Alguien'} comenzó a seguirte`,
-        data: { follower_id: follow.follower_id, following_id: follow.following_id },
-        sender_id: otherUserId as string,
+        message: `@${displayName} comenzó a seguirte.`,
+        data: { follower_id: follow.follower_id, following_id: follow.following_id, actor_id: otherUserId },
+        sender_id: otherUserId,
+        actor_id: otherUserId,
+        entity_id: otherUserId,
         sender: otherUserData || undefined,
         read: false,
-        created_at: new Date().toISOString(),
-      };
+        created_at: createdAt,
+      }));
     } else if (eventType === 'update' && follow.status === 'accepted') {
-      notification = {
+      this.emitNotification(this.normalizeNotification({
         id: `follow_accepted_${compositeId}`,
         type: 'follow_accepted',
         title: 'Solicitud aceptada',
-        message: `${otherUserData?.username || 'Alguien'} aceptó tu solicitud`,
-        data: { follower_id: follow.follower_id, following_id: follow.following_id },
-        sender_id: otherUserId as string,
+        message: `@${displayName} aceptó tu solicitud de seguimiento.`,
+        data: { follower_id: follow.follower_id, following_id: follow.following_id, actor_id: otherUserId },
+        sender_id: otherUserId,
+        actor_id: otherUserId,
+        entity_id: otherUserId,
         sender: otherUserData || undefined,
         read: false,
-        created_at: new Date().toISOString(),
-      };
+        created_at: createdAt,
+      }));
     } else {
       return; // Ignore other cases
     }
+  }
 
-    this.emitNotification(notification);
+  private normalizeNotification(raw: any): Notification {
+    const rawType = raw?.type === 'new_follower' ? 'follow' : (raw?.type || 'system');
+    const dataObj = (raw?.data && typeof raw.data === 'object' ? raw.data : {}) as Record<string, any>;
+    const senderId =
+      raw?.actor_id ||
+      raw?.sender_id ||
+      raw?.actor?.id ||
+      dataObj.actor_id ||
+      dataObj.sender_id ||
+      dataObj.follower_id ||
+      '';
+
+    const username =
+      raw?.actor?.username ||
+      raw?.sender?.username ||
+      dataObj.actor_username ||
+      '';
+    const name =
+      raw?.actor?.name ||
+      raw?.sender?.full_name ||
+      username ||
+      dataObj.actor_name ||
+      'Alguien';
+    const avatar =
+      raw?.actor?.avatar ??
+      raw?.sender?.avatar_url ??
+      dataObj.actor_avatar ??
+      null;
+
+    const postId =
+      raw?.postId ||
+      raw?.entity_id ||
+      raw?.resource_id ||
+      dataObj.post_id ||
+      undefined;
+
+    const createdAt = raw?.created_at || new Date().toISOString();
+    const timestamp =
+      typeof raw?.timestamp === 'number'
+        ? raw.timestamp
+        : new Date(createdAt).getTime();
+
+    return {
+      ...raw,
+      id: String(raw?.id || `${rawType}_${senderId || 'sys'}_${postId || timestamp}`),
+      type: rawType,
+      title: raw?.title || 'Notificación',
+      message: raw?.message || '',
+      data: {
+        ...dataObj,
+        ...(senderId ? { actor_id: senderId } : {}),
+        ...(postId ? { post_id: postId } : {}),
+      },
+      sender_id: senderId || undefined,
+      actor_id: senderId || undefined,
+      entity_id: postId || raw?.entity_id || senderId || undefined,
+      sender: raw?.sender || (username || avatar ? { username, avatar_url: avatar } : undefined),
+      actor: senderId || username || name !== 'Alguien'
+        ? {
+            id: senderId || 'unknown',
+            username,
+            name,
+            avatar,
+          }
+        : undefined,
+      postId,
+      image: raw?.image ?? dataObj.post_image ?? undefined,
+      content: raw?.content ?? dataObj.content ?? undefined,
+      timestamp,
+      time: raw?.time || 'Justo ahora',
+      read: Boolean(raw?.read),
+      created_at: createdAt,
+    } as Notification;
   }
 
   private async handleNotificationInsert(payload: RealtimePostgresChangesPayload<Record<string, unknown>>): Promise<void> {
     const data = payload.new as Record<string, unknown>;
     if (!data) return;
-    
-    const senderId = (data.sender_id || data.actor_id || (data.data as any)?.actor_id) as string;
-    let senderInfo: { username: string; avatar_url: string | null } | undefined = undefined;
+
+    const dataJson = (data.data && typeof data.data === 'object' ? data.data : {}) as Record<string, any>;
+    const senderId = (data.sender_id || data.actor_id || dataJson.actor_id || dataJson.sender_id) as string | undefined;
+    if (senderId && senderId === this.userId) return;
+
+    let senderInfo: { username: string; full_name?: string | null; avatar_url: string | null } | undefined = undefined;
+    const postId = (data.entity_id || data.resource_id || dataJson.post_id) as string | undefined;
+    let postImage = dataJson.post_image as string | undefined;
 
     if (senderId) {
       try {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('username, avatar_url')
+          .select('username, full_name, avatar_url')
           .eq('id', senderId)
           .single();
         if (profile) {
-          senderInfo = profile as { username: string; avatar_url: string | null };
+          senderInfo = profile as { username: string; full_name?: string | null; avatar_url: string | null };
         }
       } catch {}
     }
 
-    const notification: Notification = {
-      id: data.id as string || `notif_${Date.now()}`,
-      type: data.type as Notification['type'],
-      title: data.title as string || 'Notificación',
-      message: data.message as string || '',
-      data: data.data as Record<string, unknown> || {},
+    if (postId && !postImage && (data.type === 'like' || data.type === 'comment')) {
+      try {
+        const { data: post } = await supabase
+          .from('posts')
+          .select('image_url')
+          .eq('id', postId)
+          .single();
+        if (post?.image_url) {
+          postImage = post.image_url;
+        }
+      } catch {}
+    }
+
+    const notification = this.normalizeNotification({
+      id: (data.id as string) || `notif_${Date.now()}`,
+      type: data.type as string,
+      title: (data.title as string) || 'Notificación',
+      message: (data.message as string) || '',
+      data: dataJson,
       sender_id: senderId,
+      actor_id: senderId,
+      entity_id: (data.entity_id as string) || postId,
+      postId,
+      image: postImage,
       sender: senderInfo,
-      read: false,
-      created_at: data.created_at as string || new Date().toISOString(),
-    };
+      read: Boolean(data.read),
+      created_at: (data.created_at as string) || new Date().toISOString(),
+    });
 
     this.emitNotification(notification);
   }
@@ -396,6 +509,7 @@ class RealtimeManager {
   // Fallback handler for likes and comments when DB triggers are missing
   private async handleGlobalActivity(payload: any, type: 'like' | 'comment') {
     const activity = payload.new;
+    if (!activity) return;
     
     // Ignore my own likes/comments
     if (activity.user_id === this.userId) return;
@@ -421,12 +535,16 @@ class RealtimeManager {
           ? `@${senderName} le ha dado me gusta a tu publicación.`
           : `@${senderName} ha comentado en tu publicación.`;
 
-        // Format to match NotificationList expected structure
-        const notification: any = {
-          id: `${type}_${activity.id || Date.now()}`,
-          type: type,
+        const notification = this.normalizeNotification({
+          id: `${type}_${activity.id || `${activity.user_id}_${activity.post_id}`}`,
+          type,
           title: type === 'like' ? 'Nuevo me gusta' : 'Nuevo comentario',
-          message: message,
+          message,
+          sender_id: activity.user_id,
+          actor_id: activity.user_id,
+          entity_id: activity.post_id,
+          sender: profile ? { username: profile.username, full_name: profile.full_name, avatar_url: profile.avatar_url } : undefined,
+          data: { post_id: activity.post_id, actor_id: activity.user_id },
           actor: {
             id: activity.user_id,
             username: profile?.username || '',
@@ -435,11 +553,12 @@ class RealtimeManager {
           },
           image: post.image_url,
           postId: activity.post_id,
+          content: activity.content,
           timestamp: new Date(activity.created_at || new Date()).getTime(),
           time: 'Justo ahora',
           read: false,
           created_at: activity.created_at || new Date().toISOString()
-        };
+        });
 
         this.emitNotification(notification);
       }
@@ -448,99 +567,161 @@ class RealtimeManager {
     }
   }
 
-  // Very robust fallback: Poll recent activity every 15 seconds if SQL Realtime config failed
+  // Fallback: Poll recent likes, comments, and follows every 10s + on window focus
   private async pollRecentActivity() {
-    if (!this.userId) return;
+    if (!this.userId || this.isPolling) return;
+    this.isPolling = true;
 
     try {
       const now = Date.now();
       const cutoff = Math.max(this.lastPollTime, this.sessionStartTime);
       const timeSinceLastPoll = new Date(cutoff).toISOString();
+
+      // 1. Fetch our own posts and new follows in parallel
+      const [{ data: myPosts }, { data: recentFollows }] = await Promise.all([
+        supabase
+          .from('posts')
+          .select('id, image_url')
+          .eq('user_id', this.userId),
+        supabase
+          .from('follows')
+          .select('follower_id, following_id, status, created_at')
+          .eq('following_id', this.userId)
+          .gt('created_at', timeSinceLastPoll),
+      ]);
+
+      const myPostIds = (myPosts || []).map((p: any) => p.id);
+      const postImageMap = new Map((myPosts || []).map((p: any) => [p.id, p.image_url]));
+
+      let recentLikes: any[] = [];
+      let recentComments: any[] = [];
+
+      if (myPostIds.length > 0) {
+        const [likesRes, commentsRes] = await Promise.all([
+          supabase
+            .from('likes')
+            .select('user_id, post_id, created_at')
+            .in('post_id', myPostIds)
+            .gt('created_at', timeSinceLastPoll),
+          supabase
+            .from('comments' as any)
+            .select('id, user_id, post_id, created_at, content')
+            .in('post_id', myPostIds)
+            .gt('created_at', timeSinceLastPoll),
+        ]);
+        recentLikes = likesRes.data || [];
+        recentComments = commentsRes.data || [];
+      }
+
+      // 2. Batch-fetch actor profiles (FKs point to auth.users, not public.profiles)
+      const actorIds = Array.from(new Set([
+        ...recentLikes.map((l: any) => l.user_id),
+        ...recentComments.map((c: any) => c.user_id),
+        ...(recentFollows || []).map((f: any) => f.follower_id),
+      ].filter((id): id is string => Boolean(id) && id !== this.userId)));
+
+      const profileMap = new Map<string, { username: string; full_name?: string | null; avatar_url: string | null }>();
+      if (actorIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, username, full_name, avatar_url')
+          .in('id', actorIds);
+        (profiles || []).forEach((p: any) => {
+          profileMap.set(p.id, p);
+        });
+      }
+
+      // 3. Emit likes
+      recentLikes.forEach((like: any) => {
+        if (like.user_id === this.userId) return;
+        const profile = profileMap.get(like.user_id);
+        const senderName = profile?.username || profile?.full_name || 'Alguien';
+
+        this.emitNotification(this.normalizeNotification({
+          id: `like_${like.user_id}_${like.post_id}`,
+          type: 'like',
+          title: 'Nuevo me gusta',
+          message: `@${senderName} le ha dado me gusta a tu publicación.`,
+          sender_id: like.user_id,
+          actor_id: like.user_id,
+          entity_id: like.post_id,
+          sender: profile ? { username: profile.username, avatar_url: profile.avatar_url } : undefined,
+          actor: {
+            id: like.user_id,
+            username: profile?.username || '',
+            name: senderName,
+            avatar: profile?.avatar_url || null,
+          },
+          image: postImageMap.get(like.post_id),
+          postId: like.post_id,
+          read: false,
+          created_at: like.created_at,
+        }));
+      });
+
+      // 4. Emit comments
+      recentComments.forEach((comment: any) => {
+        if (comment.user_id === this.userId) return;
+        const profile = profileMap.get(comment.user_id);
+        const senderName = profile?.username || profile?.full_name || 'Alguien';
+
+        this.emitNotification(this.normalizeNotification({
+          id: `comment_${comment.id || `${comment.user_id}_${comment.post_id}`}`,
+          type: 'comment',
+          title: 'Nuevo comentario',
+          message: `@${senderName} ha comentado: ${comment.content?.substring(0, 40) || ''}`,
+          sender_id: comment.user_id,
+          actor_id: comment.user_id,
+          entity_id: comment.post_id,
+          sender: profile ? { username: profile.username, avatar_url: profile.avatar_url } : undefined,
+          actor: {
+            id: comment.user_id,
+            username: profile?.username || '',
+            name: senderName,
+            avatar: profile?.avatar_url || null,
+          },
+          image: postImageMap.get(comment.post_id),
+          postId: comment.post_id,
+          content: comment.content,
+          read: false,
+          created_at: comment.created_at,
+        }));
+      });
+
+      // 5. Emit follows / follow requests
+      (recentFollows || []).forEach((follow: any) => {
+        if (follow.follower_id === this.userId) return;
+        const profile = profileMap.get(follow.follower_id);
+        const senderName = profile?.username || profile?.full_name || 'Alguien';
+        const isPending = follow.status === 'pending';
+
+        this.emitNotification(this.normalizeNotification({
+          id: `${isPending ? 'follow_req' : 'follow'}_${follow.follower_id}::${follow.following_id}`,
+          type: isPending ? 'follow_request' : 'follow',
+          title: isPending ? 'Nueva solicitud de seguimiento' : 'Nuevo seguidor',
+          message: isPending
+            ? `@${senderName} quiere seguirte.`
+            : `@${senderName} comenzó a seguirte.`,
+          sender_id: follow.follower_id,
+          actor_id: follow.follower_id,
+          entity_id: follow.follower_id,
+          sender: profile ? { username: profile.username, avatar_url: profile.avatar_url } : undefined,
+          actor: {
+            id: follow.follower_id,
+            username: profile?.username || '',
+            name: senderName,
+            avatar: profile?.avatar_url || null,
+          },
+          read: false,
+          created_at: follow.created_at,
+        }));
+      });
+
       this.lastPollTime = now;
-
-      // 1. Fetch our own posts
-      const { data: myPosts } = await supabase
-        .from('posts')
-        .select('id, image_url')
-        .eq('user_id', this.userId);
-
-      if (!myPosts || myPosts.length === 0) return;
-
-      const myPostIds = myPosts.map((p: any) => p.id);
-      const postImageMap = new Map(myPosts.map((p: any) => [p.id, p.image_url]));
-
-      // 2. Poll for new likes
-      const { data: recentLikes } = await supabase
-        .from('likes')
-        .select('user_id, post_id, created_at, profiles!inner(username, full_name, avatar_url)')
-        .in('post_id', myPostIds)
-        .gt('created_at', timeSinceLastPoll);
-
-      // 3. Poll for new comments
-      const { data: recentComments } = await supabase
-        .from('comments' as any)
-        .select('id, user_id, post_id, created_at, content, profiles!inner(username, full_name, avatar_url)')
-        .in('post_id', myPostIds)
-        .gt('created_at', timeSinceLastPoll);
-
-      // Process likes
-      if (recentLikes) {
-        recentLikes.forEach((like: any) => {
-          if (like.user_id === this.userId) return;
-          const profile = Array.isArray(like.profiles) ? like.profiles[0] : like.profiles;
-          const senderName = profile?.username || profile?.full_name || 'Alguien';
-          
-          this.emitNotification({
-            id: `like_${like.id || Date.now()}`,
-            type: 'like',
-            title: 'Nuevo me gusta',
-            message: `@${senderName} le ha dado me gusta a tu publicación.`,
-            actor: {
-              id: like.user_id,
-              username: profile?.username || '',
-              name: senderName,
-              avatar: profile?.avatar_url || null
-            },
-            image: postImageMap.get(like.post_id),
-            postId: like.post_id,
-            timestamp: new Date(like.created_at).getTime(),
-            time: 'Justo ahora',
-            read: false,
-            created_at: like.created_at
-          } as any);
-        });
-      }
-
-      // Process comments
-      if (recentComments) {
-        recentComments.forEach((comment: any) => {
-          if (comment.user_id === this.userId) return;
-          const profile = Array.isArray(comment.profiles) ? comment.profiles[0] : comment.profiles;
-          const senderName = profile?.username || profile?.full_name || 'Alguien';
-          
-          this.emitNotification({
-            id: `comment_${comment.id || Date.now()}`,
-            type: 'comment',
-            title: 'Nuevo comentario',
-            message: `@${senderName} ha comentado: ${comment.content?.substring(0, 40) || ''}`,
-            actor: {
-              id: comment.user_id,
-              username: profile?.username || '',
-              name: senderName,
-              avatar: profile?.avatar_url || null
-            },
-            image: postImageMap.get(comment.post_id),
-            postId: comment.post_id,
-            timestamp: new Date(comment.created_at).getTime(),
-            time: 'Justo ahora',
-            read: false,
-            created_at: comment.created_at
-          } as any);
-        });
-      }
-
     } catch (err) {
       console.error('[RealtimeManager] Polling fallback error:', err);
+    } finally {
+      this.isPolling = false;
     }
   }
 
@@ -651,6 +832,11 @@ class RealtimeManager {
     if (this.pollInterval) {
       clearInterval(this.pollInterval);
       this.pollInterval = null;
+    }
+
+    if (this.focusCleanup) {
+      this.focusCleanup();
+      this.focusCleanup = null;
     }
 
     // Unsubscribe from all channels
