@@ -50,18 +50,21 @@ function KloeHeroBanner() {
   return (
     <Link href="/closet/kloe" className="block w-full" onClick={() => { try { haptics.tap(); } catch {} }}>
       <motion.div
-        whileHover={{ y: -1.5, scale: 1.005 }}
-        whileTap={{ scale: 0.98 }}
+        whileHover={{ y: -2, scale: 1.008 }}
+        whileTap={{ scale: 0.975 }}
         transition={{ type: 'spring', stiffness: 460, damping: 24 }}
-        className="w-full py-3 px-4 sm:px-5 rounded-[20px] kz-kloe-banner flex items-center justify-between gap-3 cursor-pointer group"
+        className="w-full py-3 px-3.5 sm:px-5 rounded-full kz-kloe-banner flex items-center justify-between gap-3 cursor-pointer group"
         aria-label="Charla conmigo"
       >
-        <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
-          <KloeMascot
-            mood="happy"
-            size="md"
-            variant="pink"
-          />
+        <div className="flex items-center gap-3 sm:gap-3.5 min-w-0 flex-1">
+          <div className="relative shrink-0 w-12 h-12 rounded-full bg-white dark:bg-[#17171A] border-[1.5px] border-[#FF66C4]/45 shadow-sm flex items-center justify-center">
+            <KloeMascot
+              mood="happy"
+              size="md"
+              variant="pink"
+            />
+            <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-[#FF66C4] border-2 border-white dark:border-[#17171A]" aria-hidden="true" />
+          </div>
           <div className="min-w-0 flex-1">
             <AnimatePresence mode="wait">
               <motion.p
@@ -70,19 +73,24 @@ function KloeHeroBanner() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -5 }}
                 transition={{ duration: 0.25 }}
-                className="font-display text-[17px] sm:text-[19px] font-semibold tracking-[-0.02em] text-[var(--brand-pink)] truncate leading-tight select-none"
+                className="font-display text-[17px] sm:text-[19px] font-bold tracking-[-0.025em] text-[#FF66C4] truncate leading-tight select-none"
               >
                 {KLOE_PROMPTS[promptIndex]}
               </motion.p>
             </AnimatePresence>
+            <p className="text-[11px] sm:text-xs font-medium text-[var(--foreground-secondary)] truncate mt-0.5 select-none">
+              Tu estilista personal · Pregúntame por el tiempo o un look
+            </p>
           </div>
         </div>
 
-        <ChevronRight
-          className="w-5 h-5 shrink-0 text-[var(--brand-pink)] group-hover:translate-x-0.5 transition-transform"
-          strokeWidth={2.6}
-          aria-hidden="true"
-        />
+        <div className="w-10 h-10 shrink-0 rounded-full bg-[#FF66C4] text-white shadow-[0_4px_14px_rgba(255,102,196,0.48)] flex items-center justify-center group-hover:scale-105 group-hover:translate-x-0.5 transition-all">
+          <ChevronRight
+            className="w-5 h-5"
+            strokeWidth={2.75}
+            aria-hidden="true"
+          />
+        </div>
       </motion.div>
     </Link>
   );
@@ -759,7 +767,7 @@ export default function ClosetPage() {
       >
 
       {/* Header Sticky (sin ralla divisoria horizontal) */}
-      <header className="sticky top-0 z-40 bg-[var(--background)]/95 backdrop-blur-md pb-2 pt-safe">
+      <header className="sticky top-0 z-40 apple-glass-bar !border-b-0 pb-2 pt-safe">
         <div className="max-w-7xl mx-auto px-4 pt-4 space-y-4">
 
           {/* Kloe Hero Action Banner */}

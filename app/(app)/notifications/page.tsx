@@ -25,7 +25,7 @@ export default function NotificationsPage() {
       {...swipeHandlers}
       className="min-h-screen bg-[var(--background)] pb-24 flex flex-col w-full"
     >
-      <header className="sticky top-0 z-30 apple-glass-bar pt-safe px-4 h-14 flex items-center justify-center">
+      <header className="sticky top-0 z-30 apple-glass-bar pt-safe px-4 min-h-[calc(3.5rem+env(safe-area-inset-top,0px))] flex items-center justify-center">
         <h1 className="font-display text-xl font-bold tracking-tight text-[var(--foreground)] select-none">Actividad</h1>
       </header>
 

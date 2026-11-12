@@ -145,44 +145,46 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
                             </div>
 
                             {/* Product Image */}
-                            <div className="relative aspect-[4/3] sm:aspect-square max-h-[40vh] bg-white overflow-hidden flex-shrink-0 flex items-center justify-center p-6 sm:p-8">
-                                {displayItem.imageUrl ? (
-                                    <motion.img
-                                        initial={{ scale: 1.1, opacity: 0 }}
-                                        animate={{ scale: 1, opacity: 1 }}
-                                        transition={{ duration: 0.5 }}
-                                        src={displayItem.imageUrl}
-                                        alt={displayItem.name}
-                                        className="w-full h-full object-contain"
-                                        onError={(e) => {
-                                             const target = e.target as HTMLImageElement;
-                                             target.style.display = 'none';
-                                        }}
-                                    />
-                                ) : (
-                                    <div
-                                        className="w-full h-full flex items-center justify-center"
-                                        style={{ backgroundColor: displayItem.colorHex || '#f0f0f0' }}
-                                    >
-                                        <ShoppingBag className="w-20 h-20 text-white/50" />
-                                    </div>
-                                )}
+                            <div className="p-3 pb-0 sm:p-4 sm:pb-0 flex-shrink-0">
+                                <div className="relative aspect-[4/3] sm:aspect-square max-h-[38vh] w-full bg-white rounded-[24px] border border-black/[0.06] shadow-xs overflow-hidden flex items-center justify-center p-6 sm:p-8">
+                                    {displayItem.imageUrl ? (
+                                        <motion.img
+                                            initial={{ scale: 1.1, opacity: 0 }}
+                                            animate={{ scale: 1, opacity: 1 }}
+                                            transition={{ duration: 0.5 }}
+                                            src={displayItem.imageUrl}
+                                            alt={displayItem.name}
+                                            className="w-full h-full object-contain"
+                                            onError={(e) => {
+                                                 const target = e.target as HTMLImageElement;
+                                                 target.style.display = 'none';
+                                            }}
+                                        />
+                                    ) : (
+                                        <div
+                                            className="w-full h-full rounded-[20px] flex items-center justify-center"
+                                            style={{ backgroundColor: displayItem.colorHex || '#f0f0f0' }}
+                                        >
+                                            <ShoppingBag className="w-20 h-20 text-white/50" />
+                                        </div>
+                                    )}
 
-                                {/* Price Badge */}
-                                {displayItem.price && (
-                                    <motion.div
-                                        initial={{ y: 20, opacity: 0 }}
-                                        animate={{ y: 0, opacity: 1 }}
-                                        transition={{ delay: 0.2, type: 'spring' }}
-                                        className="absolute bottom-4 right-4 px-4 py-1.5 bg-white/95 dark:bg-gray-800/95 backdrop-blur-md rounded-full shadow-[var(--shadow-card)] border border-black/[0.06]"
-                                    >
-                                        <span className="text-base font-bold text-gray-900 dark:text-white">{displayItem.price}</span>
-                                    </motion.div>
-                                )}
+                                    {/* Price Badge */}
+                                    {displayItem.price && (
+                                        <motion.div
+                                            initial={{ y: 20, opacity: 0 }}
+                                            animate={{ y: 0, opacity: 1 }}
+                                            transition={{ delay: 0.2, type: 'spring' }}
+                                            className="absolute bottom-3.5 right-3.5 px-4 py-1.5 bg-white/95 dark:bg-gray-800/95 backdrop-blur-md rounded-full shadow-[var(--shadow-card)] border border-black/[0.06]"
+                                        >
+                                            <span className="text-base font-bold text-gray-900 dark:text-white">{displayItem.price}</span>
+                                        </motion.div>
+                                    )}
+                                </div>
                             </div>
 
                             {/* Product Info */}
-                            <div className="p-4 sm:p-5 md:p-6 overflow-y-auto flex-1 custom-scrollbar bg-[var(--background)] border-t border-[var(--border-color)]/60 flex flex-col gap-4">
+                            <div className="p-4 sm:p-5 md:p-6 overflow-y-auto flex-1 custom-scrollbar bg-[var(--background)] flex flex-col gap-4">
                                 {/* Brand & Name */}
                                 <div className="flex flex-col gap-0.5">
                                     {(displayItem.brand || displayItem.source) && displayItem.brand !== 'Unknown' && displayItem.source !== 'Unknown' && (
@@ -196,7 +198,7 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
                                 {/* Details Grid */}
                                 <div className="grid grid-cols-2 gap-2.5">
                                     {/* Type */}
-                                    <div className="flex items-center gap-2.5 p-3 bg-[var(--background-secondary)] rounded-2xl border border-[var(--border-color)]/60">
+                                    <div className="flex items-center gap-2.5 p-3 bg-[var(--background-secondary)] rounded-[22px] border border-[var(--border-color)]/70">
                                         <Shirt className="w-4 h-4 text-[var(--brand-pink)] shrink-0" />
                                         <div className="min-w-0">
                                             <p className="kz-caption text-[var(--foreground-tertiary)]">Tipo</p>
@@ -206,7 +208,7 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
 
                                     {/* Color */}
                                     {displayItem.color && (
-                                        <div className="flex items-center gap-2.5 p-3 bg-[var(--background-secondary)] rounded-2xl border border-[var(--border-color)]/60">
+                                        <div className="flex items-center gap-2.5 p-3 bg-[var(--background-secondary)] rounded-[22px] border border-[var(--border-color)]/70">
                                             <div
                                                 className="w-4 h-4 rounded-full border border-black/15 dark:border-white/20 shadow-xs shrink-0"
                                                 style={{ backgroundColor: displayItem.colorHex || '#ccc' }}
@@ -220,7 +222,7 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
 
                                     {/* Size */}
                                     {(displayItem as any).size && (
-                                        <div className="flex items-center gap-2.5 p-3 bg-[var(--background-secondary)] rounded-2xl border border-[var(--border-color)]/60">
+                                        <div className="flex items-center gap-2.5 p-3 bg-[var(--background-secondary)] rounded-[22px] border border-[var(--border-color)]/70">
                                             <Ruler className="w-4 h-4 text-[var(--brand-pink)] shrink-0" />
                                             <div className="min-w-0">
                                                 <p className="kz-caption text-[var(--foreground-tertiary)]">Talla</p>
@@ -231,7 +233,7 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
 
                                     {/* Fabric */}
                                     {(displayItem as any).fabric && (
-                                        <div className="flex items-center gap-2.5 p-3 bg-[var(--background-secondary)] rounded-2xl border border-[var(--border-color)]/60">
+                                        <div className="flex items-center gap-2.5 p-3 bg-[var(--background-secondary)] rounded-[22px] border border-[var(--border-color)]/70">
                                             <Layers className="w-4 h-4 text-[var(--brand-pink)] shrink-0" />
                                             <div className="min-w-0">
                                                 <p className="kz-caption text-[var(--foreground-tertiary)]">Tejido</p>
@@ -242,7 +244,7 @@ export default function ProductModal({ item, isOpen, onClose, isFavorite = false
 
                                     {/* Season */}
                                     {(displayItem as any).season && (displayItem as any).season.length > 0 && (
-                                        <div className="flex items-center gap-2.5 p-3 bg-[var(--background-secondary)] rounded-2xl border border-[var(--border-color)]/60">
+                                        <div className="flex items-center gap-2.5 p-3 bg-[var(--background-secondary)] rounded-[22px] border border-[var(--border-color)]/70">
                                             <CalendarDays className="w-4 h-4 text-[var(--brand-pink)] shrink-0" />
                                             <div className="min-w-0">
                                                 <p className="kz-caption text-[var(--foreground-tertiary)]">Temporada</p>

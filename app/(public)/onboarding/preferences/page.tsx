@@ -165,11 +165,12 @@ function PreferencesContent() {
     const fromSource = searchParams?.get('from');
     const isFromSettings = fromSource === 'settings' || fromSource === 'profile';
     const isEditModeQuery = searchParams?.get('mode') === 'edit';
+    const isStylesOnlyMode = fromSource === 'settings' || searchParams?.get('step') === 'styles';
 
     const { user, setUser, isLoading: isLoadingUser } = useUser();
     const { checkUsernameAvailability } = useSocial();
 
-    // Identity state (only shown if OAuth user without custom handle or editing from settings)
+    // Identity state (only shown if OAuth user without custom handle on first onboarding)
     const [fullName, setFullName] = useState('');
     const [username, setUsername] = useState('');
     const [isCheckingUsername, setIsCheckingUsername] = useState(false);
@@ -181,7 +182,7 @@ function PreferencesContent() {
     // Step 0: Identidad (Género + Edad + Altura + Nombre/@usuario solo si falta)
     // Step 1: Silueta y Proporciones (Tipo de cuerpo + Colorimetría opcional)
     // Step 2: Estilos Favoritos (Pills agrupadas + Buscador + Accesorios)
-    const [step, setStep] = useState(0);
+    const [step, setStep] = useState(isStylesOnlyMode ? 2 : 0);
     const [age, setAge] = useState<number>(24);
     const [gender, setGender] = useState<'woman' | 'man' | 'other' | ''>('woman');
 
@@ -234,8 +235,12 @@ function PreferencesContent() {
             setIsUsernameAvailable(true);
         }
 
-        const shouldAskIdentity = !hasValidName || !hasValidCustomUsername || isFromSettings || isEditModeQuery;
+        const shouldAskIdentity = !isStylesOnlyMode && !isFromSettings && (!hasValidName || !hasValidCustomUsername);
         setNeedsIdentityInput(shouldAskIdentity);
+
+        if (isStylesOnlyMode) {
+            setStep(2);
+        }
 
         const isUserConfigured = Boolean(user.styleCompleted);
         if (isUserConfigured || isFromSettings || isEditModeQuery) {
@@ -408,6 +413,36 @@ function PreferencesContent() {
         };
 
         try {
+            if (isStylesOnlyMode) {
+                const styleUpdatePayload = {
+                    preferred_styles: selectedStyles,
+                    visual_style_preferences: selectedStyles,
+                    uses_accessories: usesAccessoriesVal,
+                    accessories_style: selectedAccessory,
+                    style_completed: true,
+                    updated_at: new Date().toISOString(),
+                };
+
+                const { error: styleUpdateErr } = await (supabase as any)
+                    .from('profiles')
+                    .update(styleUpdatePayload)
+                    .eq('id', user.id);
+
+                if (styleUpdateErr) throw styleUpdateErr;
+
+                setUser({
+                    ...user,
+                    preferredStyles: selectedStyles,
+                    visualStylePreferences: selectedStyles,
+                    usesAccessories: usesAccessoriesVal,
+                    accessoriesStyle: selectedAccessory,
+                    styleCompleted: true,
+                });
+
+                router.push('/profile/settings');
+                return;
+            }
+
             const currentNotifPrefs = (user.notificationSettings as any) || {};
             const updatedNotifPrefs = {
                 ...currentNotifPrefs,
@@ -519,28 +554,32 @@ function PreferencesContent() {
 
     return (
         <div className="min-h-screen bg-[#FBFBFD] text-zinc-900 pb-28 md:pb-32 overflow-hidden flex flex-col selection:bg-[var(--brand-pink)] selection:text-white">
-            {/* Minimal Header with 3 Step Indicators */}
-            <header className="px-6 py-4 flex items-center justify-between sticky top-0 z-50 bg-[#FBFBFD]/90 backdrop-blur-md border-b border-zinc-200/80">
-                <div className="flex gap-2 items-center">
-                    {Array.from({ length: totalSteps }).map((_, s) => (
-                        <button
-                            key={s}
-                            type="button"
-                            onClick={() => {
-                                if (s < step || isEditing) setStep(s);
-                            }}
-                            className={`h-2 rounded-full transition-all duration-300 ${
-                                step === s
-                                    ? 'w-10 bg-[var(--brand-pink)]'
-                                    : step > s
-                                    ? 'w-6 bg-[var(--brand-pink)]/45 cursor-pointer'
-                                    : 'w-6 bg-[var(--border-color)]'
-                            }`}
-                            aria-label={`Paso ${s + 1}`}
-                        />
-                    ))}
-                </div>
-                {isEditing ? (
+            {/* Minimal Header with 3 Step Indicators (hidden in Styles-Only Settings mode) */}
+            <header className="px-6 py-4 pt-safe flex items-center justify-between sticky top-0 z-50 bg-[#FBFBFD]/90 backdrop-blur-md border-b border-zinc-200/80">
+                {isStylesOnlyMode ? (
+                    <span className="text-sm font-bold text-[var(--foreground)]">Editar estilo</span>
+                ) : (
+                    <div className="flex gap-2 items-center">
+                        {Array.from({ length: totalSteps }).map((_, s) => (
+                            <button
+                                key={s}
+                                type="button"
+                                onClick={() => {
+                                    if (s < step || isEditing) setStep(s);
+                                }}
+                                className={`h-2 rounded-full transition-all duration-300 ${
+                                    step === s
+                                        ? 'w-10 bg-[var(--brand-pink)]'
+                                        : step > s
+                                        ? 'w-6 bg-[var(--brand-pink)]/45 cursor-pointer'
+                                        : 'w-6 bg-[var(--border-color)]'
+                                }`}
+                                aria-label={`Paso ${s + 1}`}
+                            />
+                        ))}
+                    </div>
+                )}
+                {isEditing || isStylesOnlyMode ? (
                     <button
                         onClick={() => router.push(isFromSettings ? '/profile/settings' : '/closet')}
                         className="p-2 rounded-full hover:bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:text-[var(--foreground)] transition-colors cursor-pointer"
@@ -1116,8 +1155,8 @@ function PreferencesContent() {
 
             {/* Bottom Floating Navigation */}
             <div className="fixed bottom-0 left-0 right-0 p-4 sm:p-6 bg-gradient-to-t from-[#FBFBFD] via-[#FBFBFD]/95 to-transparent z-40 pointer-events-none">
-                <div className={`max-w-xl mx-auto flex items-center gap-3 sm:gap-4 pointer-events-auto ${step === 0 ? 'justify-center' : 'justify-between'}`}>
-                    {step > 0 && (
+                <div className={`max-w-xl mx-auto flex items-center gap-3 sm:gap-4 pointer-events-auto ${step === 0 || isStylesOnlyMode ? 'justify-center' : 'justify-between'}`}>
+                    {step > 0 && !isStylesOnlyMode && (
                         <Button
                             variant="secondary"
                             size="lg"
@@ -1133,7 +1172,7 @@ function PreferencesContent() {
                     <Button
                         size="lg"
                         className={`h-13 rounded-full text-[15px] font-bold disabled:opacity-40 disabled:cursor-not-allowed shadow-lg cursor-pointer ${
-                            step === 0 ? 'w-full max-w-sm mx-auto' : 'flex-1 max-w-sm ml-auto'
+                            step === 0 || isStylesOnlyMode ? 'w-full max-w-sm mx-auto' : 'flex-1 max-w-sm ml-auto'
                         }`}
                         onClick={handleNext}
                         disabled={

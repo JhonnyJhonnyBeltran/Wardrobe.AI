@@ -116,8 +116,8 @@ export default function NotificationsPage() {
 
     return (
         <div className="min-h-screen bg-[var(--background)] pb-24 md:pb-8">
-            {/* Mobile Header (Normalized h-14 apple-glass-bar) */}
-            <div className="md:hidden sticky top-0 z-30 flex items-center justify-between px-4 h-14 apple-glass-bar pt-safe">
+            {/* Mobile Header (Normalized min-h-14 + safe-area apple-glass-bar) */}
+            <div className="md:hidden sticky top-0 z-30 flex items-center justify-between px-4 min-h-[calc(3.5rem+env(safe-area-inset-top,0px))] apple-glass-bar pt-safe">
                 <button
                     onClick={() => router.back()}
                     className="w-9 h-9 flex items-center justify-center rounded-full bg-[var(--background-secondary)] text-[var(--foreground)] hover:bg-[var(--border-color)] transition-colors cursor-pointer shrink-0"

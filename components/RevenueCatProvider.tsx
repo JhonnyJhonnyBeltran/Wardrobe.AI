@@ -27,6 +27,8 @@ export default function RevenueCatProvider({ children }: { children: React.React
 
     import('@capacitor/status-bar')
       .then(({ StatusBar, Style }) => {
+        StatusBar.setOverlaysWebView({ overlay: true }).catch(() => {});
+        StatusBar.setBackgroundColor({ color: isDark ? '#111113' : '#ffffff' }).catch(() => {});
         StatusBar.setStyle({ style: isDark ? Style.Dark : Style.Light }).catch(() => {});
       })
       .catch(() => {});

@@ -93,30 +93,36 @@ export default function PremiumPage() {
   }, [router]);
 
   const handleOpenPaymentModal = async () => {
-    if (loadingPaywall) return;
-    if (isNative) {
-      setLoadingPaywall(true);
-      try {
-        haptics.tap();
-        const res = await purchaseRevenueCatPlan({
-          plan: selectedPlan,
-          appUserId: user?.id,
-          customerEmail: user?.email,
-        });
-        if (res.purchasedOrRestored) {
-          haptics.success();
-          await refreshProfile();
-          toast.success('¡Bienvenido a Klozet Pro!');
-          router.push('/closet/kloe');
-        } else if (res.error && !res.cancelled) {
-          toast.error(res.error);
-        }
-      } finally {
-        setLoadingPaywall(false);
+    if (loadingPaywall || restoring) return;
+    setLoadingPaywall(true);
+    try {
+      haptics.tap();
+      const res = await purchaseRevenueCatPlan({
+        plan: selectedPlan,
+        appUserId: user?.id,
+        customerEmail: user?.email,
+      });
+      if (res.purchasedOrRestored) {
+        haptics.success();
+        await refreshProfile();
+        toast.success('¡Bienvenido a Klozet Pro!');
+        router.push('/closet/kloe');
+        return;
       }
-      return;
+      if (res.cancelled) {
+        return;
+      }
+      if (res.error) {
+        toast.error(res.error);
+        if (!isNative) {
+          openPremiumModal(selectedPlan);
+        }
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'No se pudo iniciar la suscripción con RevenueCat.');
+    } finally {
+      setLoadingPaywall(false);
     }
-    openPremiumModal(selectedPlan);
   };
 
   const handleRestore = async () => {
@@ -165,8 +171,8 @@ export default function PremiumPage() {
   return (
     <div className="min-h-screen bg-[var(--background)] pb-24">
       {/* Apple Glass Header */}
-      <header className="sticky top-0 z-30 apple-glass-bar border-b border-[var(--border-color)]">
-        <div className="px-4 h-14 flex items-center justify-between max-w-2xl mx-auto">
+      <header className="sticky top-0 z-30 apple-glass-bar pt-safe border-b border-[var(--border-color)]">
+        <div className="px-4 min-h-14 flex items-center justify-between max-w-2xl mx-auto">
           <button
             onClick={() => router.back()}
             className="p-2 -ml-2 text-[var(--foreground-secondary)] hover:text-[var(--foreground)] transition-colors cursor-pointer"

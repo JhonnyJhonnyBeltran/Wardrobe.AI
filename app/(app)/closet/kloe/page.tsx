@@ -826,6 +826,32 @@ export default function KloePage() {
         .filter(m => m.id !== 'welcome')
         .map(m => ({ role: m.role, content: m.content }));
 
+      let weatherPayload: { city?: string; days?: Record<string, any> } | undefined;
+      try {
+        const rawWeather = localStorage.getItem('klozet_calendar_weather');
+        if (rawWeather) {
+          const parsed = JSON.parse(rawWeather);
+          if (parsed?.days && Object.keys(parsed.days).length > 0) {
+            weatherPayload = { city: parsed.city, days: parsed.days };
+          }
+        }
+        if (!weatherPayload) {
+          const ctrl = new AbortController();
+          const timer = setTimeout(() => ctrl.abort(), 1600);
+          const wRes = await fetch('/api/weather?auto=1', { signal: ctrl.signal }).catch(() => null);
+          clearTimeout(timer);
+          if (wRes && wRes.ok) {
+            const wJson = await wRes.json();
+            if (wJson?.days && Object.keys(wJson.days).length > 0) {
+              weatherPayload = { city: wJson.city, days: wJson.days };
+              localStorage.setItem('klozet_calendar_weather', JSON.stringify({ ...wJson, savedAt: Date.now() }));
+            }
+          }
+        }
+      } catch {
+        // Non-blocking fallback
+      }
+
       const res = await fetch('/api/closy/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -834,7 +860,8 @@ export default function KloePage() {
           history: historyPayload,
           attached_items: currentAttachedItems.length > 0 ? currentAttachedItems : undefined,
           attached_post: currentAttachedPost || undefined,
-          attached_custom_image: currentAttachedImage || undefined
+          attached_custom_image: currentAttachedImage || undefined,
+          weather: weatherPayload,
         })
       });
 
@@ -1006,7 +1033,7 @@ export default function KloePage() {
       </header>
 
       {/* MOBILE HEADER */}
-      <header className="fixed top-0 left-0 right-0 z-30 h-14 apple-glass-bar px-4 flex items-center justify-between pt-safe md:hidden">
+      <header className="fixed top-0 left-0 right-0 z-30 min-h-14 apple-glass-bar px-4 flex items-center justify-between pt-safe md:hidden">
         <button
           onClick={() => router.push('/closet')}
           className="touch-target-44 flex items-center justify-center -ml-2 text-[var(--foreground)] hover:text-[var(--brand-pink)] transition-colors cursor-pointer"

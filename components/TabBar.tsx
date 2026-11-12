@@ -67,10 +67,16 @@ export default function TabBar() {
   };
 
   return (
-    <nav
-      aria-label="Navegación principal"
-      className="fixed bottom-3.5 sm:bottom-5 left-4 right-4 max-w-sm mx-auto md:hidden z-[5000] will-change-transform isolate pointer-events-none pb-[env(safe-area-inset-bottom)]"
-    >
+    <>
+      {/* Progressive frosted blur scrim below/around floating mobile TabBar */}
+      <div
+        aria-hidden="true"
+        className="fixed bottom-0 left-0 right-0 h-[calc(5.25rem+env(safe-area-inset-bottom,0px))] mobile-bottom-nav-blur pointer-events-none z-[4990] md:hidden"
+      />
+      <nav
+        aria-label="Navegación principal"
+        className="fixed bottom-3.5 sm:bottom-5 left-4 right-4 max-w-sm mx-auto md:hidden z-[5000] will-change-transform isolate pointer-events-none pb-[env(safe-area-inset-bottom)]"
+      >
       {/* Floating Apple Glass Capsule */}
       <div
         className="relative flex justify-between items-center h-[58px] px-1.5 rounded-full bg-white/85 dark:bg-[#111113]/85 backdrop-blur-2xl border border-black/[0.08] dark:border-white/[0.12] shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_12px_36px_rgba(0,0,0,0.55)] pointer-events-auto select-none"
@@ -140,6 +146,7 @@ export default function TabBar() {
           );
         })}
       </div>
-    </nav>
+      </nav>
+    </>
   );
 }

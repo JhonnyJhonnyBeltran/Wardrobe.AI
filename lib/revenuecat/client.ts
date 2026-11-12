@@ -178,6 +178,7 @@ export async function checkKlozetProEntitlement(): Promise<boolean> {
 export async function syncRevenueCatEntitlementToBackend(options?: {
   source?: 'native' | 'web';
   isTestStorePurchase?: boolean;
+  hasActiveEntitlement?: boolean;
   productIdentifier?: string;
 }): Promise<boolean> {
   try {
@@ -187,6 +188,7 @@ export async function syncRevenueCatEntitlementToBackend(options?: {
       body: JSON.stringify({
         source: options?.source || (isNativeCapacitor() ? 'native' : 'web'),
         isTestStorePurchase: Boolean(options?.isTestStorePurchase),
+        hasActiveEntitlement: options?.hasActiveEntitlement ?? true,
         productIdentifier: options?.productIdentifier,
       }),
     });
@@ -375,7 +377,8 @@ export async function purchaseRevenueCatPlan(params: {
     }
 
     // 2. Web Browser via @revenuecat/purchases-js
-    const { Purchases, ErrorCode } = await import('@revenuecat/purchases-js');
+    await initRevenueCat(params.appUserId);
+    const { Purchases } = await import('@revenuecat/purchases-js');
     if (!Purchases.isConfigured()) {
       return {
         purchasedOrRestored: false,
@@ -399,7 +402,6 @@ export async function purchaseRevenueCatPlan(params: {
     const purchaseResult = await shared.purchase({
       rcPackage: targetPkg,
       customerEmail: params.customerEmail,
-      htmlTarget: params.htmlTarget ?? undefined,
       selectedLocale: 'es',
     });
 
@@ -407,11 +409,19 @@ export async function purchaseRevenueCatPlan(params: {
     const isTestKey = getRevenueCatApiKey('web').startsWith('test_');
 
     if (entitlement || purchaseResult?.storeTransaction) {
-      await syncRevenueCatEntitlementToBackend({
+      const synced = await syncRevenueCatEntitlementToBackend({
         source: 'web',
         isTestStorePurchase: isTestKey || shared.isSandbox(),
+        hasActiveEntitlement: Boolean(entitlement || purchaseResult?.storeTransaction),
         productIdentifier: entitlement?.productIdentifier || targetPkg.product.identifier,
       });
+      if (!synced) {
+        return {
+          purchasedOrRestored: false,
+          cancelled: false,
+          error: 'Compra completada en RevenueCat, pero no se pudo activar en tu perfil. Pulsa "Restaurar compras".',
+        };
+      }
       return { purchasedOrRestored: true, cancelled: false };
     }
 
@@ -589,7 +599,22 @@ export async function restoreKlozetPurchases(appUserId?: string): Promise<boolea
       return active;
     }
 
-    return await checkKlozetProEntitlement();
+    const { Purchases } = await import('@revenuecat/purchases-js');
+    if (!Purchases.isConfigured()) return false;
+    const customerInfo = await Purchases.getSharedInstance().getCustomerInfo();
+    const entitlement = customerInfo?.entitlements?.active?.[REVENUECAT_ENTITLEMENT_ID];
+    const active = typeof entitlement !== 'undefined';
+
+    if (active) {
+      const apiKey = getRevenueCatApiKey('web');
+      await syncRevenueCatEntitlementToBackend({
+        source: 'web',
+        isTestStorePurchase: apiKey.startsWith('test_') || Purchases.getSharedInstance().isSandbox(),
+        hasActiveEntitlement: true,
+        productIdentifier: entitlement?.productIdentifier,
+      });
+    }
+    return active;
   } catch (err) {
     console.error('[RevenueCat] restoreKlozetPurchases error:', err);
     return false;

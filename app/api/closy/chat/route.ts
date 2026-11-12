@@ -12,12 +12,19 @@ import { buildUserStylingContext } from '@/lib/closy/contextIndexer';
 import { getFastCourtesyResponse } from '@/lib/closy/fastResponses';
 import { resolveImageUrl } from '@/lib/imageUtils';
 import { getGeminiApiKey } from '@/lib/ai/geminiClient';
+import { extractRequestCityHint, resolveWeatherByCityName, type DailyWeatherEntry } from '@/lib/weather/forecast';
+
+interface WeatherContextPayload {
+  city?: string;
+  days?: Record<string, DailyWeatherEntry>;
+}
 
 interface ChatRequestPayload {
   message: string;
   history?: Array<{ role: 'user' | 'assistant'; content: string }>;
   attached_custom_image?: string;
   attached_image?: string;
+  weather?: WeatherContextPayload;
   attached_item?: {
     id: string;
     name: string;
@@ -326,8 +333,36 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 6. Index User Context (Clothes with Photos, Outfits, Profile Preferences, Liked Styles)
+    // 6. Index User Context & Weather Forecast
     const context = await buildUserStylingContext(supabase, user.id);
+
+    let resolvedWeather: WeatherContextPayload | null =
+      body.weather?.days && Object.keys(body.weather.days).length > 0 ? body.weather : null;
+    if (!resolvedWeather) {
+      try {
+        const cityHint = extractRequestCityHint(request.headers);
+        const liveWeather = await resolveWeatherByCityName(cityHint);
+        if (liveWeather?.days && Object.keys(liveWeather.days).length > 0) {
+          resolvedWeather = { city: liveWeather.city, days: liveWeather.days };
+        }
+      } catch {
+        // Non-blocking fallback
+      }
+    }
+
+    const weatherLines: string[] = [];
+    if (resolvedWeather?.days) {
+      const sortedDates = Object.keys(resolvedWeather.days).filter((d) => d >= todayKey).sort().slice(0, 6);
+      for (const d of sortedDates) {
+        const w = resolvedWeather.days[d];
+        if (!w) continue;
+        const tag = d === todayKey ? `HOY (${d})` : d;
+        weatherLines.push(`- ${tag}: ${w.label}, máx ${w.tempMax ?? w.temp}°C / mín ${w.tempMin ?? w.temp}°C`);
+      }
+    }
+    const weatherSummary = weatherLines.length > 0
+      ? `Ciudad: ${resolvedWeather?.city || 'Tu ubicación'}\n${weatherLines.join('\n')}`
+      : 'Sin previsión meteorológica exacta disponible.';
 
     // 7. Normalize attached items (can be array or single item)
     const attachedItems: any[] = Array.isArray(body.attached_items) && body.attached_items.length > 0
@@ -346,7 +381,8 @@ export async function POST(request: NextRequest) {
         attachedItems,
         body.attached_post,
         attachedCustomImagePart,
-        activeLang
+        activeLang,
+        weatherSummary
       );
     }
 
@@ -358,7 +394,8 @@ export async function POST(request: NextRequest) {
         body.history || [],
         attachedItems,
         body.attached_post,
-        attachedCustomImagePart
+        attachedCustomImagePart,
+        resolvedWeather
       );
     }
 
@@ -530,7 +567,8 @@ async function callGeminiAssistant(
   attachedItems: any[] = [],
   attachedPost?: any,
   attachedCustomImagePart?: { mimeType: string; data: string } | null,
-  language: string = 'es'
+  language: string = 'es',
+  weatherSummary: string = ''
 ) {
   try {
     const langNames: Record<string, string> = {
@@ -600,6 +638,8 @@ REGLA DE ORO DE CONTEXTO VISUAL Y METADATOS:
 CUANDO SE PIDE UN OUTFIT O QUÉ PONERSE:
 - Selecciona prendas reales de su armario en "recommended_outfit" con sus IDs exactos.
 - No uses más de 1 prenda de cada categoría principal (1 top, 1 bottom, 1 calzado, opcional 1 capa exterior / abrigo).
+- CLIMA REAL: Revisa siempre el bloque PREVISIÓN METEOROLÓGICA REAL proporcionado en el contexto. Adapta las prendas, capas y calzado a esa temperatura exacta y probabilidad de lluvia/frío/calor (si llueve: evita ante delicado y sugiere capa/calzado resistente al agua; si refresca: sugiere abrigo o punto).
+- DÍA / OCASIÓN DEL OUTFIT: Si el usuario aún no ha especificado para cuándo es el outfit, pregúntale con naturalidad al final de tu mensaje si el look es para **hoy** (teniendo en cuenta el tiempo real de hoy), para **un día específico** (y qué fecha/plan tiene) o si busca un **outfit versátil para cualquier día**. Refleja también esas opciones brevemente en "follow_up_suggestions".
 
 CUANDO PREGUNTA POR COMPRAS O TENDENCIAS:
 - Si pregunta por una temporada (invierno, verano, entretiempo), adáptate al 100% al clima y a su edad/género.
@@ -681,6 +721,9 @@ PERFIL DEL USUARIO ("DINOS CÓMO ERES"):
 - Biografía / Estilo personal: ${context.user.bio || 'Sin especificar'}
 - Estilos favoritos: ${(context.user.preferredStyles || []).join(', ') || 'Moda actual'}
 - Total de prendas registradas: ${context.wardrobe.totalItems}
+
+PREVISIÓN METEOROLÓGICA REAL DEL USUARIO:
+${weatherSummary || 'Sin datos de tiempo disponibles'}
 
 METADATOS DEL ARMARIO (Fuente primaria de verdad para comprender las prendas del usuario):
 ${JSON.stringify(context.wardrobe.items.map((i: any) => ({
@@ -905,6 +948,9 @@ PERFIL DEL USUARIO:
 - Colorimetría: ${context.user.seasonPalette || 'Neutra'}
 - Estilos favoritos: ${(context.user.preferredStyles || []).join(', ') || 'Moda actual'}
 
+PREVISIÓN METEOROLÓGICA REAL DEL USUARIO:
+${weatherSummary || 'Sin datos de tiempo disponibles'}
+
 PRENDAS DISPONIBLES EN EL ARMARIO DEL USUARIO:
 ${JSON.stringify(context.wardrobe.items.map((i: any) => ({
   id: i.id,
@@ -1113,7 +1159,8 @@ function generateHeuristicStylingResponse(
   history: Array<{ role: string; content: string }> = [],
   attachedItems: any[] = [],
   attachedPost?: any,
-  attachedCustomImagePart?: any
+  attachedCustomImagePart?: any,
+  resolvedWeather?: WeatherContextPayload | null
 ) {
   const items = context.wardrobe.items || [];
   const lower = userPrompt.toLowerCase();
@@ -1617,13 +1664,18 @@ El secreto está en incorporar estas tendencias a través de pequeños detalles 
   }
 
   // Default Balanced Multi-layer Stylist Outfit
+  const todayKey = getMadridDayKey();
+  const todayW = resolvedWeather?.days?.[todayKey];
+  const weatherHint = todayW
+    ? ` En ${resolvedWeather?.city || 'tu ciudad'} hoy hace ${todayW.tempMax ?? todayW.temp}°C (${todayW.label.toLowerCase()}), así que he equilibrado las capas pensando en eso.`
+    : '';
   return {
-    message: `He armado un outfit completo y versátil combinando diferentes capas de tu armario:
+    message: `He armado un outfit completo y versátil combinando diferentes capas de tu armario:${weatherHint}
 
 - **Propuesta del conjunto**: ${layeredOutfit.map((i: any) => `**${i.name}**`).join(' + ')}.
 - **Armonía y equilibrio**: Combinamos una parte superior cómoda con un corte inferior favorecedor y calzado coordinado.
 
-¿Quieres que lo adaptemos para alguna ocasión en particular o cambiamos alguna prenda?`,
+¿Este outfit es para hoy, para un día específico de la semana o buscas un look comodín para cualquier día?`,
     recommended_outfit: {
       name: `Propuesta de Estilo Kloe`,
       occasion: 'casual',
@@ -1631,9 +1683,9 @@ El secreto está en incorporar estas tendencias a través de pequeños detalles 
     },
     highlighted_item_ids: layeredOutfit.map((i: any) => i.id),
     follow_up_suggestions: [
-      '¿Cómo adaptarlo para la noche?',
-      '¿Qué calzado combina mejor?',
-      'Consejos de colores según mi colorimetría'
+      'Es para hoy según el tiempo',
+      'Es para un día específico',
+      'Un outfit versátil para cualquier día'
     ]
   };
 }

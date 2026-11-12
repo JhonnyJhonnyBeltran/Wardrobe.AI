@@ -8,7 +8,6 @@ import {
   ShieldCheck,
   Loader2,
   X,
-  ChevronLeft,
   RotateCcw,
   LayoutGrid,
   MessageCircle,
@@ -70,7 +69,6 @@ export default function KloeProModal({
 }: KloeProModalProps) {
   const router = useRouter();
   const { user, refreshProfile } = useUser();
-  const [view, setView] = useState<'plans' | 'rc-web'>('plans');
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>(defaultPlan);
   const [loading, setLoading] = useState(false);
   const [restoring, setRestoring] = useState(false);
@@ -80,7 +78,6 @@ export default function KloeProModal({
     monthlyPrice: '2,99 €',
     hasLiveOffering: false,
   });
-  const rcWebContainerRef = useRef<HTMLDivElement | null>(null);
   const isSubmittingRef = useRef(false);
 
   const isNative = isNativeCapacitor();
@@ -94,7 +91,6 @@ export default function KloeProModal({
   // Fetch live RevenueCat package pricing when custom paywall opens
   useEffect(() => {
     if (!isOpen) {
-      setView('plans');
       setLoading(false);
       setRestoring(false);
       isSubmittingRef.current = false;
@@ -129,39 +125,33 @@ export default function KloeProModal({
     try {
       haptics.tap();
 
-      if (!isNative) {
-        setView('rc-web');
-        await new Promise((r) => setTimeout(r, 40));
-      }
-
       const res = await purchaseRevenueCatPlan({
         plan: selectedPlan,
         appUserId: user?.id,
         customerEmail: user?.email,
-        htmlTarget: isNative ? null : rcWebContainerRef.current,
       });
 
       if (res.purchasedOrRestored) {
         haptics.success();
         await refreshProfile();
         toast.success('¡Bienvenido a Klozet Pro!');
-        handleDismiss();
+        onClose();
+        if (redirectBackToCloset) {
+          router.push('/closet');
+        }
         return;
       }
 
       if (res.cancelled) {
-        setView('plans');
         return;
       }
 
       if (res.error) {
         toast.error(res.error);
-        setView('plans');
       }
     } catch (err: any) {
       console.error('[KloeProModal] RevenueCat purchase error:', err);
       toast.error(err?.message || 'No se pudo iniciar la suscripción con RevenueCat.');
-      setView('plans');
     } finally {
       setLoading(false);
       isSubmittingRef.current = false;
@@ -191,7 +181,7 @@ export default function KloeProModal({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div className="fixed inset-0 z-[5000] flex items-end sm:items-center justify-center p-0 sm:p-4">
         {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -208,34 +198,21 @@ export default function KloeProModal({
           exit={{ opacity: 0, y: 60, scale: 0.96 }}
           transition={{ type: 'spring', damping: 28, stiffness: 350 }}
           onClick={(e) => e.stopPropagation()}
-          className={`relative w-full ${
-            view !== 'plans' ? 'max-w-lg' : 'max-w-md'
-          } max-h-[92dvh] sm:max-h-[90vh] overflow-y-auto no-scrollbar bg-[var(--card-bg)] border-t sm:border border-[var(--border-color)] rounded-t-[32px] sm:rounded-3xl p-5 sm:p-6 shadow-2xl z-10 transition-all duration-300 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] sm:pb-6`}
+          className="relative w-full max-w-md max-h-[92dvh] sm:max-h-[90vh] overflow-y-auto no-scrollbar bg-[var(--card-bg)] border-t sm:border border-[var(--border-color)] rounded-t-[32px] sm:rounded-3xl p-5 sm:p-6 shadow-2xl z-10 transition-all duration-300 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] sm:pb-6"
         >
           {/* iOS Sheet Handle */}
           <div className="w-12 h-1 bg-[var(--foreground-tertiary)]/30 rounded-full mx-auto mb-3 sm:hidden" />
 
           {/* Top Bar */}
           <div className="flex items-center justify-between mb-1">
-            {view !== 'plans' ? (
-              <button
-                type="button"
-                onClick={() => setView('plans')}
-                className="flex items-center gap-1.5 text-xs font-semibold text-[var(--foreground)] hover:text-[var(--brand-pink)] py-2 px-3 -ml-1 rounded-full bg-[var(--background-secondary)] border border-[var(--border-color)] transition-all cursor-pointer active:scale-95"
-              >
-                <ChevronLeft className="w-4 h-4 text-[var(--brand-pink)]" />
-                <span>Elegir otro plan</span>
-              </button>
-            ) : (
-              <div className="relative w-14 h-7">
-                <Image
-                  src="/kloe-logo-large.png"
-                  alt="Kloe"
-                  fill
-                  className="object-contain object-left"
-                />
-              </div>
-            )}
+            <div className="relative w-14 h-7">
+              <Image
+                src="/kloe-logo-large.png"
+                alt="Kloe"
+                fill
+                className="object-contain object-left"
+              />
+            </div>
 
             <button
               type="button"
@@ -247,8 +224,7 @@ export default function KloeProModal({
             </button>
           </div>
 
-          {view === 'plans' ? (
-            <>
+          <>
               {/* Kloe Mascot Hero */}
               <div className="flex flex-col items-center text-center mt-1 mb-4">
                 <div className="w-20 h-20 rounded-[24px] bg-[var(--brand-pink)]/12 border border-[var(--brand-pink)]/25 flex items-center justify-center mb-3 shadow-xs">
@@ -415,20 +391,6 @@ export default function KloeProModal({
                 </span>
               </div>
             </>
-          ) : (
-            <div className="space-y-3">
-              <div
-                ref={rcWebContainerRef}
-                className="w-full min-h-[380px] rounded-2xl overflow-hidden bg-[var(--card-bg)] border border-[var(--border-color)]"
-              />
-              {loading && (
-                <div className="flex items-center justify-center gap-2 py-2 text-xs text-[var(--foreground-secondary)]">
-                  <Loader2 className="w-4 h-4 animate-spin text-[var(--brand-pink)]" />
-                  <span>Cargando pasarela segura de RevenueCat...</span>
-                </div>
-              )}
-            </div>
-          )}
         </motion.div>
       </div>
     </AnimatePresence>

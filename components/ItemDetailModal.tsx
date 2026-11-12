@@ -87,7 +87,7 @@ export default function ItemDetailModal({ outfit, isOpen, onClose }: ItemDetailM
                         {/* Content */}
                         <div className="overflow-y-auto p-4 space-y-4 max-h-[calc(85vh-120px)] hide-scrollbar">
                             {/* AI Description */}
-                            <div className="bg-[var(--brand-pink)]/10 rounded-2xl p-4">
+                            <div className="bg-[var(--brand-pink)]/10 rounded-[22px] p-4">
                                 <p className="text-sm text-[var(--foreground)] leading-relaxed">
                                     {outfit.description}
                                 </p>
@@ -105,10 +105,10 @@ export default function ItemDetailModal({ outfit, isOpen, onClose }: ItemDetailM
                                         initial={{ opacity: 0, x: -20 }}
                                         animate={{ opacity: 1, x: 0 }}
                                         transition={{ delay: index * 0.08 }}
-                                        className="flex items-center gap-3 p-3 rounded-2xl bg-[var(--background-secondary)] hover:bg-[var(--background-tertiary)] transition-all group border border-[var(--border-color)]"
+                                        className="flex items-center gap-3 p-3 rounded-[22px] bg-[var(--background-secondary)] hover:bg-[var(--background-tertiary)] transition-all group border border-[var(--border-color)]"
                                     >
                                         {/* Item Image or Color Swatch */}
-                                        <div className="relative w-16 h-16 rounded-xl overflow-hidden bg-white shadow-sm flex-shrink-0">
+                                        <div className="relative w-16 h-16 rounded-2xl overflow-hidden bg-white shadow-sm flex-shrink-0 border border-black/[0.06]">
                                             {(item as any).imageUrl ? (
                                                 <img
                                                     src={(item as any).imageUrl}

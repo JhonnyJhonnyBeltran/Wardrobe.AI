@@ -19,7 +19,8 @@ const config: CapacitorConfig = {
     ],
   },
   ios: {
-    contentInset: 'automatic',
+    contentInset: 'never',
+    backgroundColor: '#FFFFFF',
     allowsLinkPreview: false,
     preferredContentMode: 'mobile',
     scheme: 'Klozet',
@@ -34,7 +35,8 @@ const config: CapacitorConfig = {
       showSpinner: false,
     },
     StatusBar: {
-      style: 'DEFAULT',
+      overlaysWebView: true,
+      style: 'LIGHT',
       backgroundColor: '#FFFFFF',
     },
   },

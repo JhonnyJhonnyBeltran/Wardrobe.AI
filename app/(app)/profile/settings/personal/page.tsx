@@ -5,14 +5,13 @@
  * Avatar, Nombre, Bio, Usuario + Altura, Tipo de cuerpo, Color de ojos y Color de pelo
  */
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ChevronLeft, Save, Camera, Loader2, CheckCircle, XCircle, Ruler, Eye, Palette, User, Check } from 'lucide-react';
+import { ChevronLeft, Save, Camera, Ruler, Eye, Palette, User, Check, Lock } from 'lucide-react';
 import { Button } from '@/components';
 import { useUser } from '@/store/userStore';
 import { supabase } from '@/lib/supabase/client';
-import { useSocial } from '@/lib/hooks/useSocial';
 import {
   BODY_TYPES_BY_GENDER,
   EYE_COLOR_OPTIONS,
@@ -25,9 +24,7 @@ const MAX_BIO_LENGTH = 300;
 export default function PersonalSettingsPage() {
   const router = useRouter();
   const { user, setUser, refreshProfile } = useUser();
-  const { checkUsernameAvailability } = useSocial();
   const [fullName, setFullName] = useState('');
-  const [username, setUsername] = useState('');
   const [bio, setBio] = useState('');
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
@@ -40,15 +37,9 @@ export default function PersonalSettingsPage() {
   const [eyeColor, setEyeColor] = useState<string>('marron_oscuro');
   const [hairColor, setHairColor] = useState<string>('castano_oscuro');
 
-  // Username availability
-  const [isCheckingUsername, setIsCheckingUsername] = useState(false);
-  const [isUsernameAvailable, setIsUsernameAvailable] = useState<boolean | null>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
   useEffect(() => {
     if (user) {
       setFullName(user.name || '');
-      setUsername(user.username || '');
       setBio(user.bio || '');
       setAvatarPreview(user.avatar || null);
 
@@ -74,27 +65,6 @@ export default function PersonalSettingsPage() {
       setBodyType(currentBodyOptions[0].id);
     }
   }, [gender]);
-
-  const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
-    setUsername(val);
-    setIsUsernameAvailable(null);
-
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-
-    if (val === user?.username) {
-      return;
-    }
-
-    if (val.length < 3) return;
-
-    debounceRef.current = setTimeout(async () => {
-      setIsCheckingUsername(true);
-      const available = await checkUsernameAvailability(val);
-      setIsCheckingUsername(false);
-      setIsUsernameAvailable(available);
-    }, 600);
-  };
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -149,11 +119,6 @@ export default function PersonalSettingsPage() {
   const handleSave = async () => {
     if (!user) return;
 
-    if (username !== user.username && isUsernameAvailable === false) {
-      toast.error('El nombre de usuario no está disponible');
-      return;
-    }
-
     if (bio.length > MAX_BIO_LENGTH) {
       toast.error(`La biografía no puede superar los ${MAX_BIO_LENGTH} caracteres`);
       return;
@@ -185,7 +150,6 @@ export default function PersonalSettingsPage() {
 
       const fullPayload: Record<string, any> = {
         full_name: fullName || null,
-        username: username || null,
         bio: bio.trim().slice(0, MAX_BIO_LENGTH) || null,
         avatar_url: avatarUrl || null,
         gender,
@@ -206,7 +170,6 @@ export default function PersonalSettingsPage() {
           .from('profiles')
           .update({
             full_name: fullName || null,
-            username: username || null,
             bio: bio.trim().slice(0, MAX_BIO_LENGTH) || null,
             avatar_url: avatarUrl || null,
             gender,
@@ -228,7 +191,6 @@ export default function PersonalSettingsPage() {
           ? {
               ...prev,
               name: fullName || prev.name,
-              username: username || prev.username,
               bio: bio.trim().slice(0, MAX_BIO_LENGTH) || undefined,
               avatar: avatarUrl || prev.avatar,
               gender,
@@ -254,14 +216,10 @@ export default function PersonalSettingsPage() {
 
   if (!user) return null;
 
-  const usernameChanged = username !== (user.username || '');
-  const usernameError = usernameChanged && isUsernameAvailable === false;
-  const usernameOk = usernameChanged && isUsernameAvailable === true;
-
   return (
     <div className="min-h-screen bg-[var(--background)] pb-24 md:pb-8">
       {/* Mobile Top Header */}
-      <header className="sticky top-0 z-30 h-14 apple-glass-bar px-4 flex items-center justify-between pt-safe md:hidden">
+      <header className="sticky top-0 z-30 min-h-[calc(3.5rem+env(safe-area-inset-top,0px))] apple-glass-bar px-4 flex items-center justify-between pt-safe md:hidden">
         <Link
           href="/profile/settings"
           className="touch-target-44 flex items-center justify-center -ml-2 text-[var(--foreground)] hover:text-[var(--brand-pink)] transition-colors"
@@ -341,39 +299,21 @@ export default function PersonalSettingsPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-[var(--foreground)] mb-2">Usuario</label>
-            <div className="relative">
-              <input
-                type="text"
-                value={username}
-                onChange={handleUsernameChange}
-                placeholder="@usuario"
-                className={`w-full px-4 py-3 pr-10 bg-[var(--background-secondary)] rounded-xl border text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] outline-none transition-colors ${
-                  usernameError
-                    ? 'border-red-500 focus:border-red-500'
-                    : usernameOk
-                    ? 'border-green-500 focus:border-green-500'
-                    : 'border-[var(--border-color)] focus:border-[var(--foreground-tertiary)]'
-                }`}
-              />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                {isCheckingUsername && (
-                  <Loader2 className="w-4 h-4 text-[var(--foreground-tertiary)] animate-spin" />
-                )}
-                {!isCheckingUsername && usernameOk && (
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                )}
-                {!isCheckingUsername && usernameError && (
-                  <XCircle className="w-4 h-4 text-red-500" />
-                )}
-              </div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-sm font-medium text-[var(--foreground)] flex items-center gap-1.5">
+                <Lock className="w-3.5 h-3.5 text-[var(--foreground-tertiary)]" />
+                Usuario
+              </label>
+              <Link
+                href="/profile/edit"
+                className="text-xs font-semibold text-[var(--brand-pink)] hover:underline"
+              >
+                Cambiar en Editar perfil
+              </Link>
             </div>
-            {usernameError && (
-              <p className="text-red-500 text-xs mt-1.5 ml-1">Este nombre de usuario ya está en uso</p>
-            )}
-            {usernameOk && (
-              <p className="text-green-500 text-xs mt-1.5 ml-1">¡Nombre de usuario disponible!</p>
-            )}
+            <div className="w-full px-4 py-3 bg-[var(--background-secondary)]/70 rounded-xl border border-[var(--border-color)] text-[var(--foreground-secondary)] text-sm font-medium select-all">
+              @{user.username?.replace(/^@/, '') || 'usuario'}
+            </div>
           </div>
 
           <div>
@@ -557,7 +497,7 @@ export default function PersonalSettingsPage() {
 
           <Button
             onClick={handleSave}
-            disabled={saving || (usernameChanged && isUsernameAvailable === false)}
+            disabled={saving}
             className="w-full rounded-full py-3.5"
           >
             <Save className="w-4 h-4 mr-2" />

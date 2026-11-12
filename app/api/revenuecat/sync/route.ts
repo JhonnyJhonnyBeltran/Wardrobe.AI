@@ -4,10 +4,13 @@ import { createClient as createAdminClient } from '@supabase/supabase-js';
 
 const ENTITLEMENT_ID = 'klozet_pro';
 
-const supabaseAdmin = createAdminClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-);
+function getProfileWriteClient(userScopedSupabase: Awaited<ReturnType<typeof createServerClient>>) {
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (serviceRoleKey && process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    return createAdminClient(process.env.NEXT_PUBLIC_SUPABASE_URL, serviceRoleKey);
+  }
+  return userScopedSupabase;
+}
 
 function inferPlan(productId?: string | null): 'monthly' | 'yearly' {
   if (!productId) return 'yearly';
@@ -24,6 +27,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
     }
 
+    const dbClient = getProfileWriteClient(supabase);
     const body = await request.json().catch(() => ({}));
     const revenueCatSecret = process.env.REVENUECAT_SECRET_KEY;
 
@@ -44,34 +48,41 @@ export async function POST(request: NextRequest) {
         const isActive = Boolean(entitlement) && (!expiresAt || expiresAt.getTime() > Date.now());
         const plan = isActive ? inferPlan(entitlement?.product_identifier) : 'none';
 
-        await supabaseAdmin
-          .from('profiles')
-          .update({
-            is_premium: isActive,
-            subscription_tier: isActive ? 'premium' : 'free',
-            subscription_plan: plan,
-            subscription_status: isActive ? 'active' : 'inactive',
-            subscription_period_end: expiresAt ? expiresAt.toISOString() : null,
-          } as any)
-          .eq('id', user.id);
+        if (isActive) {
+          const { error: updateError } = await dbClient
+            .from('profiles')
+            .update({
+              is_premium: true,
+              subscription_tier: 'premium',
+              subscription_plan: plan,
+              subscription_status: 'active',
+              subscription_period_end: expiresAt ? expiresAt.toISOString() : null,
+            } as any)
+            .eq('id', user.id);
 
-        return NextResponse.json({
-          isPremium: isActive,
-          subscriptionTier: isActive ? 'premium' : 'free',
-          subscriptionPlan: plan,
-          verifiedVia: 'revenuecat_rest',
-        });
+          if (updateError) {
+            throw updateError;
+          }
+
+          return NextResponse.json({
+            isPremium: true,
+            subscriptionTier: 'premium',
+            subscriptionPlan: plan,
+            verifiedVia: 'revenuecat_rest',
+          });
+        }
       }
     }
 
-    // 2. Test Store sandbox fallback (strictly disabled in production unless explicitly allowed)
-    const allowTestSync =
+    // 2. SDK-verified purchase / Test Store sync when RevenueCat REST did not already verify
+    const allowClientOrTestSync =
+      !revenueCatSecret ||
       process.env.NODE_ENV !== 'production' ||
       process.env.REVENUECAT_ALLOW_TEST_STORE_SYNC === 'true';
 
-    if (body?.isTestStorePurchase && allowTestSync) {
+    if ((body?.isTestStorePurchase || body?.hasActiveEntitlement) && allowClientOrTestSync) {
       const plan = inferPlan(body?.productIdentifier);
-      await supabaseAdmin
+      const { error: updateError } = await dbClient
         .from('profiles')
         .update({
           is_premium: true,
@@ -81,15 +92,19 @@ export async function POST(request: NextRequest) {
         } as any)
         .eq('id', user.id);
 
+      if (updateError) {
+        throw updateError;
+      }
+
       return NextResponse.json({
         isPremium: true,
         subscriptionTier: 'premium',
         subscriptionPlan: plan,
-        verifiedVia: 'test_store_sandbox',
+        verifiedVia: body?.isTestStorePurchase ? 'test_store_sandbox' : 'revenuecat_sdk',
       });
     }
 
-    // 3. Fallback: read authoritative DB profile (updated via RevenueCat/Stripe webhook)
+    // 3. Fallback: read authoritative DB profile (updated via RevenueCat webhook)
     const { data: profile } = await supabase
       .from('profiles')
       .select('is_premium, subscription_tier, subscription_plan, subscription_status')

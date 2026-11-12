@@ -714,9 +714,11 @@ export default function SearchPage() {
     return chips;
   }, [history, user?.preferredStyles]);
 
+  const isAdjustingScrollRef = useRef(false);
+
   const loopedChips = useMemo(() => {
     if (recommendationChips.length === 0) return [];
-    return [0, 1, 2].flatMap((loopIndex) =>
+    return [0, 1, 2, 3].flatMap((loopIndex) =>
       recommendationChips.map((chip) => ({
         ...chip,
         loopKey: `${loopIndex}-${chip.text}`,
@@ -728,36 +730,53 @@ export default function SearchPage() {
     const el = chipsScrollRef.current;
     if (!el || recommendationChips.length === 0) return;
     const raf = requestAnimationFrame(() => {
-      const oneLoop = el.scrollWidth / 3;
+      const oneLoop = el.scrollWidth / 4;
       if (oneLoop > 0 && el.scrollLeft < 10) {
+        isAdjustingScrollRef.current = true;
         el.scrollLeft = oneLoop;
+        requestAnimationFrame(() => {
+          isAdjustingScrollRef.current = false;
+        });
       }
     });
     return () => cancelAnimationFrame(raf);
   }, [recommendationChips.length]);
 
   const handleChipsInfiniteScroll = () => {
+    if (isAdjustingScrollRef.current) return;
     const el = chipsScrollRef.current;
     if (!el) return;
-    const oneLoop = el.scrollWidth / 3;
+    const oneLoop = el.scrollWidth / 4;
     if (oneLoop <= 0) return;
-    if (el.scrollLeft < oneLoop * 0.25) {
+    if (el.scrollLeft < oneLoop * 0.5) {
+      isAdjustingScrollRef.current = true;
       el.scrollLeft += oneLoop;
-    } else if (el.scrollLeft > oneLoop * 2.25) {
+      requestAnimationFrame(() => {
+        isAdjustingScrollRef.current = false;
+      });
+    } else if (el.scrollLeft > oneLoop * 2.5) {
+      isAdjustingScrollRef.current = true;
       el.scrollLeft -= oneLoop;
+      requestAnimationFrame(() => {
+        isAdjustingScrollRef.current = false;
+      });
     }
   };
 
   const scrollChipsCarousel = (direction: 'left' | 'right') => {
     const el = chipsScrollRef.current;
     if (!el) return;
-    const oneLoop = el.scrollWidth / 3;
+    const oneLoop = el.scrollWidth / 4;
     if (oneLoop > 0) {
-      if (direction === 'left' && el.scrollLeft < oneLoop * 0.45) {
+      isAdjustingScrollRef.current = true;
+      if (direction === 'left' && el.scrollLeft < oneLoop * 0.8) {
         el.scrollLeft += oneLoop;
-      } else if (direction === 'right' && el.scrollLeft > oneLoop * 1.95) {
+      } else if (direction === 'right' && el.scrollLeft > oneLoop * 2.2) {
         el.scrollLeft -= oneLoop;
       }
+      requestAnimationFrame(() => {
+        isAdjustingScrollRef.current = false;
+      });
     }
     el.scrollBy({
       left: direction === 'left' ? -260 : 260,
@@ -767,8 +786,14 @@ export default function SearchPage() {
 
   return (
     <div className="min-h-[100dvh] w-full bg-[var(--background)] pb-24">
-      {/* Suspended Fixed Search Bar (Only the floating pill is fixed, NO background strip/header) */}
-      <div className="fixed top-0 left-0 right-0 md:left-[72px] z-30 pt-3 pb-2 px-3 sm:px-4 md:px-6 pointer-events-none">
+      {/* Frosted mobile top scrim below notch & floating search pill */}
+      <div
+        aria-hidden="true"
+        className="fixed top-0 left-0 right-0 h-[calc(env(safe-area-inset-top,0px)+80px)] mobile-top-nav-blur pointer-events-none z-20 md:hidden"
+      />
+
+      {/* Suspended Fixed Search Bar */}
+      <div className="fixed top-0 left-0 right-0 md:left-[72px] z-30 pt-[max(calc(env(safe-area-inset-top,0px)+0.5rem),0.75rem)] pb-2 px-3 sm:px-4 md:px-6 pointer-events-none">
         <div className="w-full max-w-3xl mx-auto pointer-events-auto">
           {/* Search Bar */}
           <div className="relative w-full rounded-full bg-[var(--card-bg)]/95 backdrop-blur-xl border border-[var(--border-color)] shadow-md overflow-hidden transition-all duration-300 focus-within:shadow-lg focus-within:border-[var(--brand-pink)]">
@@ -798,7 +823,7 @@ export default function SearchPage() {
       </div>
 
       {/* Search Content with inline Pull-to-Refresh above results */}
-      <PullToRefresh onRefresh={handleRefresh} className="pt-[70px] sm:pt-[74px] md:pt-[78px]">
+      <PullToRefresh onRefresh={handleRefresh} className="pt-[calc(env(safe-area-inset-top,0px)+70px)] sm:pt-[calc(env(safe-area-inset-top,0px)+74px)] md:pt-[78px]">
         <div className="w-full max-w-7xl mx-auto px-3 md:px-6 pt-2 pb-6 flex flex-col gap-6 min-w-0">
           {/* Infinite Horizontal Suggestion Pills Carousel with Edge Fades (No icons inside pills) */}
           <div className="relative w-full flex items-center gap-2 min-w-0">
@@ -811,39 +836,49 @@ export default function SearchPage() {
               <ChevronLeft className="w-4 h-4" />
             </button>
 
-            <div
-              ref={chipsScrollRef}
-              onScroll={handleChipsInfiniteScroll}
-              className="flex-1 min-w-0 flex items-center gap-2 overflow-x-auto no-scrollbar py-1.5 px-6 sm:px-8 touch-pan-x [mask-image:linear-gradient(to_right,transparent_0%,black_28px,black_calc(100%-28px),transparent_100%)] md:[mask-image:linear-gradient(to_right,transparent_0%,black_40px,black_calc(100%-40px),transparent_100%)]"
-            >
-              {loopedChips.map((chip) => {
-                const isSelected = query.toLowerCase() === chip.text.toLowerCase();
-                return (
-                  <button
-                    key={chip.loopKey}
-                    type="button"
-                    onClick={() => {
-                      if (isSelected) {
-                        setQuery('');
-                        setDebouncedQuery('');
-                      } else {
-                        setQuery(chip.text);
-                        setDebouncedQuery(chip.text);
-                        addSearch(chip.text);
-                      }
-                    }}
-                    className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all border shrink-0 cursor-pointer active:scale-95 ${
-                      isSelected
-                        ? 'bg-[var(--brand-pink)] text-white border-[var(--brand-pink)] shadow-xs'
-                        : chip.isHistory
-                        ? 'bg-[var(--background-secondary)] text-[var(--foreground)] border-[var(--border-color)] hover:border-[var(--brand-pink)]/40 hover:bg-[var(--card-bg)]'
-                        : 'bg-[var(--card-bg)] text-[var(--foreground-secondary)] hover:text-[var(--foreground)] border-[var(--border-color)] hover:border-[var(--brand-pink)]/40'
-                    }`}
-                  >
-                    <span>{chip.text}</span>
-                  </button>
-                );
-              })}
+            <div className="relative flex-1 min-w-0 overflow-hidden">
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-y-0 left-0 w-7 md:w-10 z-10 bg-gradient-to-r from-[var(--background)] to-transparent"
+              />
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-y-0 right-0 w-7 md:w-10 z-10 bg-gradient-to-l from-[var(--background)] to-transparent"
+              />
+              <div
+                ref={chipsScrollRef}
+                onScroll={handleChipsInfiniteScroll}
+                className="w-full flex items-center gap-2 overflow-x-auto no-scrollbar py-1.5 px-6 sm:px-8 touch-pan-x scroll-auto"
+              >
+                {loopedChips.map((chip) => {
+                  const isSelected = query.toLowerCase() === chip.text.toLowerCase();
+                  return (
+                    <button
+                      key={chip.loopKey}
+                      type="button"
+                      onClick={() => {
+                        if (isSelected) {
+                          setQuery('');
+                          setDebouncedQuery('');
+                        } else {
+                          setQuery(chip.text);
+                          setDebouncedQuery(chip.text);
+                          addSearch(chip.text);
+                        }
+                      }}
+                      className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all border shrink-0 cursor-pointer active:scale-95 ${
+                        isSelected
+                          ? 'bg-[var(--brand-pink)] text-white border-[var(--brand-pink)] shadow-xs'
+                          : chip.isHistory
+                          ? 'bg-[var(--background-secondary)] text-[var(--foreground)] border-[var(--border-color)] hover:border-[var(--brand-pink)]/40 hover:bg-[var(--card-bg)]'
+                          : 'bg-[var(--card-bg)] text-[var(--foreground-secondary)] hover:text-[var(--foreground)] border-[var(--border-color)] hover:border-[var(--brand-pink)]/40'
+                      }`}
+                    >
+                      <span>{chip.text}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             <button

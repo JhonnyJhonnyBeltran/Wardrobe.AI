@@ -180,7 +180,7 @@ export function OutfitDetailModal({
                             </div>
 
                             {/* Maximized Canvas Stage (Left Column in Desktop / Expanded Full-Flex in Mobile) - Always White */}
-                            <div className="relative w-full flex-1 min-h-0 md:h-full md:w-[58%] shrink bg-white z-0 flex flex-col items-center justify-center md:border-r border-[var(--border-color)] overflow-hidden">
+                            <div className="relative flex-1 min-h-0 md:h-[calc(100%-2rem)] md:w-[58%] shrink m-3 mb-0 md:m-4 md:mr-0 rounded-[24px] bg-white z-0 flex flex-col items-center justify-center border border-black/[0.06] shadow-xs overflow-hidden">
                                 <div className="absolute inset-0 w-full h-full bg-white">
                                     <InteractiveOutfitViewer
                                         outfit={outfit}
@@ -194,7 +194,7 @@ export function OutfitDetailModal({
                             </div>
 
                             {/* Bottom Info Section (Clean & Compact) */}
-                            <div className="relative z-10 w-full shrink-0 md:flex-1 md:shrink flex flex-col justify-between bg-[var(--background)] p-4 sm:p-5 md:p-8 md:pt-14 gap-4 md:gap-6 border-t border-[var(--border-color)]/60 md:border-t-0 md:overflow-y-auto">
+                            <div className="relative z-10 w-full shrink-0 md:flex-1 md:shrink flex flex-col justify-between bg-[var(--background)] p-4 sm:p-5 md:p-8 md:pt-14 gap-4 md:gap-6 md:overflow-y-auto">
                                 {/* Title */}
                                 <div className="flex flex-col gap-1">
                                     <h2 data-no-translate={outfit.name ? "true" : undefined} className="kz-title md:text-2xl text-[var(--foreground)] leading-tight">
@@ -227,9 +227,9 @@ export function OutfitDetailModal({
                                                     <div
                                                         key={raw.id || item.id || idx}
                                                         onClick={() => handleItemClick(raw)}
-                                                        className="group flex items-center gap-2.5 p-2 rounded-xl bg-[var(--background-secondary)] hover:bg-[var(--background-tertiary)] border border-[var(--border-color)] hover:border-[var(--brand-pink,#FF66C4)]/40 transition-all cursor-pointer select-none"
+                                                        className="group flex items-center gap-2.5 p-2 rounded-[20px] bg-[var(--background-secondary)] hover:bg-[var(--background-tertiary)] border border-[var(--border-color)] hover:border-[var(--brand-pink,#FF66C4)]/40 transition-all cursor-pointer select-none"
                                                     >
-                                                        <div className="relative w-10 h-10 shrink-0 rounded-lg bg-white border border-black/10 overflow-hidden flex items-center justify-center p-0.5">
+                                                        <div className="relative w-10 h-10 shrink-0 rounded-xl bg-white border border-black/10 overflow-hidden flex items-center justify-center p-0.5">
                                                             {imgUrl ? (
                                                                 <Image
                                                                     src={imgUrl}

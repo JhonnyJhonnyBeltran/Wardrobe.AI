@@ -106,9 +106,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         if (isDark) {
             root.classList.add('dark');
             root.style.colorScheme = 'dark';
+            root.style.backgroundColor = '#111113';
         } else {
             root.classList.remove('dark');
             root.style.colorScheme = 'light';
+            root.style.backgroundColor = '#ffffff';
         }
 
         updateThemeColorMeta(isDark);

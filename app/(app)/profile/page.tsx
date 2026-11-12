@@ -426,20 +426,21 @@ export default function ProfilePage() {
               <p className="text-sm text-[var(--foreground-secondary)] whitespace-pre-wrap mb-4">{user.bio}</p>
             )}
             
-            <div className="flex items-center gap-2 mt-4 mb-4">
+            <div className="flex items-center gap-2.5 mt-4 mb-4">
               <Link 
                 href="/profile/edit" 
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[var(--brand-pink)] text-white font-semibold text-sm hover:opacity-95 active:scale-[0.99] transition-all shadow-sm"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-[var(--brand-pink)] text-white font-semibold text-sm hover:opacity-95 active:scale-[0.99] transition-all shadow-sm"
               >
                 Editar perfil
               </Link>
               <Link 
                 href="/profile/settings" 
-                className="px-3.5 py-2.5 rounded-xl bg-[var(--background-secondary)] text-[var(--foreground)] hover:text-[var(--brand-pink)] border border-[var(--border-color)] hover:border-[var(--brand-pink)]/40 transition-all flex items-center justify-center active:scale-95 shadow-sm"
-                aria-label="Configuración"
-                title="Configuración"
+                className="px-4 py-2.5 rounded-full bg-[var(--background-secondary)] text-[var(--foreground)] hover:text-[var(--brand-pink)] border border-[var(--border-color)] hover:border-[var(--brand-pink)]/40 transition-all flex items-center justify-center gap-1.5 text-sm font-semibold active:scale-95 shadow-sm shrink-0"
+                aria-label="Ajustes"
+                title="Ajustes"
               >
-                <Settings className="w-5 h-5" />
+                <Settings className="w-4 h-4 text-[var(--brand-pink)]" />
+                <span>Ajustes</span>
               </Link>
             </div>
 

@@ -28,22 +28,20 @@ import {
     LogOut,
     Trash2,
     Edit,
-    User,
     ChevronRight,
     HelpCircle,
     LayoutGrid,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { resetRevenueCatUser } from '@/lib/revenuecat/client';
 import FeedbackModal from '@/components/FeedbackModal';
-import AvatarCalibrationModal, {
-    BODY_TYPES_BY_GENDER,
-    EYE_COLOR_OPTIONS,
-    HAIR_COLOR_OPTIONS,
-} from '@/components/AvatarCalibrationModal';
 import { useNotificationSettingsStore } from '@/store/notificationSettingsStore';
+import { useSearchStore } from '@/store/searchStore';
+import { useMessageStore } from '@/store/messageStore';
+import { useRealtimeStore } from '@/store/realtimeStore';
 
 export default function SettingsPage() {
-    const { user } = useUser();
+    const { user, setUser } = useUser();
     const { signOut } = useAuth();
     const router = useRouter();
     const { theme, themePreference, setTheme } = useTheme();
@@ -51,10 +49,8 @@ export default function SettingsPage() {
     const { t } = useTranslation();
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [showFeedbackModal, setShowFeedbackModal] = useState(false);
-    const [showPhysicalModal, setShowPhysicalModal] = useState(false);
     const [deleteInput, setDeleteInput] = useState('');
     const [isDeleting, setIsDeleting] = useState(false);
-    const [showStyleForm, setShowStyleForm] = useState(false);
     const [styleNames, setStyleNames] = useState<Record<string, string>>({});
     
     // Privacy and notification states
@@ -119,7 +115,7 @@ export default function SettingsPage() {
         try {
             const { data: { session } } = await supabase.auth.getSession();
             if (!session) throw new Error('No se pudo verificar la sesión.');
-            
+
             const res = await fetch('/api/user/delete', {
                 method: 'POST',
                 headers: {
@@ -128,12 +124,24 @@ export default function SettingsPage() {
                 },
                 body: JSON.stringify({ userId: user?.id })
             });
-            
+
             if (!res.ok) {
                 const errData = await res.json().catch(() => ({}));
                 throw new Error(errData.error || 'Error al eliminar la cuenta');
             }
-            
+
+            await resetRevenueCatUser().catch(() => {});
+
+            try {
+                useSearchStore.getState().resetSearch();
+                useMessageStore.getState().reset();
+                useRealtimeStore.getState().reset();
+            } catch (e) {
+                console.warn('Error resetting client stores:', e);
+            }
+
+            setUser(null);
+
             if (typeof window !== 'undefined') {
                 try {
                     localStorage.clear();
@@ -142,8 +150,10 @@ export default function SettingsPage() {
                     console.warn('Error clearing storage:', e);
                 }
             }
-            await signOut();
-            window.location.href = '/auth';
+
+            await signOut().catch(() => {});
+            toast.success('Cuenta eliminada permanentemente');
+            window.location.replace('/auth');
         } catch (error: any) {
             console.error('Error deleting account:', error);
             setDeleteError(error?.message || 'Hubo un error al eliminar tu cuenta.');
@@ -208,15 +218,6 @@ export default function SettingsPage() {
 
     if (!user) return null;
 
-    const allBodyOptions = [
-        ...BODY_TYPES_BY_GENDER.woman,
-        ...BODY_TYPES_BY_GENDER.man,
-        ...BODY_TYPES_BY_GENDER.other,
-    ];
-    const bodyLabel = allBodyOptions.find((b) => b.id === (user.bodyType || user.morphology))?.label || user.bodyType || user.morphology;
-    const eyeLabel = EYE_COLOR_OPTIONS.find((e) => e.id === user.eyeColor)?.label || user.eyeColor;
-    const hairLabel = HAIR_COLOR_OPTIONS.find((h) => h.id === user.hairColor)?.label || user.hairColor;
-
     const containerVariants = {
         hidden: { opacity: 0 },
         visible: {
@@ -243,7 +244,7 @@ export default function SettingsPage() {
     return (
         <div className="min-h-screen bg-[var(--background)] pb-24 md:pb-8">
             {/* Mobile Top Header */}
-            <header className="sticky top-0 z-30 h-14 apple-glass-bar px-4 flex items-center justify-between pt-safe md:hidden">
+            <header className="sticky top-0 z-30 min-h-14 apple-glass-bar px-4 flex items-center justify-between pt-safe md:hidden">
                 <Link
                     href="/profile"
                     className="touch-target-44 flex items-center justify-center -ml-2 text-[var(--foreground)] hover:text-[var(--brand-pink)] transition-colors"
@@ -487,79 +488,37 @@ export default function SettingsPage() {
                     </Card>
                 </motion.div>
 
-                {/* TU ESTILO Y PERFIL FÍSICO ("DINOS CÓMO ERES") */}
+                {/* TU ESTILO */}
                 <motion.div variants={itemVariants} className="mb-6">
                     <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
                         <h2 className="text-sm font-semibold text-[var(--foreground-secondary)] uppercase tracking-wider">
-                            Tu Estilo y Perfil Físico
+                            Tu Estilo
                         </h2>
-                        <div className="flex items-center gap-2">
-                            <button
-                                type="button"
-                                onClick={() => setShowPhysicalModal(true)}
-                                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] text-xs font-semibold hover:border-[var(--brand-pink)] transition-colors cursor-pointer"
-                            >
-                                <User className="w-3.5 h-3.5 text-[var(--brand-pink)]" />
-                                <span>Cómo eres</span>
-                            </button>
-                            <Link
-                                href="/onboarding/preferences?from=settings"
-                                className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[var(--brand-pink)] text-white text-xs font-semibold hover:opacity-90 transition-opacity"
-                            >
-                                <Edit className="w-3.5 h-3.5" />
-                                <span>Editar estilo</span>
-                            </Link>
-                        </div>
+                        <Link
+                            href="/onboarding/preferences?from=settings&step=styles"
+                            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[var(--brand-pink)] text-white text-xs font-semibold hover:opacity-90 transition-opacity"
+                        >
+                            <Edit className="w-3.5 h-3.5" />
+                            <span>Editar estilo</span>
+                        </Link>
                     </div>
                     <Card className="p-5">
-                        <div className="space-y-5">
-                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                                <div>
-                                    <div className="text-xs text-[var(--foreground-tertiary)] mb-1">{t.profile.gender}</div>
-                                    <div className="font-medium text-sm text-[var(--foreground)]">
-                                        {user.gender === 'woman' ? 'Chica' : user.gender === 'man' ? 'Chico' : user.gender === 'other' ? 'Unisex / Mixto' : 'Sin definir'}
-                                    </div>
+                        <div className="space-y-4">
+                            <div>
+                                <div className="text-xs text-[var(--foreground-tertiary)] mb-1">
+                                    {t.profile.accessories}
                                 </div>
-                                <div>
-                                    <div className="text-xs text-[var(--foreground-tertiary)] mb-1">{t.profile.height}</div>
-                                    <div className="font-medium text-sm text-[var(--foreground)]">
-                                        {user.height ? `${user.height} cm` : user.heightRange || 'Sin definir'}
-                                    </div>
-                                </div>
-                                <div>
-                                    <div className="text-xs text-[var(--foreground-tertiary)] mb-1">Tipo de cuerpo</div>
-                                    <div className="font-medium text-sm text-[var(--foreground)]">
-                                        {bodyLabel || 'Sin definir'}
-                                    </div>
-                                </div>
-                                <div>
-                                    <div className="text-xs text-[var(--foreground-tertiary)] mb-1">Color de ojos</div>
-                                    <div className="font-medium text-sm text-[var(--foreground)]">
-                                        {eyeLabel || 'Sin definir'}
-                                    </div>
-                                </div>
-                                <div>
-                                    <div className="text-xs text-[var(--foreground-tertiary)] mb-1">Color de pelo</div>
-                                    <div className="font-medium text-sm text-[var(--foreground)]">
-                                        {hairLabel || 'Sin definir'}
-                                    </div>
-                                </div>
-                                <div>
-                                    <div className="text-xs text-[var(--foreground-tertiary)] mb-1">
-                                        {t.profile.accessories}
-                                    </div>
-                                    <div className="font-medium text-sm text-[var(--foreground)]">
-                                        {user.accessoriesStyle === 'minimalista' ? 'Minimalista' :
-                                         user.accessoriesStyle === 'clasico' ? 'Clásico / Elegante' :
-                                         user.accessoriesStyle === 'llamativo' ? 'Statement / Llamativo' :
-                                         user.accessoriesStyle === 'urbano' ? 'Urbano / Streetwear' :
-                                         user.accessoriesStyle === 'ninguno' ? 'Sin accesorios' :
-                                         user.usesAccessories ? 'Minimalista' : 'Sin accesorios'}
-                                    </div>
+                                <div className="font-medium text-sm text-[var(--foreground)]">
+                                    {user.accessoriesStyle === 'minimalista' ? 'Minimalista' :
+                                     user.accessoriesStyle === 'clasico' ? 'Clásico / Elegante' :
+                                     user.accessoriesStyle === 'llamativo' ? 'Statement / Llamativo' :
+                                     user.accessoriesStyle === 'urbano' ? 'Urbano / Streetwear' :
+                                     user.accessoriesStyle === 'ninguno' ? 'Sin accesorios' :
+                                     user.usesAccessories ? 'Minimalista' : 'Sin accesorios'}
                                 </div>
                             </div>
 
-                            {user.preferredStyles && user.preferredStyles.length > 0 && (
+                            {user.preferredStyles && user.preferredStyles.length > 0 ? (
                                 <div>
                                     <div className="text-xs text-[var(--foreground-tertiary)] mb-2">
                                         {t.profile.preferredStyles}
@@ -575,6 +534,10 @@ export default function SettingsPage() {
                                         ))}
                                     </div>
                                 </div>
+                            ) : (
+                                <p className="text-xs text-[var(--foreground-tertiary)]">
+                                    Todavía no has elegido tus estilos preferidos. Pulsa Editar estilo para definirlos.
+                                </p>
                             )}
                         </div>
                     </Card>
@@ -652,56 +615,6 @@ export default function SettingsPage() {
                         </button>
                     </Card>
                 </motion.div>
-
-                {/* Physical Profile Modal ("Dinos cómo eres") */}
-                <AvatarCalibrationModal
-                    isOpen={showPhysicalModal}
-                    onClose={() => setShowPhysicalModal(false)}
-                />
-
-                {/* Style Form Modal */}
-                <AnimatePresence>
-                    {showStyleForm && (
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
-                            onClick={() => setShowStyleForm(false)}
-                        >
-                            <motion.div
-                                initial={{ scale: 0.9, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                exit={{ scale: 0.9, opacity: 0 }}
-                                className="bg-[var(--card-bg)] rounded-3xl p-6 max-w-md w-full max-h-[80vh] overflow-y-auto"
-                                onClick={(e) => e.stopPropagation()}
-                            >
-                                <h3 className="text-xl font-bold text-[var(--foreground)] mb-4">
-                                    {t.profile.editYourStyle}
-                                </h3>
-                                <p className="text-sm text-[var(--foreground-tertiary)] mb-6">
-                                    {t.profile.editStyleDesc}
-                                </p>
-                                <div className="space-y-4">
-                                    <div className="text-center py-8">
-                                        <p className="text-[var(--foreground-secondary)]">
-                                            {t.profile.styleFormPlaceholder}
-                                        </p>
-                                        <p className="text-xs text-[var(--foreground-tertiary)] mt-2">
-                                            {t.profile.toImplement}
-                                        </p>
-                                    </div>
-                                    <Button
-                                        onClick={() => setShowStyleForm(false)}
-                                        className="w-full !bg-[var(--background-secondary)] !text-[var(--foreground)]"
-                                    >
-                                        {t.common.close}
-                                    </Button>
-                                </div>
-                            </motion.div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
 
                 {/* Password Modal */}
                 <AnimatePresence>
