@@ -10,7 +10,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import { useRef } from 'react';
 import {
-  Heart, Grid3x3, List, Search, Filter, Plus, X, Shirt, Layers, Share2, Trash2, Check, CalendarDays, Camera, ChevronRight, MessageCircle, Sun
+  Heart, Grid3x3, List, Search, Filter, Plus, X, Shirt, Layers, Share2, Trash2, Check, CalendarDays, Camera, ChevronRight
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button, Card, FloatingCreateButton, OutfitCard, ClothingItem, NotificationToastContainer, WardrobeSelectionModal, OutfitDetailModal, EmptyState, SkeletonCard, SkeletonCloset, ProfileProgressBar, KloeMascot } from '@/components';
@@ -32,34 +32,30 @@ import { supabase } from '@/lib/supabase/client';
 import Image from 'next/image';
 
 const KLOE_PROMPTS = [
-  { text: '¿Qué me pongo hoy?', icon: Shirt },
-  { text: 'Charla conmigo', icon: MessageCircle },
-  { text: 'Crea un look conmigo', icon: Layers },
-  { text: '¿Look según el tiempo?', icon: Sun },
-  { text: 'Planea tu outfit de hoy', icon: CalendarDays },
+  '¿Qué me pongo hoy?',
+  'Charla conmigo',
+  'Crea un look conmigo',
+  '¿Look según el tiempo?',
+  'Planea tu outfit de hoy',
+  'Saca partido a tu armario',
+  'Tu look perfecto te espera',
+  '¿Estrenamos combinación hoy?',
 ];
 
 function KloeHeroBanner() {
   const [promptIndex, setPromptIndex] = useState(0);
-  const [showPhrase, setShowPhrase] = useState(false);
 
   useEffect(() => {
-    const randomIndex = Math.floor(Math.random() * KLOE_PROMPTS.length);
-    setPromptIndex(randomIndex);
+    setPromptIndex(Math.floor(Math.random() * KLOE_PROMPTS.length));
 
-    const initialFlip = setTimeout(() => setShowPhrase(true), 2200);
     const interval = setInterval(() => {
-      setShowPhrase((prev) => !prev);
-    }, 3600);
+      setPromptIndex((prev) => (prev + 1) % KLOE_PROMPTS.length);
+    }, 4200);
 
-    return () => {
-      clearTimeout(initialFlip);
-      clearInterval(interval);
-    };
+    return () => clearInterval(interval);
   }, []);
 
   const currentPrompt = KLOE_PROMPTS[promptIndex];
-  const PhraseIcon = currentPrompt.icon;
 
   return (
     <Link href="/closet/kloe" className="block w-full" onClick={() => { try { haptics.tap(); } catch {} }}>
@@ -67,50 +63,35 @@ function KloeHeroBanner() {
         whileHover={{ y: -2, scale: 1.006 }}
         whileTap={{ scale: 0.975 }}
         transition={{ type: 'spring', stiffness: 460, damping: 24 }}
-        className="w-full min-h-[78px] sm:min-h-[86px] py-3.5 px-5 sm:px-7 rounded-full kz-kloe-banner flex items-center justify-between gap-4 cursor-pointer group"
-        aria-label={currentPrompt.text}
+        className="w-full min-h-[78px] sm:min-h-[84px] py-3.5 px-5 sm:px-7 rounded-full kz-kloe-banner flex items-center justify-between gap-4 cursor-pointer group"
+        aria-label={currentPrompt}
       >
-        <div className="min-w-0 flex-1 flex items-center">
-          <AnimatePresence mode="wait">
-            {!showPhrase ? (
-              <motion.div
-                key="kloe-brand"
-                initial={{ opacity: 0, y: 8, scale: 0.97 }}
+        <div className="min-w-0 flex-1 flex items-center gap-4 sm:gap-5">
+          <KloeMascot
+            mood="happy"
+            size="lg"
+            variant="pink"
+            className="!w-[52px] !h-[60px] sm:!w-[58px] sm:!h-[66px] drop-shadow-[0_0_18px_rgba(255,102,196,0.68)] shrink-0"
+          />
+
+          <div className="min-w-0 flex-1 overflow-hidden">
+            <AnimatePresence mode="wait">
+              <motion.p
+                key={promptIndex}
+                initial={{ opacity: 0, y: 10, scale: 0.98 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -8, scale: 0.97 }}
-                transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
-                className="flex items-center gap-3.5"
+                exit={{ opacity: 0, y: -10, scale: 0.98 }}
+                transition={{ type: 'spring', stiffness: 280, damping: 26, mass: 0.85 }}
+                className="font-display text-[19px] sm:text-[23px] font-bold tracking-[-0.025em] text-[#FF66C4] leading-tight line-clamp-2 select-none"
               >
-                <img
-                  src="/kloe-logo-large.png"
-                  alt="Kloe"
-                  className="h-12 sm:h-14 w-auto object-contain select-none"
-                />
-              </motion.div>
-            ) : (
-              <motion.div
-                key={`phrase-${promptIndex}`}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
-                className="flex items-center gap-3.5 sm:gap-4 min-w-0"
-              >
-                <PhraseIcon
-                  className="w-10 h-10 sm:w-12 sm:h-12 text-[#FF66C4] shrink-0"
-                  strokeWidth={2}
-                  aria-hidden="true"
-                />
-                <p className="font-display text-[19px] sm:text-[23px] font-bold tracking-[-0.025em] text-[#FF66C4] leading-tight line-clamp-2 select-none">
-                  {currentPrompt.text}
-                </p>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                {currentPrompt}
+              </motion.p>
+            </AnimatePresence>
+          </div>
         </div>
 
         <ChevronRight
-          className="w-7 h-7 shrink-0 text-[#FF66C4] group-hover:translate-x-1 transition-transform"
+          className="w-7 h-7 shrink-0 text-[#FF66C4] drop-shadow-[0_0_10px_rgba(255,102,196,0.45)] group-hover:translate-x-1 transition-transform"
           strokeWidth={2.5}
           aria-hidden="true"
         />
