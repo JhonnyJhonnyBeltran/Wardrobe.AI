@@ -83,33 +83,56 @@ export default function KloeProModal({
     try {
       haptics.tap();
 
-      const res = await purchaseRevenueCatPlan({
-        plan: selectedPlan,
-        appUserId: user?.id,
-        customerEmail: user?.email,
-      });
+      if (isNative) {
+        const res = await purchaseRevenueCatPlan({
+          plan: selectedPlan,
+          appUserId: user?.id,
+          customerEmail: user?.email,
+        });
 
-      if (res.purchasedOrRestored) {
-        haptics.success();
-        await refreshProfile();
-        toast.success('¡Bienvenido a Klozet Pro!');
-        onClose();
-        if (redirectBackToCloset) {
-          router.push('/closet');
+        if (res.purchasedOrRestored) {
+          haptics.success();
+          await refreshProfile();
+          toast.success('¡Bienvenido a Klozet Pro!');
+          onClose();
+          if (redirectBackToCloset) {
+            router.push('/closet');
+          }
+          return;
+        }
+
+        if (res.cancelled) {
+          return;
+        }
+
+        if (res.error) {
+          toast.error(res.error);
         }
         return;
       }
 
-      if (res.cancelled) {
+      // Web: Direct Stripe Checkout session with Apple Pay, Google Pay & Card
+      const res = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan: selectedPlan }),
+      });
+
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error(errJson?.error || 'No se pudo iniciar la pasarela de pago');
+      }
+
+      const data = await res.json();
+      if (data?.url) {
+        window.location.href = data.url;
         return;
       }
 
-      if (res.error) {
-        toast.error(res.error);
-      }
+      throw new Error('No se recibió la URL de pago de Stripe.');
     } catch (err: any) {
-      console.error('[KloeProModal] RevenueCat purchase error:', err);
-      toast.error(err?.message || 'No se pudo iniciar la suscripción con RevenueCat.');
+      console.error('[KloeProModal] Checkout error:', err);
+      toast.error(err?.message || 'No se pudo iniciar el pago.');
     } finally {
       setLoading(false);
       isSubmittingRef.current = false;

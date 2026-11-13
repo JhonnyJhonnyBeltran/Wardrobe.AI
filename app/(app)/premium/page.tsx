@@ -30,10 +30,31 @@ export default function PremiumPage() {
   const isNative = isNativeCapacitor();
 
   useEffect(() => {
-    if (searchParams.get('subscribed') === 'success' || searchParams.get('success') === 'true') {
-      toast.success('¡Bienvenido a Klozet Pro! Tu suscripción ya está activa.');
+    const subscribed = searchParams.get('subscribed');
+    const sessionId = searchParams.get('session_id');
+
+    if (subscribed === 'success') {
+      if (sessionId) {
+        fetch('/api/stripe/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId }),
+        })
+          .then(async (res) => {
+            if (res.ok) {
+              await refreshProfile();
+              toast.success('¡Bienvenido a Klozet Pro! Tu suscripción ya está activa.');
+              router.push('/closet/kloe');
+            }
+          })
+          .catch(() => {
+            toast.success('¡Bienvenido a Klozet Pro!');
+          });
+      } else {
+        toast.success('¡Bienvenido a Klozet Pro! Tu suscripción ya está activa.');
+      }
     }
-  }, [searchParams]);
+  }, [searchParams, refreshProfile, router]);
 
   useEffect(() => {
     let mounted = true;
@@ -75,29 +96,49 @@ export default function PremiumPage() {
     setLoadingPaywall(true);
     try {
       haptics.tap();
-      const res = await purchaseRevenueCatPlan({
-        plan: selectedPlan,
-        appUserId: user?.id,
-        customerEmail: user?.email,
-      });
-      if (res.purchasedOrRestored) {
-        haptics.success();
-        await refreshProfile();
-        toast.success('¡Bienvenido a Klozet Pro!');
-        router.push('/closet/kloe');
-        return;
-      }
-      if (res.cancelled) {
-        return;
-      }
-      if (res.error) {
-        toast.error(res.error);
-        if (!isNative) {
-          openPremiumModal(selectedPlan);
+      if (isNative) {
+        const res = await purchaseRevenueCatPlan({
+          plan: selectedPlan,
+          appUserId: user?.id,
+          customerEmail: user?.email,
+        });
+        if (res.purchasedOrRestored) {
+          haptics.success();
+          await refreshProfile();
+          toast.success('¡Bienvenido a Klozet Pro!');
+          router.push('/closet/kloe');
+          return;
         }
+        if (res.cancelled) {
+          return;
+        }
+        if (res.error) {
+          toast.error(res.error);
+        }
+        return;
       }
+
+      // Web: Direct Stripe Checkout session
+      const res = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan: selectedPlan }),
+      });
+
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error(errJson?.error || 'No se pudo iniciar la pasarela de pago');
+      }
+
+      const data = await res.json();
+      if (data?.url) {
+        window.location.href = data.url;
+        return;
+      }
+
+      throw new Error('No se recibió la URL de pago de Stripe.');
     } catch (err: any) {
-      toast.error(err?.message || 'No se pudo iniciar la suscripción con RevenueCat.');
+      toast.error(err?.message || 'No se pudo iniciar la suscripción con Stripe.');
     } finally {
       setLoadingPaywall(false);
     }

@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
         }
       },
       allow_promotion_codes: true,
-      success_url: `${origin}/closet/kloe?subscribed=success`,
+      success_url: `${origin}/closet/kloe?subscribed=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/closet/kloe?subscribed=cancelled`
     });
 

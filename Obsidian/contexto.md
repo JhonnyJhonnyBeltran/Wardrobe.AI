@@ -3748,3 +3748,14 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
   - Estructura flexible en 3 franjas (`h-[100dvh] flex-col`): cabecera superior fija `.apple-glass-bar` (`X` + `Restaurar`), cuerpo central deslizable hacia abajo (hero con `K` libre + cuenta atrás + tarjetas de plan + indicador de scroll + preview de Widgets iOS + desplegable `Ver todo lo que incluye` con auto-scroll) y dock inferior fijo con el botón CTA principal (`Continuar · precio anterior tachado + precio final`) y aviso legal de renovación, eliminando por completo los cortes en la parte inferior.
 - **Apertura directa del Paywall al pulsar el anuncio de Klozet en `/feed` (`components/Feed/SponsoredAdCard.tsx`, `components/Feed/PremiumAdCard.tsx`)**:
   - Al pulsar la tarjeta promocional de Klozet/Kloe en el feed (`SponsoredAdCard`) o `PremiumAdCard` con sesión iniciada, se abre al instante el paywall a pantalla completa (`openPremiumModal('yearly')`) en lugar de salir hacia `/closet/kloe` (manteniendo `/auth` para visitantes sin sesión).
+
+---
+
+## 77. Conexión de Stripe Live Directo en Paywall con Apple Pay y Google Pay (Noviembre 2026)
+- **Motor de cobro Stripe en segundo plano (`components/KloeProModal.tsx`, `app/(app)/premium/page.tsx`, `app/api/stripe/checkout/route.ts`)**:
+  - Conectado el botón "Continuar" de la Paywall personalizada a `POST /api/stripe/checkout` en entornos web (`!isNative`), activando directamente la sesión de cobro oficial con Stripe con credenciales de producción (`sk_live_...`).
+  - Habilitados métodos de pago rápidos universales (**Apple Pay**, **Google Pay**, **Link** y **Tarjetas de crédito/débito**) con precios oficiales (`price_1U7DiWCt6LJbs620MmU8s5Vr` a `24,99 €/año` y `price_1U7DeHCt6LJbs620osDLmL2m` a `2,99 €/mes`).
+- **Verificación instantánea de sesión y activación inmediata (`app/api/stripe/verify/route.ts`, `app/(app)/closet/kloe/page.tsx`, `app/(app)/premium/page.tsx`)**:
+  - Creado endpoint `POST /api/stripe/verify` que comprueba el estado de la sesión de Stripe vía backend tan pronto el usuario regresa con `?subscribed=success&session_id={CHECKOUT_SESSION_ID}`.
+  - Actualiza de inmediato `profiles.is_premium = true` en Supabase con Service Role y refresca cuotas sin depender de retrasos en webhooks de red.
+  - En `KlozetPaywallContent.tsx`, el pie legal refleja ahora de forma fidedigna `Stripe · Apple Pay · Google Pay`.

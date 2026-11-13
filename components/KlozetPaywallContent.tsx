@@ -563,7 +563,7 @@ export default function KlozetPaywallContent({
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
             <span>
               Renovable automáticamente · Cancela cuando quieras ·{' '}
-              {isNative ? 'Apple & RevenueCat' : 'RevenueCat'}
+              {isNative ? 'Apple & RevenueCat' : 'Stripe · Apple Pay · Google Pay'}
             </span>
           </div>
         </div>

@@ -271,7 +271,7 @@ function KloeAnimatedLogo() {
 
 export default function KloePage() {
   const router = useRouter();
-  const { user, isPremium } = useUser();
+  const { user, isPremium, refreshProfile } = useUser();
   const [messages, setMessages] = useState<ChatMessage[]>([INITIAL_MESSAGE]);
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -389,6 +389,47 @@ export default function KloePage() {
   useEffect(() => {
     fetchQuota();
   }, [user?.id]);
+
+  // Handle return from Stripe checkout
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const subscribed = params.get('subscribed');
+    const sessionId = params.get('session_id');
+
+    if (subscribed === 'success') {
+      if (sessionId) {
+        fetch('/api/stripe/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId }),
+        })
+          .then(async (res) => {
+            if (res.ok) {
+              await refreshProfile();
+              fetchQuota();
+              toast.success('¡Bienvenido a Klozet Pro! Tu suscripción ya está activa.');
+            }
+          })
+          .catch(() => {
+            refreshProfile();
+            fetchQuota();
+            toast.success('¡Bienvenido a Klozet Pro!');
+          })
+          .finally(() => {
+            window.history.replaceState({}, '', window.location.pathname);
+          });
+      } else {
+        refreshProfile();
+        fetchQuota();
+        toast.success('¡Bienvenido a Klozet Pro! Tu suscripción ya está activa.');
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+    } else if (subscribed === 'cancelled') {
+      toast.info('Suscripción cancelada.');
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, [refreshProfile]);
 
   const maxDay = quotaInfo?.dailyLimit ?? (isPremium() ? 35 : MAX_TRIAL_MESSAGES);
   const remainingToday = quotaInfo?.remainingDay ?? maxDay;
