@@ -46,18 +46,18 @@ const HEART_SIZES = {
 } as const;
 
 const KLOE_SIZES = {
-  sm: 'w-7 h-8',
-  md: 'w-10 h-12',
-  lg: 'w-14 h-16',
+  sm: 'w-16 h-16',
+  md: 'w-24 h-24',
+  lg: 'w-32 h-32',
 } as const;
 
 function KloeBurstBlinker() {
   const [frame, setFrame] = useState<'open' | 'half' | 'closed'>('open');
 
   useEffect(() => {
-    const t1 = setTimeout(() => setFrame('half'), 180);
-    const t2 = setTimeout(() => setFrame('closed'), 230);
-    const t3 = setTimeout(() => setFrame('half'), 340);
+    const t1 = setTimeout(() => setFrame('half'), 160);
+    const t2 = setTimeout(() => setFrame('closed'), 220);
+    const t3 = setTimeout(() => setFrame('half'), 330);
     const t4 = setTimeout(() => setFrame('open'), 390);
     return () => {
       clearTimeout(t1);
@@ -74,7 +74,7 @@ function KloeBurstBlinker() {
   };
 
   return (
-    <div className="relative w-full h-full drop-shadow-[0_2px_6px_rgba(237,76,158,0.35)]">
+    <div className="relative w-full h-full drop-shadow-[0_10px_28px_rgba(255,102,196,0.6)]">
       {(['open', 'half', 'closed'] as const).map((k) => (
         <img
           key={k}
@@ -82,7 +82,7 @@ function KloeBurstBlinker() {
           alt={k === 'open' ? 'Kloe Like' : ''}
           aria-hidden={k !== 'open'}
           draggable={false}
-          className={`absolute inset-0 w-full h-full object-contain pointer-events-none select-none ${
+          className={`absolute inset-0 w-full h-full object-contain pointer-events-none select-none transition-opacity duration-75 ${
             frame === k ? 'opacity-100' : 'opacity-0'
           }`}
         />
@@ -93,8 +93,8 @@ function KloeBurstBlinker() {
 
 /**
  * LikeBurstOverlay
- * Renders an Instagram/Pinterest-inspired floating heart burst in the center of a photo,
- * occasionally revealing Kloe's pink bubble "K" peeking playfully inside the heart.
+ * Renders a floating heart burst in the center of a photo without border,
+ * or occasionally the animated bubbly 'K' of Kloe instead of the heart.
  */
 export default function LikeBurstOverlay({
   burst,
@@ -115,7 +115,7 @@ export default function LikeBurstOverlay({
               : {
                   scale: [0.25, 1.24, 0.94, 1.04, 1],
                   opacity: [0, 1, 1, 1, 0],
-                  rotate: [burst.withKloe ? -12 : -8, 6, -2, 0, 0],
+                  rotate: [burst.withKloe ? -10 : -6, 6, -2, 0, 0],
                   y: [6, -4, -2, -6, -18],
                 }
           }
@@ -138,36 +138,32 @@ export default function LikeBurstOverlay({
               />
             )}
 
-            {/* Main Glossy Heart */}
-            <Heart
-              className={`${HEART_SIZES[size]} ${
-                burst.withKloe
-                  ? 'fill-white text-[var(--brand-pink,#FF66C4)] drop-shadow-[0_10px_28px_rgba(255,102,196,0.5)]'
-                  : 'fill-[var(--brand-pink,#FF66C4)] text-white drop-shadow-[0_10px_28px_rgba(0,0,0,0.42)]'
-              }`}
-              strokeWidth={burst.withKloe ? 1.8 : 1.5}
-            />
-
-            {/* Kloe Bubble Mascot peeking & blinking inside center of the heart */}
-            {burst.withKloe && (
+            {/* Special 'K' of Kloe pop instead of heart, or borderless glossy heart */}
+            {burst.withKloe ? (
               <motion.div
-                initial={{ scale: 0.2, rotate: -16 }}
-                animate={{ scale: [0.2, 1.18, 0.95, 1], rotate: [-16, 10, -4, 0] }}
-                transition={{ duration: 0.42, delay: 0.06, ease: [0.34, 1.56, 0.64, 1] }}
-                className={`absolute ${KLOE_SIZES[size]} -mt-0.5 flex items-center justify-center`}
+                initial={{ scale: 0.2, rotate: -12 }}
+                animate={{ scale: [0.2, 1.22, 0.95, 1], rotate: [-12, 8, -3, 0] }}
+                transition={{ duration: 0.45, ease: [0.34, 1.56, 0.64, 1] }}
+                className={`relative ${KLOE_SIZES[size]} flex items-center justify-center`}
               >
                 <KloeBurstBlinker />
               </motion.div>
+            ) : (
+              <Heart
+                className={`${HEART_SIZES[size]} fill-[var(--brand-pink,#FF66C4)] text-transparent drop-shadow-[0_10px_30px_rgba(255,102,196,0.6)]`}
+                strokeWidth={0}
+                stroke="none"
+              />
             )}
 
             {/* Tiny radiating micro-hearts on special Kloe pop */}
             {burst.withKloe && !prefersReducedMotion && (
               <>
                 {[
-                  { x: -34, y: -30, delay: 0.08, s: 0.7 },
-                  { x: 36, y: -26, delay: 0.12, s: 0.65 },
-                  { x: -28, y: 28, delay: 0.14, s: 0.55 },
-                  { x: 32, y: 26, delay: 0.1, s: 0.6 },
+                  { x: -36, y: -32, delay: 0.08, s: 0.7 },
+                  { x: 38, y: -28, delay: 0.12, s: 0.65 },
+                  { x: -30, y: 30, delay: 0.14, s: 0.55 },
+                  { x: 34, y: 28, delay: 0.1, s: 0.6 },
                 ].map((dot, idx) => (
                   <motion.div
                     key={idx}
@@ -176,7 +172,7 @@ export default function LikeBurstOverlay({
                     transition={{ duration: 0.6, delay: dot.delay, ease: 'easeOut' }}
                     className="absolute"
                   >
-                    <Heart className="w-4 h-4 fill-[var(--brand-pink,#FF66C4)] text-[var(--brand-pink,#FF66C4)]" />
+                    <Heart className="w-4 h-4 fill-[var(--brand-pink,#FF66C4)] text-transparent" strokeWidth={0} />
                   </motion.div>
                 ))}
               </>

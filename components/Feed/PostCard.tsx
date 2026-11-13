@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, memo } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Heart, Bookmark } from 'lucide-react';
@@ -41,7 +41,7 @@ interface PostCardProps {
     hideAuthorOverlay?: boolean;
 }
 
-export default function PostCard({ 
+function PostCard({ 
     post, 
     onClick, 
     hideSaveButton = false,
@@ -199,7 +199,14 @@ export default function PostCard({
                     </p>
                     {!hideLikeButton && (
                         <div className="hidden md:flex items-center gap-1 text-xs mt-auto">
-                            <Heart className={cn("w-4 h-4 transition-colors", isLikedState ? "fill-[var(--brand-pink)] text-[var(--brand-pink)]" : "text-[var(--foreground-tertiary)]")} />
+                            <Heart
+                                className={cn(
+                                    "w-4 h-4 transition-colors",
+                                    isLikedState ? "fill-[var(--brand-pink,#FF66C4)] text-transparent" : "text-[var(--foreground-tertiary)]"
+                                )}
+                                strokeWidth={isLikedState ? 0 : 2}
+                                stroke={isLikedState ? "none" : "currentColor"}
+                            />
                         </div>
                     )}
                 </div>
@@ -216,10 +223,10 @@ export default function PostCard({
                 onTouchEnd={handleTouchEnd}
                 onTouchMove={handleTouchMove}
                 onTouchCancel={handleTouchEnd}
-                whileHover={{ scale: 1.025, transition: { duration: 0.2 } }}
+                whileHover={{ scale: 1.02, transition: { duration: 0.18 } }}
                 whileTap={{ scale: 0.97 }}
                 transition={{ type: "spring", stiffness: 420, damping: 28 }}
-                className="w-full h-full relative z-10 apple-tap-feedback"
+                className="w-full h-full relative z-10 select-none transform-gpu"
             >
                 <div
                     className="group relative rounded-[20px] overflow-hidden bg-[var(--card-bg)] shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] border border-black/[0.05] dark:border-white/[0.07] transition-all duration-300 cursor-pointer h-full w-full"
@@ -234,7 +241,7 @@ export default function PostCard({
                             alt={post.title || (post.author?.name ? `Publicación de @${post.author.name}` : "Publicación de look")}
                             width={720}
                             height={900}
-                            quality={90}
+                            quality={82}
                             className="w-full h-full object-cover transform-gpu"
                             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                         />
@@ -242,8 +249,6 @@ export default function PostCard({
                         {!hideAuthorOverlay && (
                             <div className="hidden md:block absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-60" />
                         )}
-
-
 
                         {!hideAuthorOverlay && (
                             <div className={cn(
@@ -259,34 +264,48 @@ export default function PostCard({
                                         type="button"
                                         onClick={toggleQuickLike}
                                         aria-label={isLikedState ? "Quitar me gusta" : "Me gusta"}
-                                        className="w-8 h-8 rounded-full bg-black/35 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:scale-110 active:scale-90 transition-transform cursor-pointer"
+                                        className="p-1 flex items-center justify-center text-white hover:scale-115 active:scale-90 transition-transform cursor-pointer filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.65)]"
                                     >
                                         <motion.div
                                             key={isLikedState ? 'liked' : 'unliked'}
                                             animate={isLikedState ? { scale: [1, 1.38, 0.92, 1.05, 1] } : { scale: 1 }}
                                             transition={{ type: 'spring', stiffness: 550, damping: 20 }}
                                         >
-                                            <Heart className={cn("w-4 h-4 transition-colors", isLikedState ? "fill-[var(--brand-pink)] text-[var(--brand-pink)]" : "text-white")} />
+                                            <Heart
+                                                className={cn(
+                                                    "w-5 h-5 transition-colors",
+                                                    isLikedState ? "fill-[var(--brand-pink,#FF66C4)] text-transparent" : "text-white"
+                                                )}
+                                                strokeWidth={isLikedState ? 0 : 2}
+                                                stroke={isLikedState ? "none" : "currentColor"}
+                                            />
                                         </motion.div>
                                     </button>
                                 )}
                             </div>
                         )}
 
-                        {/* Mobile 1-Tap Quick Like Pill (zero navigation delay) */}
+                        {/* Mobile 1-Tap Quick Like without circle */}
                         {!hideLikeButton && (
                             <button
                                 type="button"
                                 onClick={toggleQuickLike}
                                 aria-label={isLikedState ? "Quitar me gusta" : "Me gusta"}
-                                className="md:hidden absolute bottom-2.5 right-2.5 z-30 w-9 h-9 rounded-full bg-black/35 backdrop-blur-md border border-white/20 flex items-center justify-center pointer-events-auto active:scale-90 transition-transform cursor-pointer"
+                                className="md:hidden absolute bottom-2.5 right-2.5 z-30 p-2 flex items-center justify-center pointer-events-auto active:scale-90 transition-transform cursor-pointer filter drop-shadow-[0_2px_5px_rgba(0,0,0,0.7)]"
                             >
                                 <motion.div
                                     key={isLikedState ? 'm-liked' : 'm-unliked'}
                                     animate={isLikedState ? { scale: [1, 1.38, 0.92, 1.05, 1] } : { scale: 1 }}
                                     transition={{ type: 'spring', stiffness: 550, damping: 20 }}
                                 >
-                                    <Heart className={cn("w-4 h-4 transition-colors", isLikedState ? "fill-[var(--brand-pink)] text-[var(--brand-pink)]" : "text-white")} />
+                                    <Heart
+                                        className={cn(
+                                            "w-5 h-5 transition-colors",
+                                            isLikedState ? "fill-[var(--brand-pink,#FF66C4)] text-transparent" : "text-white"
+                                        )}
+                                        strokeWidth={isLikedState ? 0 : 2}
+                                        stroke={isLikedState ? "none" : "currentColor"}
+                                    />
                                 </motion.div>
                             </button>
                         )}
@@ -324,23 +343,27 @@ export default function PostCard({
                 </div>
             </motion.div>
 
-            {/* Fullscreen Mobile Long-Press Preview Modal */}
-            <PostPreviewModal
-                isOpen={showPreviewModal}
-                onClose={() => {
-                    setShowPreviewModal(false);
-                    isLongPressedRef.current = false;
-                }}
-                postId={post.id}
-                initialImageUrl={post.imageUrl}
-                postTitle={post.title}
-                isSaved={isSavedState}
-                onToggleSave={toggleQuickSave}
-                isLiked={isLikedState}
-                onToggleLike={toggleQuickLike}
-                hideSaveButton={hideSaveButton}
-                sourceRect={sourceRect}
-            />
+            {/* Fullscreen Mobile Long-Press Preview Modal - Mounted only when active */}
+            {showPreviewModal && (
+                <PostPreviewModal
+                    isOpen={showPreviewModal}
+                    onClose={() => {
+                        setShowPreviewModal(false);
+                        isLongPressedRef.current = false;
+                    }}
+                    postId={post.id}
+                    initialImageUrl={post.imageUrl}
+                    postTitle={post.title}
+                    isSaved={isSavedState}
+                    onToggleSave={toggleQuickSave}
+                    isLiked={isLikedState}
+                    onToggleLike={toggleQuickLike}
+                    hideSaveButton={hideSaveButton}
+                    sourceRect={sourceRect}
+                />
+            )}
         </>
     );
 }
+
+export default memo(PostCard);

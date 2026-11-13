@@ -3827,3 +3827,24 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
 - **Reporte de problemas con confirmación y despacho de email (`app/api/feedback/route.ts`, `components/FeedbackModal.tsx`)**:
   - `FeedbackModal` y backend configurados para responder con el mensaje exacto: *"Hemos recibido tu reporte. Nuestro equipo está trabajando duro para solucionarlo. Muchas gracias por seguir ayudando a la aplicación a crecer."*
   - Integrado soporte de envío automático vía `nodemailer` con confirmación al correo del usuario y reenvío al equipo de soporte (`soporte@klozet.es` / `klozet.enterprise@gmail.com`).
+
+---
+
+## 83. Fluidez del Feed, Like sin Círculo, Pop de Kloe y Modal Deslizable (Noviembre 2026)
+- **Eliminación del círculo del like en tarjetas (`components/Feed/PostCard.tsx`)**:
+  - Eliminado el contenedor circular translúcido (`rounded-full bg-black/35 backdrop-blur-md border border-white/20`) tanto en la versión de escritorio como móvil.
+  - El botón de like ahora es el icono limpio con sombra sutil de alto contraste (`drop-shadow`), manteniendo un área táctil cómoda (`p-2`) sin recuadro circular.
+- **Pop de Like con K de Kloe y Corazón sin Borde (`components/LikeBurstOverlay.tsx`)**:
+  - Eliminado el borde blanco/stroke del corazón emergente (`strokeWidth={0}`, `stroke="none"`, `text-transparent`).
+  - De forma aleatoria e interactiva (~28% de los likes), en lugar de un corazón convencional, brota la **K oficial de Kloe animada y parpadeante** (`kloe-blink-open.png` / `KloeBurstBlinker`) a tamaño completo con micro-corazones radiantes.
+- **Modal de Post y Look Deslizable con Cierre al Tocar Fuera (`components/Feed/PostPreviewModal.tsx`)**:
+  - Implementado un carril deslizante interactivo (`flex w-full h-full` con animación spring suave) para navegar de forma natural entre la foto del post y el outfit/look.
+  - Soporte de gestos táctiles directos: deslizamiento lateral para conmutar entre post y look, y deslizamiento hacia abajo (>70px) para descartar el modal.
+  - Cierre instantáneo al pulsar en cualquier punto exterior del modal (fondo desenfocado, márgenes superior/inferior/lateral) o pulsar la tecla ESC, además de incorporar un botón táctil de cierre (X).
+  - Eliminado el temporizador intrusivo de 2 segundos que cambiaba de diapositiva automáticamente, otorgando al usuario control total de lectura.
+- **Optimización de Fluidez y Rendimiento del Feed (`app/(app)/feed/page.tsx`, `components/Feed/PostCard.tsx`)**:
+  - `PostCard` envuelto en `React.memo` para erradicar re-renderizados innecesarios durante el scroll.
+  - Montaje condicional de `PostPreviewModal` únicamente en la tarjeta activa pulsada (liberando decenas de instancias inactivas en memoria).
+  - Eliminado el conflicto entre clases CSS de transición y transformaciones de Framer Motion en toques móviles.
+  - Distribución de columnas móviles (`col1`, `col2`) memoizada con `useMemo` para evitar crear nuevos arrays en cada ciclo de render.
+  - Compresión y carga optimizada de imágenes (`quality={82}` y `transform-gpu`).

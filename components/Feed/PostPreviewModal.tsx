@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Loader2, Bookmark, Heart } from 'lucide-react';
+import { Loader2, Bookmark, Heart, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/supabase/client';
 import LikeBurstOverlay, { useLikeBurst } from '@/components/LikeBurstOverlay';
@@ -143,47 +143,72 @@ export default function PostPreviewModal({
     };
   }, [isOpen, postId, initialImageUrl]);
 
-  // Auto-slide to outfit image after 3 seconds if available
+  // Keyboard shortcut to close (ESC)
   useEffect(() => {
-    if (!isOpen || !outfitImage) return;
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
-    const timer = setTimeout(() => {
-      setActiveSlide(1);
-    }, 2000);
-
-    return () => clearTimeout(timer);
-  }, [isOpen, outfitImage]);
-
-  // Touch Swipe Handlers for smooth back and forth image exploration
+  // Touch Swipe Handlers for smooth back and forth image exploration & swipe-down to dismiss
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.targetTouches[0].clientX;
     touchStartY.current = e.targetTouches[0].clientY;
+    touchEndX.current = e.targetTouches[0].clientX;
     hasSwiped.current = false;
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
     touchEndX.current = e.targetTouches[0].clientX;
+    if (touchStartY.current !== null) {
+      const currentY = e.targetTouches[0].clientY;
+      const diffY = currentY - touchStartY.current;
+      if (diffY > 60) {
+        hasSwiped.current = true;
+      }
+    }
   };
 
   const handleTouchEnd = (e: React.TouchEvent) => {
     if (touchStartX.current !== null && touchEndX.current !== null) {
       const distanceX = touchStartX.current - touchEndX.current;
-      const minSwipeDistance = 35;
+      const minSwipeDistance = 30;
 
       if (Math.abs(distanceX) > minSwipeDistance) {
         hasSwiped.current = true;
         if (distanceX > 0 && outfitImage) {
+          // Swiped left -> show outfit
           setActiveSlide(1);
         } else if (distanceX < 0) {
+          // Swiped right -> show post
           setActiveSlide(0);
         }
         touchStartX.current = null;
         touchEndX.current = null;
+        touchStartY.current = null;
         return;
       }
     }
+
+    // Swipe down to dismiss
+    if (touchStartY.current !== null) {
+      const currentY = e.changedTouches?.[0]?.clientY ?? null;
+      if (currentY !== null && currentY - touchStartY.current > 70) {
+        hasSwiped.current = true;
+        touchStartX.current = null;
+        touchEndX.current = null;
+        touchStartY.current = null;
+        onClose();
+        return;
+      }
+    }
+
     touchStartX.current = null;
     touchEndX.current = null;
+    touchStartY.current = null;
 
     // Support double-tap to like on touchscreen preview
     const now = Date.now();
@@ -236,20 +261,34 @@ export default function PostPreviewModal({
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center p-4 selection:bg-[var(--brand-pink)] selection:text-white">
-          {/* Translucent Blurred Backdrop - Lets the page content and navbar show through blurred smoothly */}
+        <div
+          className="fixed inset-0 z-[9999] flex flex-col items-center justify-center p-4 selection:bg-[var(--brand-pink)] selection:text-white"
+          onClick={onClose}
+          onPointerDown={(e) => {
+            if (e.target === e.currentTarget) {
+              onClose();
+            }
+          }}
+        >
+          {/* Translucent Blurred Backdrop - Tap outside closes immediately */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="absolute inset-0 bg-black/40 backdrop-blur-xl dark:bg-black/50"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onClose();
-            }}
+            transition={{ duration: 0.22 }}
+            className="absolute inset-0 bg-black/55 backdrop-blur-xl dark:bg-black/65 cursor-pointer"
+            onClick={onClose}
           />
+
+          {/* Close button in top right for instant touch dismiss */}
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Cerrar vista previa"
+            className="absolute top-4 right-4 z-30 w-10 h-10 rounded-full bg-black/40 hover:bg-black/60 active:scale-90 text-white flex items-center justify-center backdrop-blur-md border border-white/20 transition-all cursor-pointer"
+          >
+            <X className="w-5 h-5 text-white" />
+          </button>
 
           {/* Modal Card with Spring Expand Animation from Post Card Position */}
           <motion.div
@@ -262,13 +301,17 @@ export default function PostPreviewModal({
               damping: 28,
               mass: 0.8,
             }}
-            onClick={handleCardClick}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleCardClick(e);
+            }}
+            onPointerDown={(e) => e.stopPropagation()}
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
             className="relative z-10 w-full max-w-[340px] sm:max-w-[380px] aspect-[3/4] sm:aspect-[4/5] rounded-[36px] overflow-hidden shadow-[0_25px_70px_-15px_rgba(0,0,0,0.6)] border border-white/20 dark:border-white/15 bg-[#121216] cursor-pointer group"
           >
-            {/* Sliding Image Container without foggy vignette */}
+            {/* Sliding Image Container */}
             <div
               onDoubleClick={(e) => {
                 e.stopPropagation();
@@ -281,71 +324,59 @@ export default function PostPreviewModal({
               className="relative w-full h-full overflow-hidden select-none"
             >
               <LikeBurstOverlay burst={likeBurst} size="lg" />
-              <AnimatePresence initial={false} mode="wait">
-                {activeSlide === 0 ? (
-                  <motion.div
-                    key="post-slide"
-                    initial={{ opacity: 0, x: -40 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -80 }}
-                    transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-                    className="absolute inset-0 w-full h-full"
-                  >
-                    {postImage ? (
-                      <Image
-                        src={postImage}
-                        alt={postTitle || 'Post preview'}
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 768px) 100vw, 600px"
-                        quality={95}
-                        priority
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gray-900 text-white/60">
-                        {loading ? <Loader2 className="w-8 h-8 animate-spin text-[var(--brand-pink)]" /> : 'Sin imagen'}
-                      </div>
-                    )}
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="outfit-slide"
-                    initial={{ opacity: 0, x: 80 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 40 }}
-                    transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-                    className="absolute inset-0 w-full h-full"
-                  >
-                    {outfitImage ? (
-                      <Image
-                        src={outfitImage}
-                        alt="Outfit preview"
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 768px) 100vw, 600px"
-                        quality={95}
-                        priority
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gray-900 text-white/60">
-                        Look no disponible
-                      </div>
-                    )}
-                  </motion.div>
+
+              {/* Smooth interactive horizontal sliding track */}
+              <motion.div
+                className="flex w-full h-full"
+                animate={{ x: activeSlide === 0 ? '0%' : '-100%' }}
+                transition={{ type: 'spring', stiffness: 360, damping: 32, mass: 0.8 }}
+              >
+                {/* Slide 0: Post Photo */}
+                <div className="w-full h-full flex-shrink-0 relative">
+                  {postImage ? (
+                    <Image
+                      src={postImage}
+                      alt={postTitle || 'Post preview'}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, 600px"
+                      quality={85}
+                      priority
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-gray-900 text-white/60">
+                      {loading ? <Loader2 className="w-8 h-8 animate-spin text-[var(--brand-pink)]" /> : 'Sin imagen'}
+                    </div>
+                  )}
+                </div>
+
+                {/* Slide 1: Outfit Photo */}
+                {outfitImage && (
+                  <div className="w-full h-full flex-shrink-0 relative">
+                    <Image
+                      src={outfitImage}
+                      alt="Outfit preview"
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, 600px"
+                      quality={85}
+                      priority
+                    />
+                  </div>
                 )}
-              </AnimatePresence>
+              </motion.div>
 
               {/* Bottom Pagination Dots */}
               {outfitImage && (
-                <div className="absolute bottom-4 left-0 right-0 flex justify-center z-10">
-                  <div className="flex items-center gap-2 bg-black/40 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/20 shadow-lg">
+                <div className="absolute bottom-4 left-0 right-0 flex justify-center z-10 pointer-events-auto">
+                  <div className="flex items-center gap-2 bg-black/50 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/20 shadow-lg">
                     <button
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
                         setActiveSlide(0);
                       }}
-                      className={`h-2 rounded-full transition-all ${
+                      className={`h-2 rounded-full transition-all cursor-pointer ${
                         activeSlide === 0 ? 'bg-[var(--brand-pink)] w-6' : 'bg-white/50 w-2 hover:bg-white'
                       }`}
                       aria-label="Ver foto de la publicación"
@@ -356,7 +387,7 @@ export default function PostPreviewModal({
                         e.stopPropagation();
                         setActiveSlide(1);
                       }}
-                      className={`h-2 rounded-full transition-all ${
+                      className={`h-2 rounded-full transition-all cursor-pointer ${
                         activeSlide === 1 ? 'bg-[var(--brand-pink)] w-6' : 'bg-white/50 w-2 hover:bg-white'
                       }`}
                       aria-label="Ver foto del look"
@@ -367,12 +398,14 @@ export default function PostPreviewModal({
             </div>
           </motion.div>
 
-          {/* Floating Action Buttons: Like & Save (Icon-only) */}
+          {/* Floating Action Buttons: Like & Save */}
           <motion.div
             initial={{ opacity: 0, y: 15, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 15, scale: 0.9 }}
-            transition={{ delay: 0.1, duration: 0.3 }}
+            transition={{ delay: 0.08, duration: 0.25 }}
+            onClick={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
             className="relative z-20 mt-4 flex items-center justify-center gap-3"
           >
             {/* Like Button */}
@@ -380,7 +413,7 @@ export default function PostPreviewModal({
               type="button"
               onClick={handleQuickLike}
               className={cn(
-                "w-12 h-12 rounded-full flex items-center justify-center shadow-2xl backdrop-blur-xl border active:scale-90 transition-all duration-200",
+                "w-12 h-12 rounded-full flex items-center justify-center shadow-2xl backdrop-blur-xl border active:scale-90 transition-all duration-200 cursor-pointer",
                 isLikedState
                   ? "bg-[var(--brand-pink)] text-white border-[var(--brand-pink)]/40 shadow-[0_4px_20px_rgba(236,72,153,0.45)]"
                   : "bg-black text-white hover:bg-neutral-900 border-black/10 dark:bg-white dark:text-black dark:hover:bg-neutral-100 dark:border-white/20"
@@ -392,17 +425,17 @@ export default function PostPreviewModal({
                   "w-5 h-5 transition-transform duration-200",
                   isLikedState ? "fill-white text-white scale-110" : "text-white dark:text-black"
                 )}
-                strokeWidth={2.2}
+                strokeWidth={isLikedState ? 0 : 2.2}
               />
             </button>
 
-            {/* Save Button (Icon-only) */}
+            {/* Save Button */}
             {!hideSaveButton && (
               <button
                 type="button"
                 onClick={handleQuickSave}
                 className={cn(
-                  "w-12 h-12 rounded-full flex items-center justify-center shadow-2xl backdrop-blur-xl border active:scale-90 transition-all duration-200",
+                  "w-12 h-12 rounded-full flex items-center justify-center shadow-2xl backdrop-blur-xl border active:scale-90 transition-all duration-200 cursor-pointer",
                   isSavedState
                     ? "bg-[var(--brand-pink)] text-white border-[var(--brand-pink)]/40 shadow-[0_4px_20px_rgba(236,72,153,0.45)]"
                     : "bg-black text-white hover:bg-neutral-900 border-black/10 dark:bg-white dark:text-black dark:hover:bg-neutral-100 dark:border-white/20"

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Fragment } from 'react';
+import { useState, useEffect, Fragment, useRef, useCallback, useMemo } from 'react';
 import { PlusSquare } from 'lucide-react';
 import PostCard from '@/components/Feed/PostCard';
 import PremiumAdCard from '@/components/Feed/PremiumAdCard';
@@ -8,7 +8,6 @@ import SponsoredAdCard from '@/components/Feed/SponsoredAdCard';
 import { EmptyState, InfiniteScrollFooter, KloeEmptyVisual, PullToRefresh, SkeletonFeed } from '@/components';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useRef, useCallback } from 'react';
 import { supabase } from '@/lib/supabase/client';
 
 import { useUser } from '@/store/userStore';
@@ -349,6 +348,17 @@ export default function FeedPage() {
     return () => observer.disconnect();
   }, [loadMorePosts, hasMore, loadingMore, loading, loadError]);
 
+  // Memoized 2-column distribution for stutter-free mobile scrolling
+  const { col1, col2 } = useMemo(() => {
+    const c1: { post: any; index: number }[] = [];
+    const c2: { post: any; index: number }[] = [];
+    posts.forEach((post, i) => {
+      if (i % 2 === 0) c1.push({ post, index: i });
+      else c2.push({ post, index: i });
+    });
+    return { col1: c1, col2: c2 };
+  }, [posts]);
+
   return (
     <div className="min-h-screen bg-[var(--background)] pb-24 md:pb-8 pt-safe md:pt-0">
       {/* Feed Content with inline Pull-To-Refresh above posts */}
@@ -371,7 +381,7 @@ export default function FeedPage() {
               {/* Mobile 2-Column Parallel Layout: Guarantees column 1 & column 2 start at the exact same top height */}
               <div className="grid grid-cols-2 gap-2.5 md:hidden items-start">
                 <div className="flex flex-col gap-2.5">
-                  {posts.filter((_, i) => i % 2 === 0).map((post, index) => (
+                  {col1.map(({ post, index }) => (
                     <Fragment key={post.id}>
                       <div className="w-full">
                         <PostCard post={post} />
@@ -385,7 +395,7 @@ export default function FeedPage() {
                   ))}
                 </div>
                 <div className="flex flex-col gap-2.5">
-                  {posts.filter((_, i) => i % 2 === 1).map((post, index) => (
+                  {col2.map(({ post, index }) => (
                     <Fragment key={post.id}>
                       <div className="w-full">
                         <PostCard post={post} />
