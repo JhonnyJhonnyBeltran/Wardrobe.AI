@@ -1052,13 +1052,13 @@ html {
 
 /* ===== SMOOTH DARK MODE TRANSITION ===== */
 html {
-  transition: background-color 0.3s var(--ease-smooth), color 0.3s var(--ease-smooth);
+  transition: color 0.2s var(--ease-smooth);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  transition: background-color 0.3s var(--ease-smooth), color 0.3s var(--ease-smooth);
+  transition: color 0.2s var(--ease-smooth);
 }
 
 @theme inline {

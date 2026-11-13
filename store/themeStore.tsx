@@ -53,16 +53,69 @@ function resolveAutoTheme(): Theme {
     return 'light';
 }
 
-function updateThemeColorMeta(isDark: boolean) {
+/**
+ * Synchronizes theme state directly with HTML, BODY, meta tags, and native StatusBar.
+ * Ensures iPhone status bar, notch background, and overscroll update synchronously without delay.
+ */
+export function syncThemeToDom(isDark: boolean) {
     if (typeof document === 'undefined') return;
     const targetColor = isDark ? '#111113' : '#ffffff';
-    let meta = document.querySelector('meta[name="theme-color"]');
-    if (!meta) {
-        meta = document.createElement('meta');
-        meta.setAttribute('name', 'theme-color');
-        document.head.appendChild(meta);
+
+    const root = document.documentElement;
+    const body = document.body;
+
+    // 1. Root and Body CSS classes and background
+    if (isDark) {
+        root.classList.add('dark');
+        root.style.colorScheme = 'dark';
+    } else {
+        root.classList.remove('dark');
+        root.style.colorScheme = 'light';
     }
-    meta.setAttribute('content', targetColor);
+
+    root.style.backgroundColor = targetColor;
+    if (body) {
+        body.style.backgroundColor = targetColor;
+        body.style.colorScheme = isDark ? 'dark' : 'light';
+    }
+
+    // 2. iOS Safari & Android Theme-Color meta replacement:
+    // WebKit only recalculates status bar / notch color when meta elements are inserted or removed.
+    // Query and remove ALL existing theme-color tags (including SSR media query variants).
+    const existingThemeMetas = document.querySelectorAll('meta[name="theme-color"]');
+    existingThemeMetas.forEach(el => el.remove());
+
+    const newThemeMeta = document.createElement('meta');
+    newThemeMeta.name = 'theme-color';
+    newThemeMeta.content = targetColor;
+    document.head.appendChild(newThemeMeta);
+
+    // 3. Apple Mobile Web App Status Bar Style (iOS PWA / standalone)
+    const existingAppleMetas = document.querySelectorAll('meta[name="apple-mobile-web-app-status-bar-style"]');
+    existingAppleMetas.forEach(el => el.remove());
+
+    const newAppleMeta = document.createElement('meta');
+    newAppleMeta.name = 'apple-mobile-web-app-status-bar-style';
+    newAppleMeta.content = isDark ? 'black-translucent' : 'default';
+    document.head.appendChild(newAppleMeta);
+
+    // 4. Capacitor native iOS & Android StatusBar bridge (instant sync)
+    try {
+        if (typeof window !== 'undefined') {
+            const anyWindow = window as any;
+            if (anyWindow.Capacitor?.isNativePlatform?.()) {
+                import('@capacitor/status-bar')
+                    .then(({ StatusBar, Style }) => {
+                        StatusBar.setOverlaysWebView({ overlay: true }).catch(() => {});
+                        StatusBar.setBackgroundColor({ color: targetColor }).catch(() => {});
+                        StatusBar.setStyle({ style: isDark ? Style.Dark : Style.Light }).catch(() => {});
+                    })
+                    .catch(() => {});
+            }
+        }
+    } catch {
+        // Safe fallback in web environments
+    }
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
@@ -73,27 +126,39 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         const storedPref = localStorage.getItem(THEME_PREF_KEY) as ThemePreference | null;
-        if (storedPref === 'light' || storedPref === 'dark' || storedPref === 'auto') {
-            setThemePreference(storedPref);
-        } else {
-            setThemePreference('auto');
-        }
+        const initialPref: ThemePreference =
+            storedPref === 'light' || storedPref === 'dark' || storedPref === 'auto'
+                ? storedPref
+                : 'auto';
+        setThemePreference(initialPref);
 
-        setSystemTheme(resolveAutoTheme());
+        const autoTheme = resolveAutoTheme();
+        setSystemTheme(autoTheme);
         setMounted(true);
+
+        const initialEffective: Theme = initialPref === 'auto' ? autoTheme : initialPref;
+        const initialIsDark = !isForceLightRoute(pathname) && initialEffective === 'dark';
+        syncThemeToDom(initialIsDark);
 
         if (!isIPhoneDevice() || !window.matchMedia) return;
 
         const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-        const handleChange = () => {
-            setSystemTheme(mediaQuery.matches ? 'dark' : 'light');
+        const handleChange = (e: MediaQueryListEvent) => {
+            const newAuto = e.matches ? 'dark' : 'light';
+            setSystemTheme(newAuto);
+            const currentPref = localStorage.getItem(THEME_PREF_KEY);
+            if (!currentPref || currentPref === 'auto') {
+                if (!isForceLightRoute(pathname)) {
+                    syncThemeToDom(newAuto === 'dark');
+                }
+            }
         };
 
         if (mediaQuery.addEventListener) {
             mediaQuery.addEventListener('change', handleChange);
             return () => mediaQuery.removeEventListener('change', handleChange);
         }
-    }, []);
+    }, [pathname]);
 
     const effectiveTheme: Theme = themePreference === 'auto' ? systemTheme : themePreference;
     const forceLight = isForceLightRoute(pathname);
@@ -101,31 +166,26 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         if (!mounted) return;
-
-        const root = document.documentElement;
-        if (isDark) {
-            root.classList.add('dark');
-            root.style.colorScheme = 'dark';
-            root.style.backgroundColor = '#111113';
-        } else {
-            root.classList.remove('dark');
-            root.style.colorScheme = 'light';
-            root.style.backgroundColor = '#ffffff';
-        }
-
-        updateThemeColorMeta(isDark);
+        syncThemeToDom(isDark);
     }, [isDark, mounted]);
 
     const setTheme = (next: Theme | ThemePreference) => {
         setThemePreference(next);
         if (typeof window !== 'undefined') {
+            let nextIsDark = false;
             if (next === 'auto') {
                 localStorage.setItem(THEME_PREF_KEY, 'auto');
                 localStorage.removeItem('klozet_theme');
-                setSystemTheme(resolveAutoTheme());
+                const autoTheme = resolveAutoTheme();
+                setSystemTheme(autoTheme);
+                nextIsDark = autoTheme === 'dark';
             } else {
                 localStorage.setItem(THEME_PREF_KEY, next);
                 localStorage.setItem('klozet_theme', next);
+                nextIsDark = next === 'dark';
+            }
+            if (!isForceLightRoute(pathname)) {
+                syncThemeToDom(nextIsDark);
             }
         }
     };

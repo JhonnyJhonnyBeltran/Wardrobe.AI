@@ -3759,3 +3759,14 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
   - Creado endpoint `POST /api/stripe/verify` que comprueba el estado de la sesión de Stripe vía backend tan pronto el usuario regresa con `?subscribed=success&session_id={CHECKOUT_SESSION_ID}`.
   - Actualiza de inmediato `profiles.is_premium = true` en Supabase con Service Role y refresca cuotas sin depender de retrasos en webhooks de red.
   - En `KlozetPaywallContent.tsx`, el pie legal refleja ahora de forma fidedigna `Stripe · Apple Pay · Google Pay`.
+
+---
+
+## 78. Sincronización Instantánea del Notch y Status Bar en iPhone al Cambiar de Tema (Noviembre 2026)
+- **Sincronización DOM de fondo y meta tags en tiempo real (`store/themeStore.tsx`, `app/layout.tsx`, `app/globals.css`)**:
+  - **Reemplazo atómico de `<meta name="theme-color">`**: Se corrige el fallo de WebKit en iOS Safari, donde simplemente mutar el atributo `content` de un meta tag existente no forzaba a Safari a recalcular el color del notch. La función `syncThemeToDom` purga todas las etiquetas coincidentes (`querySelectorAll('meta[name="theme-color"]')`) e inserta una etiqueta nueva con el color de destino (`#111113` en oscuro, `#ffffff` en claro), obligando al navegador a repintar el notch al instante.
+  - **Color de fondo en `document.body` y `documentElement`**: Asignado directamente `style.backgroundColor = targetColor` tanto en `<html>` como en `<body>` para evitar que Safari tome muestras retrasadas del área de rebote y notch superior.
+  - **Soporte PWA / Standalone**: Sincronización dinámica de `<meta name="apple-mobile-web-app-status-bar-style">` entre `black-translucent` (modo oscuro con iconos blancos) y `default` (modo claro con iconos oscuros).
+  - **Eliminación del retardo de transición (`app/globals.css`)**: Eliminado `transition: background-color 0.3s` en `html` y `body`, conservando la transición suave de color tipográfico (`transition: color 0.2s`). Esto permite un cambio de fondo instantáneo (0ms) en la raíz evitando estados intermedios desfasados.
+  - **Ejecución síncrona en click (`store/themeStore.tsx`)**: Invocación inmediata de `syncThemeToDom` dentro de `setTheme('dark' | 'light' | 'auto')` antes de la reconciliación de React, eliminando cualquier desfase visual de 1 fotograma en ajustes (`/profile/settings`).
+  - **Sincronización nativa Capacitor**: Llamada inmediata a `@capacitor/status-bar` (`StatusBar.setBackgroundColor` y `StatusBar.setStyle`) en dispositivos móviles nativos.
