@@ -62,12 +62,12 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
       }
 
       setSubmitted(true);
-      toast.success('¡Gracias! Tu reporte ha sido recibido.');
+      toast.success('Hemos recibido tu reporte. Estamos trabajando duro para solucionarlo.');
       setTimeout(() => {
         setSubmitted(false);
         setMessage('');
         onClose();
-      }, 1800);
+      }, 3500);
     } catch (err: any) {
       console.error('[FeedbackModal] Error:', err);
       toast.error('Hubo un problema al enviar tu mensaje. Inténtalo de nuevo.');
@@ -102,10 +102,10 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-[var(--foreground)] tracking-tight">
-                    Reportar un problema o sugerencia
+                    Reportar un problema
                   </h3>
                   <p className="text-xs text-[var(--foreground-tertiary)]">
-                    Tu opinión nos ayuda a perfeccionar Klozet
+                    soporte@klozet.es
                   </p>
                 </div>
               </div>
@@ -119,7 +119,7 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
             </div>
 
             {submitted ? (
-              <div className="py-10 text-center flex flex-col items-center">
+              <div className="py-8 text-center flex flex-col items-center">
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
@@ -127,11 +127,14 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
                 >
                   <CheckCircle2 className="w-8 h-8" />
                 </motion.div>
-                <h4 className="text-lg font-bold text-[var(--foreground)] mb-1">
-                  ¡Reporte enviado con éxito!
+                <h4 className="text-base font-bold text-[var(--foreground)] mb-2">
+                  Hemos recibido tu reporte
                 </h4>
-                <p className="text-xs text-[var(--foreground-tertiary)] max-w-xs">
-                  Lo revisaremos en el panel de control del equipo. Muchas gracias por ayudarnos a mejorar.
+                <p className="text-xs text-[var(--foreground-secondary)] max-w-sm leading-relaxed mb-3">
+                  Estamos trabajando duro para solucionarlo.
+                </p>
+                <p className="text-xs font-semibold text-[var(--brand-pink)] max-w-sm leading-relaxed">
+                  Muchas gracias por seguir ayudando a la aplicación a crecer.
                 </p>
               </div>
             ) : (

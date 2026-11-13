@@ -37,6 +37,10 @@ export interface UserProfile {
   language?: 'es' | 'en' | 'fr' | 'de' | 'it' | 'pt'; // User UI language
   notificationSettings?: { push: boolean; email: boolean } | any;
   kloeTrialMessagesUsed?: number; // Count of free daily messages used with Kloe (out of 3)
+  subscriptionPlan?: 'monthly' | 'yearly' | 'none';
+  subscriptionStatus?: string;
+  subscriptionPeriodEnd?: string | Date;
+  stripeCustomerId?: string;
 }
 
 export interface UserPreferences {

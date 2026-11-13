@@ -3808,3 +3808,22 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
   - Reemplazada la imagen fuente de los iconos de la app por la mascota oficial **`kloe-blink-open.png`** (K rosa con ojitos abiertos expresivos y pestañeo vivo) centrada con escala de seguridad del 70% sobre fondo negro puro (`#000000`).
   - Actualizados los favicons de navegador (`public/favicon.png`, `public/favicon.ico`, `app/favicon.ico`) con `kloe-blink-open.png` sobre fondo transparente.
   - Actualizados los metadatos de iconos en [app/layout.tsx](file:///c:/Users/EthanCurro/Desktop/Ethan's%20Project/Wardobre.ai/Wardrobe.AI/app/layout.tsx).
+
+---
+
+## 82. Tema Claro por Defecto, Botón Configuración en Escritorio, Rediseño Banner Klozet Pro y Gestión de Cancelación (Noviembre 2026)
+- **Tema Claro obligatorio al abrir por primera vez (`store/themeStore.tsx`)**:
+  - Modificado el estado inicial y la comprobación de `localStorage`: si no existe preferencia previa (`null`), el tema es estrictamente `'light'`, sin forzar tema oscuro del sistema en primera apertura.
+- **Botón Configuración visible en perfil en ordenador (`app/(app)/profile/page.tsx`)**:
+  - En escritorio (`md:`), incorporada cabecera con `@username` y botón `"Configuración"` con icono `Settings`, más botón complementario junto a `"Editar perfil"`, asegurando acceso inmediato desde ordenador sin depender de la barra móvil.
+- **Rediseño del banner Klozet Pro sin textos repetitivos ni píldoras dobles (`app/(app)/profile/settings/page.tsx`)**:
+  - Icono ancla: mascota oficial `kloe-blink-open.png` con la etiqueta `"PRO"` directamente debajo en lugar de la corona genérica.
+  - Eliminada la píldora redundante de la derecha (`Klozet \n Pro`).
+  - Muestra título limpio `"Klozet Pro"`, punto sutil de estado `"Activo"` en verde y botón de acción limpio (`"Ventajas >"` o `"Mejorar"`).
+  - Justo debajo del banner se muestra la **fecha del siguiente pago** (`Próximo cobro: [Fecha]`) y el enlace directo para **Gestionar o cancelar suscripción**.
+- **Gestión y cancelación de suscripción (`app/(app)/profile/settings/page.tsx`, `app/api/stripe/portal/route.ts`)**:
+  - Creado endpoint `POST /api/stripe/portal` que genera sesión en el Customer Billing Portal de Stripe para cancelar o modificar tarjetas con 1 clic.
+  - Modal informativo explicando los pasos exactos para cancelar en Web (portal directo de Stripe), iPhone (Ajustes de iOS > ID de Apple > Suscripciones) y Android (Google Play > Pagos y suscripciones).
+- **Reporte de problemas con confirmación y despacho de email (`app/api/feedback/route.ts`, `components/FeedbackModal.tsx`)**:
+  - `FeedbackModal` y backend configurados para responder con el mensaje exacto: *"Hemos recibido tu reporte. Nuestro equipo está trabajando duro para solucionarlo. Muchas gracias por seguir ayudando a la aplicación a crecer."*
+  - Integrado soporte de envío automático vía `nodemailer` con confirmación al correo del usuario y reenvío al equipo de soporte (`soporte@klozet.es` / `klozet.enterprise@gmail.com`).

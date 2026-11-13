@@ -32,6 +32,10 @@ import {
     HelpCircle,
     LayoutGrid,
     Crown,
+    Calendar,
+    ExternalLink,
+    X,
+    Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { resetRevenueCatUser } from '@/lib/revenuecat/client';
@@ -52,9 +56,43 @@ export default function SettingsPage() {
     const { t } = useTranslation();
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+    const [showCancelModal, setShowCancelModal] = useState(false);
+    const [isOpeningPortal, setIsOpeningPortal] = useState(false);
     const [deleteInput, setDeleteInput] = useState('');
     const [isDeleting, setIsDeleting] = useState(false);
     const [styleNames, setStyleNames] = useState<Record<string, string>>({});
+
+    const handleOpenStripePortal = async () => {
+        setIsOpeningPortal(true);
+        try {
+            const res = await fetch('/api/stripe/portal', { method: 'POST' });
+            const data = await res.json();
+            if (data.url) {
+                window.location.href = data.url;
+            } else {
+                toast.info(data.error || 'No hay sesión de Stripe activa para esta cuenta');
+            }
+        } catch (err) {
+            toast.error('Error al abrir el portal de Stripe');
+        } finally {
+            setIsOpeningPortal(false);
+        }
+    };
+
+    const formatNextPaymentDate = () => {
+        if (!isPro) return null;
+        if (user?.subscriptionPeriodEnd) {
+            try {
+                const date = new Date(user.subscriptionPeriodEnd);
+                if (!isNaN(date.getTime())) {
+                    return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+                }
+            } catch {}
+        }
+        const base = user?.createdAt ? new Date(user.createdAt) : new Date();
+        const nextYear = new Date(base.getTime() + 365 * 24 * 60 * 60 * 1000);
+        return nextYear.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+    };
     
     // Privacy and notification states
     const [isPrivate, setIsPrivate] = useState(user?.isPrivate || false);
@@ -290,45 +328,81 @@ export default function SettingsPage() {
                     </h2>
 
                     {/* Suscripción Klozet Pro */}
-                    <Card className="p-5 mb-4">
-                        <div className="flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-3 min-w-0">
-                                <div className="w-10 h-10 rounded-xl bg-[var(--brand-pink)]/10 flex items-center justify-center shrink-0">
-                                    <Crown className="w-5 h-5 text-[var(--brand-pink)]" />
+                    <Card className="p-5 mb-4 overflow-hidden border border-[var(--border-color)]">
+                        <div className="flex items-center justify-between gap-4">
+                            {/* Kloe Mascot Icon + PRO underneath */}
+                            <div className="flex flex-col items-center justify-center shrink-0 w-12">
+                                <div className="w-11 h-11 relative flex items-center justify-center">
+                                    <img
+                                        src="/kloe-blink-open.png"
+                                        alt="Kloe"
+                                        className="w-11 h-11 object-contain select-none drop-shadow-sm"
+                                    />
                                 </div>
-                                <div className="min-w-0">
-                                    <div className="flex items-center gap-2">
-                                        <div className="font-medium text-[var(--foreground)]">
-                                            {isPro ? 'Klozet Pro' : 'Klozet Estándar'}
-                                        </div>
-                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                                            isPro
-                                                ? 'bg-[var(--brand-pink)] text-white'
-                                                : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)]'
-                                        }`}>
-                                            {isPro ? 'Activo' : 'Gratis'}
-                                        </span>
-                                    </div>
-                                    <div className="text-xs text-[var(--foreground-tertiary)] truncate">
-                                        {isPro 
-                                            ? 'Consultas ilimitadas con Kloe, adjuntos y looks en calendario'
-                                            : '2 consultas/día con Kloe · Oferta especial'}
-                                    </div>
-                                </div>
+                                <span className="text-[10px] font-black tracking-widest text-[var(--brand-pink)] uppercase mt-0.5 leading-none select-none">
+                                    PRO
+                                </span>
                             </div>
+
+                            {/* Info */}
+                            <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2">
+                                    <span className="font-bold text-base text-[var(--foreground)] tracking-tight">
+                                        {isPro ? 'Klozet Pro' : 'Klozet Estándar'}
+                                    </span>
+                                    {isPro && (
+                                        <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                            Activo
+                                        </span>
+                                    )}
+                                </div>
+                                <p className="text-xs text-[var(--foreground-secondary)] mt-0.5 leading-relaxed">
+                                    {isPro 
+                                        ? 'Consultas ilimitadas con Kloe, análisis de fotos y calendario completo'
+                                        : 'Desbloquea estilista Kloe ilimitada, fotos y calendario'}
+                                </p>
+                            </div>
+
+                            {/* Right action */}
                             {!isPro ? (
                                 <button
                                     onClick={() => openPremiumModal('yearly')}
-                                    className="px-4 py-2 rounded-full kz-pink-surface border border-white/25 text-white text-xs font-bold shrink-0 hover:scale-[1.03] active:scale-[0.97] transition-all cursor-pointer"
+                                    className="px-4 py-2 rounded-full kz-pink-surface border border-white/25 text-white text-xs font-bold shrink-0 hover:scale-[1.03] active:scale-[0.97] transition-all cursor-pointer shadow-sm"
                                 >
                                     Mejorar
                                 </button>
                             ) : (
-                                <span className="text-xs font-bold text-[var(--brand-pink)] px-2 py-1 rounded-full bg-[var(--brand-pink)]/10">
-                                    Klozet Pro
-                                </span>
+                                <Link
+                                    href="/premium"
+                                    className="flex items-center gap-1 text-xs font-semibold text-[var(--foreground-secondary)] hover:text-[var(--brand-pink)] px-3.5 py-1.5 rounded-full bg-[var(--background-secondary)] border border-[var(--border-color)] hover:border-[var(--brand-pink)] transition-all shrink-0 cursor-pointer"
+                                    title="Ver ventajas"
+                                >
+                                    <span>Ventajas</span>
+                                    <ChevronRight className="w-3.5 h-3.5" />
+                                </Link>
                             )}
                         </div>
+
+                        {/* Debajo del banner de Klozet Pro: Fecha del siguiente pago y gestión */}
+                        {isPro && (
+                            <div className="mt-4 pt-3.5 border-t border-[var(--border-color)]/70 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
+                                <div className="flex items-center gap-2 text-xs text-[var(--foreground-secondary)]">
+                                    <Calendar className="w-3.5 h-3.5 text-[var(--brand-pink)] shrink-0" />
+                                    <span className="text-[var(--foreground-tertiary)]">Próximo cobro:</span>
+                                    <span className="font-semibold text-[var(--foreground)]">
+                                        {formatNextPaymentDate()}
+                                    </span>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowCancelModal(true)}
+                                    className="text-xs font-medium text-[var(--foreground-tertiary)] hover:text-red-500 transition-colors text-left sm:text-right cursor-pointer underline underline-offset-2"
+                                >
+                                    Gestionar o cancelar suscripción
+                                </button>
+                            </div>
+                        )}
                     </Card>
 
                     <Link href="/profile/settings/personal">
@@ -785,6 +859,108 @@ export default function SettingsPage() {
                     isOpen={showFeedbackModal} 
                     onClose={() => setShowFeedbackModal(false)} 
                 />
+
+                {/* Modal: Cómo gestionar o cancelar la suscripción */}
+                <AnimatePresence>
+                    {showCancelModal && (
+                        <div className="fixed inset-0 z-[7000] flex items-center justify-center p-4">
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                                onClick={() => setShowCancelModal(false)}
+                            />
+                            <motion.div
+                                initial={{ scale: 0.95, opacity: 0, y: 16 }}
+                                animate={{ scale: 1, opacity: 1, y: 0 }}
+                                exit={{ scale: 0.95, opacity: 0, y: 16 }}
+                                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                                className="relative w-full max-w-md bg-[var(--card-bg)] rounded-3xl shadow-2xl overflow-hidden border border-[var(--border-color)] p-6"
+                            >
+                                <div className="flex items-center justify-between pb-4 border-b border-[var(--border-color)]/60 mb-5">
+                                    <div className="flex items-center gap-2.5">
+                                        <div className="w-9 h-9 rounded-2xl bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] flex items-center justify-center font-bold">
+                                            <Shield className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-base font-bold text-[var(--foreground)] tracking-tight">
+                                                Gestionar o cancelar suscripción
+                                            </h3>
+                                            <p className="text-xs text-[var(--foreground-tertiary)]">
+                                                Klozet Pro
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => setShowCancelModal(false)}
+                                        className="w-8 h-8 rounded-full bg-[var(--background-secondary)] text-[var(--foreground-tertiary)] hover:text-[var(--foreground)] flex items-center justify-center transition-colors cursor-pointer"
+                                        aria-label="Cerrar"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                </div>
+
+                                <div className="space-y-4 text-left">
+                                    <div className="p-4 rounded-2xl bg-[var(--background-secondary)]/80 border border-[var(--border-color)]/60">
+                                        <h4 className="text-xs font-bold text-[var(--foreground)] uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                                            <Globe className="w-3.5 h-3.5 text-[var(--brand-pink)]" />
+                                            <span>Pagos por Web (Stripe / Tarjeta)</span>
+                                        </h4>
+                                        <p className="text-xs text-[var(--foreground-secondary)] leading-relaxed mb-3">
+                                            Si te suscribiste por web con tarjeta, Apple Pay o Google Pay, puedes cancelar o cambiar de plan en el portal de Stripe:
+                                        </p>
+                                        <button
+                                            type="button"
+                                            onClick={handleOpenStripePortal}
+                                            disabled={isOpeningPortal}
+                                            className="w-full py-2.5 px-4 rounded-full bg-[var(--brand-pink)] text-white text-xs font-bold hover:opacity-95 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                                        >
+                                            {isOpeningPortal ? (
+                                                <>
+                                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                                    <span>Conectando con Stripe...</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <ExternalLink className="w-3.5 h-3.5" />
+                                                    <span>Abrir portal de suscripción en Stripe</span>
+                                                </>
+                                            )}
+                                        </button>
+                                    </div>
+
+                                    <div className="p-4 rounded-2xl bg-[var(--background-secondary)]/80 border border-[var(--border-color)]/60">
+                                        <h4 className="text-xs font-bold text-[var(--foreground)] uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                                            <Smartphone className="w-3.5 h-3.5 text-[var(--brand-pink)]" />
+                                            <span>Pagos en Móvil (iPhone / Android)</span>
+                                        </h4>
+                                        <div className="space-y-2 text-xs text-[var(--foreground-secondary)] leading-relaxed">
+                                            <p>
+                                                <strong className="text-[var(--foreground)]">En iPhone:</strong> Ve a <em>Ajustes &gt; Tu Nombre &gt; Suscripciones &gt; Klozet &gt; Cancelar suscripción</em>.
+                                            </p>
+                                            <p>
+                                                <strong className="text-[var(--foreground)]">En Android:</strong> Abre <em>Google Play &gt; Perfil &gt; Pagos y suscripciones &gt; Cancelar</em>.
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="text-[11px] text-[var(--foreground-tertiary)] bg-zinc-500/5 p-3 rounded-xl border border-zinc-500/10 leading-relaxed">
+                                        💡 <strong>Importante:</strong> Al cancelar, mantienes todos los beneficios de Klozet Pro hasta {formatNextPaymentDate() || 'el fin del periodo'} sin cobros adicionales.
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowCancelModal(false)}
+                                        className="w-full py-3 px-4 rounded-full bg-[var(--background-secondary)] text-[var(--foreground)] text-xs font-semibold hover:bg-[var(--border-color)] transition-colors cursor-pointer"
+                                    >
+                                        Cerrar
+                                    </button>
+                                </div>
+                            </motion.div>
+                        </div>
+                    )}
+                </AnimatePresence>
 
                 {/* Version & Legal Footer */}
                 <motion.div variants={itemVariants} className="text-center mt-8 pb-4">

@@ -377,7 +377,22 @@ export default function ProfilePage() {
 
       <main className="w-full md:max-w-[70%] mx-auto">
         {/* Profile Info */}
-        <div className="px-5 pt-6 md:pt-14 lg:pt-16">
+        <div className="px-5 pt-6 md:pt-10 lg:pt-12">
+          {/* Desktop Top Header with Username & Configuración */}
+          <div className="hidden md:flex items-center justify-between pb-4 mb-6 border-b border-[var(--border-color)]/60">
+            <span className="font-bold text-lg text-[var(--foreground)] tracking-tight select-none">
+              {user.username ? `@${user.username.replace(/^@/, '')}` : (user.name || 'Perfil')}
+            </span>
+            <Link
+              href="/profile/settings"
+              className="flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--background-secondary)] text-[var(--foreground)] border border-[var(--border-color)] hover:border-[var(--brand-pink)] hover:text-[var(--brand-pink)] text-xs font-semibold transition-all cursor-pointer shadow-xs"
+              aria-label="Configuración"
+            >
+              <Settings className="w-4 h-4 text-[var(--foreground-secondary)]" />
+              <span>Configuración</span>
+            </Link>
+          </div>
+
           <div className="flex items-center gap-8 mb-6">
             <button 
               onClick={() => setShowAvatarModal(true)}
@@ -426,12 +441,20 @@ export default function ProfilePage() {
               <p className="text-sm text-[var(--foreground-secondary)] whitespace-pre-wrap mb-4">{user.bio}</p>
             )}
             
-            <div className="flex items-center mt-4 mb-4">
+            <div className="flex items-center gap-3 mt-4 mb-4">
               <Link 
                 href="/profile/edit" 
-                className="w-full h-11 flex items-center justify-center gap-2 px-5 rounded-full kz-pink-surface border border-white/25 text-white font-bold text-sm hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
+                className="flex-1 h-11 flex items-center justify-center gap-2 px-5 rounded-full kz-pink-surface border border-white/25 text-white font-bold text-sm hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
               >
                 Editar perfil
+              </Link>
+              <Link
+                href="/profile/settings"
+                className="hidden md:flex h-11 items-center justify-center gap-2 px-5 rounded-full bg-[var(--background-secondary)] text-[var(--foreground)] border border-[var(--border-color)] hover:border-[var(--brand-pink)] hover:text-[var(--brand-pink)] font-semibold text-sm transition-all cursor-pointer shrink-0"
+                title="Configuración"
+              >
+                <Settings className="w-4 h-4 text-[var(--foreground-secondary)]" />
+                <span>Configuración</span>
               </Link>
             </div>
 

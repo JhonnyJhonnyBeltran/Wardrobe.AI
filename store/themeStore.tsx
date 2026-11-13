@@ -119,17 +119,19 @@ export function syncThemeToDom(isDark: boolean) {
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-    const [themePreference, setThemePreference] = useState<ThemePreference>('auto');
+    // Por defecto al abrir la app por primera vez SIEMPRE es modo CLARO
+    const [themePreference, setThemePreference] = useState<ThemePreference>('light');
     const [systemTheme, setSystemTheme] = useState<Theme>('light');
     const [mounted, setMounted] = useState(false);
     const pathname = usePathname();
 
     useEffect(() => {
         const storedPref = localStorage.getItem(THEME_PREF_KEY) as ThemePreference | null;
+        // Si no hay preferencia guardada en localStorage (primera apertura), el tema por defecto SIEMPRE es 'light'
         const initialPref: ThemePreference =
             storedPref === 'light' || storedPref === 'dark' || storedPref === 'auto'
                 ? storedPref
-                : 'auto';
+                : 'light';
         setThemePreference(initialPref);
 
         const autoTheme = resolveAutoTheme();
@@ -147,7 +149,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
             const newAuto = e.matches ? 'dark' : 'light';
             setSystemTheme(newAuto);
             const currentPref = localStorage.getItem(THEME_PREF_KEY);
-            if (!currentPref || currentPref === 'auto') {
+            // Solo sincronizar con el sistema si el usuario seleccionó explícitamente 'auto'
+            if (currentPref === 'auto') {
                 if (!isForceLightRoute(pathname)) {
                     syncThemeToDom(newAuto === 'dark');
                 }

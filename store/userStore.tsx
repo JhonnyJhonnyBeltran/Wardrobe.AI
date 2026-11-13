@@ -184,6 +184,10 @@ export function UserProvider({ children }: { children: ReactNode }) {
         },
         kloeTrialMessagesUsed: styleSource.kloe_trial_messages_used ?? styleSource.notification_preferences?.kloe_trial_messages_used ?? 0,
         language: styleSource.language || styleSource.notification_preferences?.language || undefined,
+        subscriptionPlan: styleSource.subscription_plan || 'none',
+        subscriptionStatus: styleSource.subscription_status || 'inactive',
+        subscriptionPeriodEnd: styleSource.subscription_period_end || undefined,
+        stripeCustomerId: styleSource.stripe_customer_id || undefined,
       }));
 
       // Synchronize Language from localStorage manual choice first, then profile, then Google OAuth locale
