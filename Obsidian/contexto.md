@@ -3770,3 +3770,18 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
   - **Eliminación del retardo de transición (`app/globals.css`)**: Eliminado `transition: background-color 0.3s` en `html` y `body`, conservando la transición suave de color tipográfico (`transition: color 0.2s`). Esto permite un cambio de fondo instantáneo (0ms) en la raíz evitando estados intermedios desfasados.
   - **Ejecución síncrona en click (`store/themeStore.tsx`)**: Invocación inmediata de `syncThemeToDom` dentro de `setTheme('dark' | 'light' | 'auto')` antes de la reconciliación de React, eliminando cualquier desfase visual de 1 fotograma en ajustes (`/profile/settings`).
   - **Sincronización nativa Capacitor**: Llamada inmediata a `@capacitor/status-bar` (`StatusBar.setBackgroundColor` y `StatusBar.setStyle`) en dispositivos móviles nativos.
+
+---
+
+## 79. Blindaje del Filtro de Pago y Validación de Suscripción Premium (Noviembre 2026)
+- **Validador centralizado de suscripción (`lib/server/subscriptionValidator.ts`, `app/api/closy/chat/route.ts`, `app/api/analyze-clothing/route.ts`, `app/api/widgets/today/route.ts`)**:
+  - Creado módulo `validateUserSubscription` que unifica los criterios de verificación en backend: comprueba que el usuario posea `is_premium: true` o `subscription_tier: 'premium'`, que `subscription_status` no esté en estados inactivos (`canceled`, `unpaid`, `incomplete_expired`, `inactive`), y que el periodo pagado (`subscription_period_end`) no haya vencido (+ periodo de gracia de 3 días para compensar retrasos bancarios de renovación).
+  - Integrada función de auto-degradación asíncrona `syncExpiredProfileIfNecessary` para que perfiles vencidos pasen de inmediato a `free`/`expired` en Supabase Admin.
+- **Protección a nivel de base de datos contra manipulaciones en cliente (`sql/02_security_protect_subscription.sql`)**:
+  - Implementado trigger PostgreSQL `protect_profile_subscription_fields` sobre `public.profiles`. Impide que cualquier usuario autenticado o cliente desde la consola del navegador modifique sus columnas de pago (`is_premium`, `subscription_tier`, `subscription_status`, `subscription_plan`, `subscription_period_end`, `stripe_customer_id`, `stripe_subscription_id`). Solo los procesos con rol `service_role` (webhooks y verificador de Stripe / RevenueCat) tienen autorización para modificar el estado de suscripción.
+- **Limpieza de métodos de prueba en el store de cliente (`store/userStore.tsx`)**:
+  - Desactivados `togglePremium` y `upgradeToPremiun`, reorientándolos exclusivamente a refrescar el perfil real de base de datos (`refreshProfile`).
+  - Añadida validación estricta de `subscription_status !== 'inactive'` y verificación de fecha de caducidad en el frontend.
+- **Visibilidad y gestión de suscripción en UI (`app/(app)/profile/settings/page.tsx`, `app/(app)/premium/page.tsx`)**:
+  - En Configuración (`/profile/settings`), incorporada tarjeta de Suscripción que muestra el estado actual (`Klozet Pro Activo` o `Klozet Estándar Gratis`) con botón directo para mejorar el plan.
+  - En la página de suscripción (`/premium`), si el usuario ya ha pagado, se le muestra la pantalla de confirmación con todas las ventajas activas y acceso directo a Kloe en lugar de ofrecerle comprar de nuevo.

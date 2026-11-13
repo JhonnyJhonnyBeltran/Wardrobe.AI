@@ -13,6 +13,7 @@ import { getFastCourtesyResponse } from '@/lib/closy/fastResponses';
 import { resolveImageUrl } from '@/lib/imageUtils';
 import { getGeminiApiKey } from '@/lib/ai/geminiClient';
 import { extractRequestCityHint, resolveWeatherByCityName, type DailyWeatherEntry } from '@/lib/weather/forecast';
+import { validateUserSubscription, syncExpiredProfileIfNecessary } from '@/lib/server/subscriptionValidator';
 
 interface WeatherContextPayload {
   city?: string;
@@ -224,20 +225,15 @@ export async function POST(request: NextRequest) {
     // 4. Check Subscription (strictly database-backed, zero bypasses)
     const { data: userProfile } = await supabase
       .from('profiles')
-      .select('id, is_premium, subscription_tier, subscription_status, username, full_name, ai_daily_usage_date, ai_daily_usage_count, ai_lifetime_chats')
+      .select('id, is_premium, subscription_tier, subscription_status, subscription_period_end, subscription_plan, username, full_name, ai_daily_usage_date, ai_daily_usage_count, ai_lifetime_chats')
       .eq('id', user.id)
       .maybeSingle();
 
-    const subStatus = String(userProfile?.subscription_status || '').toLowerCase();
-    const isStatusInactive =
-      subStatus === 'canceled' ||
-      subStatus === 'unpaid' ||
-      subStatus === 'incomplete_expired';
-
-    const isPremium = !isStatusInactive && Boolean(
-      userProfile?.is_premium ||
-      userProfile?.subscription_tier === 'premium'
-    );
+    const subResult = validateUserSubscription(userProfile);
+    const isPremium = subResult.isPremium;
+    if (subResult.isExpired) {
+      syncExpiredProfileIfNecessary(user.id, subResult).catch(() => {});
+    }
 
     // 4.5. Gate Kloe Pro attachments (garments, saved posts, custom photos)
     if (!isPremium && hasAttachedGarmentOrPost) {
@@ -537,20 +533,15 @@ export async function GET() {
 
     const { data: userProfile } = await supabase
       .from('profiles')
-      .select('id, is_premium, subscription_tier, subscription_status, username, full_name, ai_daily_usage_date, ai_daily_usage_count')
+      .select('id, is_premium, subscription_tier, subscription_status, subscription_period_end, subscription_plan, username, full_name, ai_daily_usage_date, ai_daily_usage_count')
       .eq('id', user.id)
       .maybeSingle();
 
-    const subStatus = String(userProfile?.subscription_status || '').toLowerCase();
-    const isStatusInactive =
-      subStatus === 'canceled' ||
-      subStatus === 'unpaid' ||
-      subStatus === 'incomplete_expired';
-
-    const isPremium = !isStatusInactive && Boolean(
-      userProfile?.is_premium ||
-      userProfile?.subscription_tier === 'premium'
-    );
+    const subResult = validateUserSubscription(userProfile);
+    const isPremium = subResult.isPremium;
+    if (subResult.isExpired) {
+      syncExpiredProfileIfNecessary(user.id, subResult).catch(() => {});
+    }
 
     const quota = getUserQuotaStatus(user.id, isPremium);
     const todayKey = getMadridDayKey();

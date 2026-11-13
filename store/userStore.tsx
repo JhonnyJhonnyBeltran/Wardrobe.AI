@@ -114,8 +114,14 @@ export function UserProvider({ children }: { children: ReactNode }) {
       const periodEndMs = periodEndStr ? new Date(periodEndStr).getTime() : 0;
       const isPastGrace = periodEndMs > 0 && (Date.now() - periodEndMs > 3 * 24 * 60 * 60 * 1000);
 
-      const status = (profile?.subscription_status || legacyProfile?.subscription_status || '').toLowerCase();
-      const isStatusExplicitlyInactive = status === 'canceled' || status === 'unpaid' || status === 'incomplete_expired' || (status === 'past_due' && isPastGrace);
+      const status = (profile?.subscription_status || legacyProfile?.subscription_status || '').toLowerCase().trim();
+      const isStatusExplicitlyInactive =
+        status === 'canceled' ||
+        status === 'unpaid' ||
+        status === 'incomplete_expired' ||
+        status === 'inactive' ||
+        (status === 'past_due' && isPastGrace) ||
+        isPastGrace;
 
       const isPremiumFromDb = !isStatusExplicitlyInactive && Boolean(
         profile?.is_premium ||
@@ -362,29 +368,14 @@ export function UserProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   const upgradeToPremiun = useCallback(() => {
-    setUser((prev) => prev ? { ...prev, subscriptionTier: SubscriptionTier.PREMIUM } : null);
-  }, []);
+    // Subscription status is strictly verified by Stripe/RevenueCat backend
+    refreshProfile().catch(() => {});
+  }, [refreshProfile]);
 
-  const togglePremium = useCallback(async (enable?: boolean) => {
-    if (!user) return;
-    const shouldBePremium = enable !== undefined ? enable : user.subscriptionTier !== SubscriptionTier.PREMIUM;
-    const newTier = shouldBePremium ? SubscriptionTier.PREMIUM : SubscriptionTier.FREE;
-
-    // Optimistic UI update
-    setUser(prev => prev ? { ...prev, subscriptionTier: newTier } : null);
-
-    try {
-      await supabase
-        .from('profiles')
-        .update({ 
-          subscription_tier: newTier,
-          is_premium: shouldBePremium 
-        } as any)
-        .eq('id', user.id);
-    } catch (err) {
-      console.warn('[UserStore] Could not persist subscription tier to DB:', err);
-    }
-  }, [user]);
+  const togglePremium = useCallback(async (_enable?: boolean) => {
+    // Security: users cannot self-assign premium status from client
+    await refreshProfile().catch(() => {});
+  }, [refreshProfile]);
 
   const value = useMemo(() => ({
     user,

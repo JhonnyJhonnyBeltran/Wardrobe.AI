@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import { createClient } from '@/lib/supabase/server';
 import { checkIpRateLimit, getMadridDayKey } from '@/lib/closy/rateLimiter';
 import { getGeminiApiKey } from '@/lib/ai/geminiClient';
+import { validateUserSubscription, syncExpiredProfileIfNecessary } from '@/lib/server/subscriptionValidator';
 
 // In-memory hot cache for instant sub-millisecond responses on serverless instances
 const memoryImageCache = new Map<string, { data: AnalyzeResponse; timestamp: number }>();
@@ -112,16 +113,15 @@ export async function POST(request: NextRequest) {
     // 4. CHECK USER SUBSCRIPTION & PERSISTENT DAILY QUOTA (Anti-Bleeding)
     const { data: profile } = await supabase
       .from('profiles')
-      .select('id, is_premium, subscription_tier, subscription_status, username, full_name, ai_daily_usage_date, ai_daily_usage_count, ai_lifetime_items_analyzed')
+      .select('id, is_premium, subscription_tier, subscription_status, subscription_period_end, subscription_plan, username, full_name, ai_daily_usage_date, ai_daily_usage_count, ai_lifetime_items_analyzed')
       .eq('id', user.id)
       .maybeSingle();
 
-    const status = String(profile?.subscription_status || '').toLowerCase();
-    const isInactive = status === 'canceled' || status === 'unpaid' || status === 'incomplete_expired';
-    const isPremium = !isInactive && Boolean(
-      profile?.is_premium ||
-      profile?.subscription_tier === 'premium'
-    );
+    const subResult = validateUserSubscription(profile);
+    const isPremium = subResult.isPremium;
+    if (subResult.isExpired) {
+      syncExpiredProfileIfNecessary(user.id, subResult).catch(() => {});
+    }
 
     const todayKey = getMadridDayKey();
     const userUsageDate = (profile as any)?.ai_daily_usage_date;

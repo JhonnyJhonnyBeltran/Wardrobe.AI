@@ -6,6 +6,7 @@ import {
   extractRequestCityHint,
 } from '@/lib/weather/forecast';
 import { resolveImageUrl } from '@/lib/imageUtils';
+import { validateUserSubscription, syncExpiredProfileIfNecessary } from '@/lib/server/subscriptionValidator';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,20 +32,15 @@ export async function GET(req: NextRequest) {
     if (user) {
       const { data: userProfile } = await supabase
         .from('profiles')
-        .select('is_premium, subscription_tier, subscription_status')
+        .select('is_premium, subscription_tier, subscription_status, subscription_period_end, subscription_plan')
         .eq('id', user.id)
         .maybeSingle();
 
-      const subStatus = String(userProfile?.subscription_status || '').toLowerCase();
-      const isInactive =
-        subStatus === 'canceled' ||
-        subStatus === 'unpaid' ||
-        subStatus === 'incomplete_expired';
-
-      isPremium = !isInactive && Boolean(
-        userProfile?.is_premium ||
-        userProfile?.subscription_tier === 'premium'
-      );
+      const subResult = validateUserSubscription(userProfile);
+      isPremium = subResult.isPremium;
+      if (subResult.isExpired) {
+        syncExpiredProfileIfNecessary(user.id, subResult).catch(() => {});
+      }
     }
 
     if (user && isPremium) {

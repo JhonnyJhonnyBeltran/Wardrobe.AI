@@ -31,6 +31,7 @@ import {
     ChevronRight,
     HelpCircle,
     LayoutGrid,
+    Crown,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { resetRevenueCatUser } from '@/lib/revenuecat/client';
@@ -38,12 +39,15 @@ import FeedbackModal from '@/components/FeedbackModal';
 import { useNotificationSettingsStore } from '@/store/notificationSettingsStore';
 import { useSearchStore } from '@/store/searchStore';
 import { useRealtimeStore } from '@/store/realtimeStore';
+import { useUiStore } from '@/store/uiStore';
 
 export default function SettingsPage() {
-    const { user, setUser } = useUser();
+    const { user, setUser, isPremium } = useUser();
     const { signOut } = useAuth();
     const router = useRouter();
     const { theme, themePreference, setTheme } = useTheme();
+    const { openPremiumModal } = useUiStore();
+    const isPro = isPremium();
     const { language, setLanguage } = useLanguageStore();
     const { t } = useTranslation();
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -284,6 +288,48 @@ export default function SettingsPage() {
                     <h2 className="text-sm font-semibold text-[var(--foreground-secondary)] uppercase tracking-wider mb-4">
                         {t.profile.configuration}
                     </h2>
+
+                    {/* Suscripción Klozet Pro */}
+                    <Card className="p-5 mb-4">
+                        <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-3 min-w-0">
+                                <div className="w-10 h-10 rounded-xl bg-[var(--brand-pink)]/10 flex items-center justify-center shrink-0">
+                                    <Crown className="w-5 h-5 text-[var(--brand-pink)]" />
+                                </div>
+                                <div className="min-w-0">
+                                    <div className="flex items-center gap-2">
+                                        <div className="font-medium text-[var(--foreground)]">
+                                            {isPro ? 'Klozet Pro' : 'Klozet Estándar'}
+                                        </div>
+                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                            isPro
+                                                ? 'bg-[var(--brand-pink)] text-white'
+                                                : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)]'
+                                        }`}>
+                                            {isPro ? 'Activo' : 'Gratis'}
+                                        </span>
+                                    </div>
+                                    <div className="text-xs text-[var(--foreground-tertiary)] truncate">
+                                        {isPro 
+                                            ? 'Consultas ilimitadas con Kloe, adjuntos y widgets'
+                                            : '2 consultas/día con Kloe · Oferta especial'}
+                                    </div>
+                                </div>
+                            </div>
+                            {!isPro ? (
+                                <button
+                                    onClick={() => openPremiumModal('yearly')}
+                                    className="px-4 py-2 rounded-full kz-pink-surface border border-white/25 text-white text-xs font-bold shrink-0 hover:scale-[1.03] active:scale-[0.97] transition-all cursor-pointer"
+                                >
+                                    Mejorar
+                                </button>
+                            ) : (
+                                <span className="text-xs font-bold text-[var(--brand-pink)] px-2 py-1 rounded-full bg-[var(--brand-pink)]/10">
+                                    Klozet Pro
+                                </span>
+                            )}
+                        </div>
+                    </Card>
 
                     <Link href="/profile/settings/personal">
                         <Card className="p-5 mb-4 cursor-pointer transition-colors">
