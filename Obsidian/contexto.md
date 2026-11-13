@@ -3800,3 +3800,11 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
 - **Nuevos Favicon e Iconos de la App (`app/layout.tsx`, `public/manifest.json`, `public/favicon.png`, `public/apple-touch-icon.png`, `public/icon-192.png`, `public/icon-512.png`, `ios/.../AppIcon-512@2x.png`)**:
   - **Favicon**: Generado `favicon.png` con el logo en rosa (`#FF66C4`) sobre **fondo transparente**.
   - **Icono de la App (iOS, PWA y Android)**: Generados iconos con la **K bubble oficial con ojitos blancos** centrada sobre **fondo negro puro (`#000000`)**, preservando la zona de respeto y los márgenes para la máscara squircle de Apple.
+
+---
+
+## 81. Actualización de Iconos con Kloe Blink Open Oficial (Noviembre 2026)
+- **Icono de la App con `kloe-blink-open.png` (`public/apple-touch-icon.png`, `public/icon-192.png`, `public/icon-512.png`, `public/klozet-app-icon-black.png`, `ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png`, `app/layout.tsx`)**:
+  - Reemplazada la imagen fuente de los iconos de la app por la mascota oficial **`kloe-blink-open.png`** (K rosa con ojitos abiertos expresivos y pestañeo vivo) centrada con escala de seguridad del 70% sobre fondo negro puro (`#000000`).
+  - Actualizados los favicons de navegador (`public/favicon.png`, `public/favicon.ico`, `app/favicon.ico`) con `kloe-blink-open.png` sobre fondo transparente.
+  - Actualizados los metadatos de iconos en [app/layout.tsx](file:///c:/Users/EthanCurro/Desktop/Ethan's%20Project/Wardobre.ai/Wardrobe.AI/app/layout.tsx).
