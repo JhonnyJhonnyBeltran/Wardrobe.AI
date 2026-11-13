@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence, useDragControls } from 'framer-motion';
-import { ChevronLeft, ChevronRight, CalendarDays, X, Plus, Trash2, Shirt, Search, Heart, Edit2, Sun, Cloud, CloudRain, CloudSnow, MapPin, ArrowLeftRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CalendarDays, X, Plus, Trash2, Shirt, Search, Heart, Edit2, Sun, Cloud, CloudRain, CloudSnow, MapPin, ArrowLeftRight, Lock } from 'lucide-react';
 import type { DailyWeatherEntry, WeatherCondition } from '@/app/api/weather/route';
 import { supabase } from '@/lib/supabase/client';
 import { useUser } from '@/store';
@@ -48,8 +48,9 @@ function WeatherIcon({
 }
 
 export default function OutfitCalendar({ hasOutfits = true }: { hasOutfits?: boolean }) {
-  const { user } = useUser();
-  const { showModal, setTabBarHidden } = useUiStore();
+  const { user, isPremium } = useUser();
+  const { showModal, openPremiumModal, setTabBarHidden } = useUiStore();
+  const isPro = isPremium();
   const [outfitSearchQuery, setOutfitSearchQuery] = useState('');
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
   
@@ -210,10 +211,14 @@ export default function OutfitCalendar({ hasOutfits = true }: { hasOutfits?: boo
   }, [user, userOutfits.length]);
 
   const handleAddToday = useCallback(() => {
+    if (!isPremium()) {
+      openPremiumModal('yearly');
+      return;
+    }
     setSelectedDate(new Date());
     loadUserOutfits();
     setShowPicker(true);
-  }, [loadUserOutfits]);
+  }, [loadUserOutfits, isPremium, openPremiumModal]);
 
   useEffect(() => {
     const onAddToday = () => {
@@ -360,6 +365,15 @@ export default function OutfitCalendar({ hasOutfits = true }: { hasOutfits?: boo
 
   const handleAssignOutfit = async (outfitId: string) => {
     if (!user || !selectedDate) return;
+    if (!isPremium()) {
+      openPremiumModal('yearly');
+      showModal({
+        title: 'Klozet Pro',
+        message: 'Programar outfits en el calendario es una función exclusiva de Klozet Pro.',
+        type: 'info',
+      });
+      return;
+    }
     const dateStr = formatDateToSQL(selectedDate);
     
     try {
@@ -478,15 +492,19 @@ export default function OutfitCalendar({ hasOutfits = true }: { hasOutfits?: boo
             type="button"
             onClick={(e) => {
               e.stopPropagation();
+              if (!isPro) {
+                openPremiumModal('yearly');
+                return;
+              }
               setOutfitToSwap(outfit.calendar_id);
               loadUserOutfits();
               setShowPicker(true);
             }}
             className="w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm border border-black/[0.06] text-zinc-700 hover:text-[var(--brand-pink)] flex items-center justify-center shadow-xs transition-colors cursor-pointer"
-            title="Cambiar outfit"
+            title={isPro ? "Cambiar outfit" : "Cambiar outfit (Klozet Pro)"}
             aria-label="Cambiar outfit"
           >
-            <ArrowLeftRight className="w-3.5 h-3.5" />
+            {isPro ? <ArrowLeftRight className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5 text-zinc-400" />}
           </button>
           <button
             type="button"
@@ -703,18 +721,29 @@ export default function OutfitCalendar({ hasOutfits = true }: { hasOutfits?: boo
           {/* Mobile Button below Calendar (hidden until user has outfits) */}
           {hasOutfits && (
             <div className="mt-4 sm:hidden">
-              <motion.button
-                whileTap={{ scale: 0.98 }}
-                onClick={() => {
-                  setSelectedDate(new Date());
-                  loadUserOutfits();
-                  setShowPicker(true);
-                }}
-                className="w-full py-3.5 px-4 rounded-2xl bg-[var(--brand-pink)] text-white font-bold text-[15px] flex items-center justify-center gap-2 shadow-lg shadow-[var(--brand-pink)]/35 hover:shadow-[0_0_22px_rgba(255,102,196,0.5)] active:opacity-90 transition-all cursor-pointer"
-              >
-                <Plus className="w-5 h-5 stroke-[2.5]" />
-                Añadir outfit para hoy
-              </motion.button>
+              {isPro ? (
+                <motion.button
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => {
+                    setSelectedDate(new Date());
+                    loadUserOutfits();
+                    setShowPicker(true);
+                  }}
+                  className="w-full py-3.5 px-4 rounded-2xl bg-[var(--brand-pink)] text-white font-bold text-[15px] flex items-center justify-center gap-2 shadow-lg shadow-[var(--brand-pink)]/35 hover:shadow-[0_0_22px_rgba(255,102,196,0.5)] active:opacity-90 transition-all cursor-pointer"
+                >
+                  <Plus className="w-5 h-5 stroke-[2.5]" />
+                  Añadir outfit para hoy
+                </motion.button>
+              ) : (
+                <motion.button
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => openPremiumModal('yearly')}
+                  className="w-full py-3.5 px-4 rounded-2xl bg-zinc-100 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/60 text-zinc-400 dark:text-zinc-500 font-bold text-sm flex items-center justify-center gap-2 hover:border-[var(--brand-pink)]/50 hover:text-[var(--brand-pink)] transition-all cursor-pointer shadow-xs"
+                >
+                  <Lock className="w-4 h-4 text-zinc-400 dark:text-zinc-500" />
+                  Añadir outfit para hoy (Klozet Pro)
+                </motion.button>
+              )}
             </div>
           )}
         </div>
@@ -842,25 +871,36 @@ export default function OutfitCalendar({ hasOutfits = true }: { hasOutfits?: boo
               </div>
 
               <div className="p-6 border-t border-[var(--border-color)] bg-[var(--background)]">
-                <Button 
-                  onClick={() => {
-                    loadUserOutfits();
-                    setShowPicker(true);
-                  }} 
-                  className="w-full py-4 text-lg rounded-2xl flex items-center justify-center gap-2 shadow-[var(--brand-pink)]/35 hover:shadow-[0_0_22px_rgba(255,102,196,0.5)]"
-                >
-                  {selectedDayOutfits.length > 0 ? (
-                    <>
-                      <Plus className="w-5 h-5" />
-                      Añadir otro Outfit
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="w-5 h-5" />
-                      Asignar un Outfit
-                    </>
-                  )}
-                </Button>
+                {isPro ? (
+                  <Button 
+                    onClick={() => {
+                      loadUserOutfits();
+                      setShowPicker(true);
+                    }} 
+                    className="w-full py-4 text-lg rounded-2xl flex items-center justify-center gap-2 shadow-[var(--brand-pink)]/35 hover:shadow-[0_0_22px_rgba(255,102,196,0.5)]"
+                  >
+                    {selectedDayOutfits.length > 0 ? (
+                      <>
+                        <Plus className="w-5 h-5" />
+                        Añadir otro Outfit
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="w-5 h-5" />
+                        Asignar un Outfit
+                      </>
+                    )}
+                  </Button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => openPremiumModal('yearly')}
+                    className="w-full py-4 px-4 rounded-2xl bg-zinc-100 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700/60 text-zinc-400 dark:text-zinc-500 font-bold text-sm flex items-center justify-center gap-2 hover:border-[var(--brand-pink)]/50 hover:text-[var(--brand-pink)] transition-all cursor-pointer shadow-xs"
+                  >
+                    <Lock className="w-4 h-4 text-zinc-400 dark:text-zinc-500" />
+                    <span>Asignar Outfit (Klozet Pro)</span>
+                  </button>
+                )}
               </div>
             </motion.div>
           </motion.div>

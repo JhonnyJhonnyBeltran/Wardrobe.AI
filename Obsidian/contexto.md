@@ -3785,3 +3785,18 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
 - **Visibilidad y gestión de suscripción en UI (`app/(app)/profile/settings/page.tsx`, `app/(app)/premium/page.tsx`)**:
   - En Configuración (`/profile/settings`), incorporada tarjeta de Suscripción que muestra el estado actual (`Klozet Pro Activo` o `Klozet Estándar Gratis`) con botón directo para mejorar el plan.
   - En la página de suscripción (`/premium`), si el usuario ya ha pagado, se le muestra la pantalla de confirmación con todas las ventajas activas y acceso directo a Kloe en lugar de ofrecerle comprar de nuevo.
+
+---
+
+## 80. Bloqueo Premium de Calendario Anti-Bypass, Guía de Widgets iPhone y Nuevos Iconos (Noviembre 2026)
+- **Programación de outfits en calendario exclusiva para Klozet Pro (`components/OutfitCalendar.tsx`, `app/(app)/create/page.tsx`, `sql/03_protect_calendar_outfits_premium.sql`)**:
+  - En el calendario del armario (`OutfitCalendar.tsx`) y en el guardado de looks (`create/page.tsx`), las acciones para asignar un outfit a una fecha aparecen **deshabilitadas en color gris** con icono de candado (`Lock`) y etiqueta `Klozet Pro` para usuarios no premium (`!isPro`).
+  - Al pulsarlas, abren de inmediato el paywall oficial de Klozet Pro (`openPremiumModal('yearly')`).
+  - **Blindaje anti-scripts**: Creado trigger PostgreSQL `trg_check_calendar_outfits_premium` sobre `public.calendar_outfits`. Cualquier inserción o modificación manual de outfits programados vía consola del navegador o peticiones directas de API sin suscripción activa es bloqueada en motor de base de datos con excepción `42501`.
+- **Eliminación de widgets en Ajustes (`app/(app)/profile/settings/page.tsx`)**:
+  - Eliminado el acceso directo a `/widgets` de la sección "Soporte y Ayuda" en `/profile/settings` para evitar confusiones, manteniendo el foco en que el widget de iOS mostrará automáticamente el outfit programado para el día de hoy desde el calendario.
+- **Guía completa de Widgets de iOS para iPhone (`Obsidian/ios_widgets_implementation_guide.md`)**:
+  - Documentada la arquitectura nativa completa: endpoint JSON `GET /api/widgets/today` existente, App Group `group.es.klozet.app` para compartir sesión entre Capacitor y WidgetKit, target Xcode `KlozetTodayWidget` y código Swift listo para producción con `TimelineProvider`, tamaños `systemSmall`/`systemMedium`, estados bloqueados para usuarios gratuitos y deep links a `klozet://closet?tab=calendar`.
+- **Nuevos Favicon e Iconos de la App (`app/layout.tsx`, `public/manifest.json`, `public/favicon.png`, `public/apple-touch-icon.png`, `public/icon-192.png`, `public/icon-512.png`, `ios/.../AppIcon-512@2x.png`)**:
+  - **Favicon**: Generado `favicon.png` con el logo en rosa (`#FF66C4`) sobre **fondo transparente**.
+  - **Icono de la App (iOS, PWA y Android)**: Generados iconos con la **K bubble oficial con ojitos blancos** centrada sobre **fondo negro puro (`#000000`)**, preservando la zona de respeto y los márgenes para la máscara squircle de Apple.

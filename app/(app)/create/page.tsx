@@ -32,7 +32,8 @@ import {
     Moon, 
     Sun, 
     Snowflake,
-    Calendar
+    Calendar,
+    Lock
 } from 'lucide-react';
 import { Button, KloeMascot } from '@/components';
 import { haptics } from '@/lib/haptic';
@@ -49,6 +50,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useUiStore } from '@/store/uiStore';
 import { useTourStore } from '@/store/tourStore';
+import { useUser } from '@/store';
 import { showDatabaseError } from '@/lib/errorModal';
 
 const OUTFIT_OCCASIONS = [
@@ -72,7 +74,9 @@ export default function CreateOutfitPage() {
     const searchParams = useSearchParams();
     const outfitId = searchParams.get('outfitId');
     const { items: wardrobeItems } = useWardrobe();
-    const { setTabBarHidden } = useUiStore();
+    const { setTabBarHidden, openPremiumModal } = useUiStore();
+    const { isPremium } = useUser();
+    const isPro = isPremium();
 
     // Mobile flow state: 'selection' | 'preview' - Skipped 'initial' as per request
     const [mobileStep, setMobileStep] = useState<'selection' | 'preview'>('selection');
@@ -666,8 +670,8 @@ export default function CreateOutfitPage() {
                 if (itemsError) throw itemsError;
             }
 
-            // Sync with calendar_outfits if scheduledDate is provided
-            if (scheduledDate && savedOutfitId && user) {
+            // Sync with calendar_outfits if scheduledDate is provided and user is premium
+            if (scheduledDate && savedOutfitId && user && isPro) {
                 try {
                     await (supabase.from('calendar_outfits') as any).upsert({
                         user_id: user.id,
@@ -880,36 +884,65 @@ export default function CreateOutfitPage() {
                                 </div>
 
                                 {/* Mobile Calendar Scheduling */}
-                                <div className="bg-[var(--card-bg)] rounded-2xl p-4 border border-[var(--border-color)] shadow-xs space-y-3">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2.5">
-                                            <div className="w-8 h-8 rounded-xl bg-[var(--brand-pink)]/10 flex items-center justify-center text-[var(--brand-pink)]">
-                                                <Calendar className="w-4 h-4" />
+                                {isPro ? (
+                                    <div className="bg-[var(--card-bg)] rounded-2xl p-4 border border-[var(--border-color)] shadow-xs space-y-3">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2.5">
+                                                <div className="w-8 h-8 rounded-xl bg-[var(--brand-pink)]/10 flex items-center justify-center text-[var(--brand-pink)]">
+                                                    <Calendar className="w-4 h-4" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs font-bold text-[var(--foreground)]">Programar en Calendario</p>
+                                                    <p className="text-[10px] text-[var(--foreground-tertiary)]">Asigna el día para lucir este outfit</p>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <p className="text-xs font-bold text-[var(--foreground)]">Programar en Calendario</p>
-                                                <p className="text-[10px] text-[var(--foreground-tertiary)]">Asigna el día para lucir este outfit</p>
-                                            </div>
+                                            {scheduledDate && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setScheduledDate('')}
+                                                    className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] hover:bg-[var(--brand-pink)]/20 transition-all cursor-pointer"
+                                                >
+                                                    Quitar
+                                                </button>
+                                            )}
                                         </div>
-                                        {scheduledDate && (
-                                            <button
-                                                type="button"
-                                                onClick={() => setScheduledDate('')}
-                                                className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] hover:bg-[var(--brand-pink)]/20 transition-all cursor-pointer"
-                                            >
-                                                Quitar
-                                            </button>
-                                        )}
+                                        <div className="relative flex items-center bg-[var(--background-secondary)] rounded-2xl border border-[var(--border-color)] hover:border-[var(--brand-pink)]/40 focus-within:border-[var(--brand-pink)] focus-within:ring-2 focus-within:ring-[var(--brand-pink)]/15 transition-all px-3.5 py-2.5">
+                                            <input
+                                                type="date"
+                                                value={scheduledDate}
+                                                onChange={(e) => setScheduledDate(e.target.value)}
+                                                className="w-full bg-transparent text-xs text-[var(--foreground)] font-medium outline-none cursor-pointer scheme-light dark:scheme-dark"
+                                            />
+                                        </div>
                                     </div>
-                                    <div className="relative flex items-center bg-[var(--background-secondary)] rounded-2xl border border-[var(--border-color)] hover:border-[var(--brand-pink)]/40 focus-within:border-[var(--brand-pink)] focus-within:ring-2 focus-within:ring-[var(--brand-pink)]/15 transition-all px-3.5 py-2.5">
-                                        <input
-                                            type="date"
-                                            value={scheduledDate}
-                                            onChange={(e) => setScheduledDate(e.target.value)}
-                                            className="w-full bg-transparent text-xs text-[var(--foreground)] font-medium outline-none cursor-pointer scheme-light dark:scheme-dark"
-                                        />
+                                ) : (
+                                    <div 
+                                        onClick={() => {
+                                            openPremiumModal('yearly');
+                                            toast.info('Programar looks en el calendario es exclusivo de Klozet Pro');
+                                        }}
+                                        className="bg-zinc-100/90 dark:bg-zinc-800/40 rounded-2xl p-4 border border-dashed border-zinc-300 dark:border-zinc-700 space-y-3 cursor-pointer hover:border-[var(--brand-pink)]/50 transition-all group"
+                                    >
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2.5">
+                                                <div className="w-8 h-8 rounded-xl bg-zinc-200 dark:bg-zinc-700/60 flex items-center justify-center text-zinc-500">
+                                                    <Lock className="w-4 h-4" />
+                                                </div>
+                                                <div>
+                                                    <div className="flex items-center gap-1.5">
+                                                        <p className="text-xs font-bold text-zinc-500 dark:text-zinc-400">Programar en Calendario</p>
+                                                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[var(--brand-pink)] text-white">Pro</span>
+                                                    </div>
+                                                    <p className="text-[10px] text-zinc-400 dark:text-zinc-500">Exclusivo de Klozet Pro</p>
+                                                </div>
+                                            </div>
+                                            <Lock className="w-4 h-4 text-zinc-400 group-hover:text-[var(--brand-pink)] transition-colors" />
+                                        </div>
+                                        <div className="relative flex items-center bg-zinc-200/50 dark:bg-zinc-800/70 rounded-2xl border border-zinc-200 dark:border-zinc-700/60 px-3.5 py-2.5 opacity-60">
+                                            <span className="text-xs text-zinc-400 font-medium">Bloqueado · Desbloquear con Klozet Pro</span>
+                                        </div>
                                     </div>
-                                </div>
+                                )}
 
                                 {/* Mobile Public Toggle */}
                                 <div className="bg-[var(--card-bg)] px-5 py-4 border-b border-[var(--border-color)] flex items-center justify-between">
@@ -1102,36 +1135,65 @@ export default function CreateOutfitPage() {
                         </div>
 
                         {/* Desktop Calendar Scheduling */}
-                        <div className="bg-[var(--card-bg)] rounded-2xl p-4 border border-[var(--border-color)] shadow-xs space-y-3">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2.5">
-                                    <div className="w-8 h-8 rounded-xl bg-[var(--brand-pink)]/10 flex items-center justify-center text-[var(--brand-pink)]">
-                                        <Calendar className="w-4 h-4" />
+                        {isPro ? (
+                            <div className="bg-[var(--card-bg)] rounded-2xl p-4 border border-[var(--border-color)] shadow-xs space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2.5">
+                                        <div className="w-8 h-8 rounded-xl bg-[var(--brand-pink)]/10 flex items-center justify-center text-[var(--brand-pink)]">
+                                            <Calendar className="w-4 h-4" />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs font-bold text-[var(--foreground)]">Programar en Calendario</p>
+                                            <p className="text-[10px] text-[var(--foreground-tertiary)]">Asigna el día para lucir este outfit</p>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p className="text-xs font-bold text-[var(--foreground)]">Programar en Calendario</p>
-                                        <p className="text-[10px] text-[var(--foreground-tertiary)]">Asigna el día para lucir este outfit</p>
-                                    </div>
+                                    {scheduledDate && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setScheduledDate('')}
+                                            className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] hover:bg-[var(--brand-pink)]/20 transition-all cursor-pointer"
+                                        >
+                                            Quitar
+                                        </button>
+                                    )}
                                 </div>
-                                {scheduledDate && (
-                                    <button
-                                        type="button"
-                                        onClick={() => setScheduledDate('')}
-                                        className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] hover:bg-[var(--brand-pink)]/20 transition-all cursor-pointer"
-                                    >
-                                        Quitar
-                                    </button>
-                                )}
+                                <div className="relative flex items-center bg-[var(--background-secondary)] rounded-2xl border border-[var(--border-color)] hover:border-[var(--brand-pink)]/40 focus-within:border-[var(--brand-pink)] focus-within:ring-2 focus-within:ring-[var(--brand-pink)]/15 transition-all px-3.5 py-2.5">
+                                    <input
+                                        type="date"
+                                        value={scheduledDate}
+                                        onChange={(e) => setScheduledDate(e.target.value)}
+                                        className="w-full bg-transparent text-xs text-[var(--foreground)] font-medium outline-none cursor-pointer scheme-light dark:scheme-dark"
+                                    />
+                                </div>
                             </div>
-                            <div className="relative flex items-center bg-[var(--background-secondary)] rounded-2xl border border-[var(--border-color)] hover:border-[var(--brand-pink)]/40 focus-within:border-[var(--brand-pink)] focus-within:ring-2 focus-within:ring-[var(--brand-pink)]/15 transition-all px-3.5 py-2.5">
-                                <input
-                                    type="date"
-                                    value={scheduledDate}
-                                    onChange={(e) => setScheduledDate(e.target.value)}
-                                    className="w-full bg-transparent text-xs text-[var(--foreground)] font-medium outline-none cursor-pointer scheme-light dark:scheme-dark"
-                                />
+                        ) : (
+                            <div 
+                                onClick={() => {
+                                    openPremiumModal('yearly');
+                                    toast.info('Programar looks en el calendario es exclusivo de Klozet Pro');
+                                }}
+                                className="bg-zinc-100/90 dark:bg-zinc-800/40 rounded-2xl p-4 border border-dashed border-zinc-300 dark:border-zinc-700 space-y-3 cursor-pointer hover:border-[var(--brand-pink)]/50 transition-all group"
+                            >
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2.5">
+                                        <div className="w-8 h-8 rounded-xl bg-zinc-200 dark:bg-zinc-700/60 flex items-center justify-center text-zinc-500">
+                                            <Lock className="w-4 h-4" />
+                                        </div>
+                                        <div>
+                                            <div className="flex items-center gap-1.5">
+                                                <p className="text-xs font-bold text-zinc-500 dark:text-zinc-400">Programar en Calendario</p>
+                                                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[var(--brand-pink)] text-white">Pro</span>
+                                            </div>
+                                            <p className="text-[10px] text-zinc-400 dark:text-zinc-500">Exclusivo de Klozet Pro</p>
+                                        </div>
+                                    </div>
+                                    <Lock className="w-4 h-4 text-zinc-400 group-hover:text-[var(--brand-pink)] transition-colors" />
+                                </div>
+                                <div className="relative flex items-center bg-zinc-200/50 dark:bg-zinc-800/70 rounded-2xl border border-zinc-200 dark:border-zinc-700/60 px-3.5 py-2.5 opacity-60">
+                                    <span className="text-xs text-zinc-400 font-medium">Bloqueado · Desbloquear con Klozet Pro</span>
+                                </div>
                             </div>
-                        </div>
+                        )}
 
                         {/* Kloe Assistant Banner (Omitted if coming from Kloe recommendation) */}
                         {!isFromKloe && (

@@ -96,12 +96,12 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
   icons: {
     icon: [
-      { url: "/klozet-logo-dark.png" },
-      { url: "/klozet-logo-dark.png", type: "image/png" }
+      { url: "/favicon.png", type: "image/png" },
+      { url: "/k-bubble-pink.png", type: "image/png" }
     ],
-    shortcut: ["/klozet-logo-dark.png"],
+    shortcut: ["/favicon.png"],
     apple: [
-      { url: "/klozet-logo-dark.png" }
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }
     ]
   },
   appleWebApp: {
