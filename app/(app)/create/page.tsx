@@ -162,7 +162,9 @@ export default function CreateOutfitPage() {
                             .maybeSingle();
 
                         if (calData?.date && !scheduledDateParam) {
-                            setScheduledDate(calData.date);
+                            if (isPro) {
+                                setScheduledDate(calData.date);
+                            }
                         }
                     } catch (calErr) {
                         console.warn('Error loading calendar date for outfit:', calErr);
@@ -343,12 +345,18 @@ export default function CreateOutfitPage() {
 
     useEffect(() => {
         if (scheduledDateParam) {
-            setScheduledDate(decodeURIComponent(scheduledDateParam));
+            if (!isPro) {
+                setScheduledDate('');
+                openPremiumModal('yearly');
+                toast.info('Programar looks en el calendario es exclusivo de Klozet Pro');
+            } else {
+                setScheduledDate(decodeURIComponent(scheduledDateParam));
+            }
         }
-    }, [scheduledDateParam]);
+    }, [scheduledDateParam, isPro, openPremiumModal]);
 
     // Filter states
-    const [scheduledDate, setScheduledDate] = useState(scheduledDateParam ? decodeURIComponent(scheduledDateParam) : '');
+    const [scheduledDate, setScheduledDate] = useState((scheduledDateParam && isPro) ? decodeURIComponent(scheduledDateParam) : '');
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedColors, setSelectedColors] = useState<string[]>([]);
     const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
@@ -671,17 +679,21 @@ export default function CreateOutfitPage() {
             }
 
             // Sync with calendar_outfits if scheduledDate is provided and user is premium
-            if (scheduledDate && savedOutfitId && user && isPro) {
-                try {
-                    await (supabase.from('calendar_outfits') as any).upsert({
-                        user_id: user.id,
-                        outfit_id: savedOutfitId,
-                        date: scheduledDate
-                    }, { onConflict: 'user_id,date,outfit_id' });
+            if (scheduledDate && savedOutfitId && user) {
+                if (!isPro) {
+                    setScheduledDate('');
+                } else {
+                    try {
+                        await (supabase.from('calendar_outfits') as any).upsert({
+                            user_id: user.id,
+                            outfit_id: savedOutfitId,
+                            date: scheduledDate
+                        }, { onConflict: 'user_id,date,outfit_id' });
 
-                    useTourStore.getState().markStepComplete('schedule_outfit', '¡Has planificado tu outfit en el calendario!', true);
-                } catch (calErr) {
-                    console.warn('Could not sync calendar_outfits:', calErr);
+                        useTourStore.getState().markStepComplete('schedule_outfit', '¡Has planificado tu outfit en el calendario!', true);
+                    } catch (calErr) {
+                        console.warn('Could not sync calendar_outfits:', calErr);
+                    }
                 }
             }
 

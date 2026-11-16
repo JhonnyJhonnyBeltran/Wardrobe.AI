@@ -95,6 +95,38 @@ export async function POST(request: NextRequest) {
       console.warn('[SaveOutfit] Error inserting outfit items:', itemsErr);
     }
 
+    // 3. Optional calendar scheduling (Strictly restricted to Klozet Pro)
+    const scheduledDate = body.scheduled_date || body.date;
+    if (scheduledDate) {
+      const { data: profile } = await (supabase
+        .from('profiles') as any)
+        .select('is_premium, subscription_tier, subscription_status, subscription_period_end')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      const subStatus = (profile?.subscription_status || '').toLowerCase().trim();
+      const isPastGrace = Boolean(
+        profile?.subscription_period_end &&
+        (new Date().getTime() - new Date(profile.subscription_period_end).getTime()) > 3 * 24 * 60 * 60 * 1000
+      );
+      const isInactive = subStatus === 'unpaid' || subStatus === 'incomplete_expired' || subStatus === 'expired' || isPastGrace;
+      const isProUser = Boolean(
+        (profile?.is_premium || profile?.subscription_tier === 'premium') && !isInactive
+      );
+
+      if (isProUser) {
+        try {
+          await (supabase.from('calendar_outfits') as any).upsert({
+            user_id: user.id,
+            outfit_id: newOutfit.id,
+            date: scheduledDate
+          }, { onConflict: 'user_id,date,outfit_id' });
+        } catch (calErr) {
+          console.warn('[SaveOutfit] Error syncing calendar_outfits:', calErr);
+        }
+      }
+    }
+
     return NextResponse.json({
       success: true,
       outfit_id: newOutfit.id,

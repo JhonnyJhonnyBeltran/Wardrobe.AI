@@ -21,6 +21,7 @@ import {
   Camera,
   Share2,
   Lock,
+  Calendar,
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -291,7 +292,9 @@ export default function KloePage() {
   const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
   const [savingOutfitKey, setSavingOutfitKey] = useState<string | null>(null);
   const [publishingOutfitKey, setPublishingOutfitKey] = useState<string | null>(null);
+  const [schedulingOutfitKey, setSchedulingOutfitKey] = useState<string | null>(null);
   const [savedOutfitKeys, setSavedOutfitKeys] = useState<Set<string>>(new Set());
+  const [scheduledTodayKeys, setScheduledTodayKeys] = useState<Set<string>>(new Set());
   const [savedOutfitIdMap, setSavedOutfitIdMap] = useState<Map<string, string>>(new Map());
   const [exportModalOutfit, setExportModalOutfit] = useState<any | null>(null);
 
@@ -362,6 +365,43 @@ export default function KloePage() {
     }
   };
 
+
+  const handleScheduleOutfitToday = async (outfit: any) => {
+    if (!outfit || !outfit.items || outfit.items.length === 0) return;
+    if (!isPremium()) {
+      setShowProModal(true);
+      toast.info('Programar outfits en el calendario es exclusivo de Klozet Pro');
+      return;
+    }
+    const outfitKey = getOutfitSignature(outfit);
+    setSchedulingOutfitKey(outfitKey);
+    try {
+      let outfitId = savedOutfitIdMap.get(outfitKey);
+      if (!outfitId) {
+        outfitId = (await handleSaveOutfitToCloset(outfit)) || undefined;
+      }
+      if (!outfitId) {
+        toast.error('No se pudo guardar el outfit para programarlo');
+        return;
+      }
+      const todayStr = new Date().toISOString().split('T')[0];
+      const { error } = await (supabase.from('calendar_outfits') as any).upsert({
+        user_id: user?.id,
+        outfit_id: outfitId,
+        date: todayStr
+      }, { onConflict: 'user_id,date,outfit_id' });
+
+      if (error) throw error;
+
+      setScheduledTodayKeys(prev => new Set(prev).add(outfitKey));
+      toast.success('¡Outfit programado para hoy en tu calendario!');
+    } catch (err: any) {
+      console.error('[KloeChat] Error scheduling outfit to today:', err);
+      toast.error('No se pudo programar en el calendario');
+    } finally {
+      setSchedulingOutfitKey(null);
+    }
+  };
 
   const [showProModal, setShowProModal] = useState(false);
   const [quotaInfo, setQuotaInfo] = useState<{
@@ -1384,7 +1424,7 @@ export default function KloePage() {
                     ))}
                   </div>
 
-                  {/* Direct Action Buttons: Save, Post, Export, Edit Canvas */}
+                  {/* Direct Action Buttons: Save, Schedule, Canvas, Post, Export */}
                   <div className="grid grid-cols-2 gap-2 pt-1">
                     {/* 1. Guardar en Armario */}
                     <button
@@ -1413,7 +1453,59 @@ export default function KloePage() {
                       )}
                     </button>
 
-                    {/* 2. Publicar en el Feed */}
+                    {/* 2. Asignar a hoy (Calendario) - Pro exclusive */}
+                    {isPremium() ? (
+                      <button
+                        type="button"
+                        onClick={() => handleScheduleOutfitToday(msg.recommended_outfit)}
+                        disabled={
+                          scheduledTodayKeys.has(getOutfitSignature(msg.recommended_outfit)) ||
+                          schedulingOutfitKey === getOutfitSignature(msg.recommended_outfit)
+                        }
+                        className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-full bg-[var(--background-secondary)] hover:bg-[var(--foreground)] hover:text-[var(--background)] text-[var(--foreground)] text-xs font-bold border border-[var(--border-color)] transition-all hover:scale-[1.02] active:scale-[0.97] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {scheduledTodayKeys.has(getOutfitSignature(msg.recommended_outfit)) ? (
+                          <>
+                            <Check className="w-3.5 h-3.5 text-emerald-500" />
+                            <span className="truncate text-emerald-600 dark:text-emerald-400 font-bold">Asignado hoy</span>
+                          </>
+                        ) : schedulingOutfitKey === getOutfitSignature(msg.recommended_outfit) ? (
+                          <>
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            <span className="truncate">Asignando...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Calendar className="w-3.5 h-3.5 text-[var(--brand-pink)]" />
+                            <span className="truncate">Asignar a hoy</span>
+                          </>
+                        )}
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowProModal(true);
+                          toast.info('Programar outfits en el calendario es exclusivo de Klozet Pro');
+                        }}
+                        className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-full bg-zinc-100 dark:bg-zinc-800/60 text-zinc-400 dark:text-zinc-500 text-xs font-bold border border-zinc-200 dark:border-zinc-700/60 transition-all hover:border-[var(--brand-pink)]/40 hover:text-zinc-600 dark:hover:text-zinc-300 cursor-pointer group"
+                      >
+                        <Lock className="w-3.5 h-3.5 text-zinc-400 group-hover:text-[var(--brand-pink)] transition-colors" />
+                        <span className="truncate">Asignar hoy</span>
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-[var(--brand-pink)] text-white">Pro</span>
+                      </button>
+                    )}
+
+                    {/* 3. Editar en el Lienzo */}
+                    <Link
+                      href={`/create?itemIds=${(msg.recommended_outfit.items || []).map((i: any) => i.id).join(',')}&name=${encodeURIComponent(msg.recommended_outfit.name || 'Look Kloe')}&occasion=${encodeURIComponent(msg.recommended_outfit.occasion || '')}&fromKloe=true`}
+                      className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-full kz-pink-surface border border-white/25 text-white text-xs font-bold transition-all hover:scale-[1.02] active:scale-[0.97] cursor-pointer"
+                    >
+                      <Layers className="w-3.5 h-3.5" />
+                      <span className="truncate">Lienzo</span>
+                    </Link>
+
+                    {/* 4. Publicar en el Feed */}
                     <button
                       onClick={() => handlePublishOutfit(msg.recommended_outfit)}
                       disabled={publishingOutfitKey === getOutfitSignature(msg.recommended_outfit)}
@@ -1432,23 +1524,14 @@ export default function KloePage() {
                       )}
                     </button>
 
-                    {/* 3. Exportar a Instagram Story (Generar sticker) */}
+                    {/* 5. Exportar a Instagram Story (Generar sticker) */}
                     <button
                       onClick={() => setExportModalOutfit(msg.recommended_outfit)}
-                      className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-full bg-[var(--brand-pink)]/10 hover:bg-[var(--brand-pink)]/20 text-[var(--brand-pink)] text-xs font-bold border border-[var(--brand-pink)]/30 transition-all hover:scale-[1.02] active:scale-[0.97] cursor-pointer"
+                      className="col-span-2 flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-full bg-[var(--brand-pink)]/10 hover:bg-[var(--brand-pink)]/20 text-[var(--brand-pink)] text-xs font-bold border border-[var(--brand-pink)]/30 transition-all hover:scale-[1.02] active:scale-[0.97] cursor-pointer"
                     >
                       <Share2 className="w-3.5 h-3.5" />
                       <span className="truncate">Generar sticker</span>
                     </button>
-
-                    {/* 4. Editar en el Lienzo */}
-                    <Link
-                      href={`/create?itemIds=${(msg.recommended_outfit.items || []).map((i: any) => i.id).join(',')}&name=${encodeURIComponent(msg.recommended_outfit.name || 'Look Kloe')}&occasion=${encodeURIComponent(msg.recommended_outfit.occasion || '')}&fromKloe=true`}
-                      className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-full kz-pink-surface border border-white/25 text-white text-xs font-bold transition-all hover:scale-[1.02] active:scale-[0.97] cursor-pointer"
-                    >
-                      <Layers className="w-3.5 h-3.5" />
-                      <span className="truncate">Lienzo</span>
-                    </Link>
                   </div>
                 </motion.div>
               )}

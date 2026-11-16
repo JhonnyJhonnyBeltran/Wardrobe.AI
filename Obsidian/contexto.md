@@ -3937,3 +3937,22 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
     - Supabase Pro + Vercel Pro: ~0,01 €/mes.
   - **Beneficio neto limpio en caja**: **2,15 € / mes (87,0% margen)** en plan mensual y **19,75 € en Día 1 (95,6% margen)** en plan anual.
   - **Break-even global**: Cubierto con solo **3 suscripciones anuales al mes** (`59,25 €` netos) o **21 suscriptores mensuales**. El modelo de negocio es altamente rentable y autosostenible.
+
+---
+
+## 88. Blindaje de Programación en Calendario y Asignación de Looks (Klozet Pro vs Free) (Noviembre 2026)
+- **Bloqueo Infranqueable en Creación de Outfits (`app/(app)/create/page.tsx`)**:
+  - `scheduledDateParam`: Si un usuario gratuito (`!isPro`) accede a `/create` con parámetros de fecha (`?date=`, `?scheduledDate=`, `?scheduled_for=`), el estado `scheduledDate` se limpia inmediatamente (`setScheduledDate('')`), se dispara el modal de suscripción `openPremiumModal('yearly')` y una alerta toast informativa: *"Programar looks en el calendario es exclusivo de Klozet Pro"*.
+  - En la carga de outfits existentes para edición, la fecha previa en `calendar_outfits` solo se inyecta en el formulario si el usuario tiene suscripción activa (`isPro`).
+  - En el guardado (`handleSaveOutfit`), si `!isPro`, se anula cualquier fecha residual y se omite estrictamente la inserción en `calendar_outfits`.
+  - En móvil y escritorio, el selector de calendario para usuarios gratuitos permanece en tarjeta gris deshabilitada (`bg-zinc-100 dark:bg-zinc-800/40`) con icono de candado (`Lock`) y etiqueta `Pro`, abriendo el paywall al hacer clic.
+- **Acción "Asignar a hoy" en Recomendaciones de Kloe (`app/(app)/closet/kloe/page.tsx`)**:
+  - Integrada la acción de asignación directa al calendario en la tarjeta de `msg.recommended_outfit`:
+    - **Usuario Pro**: Botón activo con icono de calendario (`Calendar`) que guarda el look en el armario y lo agenda automáticamente en `calendar_outfits` para la fecha de hoy (`YYYY-MM-DD`), mostrando feedback optimista con check verde (`Asignado hoy`).
+    - **Usuario Free**: Botón bloqueado en gris (`bg-zinc-100 dark:bg-zinc-800/60 text-zinc-400 border border-zinc-200 dark:border-zinc-700/60`) con icono de candado (`Lock`) y badge `Pro`. Al pulsar, no interactúa con la base de datos y abre inmediatamente el modal de Klozet Pro.
+- **Restricción Conversacional en Chat de IA (`app/api/closy/chat/route.ts`)**:
+  - `callGeminiAssistant`: Si el usuario es gratuito (`!isPremium`), la IA tiene explícitamente prohibido preguntar si el look es para hoy o para un día específico, y no incluye sugerencias de fecha en `follow_up_suggestions`. Si el usuario le pide agendarlo para hoy en el calendario, Kloe le explica con amabilidad que la programación de outfits en el calendario y widgets de iPhone es exclusiva de Klozet Pro.
+  - `generateFallbackOutfit`: Para usuarios gratuitos no ofrece chips de "Es para hoy según el tiempo", sustituyéndolos por sugerencias de estilo (calzado, formalidad o capas).
+- **Protección de Servidor (`app/api/closy/save-outfit/route.ts`) y Base de Datos**:
+  - Si una petición a `/api/closy/save-outfit` incluye `scheduled_date`, se valida el perfil del usuario en Supabase antes de insertar en `calendar_outfits`.
+  - Trigger de PostgreSQL `trg_check_calendar_outfits_premium` en `public.calendar_outfits` garantiza a nivel de motor de datos que ningún script de consola pueda eludir la comprobación.

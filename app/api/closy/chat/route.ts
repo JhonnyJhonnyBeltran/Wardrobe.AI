@@ -349,6 +349,9 @@ export async function POST(request: NextRequest) {
 
     // 6. Index User Context & Weather Forecast
     const context = await buildUserStylingContext(supabase, user.id);
+    if (context && context.user) {
+      (context.user as any).isPremium = isPremium;
+    }
 
     let resolvedWeather: WeatherContextPayload | null =
       body.weather?.days && Object.keys(body.weather.days).length > 0 ? body.weather : null;
@@ -618,6 +621,7 @@ async function callGeminiAssistant(
     const userBodyType = context.user.bodyType || context.user.bodyShape || 'Equilibrado';
     const userEyeColor = context.user.eyeColor || 'No especificado';
     const userHairColor = context.user.hairColor || 'No especificado';
+    const userIsPremium = Boolean(context.user?.isPremium);
 
     const systemInstruction = `
 Eres Kloe, la estilista personal y asesora de imagen de ${userName}.
@@ -664,7 +668,9 @@ CUANDO SE PIDE UN OUTFIT O QUÉ PONERSE:
 - OUTFIT COMPLETO OBLIGATORIO: NUNCA devuelvas "recommended_outfit" con una sola prenda suelta (por ejemplo, una blusa, camisa o pantalón aislado) ni un conjunto sin parte inferior (salvo vestido o mono completo acompañado de calzado o capa).
 - SI FALTAN PRENDAS EN EL ARMARIO PARA LO QUE PIDE (por ejemplo, solo tiene una blusa blanca o le falta parte de abajo, calzado o abrigo para trabajo/reunión/fiesta/frío): pon "recommended_outfit": null, incluye en "highlighted_item_ids" las prendas suyas compatibles que ya tiene, explícale con naturalidad que ahora mismo no salen suficientes combinaciones completas en su armario para esa ocasión y recomiéndale prendas concretas para subir al armario o comprarse (ej. chaquetón o americana, pantalón de pinzas o falda, botas o mocasines).
 - CLIMA REAL: Revisa siempre el bloque PREVISIÓN METEOROLÓGICA REAL proporcionado en el contexto. Adapta las prendas, capas y calzado a esa temperatura exacta y probabilidad de lluvia/frío/calor (si llueve: evita ante delicado y sugiere capa/calzado resistente al agua; si refresca: sugiere abrigo o punto).
-- DÍA / OCASIÓN DEL OUTFIT: Si el usuario aún no ha especificado para cuándo es el outfit, pregúntale con naturalidad al final de tu mensaje si el look es para **hoy** (teniendo en cuenta el tiempo real de hoy), para **un día específico** (y qué fecha/plan tiene) o si busca un **outfit versátil para cualquier día**. Refleja también esas opciones brevemente en "follow_up_suggestions".
+${userIsPremium ? `- DÍA / OCASIÓN DEL OUTFIT (USUARIO PRO): ${userName} tiene suscripción Klozet Pro. Si aún no ha especificado para cuándo es el outfit, pregúntale con naturalidad al final de tu mensaje si el look es para **hoy** (teniendo en cuenta el tiempo real de hoy), para **un día específico** (y qué fecha/plan tiene) o si busca un **outfit versátil para cualquier día**. Refleja también esas opciones brevemente en "follow_up_suggestions".` : `- REGLA DE PLAN GRATUITO (USUARIO FREE): ${userName} está en el plan gratuito de Klozet. Programar outfits para un día específico o asignarlos al calendario es una función EXCLUSIVA de Klozet Pro.
+  * TIENES ESTRICTAMENTE PROHIBIDO preguntar si el outfit es para hoy o para un día específico, y NUNCA incluyas "Es para hoy..." ni fechas en "follow_up_suggestions". En su lugar, sugiere variaciones de estilo, capas, calzado o colores (ej: "Probar con otro calzado", "Ver opción más formal", "Cambiar chaqueta").
+  * Si ${userName} te pide explícitamente guardar, agendar o programar un outfit para hoy o para un día en su calendario, explícale con total amabilidad y estilo que planificar outfits para una fecha en el calendario y verlos en los widgets de iPhone es exclusivo de Klozet Pro, e invítale a desbloquear Klozet Pro.`}
 
 CUANDO PREGUNTA POR COMPRAS O TENDENCIAS:
 - Si pregunta por una temporada (invierno, verano, entretiempo), adáptate al 100% al clima y a su edad/género.
@@ -1915,23 +1921,36 @@ El secreto está en incorporar estas tendencias a través de pequeños detalles 
   const weatherHint = todayW
     ? ` En ${resolvedWeather?.city || 'tu ciudad'} hoy hace ${todayW.tempMax ?? todayW.temp}°C (${todayW.label.toLowerCase()}), así que he equilibrado las capas pensando en eso.`
     : '';
+  const userIsPremium = Boolean(context.user?.isPremium);
+  const closingQuestion = userIsPremium
+    ? '¿Este outfit es para hoy, para un día específico de la semana o buscas un look comodín para cualquier día?'
+    : '¿Qué te parece este conjunto o prefieres probar con otro calzado o capa?';
+
+  const followUpChips = userIsPremium
+    ? [
+        'Es para hoy según el tiempo',
+        'Es para un día específico',
+        'Un outfit versátil para cualquier día'
+      ]
+    : [
+        'Probar con otro calzado',
+        'Ver opción más formal',
+        'Cambiar capa superior'
+      ];
+
   return {
     message: `He armado un outfit completo y versátil combinando diferentes capas de tu armario:${weatherHint}
 
 - **Propuesta del conjunto**: ${layeredOutfit.map((i: any) => `**${i.name}**`).join(' + ')}.
 - **Armonía y equilibrio**: Combinamos una parte superior cómoda con un corte inferior favorecedor y calzado coordinado.
 
-¿Este outfit es para hoy, para un día específico de la semana o buscas un look comodín para cualquier día?`,
+${closingQuestion}`,
     recommended_outfit: {
       name: `Propuesta de Estilo Kloe`,
       occasion: 'casual',
       item_ids: layeredOutfit.map((i: any) => i.id)
     },
     highlighted_item_ids: layeredOutfit.map((i: any) => i.id),
-    follow_up_suggestions: [
-      'Es para hoy según el tiempo',
-      'Es para un día específico',
-      'Un outfit versátil para cualquier día'
-    ]
+    follow_up_suggestions: followUpChips
   };
 }
