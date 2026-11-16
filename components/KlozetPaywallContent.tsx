@@ -215,10 +215,10 @@ export default function KlozetPaywallContent({
   const activePeriod = selectedPlan === 'yearly' ? '/año' : '/mes';
 
   return (
-    <div className="relative z-10 flex flex-col h-[100dvh] w-full overflow-hidden">
+    <div className="relative z-10 flex flex-col h-full max-h-[100dvh] md:max-h-[92vh] w-full overflow-hidden">
       {/* Pinned Top Bar: circular X left + Restore right */}
-      <header className="shrink-0 z-30 apple-glass-bar border-b border-[var(--border-color)]/60 pt-[max(0.75rem,env(safe-area-inset-top,0px))] pb-2.5 px-4">
-        <div className="max-w-md mx-auto flex items-center justify-between">
+      <header className="shrink-0 z-30 apple-glass-bar border-b border-[var(--border-color)]/60 pt-[max(0.75rem,env(safe-area-inset-top,0px))] pb-2.5 px-4 md:rounded-t-[36px]">
+        <div className="max-w-md md:max-w-lg mx-auto flex items-center justify-between">
           <button
             type="button"
             onClick={onDismiss}
@@ -249,7 +249,7 @@ export default function KlozetPaywallContent({
         className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-y-contain scroll-smooth"
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
-        <div className="max-w-md mx-auto w-full px-4 sm:px-5 pt-4 pb-8">
+        <div className="max-w-md md:max-w-lg mx-auto w-full px-4 sm:px-6 pt-4 pb-8">
           {/* Hero: Bare Kloe K (NO circle / NO box) beside big bold Black Friday / Promo title */}
           <div className="flex items-center justify-center gap-3.5 sm:gap-4 pt-1 pb-4">
             <KloeMascot
@@ -532,8 +532,8 @@ export default function KlozetPaywallContent({
       </div>
 
       {/* Pinned Bottom Checkout Dock: CTA + Auto-renew notice always unclipped and legible */}
-      <footer className="shrink-0 z-30 apple-glass-bar border-t border-[var(--border-color)]/70 px-4 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom,0px))]">
-        <div className="max-w-md mx-auto">
+      <footer className="shrink-0 z-30 apple-glass-bar border-t border-[var(--border-color)]/70 px-4 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] md:pb-4 md:rounded-b-[36px]">
+        <div className="max-w-md md:max-w-lg mx-auto">
           <button
             type="button"
             onClick={onStartCheckout}

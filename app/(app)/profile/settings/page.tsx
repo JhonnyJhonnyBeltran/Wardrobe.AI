@@ -755,7 +755,7 @@ export default function SettingsPage() {
                                 initial={{ scale: 0.9, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
                                 exit={{ scale: 0.9, opacity: 0 }}
-                                className="bg-[var(--card-bg)] rounded-3xl p-6 max-w-md w-full"
+                                className="bg-[var(--card-bg)] rounded-3xl p-6 max-w-md w-full border border-[var(--border-color)] shadow-2xl max-h-[90dvh] overflow-y-auto no-scrollbar"
                                 onClick={(e) => e.stopPropagation()}
                             >
                                 <div className="text-center mb-6">
@@ -830,7 +830,7 @@ export default function SettingsPage() {
                                 initial={{ scale: 0.9, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
                                 exit={{ scale: 0.9, opacity: 0 }}
-                                className="bg-[var(--card-bg)] rounded-3xl p-6 max-w-md w-full"
+                                className="bg-[var(--card-bg)] rounded-3xl p-6 max-w-md w-full border border-[var(--border-color)] shadow-2xl max-h-[90dvh] overflow-y-auto no-scrollbar"
                                 onClick={(e) => e.stopPropagation()}
                             >
                                 <div className="text-center mb-6">
@@ -898,7 +898,7 @@ export default function SettingsPage() {
                                 animate={{ scale: 1, opacity: 1, y: 0 }}
                                 exit={{ scale: 0.95, opacity: 0, y: 16 }}
                                 transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                                className="relative w-full max-w-md bg-[var(--card-bg)] rounded-3xl shadow-2xl overflow-hidden border border-[var(--border-color)] p-6"
+                                className="relative w-full max-w-md max-h-[90dvh] overflow-y-auto no-scrollbar bg-[var(--card-bg)] rounded-3xl shadow-2xl border border-[var(--border-color)] p-6"
                             >
                                 <div className="flex items-center justify-between pb-4 border-b border-[var(--border-color)]/60 mb-5">
                                     <div className="flex items-center gap-2.5">

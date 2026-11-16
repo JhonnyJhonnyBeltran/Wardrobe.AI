@@ -91,7 +91,7 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.94, opacity: 0, y: 16 }}
             transition={{ type: 'spring', damping: 26, stiffness: 320 }}
-            className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-3xl p-6 max-w-lg w-full shadow-2xl relative overflow-hidden"
+            className="bg-[var(--card-bg)] border border-[var(--border-color)] rounded-3xl p-6 max-w-lg w-full shadow-2xl relative max-h-[90dvh] overflow-y-auto no-scrollbar"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}

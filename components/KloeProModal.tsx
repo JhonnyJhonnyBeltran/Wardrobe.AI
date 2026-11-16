@@ -162,32 +162,38 @@ export default function KloeProModal({
 
   return (
     <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0, y: 28 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: 36 }}
-        transition={{ duration: 0.24, ease: [0.32, 0.72, 0, 1] }}
-        className="fixed inset-0 z-[5020] bg-[var(--background)] overflow-hidden"
+      <div
+        className="fixed inset-0 z-[5020] flex items-center justify-center bg-transparent md:bg-black/60 md:backdrop-blur-md md:p-6 overflow-hidden"
+        onClick={handleDismiss}
       >
-        {/* Animated softly blurred loose clothes floating behind full-screen paywall */}
-        <PaywallFloatingGarments className="fixed inset-0 z-0" />
+        <motion.div
+          initial={{ opacity: 0, y: 28, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 36, scale: 0.98 }}
+          transition={{ duration: 0.24, ease: [0.32, 0.72, 0, 1] }}
+          onClick={(e) => e.stopPropagation()}
+          className="relative w-full h-[100dvh] md:h-auto md:max-h-[92vh] md:max-w-lg bg-[var(--background)] md:rounded-[36px] md:border md:border-[var(--border-color)] md:shadow-[0_25px_60px_-15px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col"
+        >
+          {/* Animated softly blurred loose clothes floating behind paywall */}
+          <PaywallFloatingGarments className="absolute inset-0 z-0" />
 
-        <KlozetPaywallContent
-          selectedPlan={selectedPlan}
-          onSelectPlan={setSelectedPlan}
-          pricing={pricing}
-          loading={loading}
-          restoring={restoring}
-          isNative={isNative}
-          onStartCheckout={handleStartCheckout}
-          onRestorePurchases={handleRestorePurchases}
-          onDismiss={handleDismiss}
-          onOpenWidgetsPage={() => {
-            onClose();
-            router.push('/widgets');
-          }}
-        />
-      </motion.div>
+          <KlozetPaywallContent
+            selectedPlan={selectedPlan}
+            onSelectPlan={setSelectedPlan}
+            pricing={pricing}
+            loading={loading}
+            restoring={restoring}
+            isNative={isNative}
+            onStartCheckout={handleStartCheckout}
+            onRestorePurchases={handleRestorePurchases}
+            onDismiss={handleDismiss}
+            onOpenWidgetsPage={() => {
+              onClose();
+              router.push('/widgets');
+            }}
+          />
+        </motion.div>
+      </div>
     </AnimatePresence>
   );
 }

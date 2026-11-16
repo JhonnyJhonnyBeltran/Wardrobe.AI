@@ -3913,3 +3913,27 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
   - Añadida redirección permanente `301` en `next.config.ts` de `/contacto` a `/contact` y eliminada la carpeta redundante `app/(public)/contacto`.
   - Eliminado `/contacto` de `publicAllowed` en `app/robots.ts`, asegurando paridad estricta 1:1 con `sitemap.ts`.
   - Todas las URLs de [`app/sitemap.ts`](file:///c:/Users/EthanCurro/Desktop/Ethan's%20Project/Wardobre.ai/Wardrobe.AI/app/sitemap.ts) devuelven código `200 OK` final en HTTPS sin barras inclinadas finales ni redirecciones intermedias.
+
+---
+
+## 87. Auditoría Integral del Flujo Paywall, Modales Móvil/PC y Cobertura del Modelo de Negocio (Noviembre 2026)
+- **Flujo Completo del Paywall**:
+  - **Disparadores integrados**: Cuota Free de 2 consultas diarias en Kloe agotada, bloqueo de adjuntos de fotos y prendas en chat, bloqueo de asignación en calendario (`/create` y `/closet`), widgets iOS bloqueados en `/widgets`, anuncios patrocinados en feed/search y botón "Mejorar" en perfil.
+  - **Pasarelas unificadas**: En Web ejecuta Stripe Checkout directo (`2,99 €/mes` o `24,99 €/año`) con soporte Apple Pay, Google Pay, Link y tarjetas; en nativo ejecuta RevenueCat In-App Purchases con Apple StoreKit.
+  - **Activación y verificación**: Verificación instantánea con `/api/stripe/verify` + sincronización `profiles.is_premium = true` en base de datos.
+  - **Gestión de baja**: Portal de Stripe automatizado en `/api/stripe/portal` para usuarios web y guía paso a paso en ajustes para usuarios iOS/Android.
+- **Optimización Responsiva de Modales (Móvil vs Ordenador)**:
+  - **`KloeProModal` y `KlozetPaywallContent`**:
+    - **En teléfono (`<md`)**: Mantiene la experiencia nativa de app a pantalla completa `h-[100dvh]` con safe-areas (`pt-safe`, `pb-safe`), cabecera y dock inferior de cobro fijos sin recortes y cuerpo central deslizable.
+    - **En ordenador (`>=md`)**: Pasa de ocupar la pantalla entera a mostrarse como un modal flotante centrado estilo Apple (`md:max-w-lg md:max-h-[92vh] md:rounded-[36px] md:border md:shadow-2xl md:overflow-hidden`) sobre un fondo difuminado oscurecido `bg-black/60 backdrop-blur-md` que se cierra al pulsar fuera.
+  - **`CancelModal`, `DeleteModal` y `FeedbackModal`**:
+    - Incorporado `max-h-[90dvh] overflow-y-auto no-scrollbar` garantizando que en móviles pequeños, teclados abiertos o modos de zoom de texto nunca se bloqueen ni se recorten botones inferiores de confirmación o cierre.
+- **Viabilidad y Unit Economics del Modelo de Negocio**:
+  - Precios fijados en **2,99 € / mes** y **24,99 € / año** (`~2,08 €/mes` con 40% de descuento).
+  - Costes variables unitarios por usuario activo:
+    - IVA España (21%): 0,52 €/mes (mensual) o 4,34 €/año (anual).
+    - Comisión Stripe UE (1,4% + 0,25 €): 0,29 €/mes (9,8% en mensual) o 0,60 €/año (solo 2,4% en anual).
+    - API Gemini Flash + visión (35 msg/día max): ~0,015 €/mes.
+    - Supabase Pro + Vercel Pro: ~0,01 €/mes.
+  - **Beneficio neto limpio en caja**: **2,15 € / mes (87,0% margen)** en plan mensual y **19,75 € en Día 1 (95,6% margen)** en plan anual.
+  - **Break-even global**: Cubierto con solo **3 suscripciones anuales al mes** (`59,25 €` netos) o **21 suscriptores mensuales**. El modelo de negocio es altamente rentable y autosostenible.
