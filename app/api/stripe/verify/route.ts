@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe/client';
 import { createClient as createServerClient } from '@/lib/supabase/server';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
+import { sendProWelcomeEmail } from '@/lib/email/emailService';
 
 const supabaseAdmin = createAdminClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
@@ -47,6 +48,15 @@ export async function POST(request: NextRequest) {
       : null;
     const customerId = typeof session.customer === 'string' ? session.customer : session.customer?.id;
 
+    // Check if user was already premium before update to prevent duplicate welcome emails
+    const { data: previousProfile } = await supabaseAdmin
+      .from('profiles')
+      .select('is_premium, full_name, username')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    const isFirstTimePro = !previousProfile?.is_premium;
+
     // Immediately grant Klozet Pro in Supabase without waiting for webhook
     await supabaseAdmin
       .from('profiles')
@@ -61,6 +71,20 @@ export async function POST(request: NextRequest) {
         stripe_price_id: sub?.items?.data?.[0]?.price?.id,
       } as any)
       .eq('id', user.id);
+
+    // Enviar email de bienvenida y agradecimiento por comprar Pro si es nueva activación
+    if (isFirstTimePro && user.email) {
+      const formattedDate = periodEnd
+        ? new Date(periodEnd).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
+        : undefined;
+
+      sendProWelcomeEmail({
+        to: user.email,
+        name: previousProfile?.full_name || previousProfile?.username,
+        plan: plan as 'monthly' | 'yearly',
+        nextBillingDate: formattedDate,
+      }).catch(err => console.warn('[StripeVerify] Error dispatching Pro welcome email:', err));
+    }
 
     return NextResponse.json({
       isPremium: true,

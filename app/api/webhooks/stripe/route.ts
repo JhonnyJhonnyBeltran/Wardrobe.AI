@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe/client';
 import { createClient } from '@supabase/supabase-js';
+import {
+  sendProWelcomeEmail,
+  sendCancellationEmail,
+  sendPaymentFailedEmail
+} from '@/lib/email/emailService';
 
 // Service role client to update profile subscription status securely
 const supabaseAdmin = createClient(
@@ -64,6 +69,27 @@ export async function POST(request: NextRequest) {
             .eq('id', userId);
           
           console.log(`[StripeWebhook] User ${userId} upgraded to Premium (${plan}, expires: ${periodEnd})`);
+
+          // Enviar email de bienvenida y agradecimiento por comprar Klozet Pro
+          const customerEmail = session.customer_details?.email || session.customer_email;
+          if (customerEmail) {
+            const { data: userProfile } = await supabaseAdmin
+              .from('profiles')
+              .select('full_name, username')
+              .eq('id', userId)
+              .maybeSingle();
+
+            const formattedDate = periodEnd
+              ? new Date(periodEnd).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
+              : undefined;
+
+            sendProWelcomeEmail({
+              to: customerEmail,
+              name: userProfile?.full_name || userProfile?.username,
+              plan: plan as 'monthly' | 'yearly',
+              nextBillingDate: formattedDate,
+            }).catch(err => console.warn('[StripeWebhook] Error dispatching Pro welcome email:', err));
+          }
         }
         break;
       }
@@ -130,6 +156,20 @@ export async function POST(request: NextRequest) {
             .eq('stripe_customer_id', customerId);
 
           console.log(`[StripeWebhook] Payment failed for customer ${customerId} (attempt #${attemptCount}). Revoked=${shouldRevoke}`);
+
+          // Enviar aviso de pago fallido
+          let customerEmail = invoice.customer_email;
+          if (!customerEmail && typeof customerId === 'string') {
+            try {
+              const cust: any = await stripe.customers.retrieve(customerId);
+              customerEmail = cust?.email;
+            } catch {}
+          }
+          if (customerEmail) {
+            sendPaymentFailedEmail({ to: customerEmail }).catch(err =>
+              console.warn('[StripeWebhook] Error dispatching payment failed email:', err)
+            );
+          }
         }
         break;
       }
@@ -175,6 +215,29 @@ export async function POST(request: NextRequest) {
             .eq('stripe_customer_id', customerId);
 
           console.log(`[StripeWebhook] Customer ${customerId} subscription cancelled and downgraded to Free`);
+
+          // Enviar email de confirmación de cancelación
+          try {
+            let customerEmail: string | undefined;
+            if (typeof customerId === 'string') {
+              const cust: any = await stripe.customers.retrieve(customerId);
+              customerEmail = cust?.email;
+            }
+            if (customerEmail) {
+              const { data: userProfile } = await supabaseAdmin
+                .from('profiles')
+                .select('full_name, username')
+                .eq('stripe_customer_id', customerId)
+                .maybeSingle();
+
+              sendCancellationEmail({
+                to: customerEmail,
+                name: userProfile?.full_name || userProfile?.username,
+              }).catch(err => console.warn('[StripeWebhook] Error dispatching cancellation email:', err));
+            }
+          } catch (err) {
+            console.warn('[StripeWebhook] Could not retrieve customer email for cancellation:', err);
+          }
         }
         break;
       }

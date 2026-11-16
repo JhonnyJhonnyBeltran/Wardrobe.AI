@@ -3848,3 +3848,30 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
   - Eliminado el conflicto entre clases CSS de transición y transformaciones de Framer Motion en toques móviles.
   - Distribución de columnas móviles (`col1`, `col2`) memoizada con `useMemo` para evitar crear nuevos arrays en cada ciclo de render.
   - Compresión y carga optimizada de imágenes (`quality={82}` y `transform-gpu`).
+
+---
+
+## 84. Flujo Completo de Emails Transaccionales: Bienvenida, Agradecimiento Klozet Pro y Gestión de Suscripción (Noviembre 2026)
+- **Servicio Centralizado de Correos (`lib/email/emailService.ts`)**:
+  - Arquitectura unificada para despacho de correos transaccionales con `nodemailer` soportando SMTP personalizado (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`) y cuentas de Gmail con contraseña de aplicación (`GMAIL_USER`, `GMAIL_APP_PASSWORD`), con remitente oficial `soporte@klozet.es` y copia a `klozet.enterprise@gmail.com`.
+  - Plantilla base HTML responsive adaptada al sistema de diseño Klozet (tarjeta blanca con bordes redondeados `border-radius: 28px`, logo sobrio con punto rosa `#FF66C4`, tipografía nativa de Apple, botón pill flotante con sombra suave y pie legal).
+  - Manejo de fallos no bloqueante: si las credenciales de correo no están configuradas en desarrollo, los eventos se registran en log sin interrumpir la experiencia del usuario ni los webhooks de pago.
+- **Email de Bienvenida al Registrarse (`sendWelcomeEmail` & `app/api/email/welcome/route.ts`)**:
+  - Asunto: `¡Te damos la bienvenida a Klozet! 🎀`
+  - Contenido: Saludo personalizado con nombre/username, bienvenida al armario inteligente, guía de 3 pasos (digitalizar ropa con recorte automático de fondo, pedir estilismo a Kloe según el clima y explorar la comunidad de moda) y botón CTA directo hacia el armario (`/closet`).
+  - Disparador: Se activa automáticamente al finalizar el onboarding inicial (`/onboarding/preferences`), con protección contra reenvíos duplicados mediante flag `welcome_email_sent` en `profiles.notification_preferences`.
+- **Email de Agradecimiento y Activación Klozet Pro (`sendProWelcomeEmail`)**:
+  - Asunto: `¡Bienvenido a Klozet Pro! Tu acceso ya está activo ✨`
+  - Contenido: Agradecimiento personal por apoyar el proyecto, desglose del plan contratado (`Plan Anual` o `Plan Mensual`), fecha del próximo cobro, resumen de ventajas activas (consultas ilimitadas con Kloe, análisis multimodal de fotos, calendario de outfits y widgets para iPhone), botón directo a Kloe y enlace a gestión de suscripción.
+  - Disparadores:
+    1. Webhook de Stripe (`app/api/webhooks/stripe/route.ts`) en evento `checkout.session.completed`.
+    2. Endpoint de verificación inmediata (`app/api/stripe/verify/route.ts`) con protección de idempotencia (`isFirstTimePro`).
+    3. Webhook de RevenueCat (`app/api/webhooks/revenuecat/route.ts`) en evento `INITIAL_PURCHASE` de compras en iOS / Android.
+- **Email de Confirmación de Cancelación (`sendCancellationEmail`)**:
+  - Asunto: `Confirmación de cancelación de Klozet Pro`
+  - Contenido: Confirmación de trámite de baja, aclaración de que el usuario mantiene el acceso Pro sin nuevos cobros hasta el final del ciclo pagado actual, invitación a dar feedback y botón de retorno a la app.
+  - Disparadores: Webhook de Stripe en `customer.subscription.deleted` y webhook de RevenueCat en `CANCELLATION` o `EXPIRATION`.
+- **Email de Aviso de Pago Fallido (`sendPaymentFailedEmail`)**:
+  - Asunto: `Aviso sobre el pago de tu suscripción a Klozet Pro`
+  - Contenido: Notificación de incidencia en el cobro de renovación con aviso de periodo de gracia de 3 días y enlace directo a [Ajustes](file:///c:/Users/EthanCurro/Desktop/Ethan's%20Project/Wardobre.ai/Wardrobe.AI/app/(app)/profile/settings/page.tsx) para actualizar el método de pago.
+  - Disparador: Webhook de Stripe en `invoice.payment_failed`.

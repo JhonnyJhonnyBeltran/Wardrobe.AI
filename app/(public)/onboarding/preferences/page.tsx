@@ -525,6 +525,8 @@ function PreferencesContent() {
             if (isFromSettings) {
                 router.push('/profile/settings');
             } else {
+                // Fire welcome email asynchronously upon successful registration & onboarding
+                fetch('/api/email/welcome', { method: 'POST' }).catch(() => {});
                 router.push('/closet');
             }
         } catch (err: any) {

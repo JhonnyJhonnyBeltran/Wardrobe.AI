@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { sendProWelcomeEmail, sendCancellationEmail } from '@/lib/email/emailService';
 
 const ENTITLEMENT_ID = 'klozet_pro';
 
@@ -157,6 +158,45 @@ export async function POST(request: NextRequest) {
     if (updateError) {
       console.error('[RevenueCatWebhook] Supabase update error:', updateError);
       return NextResponse.json({ error: 'Database update failed' }, { status: 500 });
+    }
+
+    // Email dispatch para compras y cancelaciones nativas (iOS / Android)
+    try {
+      const { data: userProfile } = await supabaseAdmin
+        .from('profiles')
+        .select('full_name, username')
+        .eq('id', userId)
+        .maybeSingle();
+
+      const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(userId);
+      const userEmail = authUser?.user?.email;
+
+      if (userEmail) {
+        if (eventType === 'INITIAL_PURCHASE' && isActive) {
+          const formattedDate = expiresAt
+            ? new Date(expiresAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
+            : undefined;
+
+          sendProWelcomeEmail({
+            to: userEmail,
+            name: userProfile?.full_name || userProfile?.username,
+            plan: plan as 'monthly' | 'yearly',
+            nextBillingDate: formattedDate,
+          }).catch(err => console.warn('[RevenueCatWebhook] Error sending Pro welcome email:', err));
+        } else if (eventType === 'CANCELLATION' || eventType === 'EXPIRATION') {
+          const formattedDate = expiresAt
+            ? new Date(expiresAt).toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })
+            : undefined;
+
+          sendCancellationEmail({
+            to: userEmail,
+            name: userProfile?.full_name || userProfile?.username,
+            accessUntilDate: formattedDate,
+          }).catch(err => console.warn('[RevenueCatWebhook] Error sending cancellation email:', err));
+        }
+      }
+    } catch (emailErr) {
+      console.warn('[RevenueCatWebhook] Non-blocking email error:', emailErr);
     }
 
     console.log(`[RevenueCatWebhook] ${eventType} -> user=${userId} active=${isActive} plan=${plan}`);
