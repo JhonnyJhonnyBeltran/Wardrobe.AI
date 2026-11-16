@@ -24,6 +24,8 @@
 # misc
 .DS_Store
 *.pem
+*.exe
+.agents/skills/seo/ms-playwright/
 
 # debug
 npm-debug.log*

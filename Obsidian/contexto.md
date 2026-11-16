@@ -3893,3 +3893,23 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
   - Se despliega una alerta ámbar destacada explicando el fallo en el cobro con botón directo `Actualizar tarjeta` para evitar la pérdida del servicio.
 - **Blindaje en Motor de Base de Datos (`sql/03_protect_calendar_outfits_premium.sql`)**:
   - Trigger `trg_check_calendar_outfits_premium` permite programar looks en el calendario durante los 3 días de gracia (`v_period_end >= NOW() - INTERVAL '3 days'`), pero bloquea estrictamente con error `42501` una vez superadas las 72 horas.
+
+---
+
+## 86. Resolución de Indexación en Google Search Console y Canónicas Limpias (Noviembre 2026)
+- **Diagnóstico del Aviso "Página con redirección" en `http://klozet.es/`**:
+  - En Google Search Console (propiedad de Dominio `klozet.es`), `http://klozet.es/` es la versión HTTP sin cifrar que Vercel redirige permanentemente con `308 Permanent Redirect` a `https://klozet.es/`.
+  - Este comportamiento es el estándar de seguridad y SEO (forzar HTTPS). En GSC, "Página con redirección" es un estado informativo en páginas no indexadas, no un error que penalice el sitio.
+  - El "Error de validación" se produjo porque se pulsó "Validar corrección" en Search Console: Googlebot volvió a rastrear `http://klozet.es/`, comprobó que sigue redirigiendo (como debe hacer siempre) y reportó que la redirección persiste.
+- **Corrección de Etiquetas Canónicas Heredadas (`app/(public)/*/layout.tsx`)**:
+  - Se detectó que `app/layout.tsx` definía `alternates: { canonical: '/' }`, provocando que páginas públicas tipo cliente (`/about`, `/contact`, `/terms`, `/privacy`, `/cookies`) hereden la canónica de la raíz y apunten a `https://klozet.es` en vez de a sus propias URLs.
+  - Creados `layout.tsx` específicos con metadata, openGraph y canónica exacta autorreferenciada para:
+    - [`app/(public)/about/layout.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/app/(public)/about/layout.tsx): `https://klozet.es/about`
+    - [`app/(public)/contact/layout.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/app/(public)/contact/layout.tsx): `https://klozet.es/contact`
+    - [`app/(public)/terms/layout.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/app/(public)/terms/layout.tsx): `https://klozet.es/terms`
+    - [`app/(public)/privacy/layout.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/app/(public)/privacy/layout.tsx): `https://klozet.es/privacy`
+    - [`app/(public)/cookies/layout.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan%27s%20Project/Wardobre.ai/Wardrobe.AI/app/(public)/cookies/layout.tsx): `https://klozet.es/cookies`
+- **Normalización de Redirecciones y Robots (`next.config.ts`, `app/robots.ts`)**:
+  - Añadida redirección permanente `301` en `next.config.ts` de `/contacto` a `/contact` y eliminada la carpeta redundante `app/(public)/contacto`.
+  - Eliminado `/contacto` de `publicAllowed` en `app/robots.ts`, asegurando paridad estricta 1:1 con `sitemap.ts`.
+  - Todas las URLs de [`app/sitemap.ts`](file:///c:/Users/EthanCurro/Desktop/Ethan's%20Project/Wardobre.ai/Wardrobe.AI/app/sitemap.ts) devuelven código `200 OK` final en HTTPS sin barras inclinadas finales ni redirecciones intermedias.

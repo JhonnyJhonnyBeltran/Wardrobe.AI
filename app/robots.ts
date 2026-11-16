@@ -7,7 +7,6 @@ export default function robots(): MetadataRoute.Robots {
     '/',
     '/about',
     '/contact',
-    '/contacto',
     '/trends',
     '/trends/*',
     '/terms',
