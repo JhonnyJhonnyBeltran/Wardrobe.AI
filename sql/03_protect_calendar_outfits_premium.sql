@@ -23,9 +23,9 @@ BEGIN
   FROM public.profiles
   WHERE id = NEW.user_id;
 
-  -- Block if not premium or if expired
+  -- Block if not premium or if past the 3-day grace period
   IF (COALESCE(v_is_premium, false) = false AND COALESCE(v_sub_tier, 'free') <> 'premium') OR
-     (v_sub_status IN ('canceled', 'unpaid', 'incomplete_expired', 'inactive')) OR
+     (v_sub_status IN ('unpaid', 'incomplete_expired', 'expired')) OR
      (v_period_end IS NOT NULL AND v_period_end < (NOW() - INTERVAL '3 days')) THEN
     RAISE EXCEPTION 'Programar outfits en el calendario es exclusivo de Klozet Pro'
       USING ERRCODE = '42501';

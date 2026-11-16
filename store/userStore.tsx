@@ -110,25 +110,42 @@ export function UserProvider({ children }: { children: ReactNode }) {
       const username = profile?.username;
 
       // Check grace period: 3 days past expiration for non-active statuses
+      const GRACE_PERIOD_MS = 3 * 24 * 60 * 60 * 1000;
       const periodEndStr = profile?.subscription_period_end || legacyProfile?.subscription_period_end;
       const periodEndMs = periodEndStr ? new Date(periodEndStr).getTime() : 0;
-      const isPastGrace = periodEndMs > 0 && (Date.now() - periodEndMs > 3 * 24 * 60 * 60 * 1000);
+      const now = Date.now();
+      const hasPeriodEnd = periodEndMs > 0;
+
+      const isPastPeriodEnd = hasPeriodEnd && now > periodEndMs;
+      const isPastGrace = hasPeriodEnd && now - periodEndMs > GRACE_PERIOD_MS;
+      const isWithinGracePeriod = hasPeriodEnd && isPastPeriodEnd && !isPastGrace;
+      const graceDaysRemaining = isWithinGracePeriod
+        ? Math.max(1, Math.ceil((periodEndMs + GRACE_PERIOD_MS - now) / (24 * 60 * 60 * 1000)))
+        : 0;
 
       const status = (profile?.subscription_status || legacyProfile?.subscription_status || '').toLowerCase().trim();
       const isStatusExplicitlyInactive =
-        status === 'canceled' ||
         status === 'unpaid' ||
         status === 'incomplete_expired' ||
-        status === 'inactive' ||
+        status === 'expired' ||
+        (status === 'canceled' && isPastGrace) ||
         (status === 'past_due' && isPastGrace) ||
         isPastGrace;
 
-      const isPremiumFromDb = !isStatusExplicitlyInactive && Boolean(
+      const hasPremiumFlag = Boolean(
         profile?.is_premium ||
         legacyProfile?.is_premium ||
         profile?.subscription_tier === 'premium' ||
         legacyProfile?.subscription_tier === 'premium'
       );
+
+      // Active if has premium flag and is either in paid period or within 3-day grace period
+      const isPremiumFromDb = hasPremiumFlag && !isStatusExplicitlyInactive && !isPastGrace;
+
+      // If grace expired but profile in DB was still marked premium, demote automatically
+      if (isPastGrace && (profile?.is_premium || legacyProfile?.is_premium)) {
+        fetch('/api/subscriptions/sync', { method: 'POST' }).catch(() => {});
+      }
 
       const subscriptionTier = isPremiumFromDb ? SubscriptionTier.PREMIUM : SubscriptionTier.FREE;
 
@@ -185,9 +202,11 @@ export function UserProvider({ children }: { children: ReactNode }) {
         kloeTrialMessagesUsed: styleSource.kloe_trial_messages_used ?? styleSource.notification_preferences?.kloe_trial_messages_used ?? 0,
         language: styleSource.language || styleSource.notification_preferences?.language || undefined,
         subscriptionPlan: styleSource.subscription_plan || 'none',
-        subscriptionStatus: styleSource.subscription_status || 'inactive',
+        subscriptionStatus: isWithinGracePeriod ? 'grace_period' : (styleSource.subscription_status || 'inactive'),
         subscriptionPeriodEnd: styleSource.subscription_period_end || undefined,
         stripeCustomerId: styleSource.stripe_customer_id || undefined,
+        isWithinGracePeriod,
+        graceDaysRemaining,
       }));
 
       // Synchronize Language from localStorage manual choice first, then profile, then Google OAuth locale

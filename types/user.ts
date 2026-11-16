@@ -41,6 +41,8 @@ export interface UserProfile {
   subscriptionStatus?: string;
   subscriptionPeriodEnd?: string | Date;
   stripeCustomerId?: string;
+  isWithinGracePeriod?: boolean;
+  graceDaysRemaining?: number;
 }
 
 export interface UserPreferences {

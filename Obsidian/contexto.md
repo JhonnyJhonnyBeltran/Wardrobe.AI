@@ -3875,3 +3875,21 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
   - Asunto: `Aviso sobre el pago de tu suscripción a Klozet Pro`
   - Contenido: Notificación de incidencia en el cobro de renovación con aviso de periodo de gracia de 3 días y enlace directo a [Ajustes](file:///c:/Users/EthanCurro/Desktop/Ethan's%20Project/Wardobre.ai/Wardrobe.AI/app/(app)/profile/settings/page.tsx) para actualizar el método de pago.
   - Disparador: Webhook de Stripe en `invoice.payment_failed`.
+
+---
+
+## 85. Periodo de Gracia de 3 Días y Revocación Automática de Klozet Pro (Noviembre 2026)
+- **Validador Centralizado de Periodo de Gracia (`lib/server/subscriptionValidator.ts`)**:
+  - `validateUserSubscription` implementa la lógica estricta de 72 horas (`GRACE_PERIOD_MS = 3 * 24 * 60 * 60 * 1000`):
+    - **Durante el periodo pagado** (`now <= periodEnd`): `isPremium = true`, `isWithinGracePeriod = false`.
+    - **Durante los 3 días de gracia** (`now > periodEnd && now <= periodEnd + 3 días`): `isPremium = true`, `isWithinGracePeriod = true`, con cálculo de días restantes (`graceDaysRemaining` de 1 a 3 días). El usuario retiene acceso ininterrumpido a todas las funciones Pro.
+    - **Tras expirar los 3 días** (`now > periodEnd + 3 días`): `isPremium = false`, `subscriptionTier = 'free'`, `subscriptionStatus = 'expired'`, disparando la revocación inmediata.
+- **Revocación Automática en Base de Datos y Alertas (`app/api/subscriptions/sync/route.ts`)**:
+  - `POST /api/subscriptions/sync`: Permite sincronizar y degradar perfiles vencidos a `free` con privileges admin de Supabase, despachando el correo informativo `sendCancellationEmail`.
+  - `GET /api/subscriptions/sync`: Barrido automatizado para cron jobs que escanea y degrada perfiles expirados en masa.
+  - Sincronización proactiva en cliente (`store/userStore.tsx`): Si un usuario abre la app y han pasado los 3 días de gracia, se dispara la degradación en segundo plano y se bloquean las funciones en cliente.
+- **Avisos Visuales en Ajustes (`app/(app)/profile/settings/page.tsx`)**:
+  - Mientras el periodo de gracia está activo, la tarjeta de Klozet Pro sustituye el badge verde por una pastilla ámbar con animación ping: `Periodo de gracia (X d)`.
+  - Se despliega una alerta ámbar destacada explicando el fallo en el cobro con botón directo `Actualizar tarjeta` para evitar la pérdida del servicio.
+- **Blindaje en Motor de Base de Datos (`sql/03_protect_calendar_outfits_premium.sql`)**:
+  - Trigger `trg_check_calendar_outfits_premium` permite programar looks en el calendario durante los 3 días de gracia (`v_period_end >= NOW() - INTERVAL '3 days'`), pero bloquea estrictamente con error `42501` una vez superadas las 72 horas.

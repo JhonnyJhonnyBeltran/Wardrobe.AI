@@ -350,10 +350,16 @@ export default function SettingsPage() {
                                     <span className="font-bold text-base text-[var(--foreground)] tracking-tight">
                                         {isPro ? 'Klozet Pro' : 'Klozet Estándar'}
                                     </span>
-                                    {isPro && (
+                                    {isPro && !user?.isWithinGracePeriod && (
                                         <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
                                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                                             Activo
+                                        </span>
+                                    )}
+                                    {user?.isWithinGracePeriod && (
+                                        <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />
+                                            Periodo de gracia ({user.graceDaysRemaining ?? 1}d)
                                         </span>
                                     )}
                                 </div>
@@ -383,6 +389,22 @@ export default function SettingsPage() {
                                 </Link>
                             )}
                         </div>
+
+                        {/* Alerta de Periodo de Gracia */}
+                        {user?.isWithinGracePeriod && (
+                            <div className="mt-3 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 text-xs">
+                                <span className="text-amber-700 dark:text-amber-300">
+                                    ⚠️ Tu renovación no pudo procesarse. Tienes <strong>{user.graceDaysRemaining} día{user.graceDaysRemaining === 1 ? '' : 's'}</strong> de gracia para actualizar tu tarjeta antes de que se desactive Klozet Pro.
+                                </span>
+                                <button
+                                    type="button"
+                                    onClick={handleOpenStripePortal}
+                                    className="px-3.5 py-1.5 rounded-full bg-amber-500 hover:bg-amber-600 text-white font-bold text-[11px] shrink-0 cursor-pointer shadow-sm self-start sm:self-auto"
+                                >
+                                    Actualizar tarjeta
+                                </button>
+                            </div>
+                        )}
 
                         {/* Debajo del banner de Klozet Pro: Fecha del siguiente pago y gestión */}
                         {isPro && (
