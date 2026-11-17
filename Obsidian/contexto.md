@@ -3959,6 +3959,18 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
 
 ---
 
+## 89. Corrección de Error de Compilación Turbopack en Vercel (Eliminación de DynaPuff) (Noviembre 2026)
+- **Diagnóstico del Fallo de Build en Vercel CLI / Turbopack**:
+  - El log de Vercel reportó `Error: Turbopack build failed with 9 errors: Module not found: Can't resolve '@vercel/turbopack-next/internal/font/google/font'` con `next/font/google queries have exactly one entry`.
+  - Ocurrió porque `DynaPuff` en `app/layout.tsx` definía un array de múltiples pesos (`weight: ["500", "600", "700"]`) siendo una fuente variable de Google Fonts. En Next.js 16.1.0 Turbopack sobre Linux, este patrón genera 9 reglas `@font-face` divergentes que rompen el resolver interno de Turbopack.
+- **Alineación con el Manual de Marca Oficial (`.agents/rules/klozet-brand.md`)**:
+  - La directriz 9 de marca prohíbe fuentes externas decorativas y exige estrictamente **Inter** para la interfaz y **Outfit** para cifras y números.
+  - Eliminado el import y variable de `DynaPuff` en [`app/layout.tsx`](file:///c:/Users/EthanCurro/Desktop/Ethan's%20Project/Wardobre.ai/Wardrobe.AI/app/layout.tsx).
+  - En [`app/globals.css`](file:///c:/Users/EthanCurro/Desktop/Ethan's%20Project/Wardobre.ai/Wardrobe.AI/app/globals.css), la clase `.font-kloe` se vincula limpiamente a `var(--font-outfit), var(--font-inter), sans-serif`.
+  - Compilación verificada con éxito tanto en local como con Turbopack para el despliegue en producción de Vercel.
+
+---
+
 ## 89. Flujos Interactivos Reales, Respuestas a Comentarios y Limpieza de Rutas Falsas (Noviembre 2026)
 - **Implementación de Respuestas y Eliminación en Comentarios (`app/(app)/post/[id]/page.tsx`)**:
   - Activada la interacción en el botón *"Responder"* en listados de comentarios (escritorio y drawer móvil). Al pulsar, se activa el estado `replyingTo`, se pre-rellena el input con `@username ` y se enfoca automáticamente el campo de texto correspondiente.

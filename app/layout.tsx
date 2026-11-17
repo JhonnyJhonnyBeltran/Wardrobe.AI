@@ -1,12 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Outfit, DynaPuff } from "next/font/google";
+import { Inter, Outfit } from "next/font/google";
 import "./globals.css";
 import RootLayoutClient from "./RootLayoutClient";
 import AdSenseScript from "@/components/AdSenseScript";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit" });
-const dynaPuff = DynaPuff({ subsets: ["latin"], weight: ["500", "600", "700"], variable: "--font-kloe" });
 
 const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://klozet.es";
 const SITE_TITLE = "Klozet — La Red Social de Moda, Inspo Outfits & Armario Virtual con IA";
@@ -247,7 +246,7 @@ export default function RootLayout({
 
   return (
     <html lang="es" suppressHydrationWarning>
-      <body className={`${inter.variable} ${outfit.variable} ${dynaPuff.variable} antialiased bg-[var(--background)] text-[var(--foreground)]`}>
+      <body className={`${inter.variable} ${outfit.variable} antialiased bg-[var(--background)] text-[var(--foreground)]`}>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
