@@ -205,6 +205,7 @@ export default function PostDetailPage() {
     useBodyScrollLock(!!selectedItem);
 
     const commentInputRef = useRef<HTMLInputElement>(null);
+    const mobileCommentInputRef = useRef<HTMLInputElement>(null);
     const carouselScrollRef = useRef<HTMLDivElement>(null);
     const isAnimatingScrollRef = useRef(false);
     const [isPhotoZoomed, setIsPhotoZoomed] = useState(false);
@@ -722,6 +723,7 @@ export default function PostDetailPage() {
                 }
             }]);
             setNewComment('');
+            setReplyingTo(null);
 
             // Notify post author immediately (Realtime broadcast + persistent row)
             // @ts-ignore
@@ -739,7 +741,8 @@ export default function PostDetailPage() {
             }
 
             // Sync total comments count in the 'posts' table
-            const newCommentCount = (post?.comments_count || 0) + 1;
+            const newCommentCount = (post?.comments_count || comments.length) + 1;
+            setPost((prev: any) => prev ? { ...prev, comments_count: newCommentCount } : prev);
             await (supabase.from('posts') as any)
                 .update({ comments_count: newCommentCount })
                 .eq('id', postId);
@@ -750,6 +753,47 @@ export default function PostDetailPage() {
         } finally {
             setSubmittingComment(false);
         }
+    };
+
+    const handleDeleteComment = async (commentId: string) => {
+        try {
+            const { error } = await (supabase.from('comments') as any)
+                .delete()
+                .eq('id', commentId);
+
+            if (error) throw error;
+
+            setComments(prev => prev.filter(c => c.id !== commentId));
+            const newCount = Math.max(0, (post?.comments_count || comments.length) - 1);
+            setPost((prev: any) => prev ? { ...prev, comments_count: newCount } : prev);
+            await (supabase.from('posts') as any)
+                .update({ comments_count: newCount })
+                .eq('id', postId);
+        } catch (err) {
+            console.error('Error deleting comment:', err);
+        }
+    };
+
+    const handleReply = (comment: Comment) => {
+        setReplyingTo({ id: comment.id, username: comment.user.username });
+        setNewComment(`@${comment.user.username} `);
+        if (window.innerWidth < 768) {
+            setShowMobileComments(true);
+            setTimeout(() => {
+                mobileCommentInputRef.current?.focus();
+            }, 120);
+        } else {
+            setTimeout(() => {
+                commentInputRef.current?.focus();
+            }, 60);
+        }
+    };
+
+    const handleCancelReply = () => {
+        if (replyingTo && newComment.startsWith(`@${replyingTo.username} `)) {
+            setNewComment(newComment.replace(`@${replyingTo.username} `, ''));
+        }
+        setReplyingTo(null);
     };
     
     // Deletion and Editing handlers
@@ -1093,8 +1137,8 @@ export default function PostDetailPage() {
                 {/* ACTION BAR - Below image on mobile / Below author on desktop */}
                 <div className="border-b border-gray-100 dark:border-gray-800 px-4 py-3 flex items-center justify-between flex-shrink-0">
                     <div className="flex items-center gap-5">
-                        <button onClick={toggleLike} className="flex items-center gap-1.5 font-bold hover:opacity-70 transition-opacity" aria-label={isLiked ? "Quitar me gusta" : "Me gusta"}>
-                            <Heart className={`w-6 h-6 transition-colors ${isLiked ? 'fill-[var(--brand-pink)] text-[var(--brand-pink)]' : 'text-gray-900 dark:text-white'}`} strokeWidth={2.5} />
+                        <button onClick={toggleLike} className="flex items-center gap-1.5 font-bold hover:opacity-70 transition-opacity cursor-pointer" aria-label={isLiked ? "Quitar me gusta" : "Me gusta"}>
+                            <Heart className={`w-6 h-6 transition-colors ${isLiked ? 'fill-[var(--brand-pink)] text-transparent' : 'text-gray-900 dark:text-white'}`} strokeWidth={isLiked ? 0 : 2.2} />
                         </button>
                         <button 
                             onClick={() => {
@@ -1241,9 +1285,25 @@ export default function PostDetailPage() {
                                             </Link>
                                             <span className="text-[14px] text-gray-900 dark:text-white break-words">{comment.content}</span>
                                         </div>
-                                        <div className="flex gap-3 mt-1 text-[11px] font-medium text-gray-400">
+                                        <div className="flex gap-3 mt-1 text-[11px] font-medium text-gray-400 items-center">
                                             <span>{new Date(comment.created_at).toLocaleDateString()}</span>
-                                            <button className="hover:text-gray-600">Responder</button>
+                                            <button 
+                                                type="button"
+                                                onClick={() => handleReply(comment)} 
+                                                className="hover:text-[var(--brand-pink)] transition-colors cursor-pointer"
+                                            >
+                                                Responder
+                                            </button>
+                                            {(comment.user.id === user?.id || post?.user_id === user?.id) && (
+                                                <button 
+                                                    type="button"
+                                                    onClick={() => handleDeleteComment(comment.id)} 
+                                                    className="hover:text-red-500 transition-colors cursor-pointer"
+                                                    title="Eliminar comentario"
+                                                >
+                                                    Eliminar
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -1254,26 +1314,41 @@ export default function PostDetailPage() {
             </div>
 
             {/* Add Comment Input - Hidden on mobile, sticky bottom on desktop */}
-            <form onSubmit={handleAddComment} className="hidden md:flex px-4 py-4 border-t border-gray-100 dark:border-gray-800 gap-3 items-center md:sticky md:bottom-0 bg-white dark:bg-black flex-shrink-0 w-full z-10">
-                <Avatar src={user?.avatar || null} alt="Tú" size="sm" />
-                <div className="flex-1">
-                    <input
-                        ref={commentInputRef}
-                        type="text"
-                        placeholder="Añadir comentario..."
-                        className="w-full bg-gray-100 dark:bg-gray-800 rounded-full px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 outline-none focus:ring-2 focus:ring-gray-200 dark:focus:ring-gray-700"
-                        value={newComment}
-                        onChange={(e) => setNewComment(e.target.value)}
-                    />
-                </div>
-                <button
-                    type="submit"
-                    disabled={!newComment.trim() || submittingComment}
-                    className="text-[var(--brand-pink)] font-bold text-sm hover:text-[var(--brand-pink-dark)] disabled:opacity-50 transition-colors"
-                >
-                    Publicar
-                </button>
-            </form>
+            <div className="hidden md:flex flex-col border-t border-gray-100 dark:border-gray-800 md:sticky md:bottom-0 bg-white dark:bg-black flex-shrink-0 w-full z-10">
+                {replyingTo && (
+                    <div className="flex items-center justify-between px-4 py-1.5 bg-gray-50 dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 text-xs text-gray-500 dark:text-gray-400">
+                        <span>Respondiendo a <strong className="text-[var(--brand-pink)] font-semibold">@{replyingTo.username}</strong></span>
+                        <button 
+                            type="button" 
+                            onClick={handleCancelReply} 
+                            className="p-1 hover:text-gray-800 dark:hover:text-gray-200 transition-colors cursor-pointer"
+                            aria-label="Cancelar respuesta"
+                        >
+                            <X className="w-3.5 h-3.5" />
+                        </button>
+                    </div>
+                )}
+                <form onSubmit={handleAddComment} className="px-4 py-4 flex gap-3 items-center w-full">
+                    <Avatar src={user?.avatar || null} alt="Tú" size="sm" />
+                    <div className="flex-1">
+                        <input
+                            ref={commentInputRef}
+                            type="text"
+                            placeholder={replyingTo ? `Responde a @${replyingTo.username}...` : "Añadir comentario..."}
+                            className="w-full bg-gray-100 dark:bg-gray-800 rounded-full px-4 py-2.5 text-sm text-gray-900 dark:text-white placeholder-gray-400 outline-none focus:ring-2 focus:ring-gray-200 dark:focus:ring-gray-700"
+                            value={newComment}
+                            onChange={(e) => setNewComment(e.target.value)}
+                        />
+                    </div>
+                    <button
+                        type="submit"
+                        disabled={!newComment.trim() || submittingComment}
+                        className="text-[var(--brand-pink)] font-bold text-sm hover:text-[var(--brand-pink-dark)] disabled:opacity-50 transition-colors cursor-pointer"
+                    >
+                        Publicar
+                    </button>
+                </form>
+            </div>
 
             </div> {/* End Right Column */}
             </div> {/* End Main Content Wrapper */}
@@ -1289,7 +1364,7 @@ export default function PostDetailPage() {
 
                         <div className="flex items-center justify-between px-6 mb-4">
                             <h2 className="font-bold text-xl text-gray-900 dark:text-white">Comentarios</h2>
-                            <button onClick={() => setShowMobileComments(false)} className="p-2 bg-gray-100 dark:bg-gray-800 rounded-full">
+                            <button onClick={() => setShowMobileComments(false)} className="p-2 bg-gray-100 dark:bg-gray-800 rounded-full cursor-pointer">
                                 <X className="w-5 h-5 text-gray-900 dark:text-white" />
                             </button>
                         </div>
@@ -1313,9 +1388,25 @@ export default function PostDetailPage() {
                                                 </Link>
                                                 <span className="text-[15px] text-gray-900 dark:text-white leading-tight break-words">{comment.content}</span>
                                             </div>
-                                            <div className="flex gap-4 mt-1 text-xs font-medium text-gray-400">
+                                            <div className="flex gap-4 mt-1 text-xs font-medium text-gray-400 items-center">
                                                 <span>{new Date(comment.created_at).toLocaleDateString()}</span>
-                                                <button className="hover:text-gray-600">Responder</button>
+                                                <button 
+                                                    type="button"
+                                                    onClick={() => handleReply(comment)} 
+                                                    className="hover:text-[var(--brand-pink)] transition-colors cursor-pointer"
+                                                >
+                                                    Responder
+                                                </button>
+                                                {(comment.user.id === user?.id || post?.user_id === user?.id) && (
+                                                    <button 
+                                                        type="button"
+                                                        onClick={() => handleDeleteComment(comment.id)} 
+                                                        className="hover:text-red-500 transition-colors cursor-pointer"
+                                                        title="Eliminar comentario"
+                                                    >
+                                                        Eliminar
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -1324,29 +1415,45 @@ export default function PostDetailPage() {
                         </div>
 
                         {/* Comment Input in Overlay - Sticky at bottom */}
-                        <form 
-                            onSubmit={handleAddComment} 
-                            className="pb-8 pt-4 flex gap-3 items-center border-t border-gray-100 dark:border-gray-800 px-6 bg-white dark:bg-black"
-                        >
-                            <Avatar src={user?.avatar || null} alt="Tú" size="md" />
-                            <div className="flex-1">
-                                <input
-                                    type="text"
-                                    placeholder="Añadir comentario..."
-                                    className="w-full bg-gray-100 dark:bg-gray-800 rounded-full px-5 py-3.5 text-[15px] text-gray-900 dark:text-white placeholder-gray-400 outline-none"
-                                    value={newComment}
-                                    onChange={(e) => setNewComment(e.target.value)}
-                                    autoFocus
-                                />
-                            </div>
-                            <button
-                                type="submit"
-                                disabled={!newComment.trim() || submittingComment}
-                                className="p-3.5 bg-[var(--brand-pink)] text-white rounded-full hover:bg-[var(--brand-pink-dark)] disabled:opacity-50 transition-colors shadow-lg shadow-[var(--brand-pink)]/20"
+                        <div className="border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-black">
+                            {replyingTo && (
+                                <div className="flex items-center justify-between px-6 py-1.5 bg-gray-50 dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 text-xs text-gray-500 dark:text-gray-400">
+                                    <span>Respondiendo a <strong className="text-[var(--brand-pink)] font-semibold">@{replyingTo.username}</strong></span>
+                                    <button 
+                                        type="button" 
+                                        onClick={handleCancelReply} 
+                                        className="p-1 hover:text-gray-800 dark:hover:text-gray-200 transition-colors cursor-pointer"
+                                        aria-label="Cancelar respuesta"
+                                    >
+                                        <X className="w-3.5 h-3.5" />
+                                    </button>
+                                </div>
+                            )}
+                            <form 
+                                onSubmit={handleAddComment} 
+                                className="pb-8 pt-4 flex gap-3 items-center px-6"
                             >
-                                <Send className="w-5 h-5" />
-                            </button>
-                        </form>
+                                <Avatar src={user?.avatar || null} alt="Tú" size="md" />
+                                <div className="flex-1">
+                                    <input
+                                        ref={mobileCommentInputRef}
+                                        type="text"
+                                        placeholder={replyingTo ? `Responde a @${replyingTo.username}...` : "Añadir comentario..."}
+                                        className="w-full bg-gray-100 dark:bg-gray-800 rounded-full px-5 py-3.5 text-[15px] text-gray-900 dark:text-white placeholder-gray-400 outline-none"
+                                        value={newComment}
+                                        onChange={(e) => setNewComment(e.target.value)}
+                                        autoFocus
+                                    />
+                                </div>
+                                <button
+                                    type="submit"
+                                    disabled={!newComment.trim() || submittingComment}
+                                    className="p-3.5 bg-[var(--brand-pink)] text-white rounded-full hover:bg-[var(--brand-pink-dark)] disabled:opacity-50 transition-colors shadow-lg shadow-[var(--brand-pink)]/20 cursor-pointer"
+                                >
+                                    <Send className="w-5 h-5" />
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             )}

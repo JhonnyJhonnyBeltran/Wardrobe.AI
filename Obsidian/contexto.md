@@ -3956,3 +3956,20 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
 - **Protección de Servidor (`app/api/closy/save-outfit/route.ts`) y Base de Datos**:
   - Si una petición a `/api/closy/save-outfit` incluye `scheduled_date`, se valida el perfil del usuario en Supabase antes de insertar en `calendar_outfits`.
   - Trigger de PostgreSQL `trg_check_calendar_outfits_premium` en `public.calendar_outfits` garantiza a nivel de motor de datos que ningún script de consola pueda eludir la comprobación.
+
+---
+
+## 89. Flujos Interactivos Reales, Respuestas a Comentarios y Limpieza de Rutas Falsas (Noviembre 2026)
+- **Implementación de Respuestas y Eliminación en Comentarios (`app/(app)/post/[id]/page.tsx`)**:
+  - Activada la interacción en el botón *"Responder"* en listados de comentarios (escritorio y drawer móvil). Al pulsar, se activa el estado `replyingTo`, se pre-rellena el input con `@username ` y se enfoca automáticamente el campo de texto correspondiente.
+  - Añadido banner visual cancelable con botón `X` indicando *"Respondiendo a @username"* sobre el formulario de comentarios tanto en vista escritorio fija como en el drawer móvil deslizable.
+  - Implementada eliminación reactiva de comentarios (`handleDeleteComment`): si el usuario activo es el autor del comentario o el creador del post, se muestra la acción *"Eliminar"* que borra el registro en Supabase y sincroniza de inmediato `comments_count`.
+  - Unificado el botón de like en la barra de acciones del detalle de post: corazón sin borde blanco/negro grueso cuando está activo (`strokeWidth={0}`, `fill-[var(--brand-pink)] text-transparent`), alineado con el estándar de `PostCard`.
+- **Conexión Real de Eliminación Definitiva de Cuenta (`app/(app)/profile/settings/general/page.tsx`)**:
+  - Sustituido el marcador pendiente `// TODO: Implementar eliminación de cuenta` por la llamada real al endpoint existente `POST /api/user/delete`.
+  - Integrado estado de carga (`isDeleting`) con spinner `Loader2`, desactivación de botones mientras procesa, notificación toast de éxito, cierre de sesión en Supabase y redirección limpia a `/login`.
+- **Eliminación de Ruta Dummy `/create/post` (`app/(app)/create/post/page.tsx`)**:
+  - La ruta secundaria `/create/post` contenía un stub con un `setTimeout` simulado y un comentario `TODO`.
+  - Sustituida por una redirección limpia a la ruta real de creación de publicaciones `/create-post`, garantizando que ninguna navegación o enlace huérfano conduzca a una pantalla simulada o inoperativa.
+- **Validación de Compilación y Tipos**:
+  - Verificación exitosa al 100% con `npx tsc --noEmit` y `npm run build` (81 páginas estáticas y dinámicas compiladas en 14s sin errores).

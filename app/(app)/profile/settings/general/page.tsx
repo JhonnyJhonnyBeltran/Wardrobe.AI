@@ -7,12 +7,13 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Moon, Sun, Globe, Smartphone, Trash2 } from 'lucide-react';
+import { ArrowLeft, Moon, Sun, Globe, Smartphone, Trash2, Loader2 } from 'lucide-react';
 import { Card, Button } from '@/components';
 import { useRouter } from 'next/navigation';
 import { useTheme } from '@/store/themeStore';
 import { useLanguageStore, SUPPORTED_LANGUAGES } from '@/store/languageStore';
 import { useUser } from '@/store/userStore';
+import { supabase } from '@/lib/supabase/client';
 import { toast } from 'sonner';
 
 export default function GeneralSettingsPage() {
@@ -21,10 +22,36 @@ export default function GeneralSettingsPage() {
   const { user } = useUser();
   const { language, setLanguage } = useLanguageStore();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  const handleDeleteAccount = () => {
-    // TODO: Implementar eliminación de cuenta
-    setShowDeleteConfirm(false);
+  const handleDeleteAccount = async () => {
+    if (!user?.id || isDeleting) return;
+    setIsDeleting(true);
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      const res = await fetch('/api/user/delete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ userId: user.id }),
+      });
+      if (!res.ok) {
+        const errorJson = await res.json().catch(() => ({}));
+        throw new Error(errorJson.error || 'Error al eliminar la cuenta');
+      }
+      toast.success('Tu cuenta ha sido eliminada permanentemente.');
+      await supabase.auth.signOut();
+      router.push('/login');
+    } catch (err: any) {
+      console.error('Error deleting account:', err);
+      toast.error(err.message || 'Error al eliminar la cuenta. Inténtalo más tarde.');
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+    }
   };
 
   return (
@@ -244,15 +271,24 @@ export default function GeneralSettingsPage() {
               <div className="flex gap-3">
                 <Button
                   onClick={() => setShowDeleteConfirm(false)}
+                  disabled={isDeleting}
                   className="flex-1 !bg-[var(--background-secondary)] !text-[var(--foreground)]"
                 >
                   Cancelar
                 </Button>
                 <Button
                   onClick={handleDeleteAccount}
-                  className="flex-1 !bg-red-500 hover:!bg-red-600 !text-white"
+                  disabled={isDeleting}
+                  className="flex-1 !bg-red-500 hover:!bg-red-600 !text-white flex items-center justify-center gap-2"
                 >
-                  Eliminar
+                  {isDeleting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Eliminando...
+                    </>
+                  ) : (
+                    'Eliminar'
+                  )}
                 </Button>
               </div>
             </motion.div>
