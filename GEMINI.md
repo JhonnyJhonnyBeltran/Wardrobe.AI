@@ -21,10 +21,28 @@ En este proyecto (Klozet), todo desarrollo, componente o pantalla debe seguir es
    - Directrices Apple Human Interface Guidelines (HIG) para experiencia premium de app móvil.
    - Microinteracciones naturales, áreas de toque de 44x44pt mínimo, tipografía cuidada, materiales de vidrio translúcido y transiciones sin fricción.
 
-4. **Flujo de Trabajo:**
+4. **`ux-motion`**:
+   - 20 principios de animación aplicados a modales, botones, drawers y widgets:
+   - Modales y menús con origen de apertura desde el elemento pulsado (*origin awareness*).
+   - Botones con rebote y deformación física elástica (*squash & stretch*, scaleX 1.1 / scaleY 0.9, 80-150ms).
+   - Entradas en cascada (*stagger* 30-60ms) y feedback inmediato en <100ms (*Doherty threshold*).
+   - Cierres veloces (*fast closing* 100-150ms) y animaciones interrumpibles.
+
+5. **Flujo de Trabajo:**
    - Consultar siempre `./Obsidian/contexto.md` antes de cualquier modificación.
    - Probar que compila correctamente (`npm run build`) antes de cualquier commit.
    - Realizar commits descriptivos tras validación exitosa.
+
+## Prohibición de Texto Repetitivo y Pills Banales
+- Prohibido cualquier texto redundante o repetido en cards, listas o pantallas contiguas.
+- Prohibidas las pastillas (`pills`), chips o badges con textos o iconos banales (ej. etiquetas decorativas vacías o adornos artificiales).
+- Las pastillas se reservan exclusivamente para estados funcionales y reales (ej. estados de publicación, filtros activos con propósito claro o estados de cuenta).
+
+## Disparador Obligatorio: "Mejora la UX" / "Ejora la UX"
+- Ante órdenes como "mejora la ux", "ejora la ux", "optimiza la ux" o "mejora la experiencia":
+  * Activar inmediatamente `ux-motion` y aplicar sus 20 principios a modales, botones, widgets y vistas interactivas.
+  * Eliminar implacablemente textos repetitivos y toda pastilla o badge banal.
+  * Comprobar que modales y menús crezcan desde el punto de click (`origin awareness`), los botones reboten elásticamente y los cierres sean ultrarrápidos.
 
 ## Eficiencia de Tokens (Caveman Mode)
 - Skill configurada en `.agents/skills/caveman`.

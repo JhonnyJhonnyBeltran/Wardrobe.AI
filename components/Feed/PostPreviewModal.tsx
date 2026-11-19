@@ -281,14 +281,16 @@ export default function PostPreviewModal({
           />
 
           {/* Close button in top right for instant touch dismiss */}
-          <button
+          <motion.button
             type="button"
             onClick={onClose}
+            whileTap={{ scale: 0.90 }}
+            transition={{ type: "spring", stiffness: 600, damping: 20 }}
             aria-label="Cerrar vista previa"
-            className="absolute top-4 right-4 z-30 w-10 h-10 rounded-full bg-black/40 hover:bg-black/60 active:scale-90 text-white flex items-center justify-center backdrop-blur-md border border-white/20 transition-all cursor-pointer"
+            className="absolute top-4 right-4 z-30 w-10 h-10 rounded-full bg-black/40 hover:bg-black/60 text-white flex items-center justify-center backdrop-blur-md border border-white/20 transition-colors cursor-pointer select-none touch-manipulation"
           >
             <X className="w-5 h-5 text-white" />
-          </button>
+          </motion.button>
 
           {/* Modal Card with Spring Expand Animation from Post Card Position */}
           <motion.div
@@ -403,20 +405,22 @@ export default function PostPreviewModal({
             initial={{ opacity: 0, y: 15, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 15, scale: 0.9 }}
-            transition={{ delay: 0.08, duration: 0.25 }}
+            transition={{ delay: 0.08, duration: 0.2 }}
             onClick={(e) => e.stopPropagation()}
             onPointerDown={(e) => e.stopPropagation()}
             className="relative z-20 mt-4 flex items-center justify-center gap-3"
           >
             {/* Like Button */}
-            <button
+            <motion.button
               type="button"
               onClick={handleQuickLike}
+              whileTap={{ scaleX: 1.08, scaleY: 0.90 }}
+              transition={{ type: "spring", stiffness: 600, damping: 20 }}
               className={cn(
-                "w-12 h-12 rounded-full flex items-center justify-center shadow-2xl backdrop-blur-xl border active:scale-90 transition-all duration-200 cursor-pointer",
+                "w-12 h-12 rounded-full flex items-center justify-center backdrop-blur-xl border transition-colors cursor-pointer select-none touch-manipulation",
                 isLikedState
-                  ? "bg-[var(--brand-pink)] text-white border-[var(--brand-pink)]/40 shadow-[0_4px_20px_rgba(236,72,153,0.45)]"
-                  : "bg-black text-white hover:bg-neutral-900 border-black/10 dark:bg-white dark:text-black dark:hover:bg-neutral-100 dark:border-white/20"
+                  ? "bg-[var(--brand-pink)] text-white border-white/20 shadow-[0_8px_24px_rgba(255,102,196,0.45),inset_0_1px_0_rgba(255,255,255,0.4)]"
+                  : "bg-black/90 text-white hover:bg-black border-white/15 dark:bg-white dark:text-black dark:hover:bg-neutral-100 dark:border-white/20 shadow-[0_8px_24px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.25)]"
               )}
               aria-label={isLikedState ? "Quitar me gusta" : "Me gusta"}
             >
@@ -427,18 +431,20 @@ export default function PostPreviewModal({
                 )}
                 strokeWidth={isLikedState ? 0 : 2.2}
               />
-            </button>
+            </motion.button>
 
             {/* Save Button */}
             {!hideSaveButton && (
-              <button
+              <motion.button
                 type="button"
                 onClick={handleQuickSave}
+                whileTap={{ scaleX: 1.08, scaleY: 0.90 }}
+                transition={{ type: "spring", stiffness: 600, damping: 20 }}
                 className={cn(
-                  "w-12 h-12 rounded-full flex items-center justify-center shadow-2xl backdrop-blur-xl border active:scale-90 transition-all duration-200 cursor-pointer",
+                  "w-12 h-12 rounded-full flex items-center justify-center backdrop-blur-xl border transition-colors cursor-pointer select-none touch-manipulation",
                   isSavedState
-                    ? "bg-[var(--brand-pink)] text-white border-[var(--brand-pink)]/40 shadow-[0_4px_20px_rgba(236,72,153,0.45)]"
-                    : "bg-black text-white hover:bg-neutral-900 border-black/10 dark:bg-white dark:text-black dark:hover:bg-neutral-100 dark:border-white/20"
+                    ? "bg-[var(--brand-pink)] text-white border-white/20 shadow-[0_8px_24px_rgba(255,102,196,0.45),inset_0_1px_0_rgba(255,255,255,0.4)]"
+                    : "bg-black/90 text-white hover:bg-black border-white/15 dark:bg-white dark:text-black dark:hover:bg-neutral-100 dark:border-white/20 shadow-[0_8px_24px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.25)]"
                 )}
                 aria-label={isSavedState ? "Guardado" : "Guardar"}
               >
@@ -449,7 +455,7 @@ export default function PostPreviewModal({
                   )}
                   strokeWidth={2.2}
                 />
-              </button>
+              </motion.button>
             )}
           </motion.div>
         </div>

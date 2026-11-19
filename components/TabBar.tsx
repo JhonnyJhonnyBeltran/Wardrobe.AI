@@ -94,8 +94,8 @@ export default function TabBar() {
               className="flex-1 flex justify-center items-center h-full group touch-manipulation z-10"
             >
               <motion.div
-                whileTap={{ scale: 0.88 }}
-                transition={{ type: 'spring', stiffness: 500, damping: 24 }}
+                whileTap={{ scaleX: 1.06, scaleY: 0.90 }}
+                transition={{ type: 'spring', stiffness: 600, damping: 20 }}
                 className="relative flex flex-col items-center justify-center p-2 rounded-full"
               >
                 {tab.isLogoMark ? (

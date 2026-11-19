@@ -40,20 +40,20 @@ export default function FloatingCreateButton() {
         { id: 'item', label: 'Nueva Prenda', icon: Shirt, path: '/closet?action=new-item' },
     ];
 
-    // Cascading spring animation (~1s total duration feel)
+    // Cascading spring animation according to UX-Motion (Stagger 30-60ms, Fast Exit 2-3x faster)
     const containerVariants: Variants = {
         hidden: { 
             opacity: 0, 
             transition: { 
-                staggerChildren: 0.08, 
+                staggerChildren: 0.02, 
                 staggerDirection: -1 
             } 
         },
         visible: { 
             opacity: 1, 
             transition: { 
-                delayChildren: 0.08,
-                staggerChildren: 0.25 // Cascada lenta ~1s
+                delayChildren: 0.02,
+                staggerChildren: 0.045 // Cascada ágil 45ms por ítem (Principio 3 UX-Motion)
             } 
         }
     };
@@ -61,11 +61,11 @@ export default function FloatingCreateButton() {
     const itemVariants: Variants = {
         hidden: { 
             opacity: 0, 
-            y: 40, 
-            scale: 0.4,
+            y: 20, 
+            scale: 0.7,
             transition: {
-                duration: 0.2,
-                ease: "easeIn"
+                duration: 0.12,
+                ease: "easeOut" // Cierre veloz 2-3x más rápido (Principio 18 Fast Closing)
             }
         },
         visible: { 
@@ -74,10 +74,9 @@ export default function FloatingCreateButton() {
             scale: 1,
             transition: { 
                 type: "spring" as const, 
-                stiffness: 150, 
-                damping: 16, 
-                mass: 0.9,
-                duration: 0.75
+                stiffness: 420, 
+                damping: 24, 
+                mass: 0.7
             } 
         }
     };
@@ -105,7 +104,7 @@ export default function FloatingCreateButton() {
                 <AnimatePresence>
                     {isCreateMenuOpen && (
                         <motion.div
-                            className="flex flex-col items-end gap-3 md:gap-3.5 mb-3 md:mb-3.5 origin-bottom pointer-events-auto"
+                            className="flex flex-col items-end gap-3 md:gap-3.5 mb-3 md:mb-3.5 origin-bottom-right pointer-events-auto"
                             variants={containerVariants}
                             initial="hidden"
                             animate="visible"
@@ -117,8 +116,10 @@ export default function FloatingCreateButton() {
                                     <motion.button
                                         key={action.id}
                                         variants={itemVariants}
+                                        whileTap={{ scaleX: 1.04, scaleY: 0.94 }}
+                                        transition={{ type: "spring", stiffness: 600, damping: 22 }}
                                         onClick={() => handleActionClick(action.path)}
-                                        className="group h-11 md:h-12 px-4 md:px-5 rounded-full kz-pink-surface border border-white/25 flex items-center justify-center gap-2.5 text-white font-bold transition-all hover:scale-[1.03] active:scale-[0.97] cursor-pointer select-none pointer-events-auto"
+                                        className="group h-11 md:h-12 px-4 md:px-5 rounded-full kz-pink-surface border border-white/25 shadow-[0_8px_24px_rgba(255,102,196,0.36),inset_0_1px_0_rgba(255,255,255,0.4)] flex items-center justify-center gap-2.5 text-white font-bold transition-all hover:scale-[1.03] cursor-pointer select-none pointer-events-auto touch-manipulation"
                                     >
                                         <Icon className="w-4.5 h-4.5 md:w-5 md:h-5 flex-shrink-0" strokeWidth={2.4} />
                                         <span className="text-sm font-bold whitespace-nowrap">
@@ -138,10 +139,11 @@ export default function FloatingCreateButton() {
                             key="fab-open"
                             initial={{ scale: 0.6, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.4, opacity: 0, transition: { duration: 0.15 } }}
-                            whileTap={{ scale: 0.9 }}
+                            exit={{ scale: 0.4, opacity: 0, transition: { duration: 0.12 } }}
+                            whileTap={{ scaleX: 1.06, scaleY: 0.92 }}
+                            transition={{ type: "spring", stiffness: 600, damping: 22 }}
                             onClick={handleToggle}
-                            className="w-[52px] h-[52px] md:w-14 md:h-14 rounded-full kz-pink-surface border border-white/25 flex items-center justify-center text-white cursor-pointer overflow-hidden z-20 transition-all hover:scale-[1.03] active:scale-[0.97] pointer-events-auto"
+                            className="w-[52px] h-[52px] md:w-14 md:h-14 rounded-full kz-pink-surface border border-white/25 shadow-[0_8px_28px_rgba(255,102,196,0.4),inset_0_1px_0_rgba(255,255,255,0.45)] flex items-center justify-center text-white cursor-pointer overflow-hidden z-20 transition-all hover:scale-[1.03] pointer-events-auto select-none touch-manipulation"
                             aria-label="Crear nuevo"
                         >
                             <Plus className="w-6.5 h-6.5 md:w-7 md:h-7" strokeWidth={2.5} />
@@ -151,10 +153,11 @@ export default function FloatingCreateButton() {
                             key="fab-close"
                             initial={{ scale: 0.4, opacity: 0, rotate: -90 }}
                             animate={{ scale: 1, opacity: 1, rotate: 0 }}
-                            exit={{ scale: 0.4, opacity: 0, transition: { duration: 0.15 } }}
-                            whileTap={{ scale: 0.9 }}
+                            exit={{ scale: 0.4, opacity: 0, transition: { duration: 0.12 } }}
+                            whileTap={{ scaleX: 1.06, scaleY: 0.92 }}
+                            transition={{ type: "spring", stiffness: 600, damping: 22 }}
                             onClick={handleToggle}
-                            className="w-[52px] h-[52px] md:w-14 md:h-14 rounded-full kz-pink-surface border border-white/25 flex items-center justify-center text-white cursor-pointer hover:scale-[1.03] active:scale-[0.97] transition-all pointer-events-auto"
+                            className="w-[52px] h-[52px] md:w-14 md:h-14 rounded-full kz-pink-surface border border-white/25 shadow-[0_8px_28px_rgba(255,102,196,0.4),inset_0_1px_0_rgba(255,255,255,0.45)] flex items-center justify-center text-white cursor-pointer hover:scale-[1.03] transition-all pointer-events-auto select-none touch-manipulation"
                             aria-label="Cerrar opciones"
                         >
                             <X className="w-6.5 h-6.5 md:w-7 md:h-7" strokeWidth={2.4} />
@@ -174,7 +177,7 @@ export default function FloatingCreateButton() {
                     >
                         {/* Backdrop */}
                         <div
-                            className="absolute inset-0 bg-black/50"
+                            className="absolute inset-0 bg-black/50 backdrop-blur-xs"
                             onClick={() => setCreateMenuOpen(false)}
                         />
 
@@ -183,7 +186,7 @@ export default function FloatingCreateButton() {
                             initial={{ y: "100%" }}
                             animate={{ y: 0 }}
                             exit={{ y: "100%" }}
-                            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                            transition={{ type: "spring", stiffness: 320, damping: 30 }}
                             className="relative w-[calc(100%-32px)] max-w-sm bg-[var(--card-bg)] pt-2 pb-safe shadow-2xl border border-[var(--border-color)] overflow-hidden rounded-3xl mx-4"
                             onClick={(e) => e.stopPropagation()}
                         >
@@ -194,16 +197,18 @@ export default function FloatingCreateButton() {
                                     {actions.map((action) => {
                                         const Icon = action.icon;
                                         return (
-                                            <button
+                                            <motion.button
                                                 key={action.id}
+                                                whileTap={{ scaleX: 1.03, scaleY: 0.95 }}
+                                                transition={{ type: "spring", stiffness: 600, damping: 22 }}
                                                 onClick={() => handleActionClick(action.path)}
-                                                className="w-full kz-pink-surface border border-white/25 text-white p-3.5 rounded-full flex items-center justify-center gap-3 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer font-bold text-sm"
+                                                className="w-full kz-pink-surface border border-white/25 shadow-[0_6px_20px_rgba(255,102,196,0.3),inset_0_1px_0_rgba(255,255,255,0.35)] text-white p-3.5 rounded-full flex items-center justify-center gap-3 hover:scale-[1.02] transition-all cursor-pointer font-bold text-sm touch-manipulation select-none"
                                             >
                                                 <Icon className="w-5 h-5 flex-shrink-0" strokeWidth={2.3} />
                                                 <span className="font-bold text-sm text-white">
                                                     {action.label}
                                                 </span>
-                                            </button>
+                                            </motion.button>
                                         );
                                     })}
                                 </div>

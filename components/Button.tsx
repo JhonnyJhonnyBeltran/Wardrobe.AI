@@ -33,27 +33,28 @@ export default function Button({
 }: ButtonProps) {
   const baseStyles = `
     inline-flex items-center justify-center gap-2 font-semibold 
-    rounded-full transition-all duration-300
+    rounded-full transition-colors duration-150 select-none touch-manipulation
     focus:outline-none focus:ring-2 focus:ring-[var(--brand-pink)] focus:ring-offset-2
   `;
 
   const variants = {
     primary: `
       bg-[var(--brand-pink)] text-white
-      shadow-lg shadow-[var(--brand-pink)]/35
-      hover:shadow-[0_0_22px_rgba(255,102,196,0.5)]
+      shadow-[0_8px_24px_rgba(255,102,196,0.32),inset_0_1px_0_rgba(255,255,255,0.35)]
+      hover:shadow-[0_10px_28px_rgba(255,102,196,0.45),inset_0_1px_0_rgba(255,255,255,0.45)]
       active:brightness-95
     `,
     destructive: `
       bg-red-500 text-white
-      shadow-[var(--shadow-float)]
+      shadow-[0_8px_24px_rgba(239,68,68,0.32),inset_0_1px_0_rgba(255,255,255,0.25)]
       hover:bg-red-600
-      hover:shadow-[var(--shadow-float-hover)]
-      active:shadow-[var(--shadow-float)]
+      hover:shadow-[0_10px_28px_rgba(239,68,68,0.45),inset_0_1px_0_rgba(255,255,255,0.3)]
+      active:brightness-95
     `,
     secondary: `
       bg-[var(--background-secondary)] text-[var(--foreground)]
       border border-[var(--border-color)]
+      shadow-[0_1px_3px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.12)]
       hover:bg-[var(--background-tertiary)]
       hover:border-[var(--border-hover)]
     `,
@@ -70,15 +71,16 @@ export default function Button({
     `,
     glass: `
       glass text-[var(--foreground)]
+      shadow-[0_4px_16px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.2)]
       hover:backdrop-blur-[60px]
     `,
   };
 
   const sizes = {
-    sm: 'px-4 py-2 text-sm',
-    md: 'px-6 py-3 text-sm',
-    lg: 'px-8 py-4 text-base',
-    xl: 'px-10 py-5 text-lg',
+    sm: 'px-4 py-2 min-h-[44px] text-sm',
+    md: 'px-6 py-2.5 min-h-[44px] text-sm',
+    lg: 'px-8 py-3.5 min-h-[48px] text-base',
+    xl: 'px-10 py-4 min-h-[52px] text-lg',
   };
 
   const isDisabled = disabled || loading;
@@ -94,13 +96,13 @@ export default function Button({
 
   return (
     <motion.button
-      whileHover={!isDisabled ? { scale: 1.025 } : {}}
-      whileTap={!isDisabled ? { scale: 0.94 } : {}}
+      whileHover={!isDisabled ? { scale: 1.02 } : {}}
+      whileTap={!isDisabled ? { scaleX: 1.04, scaleY: 0.93 } : {}}
       transition={{
         type: 'spring',
-        stiffness: 500,
-        damping: 24,
-        mass: 0.8,
+        stiffness: 600,
+        damping: 22,
+        mass: 0.6,
       }}
       className={`
         ${baseStyles}

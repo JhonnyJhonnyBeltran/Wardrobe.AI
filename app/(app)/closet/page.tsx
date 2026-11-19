@@ -1406,12 +1406,13 @@ export default function ClosetPage() {
       <AnimatePresence>
         {selectionMode && (
           <motion.div
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 100, opacity: 0 }}
+            initial={{ y: 80, opacity: 0, scale: 0.95 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            exit={{ y: 80, opacity: 0, scale: 0.95, transition: { duration: 0.12 } }}
+            transition={{ type: 'spring', stiffness: 450, damping: 26 }}
             className="fixed bottom-[calc(var(--tabbar-height)+env(safe-area-inset-bottom,0px)+20px)] md:bottom-8 left-3 right-3 md:left-[calc(72px+16px)] md:right-4 z-[4995] flex justify-center pointer-events-none"
           >
-            <div className="pointer-events-auto w-full max-w-md bg-[var(--card-bg)]/95 dark:bg-[#16161b]/95 backdrop-blur-2xl border border-[var(--border-color)] rounded-full shadow-2xl flex items-center justify-between gap-2 px-3 py-1.5 sm:px-4 sm:py-2">
+            <div className="pointer-events-auto w-full max-w-md bg-[var(--card-bg)]/95 dark:bg-[#16161b]/95 backdrop-blur-2xl border border-[var(--border-color)] rounded-full shadow-2xl flex items-center justify-between gap-2 px-3 py-1.5 sm:px-4 sm:py-2 select-none">
               <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                 <span className="text-xs sm:text-sm font-semibold text-[var(--foreground)] whitespace-nowrap">
                   {selectedIds.size}{' '}
@@ -1421,6 +1422,7 @@ export default function ClosetPage() {
                 <button
                   type="button"
                   onClick={() => {
+                    try { haptics.selection(); } catch {}
                     const allVisibleIds = filteredContent.map(i => i.id);
                     if (selectedIds.size === allVisibleIds.length) {
                       setSelectedIds(new Set());
@@ -1428,7 +1430,7 @@ export default function ClosetPage() {
                       setSelectedIds(new Set(allVisibleIds));
                     }
                   }}
-                  className="text-xs text-[var(--brand-pink)] font-bold hover:underline whitespace-nowrap shrink-0 cursor-pointer"
+                  className="text-xs text-[var(--brand-pink)] font-bold hover:underline whitespace-nowrap shrink-0 cursor-pointer touch-manipulation"
                 >
                   <span className="hidden sm:inline">
                     {selectedIds.size === filteredContent.length ? 'Desmarcar todo' : 'Seleccionar todo'}
@@ -1439,10 +1441,13 @@ export default function ClosetPage() {
                 </button>
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
-                <button
+                <motion.button
                   type="button"
+                  whileTap={selectedIds.size > 0 ? { scaleX: 1.05, scaleY: 0.92 } : {}}
+                  transition={{ type: "spring", stiffness: 600, damping: 22 }}
                   onClick={async () => {
                     if (selectedIds.size === 0) return;
+                    try { haptics.tap(); } catch {}
 
                     try {
                       const idsArray = Array.from(selectedIds);
@@ -1486,18 +1491,24 @@ export default function ClosetPage() {
                       console.error('Error in bulk delete:', err);
                     }
                   }}
-                  className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer ${selectedIds.size > 0 ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-[var(--background-secondary)] text-[var(--foreground-tertiary)] cursor-not-allowed'}`}
+                  className={`px-3 sm:px-4 py-1.5 sm:py-2 min-h-[38px] rounded-full text-xs sm:text-sm font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer touch-manipulation select-none ${selectedIds.size > 0 ? 'bg-red-500 text-white hover:bg-red-600 shadow-[0_4px_16px_rgba(239,68,68,0.35),inset_0_1px_0_rgba(255,255,255,0.25)]' : 'bg-[var(--background-secondary)] text-[var(--foreground-tertiary)] cursor-not-allowed'}`}
                 >
                   Eliminar
-                </button>
-                <button
+                </motion.button>
+                <motion.button
                   type="button"
-                  onClick={() => { setSelectionMode(false); setSelectedIds(new Set()); }}
+                  whileTap={{ scale: 0.90 }}
+                  transition={{ type: "spring", stiffness: 600, damping: 20 }}
+                  onClick={() => {
+                    try { haptics.tap(); } catch {}
+                    setSelectionMode(false);
+                    setSelectedIds(new Set());
+                  }}
                   aria-label="Cancelar selección"
-                  className="p-1.5 sm:p-2 text-[var(--foreground-secondary)] hover:text-[var(--foreground)] bg-[var(--background-secondary)] rounded-full shrink-0 cursor-pointer"
+                  className="p-1.5 sm:p-2 text-[var(--foreground-secondary)] hover:text-[var(--foreground)] bg-[var(--background-secondary)] rounded-full shrink-0 cursor-pointer touch-manipulation"
                 >
                   <X className="w-4 h-4 sm:w-5 sm:h-5" />
-                </button>
+                </motion.button>
               </div>
             </div>
           </motion.div>

@@ -3985,3 +3985,42 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
   - Sustituida por una redirección limpia a la ruta real de creación de publicaciones `/create-post`, garantizando que ninguna navegación o enlace huérfano conduzca a una pantalla simulada o inoperativa.
 - **Validación de Compilación y Tipos**:
   - Verificación exitosa al 100% con `npx tsc --noEmit` y `npm run build` (81 páginas estáticas y dinámicas compiladas en 14s sin errores).
+
+---
+
+## 90. Prohibición Total de Texto Repetitivo y Pills Banales (Noviembre 2026)
+- **Mandato Universal de UI**:
+  - Prohibición estricta de textos repetitivos, explicaciones obvias o subtítulos de relleno en tarjetas y pantallas.
+  - Prohibidas pastillas (pills), chips o badges con textos superfluos (ej. "IA", "Nuevo", "Descubre") o iconos decorativos banales.
+  - Las pastillas o badges se limitan estrictamente a estados funcionales reales del sistema o indicadores de datos esenciales.
+
+---
+
+## 91. Integración de Estándares UX Motion (20 Principios de Animación) (Noviembre 2026)
+- **Ubicación:** .agents/skills/ux-motion y configuración global.
+- **Aplicación Obligatoria en Klozet**:
+  1. **Modales y Drawers:** Apertura con origen directo en el elemento detonante (*origin awareness* con 	ransform-origin), cierres rápidos (100-150ms) y arrastre con *rubber banding*.
+  2. **Botones de Acción y Likes:** Rebote y deformación física elástica (*squash and stretch* 80-150ms con Framer Motion), microinteracción secundaria (*secondary action* al dar like o guardar).
+  3. **Widgets y Feeds:** Aparición escalonada (*stagger* 30-60ms, total <300ms), feedback de toque en <100ms (*Doherty threshold*) y respeto a prefers-reduced-motion.
+  4. **Disparador Obligatorio "Mejora la UX" / "Ejora la UX":** Ante esta orden, activar de forma inmediata los 20 principios de UX Motion (origen en trigger, squash/stretch, stagger, feedback <100ms) y erradicar cualquier texto repetitivo o pill/badge banal.
+
+
+---
+
+## 92. Optimización UX en Botones Flotantes y Botones Universales (Noviembre 2026)
+- **Componente Universal `components/Button.tsx`**:
+  - Implementado **Squash and Stretch** físico elástico en pulsación (`whileTap={{ scaleX: 1.04, scaleY: 0.93 }}` con resorte Framer Motion `stiffness: 600, damping: 22, mass: 0.6`).
+  - Cumplimiento estricto de la **Ley de Fitts** y Apple HIG con área táctil mínima de 44x44pt (`min-h-[44px]` en tallas `sm` y `md`, `min-h-[48px]` en `lg`, `min-h-[52px]` en `xl`).
+  - Incorporada línea superior táctil de luz líquida artesanal (`inset 0 1px 0 rgba(255,255,255,0.35)`) y `touch-manipulation` select-none para respuesta instantánea (<100ms Doherty threshold).
+- **Botón Flotante de Creación (FAB Speed Dial) `components/FloatingCreateButton.tsx`**:
+  - **Cascada ultra-ágil (Stagger)**: Optimizado el retardo entre opciones de 0.25s a 0.045s (45ms por elemento), reduciendo la apertura total de 1.5s a menos de 200ms.
+  - **Fast Closing (Cierre 2-3x más rápido)**: Animación de salida en 120ms (`duration: 0.12, easeOut, staggerChildren: 0.02, staggerDirection: -1`).
+  - **Origin Awareness & Squash & Stretch**: Origen en `origin-bottom-right` y deformación elástica al pulsar (`scaleX: 1.06, scaleY: 0.92`) en el disparador principal y en los elementos hijos con respuesta háptica inmediata.
+- **Barra de Navegación Móvil `components/TabBar.tsx`**:
+  - Elevada la respuesta táctil de las pestañas a Squash & Stretch (`scaleX: 1.06, scaleY: 0.90` con resorte `stiffness: 600, damping: 20`).
+- **Botones Flotantes de Post (Vista Previa) `components/Feed/PostPreviewModal.tsx`**:
+  - Convertidos botones flotantes de Like, Guardar y Cerrar a `motion.button` con Squash & Stretch (`scaleX: 1.08, scaleY: 0.90`), micro-borde artesanal y vibración háptica.
+- **Píldora Flotante de Borrado Masivo `app/(app)/closet/page.tsx`**:
+  - Botón de eliminación masiva mejorado con feedback elástico `whileTap={{ scaleX: 1.05, scaleY: 0.92 }}` y cierre acelerado (120ms).
+- **Micro-interacciones Globales en `app/globals.css`**:
+  - Actualizadas las clases `.apple-button-spring:active`, `.btn-apple:active` y `.btn-haptic:active` con `transform: scale3d(1.04, 0.93, 1)` y `touch-action: manipulation`.
