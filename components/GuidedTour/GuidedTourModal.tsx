@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Palette, 
@@ -15,13 +15,16 @@ import {
   Search, 
   Plus, 
   CheckCircle2, 
-  Trophy 
+  Trophy,
+  Sparkles
 } from 'lucide-react';
 import KloeMascot from '@/components/KloeMascot';
 import { useTourStore, TOUR_STEPS, TourStepId, calculateTourProgress } from '@/store/tourStore';
 import { useWardrobeStore } from '@/store/wardrobeStore';
+import { useProfileStore } from '@/store/profileStore';
 import { useUser } from '@/store/userStore';
 import { useUiStore } from '@/store/uiStore';
+import { supabase } from '@/lib/supabase/client';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 
 const KloeStepIcon = () => <KloeMascot mood="happy" size="sm" />;
@@ -64,8 +67,18 @@ export default function GuidedTourModal() {
     prevStep,
     goToStep,
     markStepComplete,
+    setStepStatus,
     hideCelebration
   } = useTourStore();
+
+  // Real account metrics state (Prendas, Outfits, Mensajes con Kloe, Posts)
+  const [stats, setStats] = useState({
+    clothesCount: 0,
+    outfitsCount: 0,
+    messagesCount: 0,
+    postsCount: 0,
+    hasLoaded: false
+  });
 
   // Initialize tour state isolated per authenticated user
   useEffect(() => {
@@ -73,6 +86,110 @@ export default function GuidedTourModal() {
       initUserTour(user.id);
     }
   }, [user?.id, initUserTour]);
+
+  // Helper to extract message counts from local storage
+  const calculateLocalMessages = (userId: string) => {
+    let count = 0;
+    try {
+      const raw = localStorage.getItem(`kloe_conversations_${userId}`);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          for (const conv of parsed) {
+            if (Array.isArray(conv.messages)) {
+              count += conv.messages.filter((m: any) => m.role === 'user').length;
+            }
+          }
+        }
+      }
+      const trial = localStorage.getItem(`kloe_trial_used_${userId}`);
+      if (trial) {
+        const val = parseInt(trial, 10);
+        if (!isNaN(val) && val > count) count = val;
+      }
+    } catch {}
+    return count;
+  };
+
+  // Fetch real account metrics directly from Supabase and active stores
+  const fetchTourStats = useCallback(async () => {
+    if (!user?.id) return;
+    try {
+      const [itemsRes, outfitsRes, postsRes, profileRes] = await Promise.all([
+        supabase.from('items').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+        supabase.from('outfits').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+        supabase.from('posts').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+        supabase.from('profiles').select('notification_preferences, kloe_trial_messages_used').eq('id', user.id).maybeSingle()
+      ]);
+
+      const liveItems = items.length;
+      const dbItems = itemsRes.count ?? 0;
+      const finalClothes = Math.max(dbItems, liveItems);
+
+      const dbOutfits = outfitsRes.count ?? 0;
+      const liveOutfits = (useWardrobeStore.getState() as any).outfits?.length || 0;
+      const finalOutfits = Math.max(dbOutfits, liveOutfits);
+
+      const dbPosts = postsRes.count ?? 0;
+      const livePosts = useProfileStore.getState().posts?.length || 0;
+      const liveProfileStatsPosts = useProfileStore.getState().profileStats?.posts || 0;
+      const finalPosts = Math.max(dbPosts, livePosts, liveProfileStatsPosts);
+
+      let finalMessages = calculateLocalMessages(user.id);
+      if (profileRes.data) {
+        const trialUsed = (profileRes.data as any).kloe_trial_messages_used || 0;
+        if (trialUsed > finalMessages) finalMessages = trialUsed;
+
+        const notifs = (profileRes.data as any).notification_preferences;
+        if (notifs && Array.isArray(notifs.kloe_conversations)) {
+          let remoteUserMsgs = 0;
+          for (const conv of notifs.kloe_conversations) {
+            if (Array.isArray(conv.messages)) {
+              remoteUserMsgs += conv.messages.filter((m: any) => m.role === 'user').length;
+            }
+          }
+          if (remoteUserMsgs > finalMessages) finalMessages = remoteUserMsgs;
+        }
+      }
+
+      setStats({
+        clothesCount: finalClothes,
+        outfitsCount: finalOutfits,
+        messagesCount: finalMessages,
+        postsCount: finalPosts,
+        hasLoaded: true
+      });
+    } catch (err) {
+      console.warn('[GuidedTourModal] Error fetching tour stats:', err);
+    }
+  }, [user?.id, items.length]);
+
+  // Refetch when modal opens or route changes
+  useEffect(() => {
+    if (user?.id) {
+      fetchTourStats();
+    }
+  }, [user?.id, isOpen, pathname, fetchTourStats]);
+
+  const hasStyle = Boolean(
+    user?.styleCompleted ||
+    (user?.preferredStyles && user.preferredStyles.length > 0) ||
+    user?.age ||
+    user?.gender
+  );
+  const hasAvatar = Boolean(user?.avatar && !user.avatar.includes('placeholder'));
+
+  // Sync completion status accurately based on real user data
+  useEffect(() => {
+    if (!user?.id || !stats.hasLoaded) return;
+
+    setStepStatus('upload_clothes', stats.clothesCount >= 3);
+    setStepStatus('create_outfit', stats.outfitsCount >= 1);
+    setStepStatus('talk_to_kloe', stats.messagesCount >= 1);
+    setStepStatus('create_post', stats.postsCount >= 1);
+    setStepStatus('style_preferences', hasStyle);
+    setStepStatus('avatar', hasAvatar);
+  }, [user?.id, stats, hasStyle, hasAvatar, setStepStatus]);
 
   const totalPercent = calculateTourProgress(completedSteps);
   const completedCount = completedSteps.filter(id => TOUR_STEPS.some(s => s.id === id)).length;
@@ -103,16 +220,7 @@ export default function GuidedTourModal() {
     }
   }, [searchParams, user?.id, startNewUserTour, isTourCompleted, isDismissed]);
 
-  // Auto-detect completed clothes action (3 garments: Top + Bottom + Footwear)
-  useEffect(() => {
-    if (!user) return;
-    if (items.length >= 3 && !completedSteps.includes('upload_clothes')) {
-      const isActivelyOnTour = hasStartedTour && !isDismissed && !isTourCompleted;
-      markStepComplete('upload_clothes', '¡Ya tienes tus primeras 3 prendas para armar un look completo!', isActivelyOnTour);
-    }
-  }, [items.length, user, completedSteps, hasStartedTour, isDismissed, isTourCompleted, markStepComplete]);
-
-  // Auto-hide celebration after 4 seconds
+  // Auto-hide celebration after 4.5 seconds
   useEffect(() => {
     if (showCelebration) {
       const timer = setTimeout(() => {
@@ -131,6 +239,41 @@ export default function GuidedTourModal() {
     if (!currentStep) return;
     closeTour();
     router.push(currentStep.actionUrl);
+  };
+
+  const getActionButtonText = () => {
+    if (!currentStep) return '';
+    if (isCurrentCompleted) {
+      switch (currentStep.id) {
+        case 'upload_clothes': return 'Añadir más prendas';
+        case 'create_outfit': return 'Crear otro outfit';
+        case 'talk_to_kloe': return 'Seguir hablando con Kloe';
+        case 'create_post': return 'Crear otra publicación';
+        case 'style_preferences': return 'Editar estilos';
+        case 'avatar': return 'Cambiar foto de perfil';
+        default: return currentStep.actionText;
+      }
+    }
+    return currentStep.actionText;
+  };
+
+  const getStepMetricBadge = (stepId: TourStepId) => {
+    switch (stepId) {
+      case 'upload_clothes':
+        return `${stats.clothesCount}/3`;
+      case 'create_outfit':
+        return `${stats.outfitsCount}/1`;
+      case 'talk_to_kloe':
+        return `${stats.messagesCount}/1`;
+      case 'create_post':
+        return `${stats.postsCount}/1`;
+      case 'style_preferences':
+        return hasStyle ? '1/1' : '0/1';
+      case 'avatar':
+        return hasAvatar ? '1/1' : '0/1';
+      default:
+        return '';
+    }
   };
 
   const handleCelebrationContinue = () => {
@@ -248,31 +391,276 @@ export default function GuidedTourModal() {
                   </div>
                 </div>
 
-                {/* Special Advice Box for Step 2 (upload_clothes) */}
-                {currentStep.id === 'upload_clothes' && currentStep.tips && (
-                  <div className="bg-[var(--background-secondary)] border border-[var(--border-color)] rounded-2xl p-4 sm:p-5 space-y-3">
-                    <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[var(--foreground)]">
-                      <Camera className="w-4 h-4 text-[var(--brand-pink)]" />
-                      <span>{currentStep.tipTitle}</span>
-                    </div>
-
-                    <div className="space-y-2.5 text-xs sm:text-[13px] text-[var(--foreground-secondary)] leading-relaxed">
-                      <div className="flex items-start gap-2.5">
-                        <span className="w-5 h-5 rounded-full bg-[var(--brand-pink)]/15 text-[var(--brand-pink)] flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">1</span>
-                        <p><strong className="text-[var(--foreground)]">Fotos tuyas o de tiendas:</strong> haz foto sobre fondo liso o sube capturas web. Recortamos el fondo al instante.</p>
+                {/* Dynamic Step Progress & Real Data Metrics Card */}
+                <div className="bg-[var(--background-secondary)] border border-[var(--border-color)] rounded-2xl p-4 sm:p-5 space-y-3">
+                  {currentStep.id === 'upload_clothes' && (
+                    <>
+                      <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-[var(--foreground)]">
+                        <div className="flex items-center gap-2">
+                          <Plus className="w-4 h-4 text-[var(--brand-pink)]" />
+                          <span>Prendas en tu armario</span>
+                        </div>
+                        <span className={`tabular-nums font-bold ${stats.clothesCount >= 3 ? 'text-emerald-500' : 'text-[var(--brand-pink)]'}`}>
+                          {stats.clothesCount} / 3 recomendadas
+                        </span>
                       </div>
-                      <div className="flex items-start gap-2.5">
-                        <span className="w-5 h-5 rounded-full bg-[var(--brand-pink)]/15 text-[var(--brand-pink)] flex items-center justify-center font-bold text-[11px] shrink-0 mt-0.5">2</span>
-                        <p><strong className="text-[var(--foreground)]">Hasta 20 prendas por lote:</strong> sube varias fotos a la vez y revisa categoría, color o marca antes de guardar.</p>
-                      </div>
-                    </div>
 
-                    <div className="pt-2 border-t border-[var(--border-color)]/50 flex items-center justify-between text-xs">
-                      <span className="text-[var(--foreground-tertiary)] font-medium">Prendas en tu armario:</span>
-                      <span className="font-bold text-[var(--brand-pink)] tabular-nums">{items.length} / 3 recomendadas</span>
-                    </div>
-                  </div>
-                )}
+                      {/* Progress Bar */}
+                      <div className="w-full h-2 rounded-full bg-[var(--card-bg)] border border-[var(--border-color)]/60 overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ${
+                            stats.clothesCount >= 3 ? 'bg-emerald-500' : 'bg-[var(--brand-pink)]'
+                          }`}
+                          style={{ width: `${Math.min(100, Math.round((stats.clothesCount / 3) * 100))}%` }}
+                        />
+                      </div>
+
+                      <div className="space-y-2 text-xs sm:text-[13px] text-[var(--foreground-secondary)] leading-relaxed">
+                        <p>
+                          {stats.clothesCount >= 3 ? (
+                            <span className="text-emerald-500 font-medium flex items-center gap-1.5">
+                              <CheckCircle2 className="w-4 h-4 shrink-0" />
+                              ¡Completado! Tienes {stats.clothesCount} prendas subidas y listas para combinar.
+                            </span>
+                          ) : stats.clothesCount > 0 ? (
+                            <span>
+                              Tienes <strong className="text-[var(--foreground)]">{stats.clothesCount} prenda{stats.clothesCount > 1 ? 's' : ''}</strong> subida{stats.clothesCount > 1 ? 's' : ''}. Te faltan <strong className="text-[var(--brand-pink)]">{3 - stats.clothesCount}</strong> para alcanzar el mínimo recomendado.
+                            </span>
+                          ) : (
+                            <span>Sube fotos reales o capturas de tiendas. Recortamos el fondo automáticamente para dejarlas limpias.</span>
+                          )}
+                        </p>
+                      </div>
+
+                      <div className="pt-2 border-t border-[var(--border-color)]/50 flex items-center justify-between text-xs">
+                        <span className="text-[var(--foreground-tertiary)] font-medium">Estado real en tu cuenta:</span>
+                        <span className={`font-bold ${stats.clothesCount >= 3 ? 'text-emerald-500' : 'text-[var(--brand-pink)]'}`}>
+                          {stats.clothesCount >= 3 ? `${stats.clothesCount} prendas subidas` : `${stats.clothesCount} de 3 prendas`}
+                        </span>
+                      </div>
+                    </>
+                  )}
+
+                  {currentStep.id === 'create_outfit' && (
+                    <>
+                      <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-[var(--foreground)]">
+                        <div className="flex items-center gap-2">
+                          <Layers className="w-4 h-4 text-[var(--brand-pink)]" />
+                          <span>Outfits en tu armario</span>
+                        </div>
+                        <span className={`tabular-nums font-bold ${stats.outfitsCount >= 1 ? 'text-emerald-500' : 'text-[var(--brand-pink)]'}`}>
+                          {stats.outfitsCount} / 1 look
+                        </span>
+                      </div>
+
+                      {/* Progress Bar */}
+                      <div className="w-full h-2 rounded-full bg-[var(--card-bg)] border border-[var(--border-color)]/60 overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ${
+                            stats.outfitsCount >= 1 ? 'bg-emerald-500' : 'bg-[var(--brand-pink)]'
+                          }`}
+                          style={{ width: `${stats.outfitsCount >= 1 ? 100 : 0}%` }}
+                        />
+                      </div>
+
+                      <div className="space-y-2 text-xs sm:text-[13px] text-[var(--foreground-secondary)] leading-relaxed">
+                        <p>
+                          {stats.outfitsCount >= 1 ? (
+                            <span className="text-emerald-500 font-medium flex items-center gap-1.5">
+                              <CheckCircle2 className="w-4 h-4 shrink-0" />
+                              ¡Completado! Ya has guardado {stats.outfitsCount} outfit{stats.outfitsCount > 1 ? 's' : ''} en tu armario.
+                            </span>
+                          ) : (
+                            <span>Combina tus prendas en el lienzo interactivo, añade capas y guarda tu primer look en el armario o en el calendario.</span>
+                          )}
+                        </p>
+                      </div>
+
+                      <div className="pt-2 border-t border-[var(--border-color)]/50 flex items-center justify-between text-xs">
+                        <span className="text-[var(--foreground-tertiary)] font-medium">Estado real en tu cuenta:</span>
+                        <span className={`font-bold ${stats.outfitsCount >= 1 ? 'text-emerald-500' : 'text-[var(--brand-pink)]'}`}>
+                          {stats.outfitsCount >= 1 ? `${stats.outfitsCount} outfit${stats.outfitsCount > 1 ? 's' : ''} guardado${stats.outfitsCount > 1 ? 's' : ''}` : '0 outfits creados'}
+                        </span>
+                      </div>
+                    </>
+                  )}
+
+                  {currentStep.id === 'talk_to_kloe' && (
+                    <>
+                      <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-[var(--foreground)]">
+                        <div className="flex items-center gap-2">
+                          <Sparkles className="w-4 h-4 text-[var(--brand-pink)]" />
+                          <span>Mensajes con Kloe</span>
+                        </div>
+                        <span className={`tabular-nums font-bold ${stats.messagesCount >= 1 ? 'text-emerald-500' : 'text-[var(--brand-pink)]'}`}>
+                          {stats.messagesCount} / 1 mensaje
+                        </span>
+                      </div>
+
+                      {/* Progress Bar */}
+                      <div className="w-full h-2 rounded-full bg-[var(--card-bg)] border border-[var(--border-color)]/60 overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ${
+                            stats.messagesCount >= 1 ? 'bg-emerald-500' : 'bg-[var(--brand-pink)]'
+                          }`}
+                          style={{ width: `${stats.messagesCount >= 1 ? 100 : 0}%` }}
+                        />
+                      </div>
+
+                      <div className="space-y-2 text-xs sm:text-[13px] text-[var(--foreground-secondary)] leading-relaxed">
+                        <p>
+                          {stats.messagesCount >= 1 ? (
+                            <span className="text-emerald-500 font-medium flex items-center gap-1.5">
+                              <CheckCircle2 className="w-4 h-4 shrink-0" />
+                              ¡Completado! Has interactuado {stats.messagesCount} vez/veces con Kloe.
+                            </span>
+                          ) : (
+                            <span>Pídele a Kloe que te arme un look con tu propia ropa: &ldquo;¿Qué me pongo hoy para salir?&rdquo; o &ldquo;Combina mis prendas&rdquo;.</span>
+                          )}
+                        </p>
+                      </div>
+
+                      <div className="pt-2 border-t border-[var(--border-color)]/50 flex items-center justify-between text-xs">
+                        <span className="text-[var(--foreground-tertiary)] font-medium">Estado real en tu cuenta:</span>
+                        <span className={`font-bold ${stats.messagesCount >= 1 ? 'text-emerald-500' : 'text-[var(--brand-pink)]'}`}>
+                          {stats.messagesCount >= 1 ? `${stats.messagesCount} mensaje${stats.messagesCount > 1 ? 's' : ''} enviado${stats.messagesCount > 1 ? 's' : ''}` : '0 mensajes enviados'}
+                        </span>
+                      </div>
+                    </>
+                  )}
+
+                  {currentStep.id === 'create_post' && (
+                    <>
+                      <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-[var(--foreground)]">
+                        <div className="flex items-center gap-2">
+                          <Share2 className="w-4 h-4 text-[var(--brand-pink)]" />
+                          <span>Publicaciones en el feed</span>
+                        </div>
+                        <span className={`tabular-nums font-bold ${stats.postsCount >= 1 ? 'text-emerald-500' : 'text-[var(--brand-pink)]'}`}>
+                          {stats.postsCount} / 1 post
+                        </span>
+                      </div>
+
+                      {/* Progress Bar */}
+                      <div className="w-full h-2 rounded-full bg-[var(--card-bg)] border border-[var(--border-color)]/60 overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ${
+                            stats.postsCount >= 1 ? 'bg-emerald-500' : 'bg-[var(--brand-pink)]'
+                          }`}
+                          style={{ width: `${stats.postsCount >= 1 ? 100 : 0}%` }}
+                        />
+                      </div>
+
+                      <div className="space-y-2 text-xs sm:text-[13px] text-[var(--foreground-secondary)] leading-relaxed">
+                        <p>
+                          {stats.postsCount >= 1 ? (
+                            <span className="text-emerald-500 font-medium flex items-center gap-1.5">
+                              <CheckCircle2 className="w-4 h-4 shrink-0" />
+                              ¡Completado! Ya has compartido {stats.postsCount} publicación{stats.postsCount > 1 ? 'es' : ''} en el feed.
+                            </span>
+                          ) : (
+                            <span>Sube una foto de tu look al feed comunitario, etiqueta tus prendas y comparte tu estilo con otros usuarios.</span>
+                          )}
+                        </p>
+                      </div>
+
+                      <div className="pt-2 border-t border-[var(--border-color)]/50 flex items-center justify-between text-xs">
+                        <span className="text-[var(--foreground-tertiary)] font-medium">Estado real en tu cuenta:</span>
+                        <span className={`font-bold ${stats.postsCount >= 1 ? 'text-emerald-500' : 'text-[var(--brand-pink)]'}`}>
+                          {stats.postsCount >= 1 ? `${stats.postsCount} publicación${stats.postsCount > 1 ? 'es' : ''} en tu perfil` : '0 publicaciones en tu perfil'}
+                        </span>
+                      </div>
+                    </>
+                  )}
+
+                  {currentStep.id === 'style_preferences' && (
+                    <>
+                      <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-[var(--foreground)]">
+                        <div className="flex items-center gap-2">
+                          <Palette className="w-4 h-4 text-[var(--brand-pink)]" />
+                          <span>Tus gustos y estilos</span>
+                        </div>
+                        <span className={`tabular-nums font-bold ${hasStyle ? 'text-emerald-500' : 'text-[var(--brand-pink)]'}`}>
+                          {hasStyle ? '1 / 1' : '0 / 1'}
+                        </span>
+                      </div>
+
+                      {/* Progress Bar */}
+                      <div className="w-full h-2 rounded-full bg-[var(--card-bg)] border border-[var(--border-color)]/60 overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ${
+                            hasStyle ? 'bg-emerald-500' : 'bg-[var(--brand-pink)]'
+                          }`}
+                          style={{ width: `${hasStyle ? 100 : 0}%` }}
+                        />
+                      </div>
+
+                      <div className="space-y-2 text-xs sm:text-[13px] text-[var(--foreground-secondary)] leading-relaxed">
+                        <p>
+                          {hasStyle ? (
+                            <span className="text-emerald-500 font-medium flex items-center gap-1.5">
+                              <CheckCircle2 className="w-4 h-4 shrink-0" />
+                              ¡Completado! Tus estilos preferidos están configurados y afinan las recomendaciones.
+                            </span>
+                          ) : (
+                            <span>Elige los estilos de moda que más te gusten para personalizar el feed y el criterio de Kloe.</span>
+                          )}
+                        </p>
+                      </div>
+
+                      <div className="pt-2 border-t border-[var(--border-color)]/50 flex items-center justify-between text-xs">
+                        <span className="text-[var(--foreground-tertiary)] font-medium">Estado real en tu cuenta:</span>
+                        <span className={`font-bold ${hasStyle ? 'text-emerald-500' : 'text-[var(--brand-pink)]'}`}>
+                          {hasStyle ? 'Estilos definidos' : 'Pendiente de definir'}
+                        </span>
+                      </div>
+                    </>
+                  )}
+
+                  {currentStep.id === 'avatar' && (
+                    <>
+                      <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-[var(--foreground)]">
+                        <div className="flex items-center gap-2">
+                          <Camera className="w-4 h-4 text-[var(--brand-pink)]" />
+                          <span>Foto de perfil</span>
+                        </div>
+                        <span className={`tabular-nums font-bold ${hasAvatar ? 'text-emerald-500' : 'text-[var(--brand-pink)]'}`}>
+                          {hasAvatar ? '1 / 1' : '0 / 1'}
+                        </span>
+                      </div>
+
+                      {/* Progress Bar */}
+                      <div className="w-full h-2 rounded-full bg-[var(--card-bg)] border border-[var(--border-color)]/60 overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ${
+                            hasAvatar ? 'bg-emerald-500' : 'bg-[var(--brand-pink)]'
+                          }`}
+                          style={{ width: `${hasAvatar ? 100 : 0}%` }}
+                        />
+                      </div>
+
+                      <div className="space-y-2 text-xs sm:text-[13px] text-[var(--foreground-secondary)] leading-relaxed">
+                        <p>
+                          {hasAvatar ? (
+                            <span className="text-emerald-500 font-medium flex items-center gap-1.5">
+                              <CheckCircle2 className="w-4 h-4 shrink-0" />
+                              ¡Completado! Tu foto de perfil personalizada está activa.
+                            </span>
+                          ) : (
+                            <span>Añade una foto de perfil para que tus amigos y la comunidad te reconozcan fácilmente.</span>
+                          )}
+                        </p>
+                      </div>
+
+                      <div className="pt-2 border-t border-[var(--border-color)]/50 flex items-center justify-between text-xs">
+                        <span className="text-[var(--foreground-tertiary)] font-medium">Estado real en tu cuenta:</span>
+                        <span className={`font-bold ${hasAvatar ? 'text-emerald-500' : 'text-[var(--brand-pink)]'}`}>
+                          {hasAvatar ? 'Foto de perfil activa' : 'Avatar pendiente'}
+                        </span>
+                      </div>
+                    </>
+                  )}
+                </div>
 
                 {/* Quick overview of all 6 steps checklist matching ProfileProgressBar */}
                 <div className="grid grid-cols-2 gap-2 pt-1">
@@ -284,7 +672,7 @@ export default function GuidedTourModal() {
                       <button
                         key={s.id}
                         onClick={() => goToStep(idx)}
-                        className={`flex items-center gap-2 p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                        className={`flex items-center justify-between p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
                           isCur
                             ? 'bg-[var(--brand-pink)]/10 border-[var(--brand-pink)] text-[var(--foreground)] ring-1 ring-[var(--brand-pink)]/40'
                             : isDone
@@ -292,12 +680,19 @@ export default function GuidedTourModal() {
                             : 'bg-[var(--background-secondary)]/40 border-[var(--border-color)]/40 text-[var(--foreground-tertiary)] hover:border-[var(--border-color)]'
                         }`}
                       >
-                        <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${
-                          isDone ? 'bg-emerald-500 text-white' : 'border border-[var(--border-color)]'
-                        }`}>
-                          {isDone && <Check className="w-2.5 h-2.5" strokeWidth={3} />}
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${
+                            isDone ? 'bg-emerald-500 text-white' : 'border border-[var(--border-color)]'
+                          }`}>
+                            {isDone && <Check className="w-2.5 h-2.5" strokeWidth={3} />}
+                          </div>
+                          <span className="text-xs font-medium truncate">{s.shortTitle}</span>
                         </div>
-                        <span className="text-xs font-medium truncate">{s.shortTitle}</span>
+                        <span className={`text-[10px] font-bold tabular-nums shrink-0 ml-1.5 ${
+                          isDone ? 'text-emerald-500' : 'text-[var(--foreground-tertiary)]'
+                        }`}>
+                          {getStepMetricBadge(s.id)}
+                        </span>
                       </button>
                     );
                   })}
@@ -319,9 +714,9 @@ export default function GuidedTourModal() {
                 <button
                   type="button"
                   onClick={handleAction}
-                  className="flex-1 h-11 px-5 rounded-full kz-pink-surface border border-white/25 text-white font-bold text-sm hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center cursor-pointer"
+                  className="flex-1 h-11 px-5 rounded-full kz-pink-surface border border-white/25 shadow-[0_6px_20px_rgba(255,102,196,0.35),inset_0_1px_0_rgba(255,255,255,0.4)] text-white font-bold text-sm hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center cursor-pointer touch-manipulation select-none"
                 >
-                  <span>{currentStep.actionText}</span>
+                  <span>{getActionButtonText()}</span>
                 </button>
 
                 <button

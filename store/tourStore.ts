@@ -132,6 +132,7 @@ interface TourState {
   prevStep: () => void;
   goToStep: (index: number) => void;
   markStepComplete: (stepId: TourStepId, customMessage?: string, shouldCelebrate?: boolean) => void;
+  setStepStatus: (stepId: TourStepId, isComplete: boolean) => void;
   resetTour: () => void;
   hideCelebration: () => void;
 }
@@ -416,6 +417,33 @@ export const useTourStore = create<TourState>((set, get) => ({
       currentStepIndex: nextStepIdx,
       completedSteps: nextCompleted,
       isDismissed: isNowAllDone ? true : isDismissed,
+      isCompleted: isNowAllDone
+    });
+  },
+
+  setStepStatus: (stepId: TourStepId, isComplete: boolean) => {
+    const { completedSteps, currentUserId } = get();
+    const alreadyDone = completedSteps.includes(stepId);
+    if (alreadyDone === isComplete) return;
+
+    const nextCompleted = isComplete
+      ? [...completedSteps, stepId]
+      : completedSteps.filter(id => id !== stepId);
+
+    const isNowAllDone = TOUR_STEPS.every(s => nextCompleted.includes(s.id));
+
+    set({
+      completedSteps: nextCompleted,
+      isCompleted: isNowAllDone
+    });
+
+    const current = get();
+    persistUserState(currentUserId, {
+      isOpen: current.isOpen,
+      hasStartedTour: current.hasStartedTour,
+      currentStepIndex: current.currentStepIndex,
+      completedSteps: nextCompleted,
+      isDismissed: current.isDismissed,
       isCompleted: isNowAllDone
     });
   },

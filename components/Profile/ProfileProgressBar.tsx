@@ -16,15 +16,6 @@ export default function ProfileProgressBar() {
   const { profileStats, posts } = useProfileStore();
   const { completedSteps, markStepComplete, completeTour } = useTourStore();
 
-  const isEthan = useMemo(() => {
-    if (!user) return false;
-    return Boolean(
-      user.email?.toLowerCase().includes('ethan') ||
-      user.username?.toLowerCase() === 'ethan' ||
-      (user as any)?.isEthanUser
-    );
-  }, [user]);
-
   // Check if Kloe has been used from local storage
   const hasKloeFromStorage = useMemo(() => {
     if (typeof window === 'undefined' || !user?.id) return false;
@@ -51,45 +42,30 @@ export default function ProfileProgressBar() {
 
   // Cached & live milestone flags backed by database queries
   const [realMilestones, setRealMilestones] = useState<{
+    itemsCount: number;
     hasOutfit: boolean;
     hasPost: boolean;
     hasKloe: boolean;
   }>(() => {
     if (typeof window === 'undefined' || !user?.id) {
-      return { hasOutfit: false, hasPost: false, hasKloe: false };
-    }
-    if (isEthan) {
-      return { hasOutfit: true, hasPost: true, hasKloe: true };
+      return { itemsCount: 0, hasOutfit: false, hasPost: false, hasKloe: false };
     }
     try {
       const raw = localStorage.getItem(`klozet_user_milestones_${user.id}`);
       if (raw) return JSON.parse(raw);
     } catch {}
-    return { hasOutfit: false, hasPost: false, hasKloe: false };
+    return { itemsCount: 0, hasOutfit: false, hasPost: false, hasKloe: false };
   });
 
-  // Query Supabase for real account data (outfits, posts, kloe conversations)
+  // Query Supabase for real account data (items, outfits, posts, kloe conversations)
   useEffect(() => {
     if (!user?.id) return;
-
-    if (isEthan) {
-      setRealMilestones({ hasOutfit: true, hasPost: true, hasKloe: true });
-      try {
-        localStorage.setItem(`klozet_user_milestones_${user.id}`, JSON.stringify({ hasOutfit: true, hasPost: true, hasKloe: true }));
-      } catch {}
-      return;
-    }
-
-    // If already marked as completed in localStorage, skip DB overhead
-    if (typeof window !== 'undefined' && localStorage.getItem(`klozet_tour_completed_${user.id}`) === 'true') {
-      setRealMilestones({ hasOutfit: true, hasPost: true, hasKloe: true });
-      return;
-    }
 
     let isMounted = true;
     const fetchRealData = async () => {
       try {
-        const [outfitsRes, postsRes, profileRes] = await Promise.all([
+        const [itemsRes, outfitsRes, postsRes, profileRes] = await Promise.all([
+          supabase.from('items').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
           supabase.from('outfits').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
           supabase.from('posts').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
           supabase.from('profiles').select('notification_preferences, kloe_trial_messages_used').eq('id', user.id).maybeSingle()
@@ -97,6 +73,7 @@ export default function ProfileProgressBar() {
 
         if (!isMounted) return;
 
+        const clothesCount = Math.max(itemsRes.count ?? 0, items.length);
         const outfitOk = (outfitsRes.count ?? 0) > 0;
         const postOk = (postsRes.count ?? 0) > 0;
         const notifs = (profileRes.data as any)?.notification_preferences;
@@ -105,17 +82,21 @@ export default function ProfileProgressBar() {
           hasKloeFromStorage ||
           hasKloeFromProfile;
 
-        setRealMilestones(prev => {
-          const next = {
-            hasOutfit: prev.hasOutfit || outfitOk,
-            hasPost: prev.hasPost || postOk,
-            hasKloe: prev.hasKloe || kloeOk
-          };
-          try {
-            localStorage.setItem(`klozet_user_milestones_${user.id}`, JSON.stringify(next));
-          } catch {}
-          return next;
+        setRealMilestones({
+          itemsCount: clothesCount,
+          hasOutfit: outfitOk,
+          hasPost: postOk,
+          hasKloe: kloeOk
         });
+
+        try {
+          localStorage.setItem(`klozet_user_milestones_${user.id}`, JSON.stringify({
+            itemsCount: clothesCount,
+            hasOutfit: outfitOk,
+            hasPost: postOk,
+            hasKloe: kloeOk
+          }));
+        } catch {}
       } catch (err) {
         console.warn('[ProfileProgressBar] Error fetching milestone counts:', err);
       }
@@ -123,33 +104,28 @@ export default function ProfileProgressBar() {
 
     fetchRealData();
     return () => { isMounted = false; };
-  }, [user?.id, isEthan, hasKloeFromStorage, hasKloeFromProfile]);
+  }, [user?.id, items.length, hasKloeFromStorage, hasKloeFromProfile]);
 
-  // Calculate completeness breakdown (100% clean sum)
+  // Calculate completeness breakdown (100% clean sum based on REAL user data)
   const hasStyle = Boolean(
-    isEthan ||
     user?.styleCompleted ||
     (user?.preferredStyles && user.preferredStyles.length > 0) ||
     user?.age ||
     user?.gender
   );
-  const hasAvatar = Boolean(isEthan || (user?.avatar && !user.avatar.includes('placeholder')));
-  const has3Items = Boolean(isEthan || items.length >= 3);
+  const hasAvatar = Boolean(user?.avatar && !user.avatar.includes('placeholder'));
+  const has3Items = Boolean(realMilestones.itemsCount >= 3 || items.length >= 3);
   const hasOutfit = Boolean(
-    isEthan ||
     realMilestones.hasOutfit ||
-    completedSteps.includes('create_outfit') ||
-    profileStats.posts > 0
+    completedSteps.includes('create_outfit')
   );
   const hasKloe = Boolean(
-    isEthan ||
     realMilestones.hasKloe ||
     completedSteps.includes('talk_to_kloe') ||
     hasKloeFromStorage ||
     hasKloeFromProfile
   );
   const hasPost = Boolean(
-    isEthan ||
     realMilestones.hasPost ||
     completedSteps.includes('create_post') ||
     posts.length > 0 ||

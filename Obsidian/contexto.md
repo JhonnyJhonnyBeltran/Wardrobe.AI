@@ -4024,3 +4024,22 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
   - Botón de eliminación masiva mejorado con feedback elástico `whileTap={{ scaleX: 1.05, scaleY: 0.92 }}` y cierre acelerado (120ms).
 - **Micro-interacciones Globales en `app/globals.css`**:
   - Actualizadas las clases `.apple-button-spring:active`, `.btn-apple:active` y `.btn-haptic:active` con `transform: scale3d(1.04, 0.93, 1)` y `touch-action: manipulation`.
+
+
+---
+
+## 93. Conexión de Métricas Reales en Modal de Guía (Prendas, Outfits, Mensajes con Kloe y Posts) (Noviembre 2026)
+- **Diagnóstico y Corrección de Desincronización en `components/GuidedTour/GuidedTourModal.tsx`**:
+  - El modal de guía (`GuidedTourModal`) únicamente leía `items.length` de `useWardrobeStore` en memoria (el cual permanecía en `0` si el usuario no había navegado previamente a `/closet`), y carecía de consultas o indicadores para los pasos de **Outfits**, **Mensajes con Kloe** y **Posts en el feed**.
+  - En `components/Profile/ProfileProgressBar.tsx` existía un bypass estático `isEthan` que forzaba los hitos a completados independientemente de las prendas, mensajes, outfits o posts reales del usuario.
+- **Implementación de Consultas a Base de Datos y Caché Local**:
+  - **Prendas subidas (`upload_clothes`)**: Consulta exacta a Supabase `supabase.from('items').select('id', { count: 'exact', head: true }).eq('user_id', user.id)` combinada reactivamente con `useWardrobeStore.items.length`. Muestra `{clothesCount} / 3 recomendadas` con barra de progreso y estado dinámico.
+  - **Outfits creados (`create_outfit`)**: Consulta a Supabase `supabase.from('outfits').select('id', { count: 'exact', head: true }).eq('user_id', user.id)`. Muestra `{outfitsCount} / 1 look` con barra de progreso y estado completado.
+  - **Mensajes con Kloe (`talk_to_kloe`)**: Consulta combinada de `localStorage.kloe_conversations_${userId}` (conteo real de mensajes con rol `user`), `localStorage.kloe_trial_used_${userId}` y `profiles.kloe_trial_messages_used` / `profiles.notification_preferences.kloe_conversations`. Muestra `{messagesCount} / 1 mensaje` y estado real.
+  - **Posts compartidos (`create_post`)**: Consulta a Supabase `supabase.from('posts').select('id', { count: 'exact', head: true }).eq('user_id', user.id)` y `useProfileStore.posts.length`. Muestra `{postsCount} / 1 post` y estado real.
+- **Sincronización Silenciosa y Reactiva en `store/tourStore.ts`**:
+  - Incorporada la acción `setStepStatus: (stepId: TourStepId, isComplete: boolean)` para alinear limpiamente los pasos completados según las métricas reales del usuario sin disparar banners de celebración invasivos.
+  - Los 6 pasos en la cuadrícula de resumen inferior reflejan sus contadores exactos (`upload_clothes: X/3`, `create_outfit: X/1`, `talk_to_kloe: X/1`, `create_post: X/1`, `style_preferences: 1/1 o 0/1`, `avatar: 1/1 o 0/1`).
+  - El botón de acción adapta su texto contextual cuando el hito ya está completado (*"Añadir más prendas"*, *"Crear otro outfit"*, *"Seguir hablando con Kloe"*, etc.).
+- **Limpieza de Mocks en `components/Profile/ProfileProgressBar.tsx`**:
+  - Erradicado el flag `isEthan` para garantizar que todos los perfiles se evalúen bajo las mismas reglas y métricas reales.
