@@ -2,8 +2,11 @@
 
 /**
  * Create Outfit - Mobile & Desktop Flow
- * Mobile: Selection → Preview/Name/Save
- * Desktop: Side-by-side with name input
+ * Mobile 3-Step:
+ *   1. Selection: Choose garments with filters
+ *   2. Canvas: Fixed-size canvas with Undo (paso atrás) / Redo (paso adelante) + Continue
+ *   3. Details: Name, Category/Occasion, Calendar (Pro), and Save
+ * Desktop: Side-by-side with Canvas Undo/Redo toolbar and keyboard shortcuts
  */
 
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
@@ -33,7 +36,9 @@ import {
     Sun, 
     Snowflake,
     Calendar,
-    Lock
+    Lock,
+    Undo2,
+    Redo2
 } from 'lucide-react';
 import { Button, KloeMascot } from '@/components';
 import { haptics } from '@/lib/haptic';
@@ -78,8 +83,18 @@ export default function CreateOutfitPage() {
     const { isPremium } = useUser();
     const isPro = isPremium();
 
-    // Mobile flow state: 'selection' | 'preview' - Skipped 'initial' as per request
-    const [mobileStep, setMobileStep] = useState<'selection' | 'preview'>('selection');
+    // Hide mobile tab bar while creating outfit
+    useEffect(() => {
+        setTabBarHidden(true);
+        return () => setTabBarHidden(false);
+    }, [setTabBarHidden]);
+
+    // Mobile flow: 1. selection → 2. canvas → 3. details
+    const [mobileStep, setMobileStep] = useState<'selection' | 'canvas' | 'details'>('selection');
+
+    // History state for Undo / Redo
+    const [canUndo, setCanUndo] = useState(false);
+    const [canRedo, setCanRedo] = useState(false);
 
     // Outfit metadata
     const [outfitName, setOutfitName] = useState('');
@@ -99,8 +114,39 @@ export default function CreateOutfitPage() {
 
     // Canvas state for positions
     const [canvasState, setCanvasState] = useState<Record<string, any>>({});
-    // Canvas ref
-    const canvasRef = useRef<FreeDragCanvasRef>(null);
+
+    // Canvas refs (separate for mobile and desktop to avoid DOM ref conflicts)
+    const mobileCanvasRef = useRef<FreeDragCanvasRef>(null);
+    const desktopCanvasRef = useRef<FreeDragCanvasRef>(null);
+
+    const getActiveCanvas = useCallback(() => {
+        if (typeof window !== 'undefined' && window.innerWidth >= 1024) {
+            return desktopCanvasRef.current || mobileCanvasRef.current;
+        }
+        return mobileCanvasRef.current || desktopCanvasRef.current;
+    }, []);
+
+    // Global keyboard shortcuts for Undo / Redo (Ctrl+Z / Cmd+Z, Ctrl+Y / Cmd+Shift+Z)
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            const targetTag = (e.target as HTMLElement)?.tagName?.toUpperCase();
+            if (targetTag === 'INPUT' || targetTag === 'TEXTAREA') return;
+
+            if ((e.metaKey || e.ctrlKey) && !e.shiftKey && e.key.toLowerCase() === 'z') {
+                e.preventDefault();
+                getActiveCanvas()?.undo();
+            } else if (
+                ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'z') ||
+                ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'y')
+            ) {
+                e.preventDefault();
+                getActiveCanvas()?.redo();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [getActiveCanvas]);
 
     // Flatten selections to a single list for FreeDragCanvas
     const flatItems = useMemo(() => {
@@ -118,10 +164,30 @@ export default function CreateOutfitPage() {
         returnTo?: string | null;
     }>({ isOpen: false, outfitName: '', isUpdate: false });
 
+    const scheduledDateParam = searchParams.get('date') || searchParams.get('scheduledDate') || searchParams.get('scheduled_for');
+
+    useEffect(() => {
+        if (scheduledDateParam) {
+            if (!isPro) {
+                setScheduledDate('');
+                openPremiumModal('yearly');
+                toast.info('Programar looks en el calendario es exclusivo de Klozet Pro');
+            } else {
+                setScheduledDate(decodeURIComponent(scheduledDateParam));
+            }
+        }
+    }, [scheduledDateParam, isPro, openPremiumModal]);
+
+    // Filter states
+    const [scheduledDate, setScheduledDate] = useState((scheduledDateParam && isPro) ? decodeURIComponent(scheduledDateParam) : '');
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedColors, setSelectedColors] = useState<string[]>([]);
+    const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
+    const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+
     // Load outfit data if editing
     useEffect(() => {
         if (!outfitId) return;
-        setMobileStep('selection');
 
         const fetchOutfit = async () => {
             setLoading(true);
@@ -177,25 +243,23 @@ export default function CreateOutfitPage() {
                     const newCanvasState: Record<string, any> = {};
 
                     outfit.outfit_items.forEach((oi: any) => {
-                        const item = oi.param_clothing_item || oi.clothing_item; // Handle potential alias or direct join
+                        const item = oi.param_clothing_item || oi.clothing_item;
                         if (!item) return;
 
-                        // Normalize fields if needed (Supabase returns snake_case, type expects camelCase/defined fields)
                         const clothingItem: ClothingItem = {
                             id: item.id,
                             imageUrl: item.image_url,
-                            category: item.category as any, // Cast to enum
+                            category: item.category as any,
                             name: item.name,
                             brand: item.brand,
-                            color: item.color as any, // Cast to enum
+                            color: item.color as any,
                             originalImageUrl: item.original_image,
                             favorite: item.is_favorite,
                             createdAt: new Date(item.created_at),
-                            season: item.season || [], // Default to empty array or map if needed
+                            season: item.season || [],
                             tags: item.tags || [],
                         };
 
-                        // Determine slot (simple mapping based on category)
                         let slot = 'accessories';
                         const cat = clothingItem.category.toLowerCase();
                         if (['top', 'shirt', 'blouse', 't-shirt', 'sweater', 'jersey'].includes(cat)) slot = 'top';
@@ -216,9 +280,7 @@ export default function CreateOutfitPage() {
                             newSelections[slot].push(clothingItem);
                         }
 
-                        // Set canvas state using item.id as key
-                        const stateKey = item.id;
-                        newCanvasState[stateKey] = {
+                        newCanvasState[item.id] = {
                             x: oi.position_x ?? 50,
                             y: oi.position_y ?? 50,
                             scale: oi.scale ?? 1,
@@ -229,11 +291,8 @@ export default function CreateOutfitPage() {
 
                     setSelections(newSelections);
                     setCanvasState(newCanvasState);
-
-                    // If editing, go straight to preview on mobile potentially? 
-                    // Or stay on selection to allow adding more. 
-                    // Let's stay on selection but maybe user wants to see the outfit first.
-                    // For now, default behavior is fine.
+                    // Start in canvas view when editing an outfit
+                    setMobileStep('canvas');
                 }
             } catch (err) {
                 console.error('Error fetching outfit:', err);
@@ -245,9 +304,9 @@ export default function CreateOutfitPage() {
         };
 
         fetchOutfit();
-    }, [outfitId, router]);
+    }, [outfitId, router, isPro, scheduledDateParam]);
 
-    // Load preselected items if coming from Klosy AI or external link (itemIds param)
+    // Load preselected items if coming from Kloe or external link
     const itemIdsParam = searchParams.get('itemIds') || searchParams.get('items');
     const outfitNameParam = searchParams.get('name') || searchParams.get('outfitName');
     const occasionParam = searchParams.get('occasion');
@@ -302,14 +361,14 @@ export default function CreateOutfitPage() {
                             defaultY = 32;
                         } else if (['bottom', 'pants', 'skirt', 'jeans', 'shorts', 'dress', 'bottomwear'].some(s => cat.includes(s))) {
                             slot = 'bottom';
-                            defaultY = 62;
+                            defaultY = 58;
                         } else if (['shoes', 'boots', 'sneakers', 'sandals', 'footwear'].some(s => cat.includes(s))) {
                             slot = 'shoes';
-                            defaultY = 86;
+                            defaultY = 82;
                         } else if (['outerwear', 'jacket', 'coat', 'blazer'].some(s => cat.includes(s))) {
                             slot = 'layer';
-                            defaultY = 35;
-                        } else if (cat.includes('headwear') || clothingItem.name.toLowerCase().includes('gorra') || clothingItem.name.toLowerCase().includes('sombrero')) {
+                            defaultY = 32;
+                        } else if (clothingItem.name.toLowerCase().includes('gorra') || clothingItem.name.toLowerCase().includes('sombrero')) {
                             slot = 'headwear';
                             defaultY = 12;
                         }
@@ -319,7 +378,7 @@ export default function CreateOutfitPage() {
                         }
 
                         newCanvasState[item.id] = {
-                            x: 50 + (slot === 'layer' ? 12 : 0) + (idx % 2 === 1 ? -4 : 4),
+                            x: 50,
                             y: defaultY,
                             scale: 1,
                             rotation: 0,
@@ -329,10 +388,10 @@ export default function CreateOutfitPage() {
 
                     setSelections(newSelections);
                     setCanvasState(newCanvasState);
-                    setMobileStep('preview');
+                    setMobileStep('canvas');
                 }
-            } catch (e) {
-                console.error('[CreateOutfit] Error loading preselected items:', e);
+            } catch (err) {
+                console.error('Error preloading items:', err);
             } finally {
                 setLoading(false);
             }
@@ -340,27 +399,6 @@ export default function CreateOutfitPage() {
 
         loadPreselectedItems();
     }, [outfitId, itemIdsParam, outfitNameParam, occasionParam]);
-
-    const scheduledDateParam = searchParams.get('date') || searchParams.get('scheduledDate') || searchParams.get('scheduled_for');
-
-    useEffect(() => {
-        if (scheduledDateParam) {
-            if (!isPro) {
-                setScheduledDate('');
-                openPremiumModal('yearly');
-                toast.info('Programar looks en el calendario es exclusivo de Klozet Pro');
-            } else {
-                setScheduledDate(decodeURIComponent(scheduledDateParam));
-            }
-        }
-    }, [scheduledDateParam, isPro, openPremiumModal]);
-
-    // Filter states
-    const [scheduledDate, setScheduledDate] = useState((scheduledDateParam && isPro) ? decodeURIComponent(scheduledDateParam) : '');
-    const [searchQuery, setSearchQuery] = useState('');
-    const [selectedColors, setSelectedColors] = useState<string[]>([]);
-    const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
-    const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
 
     // Helpers
     const handleSelect = useCallback((slotId: string, item: ClothingItem) => {
@@ -418,7 +456,6 @@ export default function CreateOutfitPage() {
                 const colorMatches = selectedColors.some(selectedColor => {
                     const c = item.color?.toLowerCase() || '';
                     const n = item.name?.toLowerCase() || '';
-                    
                     const synonyms = colorTranslations[selectedColor] || [selectedColor];
                     return synonyms.some(syn => c.includes(syn) || c === syn || n.includes(syn));
                 });
@@ -451,113 +488,9 @@ export default function CreateOutfitPage() {
         });
     }, [wardrobeItems, searchQuery, selectedColors, selectedTypes, showFavoritesOnly]);
 
-    // Get items for each slot with filters applied
-    const getItemsForSlot = useCallback((category: string, filter?: (item: ClothingItem) => boolean) => {
-        return filteredItems.filter(item => {
-            if (item.category !== category) return false;
-            if (filter) return filter(item);
-            return true;
-        });
-    }, [filteredItems]);
-
     // Check if outfit is empty
     const isEmpty = Object.values(selections).every(items => items.length === 0);
     const totalSelected = Object.values(selections).reduce((sum, items) => sum + items.length, 0);
-
-    // Publish to feed - redirect to create post page
-    const handlePublishToFeed = async () => {
-        // First save the outfit if not saved yet
-        if (!outfitId) {
-            // Save the outfit first
-            await handleSaveWithoutRedirect();
-            // Then redirect to create post
-            if (savedOutfitIdRef.current) {
-                router.push(`/create-post?outfitId=${savedOutfitIdRef.current}`);
-            }
-        } else {
-            router.push(`/create-post?outfitId=${outfitId}`);
-        }
-    };
-
-    // Helper to save outfit without redirecting (for publish flow)
-    const handleSaveWithoutRedirect = async (): Promise<string | null> => {
-        if (loading || isEmpty || !outfitName.trim()) return null;
-        setLoading(true);
-
-        try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) {
-                toast.error('Debes iniciar sesión para guardar outfits');
-                return null;
-            }
-
-            // Generate Image
-            let finalImage = await canvasRef.current?.exportToImage() || null;
-
-            // Upload Image to Storage
-            let publicImageUrl = null;
-            if (finalImage) {
-                const uploadResult = await uploadImage(finalImage, BUCKETS.CLOTHING, {
-                    folder: `outfits/${user.id}`,
-                    fileName: `outfit_${Date.now()}`
-                });
-
-                if (uploadResult.success) {
-                    publicImageUrl = uploadResult.url;
-                }
-            }
-
-            // Insert new outfit
-            const { data: outfitData, error: outfitError } = await (supabase.from('outfits') as any)
-                .insert({
-                    user_id: user.id,
-                    name: outfitName,
-                    occasion: outfitOccasion,
-                    description: '',
-                    season: 'all-season',
-                    is_public: isPublic,
-                    ai_generated: false,
-                    image_url: publicImageUrl
-                } as any)
-                .select()
-                .single();
-
-            if (outfitError) throw outfitError;
-            const newOutfitId = (outfitData as any).id;
-
-            // Create Outfit Items
-            const outfitItemsArr: any[] = [];
-            const currentCanvasState = canvasState; // Use the continuously updated state!
-            
-            Object.entries(selections).forEach(([slotId, items]) => {
-                items.forEach(item => {
-                    const state = currentCanvasState[item.id] || { x: 50, y: 50, scale: 1, rotation: 0, zIndex: 1 };
-
-                    outfitItemsArr.push({
-                        outfit_id: newOutfitId,
-                        clothing_item_id: item.id,
-                        position_x: state.x ?? 50, // Fix fallback to use ?? so 0 doesn't become 50
-                        position_y: state.y ?? 50,
-                        scale: state.scale ?? 1,
-                        rotation: state.rotation ?? 0,
-                        layer_order: state.zIndex ?? 1
-                    });
-                });
-            });
-
-            if (outfitItemsArr.length > 0) {
-                await (supabase.from('outfit_items') as any).insert(outfitItemsArr as any);
-            }
-
-            return newOutfitId;
-        } catch (error) {
-            console.error('Error saving outfit:', error);
-            showDatabaseError(error, 'No se pudo guardar el outfit.');
-            return null;
-        } finally {
-            setLoading(false);
-        }
-    };
 
     // Save outfit
     const handleSave = async () => {
@@ -581,15 +514,14 @@ export default function CreateOutfitPage() {
                 return;
             }
 
-            // 1. Generate Image
-            const finalImage = await canvasRef.current?.exportToImage() || null;
+            // 1. Generate Image from the active canvas
+            const finalImage = await getActiveCanvas()?.exportToImage() || null;
 
             // 2. Upload Image to Storage
             let publicImageUrl = null;
             if (finalImage) {
-                // Use CLOTHING bucket ('clothing-images') as it's guaranteed to exist
                 const uploadResult = await uploadImage(finalImage, BUCKETS.CLOTHING, {
-                    folder: `outfits/${user.id}`, // Subfolder for organization
+                    folder: `outfits/${user.id}`,
                     fileName: `outfit_${Date.now()}`
                 });
 
@@ -621,7 +553,7 @@ export default function CreateOutfitPage() {
 
                 if (updateError) throw updateError;
 
-                // Delete existing items to replace them (easier than syncing)
+                // Delete existing items to replace them
                 const { error: deleteItemsError } = await supabase
                     .from('outfit_items')
                     .delete()
@@ -637,7 +569,7 @@ export default function CreateOutfitPage() {
                         name: outfitName,
                         occasion: outfitOccasion || null,
                         description: '',
-                        season: 'all-season', // Default for now
+                        season: 'all-season',
                         is_public: isPublic,
                         ai_generated: false,
                         image_url: publicImageUrl
@@ -652,7 +584,7 @@ export default function CreateOutfitPage() {
 
             // Create Outfit Items (Common for both insert and update)
             const outfitItemsArr: any[] = [];
-            const currentCanvasState = canvasState; // Use the continuously updated state!
+            const currentCanvasState = canvasState;
 
             Object.entries(selections).forEach(([slotId, items]) => {
                 items.forEach(item => {
@@ -725,32 +657,124 @@ export default function CreateOutfitPage() {
         <div className="min-h-screen bg-[var(--background)] flex flex-col">
             {/* Header */}
             <header className="sticky top-0 z-30 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-color)] px-4 h-16 flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                    <button
-                        onClick={() => {
-                            if (mobileStep === 'preview') {
-                                setMobileStep('selection');
-                            } else {
-                                router.back();
-                            }
-                        }}
-                        className="p-2 -ml-2 hover:bg-[var(--background-secondary)] rounded-full transition-colors"
-                    >
-                        <ArrowLeft className="w-5 h-5 text-[var(--foreground)]" />
-                    </button>
-                    <h1 className="text-lg font-bold text-[var(--foreground)]">
-                        {mobileStep === 'selection' ? 'Seleccionar Prendas' : 'Crear Outfit'}
-                    </h1>
+                {/* Mobile Step 1: Selection Header */}
+                <div className={`w-full flex items-center justify-between lg:hidden ${mobileStep !== 'selection' ? 'hidden' : ''}`}>
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => router.back()}
+                            className="p-2 -ml-2 hover:bg-[var(--background-secondary)] rounded-full transition-colors active:scale-95"
+                            aria-label="Volver"
+                        >
+                            <ArrowLeft className="w-5 h-5 text-[var(--foreground)]" />
+                        </button>
+                        <div className="flex items-center gap-2">
+                            <h1 className="text-base font-bold text-[var(--foreground)]">Elegir Prendas</h1>
+                            <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[var(--background-secondary)] text-[var(--foreground-secondary)]">1/3</span>
+                        </div>
+                    </div>
+                    {totalSelected > 0 && (
+                        <button
+                            onClick={() => setMobileStep('canvas')}
+                            className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-full kz-pink-surface text-white shadow-xs active:scale-95 transition-all cursor-pointer"
+                        >
+                            <span>Lienzo</span>
+                            <ArrowRight className="w-3.5 h-3.5" />
+                        </button>
+                    )}
+                </div>
+
+                {/* Mobile Step 2: Canvas Header (Undo, Redo, Continue) */}
+                <div className={`w-full flex items-center justify-between lg:hidden ${mobileStep !== 'canvas' ? 'hidden' : ''}`}>
+                    <div className="flex items-center gap-1.5">
+                        <button
+                            onClick={() => setMobileStep('selection')}
+                            className="p-2 -ml-2 hover:bg-[var(--background-secondary)] rounded-full transition-colors active:scale-95 cursor-pointer"
+                            title="Volver a elegir prendas"
+                            aria-label="Volver a elegir prendas"
+                        >
+                            <ArrowLeft className="w-5 h-5 text-[var(--foreground)]" />
+                        </button>
+
+                        <div className="h-4 w-px bg-[var(--border-color)] mx-1" />
+
+                        <button
+                            onClick={() => mobileCanvasRef.current?.undo()}
+                            disabled={!canUndo}
+                            className="p-2 rounded-full hover:bg-[var(--background-secondary)] disabled:opacity-25 disabled:cursor-not-allowed transition-all active:scale-90 cursor-pointer"
+                            title="Paso atrás (Deshacer)"
+                            aria-label="Paso atrás"
+                        >
+                            <Undo2 className="w-5 h-5 text-[var(--foreground)]" />
+                        </button>
+
+                        <button
+                            onClick={() => mobileCanvasRef.current?.redo()}
+                            disabled={!canRedo}
+                            className="p-2 rounded-full hover:bg-[var(--background-secondary)] disabled:opacity-25 disabled:cursor-not-allowed transition-all active:scale-90 cursor-pointer"
+                            title="Paso adelante (Rehacer)"
+                            aria-label="Paso adelante"
+                        >
+                            <Redo2 className="w-5 h-5 text-[var(--foreground)]" />
+                        </button>
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
+                        <span className="text-sm font-bold text-[var(--foreground)]">Colocar</span>
+                        <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-[var(--background-secondary)] text-[var(--foreground-secondary)]">2/3</span>
+                    </div>
+
+                    <div className="flex items-center">
+                        <button
+                            onClick={() => setMobileStep('details')}
+                            className="flex items-center gap-1 text-xs font-semibold px-3.5 py-1.5 rounded-full kz-pink-surface text-white shadow-xs active:scale-95 transition-all cursor-pointer"
+                        >
+                            <span>Continuar</span>
+                            <ArrowRight className="w-3.5 h-3.5" />
+                        </button>
+                    </div>
+                </div>
+
+                {/* Mobile Step 3: Details Header */}
+                <div className={`w-full flex items-center justify-between lg:hidden ${mobileStep !== 'details' ? 'hidden' : ''}`}>
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => setMobileStep('canvas')}
+                            className="p-2 -ml-2 hover:bg-[var(--background-secondary)] rounded-full transition-colors active:scale-95 cursor-pointer"
+                            aria-label="Volver al lienzo"
+                        >
+                            <ArrowLeft className="w-5 h-5 text-[var(--foreground)]" />
+                        </button>
+                        <div className="flex items-center gap-2">
+                            <h1 className="text-base font-bold text-[var(--foreground)]">Guardar Outfit</h1>
+                            <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[var(--background-secondary)] text-[var(--foreground-secondary)]">3/3</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Desktop Header */}
+                <div className="hidden lg:flex items-center justify-between w-full">
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={() => router.back()}
+                            className="p-2 -ml-2 hover:bg-[var(--background-secondary)] rounded-full transition-colors active:scale-95 cursor-pointer"
+                            aria-label="Volver"
+                        >
+                            <ArrowLeft className="w-5 h-5 text-[var(--foreground)]" />
+                        </button>
+                        <h1 className="text-lg font-bold text-[var(--foreground)]">
+                            {outfitId ? 'Editar Outfit' : 'Crear Outfit'}
+                        </h1>
+                    </div>
                 </div>
             </header>
 
             {/* Main Content */}
             <main className="flex-1 flex flex-col lg:flex-row lg:container lg:mx-auto lg:max-w-7xl lg:p-8 lg:gap-8 overflow-hidden h-full">
 
-                {/* MOBILE: Two-Step Flow */}
+                {/* MOBILE: 3-Step Flow */}
                 <div className="flex-1 flex flex-col lg:hidden relative h-full">
                     <AnimatePresence mode="wait">
-                        {/* Step 1: Selection */}
+                        {/* Step 1: Selection Screen */}
                         {mobileStep === 'selection' && (
                             <motion.div
                                 key="selection"
@@ -781,7 +805,6 @@ export default function CreateOutfitPage() {
                                             </div>
                                         ) : (
                                             filteredItems.map(item => {
-                                                // Determine slot dynamically for selection checking
                                                 let slot = 'accessories';
                                                 const cat = item.category?.toLowerCase() || '';
                                                 if (['top', 'shirt', 'blouse', 't-shirt', 'sweater', 'jersey'].includes(cat)) slot = 'top';
@@ -831,23 +854,68 @@ export default function CreateOutfitPage() {
                                         )}
                                     </div>
                                 </div>
-
-                                {/* Selected Items Summary and Next Button moved to global layout */}
                             </motion.div>
                         )}
 
-                        {/* Step 2: Preview + Name + Save */}
-                        {mobileStep === 'preview' && (
+                        {/* Step 2: Fixed Canvas Screen with Undo/Redo */}
+                        {mobileStep === 'canvas' && (
                             <motion.div
-                                key="preview"
+                                key="canvas"
                                 initial={{ opacity: 0, x: 20 }}
                                 animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: 20 }}
+                                exit={{ opacity: 0, x: -20 }}
+                                className="flex-1 flex flex-col justify-between items-center p-4 pb-6 overflow-hidden touch-none select-none h-[calc(100dvh-64px)]"
+                            >
+                                {/* Subtle hint */}
+                                <div className="text-center py-0.5">
+                                    <p className="text-xs text-[var(--foreground-secondary)] font-medium">
+                                        Arrastra y coloca tus prendas en el look
+                                    </p>
+                                </div>
+
+                                {/* Fixed Canvas Container - Not taking whole screen */}
+                                <div className="w-full max-w-[340px] sm:max-w-[370px] aspect-[4/5] max-h-[52vh] sm:max-h-[56vh] bg-white rounded-3xl shadow-xl overflow-hidden border border-black/[0.08] dark:border-white/[0.12] my-auto flex-shrink-0 touch-none relative">
+                                    <FreeDragCanvas
+                                        ref={mobileCanvasRef}
+                                        items={flatItems}
+                                        onRemoveItem={handleRemoveItem}
+                                        initialState={canvasState}
+                                        onStateChange={setCanvasState}
+                                        onHistoryChange={(u, r) => {
+                                            setCanUndo(u);
+                                            setCanRedo(r);
+                                        }}
+                                    />
+                                </div>
+
+                                {/* Bottom helper bar */}
+                                <div className="w-full max-w-[340px] flex flex-col gap-2 pt-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setMobileStep('selection')}
+                                        className="w-full py-2.5 px-4 rounded-2xl border border-[var(--border-color)] bg-[var(--card-bg)] text-[var(--foreground)] text-xs font-semibold flex items-center justify-center gap-2 hover:bg-[var(--background-secondary)] active:scale-[0.98] transition-all shadow-xs cursor-pointer"
+                                    >
+                                        <div className="w-5 h-5 rounded-full bg-[var(--brand-pink)]/10 flex items-center justify-center">
+                                            <Shirt className="w-3.5 h-3.5 text-[var(--brand-pink)]" />
+                                        </div>
+                                        <span>Elegir más prendas ({totalSelected})</span>
+                                    </button>
+                                </div>
+                            </motion.div>
+                        )}
+
+                        {/* Step 3: Details & Save Screen */}
+                        {mobileStep === 'details' && (
+                            <motion.div
+                                key="details"
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
                                 className="flex flex-col h-full p-4 space-y-4 pb-36 overflow-y-auto"
                             >
                                 {/* Outfit Name Input */}
-                                <div className="bg-[var(--card-bg)] rounded-2xl p-4 border border-[var(--border-color)]">
-                                    <label className="block text-sm font-medium text-[var(--foreground-secondary)] mb-2">
+                                <div className="bg-[var(--card-bg)] rounded-2xl p-4 border border-[var(--border-color)] shadow-xs">
+                                    <label className="block text-xs font-bold text-[var(--foreground-secondary)] uppercase tracking-wider mb-2">
                                         Nombre del Outfit
                                     </label>
                                     <input
@@ -855,18 +923,18 @@ export default function CreateOutfitPage() {
                                         placeholder="Ej: Look casual de verano"
                                         value={outfitName}
                                         onChange={(e) => setOutfitName(e.target.value)}
-                                        className="w-full px-4 py-3 bg-[var(--background-secondary)] rounded-xl text-[var(--foreground)] outline-none mb-4"
+                                        className="w-full px-4 py-3 bg-[var(--background-secondary)] rounded-xl text-sm text-[var(--foreground)] outline-none border border-transparent focus:border-[var(--brand-pink)] transition-all mb-4"
                                     />
 
                                     <div className="flex items-center justify-between mb-2">
-                                        <label className="block text-sm font-medium text-[var(--foreground-secondary)]">
-                                            Ocasión (Opcional)
+                                        <label className="block text-xs font-bold text-[var(--foreground-secondary)] uppercase tracking-wider">
+                                            Tipo de Outfit / Ocasión
                                         </label>
                                         {outfitOccasion && (
                                             <button
                                                 type="button"
                                                 onClick={() => setOutfitOccasion(null)}
-                                                className="text-[11px] text-[var(--brand-pink)] hover:underline font-medium"
+                                                className="text-[11px] text-[var(--brand-pink)] hover:underline font-medium cursor-pointer"
                                             >
                                                 Desmarcar
                                             </button>
@@ -881,13 +949,13 @@ export default function CreateOutfitPage() {
                                                     key={occ.id}
                                                     type="button"
                                                     onClick={() => setOutfitOccasion(isSelected ? null : occ.id)}
-                                                    className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all ${
+                                                    className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
                                                         isSelected
                                                             ? 'bg-[var(--brand-pink)] text-white shadow-sm'
                                                             : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:bg-[var(--border-color)]'
                                                     }`}
                                                 >
-                                                    <Icon className="w-4 h-4" />
+                                                    <Icon className="w-3.5 h-3.5" />
                                                     {occ.label}
                                                 </button>
                                             );
@@ -957,7 +1025,7 @@ export default function CreateOutfitPage() {
                                 )}
 
                                 {/* Mobile Public Toggle */}
-                                <div className="bg-[var(--card-bg)] px-5 py-4 border-b border-[var(--border-color)] flex items-center justify-between">
+                                <div className="bg-[var(--card-bg)] px-5 py-4 rounded-2xl border border-[var(--border-color)] flex items-center justify-between shadow-xs">
                                     <div>
                                         <p className="text-sm font-bold text-[var(--foreground)]">Outfit Público</p>
                                         <p className="text-[11px] text-[var(--foreground-secondary)] mt-0.5">Visible para todos en tu perfil</p>
@@ -965,54 +1033,31 @@ export default function CreateOutfitPage() {
                                     <button 
                                         type="button"
                                         onClick={() => setIsPublic(!isPublic)}
-                                        className={`relative inline-flex h-6 w-12 items-center rounded-full transition-colors focus:outline-none ${isPublic ? 'bg-[var(--brand-pink)]' : 'bg-gray-300 dark:bg-gray-700'}`}
+                                        className={`relative inline-flex h-6 w-12 items-center rounded-full transition-colors focus:outline-none cursor-pointer ${isPublic ? 'bg-[var(--brand-pink)]' : 'bg-gray-300 dark:bg-gray-700'}`}
                                     >
                                         <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform ${isPublic ? 'translate-x-6' : 'translate-x-1'}`} />
                                     </button>
                                 </div>
 
-                                {/* Canvas Preview - Border removed for cleaner look */}
-                                <div className="w-full bg-white overflow-hidden aspect-[4/5] shadow-sm">
-                                    <FreeDragCanvas
-                                        ref={canvasRef}
-                                        items={flatItems}
-                                        onRemoveItem={handleRemoveItem}
-                                        initialState={canvasState}
-                                        onStateChange={setCanvasState}
-                                    />
+                                {/* Garments Summary Info */}
+                                <div className="bg-[var(--card-bg)] rounded-2xl p-3 border border-[var(--border-color)] flex items-center justify-between shadow-xs">
+                                    <span className="text-xs text-[var(--foreground-secondary)] font-medium">Prendas en el look:</span>
+                                    <span className="text-xs font-bold text-[var(--foreground)]">{totalSelected} prendas seleccionadas</span>
                                 </div>
-                                <button
-                                    onClick={() => setMobileStep('selection')}
-                                    className="w-full py-3 px-4 rounded-xl border border-[var(--border-color)] bg-[var(--card-bg)] text-[var(--foreground)] font-medium flex items-center justify-center gap-2 hover:bg-[var(--background-secondary)] transition-colors"
-                                >
-                                    <div className="w-6 h-6 rounded-full bg-[var(--brand-pink)]/10 flex items-center justify-center">
-                                        <Shirt className="w-4 h-4 text-[var(--brand-pink)]" />
-                                    </div>
-                                    Seguir añadiendo prendas
-                                </button>
 
-                                {/* Preview & Save Buttons */}
-                                <AnimatePresence>
-                                    {!isEmpty && outfitName.trim().length > 0 && (
-                                        <motion.div
-                                            initial={{ opacity: 0, y: 50 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            exit={{ opacity: 0, y: 50 }}
-                                            className="fixed bottom-0 left-0 right-0 p-4 pb-[calc(16px+env(safe-area-inset-bottom,0px))] border-t border-[var(--border-color)] bg-[var(--background)]/90 backdrop-blur-md z-40 flex gap-3"
-                                        >
-                                            <Button
-                                                onClick={handleSave}
-                                                glow={true}
-                                                loading={loading}
-                                                disabled={loading}
-                                                className="w-full rounded-2xl py-3.5 text-sm font-semibold shadow-xl"
-                                            >
-                                                <Save className="w-5 h-5 mr-2" />
-                                                Guardar Outfit
-                                            </Button>
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
+                                {/* Save Button */}
+                                <div className="fixed bottom-0 left-0 right-0 p-4 pb-[calc(16px+env(safe-area-inset-bottom,0px))] border-t border-[var(--border-color)] bg-[var(--background)]/90 backdrop-blur-md z-40">
+                                    <Button
+                                        onClick={handleSave}
+                                        glow={true}
+                                        loading={loading}
+                                        disabled={loading || !outfitName.trim() || isEmpty}
+                                        className="w-full rounded-2xl py-3.5 text-sm font-semibold shadow-xl kz-pink-surface text-white"
+                                    >
+                                        <Save className="w-5 h-5 mr-2" />
+                                        {outfitId ? 'Guardar Cambios' : 'Guardar Outfit'}
+                                    </Button>
+                                </div>
                             </motion.div>
                         )}
                     </AnimatePresence>
@@ -1042,7 +1087,6 @@ export default function CreateOutfitPage() {
                                     </div>
                                 ) : (
                                     filteredItems.map(item => {
-                                        // Determine slot dynamically
                                         let slot = 'accessories';
                                         const cat = item.category?.toLowerCase() || '';
                                         if (['top', 'shirt', 'blouse', 't-shirt', 'sweater', 'jersey'].includes(cat)) slot = 'top';
@@ -1095,10 +1139,10 @@ export default function CreateOutfitPage() {
                     </div>
 
                     {/* Right: Preview Panel (Sticky) */}
-                    <div className="w-[400px] flex-shrink-0 flex flex-col gap-4 h-full overflow-y-auto pb-8">
+                    <div className="w-[420px] flex-shrink-0 flex flex-col gap-4 h-full overflow-y-auto pb-8">
                         {/* Outfit Name */}
                         <div className="bg-[var(--card-bg)] rounded-2xl p-4 border border-[var(--border-color)] shadow-sm">
-                            <label className="block text-sm font-medium text-[var(--foreground-secondary)] mb-2">
+                            <label className="block text-xs font-bold text-[var(--foreground-secondary)] uppercase tracking-wider mb-2">
                                 Nombre del Outfit
                             </label>
                             <input
@@ -1106,18 +1150,18 @@ export default function CreateOutfitPage() {
                                 placeholder="Ej: Look casual de verano"
                                 value={outfitName}
                                 onChange={(e) => setOutfitName(e.target.value)}
-                                className="w-full px-4 py-3 bg-[var(--background-secondary)] rounded-xl text-sm text-[var(--foreground)] outline-none focus:border-[var(--foreground-tertiary)] border border-transparent transition-all mb-4"
+                                className="w-full px-4 py-3 bg-[var(--background-secondary)] rounded-xl text-sm text-[var(--foreground)] outline-none focus:border-[var(--brand-pink)] border border-transparent transition-all mb-4"
                             />
 
                             <div className="flex items-center justify-between mb-2">
-                                <label className="block text-sm font-medium text-[var(--foreground-secondary)]">
+                                <label className="block text-xs font-bold text-[var(--foreground-secondary)] uppercase tracking-wider">
                                     Ocasión (Opcional)
                                 </label>
                                 {outfitOccasion && (
                                     <button
                                         type="button"
                                         onClick={() => setOutfitOccasion(null)}
-                                        className="text-[11px] text-[var(--brand-pink)] hover:underline font-medium"
+                                        className="text-[11px] text-[var(--brand-pink)] hover:underline font-medium cursor-pointer"
                                     >
                                         Desmarcar
                                     </button>
@@ -1132,7 +1176,7 @@ export default function CreateOutfitPage() {
                                             key={occ.id}
                                             type="button"
                                             onClick={() => setOutfitOccasion(isSelected ? null : occ.id)}
-                                            className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-all ${
+                                            className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
                                                 isSelected
                                                     ? 'bg-[var(--brand-pink)] text-white shadow-sm'
                                                     : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:bg-[var(--border-color)]'
@@ -1207,7 +1251,7 @@ export default function CreateOutfitPage() {
                             </div>
                         )}
 
-                        {/* Kloe Assistant Banner (Omitted if coming from Kloe recommendation) */}
+                        {/* Kloe Assistant Banner */}
                         {!isFromKloe && (
                             <Link href="/closet/kloe" className="block group">
                                 <div className="relative overflow-hidden kz-kloe-hero rounded-[20px] p-3.5 flex items-center justify-between transition-all duration-300 active:scale-[0.98]">
@@ -1238,28 +1282,64 @@ export default function CreateOutfitPage() {
                             <button 
                                 type="button"
                                 onClick={() => setIsPublic(!isPublic)}
-                                className={`relative inline-flex h-6 w-12 items-center rounded-full transition-colors focus:outline-none ${isPublic ? 'bg-[var(--brand-pink)]' : 'bg-gray-300 dark:bg-gray-700'}`}
+                                className={`relative inline-flex h-6 w-12 items-center rounded-full transition-colors focus:outline-none cursor-pointer ${isPublic ? 'bg-[var(--brand-pink)]' : 'bg-gray-300 dark:bg-gray-700'}`}
                             >
                                 <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform ${isPublic ? 'translate-x-6' : 'translate-x-1'}`} />
                             </button>
                         </div>
 
-                        {/* Canvas */}
-                        <div className="overflow-hidden shadow-lg bg-white border border-gray-200 rounded-2xl">
-                            <FreeDragCanvas
-                                ref={canvasRef}
-                                items={flatItems}
-                                onRemoveItem={handleRemoveItem}
-                                initialState={canvasState}
-                                onStateChange={setCanvasState}
-                            />
+                        {/* Desktop Canvas Section with Undo / Redo Toolbar */}
+                        <div className="flex flex-col gap-2">
+                            {/* Toolbar: Paso atrás (Undo) / Paso adelante (Redo) */}
+                            <div className="flex items-center justify-between px-3 py-2 bg-[var(--card-bg)] border border-[var(--border-color)] rounded-2xl shadow-xs">
+                                <div className="flex items-center gap-1.5">
+                                    <button
+                                        type="button"
+                                        onClick={() => desktopCanvasRef.current?.undo()}
+                                        disabled={!canUndo}
+                                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-medium text-[var(--foreground)] hover:bg-[var(--background-secondary)] disabled:opacity-25 disabled:cursor-not-allowed transition-all active:scale-95 cursor-pointer"
+                                        title="Paso atrás (Ctrl+Z / Cmd+Z)"
+                                    >
+                                        <Undo2 className="w-3.5 h-3.5" />
+                                        <span>Paso atrás</span>
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => desktopCanvasRef.current?.redo()}
+                                        disabled={!canRedo}
+                                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-medium text-[var(--foreground)] hover:bg-[var(--background-secondary)] disabled:opacity-25 disabled:cursor-not-allowed transition-all active:scale-95 cursor-pointer"
+                                        title="Paso adelante (Ctrl+Y / Cmd+Shift+Z)"
+                                    >
+                                        <Redo2 className="w-3.5 h-3.5" />
+                                        <span>Paso adelante</span>
+                                    </button>
+                                </div>
+                                <div className="flex items-center gap-2 text-xs font-medium text-[var(--foreground-tertiary)]">
+                                    <span>{totalSelected} prendas en el look</span>
+                                </div>
+                            </div>
+
+                            {/* Canvas */}
+                            <div className="overflow-hidden shadow-lg bg-white border border-gray-200 rounded-2xl">
+                                <FreeDragCanvas
+                                    ref={desktopCanvasRef}
+                                    items={flatItems}
+                                    onRemoveItem={handleRemoveItem}
+                                    initialState={canvasState}
+                                    onStateChange={setCanvasState}
+                                    onHistoryChange={(u, r) => {
+                                        setCanUndo(u);
+                                        setCanRedo(r);
+                                    }}
+                                />
+                            </div>
                         </div>
 
                         {/* Info & Save */}
                         <div className="bg-[var(--card-bg)] rounded-2xl p-5 border border-[var(--border-color)] space-y-4 shadow-sm">
                             <div className="flex justify-between items-center text-sm font-medium text-[var(--foreground-secondary)]">
                                 <span>{totalSelected} prendas seleccionadas</span>
-                                {totalSelected > 0 && <span className="text-[var(--brand-pink)]">¡Listo para guardar!</span>}
+                                {totalSelected > 0 && <span className="text-[var(--brand-pink)] font-semibold">¡Listo para guardar!</span>}
                             </div>
 
                             <AnimatePresence>
@@ -1274,7 +1354,7 @@ export default function CreateOutfitPage() {
                                             onClick={handleSave}
                                             loading={loading}
                                             disabled={loading}
-                                            className="flex-1 py-3 bg-[var(--brand-pink)] hover:bg-[#ff3377] text-white rounded-xl shadow-lg shadow-[var(--brand-pink)]/20 transition-all font-medium"
+                                            className="flex-1 py-3 kz-pink-surface text-white rounded-xl shadow-lg shadow-[var(--brand-pink)]/20 transition-all font-medium"
                                         >
                                             <Save className="w-4 h-4 mr-2" />
                                             {outfitId ? 'Guardar Cambios' : 'Guardar Outfit'}
@@ -1356,12 +1436,12 @@ export default function CreateOutfitPage() {
                             </div>
                         </div>
 
-                        {/* Next Button Pill */}
+                        {/* Next Button Pill to go to Canvas */}
                         <div className="w-full">
                             <Button
-                                onClick={() => setMobileStep('preview')}
+                                onClick={() => setMobileStep('canvas')}
                                 glow={true}
-                                className="w-full rounded-2xl py-3.5 text-sm font-semibold overflow-hidden shadow-xl"
+                                className="w-full rounded-2xl py-3.5 text-sm font-semibold overflow-hidden shadow-xl kz-pink-surface text-white"
                             >
                                 <motion.span
                                     key={totalSelected}
@@ -1369,7 +1449,7 @@ export default function CreateOutfitPage() {
                                     animate={{ y: 0, opacity: 1 }}
                                     className="inline-block"
                                 >
-                                    Continuar con el look ({totalSelected})
+                                    Continuar al lienzo ({totalSelected})
                                 </motion.span>
                                 <ArrowRight className="w-4 h-4 ml-2" />
                             </Button>
@@ -1415,7 +1495,7 @@ export default function CreateOutfitPage() {
                                           router.push('/closet?tab=outfits');
                                       }
                                   }}
-                                  className="w-full rounded-full py-3 font-semibold kz-pink-surface border-0 text-white"
+                                  className="w-full rounded-full py-3 font-semibold kz-pink-surface border-0 text-white cursor-pointer"
                               >
                                   Ir al Armario
                               </Button>

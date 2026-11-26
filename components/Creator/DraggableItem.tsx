@@ -13,6 +13,7 @@ interface DraggableItemProps {
     isSelected: boolean;
     onSelect: () => void;
     onChange: (updates: Partial<{ x: number; y: number; scale: number; rotation: number; zIndex: number }>) => void;
+    onCommit?: () => void;
     onRemove: () => void;
     containerRef: React.RefObject<HTMLDivElement | null>;
 }
@@ -23,6 +24,7 @@ export const DraggableItem = ({
     isSelected,
     onSelect,
     onChange,
+    onCommit,
     onRemove,
     containerRef
 }: DraggableItemProps) => {
@@ -63,6 +65,7 @@ export const DraggableItem = ({
         
         // Update state
         onChange({ x: xPercent, y: yPercent });
+        onCommit?.();
     };
 
     return (
@@ -138,6 +141,7 @@ export const DraggableItem = ({
                                     // Simple rotation logic based on drag delta X
                                     onChange({ rotation: state.rotation + info.delta.x });
                                 }}
+                                onDragEnd={() => onCommit?.()}
                                 dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }} // Don't actually move the handle div
                                 className="bg-[var(--brand-pink)] text-white p-1.5 rounded-full shadow-md"
                             >
@@ -157,6 +161,7 @@ export const DraggableItem = ({
                                     const newScale = Math.max(0.3, Math.min(3, state.scale + scaleDelta));
                                     onChange({ scale: newScale });
                                 }}
+                                onDragEnd={() => onCommit?.()}
                                 dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
                                 className="bg-[var(--brand-pink)] text-white p-1.5 rounded-full shadow-md"
                             >

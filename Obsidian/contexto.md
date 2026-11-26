@@ -4043,3 +4043,26 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
   - El botón de acción adapta su texto contextual cuando el hito ya está completado (*"Añadir más prendas"*, *"Crear otro outfit"*, *"Seguir hablando con Kloe"*, etc.).
 - **Limpieza de Mocks en `components/Profile/ProfileProgressBar.tsx`**:
   - Erradicado el flag `isEthan` para garantizar que todos los perfiles se evalúen bajo las mismas reglas y métricas reales.
+
+
+---
+
+## 94. Flujo de Creación de Outfit por Pasos en Móvil y Sistema Undo/Redo en Lienzo (Noviembre 2026)
+- **Flujo Guiado de 3 Pasos en Móvil (`app/(app)/create/page.tsx`)**:
+  - **Paso 1: Elección de Prendas (`selection`)**: Pantalla dedicada con barra de filtros (`FilterBar`), cuadrícula interactiva de prendas del armario con checkmarks elásticos y barra flotante inferior con scroll horizontal de prendas seleccionadas y botón de avance *"Continuar al lienzo ({totalSelected})"*.
+  - **Paso 2: Disposición en Lienzo Fijo (`canvas`)**:
+    - **Lienzo Proporcional y No Extendido**: Contenedor con relación fija de aspecto (`aspect-[4/5]`, `max-w-[340px]`, `max-h-[52vh]`), bordes redondeados `rounded-3xl` y sombras de alta gama, evitando ocupar toda la pantalla y eliminando scrolls accidentales en móvil (`touch-none select-none`).
+    - **Header de Navegación de Alta Precisión**:
+      - Arriba a la izquierda: Botón de retorno a selección (`selection`) y botones independientes de **Paso atrás (Undo / Deshacer)** y **Paso adelante (Redo / Rehacer)** con iconos `Undo2` y `Redo2` y opacidad desactivada dinámica (`canUndo`, `canRedo`).
+      - Arriba en el centro: Indicador de paso `2/3` ("Colocar").
+      - Arriba a la derecha: Botón prioritario *"Continuar"* para avanzar a la pantalla de detalles.
+    - Controles inferiores: Botón de acceso rápido *"Elegir más prendas"* sin perder las posiciones establecidas.
+  - **Paso 3: Detalles y Guardado (`details`)**:
+    - Pantalla enfocada en metadatos: Nombre del outfit (`outfitName`), selector de ocasión / tipo de outfit (`outfitOccasion` con chips de `OUTFIT_OCCASIONS`), selector de fecha en calendario sincronizado con Supabase (`calendar_outfits`) restringido a usuarios Pro con banner interactivo de suscripción para usuarios free, toggle de visibilidad pública/privada y botón flotante de guardado *"Guardar Outfit"*.
+- **Pila de Historial Undo / Redo en Lienzo (`components/Creator/FreeDragCanvas.tsx` y `DraggableItem.tsx`)**:
+  - Implementada pila de snapshots (`historyRef`, `historyIndexRef`, hasta 40 estados) que registra instantáneas al finalizar arrastres (`onDragEnd`), rotaciones y escalados.
+  - Expuestos métodos imperativos `undo()`, `redo()`, `canUndo()` y `canRedo()` junto con el callback reactivo `onHistoryChange(canUndo, canRedo)`.
+- **Integración en Escritorio (Desktop)**:
+  - Añadida barra de herramientas directamente sobre el lienzo con botones *"Paso atrás"* y *"Paso adelante"*, contador de prendas y soporte completo de atajos de teclado (`Ctrl+Z` / `Cmd+Z` para Deshacer, `Ctrl+Y` / `Cmd+Shift+Z` para Rehacer).
+- **Separación de Instancias y Detección de Viewport**:
+  - Creados refs independientes (`mobileCanvasRef` y `desktopCanvasRef`) con selector dinámico `getActiveCanvas()` para evitar colisiones en la jerarquía DOM.
