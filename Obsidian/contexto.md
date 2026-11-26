@@ -4066,3 +4066,19 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
   - Añadida barra de herramientas directamente sobre el lienzo con botones *"Paso atrás"* y *"Paso adelante"*, contador de prendas y soporte completo de atajos de teclado (`Ctrl+Z` / `Cmd+Z` para Deshacer, `Ctrl+Y` / `Cmd+Shift+Z` para Rehacer).
 - **Separación de Instancias y Detección de Viewport**:
   - Creados refs independientes (`mobileCanvasRef` y `desktopCanvasRef`) con selector dinámico `getActiveCanvas()` para evitar colisiones en la jerarquía DOM.
+
+
+---
+
+## 95. Despliegue Automatizado a TestFlight sin Mac (GitHub Actions + Fastlane) (Noviembre 2026)
+- **Motivación**: Permitir compilar y desplegar la app nativa iOS de Klozet directamente a la app TestFlight del iPhone desde entornos Windows o sin Xcode físico instalado.
+- **Workflow de GitHub Actions (`.github/workflows/deploy-testflight.yml`)**:
+  - Ejecución bajo runner `macos-14` (con Xcode preinstalado).
+  - Pasos automatizados: Checkout, Node.js 20, compilación Next.js (`npm run build`), sincronización de Capacitor (`npx cap sync ios`), instalación de Fastlane y ejecución de carril `fastlane beta`.
+  - Disparador manual `workflow_dispatch` desde la pestaña Actions de GitHub.
+- **Configuración de Fastlane (`ios/App/fastlane/Fastfile` y `Appfile`)**:
+  - Conexión vía App Store Connect API Key (`APPSTORE_KEY_ID`, `APPSTORE_ISSUER_ID`, `APPSTORE_PRIVATE_KEY`).
+  - Creación de llavero efímero `ci_keychain` para firma de código segura.
+  - Generación/descarga automática de certificados de distribución (`get_certificates`) y perfil de aprovisionamiento App Store (`get_provisioning_profile`) para `es.klozet.app`.
+  - Auto-incremento de `build_number` basado en marca temporal (`%Y%m%d%H%M`).
+  - Compilación de `App.xcworkspace` (`build_app`) y subida directa a TestFlight (`upload_to_testflight`).
