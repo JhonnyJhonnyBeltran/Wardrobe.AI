@@ -72,5 +72,7 @@
 	<string>Klozet necesita acceso a tu galería para subir fotos de tus prendas y outfits.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Klozet necesita permiso para guardar imágenes de tus outfits y stickers en tu galería.</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 </dict>
 </plist>
