@@ -4137,3 +4137,14 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
      - **Solución**: Sustituido por un degradado suave CSS sin máscara ni `backdrop-filter` pesado detrás de la barra de navegación.
   5. **Deformación 2D Innecesaria en Botones Universales (`components/Button.tsx`, `components/TabBar.tsx` y `app/globals.css`)**:
      - Reemplazada la transformación matricial pesada (`scaleX: 1.04, scaleY: 0.93`) por escala uniforme acelerada por hardware (`scale: 0.96` / `scale: 0.92`), eliminando cálculos de física innecesarios y garantizando respuesta táctil inmediata (<16ms).
+
+
+---
+
+## 99. Corrección del Runner CI macOS 15 y Fastlane para Swift Package Manager (Noviembre 2026)
+- **Causa del Error en GitHub Actions**:
+  - `The configuration 'macos-14-arm64-us-default' is not supported`: GitHub retiró oficialmente los ejecutores `macos-14` el 2 de noviembre de 2026.
+  - **Solución en Workflow**: Actualizar el ejecutor a `runs-on: macos-15` en `.github/workflows/deploy-testflight.yml`.
+- **Ajuste de Compilación Nativa en Fastlane (`ios/App/fastlane/Fastfile`)**:
+  - Al usar Capacitor 6 con Swift Package Manager (`CapApp-SPM`), no existe `App.xcworkspace`, sino el proyecto base `App.xcodeproj`.
+  - Actualizado `build_app` en Fastlane de `workspace: "App.xcworkspace"` a `project: "App.xcodeproj"`, permitiendo que `xcodebuild` resuelva e integre las dependencias de Swift directamente sin requerir CocoaPods.
