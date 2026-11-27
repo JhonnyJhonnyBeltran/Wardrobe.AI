@@ -306,14 +306,13 @@ export default function SettingsPage() {
             >
                 {/* Desktop Top Header */}
                 <motion.div variants={itemVariants} className="hidden md:flex items-center justify-between mb-8 pb-4 border-b border-[var(--border-color)] relative">
-                    <Link href="/profile">
-                        <button
-                            className="p-2 -ml-2 rounded-full text-[var(--foreground-secondary)] hover:text-[var(--foreground)] hover:bg-[var(--background-secondary)] transition-colors cursor-pointer"
-                            aria-label="Volver al perfil"
-                            title="Volver al perfil"
-                        >
-                            <ChevronLeft className="w-6 h-6" />
-                        </button>
+                    <Link
+                        href="/profile"
+                        className="p-2 -ml-2 rounded-full text-[var(--foreground-secondary)] hover:text-[var(--foreground)] hover:bg-[var(--background-secondary)] transition-colors cursor-pointer"
+                        aria-label="Volver al perfil"
+                        title="Volver al perfil"
+                    >
+                        <ChevronLeft className="w-6 h-6" />
                     </Link>
                     <h1 className="text-xl font-bold tracking-tight text-[var(--foreground)] absolute left-1/2 -translate-x-1/2 select-none">
                         Configuración
@@ -545,11 +544,12 @@ export default function SettingsPage() {
                                     </div>
                                 </div>
                             </div>
-                            <Link href="/profile/settings/notifications">
-                                <button className="text-xs font-semibold text-[var(--brand-pink)] hover:underline flex items-center gap-1 cursor-pointer">
-                                    Ver todas
-                                    <ChevronLeft className="w-4 h-4 rotate-180" />
-                                </button>
+                            <Link
+                                href="/profile/settings/notifications"
+                                className="text-xs font-semibold text-[var(--brand-pink)] hover:underline flex items-center gap-1 cursor-pointer"
+                            >
+                                Ver todas
+                                <ChevronLeft className="w-4 h-4 rotate-180" />
                             </Link>
                         </div>
                         <div className="space-y-3">

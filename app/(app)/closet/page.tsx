@@ -28,7 +28,6 @@ import { useBodyScrollLock } from '@/lib/hooks';
 import { useTranslation } from '@/lib/i18n';
 import { translateSpanishString } from '@/lib/i18n/autoTranslate';
 import Link from 'next/link';
-import { triggerNavigationProgress } from '@/components/NavigationProgressBar';
 
 import { supabase } from '@/lib/supabase/client';
 import Image from 'next/image';
@@ -1203,7 +1202,6 @@ export default function ClosetPage() {
                   if (activeTab === 'items') {
                     setShowAddModal(true);
                   } else if (activeTab === 'outfits') {
-                    triggerNavigationProgress();
                     router.push('/create');
                   } else if (activeTab === 'calendar') {
                     if (typeof window !== 'undefined') {

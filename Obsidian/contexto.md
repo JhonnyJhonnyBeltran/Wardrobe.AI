@@ -4372,13 +4372,43 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
 3. **Aislamiento en `<Suspense>` de `CreateOutfitPage`**:
    - Encapsulado `useSearchParams()` dentro de `<Suspense fallback={<CreateOutfitSkeleton />}>`, impidiendo que los parámetros de búsqueda de la URL bloqueen la cola de eventos de renderizado de React.
 
-4. **Barra de Progreso de Navegación Global (`components/NavigationProgressBar.tsx`)**:
-   - Montada a nivel de layout raíz (`app/RootLayoutClient.tsx`).
-   - Intercepta cualquier clic en enlaces o llamadas a `router.push` mediante `triggerNavigationProgress()`.
-   - Despliega inmediatamente una fina línea brillante en color rosa `#FF66C4` en la cúspide de la pantalla (`z-[999999]`, respuesta en <16ms - Umbral de Doherty), completándose al 100% y desvaneciéndose en cuanto la nueva ruta carga.
-   - Da confirmación visual inmediata en cada pulsación en toda la app y la landing.
+4. **Eliminación de Barra de Progreso y Limpieza de Interceptores**:
+   - Eliminada la barra rosa de carga (`NavigationProgressBar.tsx`) tras feedback del usuario. Cero interferencias globales en eventos de clic.
 
 5. **Prefetching Proactivo y Enlaces Nativos**:
    - En `app/(app)/closet/page.tsx`, se ejecuta `router.prefetch('/create')`, `/create-post` y `/closet/kloe` en el montaje del armario.
    - En `EmptyState`, se sustituyó la función imperativa por `actionHref="/create"`, permitiendo que Next.js precargue el código en la memoria del navegador mientras el usuario lee la pantalla.
    - En `components/Profile/ProfileProgressBar.tsx` (checklist "Primeros pasos"), se configuró `prefetch={true}` en el enlace "Ir al lienzo".
+
+---
+
+## 109. Rediseño Integral de `/create` (Cabecera Full-Width, Lienzo Editorial 3:4 Superior, Guardar al Final) y Erradicación Definitiva de Botones Bloqueados (Noviembre 2026)
+
+### 1. Diagnóstico del Botón Bloqueado ("Hay que pulsar repetidamente para que navegue")
+- **Causa Raíz Identificada**:
+  - En `components/EmptyState.tsx`, `components/OutfitDetailModal.tsx`, `app/(app)/profile/settings/page.tsx` y `app/(app)/profile/settings/personal/page.tsx`, se anidaban elementos interactivos `<button>` o componentes `<Button>` (basados en `motion.button`) dentro de etiquetas `<Link>`.
+  - Conforme al estándar HTML5 y las APIs de eventos del DOM, un elemento `<a>` nunca debe contener un `<button>`. En navegadores modernos (WebKit / Chrome / Safari móvil), el `<button>` interior intercepta y consume el evento de puntero (`pointerdown`/`click`), impidiendo que el `<a>` despache la navegación al enrutador de Next.js en el primer toque. El enlace únicamente se activaba si el usuario pulsaba repetidamente en ráfaga o en los márgenes de 1px del contenedor.
+- **Solución Implementada**:
+  - Reemplazados todos los botones anidados por elementos directos `<Link href={...} className="...">` estilizados con el aspecto visual de botón nativo.
+  - Al pulsar 1 sola vez en "+ Crear primer outfit", "Editar look", "Publicar" o cualquier botón de navegación, el evento se despacha directamente al enrutador de Next.js en **0ms** sin intermediarios ni bloqueos.
+
+### 2. Eliminación de Barra de Carga Rosa
+- Retirado por completo el componente `NavigationProgressBar.tsx` de `app/RootLayoutClient.tsx` y eliminado del proyecto.
+- Eliminada la llamada `triggerNavigationProgress()` en `closet/page.tsx`.
+
+### 3. Solución al Ancho de Cabecera en `/create` (0px Margen Fantasma)
+- **Causa Raíz**: `Sidebar.tsx` comprobaba `storeTabBarHidden` y aplicaba `opacity-0 pointer-events-none` pero mantenía su anchura fija de `w-[72px] shrink-0`. Esto creaba una franja invisible de 72px a la izquierda de la pantalla que empujaba la cabecera de `/create` y hacía que el borde superior no alcanzase el borde izquierdo de la pantalla.
+- **Solución**: En `Sidebar.tsx`, se configuró `(storeTabBarHidden || pathname === '/create') ? 'hidden' : 'hidden md:flex flex-col w-[72px] ...'`, eliminando por completo el elemento del flujo (`display: none`) en `/create`.
+- La cabecera de `/create` ahora ocupa el **100% real del ancho de la pantalla** (`w-full border-b px-4 lg:px-8 h-16`), con el botón de retroceso `<` alineado al extremo izquierdo y el contador de prendas seleccionadas a la derecha.
+
+### 4. Reestructuración de la Columna del Lienzo en Escritorio
+- **Lienzo Proporción Moda (Aspect 3:4, no cuadrado)**:
+  - El lienzo interactivo (`FreeDragCanvas`) ya no es un cuadrado achatado ni se sitúa al final de la página.
+  - Se colocó en la **posición superior de la columna derecha**, con proporción vertical de moda `aspect-[3/4]` (altura min 440px, max 540px), esquinas redondeadas `rounded-3xl` y cuadrícula de precisión.
+- **Barra de Herramientas Superior**:
+  - Integrada justo encima del lienzo con botones "Paso atrás" (Undo / Cmd+Z), "Paso adelante" (Redo / Cmd+Shift+Z) y contador dinámico de prendas.
+- **Metadatos Bajo el Lienzo**:
+  - Debajo del lienzo se sitúan en orden: Nombre del Outfit, Ocasión (pills filtrables), Programar en Calendario (con bloqueo Pro accesible), toggle Outfit Público y banner de Kloe Asistente.
+- **Botón "Crear Outfit" / "Guardar Cambios" al Final Absoluto**:
+  - El botón primario de acción se situó en el extremo inferior de la columna (`w-full h-14 rounded-2xl font-bold text-base kz-pink-surface text-white shadow-lg`), cerrando el flujo de creación de manera natural e intuitiva.
+

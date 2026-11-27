@@ -71,11 +71,12 @@ export default function EmptyState({
       </p>
 
       {actionLabel && actionHref && (
-        <Link href={actionHref}>
-          <Button className="px-8 h-12 text-[15px] rounded-full font-bold kz-pink-surface text-white border border-white/25 hover:scale-[1.03] active:scale-[0.97] transition-all">
-            {ActionIcon && <ActionIcon className="w-4 h-4 mr-2" />}
-            {actionLabel}
-          </Button>
+        <Link
+          href={actionHref}
+          className="inline-flex items-center justify-center px-8 h-12 text-[15px] rounded-full font-bold kz-pink-surface text-white border border-white/25 hover:scale-[1.03] active:scale-[0.97] transition-all cursor-pointer shadow-md"
+        >
+          {ActionIcon && <ActionIcon className="w-4 h-4 mr-2" />}
+          {actionLabel}
         </Link>
       )}
 

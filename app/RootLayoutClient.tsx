@@ -8,7 +8,6 @@
 import { useEffect } from "react";
 import dynamic from "next/dynamic";
 import { UserProvider, ThemeProvider, useTheme } from "@/store";
-import NavigationProgressBar from "@/components/NavigationProgressBar";
 import RealtimeProvider from "@/components/RealtimeProvider";
 import RevenueCatProvider from "@/components/RevenueCatProvider";
 import GlobalErrorBoundary from "@/components/GlobalErrorBoundary";
@@ -108,7 +107,6 @@ export default function RootLayoutClient({ children }: RootLayoutClientProps) {
           <RevenueCatProvider>
             <RealtimeProvider>
               {/* Critical components */}
-              <NavigationProgressBar />
               <LanguageDomTranslator />
               <SmartModelPreloader />
               <AppLifecycleManager />

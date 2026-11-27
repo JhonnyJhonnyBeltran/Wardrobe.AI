@@ -262,30 +262,20 @@ export function OutfitDetailModal({
                                     <div className="flex items-center gap-2.5">
                                         <Link
                                             href={`/create?outfitId=${outfit.id}`}
-                                            className="flex-1"
                                             onClick={onClose}
+                                            className="flex-1 h-11 px-4 rounded-2xl bg-[var(--foreground)] text-[var(--background)] font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 hover:opacity-90 active:scale-[0.98] transition-all shadow-xs cursor-pointer"
                                         >
-                                            <button
-                                                type="button"
-                                                className="w-full h-11 px-4 rounded-2xl bg-[var(--foreground)] text-[var(--background)] font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 hover:opacity-90 active:scale-[0.98] transition-all shadow-xs cursor-pointer"
-                                            >
-                                                <Edit2 className="w-4 h-4 shrink-0" />
-                                                <span className="truncate">Editar look</span>
-                                            </button>
+                                            <Edit2 className="w-4 h-4 shrink-0" />
+                                            <span className="truncate">Editar look</span>
                                         </Link>
 
                                         <Link
                                             href={`/create-post?outfitId=${outfit.id}`}
-                                            className="flex-1"
                                             onClick={onClose}
+                                            className="flex-1 h-11 px-4 rounded-2xl bg-[var(--brand-pink,#FF66C4)]/12 dark:bg-[var(--brand-pink,#FF66C4)]/20 text-[var(--brand-pink,#FF66C4)] border border-[var(--brand-pink,#FF66C4)]/25 dark:border-[var(--brand-pink,#FF66C4)]/35 hover:bg-[var(--brand-pink,#FF66C4)]/20 dark:hover:bg-[var(--brand-pink,#FF66C4)]/30 font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 active:scale-[0.98] transition-all shadow-xs cursor-pointer"
                                         >
-                                            <button
-                                                type="button"
-                                                className="w-full h-11 px-4 rounded-2xl bg-[var(--brand-pink,#FF66C4)]/12 dark:bg-[var(--brand-pink,#FF66C4)]/20 text-[var(--brand-pink,#FF66C4)] border border-[var(--brand-pink,#FF66C4)]/25 dark:border-[var(--brand-pink,#FF66C4)]/35 hover:bg-[var(--brand-pink,#FF66C4)]/20 dark:hover:bg-[var(--brand-pink,#FF66C4)]/30 font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 active:scale-[0.98] transition-all shadow-xs cursor-pointer"
-                                            >
-                                                <Send className="w-4 h-4 shrink-0" />
-                                                <span className="truncate">Publicar</span>
-                                            </button>
+                                            <Send className="w-4 h-4 shrink-0" />
+                                            <span className="truncate">Publicar</span>
                                         </Link>
                                     </div>
 

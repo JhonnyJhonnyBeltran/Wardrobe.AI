@@ -236,14 +236,13 @@ export default function PersonalSettingsPage() {
       <div className="max-w-2xl mx-auto px-4 py-4 md:py-8 space-y-6">
         {/* Desktop Top Header */}
         <div className="hidden md:flex items-center justify-between mb-8 pb-4 border-b border-[var(--border-color)] relative">
-          <Link href="/profile/settings">
-            <button
-              className="p-2 -ml-2 rounded-full text-[var(--foreground-secondary)] hover:text-[var(--foreground)] hover:bg-[var(--background-secondary)] transition-colors cursor-pointer"
-              aria-label="Volver a configuración"
-              title="Volver a configuración"
-            >
-              <ChevronLeft className="w-6 h-6" />
-            </button>
+          <Link
+            href="/profile/settings"
+            className="p-2 -ml-2 rounded-full text-[var(--foreground-secondary)] hover:text-[var(--foreground)] hover:bg-[var(--background-secondary)] transition-colors cursor-pointer"
+            aria-label="Volver a configuración"
+            title="Volver a configuración"
+          >
+            <ChevronLeft className="w-6 h-6" />
           </Link>
           <h1 className="text-xl font-bold tracking-tight text-[var(--foreground)] absolute left-1/2 -translate-x-1/2 select-none">
             Datos personales
