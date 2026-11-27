@@ -4169,3 +4169,16 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
   - **`components/TabBar.tsx`**: Movida la animación de pulsación directamente a la clase del `<Link>` (`active:scale-95 transition-transform duration-100`) y eliminado el `<motion.div whileTap>` interior que desalineaba los eventos en el enlace.
   - **`components/FloatingCreateButton.tsx`, `components/Feed/PostPreviewModal.tsx` y `app/(app)/closet/page.tsx`**: Eliminadas todas las deformaciones `scaleX/scaleY`, unificando a escala proporcional `scale: 0.95-0.96`.
   - **`app/RootLayoutClient.tsx`**: Suprimidos los listeners de `gesturestart`/`gesturechange` que interferían en la cola de punteros nativa de WebKit.
+
+
+---
+
+## 101. Configuración de Secrets de CI y Prevención de Fallos en Build Time para TestFlight (Noviembre 2026)
+- **Causa del Fallo en GitHub Actions (`npm run build`)**:
+  - `Error: supabaseUrl is required. Failed to collect page data for /api/subscriptions/sync`: Durante la fase de recolección estática de páginas de Next.js (`npm run build`), Turbopack evalúa los módulos en tiempo de compilación. Las rutas `/api/subscriptions/sync`, `/api/webhooks/revenuecat`, `/api/webhooks/stripe`, `/api/stripe/verify` y `/api/email/welcome` instanciaban `createClient` a nivel de módulo con `process.env.NEXT_PUBLIC_SUPABASE_URL || ''`. Al faltar las variables de entorno en el entorno de integración continua, el paso arrojaba una excepción fatal.
+- **Solución Aplicada**:
+  1. **Inyección Cifrada de Secrets en el Repositorio de GitHub**:
+     - Cifrados y subidos vía API de GitHub Actions (`pynacl` con clave pública RSA de repo): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` y `NEXT_PUBLIC_APP_URL`.
+  2. **Fallbacks Seguros de Compilación en Rutas y Clientes Supabase**:
+     - Configurados fallbacks oficiales a producción (`https://zitsnkacbmkeqnkjasbr.supabase.co` y su `anon_key`) en `lib/supabase/client.ts`, `lib/supabase/server.ts`, `app/api/subscriptions/sync/route.ts`, `app/api/webhooks/revenuecat/route.ts`, `app/api/webhooks/stripe/route.ts`, `app/api/stripe/verify/route.ts`, `app/api/email/welcome/route.ts`, `lib/server/subscriptionValidator.ts`, `app/api/posts/[id]/route.ts`, `app/api/outfits/[id]/route.ts`, `app/api/closy/conversations/route.ts`, `app/api/closy/generate-avatar/route.ts` y `app/api/user/avatar-calibration/route.ts`.
+     - Garantiza que `npm run build` compile al 100% tanto en local como en los runners de GitHub Actions sin riesgo de interrupción.

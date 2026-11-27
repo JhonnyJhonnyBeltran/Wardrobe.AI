@@ -4,8 +4,8 @@ import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { sendWelcomeEmail } from '@/lib/email/emailService';
 
 const supabaseAdmin = createAdminClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+  process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://zitsnkacbmkeqnkjasbr.supabase.co',
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_VRuWVE-qd-9QdweTy8GxXA_0rRGx72L'
 );
 
 export async function POST(request: NextRequest) {

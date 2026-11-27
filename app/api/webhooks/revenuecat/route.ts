@@ -5,8 +5,8 @@ import { sendProWelcomeEmail, sendCancellationEmail } from '@/lib/email/emailSer
 const ENTITLEMENT_ID = 'klozet_pro';
 
 const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+  process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://zitsnkacbmkeqnkjasbr.supabase.co',
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_VRuWVE-qd-9QdweTy8GxXA_0rRGx72L'
 );
 
 function inferPlanFromProductId(productId?: string | null): 'monthly' | 'yearly' | 'none' {

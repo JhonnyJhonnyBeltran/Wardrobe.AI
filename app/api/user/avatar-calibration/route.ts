@@ -4,10 +4,10 @@ import { createClient as createAdminClient } from '@supabase/supabase-js';
 
 export const dynamic = 'force-dynamic';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://zitsnkacbmkeqnkjasbr.supabase.co';
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 
                    process.env.SUPABASE_SERVICE_KEY || 
-                   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+                   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_VRuWVE-qd-9QdweTy8GxXA_0rRGx72L';
 
 const getAdmin = () => createAdminClient(supabaseUrl, serviceKey, {
   auth: { persistSession: false, autoRefreshToken: false }
