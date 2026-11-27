@@ -1,6 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
+import { motion } from 'framer-motion';
+import { RefreshCw } from 'lucide-react';
 
 export default function ErrorBoundary({
   error,
@@ -9,74 +12,141 @@ export default function ErrorBoundary({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  const [isReloading, setIsReloading] = useState(false);
+  const [recovering, setRecovering] = useState(false);
 
   useEffect(() => {
-    console.error('Unhandled application error:', error);
-    
-    // Prevent infinite reload loops
+    console.warn('[ErrorBoundary] Intercepted runtime error:', error);
+
     const now = Date.now();
-    const lastReload = parseInt(sessionStorage.getItem('error_reload_time') || '0');
-    const reloadCount = parseInt(sessionStorage.getItem('error_reload_count') || '0');
+    const lastReload = parseInt(sessionStorage.getItem('klozet_error_time') || '0', 10);
+    const reloadCount = parseInt(sessionStorage.getItem('klozet_error_count') || '0', 10);
 
     let newCount = 1;
-    // If the last reload was less than 10 seconds ago, it's a loop
-    if (now - lastReload < 10000) {
+    if (now - lastReload < 12000) {
       newCount = reloadCount + 1;
     }
 
-    sessionStorage.setItem('error_reload_time', now.toString());
-    sessionStorage.setItem('error_reload_count', newCount.toString());
+    sessionStorage.setItem('klozet_error_time', now.toString());
+    sessionStorage.setItem('klozet_error_count', newCount.toString());
 
-    // Only auto-reload up to 2 times in a row
-    if (newCount <= 2) {
-      console.warn('Auto-reloading page to recover from error...', error);
-      setIsReloading(true);
+    // Auto-recover silently on first occurrence
+    if (newCount === 1) {
+      setRecovering(true);
+      const timer = setTimeout(() => {
+        try {
+          reset();
+        } catch {
+          window.location.reload();
+        }
+      }, 800);
+      return () => clearTimeout(timer);
+    }
+  }, [error, reset]);
+
+  const handleManualReconnect = () => {
+    sessionStorage.removeItem('klozet_error_time');
+    sessionStorage.removeItem('klozet_error_count');
+    try {
+      reset();
+    } catch {
       window.location.reload();
     }
-  }, [error]);
-
-  if (isReloading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[50vh] p-4 text-center">
-        <div className="w-8 h-8 border-4 border-[var(--brand-pink)] border-t-transparent rounded-full animate-spin mb-4"></div>
-        <h2 className="text-xl font-bold mb-2">Recargando aplicación...</h2>
-        <p className="text-gray-500">Hemos detectado un problema y estamos intentando solucionarlo.</p>
-      </div>
-    );
-  }
+  };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] p-4 text-center">
-      <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 text-red-500 rounded-full flex items-center justify-center mb-6">
-        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="10"></circle>
-          <line x1="12" y1="8" x2="12" y2="12"></line>
-          <line x1="12" y1="16" x2="12.01" y2="16"></line>
-        </svg>
+    <div
+      style={{
+        paddingTop: 'max(1rem, env(safe-area-inset-top, 0px))',
+        paddingBottom: 'max(1.5rem, env(safe-area-inset-bottom, 0px))',
+        colorScheme: 'light',
+      }}
+      className="fixed inset-0 w-screen h-screen bg-white text-zinc-950 flex flex-col justify-between px-4 sm:px-6 z-[9999] overflow-hidden select-none"
+    >
+      {/* 1. Header with official Klozet logo */}
+      <header className="w-full flex items-center justify-between py-2 border-b border-zinc-100">
+        <Image
+          src="/landing/klozet-nombre-grande.png"
+          alt="Klozet"
+          width={120}
+          height={38}
+          className="h-7 w-auto object-contain"
+          priority
+        />
+        <div className="w-8 h-8 rounded-full bg-pink-50 flex items-center justify-center">
+          <Image
+            src="/kloe-avatar.png"
+            alt="Kloe"
+            width={20}
+            height={20}
+            className="object-contain"
+          />
+        </div>
+      </header>
+
+      {/* 2. Embedded App Skeleton Background */}
+      <div className="flex-1 w-full max-w-md mx-auto grid grid-cols-2 gap-3 py-4 opacity-40 pointer-events-none">
+        {[1, 2, 3, 4].map((idx) => (
+          <div
+            key={idx}
+            className="w-full aspect-[3/4] rounded-2xl bg-zinc-100 border border-zinc-200/60 p-3 flex flex-col justify-between animate-pulse"
+          >
+            <div className="w-full h-[65%] rounded-xl bg-zinc-200/80" />
+            <div className="space-y-1.5 pt-2">
+              <div className="w-3/4 h-3 rounded-md bg-zinc-200" />
+              <div className="w-1/2 h-2.5 rounded-md bg-zinc-200/70" />
+            </div>
+          </div>
+        ))}
       </div>
-      <h2 className="text-2xl font-bold mb-3 text-gray-900 dark:text-white">Algo ha salido mal</h2>
-      <p className="text-gray-500 dark:text-gray-400 mb-8 max-w-md">
-        Ha ocurrido un error persistente. Si el problema continúa, contacta a soporte.
-      </p>
-      <div className="flex gap-4">
-        <button
-          onClick={() => window.location.reload()}
-          className="px-6 py-2.5 bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white font-semibold rounded-xl hover:opacity-80 transition-opacity"
+
+      {/* 3. Centered Embedded Recovery Card (Apple HIG translucent glass) */}
+      <div className="absolute inset-0 flex items-center justify-center p-4 bg-white/60 backdrop-blur-md">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.96, y: 10 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+          className="w-full max-w-sm bg-white/95 border border-black/[0.08] rounded-[32px] p-6 text-center shadow-[0_20px_60px_rgba(0,0,0,0.1)] flex flex-col items-center"
         >
-          Forzar recarga
-        </button>
-        <button
-          onClick={() => {
-            sessionStorage.removeItem('error_reload_time');
-            sessionStorage.removeItem('error_reload_count');
-            reset();
-          }}
-          className="px-6 py-2.5 bg-[var(--brand-pink)] text-white font-semibold rounded-xl hover:opacity-90 transition-opacity shadow-lg shadow-[var(--brand-pink)]/20"
-        >
-          Intentar de nuevo
-        </button>
+          {/* Animated Kloe Avatar Container */}
+          <div className="relative w-18 h-18 rounded-full bg-[#FF66C4]/10 flex items-center justify-center mb-4">
+            <Image
+              src="/kloe-avatar.png"
+              alt="Kloe"
+              width={42}
+              height={42}
+              className="object-contain"
+            />
+            <div className="absolute inset-0 rounded-full border-2 border-[#FF66C4] border-t-transparent animate-spin" />
+          </div>
+
+          <h2 className="text-xl font-bold text-zinc-950 tracking-tight mb-1.5">
+            {recovering ? 'Sincronizando armario...' : 'Actualizando la conexión'}
+          </h2>
+          <p className="text-xs text-zinc-500 font-medium leading-relaxed mb-6 max-w-[260px]">
+            {recovering
+              ? 'Conectando con tu cuenta y cargando tus prendas.'
+              : 'Estamos sincronizando las últimas mejoras de Klozet para ti.'}
+          </p>
+
+          <button
+            type="button"
+            onClick={handleManualReconnect}
+            className="w-full h-12 rounded-full bg-[#FF66C4] hover:bg-[#ED4C9E] active:scale-[0.97] transition-all text-white font-bold text-sm flex items-center justify-center gap-2 shadow-[0_6px_20px_rgba(255,102,196,0.35)] cursor-pointer touch-manipulation"
+          >
+            <RefreshCw className="w-4 h-4 text-white" />
+            <span>Reconectar ahora</span>
+          </button>
+        </motion.div>
       </div>
+
+      {/* 4. Bottom TabBar Skeleton Placeholder */}
+      <footer className="w-full max-w-md mx-auto h-12 rounded-full bg-zinc-100 border border-zinc-200/80 flex items-center justify-around px-4 opacity-50 pointer-events-none mb-1">
+        <div className="w-5 h-5 rounded-md bg-zinc-300" />
+        <div className="w-5 h-5 rounded-md bg-zinc-300" />
+        <div className="w-7 h-7 rounded-full bg-[#FF66C4]/50" />
+        <div className="w-5 h-5 rounded-md bg-zinc-300" />
+        <div className="w-5 h-5 rounded-md bg-zinc-300" />
+      </footer>
     </div>
   );
 }

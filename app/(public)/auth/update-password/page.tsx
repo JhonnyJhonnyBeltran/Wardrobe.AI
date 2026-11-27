@@ -17,17 +17,26 @@ export default function UpdatePasswordPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
+    const [errorMsg, setErrorMsg] = useState('');
+    const [isShaking, setIsShaking] = useState(false);
+
+    const triggerShake = (msg: string) => {
+        setErrorMsg(msg);
+        setIsShaking(true);
+        setTimeout(() => setIsShaking(false), 500);
+    };
 
     const handleUpdate = async (e: React.FormEvent) => {
         e.preventDefault();
+        setErrorMsg('');
         
         if (password !== confirmPassword) {
-            toast.error('Las contraseñas no coinciden');
+            triggerShake('Las contraseñas no coinciden');
             return;
         }
 
         if (password.length < 6) {
-            toast.error('La contraseña debe tener al menos 6 caracteres');
+            triggerShake('La contraseña debe tener al menos 6 caracteres');
             return;
         }
 
@@ -37,12 +46,11 @@ export default function UpdatePasswordPage() {
             const res = await updatePassword(password);
             if (res.success) {
                 setSuccess(true);
-                toast.success('Contraseña actualizada correctamente');
             } else {
-                toast.error(res.error || 'Error al actualizar la contraseña');
+                triggerShake(res.error || 'Error al actualizar la contraseña');
             }
         } catch (err: any) {
-            toast.error(err?.message || 'Error inesperado');
+            triggerShake(err?.message || 'Error inesperado');
         } finally {
             setLoading(false);
         }
@@ -104,38 +112,68 @@ export default function UpdatePasswordPage() {
                         </p>
 
                         <form onSubmit={handleUpdate} className="space-y-4">
-                            {/* Nueva Contraseña */}
-                            <div className="relative group">
-                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--foreground-tertiary)] group-focus-within:text-[var(--foreground)] transition-colors" />
-                                <input
-                                    type={showPassword ? 'text' : 'password'}
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    placeholder="Nueva contraseña"
-                                    required
-                                    className="w-full pl-12 pr-12 h-12 rounded-xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:border-[var(--foreground-tertiary)] transition-all"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--foreground-tertiary)] hover:text-[var(--foreground)] transition-colors"
-                                >
-                                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                                </button>
-                            </div>
+                            <motion.div
+                                animate={isShaking ? { x: [-8, 8, -6, 6, -3, 3, 0] } : {}}
+                                transition={{ duration: 0.35 }}
+                                className="space-y-4"
+                            >
+                                {/* Nueva Contraseña */}
+                                <div className="relative group">
+                                    <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${errorMsg ? 'text-rose-500' : 'text-[var(--foreground-tertiary)] group-focus-within:text-[var(--foreground)]'}`} />
+                                    <input
+                                        type={showPassword ? 'text' : 'password'}
+                                        value={password}
+                                        onChange={(e) => {
+                                            setPassword(e.target.value);
+                                            setErrorMsg('');
+                                        }}
+                                        placeholder="Nueva contraseña"
+                                        required
+                                        className={`w-full pl-12 pr-12 h-12 rounded-xl bg-[var(--background-secondary)] border text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none transition-all ${
+                                            errorMsg
+                                                ? 'border-rose-500 ring-2 ring-rose-500/20 bg-rose-50/20'
+                                                : 'border-[var(--border-color)] focus:border-[#FF66C4]'
+                                        }`}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--foreground-tertiary)] hover:text-[var(--foreground)] transition-colors"
+                                    >
+                                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                    </button>
+                                </div>
 
-                            {/* Confirmar Contraseña */}
-                            <div className="relative group">
-                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[var(--foreground-tertiary)] group-focus-within:text-[var(--foreground)] transition-colors" />
-                                <input
-                                    type={showPassword ? 'text' : 'password'}
-                                    value={confirmPassword}
-                                    onChange={(e) => setConfirmPassword(e.target.value)}
-                                    placeholder="Confirmar contraseña"
-                                    required
-                                    className="w-full pl-12 pr-12 h-12 rounded-xl bg-[var(--background-secondary)] border border-[var(--border-color)] text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none focus:border-[var(--foreground-tertiary)] transition-all"
-                                />
-                            </div>
+                                {/* Confirmar Contraseña */}
+                                <div className="relative group">
+                                    <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 transition-colors ${errorMsg ? 'text-rose-500' : 'text-[var(--foreground-tertiary)] group-focus-within:text-[var(--foreground)]'}`} />
+                                    <input
+                                        type={showPassword ? 'text' : 'password'}
+                                        value={confirmPassword}
+                                        onChange={(e) => {
+                                            setConfirmPassword(e.target.value);
+                                            setErrorMsg('');
+                                        }}
+                                        placeholder="Confirmar contraseña"
+                                        required
+                                        className={`w-full pl-12 pr-12 h-12 rounded-xl bg-[var(--background-secondary)] border text-[var(--foreground)] placeholder:text-[var(--foreground-tertiary)] focus:outline-none transition-all ${
+                                            errorMsg
+                                                ? 'border-rose-500 ring-2 ring-rose-500/20 bg-rose-50/20'
+                                                : 'border-[var(--border-color)] focus:border-[#FF66C4]'
+                                        }`}
+                                    />
+                                </div>
+                            </motion.div>
+
+                            {errorMsg && (
+                                <motion.p
+                                    initial={{ opacity: 0, y: -4 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="text-xs text-rose-500 font-semibold text-center"
+                                >
+                                    {errorMsg}
+                                </motion.p>
+                            )}
 
                             <Button
                                 type="submit"

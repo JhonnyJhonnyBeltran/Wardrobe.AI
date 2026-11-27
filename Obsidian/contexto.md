@@ -4310,3 +4310,39 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
     - Cualquier píxel transparente interno no alcanzable desde el exterior se identifica como un **agujero artificial/hueco interior ("prenda rota")**.
     - Restaura automáticamente los píxeles RGB del tejido original en los huecos detectados y fija la opacidad al 100% ($A=255$), preservando la prenda entera e impoluta mientras el fondo exterior permanece totalmente transparente.
   - **Integración en `processor.ts` y `useAddItemForm.ts`**: Reporta en `ProcessingResult.analysis` el estado de la prenda (`pristine`, `repaired`, `severely_broken_fallback`) y notifica al usuario cuando se ha protegido y restaurado el tejido de su prenda clara.
+
+
+---
+
+## 107. Regla Mandatoria: Erradicación de Toasts Flotantes de Error, Inline Shake + Borde Rojo, Blindaje de Safe Areas y Error Boundary con Skeleton (Noviembre 2026)
+
+### 1. Regla Mandatoria: Prohibición Absoluta de Toasts Flotantes de Error en Toda la Aplicación
+- **Principio Fundamental**: En pantallas de login, registro, formularios de prendas o perfil, JAMÁS debe mostrarse un toast o alerta flotante en la parte superior de la pantalla.
+- **Implementación Inline con Shake y Borde Rojo**:
+  1. **Animación Táctil de Temblor (`shake`)**: El input afectado vibra lateralmente (`x: [-8, 8, -6, 6, -3, 3, 0]`, duración 350ms) acompañado de respuesta háptica de error (`haptics.error()`).
+  2. **Borde y Resalte Rojo**: La clase cambia a `border-rose-500 ring-2 ring-rose-500/20 bg-rose-50/20 text-rose-950 placeholder:text-rose-300` con icono en rojo.
+  3. **Texto Explicativo Inline**: Justo debajo del input se renderiza una etiqueta animada (`<motion.p className="text-xs text-rose-500 font-semibold pl-4 pt-1">...`) detallando con claridad la causa del error.
+  4. **Limpieza Instantánea al Escribir (`clearFieldError`)**: Al introducir o modificar texto en el campo (`onChange`), el borde rojo y el mensaje de error desaparecen inmediatamente, devolviendo el input a su estado natural.
+  5. **Errores Generales Embeded**: Si ocurre un error de red o servidor no asociado a un campo concreto, se renderiza como tarjeta sutil dentro del formulario (`bg-rose-50 border border-rose-200 text-rose-600 text-xs font-semibold text-center p-3.5 rounded-2xl`), nunca flotando en la cabecera.
+  6. **Toaster Reubicado a `bottom-center`**: `ThemedToaster` en `RootLayoutClient.tsx` se configuró en `position="bottom-center"` con offset inferior dinámico `marginBottom: max(1rem, env(safe-area-inset-bottom, 12px))`, impidiendo que ninguna notificación colisione con la barra de estado superior.
+
+### 2. Blindaje de Safe Areas contra Colisión con Dynamic Island y Reloj de iOS (Notch Protection)
+- **Diagnóstico**: En iPhone 14/15/16 Pro, el reloj del sistema se sitúa entre Y=14px y Y=40px, y la Dynamic Island entre Y=11px y Y=46px. Los elementos situados con `top-4` (16px) o `top: max(1rem, env(...) + 0.5rem)` quedaban estampados directamente debajo del reloj `13:31`.
+- **Solución Estricta**:
+  - En `app/(public)/auth/page.tsx`, el botón `< Inicio` se reposiciona con `style={{ top: 'max(3.25rem, calc(env(safe-area-inset-top, 44px) + 0.75rem))', left: 'max(1rem, calc(env(safe-area-inset-left, 0px) + 0.75rem))' }}`.
+  - En `components/native/IosNativeLanding.tsx` y `app/(public)/page.tsx`, el padding superior de la cabecera se blinda con `max(3.25rem, calc(env(safe-area-inset-top, 44px) + 0.5rem))`.
+  - Garantiza que en cualquier modelo de iPhone con Dynamic Island o notch clásico, los botones y logotipos se sitúen limpiamente por debajo del área de estado (Y ≥ 56px).
+
+### 3. Recuperación Silenciosa y Sustitución de Pantallas de Error por Skeleton Embeded
+- **Diagnóstico**: La pantalla estándar de Next.js `app/error.tsx` mostraba un mensaje alarmante *"Algo ha salido mal / Forzar recarga"*, rompiendo la inmersión nativa.
+- **Solución Implementada (`app/error.tsx` y `components/GlobalErrorBoundary.tsx`)**:
+  - **Recarga Silenciosa Automática**: Ante el primer error no controlado en tiempo de ejecución, el sistema auto-recupera la sesión ejecutando silenciosamente `window.location.reload()`.
+  - **Renderizado de App Skeleton**: Si el error persiste, la pantalla no se queda en blanco ni muestra alertas alarmantes: renderiza el esqueleto visual completo de Klozet (cabecera con logotipo oficial, cuadrícula de tarjetas de ropa con animación de onda shimmer y barra de pestañas inferior) junto a una tarjeta translúcida de Apple con el avatar de Kloe animado (*"Actualizando la conexión"*, botón *"Reconectar ahora"*).
+
+### 4. Carrusel Táctil Nativo para iOS (`components/native/IosNativeLanding.tsx`)
+- Detecta instantáneamente la plataforma iOS (`isNativeIos`) en render inicial sin parpadeos.
+- Sustituye la landing web de escritorio por una experiencia editorial nativa:
+  - 3 diapositivas de moda con fotografías ampliadas (`aspect-[4/4.9]`, esquinas `rounded-[36px]`).
+  - Iconos y tipografías grandes de alta legibilidad (`text-3xl sm:text-4xl font-extrabold`).
+  - Botón táctil prominente *"Continuar"* para avanzar entre pasos con retroalimentación háptica.
+  - Diapositiva final con *"Empezar gratis"*, *"Continuar con Google"* nativo e *"Iniciar sesión"*.

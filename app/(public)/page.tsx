@@ -24,13 +24,25 @@ export default function LandingPage() {
   const { language, setLanguage, initLanguage } = useLanguageStore();
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
   const [currentFrame, setCurrentFrame] = useState(0);
-  const [isNativeIos, setIsNativeIos] = useState(false);
+  const [isNativeIos, setIsNativeIos] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    try {
+      return (Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios') ||
+             (window as any).Capacitor?.platform === 'ios' ||
+             (window as any).Capacitor?.isNativePlatform?.();
+    } catch {
+      return false;
+    }
+  });
 
   useEffect(() => {
     initLanguage();
     try {
-      if (typeof window !== 'undefined' && Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios') {
-        setIsNativeIos(true);
+      if (typeof window !== 'undefined') {
+        const isIos = (Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios') ||
+                      (window as any).Capacitor?.platform === 'ios' ||
+                      (window as any).Capacitor?.isNativePlatform?.();
+        if (isIos) setIsNativeIos(true);
       }
     } catch {}
   }, [initLanguage]);
@@ -164,7 +176,7 @@ export default function LandingPage() {
       {/* 1. TOP BAR WITH LOGO AND AUTH BUTTONS (With iOS safe area protection) */}
       <header 
         style={{
-          paddingTop: 'max(0.75rem, calc(env(safe-area-inset-top, 0px) + 0.5rem))',
+          paddingTop: 'max(3.25rem, calc(env(safe-area-inset-top, 44px) + 0.5rem))',
           paddingLeft: 'max(1rem, env(safe-area-inset-left, 0px))',
           paddingRight: 'max(1rem, env(safe-area-inset-right, 0px))',
         }}

@@ -116,11 +116,10 @@ export default function AuthPage() {
     useEffect(() => {
         initNativeOAuthListener(
             () => {
-                toast.success('Sesión iniciada correctamente');
                 router.push('/closet');
             },
             (err) => {
-                toast.error(err || 'Error al completar el inicio de sesión');
+                triggerFieldShake('general', err || 'Error al completar el inicio de sesión');
                 setLoading(false);
                 isSubmittingRef.current = false;
             }
@@ -132,6 +131,29 @@ export default function AuthPage() {
     const [loading, setLoading] = useState(false);
     const [emailConfirmPending, setEmailConfirmPending] = useState(false);
     const isSubmittingRef = useRef(false);
+
+    // Strict inline error & tactile shake state (No floating toasts)
+    const [fieldErrors, setFieldErrors] = useState<{
+        emailOrUser?: string;
+        password?: string;
+        fullName?: string;
+        username?: string;
+        email?: string;
+        resetEmail?: string;
+        general?: string;
+    }>({});
+    const [shakingField, setShakingField] = useState<string | null>(null);
+
+    const triggerFieldShake = (field: 'emailOrUser' | 'password' | 'fullName' | 'username' | 'email' | 'resetEmail' | 'general', message: string) => {
+        try { haptics.error(); } catch {}
+        setFieldErrors((prev) => ({ ...prev, [field]: message }));
+        setShakingField(field);
+        setTimeout(() => setShakingField(null), 500);
+    };
+
+    const clearFieldError = (field: string) => {
+        setFieldErrors((prev) => ({ ...prev, [field]: undefined, general: undefined }));
+    };
 
     // Personality & Interactive Showcase state
     const [selectedLookIdx, setSelectedLookIdx] = useState(0);
@@ -250,19 +272,24 @@ export default function AuthPage() {
     const handleResetPassword = async (e: React.FormEvent) => {
         e.preventDefault();
         if (loading || isSubmittingRef.current) return;
+        setFieldErrors({});
+
+        if (!resetEmail || !resetEmail.includes('@')) {
+            triggerFieldShake('resetEmail', 'Introduce un correo electrónico válido.');
+            return;
+        }
+
         isSubmittingRef.current = true;
         setLoading(true);
         try {
             const res = await resetPasswordForEmail(resetEmail);
             if (res.success) {
                 setResetSent(true);
-                toast.success('Enlace de recuperación enviado. Revisa tu correo.');
             } else {
-                toast.error(res.error || 'Error al enviar enlace de recuperación');
+                triggerFieldShake('resetEmail', res.error || 'No se pudo enviar el enlace de recuperación.');
             }
         } catch (err: any) {
-            console.error('Reset password error:', err);
-            showDatabaseError(err, 'No se pudo enviar el enlace de recuperación.');
+            triggerFieldShake('resetEmail', err?.message || 'Error de conexión.');
         } finally {
             setLoading(false);
             isSubmittingRef.current = false;
@@ -272,19 +299,32 @@ export default function AuthPage() {
     const handleEmailAuth = async (e: React.FormEvent) => {
         e.preventDefault();
         if (loading || isSubmittingRef.current) return;
-        isSubmittingRef.current = true;
-        setLoading(true);
+        setFieldErrors({});
 
-        try {
-            if (isLogin) {
-                const input = emailOrUser.trim();
+        if (isLogin) {
+            const input = emailOrUser.trim();
+            if (!input) {
+                triggerFieldShake('emailOrUser', 'Introduce tu email o nombre de usuario.');
+                return;
+            }
+            if (!password) {
+                triggerFieldShake('password', 'Introduce tu contraseña.');
+                return;
+            }
+
+            isSubmittingRef.current = true;
+            setLoading(true);
+
+            try {
                 let emailToUse: string;
                 if (input.includes('@') && input.includes('.')) {
                     emailToUse = input;
                 } else {
                     const resolved = await resolveEmail(input);
                     if (!resolved) {
-                        toast.error('Usuario no encontrado. Intenta con tu email directamente.');
+                        triggerFieldShake('emailOrUser', 'Usuario no encontrado. Comprueba tus datos o escribe tu email.');
+                        setLoading(false);
+                        isSubmittingRef.current = false;
                         return;
                     }
                     emailToUse = resolved;
@@ -308,19 +348,51 @@ export default function AuthPage() {
                 } else {
                     const msg = res.error || 'Error al iniciar sesión';
                     if (msg.toLowerCase().includes('email not confirmed') || msg.toLowerCase().includes('not confirmed')) {
-                        toast.error('Debes confirmar tu email antes de iniciar sesión. Revisa tu bandeja de entrada.');
+                        triggerFieldShake('general', 'Debes confirmar tu email antes de entrar. Revisa tu bandeja de entrada o spam.');
                     } else if (msg.toLowerCase().includes('invalid login') || msg.toLowerCase().includes('invalid credentials') || msg.toLowerCase().includes('invalid email')) {
-                        toast.error('Email o contraseña incorrectos');
+                        triggerFieldShake('emailOrUser', '');
+                        triggerFieldShake('password', 'Email, usuario o contraseña incorrectos.');
                     } else {
-                        showDatabaseError(res.error || msg, msg);
+                        triggerFieldShake('general', msg);
                     }
                 }
-            } else {
-                if (isEmailAvailable === false) { toast.error('El email ya está en uso'); return; }
-                if (isUsernameAvailable === false) { toast.error('El nombre de usuario ya está en uso'); return; }
-                if (!fullName.trim()) { toast.error('Introduce tu nombre completo'); return; }
-                if (!username.trim() || username.length < 3) { toast.error('El nombre de usuario debe tener al menos 3 caracteres'); return; }
+            } catch (err: any) {
+                triggerFieldShake('general', err?.message || 'Error inesperado al conectar.');
+            } finally {
+                setLoading(false);
+                isSubmittingRef.current = false;
+            }
+        } else {
+            // Register flow
+            if (!fullName.trim()) {
+                triggerFieldShake('fullName', 'Introduce tu nombre completo.');
+                return;
+            }
+            if (!username.trim() || username.length < 3) {
+                triggerFieldShake('username', 'El nombre de usuario debe tener al menos 3 caracteres.');
+                return;
+            }
+            if (isUsernameAvailable === false) {
+                triggerFieldShake('username', 'Este nombre de usuario ya está ocupado.');
+                return;
+            }
+            if (!email.trim() || !email.includes('@')) {
+                triggerFieldShake('email', 'Introduce un correo electrónico válido.');
+                return;
+            }
+            if (isEmailAvailable === false) {
+                triggerFieldShake('email', 'Este email ya está en uso.');
+                return;
+            }
+            if (!password || password.length < 6) {
+                triggerFieldShake('password', 'La contraseña debe tener al menos 6 caracteres.');
+                return;
+            }
 
+            isSubmittingRef.current = true;
+            setLoading(true);
+
+            try {
                 const cleanUsername = username.toLowerCase().replace(/[^a-z0-9_]/g, '');
                 const res = await signUp(email, password, fullName.trim(), cleanUsername);
 
@@ -331,33 +403,31 @@ export default function AuthPage() {
                         setEmailConfirmPending(true);
                     }
                 } else {
-                    showDatabaseError(res.error, res.error || 'Error al crear cuenta');
+                    triggerFieldShake('general', res.error || 'Error al crear la cuenta.');
                 }
+            } catch (err: any) {
+                triggerFieldShake('general', err?.message || 'Error inesperado al crear tu cuenta.');
+            } finally {
+                setLoading(false);
+                isSubmittingRef.current = false;
             }
-        } catch (err: any) {
-            console.error('Auth error:', err);
-            showDatabaseError(err, 'Ha ocurrido un error inesperado al procesar tu cuenta');
-        } finally {
-            setLoading(false);
-            isSubmittingRef.current = false;
         }
     };
 
     const handleGoogleLogin = async () => {
         if (loading || isSubmittingRef.current) return;
+        setFieldErrors({});
         isSubmittingRef.current = true;
         setLoading(true);
         try {
             const res = await signInWithGoogleNativeOrWeb();
             if (!res.success && res.error) {
-                toast.error(res.error);
+                triggerFieldShake('general', res.error);
                 setLoading(false);
                 isSubmittingRef.current = false;
             }
-            // On native, system browser opens; listener handles return. On web, redirects.
         } catch (err: any) {
-            console.error('Google auth error:', err);
-            showDatabaseError(err, 'Error al iniciar sesión con Google');
+            triggerFieldShake('general', 'Error al conectar con Google.');
             setLoading(false);
             isSubmittingRef.current = false;
         }
@@ -404,16 +474,16 @@ export default function AuthPage() {
             style={{ colorScheme: 'light' }}
             className="relative min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-10 bg-white text-black overflow-x-hidden selection:bg-[#FF66C4] selection:text-white antialiased"
         >
-            {/* Top Return Pill with iOS safe area inset */}
+            {/* Top Return Pill with iOS safe area inset (placed well below status bar/Dynamic Island) */}
             <Link
                 href="/"
                 style={{
-                    top: 'max(1rem, calc(env(safe-area-inset-top, 0px) + 0.5rem))',
-                    left: 'max(1rem, calc(env(safe-area-inset-left, 0px) + 0.5rem))',
+                    top: 'max(3.25rem, calc(env(safe-area-inset-top, 44px) + 0.75rem))',
+                    left: 'max(1rem, calc(env(safe-area-inset-left, 0px) + 0.75rem))',
                 }}
-                className="fixed z-50 min-h-[44px] px-4 py-2 rounded-full text-xs sm:text-sm font-semibold bg-[#F2F2F7] hover:bg-[#E5E5EA] border border-black/[0.06] text-black transition-all flex items-center gap-1.5 active:scale-[0.97]"
+                className="fixed z-50 min-h-[44px] px-3.5 py-2 rounded-full text-xs sm:text-sm font-semibold bg-[#F2F2F7] hover:bg-[#E5E5EA] border border-black/[0.08] text-black shadow-xs transition-all flex items-center gap-1.5 active:scale-[0.96] touch-manipulation"
             >
-                <ArrowLeft className="w-4 h-4" />
+                <ArrowLeft className="w-4 h-4 text-black" />
                 <span>Inicio</span>
             </Link>
 
@@ -642,17 +712,50 @@ export default function AuthPage() {
                                         <p className="text-xs sm:text-sm text-zinc-600 text-center mb-4">
                                             Introduce tu correo y te enviamos un enlace para cambiarla.
                                         </p>
-                                        <div className="relative group">
-                                            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#636366] group-focus-within:text-black transition-colors" />
-                                            <input
-                                                type="email"
-                                                value={resetEmail}
-                                                onChange={(e) => setResetEmail(e.target.value)}
-                                                placeholder="Correo electrónico"
-                                                required
-                                                className="w-full pl-11 pr-4 h-12 text-sm rounded-full bg-[#F2F2F7] focus:bg-white border border-transparent focus:border-[#FF66C4] focus:ring-4 focus:ring-[#FF66C4]/10 text-black placeholder:text-[#636366] focus:outline-none transition-all"
-                                            />
-                                        </div>
+                                        <motion.div
+                                            animate={shakingField === 'resetEmail' ? { x: [-8, 8, -6, 6, -3, 3, 0] } : {}}
+                                            transition={{ duration: 0.35 }}
+                                            className="space-y-1"
+                                        >
+                                            <div className="relative group">
+                                                <Mail className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${fieldErrors.resetEmail ? 'text-rose-500' : 'text-[#636366] group-focus-within:text-black'}`} />
+                                                <input
+                                                    type="email"
+                                                    value={resetEmail}
+                                                    onChange={(e) => {
+                                                        setResetEmail(e.target.value);
+                                                        clearFieldError('resetEmail');
+                                                    }}
+                                                    placeholder="Correo electrónico"
+                                                    required
+                                                    className={`w-full pl-11 pr-4 h-12 text-sm rounded-full bg-[#F2F2F7] focus:bg-white border text-black placeholder:text-[#636366] focus:outline-none transition-all ${
+                                                        fieldErrors.resetEmail
+                                                            ? 'border-rose-500 ring-2 ring-rose-500/20 bg-rose-50/20 text-rose-950 placeholder:text-rose-300'
+                                                            : 'border-transparent focus:border-[#FF66C4] focus:ring-4 focus:ring-[#FF66C4]/10'
+                                                    }`}
+                                                />
+                                            </div>
+                                            {fieldErrors.resetEmail && (
+                                                <motion.p
+                                                    initial={{ opacity: 0, y: -4 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    className="text-xs text-rose-500 font-semibold pl-4 text-left"
+                                                >
+                                                    {fieldErrors.resetEmail}
+                                                </motion.p>
+                                            )}
+                                        </motion.div>
+
+                                        {fieldErrors.general && (
+                                            <motion.div
+                                                initial={{ opacity: 0, scale: 0.96 }}
+                                                animate={shakingField === 'general' ? { x: [-8, 8, -6, 6, -3, 3, 0], opacity: 1, scale: 1 } : { opacity: 1, scale: 1 }}
+                                                transition={{ duration: 0.35 }}
+                                                className="p-3.5 rounded-2xl bg-rose-50/90 border border-rose-200/90 text-rose-600 text-xs font-semibold text-center leading-relaxed"
+                                            >
+                                                {fieldErrors.general}
+                                            </motion.div>
+                                        )}
 
                                         <button
                                             type="submit"
@@ -690,97 +793,201 @@ export default function AuthPage() {
                                     {!isLogin && (
                                         <>
                                             {/* Nombre completo */}
-                                            <div className="relative group">
-                                                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#636366] group-focus-within:text-black transition-colors" />
-                                                <input
-                                                    type="text"
-                                                    value={fullName}
-                                                    onChange={(e) => setFullName(e.target.value)}
-                                                    onFocus={() => setFocusedField('none')}
-                                                    placeholder="Tu nombre"
-                                                    aria-label="Nombre completo"
-                                                    autoComplete="name"
-                                                    required
-                                                    className="w-full pl-11 pr-4 h-12 text-sm rounded-full bg-[#F2F2F7] focus:bg-white border border-transparent focus:border-[#FF66C4] focus:ring-4 focus:ring-[#FF66C4]/10 text-black placeholder:text-[#636366] focus:outline-none transition-all"
-                                                />
-                                            </div>
+                                            <motion.div
+                                                animate={shakingField === 'fullName' ? { x: [-8, 8, -6, 6, -3, 3, 0] } : {}}
+                                                transition={{ duration: 0.35 }}
+                                                className="space-y-1"
+                                            >
+                                                <div className="relative group">
+                                                    <User className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${fieldErrors.fullName ? 'text-rose-500' : 'text-[#636366] group-focus-within:text-black'}`} />
+                                                    <input
+                                                        type="text"
+                                                        value={fullName}
+                                                        onChange={(e) => {
+                                                            setFullName(e.target.value);
+                                                            clearFieldError('fullName');
+                                                        }}
+                                                        onFocus={() => setFocusedField('none')}
+                                                        placeholder="Tu nombre"
+                                                        aria-label="Nombre completo"
+                                                        autoComplete="name"
+                                                        required
+                                                        className={`w-full pl-11 pr-4 h-12 text-sm rounded-full bg-[#F2F2F7] focus:bg-white border text-black placeholder:text-[#636366] focus:outline-none transition-all ${
+                                                            fieldErrors.fullName
+                                                                ? 'border-rose-500 ring-2 ring-rose-500/20 bg-rose-50/20 text-rose-950 placeholder:text-rose-300'
+                                                                : 'border-transparent focus:border-[#FF66C4] focus:ring-4 focus:ring-[#FF66C4]/10'
+                                                        }`}
+                                                    />
+                                                </div>
+                                                {fieldErrors.fullName && (
+                                                    <motion.p
+                                                        initial={{ opacity: 0, y: -4 }}
+                                                        animate={{ opacity: 1, y: 0 }}
+                                                        className="text-xs text-rose-500 font-semibold pl-4 text-left"
+                                                    >
+                                                        {fieldErrors.fullName}
+                                                    </motion.p>
+                                                )}
+                                            </motion.div>
 
                                             {/* Nombre de usuario */}
-                                            <div className="relative group">
-                                                <AtSign className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#636366] group-focus-within:text-black transition-colors" />
-                                                <input
-                                                    type="text"
-                                                    value={username}
-                                                    onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
-                                                    onFocus={() => setFocusedField('username')}
-                                                    onBlur={() => setFocusedField('none')}
-                                                    placeholder="tu_usuario"
-                                                    aria-label="Nombre de usuario"
-                                                    autoComplete="username"
-                                                    required
-                                                    minLength={3}
-                                                    className="w-full pl-11 pr-10 h-12 text-sm rounded-full bg-[#F2F2F7] focus:bg-white border border-transparent focus:border-[#FF66C4] focus:ring-4 focus:ring-[#FF66C4]/10 text-black placeholder:text-[#636366] focus:outline-none transition-all"
-                                                />
-                                                <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                                                    {isCheckingUsername && <Loader2 className="w-4 h-4 animate-spin text-[#636366]" />}
-                                                    {!isCheckingUsername && isUsernameAvailable === true && <CheckCircle className="w-4 h-4 text-emerald-600" />}
-                                                    {!isCheckingUsername && isUsernameAvailable === false && <XCircle className="w-4 h-4 text-red-600" />}
+                                            <motion.div
+                                                animate={shakingField === 'username' ? { x: [-8, 8, -6, 6, -3, 3, 0] } : {}}
+                                                transition={{ duration: 0.35 }}
+                                                className="space-y-1"
+                                            >
+                                                <div className="relative group">
+                                                    <AtSign className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${fieldErrors.username ? 'text-rose-500' : 'text-[#636366] group-focus-within:text-black'}`} />
+                                                    <input
+                                                        type="text"
+                                                        value={username}
+                                                        onChange={(e) => {
+                                                            setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''));
+                                                            clearFieldError('username');
+                                                        }}
+                                                        onFocus={() => setFocusedField('username')}
+                                                        onBlur={() => setFocusedField('none')}
+                                                        placeholder="tu_usuario"
+                                                        aria-label="Nombre de usuario"
+                                                        autoComplete="username"
+                                                        required
+                                                        minLength={3}
+                                                        className={`w-full pl-11 pr-10 h-12 text-sm rounded-full bg-[#F2F2F7] focus:bg-white border text-black placeholder:text-[#636366] focus:outline-none transition-all ${
+                                                            fieldErrors.username
+                                                                ? 'border-rose-500 ring-2 ring-rose-500/20 bg-rose-50/20 text-rose-950 placeholder:text-rose-300'
+                                                                : 'border-transparent focus:border-[#FF66C4] focus:ring-4 focus:ring-[#FF66C4]/10'
+                                                        }`}
+                                                    />
+                                                    <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                                                        {isCheckingUsername && <Loader2 className="w-4 h-4 animate-spin text-[#636366]" />}
+                                                        {!isCheckingUsername && isUsernameAvailable === true && <CheckCircle className="w-4 h-4 text-emerald-600" />}
+                                                        {!isCheckingUsername && isUsernameAvailable === false && <XCircle className="w-4 h-4 text-rose-600" />}
+                                                    </div>
                                                 </div>
-                                            </div>
+                                                {fieldErrors.username && (
+                                                    <motion.p
+                                                        initial={{ opacity: 0, y: -4 }}
+                                                        animate={{ opacity: 1, y: 0 }}
+                                                        className="text-xs text-rose-500 font-semibold pl-4 text-left"
+                                                    >
+                                                        {fieldErrors.username}
+                                                    </motion.p>
+                                                )}
+                                            </motion.div>
                                         </>
                                     )}
 
                                     {/* Email / usuario */}
-                                    <div className="relative group">
-                                        {isLogin
-                                            ? <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#636366] group-focus-within:text-black transition-colors" />
-                                            : <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#636366] group-focus-within:text-black transition-colors" />
-                                        }
-                                        <input
-                                            type={isLogin ? 'text' : 'email'}
-                                            value={isLogin ? emailOrUser : email}
-                                            onChange={(e) => isLogin ? setEmailOrUser(e.target.value) : setEmail(e.target.value)}
-                                            onFocus={() => setFocusedField('email')}
-                                            onBlur={() => setFocusedField('none')}
-                                            placeholder={isLogin ? 'Email o @usuario' : 'Correo electrónico'}
-                                            aria-label={isLogin ? 'Email o nombre de usuario' : 'Correo electrónico'}
-                                            autoComplete={isLogin ? 'username' : 'email'}
-                                            required
-                                            className="w-full pl-11 pr-10 h-12 text-sm rounded-full bg-[#F2F2F7] focus:bg-white border border-transparent focus:border-[#FF66C4] focus:ring-4 focus:ring-[#FF66C4]/10 text-black placeholder:text-[#636366] focus:outline-none transition-all"
-                                        />
-                                        {!isLogin && (
-                                            <div className="absolute right-4 top-1/2 -translate-y-1/2">
-                                                {isCheckingEmail && <Loader2 className="w-4 h-4 animate-spin text-[#636366]" />}
-                                                {!isCheckingEmail && isEmailAvailable === true && <CheckCircle className="w-4 h-4 text-emerald-600" />}
-                                                {!isCheckingEmail && isEmailAvailable === false && <XCircle className="w-4 h-4 text-red-600" />}
-                                            </div>
+                                    <motion.div
+                                        animate={(isLogin ? shakingField === 'emailOrUser' : shakingField === 'email') ? { x: [-8, 8, -6, 6, -3, 3, 0] } : {}}
+                                        transition={{ duration: 0.35 }}
+                                        className="space-y-1"
+                                    >
+                                        <div className="relative group">
+                                            {isLogin
+                                                ? <User className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${(isLogin ? fieldErrors.emailOrUser : fieldErrors.email) ? 'text-rose-500' : 'text-[#636366] group-focus-within:text-black'}`} />
+                                                : <Mail className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${(isLogin ? fieldErrors.emailOrUser : fieldErrors.email) ? 'text-rose-500' : 'text-[#636366] group-focus-within:text-black'}`} />
+                                            }
+                                            <input
+                                                type={isLogin ? 'text' : 'email'}
+                                                value={isLogin ? emailOrUser : email}
+                                                onChange={(e) => {
+                                                    if (isLogin) {
+                                                        setEmailOrUser(e.target.value);
+                                                        clearFieldError('emailOrUser');
+                                                    } else {
+                                                        setEmail(e.target.value);
+                                                        clearFieldError('email');
+                                                    }
+                                                }}
+                                                onFocus={() => setFocusedField('email')}
+                                                onBlur={() => setFocusedField('none')}
+                                                placeholder={isLogin ? 'Email o @usuario' : 'Correo electrónico'}
+                                                aria-label={isLogin ? 'Email o nombre de usuario' : 'Correo electrónico'}
+                                                autoComplete={isLogin ? 'username' : 'email'}
+                                                required
+                                                className={`w-full pl-11 pr-10 h-12 text-sm rounded-full bg-[#F2F2F7] focus:bg-white border text-black placeholder:text-[#636366] focus:outline-none transition-all ${
+                                                    (isLogin ? fieldErrors.emailOrUser : fieldErrors.email)
+                                                        ? 'border-rose-500 ring-2 ring-rose-500/20 bg-rose-50/20 text-rose-950 placeholder:text-rose-300'
+                                                        : 'border-transparent focus:border-[#FF66C4] focus:ring-4 focus:ring-[#FF66C4]/10'
+                                                }`}
+                                            />
+                                            {!isLogin && (
+                                                <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                                                    {isCheckingEmail && <Loader2 className="w-4 h-4 animate-spin text-[#636366]" />}
+                                                    {!isCheckingEmail && isEmailAvailable === true && <CheckCircle className="w-4 h-4 text-emerald-600" />}
+                                                    {!isCheckingEmail && isEmailAvailable === false && <XCircle className="w-4 h-4 text-rose-600" />}
+                                                </div>
+                                            )}
+                                        </div>
+                                        {(isLogin ? fieldErrors.emailOrUser : fieldErrors.email) && (
+                                            <motion.p
+                                                initial={{ opacity: 0, y: -4 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                className="text-xs text-rose-500 font-semibold pl-4 text-left"
+                                            >
+                                                {isLogin ? fieldErrors.emailOrUser : fieldErrors.email}
+                                            </motion.p>
                                         )}
-                                    </div>
+                                    </motion.div>
 
                                     {/* Contraseña */}
-                                    <div className="relative group">
-                                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#636366] group-focus-within:text-black transition-colors" />
-                                        <input
-                                            type={showPassword ? 'text' : 'password'}
-                                            value={password}
-                                            onChange={(e) => setPassword(e.target.value)}
-                                            onFocus={() => setFocusedField('password')}
-                                            onBlur={() => setFocusedField('none')}
-                                            placeholder="Contraseña"
-                                            aria-label="Contraseña"
-                                            autoComplete={isLogin ? 'current-password' : 'new-password'}
-                                            required
-                                            className="w-full pl-11 pr-12 h-12 text-sm rounded-full bg-[#F2F2F7] focus:bg-white border border-transparent focus:border-[#FF66C4] focus:ring-4 focus:ring-[#FF66C4]/10 text-black placeholder:text-[#636366] focus:outline-none transition-all"
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowPassword(!showPassword)}
-                                            aria-label={showPassword ? 'Ocultar contraseña' : 'Ver contraseña'}
-                                            className="absolute right-2 top-1/2 -translate-y-1/2 min-w-[40px] min-h-[40px] flex items-center justify-center text-[#636366] hover:text-black transition-colors rounded-full cursor-pointer"
+                                    <motion.div
+                                        animate={shakingField === 'password' ? { x: [-8, 8, -6, 6, -3, 3, 0] } : {}}
+                                        transition={{ duration: 0.35 }}
+                                        className="space-y-1"
+                                    >
+                                        <div className="relative group">
+                                            <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors ${fieldErrors.password ? 'text-rose-500' : 'text-[#636366] group-focus-within:text-black'}`} />
+                                            <input
+                                                type={showPassword ? 'text' : 'password'}
+                                                value={password}
+                                                onChange={(e) => {
+                                                    setPassword(e.target.value);
+                                                    clearFieldError('password');
+                                                }}
+                                                onFocus={() => setFocusedField('password')}
+                                                onBlur={() => setFocusedField('none')}
+                                                placeholder="Contraseña"
+                                                aria-label="Contraseña"
+                                                autoComplete={isLogin ? 'current-password' : 'new-password'}
+                                                required
+                                                className={`w-full pl-11 pr-12 h-12 text-sm rounded-full bg-[#F2F2F7] focus:bg-white border text-black placeholder:text-[#636366] focus:outline-none transition-all ${
+                                                    fieldErrors.password
+                                                        ? 'border-rose-500 ring-2 ring-rose-500/20 bg-rose-50/20 text-rose-950 placeholder:text-rose-300'
+                                                        : 'border-transparent focus:border-[#FF66C4] focus:ring-4 focus:ring-[#FF66C4]/10'
+                                                }`}
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowPassword(!showPassword)}
+                                                aria-label={showPassword ? 'Ocultar contraseña' : 'Ver contraseña'}
+                                                className="absolute right-2 top-1/2 -translate-y-1/2 min-w-[40px] min-h-[40px] flex items-center justify-center text-[#636366] hover:text-black transition-colors rounded-full cursor-pointer"
+                                            >
+                                                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                            </button>
+                                        </div>
+                                        {fieldErrors.password && (
+                                            <motion.p
+                                                initial={{ opacity: 0, y: -4 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                className="text-xs text-rose-500 font-semibold pl-4 text-left"
+                                            >
+                                                {fieldErrors.password}
+                                            </motion.p>
+                                        )}
+                                    </motion.div>
+
+                                    {fieldErrors.general && (
+                                        <motion.div
+                                            initial={{ opacity: 0, scale: 0.96 }}
+                                            animate={shakingField === 'general' ? { x: [-8, 8, -6, 6, -3, 3, 0], opacity: 1, scale: 1 } : { opacity: 1, scale: 1 }}
+                                            transition={{ duration: 0.35 }}
+                                            className="p-3.5 rounded-2xl bg-rose-50/90 border border-rose-200/90 text-rose-600 text-xs font-semibold text-center leading-relaxed"
                                         >
-                                            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                                        </button>
-                                    </div>
+                                            {fieldErrors.general}
+                                        </motion.div>
+                                    )}
 
                                     {isLogin && (
                                         <div className="text-right">

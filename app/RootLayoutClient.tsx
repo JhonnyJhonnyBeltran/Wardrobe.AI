@@ -59,16 +59,17 @@ function ThemedToaster() {
   const { isDark } = useTheme();
   return (
     <Toaster 
-      position="top-center" 
+      position="bottom-center" 
       theme={isDark ? 'dark' : 'light'} 
-      expand={true} 
+      expand={false} 
       toastOptions={{
         style: {
-          background: 'var(--brand-pink)',
+          background: 'var(--brand-pink, #FF66C4)',
           color: 'white',
           border: 'none',
+          marginBottom: 'max(1rem, env(safe-area-inset-bottom, 12px))',
         },
-        className: 'font-sans font-medium shadow-xl rounded-2xl',
+        className: 'font-sans font-medium shadow-xl rounded-full text-xs py-2.5 px-4',
       }}
     />
   );
