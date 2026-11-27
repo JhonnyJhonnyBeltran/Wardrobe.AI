@@ -23,6 +23,17 @@ platform :ios do
     kc_path = File.expand_path("~/Library/Keychains/ci_keychain-db")
     kc_path = File.expand_path("~/Library/Keychains/ci_keychain") unless File.exist?(kc_path)
 
+    # Ensure there is room for a new certificate (Apple limit is 2 for individual accounts)
+    begin
+      certs = Spaceship::ConnectAPI::Certificate.all(filter: { certificateType: "DISTRIBUTION" })
+      if certs.count >= 2
+        UI.message("Account reached 2 distribution certificates. Revoking oldest certificate...")
+        certs.first.delete!
+      end
+    rescue => ex
+      UI.important("Non-fatal certificate cleanup note: #{ex.message}")
+    end
+
     get_certificates(
       api_key: api_key,
       keychain_path: kc_path,
