@@ -95,20 +95,8 @@ export default function RootLayoutClient({ children }: RootLayoutClientProps) {
 
     window.addEventListener('error', handleError);
 
-    // Block pinch-to-zoom gestures across mobile Safari without blocking the compositor thread
-    const preventPinchZoom = (event: Event) => {
-      event.preventDefault();
-    };
-
-    document.addEventListener('gesturestart', preventPinchZoom, { passive: false });
-    document.addEventListener('gesturechange', preventPinchZoom, { passive: false });
-    document.addEventListener('gestureend', preventPinchZoom, { passive: false });
-
     return () => {
       window.removeEventListener('error', handleError);
-      document.removeEventListener('gesturestart', preventPinchZoom);
-      document.removeEventListener('gesturechange', preventPinchZoom);
-      document.removeEventListener('gestureend', preventPinchZoom);
     };
   }, []);
   return (

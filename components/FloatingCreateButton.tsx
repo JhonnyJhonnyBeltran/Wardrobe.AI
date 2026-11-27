@@ -116,8 +116,8 @@ export default function FloatingCreateButton() {
                                     <motion.button
                                         key={action.id}
                                         variants={itemVariants}
-                                        whileTap={{ scaleX: 1.04, scaleY: 0.94 }}
-                                        transition={{ type: "spring", stiffness: 600, damping: 22 }}
+                                        whileTap={{ scale: 0.95 }}
+                                        transition={{ duration: 0.08, ease: 'easeOut' }}
                                         onClick={() => handleActionClick(action.path)}
                                         className="group h-11 md:h-12 px-4 md:px-5 rounded-full kz-pink-surface border border-white/25 shadow-[0_8px_24px_rgba(255,102,196,0.36),inset_0_1px_0_rgba(255,255,255,0.4)] flex items-center justify-center gap-2.5 text-white font-bold transition-all hover:scale-[1.03] cursor-pointer select-none pointer-events-auto touch-manipulation"
                                     >
@@ -140,8 +140,8 @@ export default function FloatingCreateButton() {
                             initial={{ scale: 0.6, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.4, opacity: 0, transition: { duration: 0.12 } }}
-                            whileTap={{ scaleX: 1.06, scaleY: 0.92 }}
-                            transition={{ type: "spring", stiffness: 600, damping: 22 }}
+                            whileTap={{ scale: 0.95 }}
+                            transition={{ duration: 0.08, ease: 'easeOut' }}
                             onClick={handleToggle}
                             className="w-[52px] h-[52px] md:w-14 md:h-14 rounded-full kz-pink-surface border border-white/25 shadow-[0_8px_28px_rgba(255,102,196,0.4),inset_0_1px_0_rgba(255,255,255,0.45)] flex items-center justify-center text-white cursor-pointer overflow-hidden z-20 transition-all hover:scale-[1.03] pointer-events-auto select-none touch-manipulation"
                             aria-label="Crear nuevo"
@@ -154,8 +154,8 @@ export default function FloatingCreateButton() {
                             initial={{ scale: 0.4, opacity: 0, rotate: -90 }}
                             animate={{ scale: 1, opacity: 1, rotate: 0 }}
                             exit={{ scale: 0.4, opacity: 0, transition: { duration: 0.12 } }}
-                            whileTap={{ scaleX: 1.06, scaleY: 0.92 }}
-                            transition={{ type: "spring", stiffness: 600, damping: 22 }}
+                            whileTap={{ scale: 0.95 }}
+                            transition={{ duration: 0.08, ease: 'easeOut' }}
                             onClick={handleToggle}
                             className="w-[52px] h-[52px] md:w-14 md:h-14 rounded-full kz-pink-surface border border-white/25 shadow-[0_8px_28px_rgba(255,102,196,0.4),inset_0_1px_0_rgba(255,255,255,0.45)] flex items-center justify-center text-white cursor-pointer hover:scale-[1.03] transition-all pointer-events-auto select-none touch-manipulation"
                             aria-label="Cerrar opciones"
@@ -199,8 +199,8 @@ export default function FloatingCreateButton() {
                                         return (
                                             <motion.button
                                                 key={action.id}
-                                                whileTap={{ scaleX: 1.03, scaleY: 0.95 }}
-                                                transition={{ type: "spring", stiffness: 600, damping: 22 }}
+                                                whileTap={{ scale: 0.95 }}
+                                                transition={{ duration: 0.08, ease: 'easeOut' }}
                                                 onClick={() => handleActionClick(action.path)}
                                                 className="w-full kz-pink-surface border border-white/25 shadow-[0_6px_20px_rgba(255,102,196,0.3),inset_0_1px_0_rgba(255,255,255,0.35)] text-white p-3.5 rounded-full flex items-center justify-center gap-3 hover:scale-[1.02] transition-all cursor-pointer font-bold text-sm touch-manipulation select-none"
                                             >

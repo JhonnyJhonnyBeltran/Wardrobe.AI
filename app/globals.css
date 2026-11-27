@@ -14,7 +14,7 @@ html {
   font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, sans-serif;
   letter-spacing: -0.022em;
   scrollbar-gutter: stable;
-  touch-action: pan-x pan-y;
+  touch-action: manipulation;
   background-color: var(--background);
   min-height: 100%;
 }
@@ -265,8 +265,10 @@ html {
   -webkit-tap-highlight-color: transparent;
 }
 
-.apple-button-spring:hover {
-  transform: scale(1.02);
+@media (hover: hover) and (pointer: fine) {
+  .apple-button-spring:hover {
+    transform: scale(1.02);
+  }
 }
 
 .apple-button-spring:active {

@@ -414,8 +414,8 @@ export default function PostPreviewModal({
             <motion.button
               type="button"
               onClick={handleQuickLike}
-              whileTap={{ scaleX: 1.08, scaleY: 0.90 }}
-              transition={{ type: "spring", stiffness: 600, damping: 20 }}
+              whileTap={{ scale: 0.94 }}
+              transition={{ duration: 0.08, ease: 'easeOut' }}
               className={cn(
                 "w-12 h-12 rounded-full flex items-center justify-center backdrop-blur-xl border transition-colors cursor-pointer select-none touch-manipulation",
                 isLikedState
@@ -438,8 +438,8 @@ export default function PostPreviewModal({
               <motion.button
                 type="button"
                 onClick={handleQuickSave}
-                whileTap={{ scaleX: 1.08, scaleY: 0.90 }}
-                transition={{ type: "spring", stiffness: 600, damping: 20 }}
+                whileTap={{ scale: 0.94 }}
+                transition={{ duration: 0.08, ease: 'easeOut' }}
                 className={cn(
                   "w-12 h-12 rounded-full flex items-center justify-center backdrop-blur-xl border transition-colors cursor-pointer select-none touch-manipulation",
                   isSavedState

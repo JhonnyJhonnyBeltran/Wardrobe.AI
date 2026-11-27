@@ -1443,8 +1443,8 @@ export default function ClosetPage() {
               <div className="flex items-center gap-1.5 shrink-0">
                 <motion.button
                   type="button"
-                  whileTap={selectedIds.size > 0 ? { scaleX: 1.05, scaleY: 0.92 } : {}}
-                  transition={{ type: "spring", stiffness: 600, damping: 22 }}
+                  whileTap={selectedIds.size > 0 ? { scale: 0.96 } : {}}
+                  transition={{ duration: 0.08, ease: 'easeOut' }}
                   onClick={async () => {
                     if (selectedIds.size === 0) return;
                     try { haptics.tap(); } catch {}

@@ -4148,3 +4148,24 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
 - **Ajuste de Compilación Nativa en Fastlane (`ios/App/fastlane/Fastfile`)**:
   - Al usar Capacitor 6 con Swift Package Manager (`CapApp-SPM`), no existe `App.xcworkspace`, sino el proyecto base `App.xcodeproj`.
   - Actualizado `build_app` en Fastlane de `workspace: "App.xcworkspace"` a `project: "App.xcodeproj"`, permitiendo que `xcodebuild` resuelva e integre las dependencias de Swift directamente sin requerir CocoaPods.
+
+
+---
+
+## 100. Diagnóstico y Corrección de la Necesidad de Doble Clic / Doble Tap en Botones (Noviembre 2026)
+- **Causa Raíz del Doble Clic en toda la Aplicación**:
+  1. **Deformación Física Asimétrica (`scaleX` / `scaleY`) en `whileTap`**:
+     - Las microinteracciones introducidas con deformación `scaleX: 1.06, scaleY: 0.90` (squash & stretch) reducían la altura del botón hasta un 10% instantáneamente al presionar (`pointerdown`).
+     - Al encogerse el botón varios píxeles verticalmente, al soltar el dedo o ratón (`pointerup`), las coordenadas caían fuera del área deformada. Según la especificación DOM, si el elemento de `mousedown` y `mouseup` no coincide, el navegador anula el evento `click`. Requería un segundo clic inmediato (ya con el botón deformado o más centrado) para registrarse.
+  2. **Simulación de Hover en Pantallas Táctiles por `whileHover` y `:hover`**:
+     - En WebKit/Safari móvil, cualquier elemento con reglas de hover interpreta el primer toque como `mouseenter` (para mostrar el hover/tooltip), devorando el evento e impidiendo el `click` hasta un segundo toque consecutivo.
+  3. **Conflicto de Gestos en Raíz por `touch-action: pan-x pan-y`**:
+     - Declarado en `html`, hacía que el navegador interpretase los toques iniciales como inicio de paneo/scroll en vez de clics directos de interfaz.
+  4. **Listeners no pasivos de gestos en `RootLayoutClient.tsx`**:
+     - `gesturestart` con `preventDefault()` interceptaba secuencias táctiles en dispositivos Apple.
+- **Solución Definitiva Aplicada**:
+  - **`components/Button.tsx`**: Eliminado `whileHover`, sustituido `whileTap` por escala uniforme sutil `scale: 0.97` con transición rápida (80ms), y desestructuración explícita de `onClick` garantizando ejecución sin colisiones de props.
+  - **`app/globals.css`**: Cambiado `touch-action: pan-x pan-y` a `touch-action: manipulation` en `html` (estándar oficial para suprimir el retraso de 300ms y garantizar clics instantáneos), y encapsulado `.apple-button-spring:hover` dentro de `@media (hover: hover) and (pointer: fine)`.
+  - **`components/TabBar.tsx`**: Movida la animación de pulsación directamente a la clase del `<Link>` (`active:scale-95 transition-transform duration-100`) y eliminado el `<motion.div whileTap>` interior que desalineaba los eventos en el enlace.
+  - **`components/FloatingCreateButton.tsx`, `components/Feed/PostPreviewModal.tsx` y `app/(app)/closet/page.tsx`**: Eliminadas todas las deformaciones `scaleX/scaleY`, unificando a escala proporcional `scale: 0.95-0.96`.
+  - **`app/RootLayoutClient.tsx`**: Suprimidos los listeners de `gesturestart`/`gesturechange` que interferían en la cola de punteros nativa de WebKit.

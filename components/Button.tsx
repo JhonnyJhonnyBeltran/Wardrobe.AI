@@ -29,6 +29,7 @@ export default function Button({
   loading = false,
   className = '',
   disabled,
+  onClick,
   ...props
 }: ButtonProps) {
   const baseStyles = `
@@ -86,24 +87,18 @@ export default function Button({
   const isDisabled = disabled || loading;
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
-    // Trigger haptic feedback on click
     if (!isDisabled) {
-      haptics.tap();
+      try {
+        haptics.tap();
+      } catch {}
     }
-    // Call original onClick if provided
-    props.onClick?.(e);
+    onClick?.(e);
   };
 
   return (
     <motion.button
-      whileHover={!isDisabled ? { scale: 1.02 } : {}}
-      whileTap={!isDisabled ? { scale: 0.96 } : {}}
-      transition={{
-        type: 'spring',
-        stiffness: 500,
-        damping: 26,
-        mass: 0.5,
-      }}
+      whileTap={!isDisabled ? { scale: 0.97 } : {}}
+      transition={{ duration: 0.08, ease: 'easeOut' }}
       className={`
         ${baseStyles}
         ${variants[variant]}

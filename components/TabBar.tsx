@@ -91,11 +91,9 @@ export default function TabBar() {
                   triggerHaptic('medium');
                 }
               }}
-              className="flex-1 flex justify-center items-center h-full group touch-manipulation z-10"
+              className="flex-1 flex justify-center items-center h-full group touch-manipulation z-10 active:scale-95 transition-transform duration-100"
             >
-              <motion.div
-                whileTap={{ scale: 0.92 }}
-                transition={{ type: 'spring', stiffness: 500, damping: 24 }}
+              <div
                 className="relative flex flex-col items-center justify-center p-2 rounded-full"
               >
                 {tab.isLogoMark ? (
@@ -133,7 +131,7 @@ export default function TabBar() {
                     </AnimatePresence>
                   </div>
                 )}
-              </motion.div>
+              </div>
             </Link>
           );
         })}
