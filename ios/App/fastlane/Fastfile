@@ -35,11 +35,15 @@ platform :ios do
     )
 
     build_ver = Time.now.strftime("%Y%m%d%H%M")
+    profile_name = lane_context[SharedValues::SIGH_NAME] || "es.klozet.app AppStore"
+    profile_uuid = lane_context[SharedValues::SIGH_UUID]
 
     update_code_signing_settings(
       use_automatic_signing: false,
       path: "App.xcodeproj",
-      profile_name: ENV["sigh_es.klozet.app_appstore_profile-name"],
+      profile_name: profile_name,
+      profile_uuid: profile_uuid,
+      code_sign_identity: "Apple Distribution",
       bundle_identifier: "es.klozet.app"
     )
 
@@ -48,7 +52,13 @@ platform :ios do
       scheme: "App",
       export_method: "app-store",
       clean: true,
-      xcargs: "CURRENT_PROJECT_VERSION=#{build_ver}"
+      export_options: {
+        signingStyle: "manual",
+        provisioningProfiles: {
+          "es.klozet.app" => profile_name
+        }
+      },
+      xcargs: "PROVISIONING_PROFILE_SPECIFIER='#{profile_name}' CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY='Apple Distribution' CURRENT_PROJECT_VERSION=#{build_ver}"
     )
 
     upload_to_testflight(

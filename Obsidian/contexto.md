@@ -4186,4 +4186,5 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
      - Actualizado `node-version: 22` en `.github/workflows/deploy-testflight.yml` para cumplir con el requisito estricto de Capacitor CLI (`NodeJS >= 22.0.0`).
      - Corregidos los parámetros de `get_certificates` en `ios/App/fastlane/Fastfile` (eliminando la opción inválida `create_new: true` y usando `keychain_path` con resolución dinámica de la base de datos de keychain creada).
      - Resuelta la ruta real del archivo de llavero macOS (`ci_keychain-db` vs `ci_keychain`) mediante comprobación `File.exist?`, evitando el fallo de `Keychain not found` en runners macOS 15.
+     - Corregida la asignación del Provisioning Profile para `xcodebuild`: `lane_context[SharedValues::SIGH_NAME]` y `SIGH_UUID` inyectados en `update_code_signing_settings` (`code_sign_identity: 'Apple Distribution'`), `export_options.provisioningProfiles` y `xcargs PROVISIONING_PROFILE_SPECIFIER`, resolviendo el error `App requires a provisioning profile`.
      - Limpiados los argumentos de `build_app` eliminando opciones no soportadas por gym (`keychain_name`).
