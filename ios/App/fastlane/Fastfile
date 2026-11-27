@@ -20,10 +20,11 @@ platform :ios do
       lock_when_sleeps: false
     )
 
+    keychain_file = lane_context[SharedValues::KEYCHAIN_PATH] || File.expand_path("~/Library/Keychains/ci_keychain-db")
+
     get_certificates(
       api_key: api_key,
-      create_new: true,
-      keychain_name: "ci_keychain",
+      keychain_path: keychain_file,
       keychain_password: "ci_password_klozet"
     )
 
@@ -46,9 +47,7 @@ platform :ios do
       scheme: "App",
       export_method: "app-store",
       clean: true,
-      xcargs: "CURRENT_PROJECT_VERSION=#{build_ver}",
-      keychain_name: "ci_keychain",
-      keychain_password: "ci_password_klozet"
+      xcargs: "CURRENT_PROJECT_VERSION=#{build_ver}"
     )
 
     upload_to_testflight(

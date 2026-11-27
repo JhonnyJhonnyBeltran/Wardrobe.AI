@@ -4182,3 +4182,7 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
   2. **Fallbacks Seguros de Compilación en Rutas y Clientes Supabase**:
      - Configurados fallbacks oficiales a producción (`https://zitsnkacbmkeqnkjasbr.supabase.co` y su `anon_key`) en `lib/supabase/client.ts`, `lib/supabase/server.ts`, `app/api/subscriptions/sync/route.ts`, `app/api/webhooks/revenuecat/route.ts`, `app/api/webhooks/stripe/route.ts`, `app/api/stripe/verify/route.ts`, `app/api/email/welcome/route.ts`, `lib/server/subscriptionValidator.ts`, `app/api/posts/[id]/route.ts`, `app/api/outfits/[id]/route.ts`, `app/api/closy/conversations/route.ts`, `app/api/closy/generate-avatar/route.ts` y `app/api/user/avatar-calibration/route.ts`.
      - Garantiza que `npm run build` compile al 100% tanto en local como en los runners de GitHub Actions sin riesgo de interrupción.
+  3. **Corrección de Versión de Node y Parámetros de Fastlane**:
+     - Actualizado `node-version: 22` en `.github/workflows/deploy-testflight.yml` para cumplir con el requisito estricto de Capacitor CLI (`NodeJS >= 22.0.0`).
+     - Corregidos los parámetros de `get_certificates` en `ios/App/fastlane/Fastfile` (eliminando la opción inválida `create_new: true` y usando `keychain_path` con resolución dinámica de la base de datos de keychain creada).
+     - Limpiados los argumentos de `build_app` eliminando opciones no soportadas por gym (`keychain_name`).
