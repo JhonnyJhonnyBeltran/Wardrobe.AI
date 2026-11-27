@@ -60,24 +60,24 @@ export default function ItemDetailModal({ outfit, isOpen, onClose }: ItemDetailM
                             </div>
                             <div className="flex items-center gap-1">
                                 <motion.button
-                                    whileHover={{ scale: 1.1 }}
-                                    whileTap={{ scale: 0.9 }}
-                                    className="p-2 rounded-full hover:bg-[var(--background-secondary)] transition-colors"
+                                    whileTap={{ scale: 0.92 }}
+                                    transition={{ duration: 0.08, ease: 'easeOut' }}
+                                    className="p-2 rounded-full hover:bg-[var(--background-secondary)] transition-colors cursor-pointer touch-manipulation"
                                 >
                                     <Heart className="w-5 h-5 text-[var(--foreground-secondary)]" />
                                 </motion.button>
                                 <motion.button
-                                    whileHover={{ scale: 1.1 }}
-                                    whileTap={{ scale: 0.9 }}
-                                    className="p-2 rounded-full hover:bg-[var(--background-secondary)] transition-colors"
+                                    whileTap={{ scale: 0.92 }}
+                                    transition={{ duration: 0.08, ease: 'easeOut' }}
+                                    className="p-2 rounded-full hover:bg-[var(--background-secondary)] transition-colors cursor-pointer touch-manipulation"
                                 >
                                     <Share2 className="w-5 h-5 text-[var(--foreground-secondary)]" />
                                 </motion.button>
                                 <motion.button
-                                    whileHover={{ scale: 1.1 }}
-                                    whileTap={{ scale: 0.9 }}
+                                    whileTap={{ scale: 0.92 }}
+                                    transition={{ duration: 0.08, ease: 'easeOut' }}
                                     onClick={onClose}
-                                    className="p-2 rounded-full hover:bg-[var(--background-secondary)] transition-colors"
+                                    className="p-2 rounded-full hover:bg-[var(--background-secondary)] transition-colors cursor-pointer touch-manipulation"
                                 >
                                     <X className="w-5 h-5 text-[var(--foreground-secondary)]" />
                                 </motion.button>
@@ -151,9 +151,9 @@ export default function ItemDetailModal({ outfit, isOpen, onClose }: ItemDetailM
                                                 href={(item as any).buyLink}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                whileHover={{ scale: 1.1 }}
-                                                whileTap={{ scale: 0.9 }}
-                                                className="flex items-center gap-1 px-3 py-2 rounded-full bg-[var(--brand-pink)] hover:bg-[var(--brand-pink-dark)] text-white text-xs font-medium shadow-md hover:shadow-lg transition-all"
+                                                whileTap={{ scale: 0.95 }}
+                                                transition={{ duration: 0.08, ease: 'easeOut' }}
+                                                className="flex items-center gap-1 px-3 py-2 rounded-full bg-[var(--brand-pink)] hover:bg-[var(--brand-pink-dark)] text-white text-xs font-medium shadow-md hover:shadow-lg transition-all touch-manipulation"
                                                 onClick={(e) => e.stopPropagation()}
                                             >
                                                 <ShoppingBag className="w-3 h-3" />
@@ -164,9 +164,9 @@ export default function ItemDetailModal({ outfit, isOpen, onClose }: ItemDetailM
                                                 href={item.ref}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                whileHover={{ scale: 1.1 }}
-                                                whileTap={{ scale: 0.9 }}
-                                                className="p-2 rounded-full bg-[var(--card-bg)] text-[var(--foreground-secondary)] shadow-sm opacity-0 group-hover:opacity-100 transition-all hover:shadow-md border border-[var(--border-color)]"
+                                                whileTap={{ scale: 0.95 }}
+                                                transition={{ duration: 0.08, ease: 'easeOut' }}
+                                                className="p-2 rounded-full bg-[var(--card-bg)] text-[var(--foreground-secondary)] shadow-sm opacity-0 group-hover:opacity-100 transition-all hover:shadow-md border border-[var(--border-color)] touch-manipulation"
                                                 onClick={(e) => e.stopPropagation()}
                                             >
                                                 <ExternalLink className="w-4 h-4 text-[var(--brand-pink)]" />
@@ -178,9 +178,9 @@ export default function ItemDetailModal({ outfit, isOpen, onClose }: ItemDetailM
 
                             {/* CTA */}
                             <motion.button
-                                whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
-                                className="w-full py-3 rounded-full bg-[var(--brand-pink)] text-white font-medium text-sm glow-effect"
+                                transition={{ duration: 0.08, ease: 'easeOut' }}
+                                className="w-full py-3 rounded-full bg-[var(--brand-pink)] text-white font-medium text-sm glow-effect cursor-pointer touch-manipulation"
                             >
                                 Recrear este look
                             </motion.button>

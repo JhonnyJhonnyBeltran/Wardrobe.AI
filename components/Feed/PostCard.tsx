@@ -95,13 +95,18 @@ function PostCard({
 
     const handleTouchEnd = () => {
         if (longPressTimer.current) clearTimeout(longPressTimer.current);
-        setTimeout(() => {
+        if (!showPreviewModal) {
             isLongPressedRef.current = false;
-        }, 150);
+        } else {
+            setTimeout(() => {
+                isLongPressedRef.current = false;
+            }, 100);
+        }
     };
 
     const handleTouchMove = () => {
         if (longPressTimer.current) clearTimeout(longPressTimer.current);
+        isLongPressedRef.current = false;
     };
 
     const handleNavigation = (e: React.MouseEvent) => {
@@ -223,9 +228,8 @@ function PostCard({
                 onTouchEnd={handleTouchEnd}
                 onTouchMove={handleTouchMove}
                 onTouchCancel={handleTouchEnd}
-                whileHover={{ scale: 1.02, transition: { duration: 0.18 } }}
                 whileTap={{ scale: 0.97 }}
-                transition={{ type: "spring", stiffness: 420, damping: 28 }}
+                transition={{ duration: 0.08, ease: "easeOut" }}
                 className="w-full h-full relative z-10 select-none transform-gpu touch-manipulation"
             >
                 <div
@@ -323,8 +327,7 @@ function PostCard({
                                 >
                                     <motion.button
                                         whileTap={{ scale: 0.85 }}
-                                        whileHover={{ scale: 1.08 }}
-                                        transition={{ type: 'spring', stiffness: 500, damping: 22 }}
+                                        transition={{ duration: 0.08, ease: 'easeOut' }}
                                         onClick={toggleQuickSave}
                                         aria-label={isSavedState ? "Eliminar publicación de guardados" : "Guardar publicación"}
                                         className="touch-target-44 bg-[var(--card-bg)]/90 backdrop-blur-md border border-[var(--border-color)]/60 rounded-full shadow-sm focus-visible:ring-2 focus-visible:ring-[var(--brand-pink)] cursor-pointer"

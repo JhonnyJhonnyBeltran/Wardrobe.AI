@@ -69,9 +69,9 @@ export function CarouselSlot({
                                 key={item.id}
                                 layoutId={`slot-${item.id}`}
                                 onClick={() => onSelect(item)}
-                                whileHover={{ y: -1 }}
                                 whileTap={{ scale: 0.95 }}
-                                className={`relative flex-shrink-0 w-32 snap-center transition-all ${isSelected ? '' : 'opacity-70 hover:opacity-100'}`}
+                                transition={{ duration: 0.08, ease: 'easeOut' }}
+                                className={`relative flex-shrink-0 w-32 snap-center transition-all touch-manipulation ${isSelected ? '' : 'opacity-70 hover:opacity-100'}`}
                             >
                                 {/* Image Container */}
                                 <div className="relative w-32 h-40 rounded-2xl overflow-hidden bg-[var(--card-bg)]">

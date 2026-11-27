@@ -62,10 +62,10 @@ const SelectableItem = memo(function SelectableItem({
     return (
         <motion.button
             layoutId={`item-${item.id}`}
-            whileHover={{ y: -5, scale: 1.02 }}
-            whileTap={{ scale: 0.95 }}
+            whileTap={{ scale: 0.96 }}
+            transition={{ duration: 0.08, ease: 'easeOut' }}
             onClick={handleClick}
-            className={`group relative aspect-[3/4] rounded-2xl bg-[var(--card-bg)] overflow-hidden text-left transition-all duration-300 shadow-sm hover:shadow-xl ${isSelected
+            className={`group relative aspect-[3/4] rounded-2xl bg-[var(--card-bg)] overflow-hidden text-left transition-all duration-300 shadow-sm hover:shadow-xl touch-manipulation ${isSelected
                     ? 'ring-4 ring-[var(--brand-pink)]/50 border-transparent shadow-[0_0_20px_rgba(255,105,180,0.3)]'
                     : 'border border-[var(--border-color)] hover:border-[var(--brand-pink)]'
                 }`}

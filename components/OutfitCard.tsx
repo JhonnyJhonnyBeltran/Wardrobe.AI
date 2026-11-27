@@ -105,14 +105,10 @@ const OutfitCard = ({ outfit, isLocked = false, selectionMode = false, isSelecte
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: index * 0.08 }}
-            whileHover={!isLocked && !selectionMode ? {
-                y: -3,
-                transition: { type: 'spring', stiffness: 420, damping: 24 }
-            } : {}}
+            transition={{ duration: 0.3, delay: index * 0.04 }}
             whileTap={!isLocked ? { scale: 0.97 } : {}}
             onClick={!isLocked && onClick ? () => onClick(outfit) : undefined}
-            className={`group relative overflow-hidden rounded-[20px] kz-surface-card hover:shadow-[var(--shadow-card-hover)] transition-shadow duration-300 select-none ${
+            className={`group relative overflow-hidden rounded-[20px] kz-surface-card hover:shadow-[var(--shadow-card-hover)] transition-shadow duration-300 select-none touch-manipulation ${
                 selectionMode && isSelected ? 'ring-4 ring-[var(--brand-pink)] ring-inset' : ''
             } ${isLocked ? 'cursor-not-allowed' : 'cursor-pointer'}`}
         >
@@ -253,8 +249,7 @@ const OutfitCard = ({ outfit, isLocked = false, selectionMode = false, isSelecte
                 {onToggleFavorite && !isLocked && (
                     <motion.button
                         whileTap={{ scale: 0.8 }}
-                        whileHover={{ scale: 1.15 }}
-                        transition={{ type: 'spring', stiffness: 500, damping: 20 }}
+                        transition={{ duration: 0.08, ease: 'easeOut' }}
                         onClick={(e) => {
                             e.stopPropagation();
                             onToggleFavorite(outfit, outfit.favorite ?? false);

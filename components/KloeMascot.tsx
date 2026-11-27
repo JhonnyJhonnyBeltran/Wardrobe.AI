@@ -187,7 +187,6 @@ export default function KloeMascot({
     <motion.div
       key={tapKey}
       onClick={interactive || onTap ? handleTap : undefined}
-      whileHover={interactive ? { scale: 1.1, rotate: -4 } : undefined}
       whileTap={interactive ? { scale: 0.88, rotate: 6 } : undefined}
       initial={tapKey > 0 ? { scale: 0.85, rotate: -10 } : false}
       animate={{ scale: 1, rotate: 0 }}

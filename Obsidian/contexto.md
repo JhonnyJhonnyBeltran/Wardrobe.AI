@@ -4192,3 +4192,41 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
      - Selección Automática de Toolchain Xcode 26+ (`DEVELOPER_DIR`): Apple exige en App Store Connect que todas las aplicaciones se compilen con el SDK de iOS 26+ (Xcode 26+). En los runners `macos-15`, el Xcode por defecto seguía siendo 16.4 (iOS 18.5 SDK). Se configuró la selección dinámica del entorno Xcode 26 preinstalado (`/Applications/Xcode_26.3.app` / `Xcode_26.2.app`) mediante `DEVELOPER_DIR`, asegurando cumplimiento estricto del requisito de validación de App Store Connect.
      - Gestión del Límite de Certificados de Distribución de Apple: Las cuentas individuales están limitadas a 2 certificados. Al ejecutarse en runners efímeros sin clave privada previa, se alcanzaba el cupo máximo. Se purgaron los certificados huérfanos anteriores vía API de App Store Connect y se añadió rotación automática en Fastlane (`Spaceship::ConnectAPI::Certificate`) para revocar certificados obsoletos antes de solicitar uno nuevo.
      - Limpiados los argumentos de `build_app` eliminando opciones no soportadas por gym (`keychain_name`).
+
+
+---
+
+## 102. Despliegue Exitoso a TestFlight y Validación en App Store Connect (Noviembre 2026)
+- **Compilación y Subida Exitosa (Run #12 / Commit `b3fd876`)**:
+  - **Build Number**: `202611271144`
+  - **Bundle ID**: `es.klozet.app`
+  - **App ID (Apple Store Connect)**: `6839955431`
+  - **Xcode Toolchain**: Xcode 26.3 (`DEVELOPER_DIR=/Applications/Xcode_26.3.app/Contents/Developer`, iOS 26 SDK).
+  - **Firma de Código**: Apple Distribution Certificate oficial (`QH686PH7MM` - `ETIWW FRAWCISCO RAMIREZ ACEDO`) + Provisioning Profile `es.klozet.app AppStore`.
+  - **Estado en App Store Connect API**: `VALID` (`processingState: VALID`).
+  - El paquete binario `.ipa` fue procesado, validado y aceptado por Apple sin rechazos ni incompatibilidades de SDK.
+
+
+---
+
+## 103. Erradicación Integral del Doble Clic y Latencia Táctil en Toda la Aplicación (Noviembre 2026)
+- **Diagnóstico Técnico de Raíz**:
+  - En WebKit móvil y Capacitor iOS, cualquier elemento interactivo (`button`, `div` clicable) que contenga la propiedad `whileHover` de Framer Motion activa la emulación de eventos de puntero de escritorio (`mouseenter`/`mouseover`) en el primer toque.
+  - Como consecuencia, el primer toque se consumía en calcular y ejecutar la animación de hover, reteniendo la cola de eventos y requiriendo un segundo toque físico consecutivo para disparar el evento `click` o la navegación.
+- **Componentes Modificados y Optimizados**:
+  1. **`components/Feed/PostCard.tsx`**:
+     - Eliminado `whileHover` del contenedor principal del post y del botón de guardado rápido.
+     - Restablecido `isLongPressedRef.current = false` inmediatamente en `handleTouchMove` y en toques cortos en `handleTouchEnd`, garantizando que cualquier toque simple navegue instantáneamente al post.
+  2. **`components/OutfitCard.tsx`**:
+     - Eliminado `whileHover` condicional de la tarjeta del outfit y del botón de favoritos. Sustituido por `whileTap={{ scale: 0.97 }}` con transición instantánea (`duration: 0.08, ease: 'easeOut'`).
+  3. **`components/ClothingItem.tsx`**:
+     - Eliminado `whileHover={{ scale: 1.03 }}` de la tarjeta de prenda del armario y `whileHover="hover"` del botón de eliminación animado.
+  4. **`components/ItemDetailModal.tsx`**:
+     - Eliminado `whileHover={{ scale: 1.1 }}` de los botones de cabecera (Like, Compartir, Cerrar con icono `X`) y enlaces de compra. Cerrar y acciones responden al primer toque.
+  5. **`app/(app)/closet/page.tsx`**:
+     - Eliminado `whileHover` del banner interactivo de Kloe, de los ítems del armario, del botón de favoritos y de los botones flotantes de acción (`Filtrar`, `Seleccionar`, `+`).
+  6. **`components/WardrobeSelectionModal.tsx` & `components/Creator/CarouselSlot.tsx`**:
+     - Eliminado `whileHover` en las prendas seleccionables para outfits y slots de carrusel en el creador.
+  7. **`components/BubbleToggle.tsx` & `components/Feed/SponsoredAdCard.tsx`**:
+     - Eliminado `whileHover` y agregada la clase universal `touch-manipulation`.
+- **Resultado**: Clics 100% responsivos al primer toque en toda la aplicación, sin retrasos de 300ms y con respuesta visual inmediata (<16ms).

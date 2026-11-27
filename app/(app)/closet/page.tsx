@@ -72,10 +72,9 @@ function KloeHeroBanner() {
   return (
     <Link href="/closet/kloe" className="block w-full" onClick={() => { try { haptics.tap(); } catch {} }}>
       <motion.div
-        whileHover={{ y: -2, scale: 1.006 }}
         whileTap={{ scale: 0.975 }}
-        transition={{ type: 'spring', stiffness: 460, damping: 24 }}
-        className="w-full min-h-[78px] sm:min-h-[84px] py-3.5 px-5 sm:px-7 rounded-full kz-kloe-banner flex items-center justify-between gap-4 cursor-pointer group"
+        transition={{ duration: 0.08, ease: 'easeOut' }}
+        className="w-full min-h-[78px] sm:min-h-[84px] py-3.5 px-5 sm:px-7 rounded-full kz-kloe-banner flex items-center justify-between gap-4 cursor-pointer group touch-manipulation"
         aria-label={currentPrompt}
       >
         <div className="min-w-0 flex-1 flex items-center gap-4 sm:gap-5">
@@ -944,9 +943,9 @@ export default function ClosetPage() {
                         <motion.div
                           initial={isJustAdded ? { scale: 0.72, opacity: 0, y: 16 } : false}
                           animate={{ scale: 1, opacity: 1, y: 0 }}
-                          whileHover={{ y: -3 }}
-                          transition={{ type: 'spring', stiffness: 420, damping: 24 }}
-                          className="relative"
+                          whileTap={{ scale: 0.97 }}
+                          transition={{ duration: 0.08, ease: 'easeOut' }}
+                          className="relative touch-manipulation"
                           onTouchStart={() => handleTouchStart(item.id)}
                           onTouchMove={handleTouchEnd}
                           onTouchEnd={handleTouchEnd}
@@ -996,15 +995,14 @@ export default function ClosetPage() {
 
                               {/* Favorite Button Overlay with celebratory bounce */}
                               <motion.button
-                                whileTap={{ scale: 0.78 }}
-                                whileHover={{ scale: 1.15 }}
-                                transition={{ type: 'spring', stiffness: 500, damping: 20 }}
+                                whileTap={{ scale: 0.8 }}
+                                transition={{ duration: 0.08, ease: 'easeOut' }}
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleFavoriteToggle(item.id);
                                 }}
                                 aria-label={item.favorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
-                                className="absolute top-2 right-2 p-1.5 z-20 bg-transparent focus:outline-none cursor-pointer"
+                                className="absolute top-2 right-2 p-1.5 z-20 bg-transparent focus:outline-none cursor-pointer touch-manipulation"
                               >
                                 <motion.div
                                   animate={isJustFav ? { scale: [1, 1.45, 0.9, 1.1, 1] } : { scale: 1 }}
@@ -1142,8 +1140,8 @@ export default function ClosetPage() {
           {/* Desktop Select Button */}
           {activeTab !== 'calendar' && (
             <motion.button
-              whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
+              transition={{ duration: 0.08, ease: 'easeOut' }}
               onClick={() => {
                 if (selectionMode) {
                   setSelectionMode(false);
@@ -1152,7 +1150,7 @@ export default function ClosetPage() {
                   setSelectionMode(true);
                 }
               }}
-              className={`h-12 px-5 rounded-full hidden md:flex items-center justify-center gap-2 transition-all cursor-pointer ${
+              className={`h-12 px-5 rounded-full hidden md:flex items-center justify-center gap-2 transition-all cursor-pointer touch-manipulation ${
                 selectionMode
                   ? 'bg-zinc-950 dark:bg-white text-white dark:text-zinc-950 shadow-md'
                   : 'kz-pink-surface text-white border border-white/25 hover:scale-[1.03]'
@@ -1169,10 +1167,10 @@ export default function ClosetPage() {
           {/* Search / Filter Button */}
           {activeTab !== 'calendar' && (
             <motion.button
-              whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
+              transition={{ duration: 0.08, ease: 'easeOut' }}
               onClick={() => setShowFilters(prev => !prev)}
-              className="h-12 min-w-[48px] px-0 md:px-5 rounded-full kz-pink-surface border border-white/25 flex items-center justify-center gap-2 text-white transition-all cursor-pointer relative"
+              className="h-12 min-w-[48px] px-0 md:px-5 rounded-full kz-pink-surface border border-white/25 flex items-center justify-center gap-2 text-white transition-all cursor-pointer relative touch-manipulation"
               aria-label="Buscar y filtrar"
             >
               <Search className="w-5 h-5 flex-shrink-0" strokeWidth={2.4} />
@@ -1195,9 +1193,8 @@ export default function ClosetPage() {
                 initial={{ scale: 0, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0, opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
+                transition={{ duration: 0.15, ease: 'easeOut' }}
                 onClick={() => {
                   if (activeTab === 'items') {
                     setShowAddModal(true);

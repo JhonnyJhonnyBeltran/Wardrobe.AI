@@ -65,9 +65,9 @@ export const ClothingItem: React.FC<ClothingItemProps> = ({
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
-      whileHover={{ scale: 1.03 }}
-      transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-      className={`clothing-item group relative cursor-pointer focus:outline-none ${className}`}
+      whileTap={{ scale: 0.97 }}
+      transition={{ duration: 0.08, ease: 'easeOut' }}
+      className={`clothing-item group relative cursor-pointer focus:outline-none touch-manipulation ${className}`}
       onClick={onClick}
       style={{ WebkitTapHighlightColor: 'transparent' }}
     >
@@ -130,10 +130,9 @@ export const ClothingItem: React.FC<ClothingItemProps> = ({
             onClick={handleDeleteClick}
             aria-label={`Eliminar ${name || 'prenda'}`}
             initial="idle"
-            whileHover="hover"
             whileTap="active"
             style={{ WebkitTapHighlightColor: 'transparent' }}
-            className="absolute top-3 left-3 z-20 w-10 h-10 flex items-center justify-center rounded-full bg-white/80 dark:bg-black/50 backdrop-blur-md shadow-sm opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-300 hover:bg-white dark:hover:bg-black/70 hover:shadow-md border border-white/20 focus-visible:ring-2 focus-visible:ring-red-500"
+            className="absolute top-3 left-3 z-20 w-10 h-10 flex items-center justify-center rounded-full bg-white/80 dark:bg-black/50 backdrop-blur-md shadow-sm opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-300 hover:bg-white dark:hover:bg-black/70 hover:shadow-md border border-white/20 focus-visible:ring-2 focus-visible:ring-red-500 touch-manipulation cursor-pointer"
           >
             <motion.svg
               viewBox="0 -10 64 74"

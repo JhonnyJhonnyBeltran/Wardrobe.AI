@@ -41,9 +41,9 @@ export function ImageSelector({
                         key={index}
                         type="button"
                         onClick={() => onSelectImage(imgUrl, index)}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        className={`relative aspect-square rounded-xl overflow-hidden border-2 transition-all ${selectedIndex === index
+                        whileTap={{ scale: 0.96 }}
+                        transition={{ duration: 0.08, ease: 'easeOut' }}
+                        className={`relative aspect-square rounded-xl overflow-hidden border-2 transition-all touch-manipulation ${selectedIndex === index
                             ? 'border-[var(--brand-pink)] ring-2 ring-[var(--brand-pink)]/30'
                             : 'border-[var(--border-color)] hover:border-[var(--brand-pink)]/50'
                             }`}

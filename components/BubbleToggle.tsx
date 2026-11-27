@@ -100,8 +100,8 @@ const BubbleToggle = memo(function BubbleToggle({
             initial="hidden"
             animate="visible"
             exit="exit"
-            whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
+            transition={{ duration: 0.08, ease: 'easeOut' }}
             onClick={onToggle}
             style={{
               height: size,

@@ -119,10 +119,9 @@ export default function SponsoredAdCard({
     <motion.div
       role="button"
       tabIndex={0}
-      whileHover={{ y: -3, transition: { duration: 0.2 } }}
       whileTap={{ scale: 0.97 }}
-      transition={{ type: 'spring', stiffness: 420, damping: 28 }}
-      className={`w-full relative z-10 apple-tap-feedback ${className}`}
+      transition={{ duration: 0.08, ease: 'easeOut' }}
+      className={`w-full relative z-10 apple-tap-feedback touch-manipulation ${className}`}
       onClick={handleClick}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
