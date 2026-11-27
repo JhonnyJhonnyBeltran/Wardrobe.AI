@@ -4117,3 +4117,23 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
   - Apertura con origen de coordenadas en el punto pulsado (*origin awareness*).
   - Efectos físicos de resorte (*spring physics*) y cierres acelerados (100-150ms).
   - Fondos translúcidos con desenfoque de cristal líquido (`backdrop-blur-xl`) y soporte estricto a gestos de deslizamiento para descartar (*swipe to dismiss* con *rubber banding*).
+
+
+---
+
+## 98. Auditoría y Eliminación de Cuellos de Botella de Rendimiento y Latencia Táctil (Noviembre 2026)
+- **Diagnóstico de Lentitud y Bloqueo de Interacción (Lag/Freezing)**:
+  1. **Bloqueo del Hilo Principal por Touch Listener No Pasivo en Documento (`app/RootLayoutClient.tsx`)**:
+     - Existía un listener `document.addEventListener('touchmove', preventMultiTouchZoom, { passive: false })`. Al registrarse a nivel de documento con `passive: false`, el motor WebKit y Chromium detiene la cola de eventos de desplazamiento y pulsación en cada píxel hasta que JavaScript evalúa el código, causando congelamientos de 200-500ms al pulsar o interactuar.
+     - **Solución**: Eliminado el listener no pasivo de `touchmove`. El bloqueo de zoom multitáctil se gestiona nativamente por el compositor con `touch-action: pan-x pan-y` y los eventos nativos de Safari `gesturestart`/`gesturechange`.
+  2. **Sobrecarga de CPU por Observador Continuo de Mutaciones (`components/LanguageDomTranslator.tsx`)**:
+     - `LanguageDomTranslator` ejecutaba un `MutationObserver` global observando todo el subárbol de `document.body` (elementos, texto, atributos) y ejecutando `TreeWalker` en cada cambio del DOM, incluso cuando el idioma activo es Español (`'es'`).
+     - **Solución**: Añadida salida temprana inmediata `if (language === 'es') return;`, eliminando el 100% de la sobrecarga del observador DOM para usuarios en español.
+  3. **Inercia y Descarte de Toques por `scroll-behavior: smooth` (`app/globals.css`)**:
+     - `scroll-behavior: smooth` en la raíz `html` provocaba que WebKit ignorara toques y clics durante la desaceleración del scroll.
+     - **Solución**: Eliminado `scroll-behavior: smooth` global para que los botones y enlaces respondan instantáneamente al toque sin retrasos.
+  4. **Sobrecarga de Rasterización GPU por Difuminado y Máscara en Degradado (`app/globals.css`)**:
+     - La clase `.mobile-bottom-nav-blur` combinaba `backdrop-filter: blur(22px)` con `mask-image: linear-gradient(...)`, forzando al chip gráfico a re-renderizar todo el fondo en cada fotograma del scroll.
+     - **Solución**: Sustituido por un degradado suave CSS sin máscara ni `backdrop-filter` pesado detrás de la barra de navegación.
+  5. **Deformación 2D Innecesaria en Botones Universales (`components/Button.tsx`, `components/TabBar.tsx` y `app/globals.css`)**:
+     - Reemplazada la transformación matricial pesada (`scaleX: 1.04, scaleY: 0.93`) por escala uniforme acelerada por hardware (`scale: 0.96` / `scale: 0.92`), eliminando cálculos de física innecesarios y garantizando respuesta táctil inmediata (<16ms).

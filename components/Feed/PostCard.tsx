@@ -226,7 +226,7 @@ function PostCard({
                 whileHover={{ scale: 1.02, transition: { duration: 0.18 } }}
                 whileTap={{ scale: 0.97 }}
                 transition={{ type: "spring", stiffness: 420, damping: 28 }}
-                className="w-full h-full relative z-10 select-none transform-gpu"
+                className="w-full h-full relative z-10 select-none transform-gpu touch-manipulation"
             >
                 <div
                     className="group relative rounded-[20px] overflow-hidden bg-[var(--card-bg)] shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] border border-black/[0.05] dark:border-white/[0.07] transition-all duration-300 cursor-pointer h-full w-full"

@@ -10,7 +10,6 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 html {
-  scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   font-family: var(--font-inter), -apple-system, BlinkMacSystemFont, sans-serif;
   letter-spacing: -0.022em;
@@ -271,7 +270,7 @@ html {
 }
 
 .apple-button-spring:active {
-  transform: scale3d(1.04, 0.93, 1);
+  transform: scale(0.96);
   opacity: 0.92;
   transition-duration: 0.08s;
 }
@@ -330,23 +329,21 @@ html {
   .mobile-bottom-nav-blur {
     background: linear-gradient(
       to top,
-      rgba(255, 255, 255, 0.92) 0%,
-      rgba(255, 255, 255, 0.72) 52%,
+      rgba(255, 255, 255, 0.95) 0%,
+      rgba(255, 255, 255, 0.75) 45%,
       rgba(255, 255, 255, 0) 100%
     );
-    backdrop-filter: blur(22px) saturate(180%);
-    -webkit-backdrop-filter: blur(22px) saturate(180%);
-    -webkit-mask-image: linear-gradient(to top, #000 58%, transparent 100%);
-    mask-image: linear-gradient(to top, #000 58%, transparent 100%);
+    pointer-events: none;
   }
 
   .dark .mobile-bottom-nav-blur {
     background: linear-gradient(
       to top,
-      rgba(17, 17, 19, 0.92) 0%,
-      rgba(17, 17, 19, 0.72) 52%,
+      rgba(17, 17, 19, 0.95) 0%,
+      rgba(17, 17, 19, 0.75) 45%,
       rgba(17, 17, 19, 0) 100%
     );
+    pointer-events: none;
   }
 }
 
@@ -1402,7 +1399,7 @@ html::-webkit-scrollbar {
 }
 
 .btn-apple:active {
-  transform: scale3d(1.04, 0.93, 1);
+  transform: scale(0.96);
   transition-duration: 0.08s;
 }
 
@@ -1507,7 +1504,7 @@ html::-webkit-scrollbar {
 
 /* Active state for haptic feel */
 .btn-haptic:active {
-  transform: scale3d(1.04, 0.93, 1);
+  transform: scale(0.96);
   transition-duration: 0.08s;
 }
 

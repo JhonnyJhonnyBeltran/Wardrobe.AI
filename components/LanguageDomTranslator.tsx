@@ -149,6 +149,8 @@ export default function LanguageDomTranslator() {
 
   useEffect(() => {
     if (typeof document === 'undefined' || !document.body) return;
+    // Spanish is native to Klozet - skip DOM observation and tree walking completely for zero CPU overhead
+    if (language === 'es') return;
 
     let isMutating = false;
 
