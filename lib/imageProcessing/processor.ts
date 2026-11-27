@@ -22,6 +22,12 @@ import {
 } from './imageCompression';
 import { removeImageBackground } from './backgroundRemoval';
 import { normalizeImage } from './imageNormalization';
+import { 
+    analyzeGarmentInput, 
+    enhanceLightGarmentForSegmentation, 
+    analyzeAndRepairGarment,
+    type GarmentMaskAnalysis 
+} from './garmentAnalyzer';
 
 /**
  * Yields control to the browser to prevent UI blocking
@@ -100,19 +106,48 @@ export async function processClothingImage(
 
         // Step 4: Remove background (unless skipped)
         let processedBlob: Blob;
+        let garmentAnalysis: GarmentMaskAnalysis | undefined;
         
         if (opts.skipBackgroundRemoval) {
             processedBlob = inputBlob;
             onProgress?.('removing-background', 100, 'Omitiendo remoción de fondo...');
         } else {
-            onProgress?.('removing-background', 0, 'Eliminando fondo...');
+            onProgress?.('removing-background', 5, 'Analizando contraste y luminosidad...');
             await yieldToBrowser();
-            processedBlob = await removeImageBackground(
-                inputBlob,
+
+            // Pre-analysis: Detect light garments and contrast challenges
+            const preAnalysis = await analyzeGarmentInput(inputBlob);
+            let inputForRemoval = inputBlob;
+
+            if (preAnalysis.riskLevel === 'high') {
+                onProgress?.('removing-background', 15, 'Protegiendo tejido claro frente al fondo...');
+                inputForRemoval = await enhanceLightGarmentForSegmentation(inputBlob);
+            }
+
+            onProgress?.('removing-background', 25, 'Eliminando fondo con IA...');
+            await yieldToBrowser();
+            const rawRemovedBlob = await removeImageBackground(
+                inputForRemoval,
                 opts.quality || 'fast',
                 onProgress,
                 timeoutController.signal
             );
+
+            // Post-analysis: Inspect for broken garment voids ("prendas rotas") and auto-repair
+            onProgress?.('removing-background', 85, 'Inspeccionando integridad de prenda...');
+            await yieldToBrowser();
+
+            const repairedOutput = await analyzeAndRepairGarment(
+                rawRemovedBlob,
+                inputBlob,
+                preAnalysis.isLightGarment
+            );
+            processedBlob = repairedOutput.blob;
+            garmentAnalysis = repairedOutput.analysis;
+
+            if (garmentAnalysis.status === 'repaired') {
+                console.log(`[GarmentAnalyzer] Prenda reparada con éxito: ${garmentAnalysis.internalHolesCount}px restaurados.`);
+            }
         }
 
         if (combinedAbort()) {
@@ -157,6 +192,7 @@ export async function processClothingImage(
             imageUrl: finalUrl,
             blob: finalBlob,
             processingTime,
+            analysis: garmentAnalysis,
         };
 
     } catch (error) {

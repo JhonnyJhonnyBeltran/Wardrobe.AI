@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { useUser } from '@/store/userStore';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
+import { signInWithGoogleNativeOrWeb } from '@/lib/auth/nativeOAuth';
 
 interface UseAuthReturn {
   user: SupabaseUser | null;
@@ -170,16 +171,10 @@ export function useAuth(): UseAuthReturn {
   };
 
   const signInWithGoogle = async () => {
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-        queryParams: {
-          prompt: 'select_account',
-          access_type: 'offline',
-        },
-      },
-    });
+    const res = await signInWithGoogleNativeOrWeb();
+    if (!res.success && res.error) {
+      throw new Error(res.error);
+    }
   };
 
   const resetPasswordForEmail = async (email: string) => {

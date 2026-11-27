@@ -4269,3 +4269,44 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
 - **Inyección en la Aplicación**:
   - Clave oficial inyectada como fallback permanente `OFFICIAL_REVENUECAT_IOS_API_KEY` en `lib/revenuecat/client.ts`.
   - Variable `NEXT_PUBLIC_REVENUECAT_IOS_API_KEY` persistida en `.env` local y en los Secrets cifrados de GitHub Actions (`201 Created`).
+
+
+---
+
+## 106. Reconstrucción de Landing iOS Nativa, Google OAuth Nativo, Reactivación de Kloe AI y Analizador de Integridad de Prendas (Noviembre 2026)
+
+### 1. Reconstrucción de Landing en iOS Nativo y Blindaje de Safe Areas (Notch / Dynamic Island)
+- **Diagnóstico en iPhone Real**:
+  - En `/auth`, el botón píldora `<- Inicio` usaba `fixed top-4 left-4`, colisionando directamente con el reloj `13:31` y la Dynamic Island.
+  - En la landing de inicio `/`, la cabecera web con selector de idiomas colisionaba con los iconos de estado de iOS y el contenido marketiniano desktop no encajaba con los estándares de una app nativa Apple.
+- **Solución Implementada**:
+  - **`components/native/IosNativeLanding.tsx`**: Nueva experiencia de bienvenida exclusiva para iOS (`Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios'`). Sigue al 100% el Brand Kit ("un juguete dentro de un iPhone") y las directrices Apple HIG: logotipo oficial bubble con ojos, carrusel táctil interactivo con 3 cartas visuales y microinteracciones spring, botones de acción optimizados para el pulgar ("Empezar gratis" en `#FF66C4`, "Continuar con Google" y enlace sutil "Iniciar sesión"), y padding dinámico estricto `pt-[max(1rem,env(safe-area-inset-top,0px))]` y `pb-[max(1.25rem,env(safe-area-inset-bottom,0px))]`.
+  - **`app/(public)/auth/page.tsx`**: Botón `<- Inicio` reposicionado mediante coordenadas calculadas con `style={{ top: 'max(1rem, calc(env(safe-area-inset-top, 0px) + 0.5rem))', left: 'max(1rem, calc(env(safe-area-inset-left, 0px) + 0.5rem))' }}` y contenedor con padding superior `pt-[calc(env(safe-area-inset-top,0px)+3.75rem)]`, eliminando toda superposición con la Dynamic Island.
+  - **`app/(public)/page.tsx`**: Blindada la cabecera web con `paddingTop: max(0.75rem, calc(env(safe-area-inset-top, 0px) + 0.5rem))` para visitas desde Safari móvil.
+
+### 2. Autenticación Google OAuth Nativa en Capacitor iOS (Eliminación de `403 disallowed_useragent`)
+- **Causa Raíz**: Google bloquea el inicio de sesión OAuth en WebViews incrustadas (WebKit/WKWebView) por su política de navegadores seguros.
+- **Solución Implementada**:
+  - Instalados `@capacitor/browser` y `@capacitor/app`.
+  - Registrado el esquema de URL personalizado `es.klozet.app` en `ios/App/App/Info.plist` (`CFBundleURLTypes`).
+  - **`lib/auth/nativeOAuth.ts`**: Cuando se detecta iOS nativo, se invoca `supabase.auth.signInWithOAuth` con `skipBrowserRedirect: true` y se abre la URL en la hoja nativa del sistema (Safari View Controller) vía `Browser.open`.
+  - **`app/(public)/auth/callback/route.ts`**: Al recibir el callback con `isNative=1`, redirige automáticamente hacia el esquema de la app `es.klozet.app://auth/callback?code=...`.
+  - **`AppLifecycleManager.tsx` y `app/(public)/auth/page.tsx`**: `App.addListener('appUrlOpen')` intercepta el retorno, cierra automáticamente la hoja del navegador (`Browser.close()`) e intercambia el código con `supabase.auth.exchangeCodeForSession(code)`, autenticando al usuario de forma transparente y sin errores de User-Agent.
+
+### 3. Diagnóstico y Reactivación de Kloe AI (`/api/closy/chat`)
+- **Causa Raíz**: Los modelos anteriores `gemini-2.0-flash`, `gemini-2.5-flash` y `gemini-1.5-flash` fueron discontinuados en la API de Google Generative Language devolviendo `404 Not Found`, lo que provocaba que la cascada fallase.
+- **Solución Implementada**:
+  - Verificada en vivo la disponibilidad de modelos con la clave del proyecto, comprobando respuesta exitosa `200 OK` en `gemini-3.5-flash`, `gemini-3.6-flash` y `gemini-3.1-flash-lite`.
+  - Actualizada la cascada de modelos en `app/api/closy/chat/route.ts` situando `gemini-3.5-flash` como primer respondedor ultra-rápido, seguido de `gemini-3.6-flash` y `gemini-3.1-flash-lite`.
+  - Actualizado el fallback de clave verificada en `lib/ai/geminiClient.ts` y el modelo de moderación a `gemini-3.5-flash`. Kloe vuelve a responder de forma inmediata.
+
+### 4. Analizador de Calidad y Auto-Reparación de Prendas Claras ("Prendas Rotas")
+- **Causa Raíz**: En prendas claras (blanco, beige, gris claro, crudo) fotografiadas sobre fondos claros, la falta de contraste ($\Delta Y < 35$) provocaba que la red de segmentación (`isnet_fp16`) tratase partes internas del tejido como fondo, dejando agujeros transparentes en la tela ("prendas rotas").
+- **Solución Implementada (`lib/imageProcessing/garmentAnalyzer.ts`)**:
+  - **Análisis Previo (`analyzeGarmentInput`)**: Analiza la luminancia del centro de la prenda frente a los márgenes del fondo en <5ms. Si detecta prenda clara con bajo contraste (`isLightGarment: true`), activa protección especial.
+  - **Pre-procesado Adaptativo (`enhanceLightGarmentForSegmentation`)**: Aplica una modulación suave de contraste S-curve en la región de sombras del tejido para que el modelo IA distinga claramente los límites físicos de la prenda sin alterar la textura.
+  - **Inspección de Máscara y Auto-Reparación (`analyzeAndRepairGarment`)**:
+    - Ejecuta un algoritmo de inundación BFS desde los 4 bordes exteriores sobre los píxeles transparentes para identificar el verdadero fondo exterior.
+    - Cualquier píxel transparente interno no alcanzable desde el exterior se identifica como un **agujero artificial/hueco interior ("prenda rota")**.
+    - Restaura automáticamente los píxeles RGB del tejido original en los huecos detectados y fija la opacidad al 100% ($A=255$), preservando la prenda entera e impoluta mientras el fondo exterior permanece totalmente transparente.
+  - **Integración en `processor.ts` y `useAddItemForm.ts`**: Reporta en `ProcessingResult.analysis` el estado de la prenda (`pristine`, `repaired`, `severely_broken_fallback`) y notifica al usuario cuando se ha protegido y restaurado el tejido de su prenda clara.

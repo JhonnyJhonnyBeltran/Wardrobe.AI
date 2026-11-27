@@ -9,9 +9,20 @@ export async function GET(request: NextRequest) {
   const token_hash = requestUrl.searchParams.get('token_hash');
   const type = requestUrl.searchParams.get('type') as EmailOtpType | null;
   const next = requestUrl.searchParams.get('next') ?? '/closet';
+  const isNative = requestUrl.searchParams.get('isNative') === '1';
+
+  // If initiated from native iOS app, hand off code to the app directly via custom deep link
+  if (isNative && code) {
+    return NextResponse.redirect(`es.klozet.app://auth/callback?code=${encodeURIComponent(code)}`);
+  }
 
   let hasError = false;
   let errorMessage = '';
+
+  if (isNative && requestUrl.searchParams.get('error')) {
+    const nativeErr = requestUrl.searchParams.get('error_description') || requestUrl.searchParams.get('error') || 'Error de autenticación';
+    return NextResponse.redirect(`es.klozet.app://auth/callback?error=${encodeURIComponent(nativeErr)}`);
+  }
 
   let response = NextResponse.redirect(new URL(next, requestUrl.origin));
   const cookieStore = await cookies();

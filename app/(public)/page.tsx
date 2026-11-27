@@ -16,16 +16,28 @@ import { useUser } from '@/store';
 import { triggerHaptic } from '@/lib/haptic';
 import { useLanguageStore, SUPPORTED_LANGUAGES } from '@/store/languageStore';
 import { LANDING_TRANSLATIONS } from '@/lib/i18n/landingTranslations';
+import { Capacitor } from '@capacitor/core';
+import IosNativeLanding from '@/components/native/IosNativeLanding';
 
 export default function LandingPage() {
   const { user } = useUser();
   const { language, setLanguage, initLanguage } = useLanguageStore();
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
   const [currentFrame, setCurrentFrame] = useState(0);
+  const [isNativeIos, setIsNativeIos] = useState(false);
 
   useEffect(() => {
     initLanguage();
+    try {
+      if (typeof window !== 'undefined' && Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios') {
+        setIsNativeIos(true);
+      }
+    } catch {}
   }, [initLanguage]);
+
+  if (isNativeIos && !user) {
+    return <IosNativeLanding />;
+  }
 
   const t = LANDING_TRANSLATIONS[language] || LANDING_TRANSLATIONS.es;
   const totalFrames = 5;
@@ -149,8 +161,15 @@ export default function LandingPage() {
       style={{ colorScheme: 'light', backgroundColor: '#ffffff', color: '#09090b' }}
       className="h-[100dvh] min-h-[100dvh] w-screen overflow-hidden bg-white text-zinc-900 selection:bg-[var(--brand-pink,#FF66C4)] selection:text-white flex flex-col justify-between fixed inset-0 select-none antialiased"
     >
-      {/* 1. TOP BAR WITH LOGO AND AUTH BUTTONS */}
-      <header className="fixed top-0 left-0 right-0 z-50 px-4 sm:px-8 py-3 sm:py-5 flex items-center justify-between pointer-events-none">
+      {/* 1. TOP BAR WITH LOGO AND AUTH BUTTONS (With iOS safe area protection) */}
+      <header 
+        style={{
+          paddingTop: 'max(0.75rem, calc(env(safe-area-inset-top, 0px) + 0.5rem))',
+          paddingLeft: 'max(1rem, env(safe-area-inset-left, 0px))',
+          paddingRight: 'max(1rem, env(safe-area-inset-right, 0px))',
+        }}
+        className="fixed top-0 left-0 right-0 z-50 px-4 sm:px-8 py-3 sm:py-5 flex items-center justify-between pointer-events-none"
+      >
         {/* Left: Brand Logo (Se oculta en el último frame junto a los botones) */}
         <div className={`pointer-events-auto flex items-center gap-2 transition-opacity duration-300 ${currentFrame === 4 ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
           <Link href="/" className="inline-block transition-transform active:scale-95">

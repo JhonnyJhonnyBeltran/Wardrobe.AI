@@ -3,7 +3,7 @@
  * Ensures Gemini API key is always available in all deployment environments (Local, Vercel, Production)
  */
 
-const DEFAULT_ENCODED_GEMINI_KEY = 'QVEuQWI4Uk42TFFfU2dHNDc0d3RvajBCdTZ6NzFrVTdhMDRMa1lWdkptcnVwVUZfQ0RkU3c=';
+const DEFAULT_ENCODED_GEMINI_KEY = 'QVEuQWI4Uk42S1o4Ykh4MHA3ZC1FaUV5WXMzYkdIbWpMWWt6NThaeHhPTk4wOVFpX2REQUE=';
 
 export function getGeminiApiKey(): string {
   const envKey = process.env.GEMINI_API_KEY || 

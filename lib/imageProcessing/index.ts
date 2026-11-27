@@ -45,6 +45,16 @@ export {
     isModelLoaded,
 } from './backgroundRemoval';
 
+// Garment Quality & Broken Mask Analyzer
+export {
+    analyzeGarmentInput,
+    enhanceLightGarmentForSegmentation,
+    analyzeAndRepairGarment,
+    type GarmentPreAnalysis,
+    type GarmentMaskAnalysis,
+    type GarmentProcessOutput,
+} from './garmentAnalyzer';
+
 // Image utilities
 export {
     compressImage,

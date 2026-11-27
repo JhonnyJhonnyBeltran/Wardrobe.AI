@@ -5,6 +5,8 @@ import { usePathname } from 'next/navigation';
 import { useUiStore } from '@/store/uiStore';
 import { useUser } from '@/store/userStore';
 import { forceUnlockBodyScroll } from '@/lib/hooks/useBodyScrollLock';
+import { initNativeOAuthListener } from '@/lib/auth/nativeOAuth';
+import { useRouter } from 'next/navigation';
 
 /**
  * AppLifecycleManager - Centralized system for focus, visibility, and session health.
@@ -12,6 +14,7 @@ import { forceUnlockBodyScroll } from '@/lib/hooks/useBodyScrollLock';
  */
 export default function AppLifecycleManager() {
     const pathname = usePathname();
+    const router = useRouter();
     const triggerRefetch = useUiStore((state) => state.triggerRefetch);
     const lastFocusTimestamp = useUiStore((state) => state.lastFocusTimestamp);
     const setLastFocusTimestamp = useUiStore((state) => state.setLastFocusTimestamp);
@@ -19,6 +22,19 @@ export default function AppLifecycleManager() {
     
     // Safety ref to prevent double-firing in strict mode
     const isWakingRef = useRef(false);
+
+    // Global native deep link listener for OAuth return
+    useEffect(() => {
+        initNativeOAuthListener(
+            () => {
+                refreshProfile();
+                router.push('/closet');
+            },
+            (err) => {
+                console.warn('[Lifecycle] OAuth callback error:', err);
+            }
+        );
+    }, [refreshProfile, router]);
 
     // Ensure scroll lock is safely reset on route transitions
     useEffect(() => {

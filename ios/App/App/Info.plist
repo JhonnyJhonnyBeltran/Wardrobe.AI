@@ -74,5 +74,17 @@
 	<string>Klozet necesita permiso para guardar imágenes de tus outfits y stickers en tu galería.</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>es.klozet.app</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>es.klozet.app</string>
+				<string>rc-ccd3b25798</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

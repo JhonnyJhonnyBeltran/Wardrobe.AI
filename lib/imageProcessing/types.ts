@@ -35,6 +35,15 @@ export interface ProcessingResult {
     processingTime?: number;
     /** Whether the result came from cache */
     fromCache?: boolean;
+    /** Detailed diagnostic analysis of garment integrity and background removal */
+    analysis?: {
+        isBroken: boolean;
+        isLightGarment: boolean;
+        internalHolesCount: number;
+        internalHolesRatio: number;
+        status: 'pristine' | 'repaired' | 'severely_broken_fallback';
+        diagnosticMessage: string;
+    };
 }
 
 export interface BatchProcessingResult {

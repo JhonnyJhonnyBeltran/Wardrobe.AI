@@ -7,6 +7,7 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
+import { toast } from 'sonner';
 import { processClothingImage, type ProcessingStage, STAGE_MESSAGES } from '@/lib/imageProcessing';
 import { extractDominantColor, hexToRgb, rgbToColorName } from '@/lib/utils/colorUtils';
 import { DEFAULT_FORM_DATA, COLOR_OPTIONS, matchColorToOption } from '../constants';
@@ -681,6 +682,10 @@ export function useAddItemForm({
         if (finalProcessedImage) {
             setProcessedImage(finalProcessedImage);
             setImage(finalProcessedImage);
+
+            if (processResult?.analysis?.status === 'repaired') {
+                toast.success('Prenda optimizada: Se ha protegido el tejido claro y restaurado la silueta intacta.');
+            }
         }
 
         let detectedColor = aiAnalysis?.color;

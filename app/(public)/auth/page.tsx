@@ -25,6 +25,7 @@ import { useUser } from '@/store/userStore';
 import { toast } from 'sonner';
 import { showDatabaseError } from '@/lib/errorModal';
 import { haptics } from '@/lib/haptic';
+import { initNativeOAuthListener, signInWithGoogleNativeOrWeb } from '@/lib/auth/nativeOAuth';
 
 interface ShowcaseLook {
     id: string;
@@ -110,6 +111,21 @@ export default function AuthPage() {
             toast.error(`Error de autenticación: ${urlError}`);
         }
     }, [urlError]);
+
+    // Handle deep link OAuth callback for native iOS/Android
+    useEffect(() => {
+        initNativeOAuthListener(
+            () => {
+                toast.success('Sesión iniciada correctamente');
+                router.push('/closet');
+            },
+            (err) => {
+                toast.error(err || 'Error al completar el inicio de sesión');
+                setLoading(false);
+                isSubmittingRef.current = false;
+            }
+        );
+    }, [router]);
 
     const [isLogin, setIsLogin] = useState(mode !== 'signup');
     const [showPassword, setShowPassword] = useState(false);
@@ -332,17 +348,13 @@ export default function AuthPage() {
         isSubmittingRef.current = true;
         setLoading(true);
         try {
-            const { error } = await supabase.auth.signInWithOAuth({
-                provider: 'google',
-                options: {
-                    redirectTo: `${window.location.origin}/auth/callback`,
-                    queryParams: {
-                        prompt: 'select_account',
-                        access_type: 'offline',
-                    }
-                }
-            });
-            if (error) throw error;
+            const res = await signInWithGoogleNativeOrWeb();
+            if (!res.success && res.error) {
+                toast.error(res.error);
+                setLoading(false);
+                isSubmittingRef.current = false;
+            }
+            // On native, system browser opens; listener handles return. On web, redirects.
         } catch (err: any) {
             console.error('Google auth error:', err);
             showDatabaseError(err, 'Error al iniciar sesión con Google');
@@ -392,16 +404,20 @@ export default function AuthPage() {
             style={{ colorScheme: 'light' }}
             className="relative min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-10 bg-white text-black overflow-x-hidden selection:bg-[#FF66C4] selection:text-white antialiased"
         >
-            {/* Top Return Pill */}
+            {/* Top Return Pill with iOS safe area inset */}
             <Link
                 href="/"
-                className="fixed top-4 left-4 sm:top-6 sm:left-6 z-50 min-h-[44px] px-4 py-2 rounded-full text-xs sm:text-sm font-semibold bg-[#F2F2F7] hover:bg-[#E5E5EA] border border-black/[0.06] text-black transition-all flex items-center gap-1.5 active:scale-[0.97]"
+                style={{
+                    top: 'max(1rem, calc(env(safe-area-inset-top, 0px) + 0.5rem))',
+                    left: 'max(1rem, calc(env(safe-area-inset-left, 0px) + 0.5rem))',
+                }}
+                className="fixed z-50 min-h-[44px] px-4 py-2 rounded-full text-xs sm:text-sm font-semibold bg-[#F2F2F7] hover:bg-[#E5E5EA] border border-black/[0.06] text-black transition-all flex items-center gap-1.5 active:scale-[0.97]"
             >
                 <ArrowLeft className="w-4 h-4" />
                 <span>Inicio</span>
             </Link>
 
-            <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center pt-12 lg:pt-0 my-auto">
+            <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center pt-[calc(env(safe-area-inset-top,0px)+3.75rem)] lg:pt-0 pb-[max(1.5rem,env(safe-area-inset-bottom,0px))] my-auto">
                 {/* LEFT COLUMN (Desktop): Visual Outfit Preview + Kloe Toy Companion */}
                 <motion.div
                     initial={{ opacity: 0, x: -16 }}
