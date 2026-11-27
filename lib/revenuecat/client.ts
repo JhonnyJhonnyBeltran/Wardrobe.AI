@@ -12,12 +12,13 @@ import { Capacitor } from '@capacitor/core';
 
 export const REVENUECAT_ENTITLEMENT_ID = 'klozet_pro';
 
+export const OFFICIAL_REVENUECAT_IOS_API_KEY = 'appl_dIdlLCYEhfaAEKwProxNZjuGiwS';
 const DEFAULT_TEST_STORE_KEY = 'test_XZNJUZgtJPHbnONEWbcAQHnxNxC';
 
 function getRevenueCatApiKey(platform: 'ios' | 'android' | 'web'): string {
   if (platform === 'ios') {
-    const key = process.env.NEXT_PUBLIC_REVENUECAT_IOS_API_KEY || process.env.NEXT_PUBLIC_REVENUECAT_API_KEY || '';
-    return key.startsWith('appl_') ? key : '';
+    const key = process.env.NEXT_PUBLIC_REVENUECAT_IOS_API_KEY || process.env.NEXT_PUBLIC_REVENUECAT_API_KEY || OFFICIAL_REVENUECAT_IOS_API_KEY;
+    return key.startsWith('appl_') ? key : OFFICIAL_REVENUECAT_IOS_API_KEY;
   }
   if (platform === 'android') {
     const key = process.env.NEXT_PUBLIC_REVENUECAT_ANDROID_API_KEY || process.env.NEXT_PUBLIC_REVENUECAT_API_KEY || '';

@@ -4244,3 +4244,28 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
   - **Protección contra Inicialización Inválida (`initRevenueCat`)**: Si la plataforma es iOS y la clave no empieza por `appl_`, se omite la llamada a `Purchases.configure(...)`, dejando el SDK nativo en estado inactivo y evitando el 100% de alertas nativas o interrupciones en la interfaz del iPhone.
   - **Blindaje de Métodos Nativos**: `checkKlozetProEntitlement`, `fetchRevenueCatOfferings`, `presentNativePaywall`, `purchaseRevenueCatPlan` y `restoreKlozetPurchases` verifican `nativeConfigured` antes de invocar métodos de `Purchases`, retornando los valores seguros por defecto sin errores.
   - **Activación de Compras Reales**: Cuando se configure la clave oficial `appl_...` desde el dashboard de RevenueCat (Project Settings > API Keys > App Store), el SDK se activará automáticamente sin requerir cambios de arquitectura.
+
+
+---
+
+## 105. Integración Completa de RevenueCat con Apple App Store y Catálogo de Productos (Noviembre 2026)
+- **Configuración Oficial de App de iOS en RevenueCat (`b2062d04`)**:
+  - **App Name**: `Klozet` (`appccd3b25798`)
+  - **Bundle ID**: `es.klozet.app`
+  - **Custom URL Scheme**: `rc-ccd3b25798`
+  - **Clave Pública Oficial Apple App Store**: **`appl_dIdlLCYEhfaAEKwProxNZjuGiwS`**
+  - **Credencial In-App Purchase StoreKit**: `SubscriptionKey_7QCQ6FXUWU.p8` vinculada con Key ID `7QCQ6FXUWU` e Issuer ID `7bc1085f-3e3f-42ee-9ae7-dab258589070` (Estado: Credenciales Válidas).
+- **Catálogo de Productos y Entitlements Vinculados**:
+  - **Entitlement Activo**: `klozet_pro` (`entl97b3eacddf`).
+  - **Productos Creados en RevenueCat (App Store)**:
+    - `klozet_monthly_299` (`prodc6cfe5b636`) asociado a `klozet_pro`.
+    - `klozet_yearly_2499` (`proddfbd0afdf6`) asociado a `klozet_pro`.
+  - **Offering Oficial (`default` / `ofrng5f56e93fe3`)**:
+    - `$rc_monthly` -> `klozet_monthly_299` (Klozet / App Store)
+    - `$rc_annual` -> `klozet_yearly_2499` (Klozet / App Store)
+- **App Store Connect**:
+  - **Subscription Group**: `22629801` (*"Klozet Pro"*).
+  - **Suscripciones Auto-renovables**: `6840001490` (`klozet_monthly_299`) y `6840001348` (`klozet_yearly_2499`).
+- **Inyección en la Aplicación**:
+  - Clave oficial inyectada como fallback permanente `OFFICIAL_REVENUECAT_IOS_API_KEY` en `lib/revenuecat/client.ts`.
+  - Variable `NEXT_PUBLIC_REVENUECAT_IOS_API_KEY` persistida en `.env` local y en los Secrets cifrados de GitHub Actions (`201 Created`).
