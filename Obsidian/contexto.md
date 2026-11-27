@@ -4082,3 +4082,17 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
   - Generación/descarga automática de certificados de distribución (`get_certificates`) y perfil de aprovisionamiento App Store (`get_provisioning_profile`) para `es.klozet.app`.
   - Auto-incremento de `build_number` basado en marca temporal (`%Y%m%d%H%M`).
   - Compilación de `App.xcworkspace` (`build_app`) y subida directa a TestFlight (`upload_to_testflight`).
+
+
+---
+
+## 96. Activación de Cuenta Apple Developer y Configuración de Equipo Nativo (Noviembre 2026)
+- **Confirmación de Activación**: Cuenta de Apple Developer activada oficialmente por Apple. Acceso completo a Recursos del Programa (App Store Connect, Certificados, Identificadores y Perfiles).
+- **Datos de Equipo de Desarrollador Oficial**:
+  - `Team ID`: `QH686PH7MM`
+  - `Titular`: `ETIWW FRAWCISCO RAMIREZ ACEDO`
+  - `Programa`: Apple Developer Program (Persona física)
+  - `Renovación`: 28 de noviembre de 2027
+- **Vinculación en Proyecto Nativo**:
+  - `ios/App/App.xcodeproj/project.pbxproj`: Asociado `DEVELOPMENT_TEAM = QH686PH7MM` en `TargetAttributes` y configuraciones `Debug`/`Release`.
+  - `ios/App/fastlane/Appfile`: Asociado `team_id("QH686PH7MM")` para compilaciones automáticas de TestFlight.
