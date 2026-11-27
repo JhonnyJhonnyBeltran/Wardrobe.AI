@@ -9,7 +9,7 @@
  * Desktop: Side-by-side with Canvas Undo/Redo toolbar and keyboard shortcuts
  */
 
-import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -74,7 +74,7 @@ const OUTFIT_OCCASIONS = [
     { id: 'summer', label: 'Verano', icon: Sun },
 ];
 
-export default function CreateOutfitPage() {
+function CreateOutfitContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const outfitId = searchParams.get('outfitId');
@@ -1504,5 +1504,36 @@ export default function CreateOutfitPage() {
                 )}
             </AnimatePresence>
         </div>
+    );
+}
+
+
+function CreateOutfitSkeleton() {
+    return (
+        <div className="w-full h-[100dvh] bg-white flex flex-col justify-between overflow-hidden select-none animate-pulse">
+            <div className="h-14 border-b border-zinc-100 flex items-center justify-between px-4 sm:px-6">
+                <div className="w-24 h-8 rounded-full bg-zinc-200/80" />
+                <div className="w-32 h-6 rounded-md bg-zinc-200/60" />
+                <div className="w-20 h-8 rounded-full bg-zinc-200/80" />
+            </div>
+            <div className="flex-1 flex items-center justify-center p-4">
+                <div className="w-full max-w-lg aspect-[3/4] rounded-3xl bg-zinc-100 border border-zinc-200/60 flex items-center justify-center">
+                    <div className="w-16 h-16 rounded-2xl bg-zinc-200/80" />
+                </div>
+            </div>
+            <div className="h-28 border-t border-zinc-100 flex items-center justify-center gap-3 px-4">
+                <div className="w-16 h-16 rounded-2xl bg-zinc-200/80" />
+                <div className="w-16 h-16 rounded-2xl bg-zinc-200/80" />
+                <div className="w-16 h-16 rounded-2xl bg-zinc-200/80" />
+            </div>
+        </div>
+    );
+}
+
+export default function CreateOutfitPage() {
+    return (
+        <Suspense fallback={<CreateOutfitSkeleton />}>
+            <CreateOutfitContent />
+        </Suspense>
     );
 }

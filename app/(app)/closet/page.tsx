@@ -28,6 +28,7 @@ import { useBodyScrollLock } from '@/lib/hooks';
 import { useTranslation } from '@/lib/i18n';
 import { translateSpanishString } from '@/lib/i18n/autoTranslate';
 import Link from 'next/link';
+import { triggerNavigationProgress } from '@/components/NavigationProgressBar';
 
 import { supabase } from '@/lib/supabase/client';
 import Image from 'next/image';
@@ -141,6 +142,15 @@ export default function ClosetPage() {
   const [selectedItem, setSelectedItem] = useState<ClothingItemType | null>(null);
   const [selectedOutfit, setSelectedOutfit] = useState<Outfit | null>(null);
   const [showKloeProModal, setShowKloeProModal] = useState(false);
+
+  // Proactive Route Prefetching for 0ms Instant Navigation
+  useEffect(() => {
+    try {
+      router.prefetch('/create');
+      router.prefetch('/create-post');
+      router.prefetch('/closet/kloe');
+    } catch {}
+  }, [router]);
 
   // Auto-open Add Item Modal, switch Tab or open Upgrade modal based on query param
   useEffect(() => {
@@ -1064,13 +1074,7 @@ export default function ClosetPage() {
                   description={(!outfits || outfits.length === 0) ? 'Combina prendas de tu armario en el lienzo y guarda tus looks favoritos.' : 'Prueba con otra búsqueda.'}
                   actionLabel={(!outfits || outfits.length === 0) ? 'Crear primer outfit' : 'Crear outfit'}
                   actionIcon={Plus}
-                  actionOnClick={() => {
-                    if (!items || items.length === 0) {
-                      toast.error('Añade prendas a tu armario antes de crear outfits');
-                    } else {
-                      router.push('/create');
-                    }
-                  }}
+                  actionHref="/create"
                   fullHeight={false}
                   previewSlot={(!outfits || outfits.length === 0) ? <KloeEmptyVisual variant="outfit" /> : undefined}
                 />
@@ -1199,6 +1203,7 @@ export default function ClosetPage() {
                   if (activeTab === 'items') {
                     setShowAddModal(true);
                   } else if (activeTab === 'outfits') {
+                    triggerNavigationProgress();
                     router.push('/create');
                   } else if (activeTab === 'calendar') {
                     if (typeof window !== 'undefined') {

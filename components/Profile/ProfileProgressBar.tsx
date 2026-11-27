@@ -262,7 +262,7 @@ export default function ProfileProgressBar() {
                   </span>
                 </div>
                 {!hasOutfit && (
-                  <Link href="/create" className="text-[var(--brand-pink)] font-semibold hover:underline">
+                  <Link href="/create" prefetch={true} className="text-[var(--brand-pink)] font-semibold hover:underline">
                     Ir al lienzo
                   </Link>
                 )}

@@ -3,7 +3,6 @@
 import { useState, useRef, forwardRef, useImperativeHandle, useEffect, useCallback } from 'react';
 import { ClothingItem } from '@/types/clothing';
 import { DraggableItem } from './DraggableItem';
-import html2canvas from 'html2canvas';
 
 export interface ItemState {
     x: number;
@@ -180,6 +179,7 @@ export const FreeDragCanvas = forwardRef<FreeDragCanvasRef, FreeDragCanvasProps>
             await new Promise(resolve => setTimeout(resolve, 120));
 
             try {
+                const html2canvas = (await import('html2canvas')).default;
                 const canvas = await html2canvas(containerRef.current, {
                     backgroundColor: '#ffffff',
                     scale: 2.5, // Crisp 2.5x retina quality
