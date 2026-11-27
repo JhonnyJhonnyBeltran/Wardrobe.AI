@@ -20,11 +20,12 @@ platform :ios do
       lock_when_sleeps: false
     )
 
-    keychain_file = lane_context[SharedValues::KEYCHAIN_PATH] || File.expand_path("~/Library/Keychains/ci_keychain-db")
+    kc_path = File.expand_path("~/Library/Keychains/ci_keychain-db")
+    kc_path = File.expand_path("~/Library/Keychains/ci_keychain") unless File.exist?(kc_path)
 
     get_certificates(
       api_key: api_key,
-      keychain_path: keychain_file,
+      keychain_path: kc_path,
       keychain_password: "ci_password_klozet"
     )
 
