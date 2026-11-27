@@ -16,18 +16,12 @@ const DEFAULT_TEST_STORE_KEY = 'test_XZNJUZgtJPHbnONEWbcAQHnxNxC';
 
 function getRevenueCatApiKey(platform: 'ios' | 'android' | 'web'): string {
   if (platform === 'ios') {
-    return (
-      process.env.NEXT_PUBLIC_REVENUECAT_IOS_API_KEY ||
-      process.env.NEXT_PUBLIC_REVENUECAT_API_KEY ||
-      DEFAULT_TEST_STORE_KEY
-    );
+    const key = process.env.NEXT_PUBLIC_REVENUECAT_IOS_API_KEY || process.env.NEXT_PUBLIC_REVENUECAT_API_KEY || '';
+    return key.startsWith('appl_') ? key : '';
   }
   if (platform === 'android') {
-    return (
-      process.env.NEXT_PUBLIC_REVENUECAT_ANDROID_API_KEY ||
-      process.env.NEXT_PUBLIC_REVENUECAT_API_KEY ||
-      DEFAULT_TEST_STORE_KEY
-    );
+    const key = process.env.NEXT_PUBLIC_REVENUECAT_ANDROID_API_KEY || process.env.NEXT_PUBLIC_REVENUECAT_API_KEY || '';
+    return key.startsWith('goog_') ? key : '';
   }
   return (
     process.env.NEXT_PUBLIC_REVENUECAT_WEB_API_KEY ||
@@ -60,9 +54,16 @@ export async function initRevenueCat(appUserId?: string): Promise<void> {
     } else if (!nativeConfigured) {
       nativeConfigurePromise = (async () => {
         try {
-          const { Purchases, LOG_LEVEL } = await import('@revenuecat/purchases-capacitor');
           const platform = Capacitor.getPlatform() === 'android' ? 'android' : 'ios';
           const apiKey = getRevenueCatApiKey(platform);
+
+          if (!apiKey) {
+            console.warn(`[RevenueCat] No valid API key configured for platform "${platform}". Native SDK will remain idle.`);
+            nativeConfigured = false;
+            return;
+          }
+
+          const { Purchases, LOG_LEVEL } = await import('@revenuecat/purchases-capacitor');
 
           await Purchases.setLogLevel({
             level: process.env.NODE_ENV === 'production' ? LOG_LEVEL.WARN : LOG_LEVEL.VERBOSE,
@@ -157,6 +158,7 @@ export async function checkKlozetProEntitlement(): Promise<boolean> {
     await initRevenueCat();
 
     if (isNativeCapacitor()) {
+      if (!nativeConfigured) return false;
       const { Purchases } = await import('@revenuecat/purchases-capacitor');
       const { customerInfo } = await Purchases.getCustomerInfo();
       return typeof customerInfo?.entitlements?.active?.[REVENUECAT_ENTITLEMENT_ID] !== 'undefined';
@@ -305,6 +307,7 @@ export async function fetchRevenueCatOfferings(appUserId?: string): Promise<Reve
     const isTestStore = getRevenueCatApiKey(platform).startsWith('test_');
 
     if (isNativeCapacitor()) {
+      if (!nativeConfigured) return DEFAULT_PLAN_PRICING;
       const { Purchases } = await import('@revenuecat/purchases-capacitor');
       const offerings = await Purchases.getOfferings();
       const current = offerings?.current;
@@ -411,6 +414,13 @@ export async function purchaseRevenueCatPlan(params: {
 
     // 1. Native iOS (App Store / StoreKit) or Android via Capacitor
     if (isNativeCapacitor()) {
+      if (!nativeConfigured) {
+        return {
+          purchasedOrRestored: false,
+          cancelled: false,
+          error: 'Las compras dentro de la app (In-App Purchases) requieren configurar la clave de Apple en RevenueCat.',
+        };
+      }
       const { Purchases } = await import('@revenuecat/purchases-capacitor');
       const offerings = await Purchases.getOfferings();
       const targetPkg = selectNativePackage(offerings?.current, params.plan);
@@ -547,6 +557,13 @@ export async function presentNativePaywall(appUserId?: string): Promise<PaywallP
 
   try {
     await initRevenueCat(appUserId);
+    if (!nativeConfigured) {
+      return {
+        purchasedOrRestored: false,
+        cancelled: false,
+        error: 'Las compras dentro de la app requieren configurar la clave de Apple en RevenueCat.',
+      };
+    }
     const { RevenueCatUI } = await import('@revenuecat/purchases-capacitor-ui');
     const { PAYWALL_RESULT, Purchases } = await import('@revenuecat/purchases-capacitor');
 
@@ -664,6 +681,7 @@ export async function restoreKlozetPurchases(appUserId?: string): Promise<boolea
     await initRevenueCat(appUserId);
 
     if (isNativeCapacitor()) {
+      if (!nativeConfigured) return false;
       const { Purchases } = await import('@revenuecat/purchases-capacitor');
       const { customerInfo } = await Purchases.restorePurchases();
       const entitlement = customerInfo?.entitlements?.active?.[REVENUECAT_ENTITLEMENT_ID];

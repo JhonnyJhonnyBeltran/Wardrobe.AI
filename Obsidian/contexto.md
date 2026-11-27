@@ -4230,3 +4230,17 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
   7. **`components/BubbleToggle.tsx` & `components/Feed/SponsoredAdCard.tsx`**:
      - Eliminado `whileHover` y agregada la clase universal `touch-manipulation`.
 - **Resultado**: Clics 100% responsivos al primer toque en toda la aplicación, sin retrasos de 300ms y con respuesta visual inmediata (<16ms).
+
+
+---
+
+## 104. Corrección de Clave de RevenueCat en iOS Nativo y Supresión de Alertas (Noviembre 2026)
+- **Causa del Error "Invalid API Key de RevenueCat" en iPhone**:
+  - En entornos Web, RevenueCat utiliza claves de Test Store / Web Billing (`test_...`).
+  - Al ejecutarse la aplicación compilada en un iPhone real (entorno nativo de Capacitor iOS), el SDK `@revenuecat/purchases-capacitor` se inicializaba pasando la clave de fallback `test_XZNJUZgtJPHbnONEWbcAQHnxNxC`.
+  - El SDK nativo de RevenueCat para iOS exige estrictamente una clave pública de Apple App Store que empiece por `appl_...`. Al recibir una clave de tipo `test_...`, el SDK nativo lanzaba un cuadro de diálogo / alerta modal nativa en pantalla indicando *"Invalid API Key"*.
+- **Solución Aplicada (`lib/revenuecat/client.ts`)**:
+  - **Validación Estricta de Claves por Plataforma (`getRevenueCatApiKey`)**: En iOS nativo, únicamente se devuelve la clave si empieza por `appl_...` (`NEXT_PUBLIC_REVENUECAT_IOS_API_KEY`). Si no existe o no tiene el formato oficial de Apple, devuelve cadena vacía en lugar de hacer fallback a `test_...`.
+  - **Protección contra Inicialización Inválida (`initRevenueCat`)**: Si la plataforma es iOS y la clave no empieza por `appl_`, se omite la llamada a `Purchases.configure(...)`, dejando el SDK nativo en estado inactivo y evitando el 100% de alertas nativas o interrupciones en la interfaz del iPhone.
+  - **Blindaje de Métodos Nativos**: `checkKlozetProEntitlement`, `fetchRevenueCatOfferings`, `presentNativePaywall`, `purchaseRevenueCatPlan` y `restoreKlozetPurchases` verifican `nativeConfigured` antes de invocar métodos de `Purchases`, retornando los valores seguros por defecto sin errores.
+  - **Activación de Compras Reales**: Cuando se configure la clave oficial `appl_...` desde el dashboard de RevenueCat (Project Settings > API Keys > App Store), el SDK se activará automáticamente sin requerir cambios de arquitectura.
