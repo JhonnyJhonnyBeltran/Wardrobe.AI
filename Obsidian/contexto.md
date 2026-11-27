@@ -4096,3 +4096,24 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
 - **Vinculación en Proyecto Nativo**:
   - `ios/App/App.xcodeproj/project.pbxproj`: Asociado `DEVELOPMENT_TEAM = QH686PH7MM` en `TargetAttributes` y configuraciones `Debug`/`Release`.
   - `ios/App/fastlane/Appfile`: Asociado `team_id("QH686PH7MM")` para compilaciones automáticas de TestFlight.
+
+
+---
+
+## 97. Hoja de Ruta de Tareas Pendientes para Producción y Lanzamiento iOS (Noviembre 2026)
+- **1. Pagos Nativos In-App Purchases (IAP) con RevenueCat / Apple StoreKit**:
+  - Requisito mandatario de la directriz 3.1.1 de Apple App Store para bienes digitales y suscripciones Pro dentro de iOS.
+  - Pasar de Stripe (web) al flujo nativo de RevenueCat (`@revenuecat/purchases-capacitor` y `@revenuecat/purchases-capacitor-ui`) cuando la app corre en plataforma iOS (`Capacitor.getPlatform() === 'ios'`).
+  - Configurar productos en App Store Connect (`klozet_monthly_299` y `klozet_yearly_2499`), sincronizar entitlements con RevenueCat y mantener sincronización con la tabla `subscriptions` / `profiles` en Supabase vía webhook.
+- **2. Iniciar Sesión con Apple (Sign in with Apple / Apple ID)**:
+  - Requisito obligatorio de Apple HIG cuando la app ofrece inicios de sesión con terceros (Google OAuth).
+  - Implementar flujo nativo con Apple ID mediante `@capacitor-community/apple-sign-in` o integración OAuth directa con Supabase Auth (`supabase.auth.signInWithIdToken` / `provider: 'apple'`).
+  - Botón oficial *"Continuar con Apple"* con directrices oficiales de diseño de Apple (fondo negro/blanco según tema, tipografía y proporciones HIG).
+- **3. Optimización y Rediseño del Onboarding**:
+  - Mejorar la experiencia inicial del nuevo usuario en `/onboarding/preferences` y pantallas de bienvenida.
+  - Aplicar el concepto visual de Klozet (*"un juguete dentro de un iPhone"*): transiciones fluidas, selección táctil de estilos de moda con respuesta háptica, presentación carismática de Kloe y carga sin fricción.
+- **4. Pulido Visual y Animaciones en Modales (UX Motion & Apple HIG)**:
+  - Integrar los 20 principios de UX Motion en todos los modales, drawers y hojas inferiores (`bottom sheets`).
+  - Apertura con origen de coordenadas en el punto pulsado (*origin awareness*).
+  - Efectos físicos de resorte (*spring physics*) y cierres acelerados (100-150ms).
+  - Fondos translúcidos con desenfoque de cristal líquido (`backdrop-blur-xl`) y soporte estricto a gestos de deslizamiento para descartar (*swipe to dismiss* con *rubber banding*).
