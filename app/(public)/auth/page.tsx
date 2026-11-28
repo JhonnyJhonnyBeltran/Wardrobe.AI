@@ -475,19 +475,27 @@ export default function AuthPage() {
             className="relative min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-10 bg-white text-black overflow-x-hidden selection:bg-[#FF66C4] selection:text-white antialiased"
         >
             {/* Top Return Pill with iOS safe area inset (placed well below status bar/Dynamic Island) */}
-            <Link
-                href="/"
-                style={{
-                    top: 'max(3.25rem, calc(env(safe-area-inset-top, 44px) + 0.75rem))',
-                    left: 'max(1rem, calc(env(safe-area-inset-left, 0px) + 0.75rem))',
+            <button
+                type="button"
+                onClick={() => {
+                    try { haptics.tap(); } catch {}
+                    if (typeof window !== 'undefined' && window.history.length > 1) {
+                        router.back();
+                    } else {
+                        router.push('/');
+                    }
                 }}
-                className="fixed z-50 min-h-[44px] px-3.5 py-2 rounded-full text-xs sm:text-sm font-semibold bg-[#F2F2F7] hover:bg-[#E5E5EA] border border-black/[0.08] text-black shadow-xs transition-all flex items-center gap-1.5 active:scale-[0.96] touch-manipulation"
+                style={{
+                    top: 'max(4.25rem, calc(env(safe-area-inset-top, 54px) + 1rem))',
+                    left: 'max(1.25rem, calc(env(safe-area-inset-left, 0px) + 1rem))',
+                }}
+                className="fixed z-50 min-h-[44px] px-3.5 py-2 rounded-full text-xs sm:text-sm font-semibold bg-[#F2F2F7] hover:bg-[#E5E5EA] border border-black/[0.08] text-black shadow-xs transition-all flex items-center gap-1.5 active:scale-[0.96] touch-manipulation cursor-pointer"
             >
                 <ArrowLeft className="w-4 h-4 text-black" />
                 <span>Inicio</span>
-            </Link>
+            </button>
 
-            <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center pt-[calc(env(safe-area-inset-top,0px)+3.75rem)] lg:pt-0 pb-[max(1.5rem,env(safe-area-inset-bottom,0px))] my-auto">
+            <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center pt-[max(6rem,calc(env(safe-area-inset-top,54px)+2.5rem))] lg:pt-0 pb-[max(1.5rem,env(safe-area-inset-bottom,0px))] my-auto">
                 {/* LEFT COLUMN (Desktop): Visual Outfit Preview + Kloe Toy Companion */}
                 <motion.div
                     initial={{ opacity: 0, x: -16 }}

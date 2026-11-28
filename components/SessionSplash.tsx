@@ -84,25 +84,9 @@ export default function SessionSplash({ isLoading, onComplete, text, subtext }: 
               transition={{ delay: 0.2 }}
               className="mt-12 text-center flex flex-col items-center gap-3 px-6"
             >
-              {!isStuck ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-[var(--brand-pink)] border-t-transparent rounded-full animate-spin mb-2" />
-                  {text && <p className="text-sm font-bold text-[var(--foreground)] tracking-wide">{text}</p>}
-                  {subtext && <p className="text-xs text-[var(--foreground-secondary)]">{subtext}</p>}
-                </>
-              ) : (
-                <div className="flex flex-col items-center gap-3 animate-in fade-in zoom-in duration-500">
-                  <p className="text-sm font-bold text-[var(--foreground)] tracking-wide">
-                    La conexión va lenta
-                  </p>
-                  <p className="text-xs text-[var(--foreground-secondary)] max-w-xs text-center mb-1">
-                    Estamos teniendo problemas para conectar. Puedes intentar recargar la página.
-                  </p>
-                  <Button onClick={handleForceReload} className="px-6 py-2 text-sm shadow-sm rounded-full">
-                    Recargar
-                  </Button>
-                </div>
-              )}
+              <div className="w-5 h-5 border-2 border-[var(--brand-pink)] border-t-transparent rounded-full animate-spin mb-2" />
+              {text && <p className="text-sm font-bold text-[var(--foreground)] tracking-wide">{text}</p>}
+              {subtext && <p className="text-xs text-[var(--foreground-secondary)]">{subtext}</p>}
             </motion.div>
           )}
         </motion.div>

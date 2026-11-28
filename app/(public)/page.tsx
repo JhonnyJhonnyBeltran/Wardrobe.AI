@@ -24,12 +24,17 @@ export default function LandingPage() {
   const { language, setLanguage, initLanguage } = useLanguageStore();
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
   const [currentFrame, setCurrentFrame] = useState(0);
-  const [isNativeIos, setIsNativeIos] = useState(() => {
+  const [isMobileOrIos, setIsMobileOrIos] = useState(() => {
     if (typeof window === 'undefined') return false;
     try {
-      return (Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios') ||
-             (window as any).Capacitor?.platform === 'ios' ||
-             (window as any).Capacitor?.isNativePlatform?.();
+      const ua = navigator.userAgent || '';
+      const isIosDevice = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      const isCapacitor = (Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios') ||
+                          (window as any).Capacitor?.platform === 'ios' ||
+                          (window as any).Capacitor !== undefined;
+      const isMobileScreen = window.innerWidth < 768;
+      const isStandalone = (window.navigator as any).standalone === true;
+      return isIosDevice || isCapacitor || isMobileScreen || isStandalone;
     } catch {
       return false;
     }
@@ -39,15 +44,21 @@ export default function LandingPage() {
     initLanguage();
     try {
       if (typeof window !== 'undefined') {
-        const isIos = (Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios') ||
-                      (window as any).Capacitor?.platform === 'ios' ||
-                      (window as any).Capacitor?.isNativePlatform?.();
-        if (isIos) setIsNativeIos(true);
+        const ua = navigator.userAgent || '';
+        const isIosDevice = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        const isCapacitor = (Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios') ||
+                            (window as any).Capacitor?.platform === 'ios' ||
+                            (window as any).Capacitor !== undefined;
+        const isMobileScreen = window.innerWidth < 768;
+        const isStandalone = (window.navigator as any).standalone === true;
+        if (isIosDevice || isCapacitor || isMobileScreen || isStandalone) {
+          setIsMobileOrIos(true);
+        }
       }
     } catch {}
   }, [initLanguage]);
 
-  if (isNativeIos && !user) {
+  if (isMobileOrIos && !user) {
     return <IosNativeLanding />;
   }
 

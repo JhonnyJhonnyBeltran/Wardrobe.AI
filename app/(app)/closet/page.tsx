@@ -10,7 +10,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import { useRef } from 'react';
 import {
-  Heart, Grid3x3, List, Search, Filter, Plus, X, Shirt, Layers, Share2, Trash2, Check, CalendarDays, Camera, ChevronRight
+  Heart, Grid3x3, List, Search, Filter, Plus, X, Shirt, Layers, Share2, Trash2, Check, CalendarDays, Camera, ChevronRight, RefreshCw
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button, Card, FloatingCreateButton, OutfitCard, ClothingItem, NotificationToastContainer, WardrobeSelectionModal, OutfitDetailModal, EmptyState, KloeEmptyVisual, SkeletonCard, SkeletonCloset, ProfileProgressBar, KloeMascot } from '@/components';
@@ -179,6 +179,17 @@ export default function ClosetPage() {
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [editingItem, setEditingItem] = useState<ClothingItemType | null>(null);
   const { items, loading, loadingMore, hasMore, loadMore, addItem, updateItem, deleteItem, refresh } = useWardrobe();
+
+  // Offline / Slow Network Safety Net: After 5s of skeleton with 0 items, show inline Retry
+  const [showRetrySkeleton, setShowRetrySkeleton] = useState(false);
+  useEffect(() => {
+    if (loading && items.length === 0) {
+      const timer = setTimeout(() => setShowRetrySkeleton(true), 5000);
+      return () => clearTimeout(timer);
+    } else {
+      setShowRetrySkeleton(false);
+    }
+  }, [loading, items.length]);
 
   // Selection Mode State (Synced with global store)
   const { isSelectionMode, setSelectionMode: setGlobalSelectionMode } = useUiStore();
@@ -879,8 +890,25 @@ export default function ClosetPage() {
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.2 }}
             >
-              {loading ? (
-                <SkeletonCloset count={viewMode === 'grid' ? 6 : 4} />
+              {loading && items.length === 0 ? (
+                <div className="flex flex-col items-center w-full">
+                  <SkeletonCloset count={viewMode === 'grid' ? 6 : 4} />
+                  {showRetrySkeleton && (
+                    <div className="w-full flex justify-center py-6 animate-in fade-in zoom-in-95 duration-200">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowRetrySkeleton(false);
+                          refresh();
+                        }}
+                        className="px-6 py-2.5 rounded-full bg-[var(--brand-pink,#FF66C4)] text-white text-xs font-bold shadow-md active:scale-95 transition-all flex items-center gap-2 cursor-pointer touch-manipulation"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5 text-white" />
+                        <span>Reintentar</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
               ) : (!items || items.length === 0) ? (
                 <EmptyState
                   icon={Shirt}

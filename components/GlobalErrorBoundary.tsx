@@ -1,8 +1,8 @@
 'use client';
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { motion } from 'framer-motion';
-import { RefreshCcw, AlertTriangle } from 'lucide-react';
+import Image from 'next/image';
+import { RefreshCw } from 'lucide-react';
 
 interface Props {
     children: ReactNode;
@@ -11,42 +11,42 @@ interface Props {
 interface State {
     hasError: boolean;
     error: Error | null;
-    attemptedReload: boolean;
+    showRetry: boolean;
 }
 
 /**
- * GlobalErrorBoundary - The ultimate safety net for Klozet.
- * Prevents white screens by intercepting JS crashes and attempting a silent recovery.
+ * GlobalErrorBoundary - The non-intrusive safety net for Klozet.
+ * Prevents blank screens and renders the native app skeleton without blocking modal popups.
  */
 export default class GlobalErrorBoundary extends Component<Props, State> {
+    private retryTimeout: ReturnType<typeof setTimeout> | null = null;
+
     public state: State = {
         hasError: false,
         error: null,
-        attemptedReload: false
+        showRetry: false,
     };
 
-    public static getDerivedStateFromError(error: Error): State {
-        return { hasError: true, error, attemptedReload: false };
+    public static getDerivedStateFromError(error: Error): Partial<State> {
+        return { hasError: true, error };
     }
 
     public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-        console.error('[GlobalError] Uncaught crash:', error, errorInfo);
-        
-        // Auto-recovery: If it crashes, try to reload once
-        if (!sessionStorage.getItem('klozet_crash_reload')) {
-            console.log('[GlobalError] Attempting automatic recovery reload...');
-            sessionStorage.setItem('klozet_crash_reload', 'true');
-            
-            // Wait 1.5s to show the "Updating" screen before reloading
-            setTimeout(() => {
-                window.location.reload();
-            }, 1500);
-        }
+        console.warn('[GlobalError] Runtime error caught:', error, errorInfo);
+
+        // After 5s of being stuck, show inline retry button
+        if (this.retryTimeout) clearTimeout(this.retryTimeout);
+        this.retryTimeout = setTimeout(() => {
+            this.setState({ showRetry: true });
+        }, 5000);
     }
 
-    private handleManualReset = () => {
-        sessionStorage.removeItem('klozet_crash_reload');
-        window.location.reload();
+    public componentWillUnmount() {
+        if (this.retryTimeout) clearTimeout(this.retryTimeout);
+    }
+
+    private handleRetry = () => {
+        this.setState({ hasError: false, error: null, showRetry: false });
     };
 
     public render() {
@@ -61,24 +61,29 @@ export default class GlobalErrorBoundary extends Component<Props, State> {
                     className="fixed inset-0 w-screen h-screen bg-white text-zinc-950 flex flex-col justify-between px-4 sm:px-6 z-[9999] overflow-hidden select-none"
                 >
                     {/* Header with official Klozet logo */}
-                    <header className="w-full flex items-center justify-between py-2 border-b border-zinc-100">
-                        <img
+                    <header className="w-full flex items-center justify-between py-2 border-b border-zinc-100 z-10">
+                        <Image
                             src="/landing/klozet-nombre-grande.png"
                             alt="Klozet"
+                            width={120}
+                            height={38}
                             className="h-7 w-auto object-contain"
+                            priority
                         />
                         <div className="w-8 h-8 rounded-full bg-pink-50 flex items-center justify-center">
-                            <img
+                            <Image
                                 src="/kloe-avatar.png"
                                 alt="Kloe"
-                                className="w-5 h-5 object-contain"
+                                width={20}
+                                height={20}
+                                className="object-contain"
                             />
                         </div>
                     </header>
 
                     {/* Embedded App Skeleton Background */}
-                    <div className="flex-1 w-full max-w-md mx-auto grid grid-cols-2 gap-3 py-4 opacity-40 pointer-events-none">
-                        {[1, 2, 3, 4].map((idx) => (
+                    <div className="flex-1 w-full max-w-md mx-auto grid grid-cols-2 gap-3 py-4 overflow-hidden pointer-events-none">
+                        {[1, 2, 3, 4, 5, 6].map((idx) => (
                             <div
                                 key={idx}
                                 className="w-full aspect-[3/4] rounded-2xl bg-zinc-100 border border-zinc-200/60 p-3 flex flex-col justify-between animate-pulse"
@@ -92,41 +97,27 @@ export default class GlobalErrorBoundary extends Component<Props, State> {
                         ))}
                     </div>
 
-                    {/* Centered Serene Recovery Overlay */}
-                    <div className="absolute inset-0 flex items-center justify-center p-4 pointer-events-auto">
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="w-full max-w-sm bg-white/95 backdrop-blur-xl border border-black/[0.08] rounded-[32px] p-6 text-center shadow-[0_20px_50px_rgba(0,0,0,0.12)] flex flex-col items-center"
-                        >
-                            <div className="relative w-16 h-16 rounded-full bg-pink-50 flex items-center justify-center mb-4">
-                                <img src="/kloe-avatar.png" alt="Kloe" className="w-10 h-10 object-contain" />
-                                <div className="absolute inset-0 rounded-full border-2 border-[#FF66C4] border-t-transparent animate-spin" />
-                            </div>
-
-                            <h2 className="text-lg font-bold text-zinc-950 mb-1.5 tracking-tight">
-                                Actualizando la conexión
-                            </h2>
-                            <p className="text-xs text-zinc-500 mb-5 leading-relaxed max-w-[260px]">
-                                Estamos sincronizando la app con tu armario. Un momento por favor.
-                            </p>
-
+                    {/* Inline Retry Button (Appears only after 5 seconds if connection fails) */}
+                    {this.state.showRetry && (
+                        <div className="w-full max-w-xs mx-auto py-3 flex flex-col items-center gap-2 z-20 animate-in fade-in zoom-in-95 duration-300">
                             <button
                                 type="button"
-                                onClick={this.handleManualReset}
-                                className="w-full h-12 rounded-full bg-[#FF66C4] hover:bg-[#ED4C9E] active:scale-[0.97] transition-all text-white font-bold text-sm flex items-center justify-center gap-2 shadow-[0_6px_20px_rgba(255,102,196,0.35)] cursor-pointer touch-manipulation"
+                                onClick={this.handleRetry}
+                                className="w-full h-11 rounded-full bg-[#FF66C4] active:scale-[0.97] transition-all text-white font-bold text-xs flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(255,102,196,0.35)] cursor-pointer touch-manipulation"
                             >
-                                <RefreshCcw className="w-4 h-4 text-white" />
-                                <span>Reconectar ahora</span>
+                                <RefreshCw className="w-3.5 h-3.5 text-white" />
+                                <span>Reintentar</span>
                             </button>
-                        </motion.div>
-                    </div>
+                        </div>
+                    )}
 
-                    {/* Bottom Tab Bar Skeleton */}
-                    <footer className="w-full max-w-md mx-auto py-2 flex items-center justify-around border-t border-zinc-100 opacity-40">
-                        {[1, 2, 3, 4, 5].map((i) => (
-                            <div key={i} className="w-8 h-8 rounded-full bg-zinc-200 animate-pulse" />
-                        ))}
+                    {/* Bottom TabBar Skeleton Placeholder */}
+                    <footer className="w-full max-w-md mx-auto h-12 rounded-full bg-zinc-100 border border-zinc-200/80 flex items-center justify-around px-4 opacity-50 pointer-events-none mb-1">
+                        <div className="w-5 h-5 rounded-md bg-zinc-300" />
+                        <div className="w-5 h-5 rounded-md bg-zinc-300" />
+                        <div className="w-7 h-7 rounded-full bg-[#FF66C4]/50" />
+                        <div className="w-5 h-5 rounded-md bg-zinc-300" />
+                        <div className="w-5 h-5 rounded-md bg-zinc-300" />
                     </footer>
                 </div>
             );

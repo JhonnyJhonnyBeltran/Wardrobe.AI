@@ -52,7 +52,26 @@ export const useWardrobeStore = create<WardrobeState>((set, get) => ({
       set({ loadingMore: true });
     } else {
       if (get().items.length === 0) {
-        set({ loading: true, page: 0 });
+        // Instant Hydration from localStorage if available (0ms offline support)
+        if (typeof window !== 'undefined') {
+          try {
+            const cached = localStorage.getItem(`klozet_wardrobe_items_${userId}`);
+            if (cached) {
+              const parsed = JSON.parse(cached);
+              if (Array.isArray(parsed) && parsed.length > 0) {
+                const rehydrated = parsed.map((it: any) => ({
+                  ...it,
+                  createdAt: it.createdAt ? new Date(it.createdAt) : new Date(),
+                }));
+                set({ items: rehydrated, loading: false, page: 0 });
+              }
+            }
+          } catch {}
+        }
+
+        if (get().items.length === 0) {
+          set({ loading: true, page: 0 });
+        }
       }
     }
     set({ error: null });
@@ -98,6 +117,13 @@ export const useWardrobeStore = create<WardrobeState>((set, get) => ({
         loading: false,
         loadingMore: false
       }));
+
+      // Persist to local cache for instant offline startup
+      if (!isLoadMore && typeof window !== 'undefined') {
+        try {
+          localStorage.setItem(`klozet_wardrobe_items_${userId}`, JSON.stringify(formattedItems));
+        } catch {}
+      }
     } catch (err) {
       console.error('Error fetching wardrobe store:', err);
       set({ 

@@ -4412,3 +4412,38 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
 - **Botón "Crear Outfit" / "Guardar Cambios" al Final Absoluto**:
   - El botón primario de acción se situó en el extremo inferior de la columna (`w-full h-14 rounded-2xl font-bold text-base kz-pink-surface text-white shadow-lg`), cerrando el flujo de creación de manera natural e intuitiva.
 
+
+---
+
+## 110. Landing Nativa iOS en Carrusel (Calca de la Webapp), Erradicación de Bucles Offline/Modales y Protección Absoluta del Notch/Status Bar (Noviembre 2026)
+
+### 1. Reconstrucción de la Landing Nativa en iOS (`components/native/IosNativeLanding.tsx`)
+- **Calca Fiel de los 5 Frames de la Webapp adaptados a Carrusel Horizontal Móvil**:
+  - **Slide 0 (Armario Lleno / Nada que ponerte)**: Tipografía editorial drop-cap en serifa itálica, prendas flotantes de gran tamaño (Top Halter, Chaqueta Militar, Denim Wide, Bailarinas Alaïa Strass) con pastillas identificadoras interactivas.
+  - **Slide 1 (Tu Ropa / En tu Bolsillo)**: Animación de láser escáner con resplandor sobre el top halter, acompañado de Jersey a rayas y zapatillas Margiela.
+  - **Slide 2 (Kloe / Tu Estilista)**: Mascota Kloe interactiva a gran escala con aura pulsante y bocadillo de diálogo flotante con recomendación de estilismo.
+  - **Slide 3 (Inspírate / Con Looks Reales)**: Moodboard con tarjetas editoriales de looks reales y stickers superpuestos.
+  - **Slide 4 (Empieza Hoy / Gratis)**: Logo oficial Klozet, botón de Google Sign In nativo, botón primario "Empezar gratis" hacia `/auth?mode=signup`, acceso directo a "Iniciar sesión" hacia `/auth?mode=login` y enlaces legales.
+- **Detección Estricta en `app/(public)/page.tsx`**:
+  - Detección universal mediante `isMobileOrIos` combinando User-Agent iOS (`iPhone|iPad|iPod`), plataforma Capacitor nativa, ancho de pantalla `< 768px` y modo PWA standalone.
+  - La landing web de rueda de ratón queda completamente desactivada en iOS y dispositivos móviles, impidiendo que el usuario de la app vea barras de navegación de escritorio como `ES`, `Entrar` o `Registrarse`.
+  - El botón "Iniciar sesión" en el carrusel navega directamente a `/auth?mode=login` sin volver a renderizar la landing ni provocar parpadeos.
+
+### 2. Erradicación Total de Bucles Offline y Modales Invasivos
+- **Eliminación de `errorPath: 'offline.html'` en Capacitor (`capacitor.config.ts` e `ios/App/App/capacitor.config.json`)**:
+  - La configuración previa forzaba a WKWebView a abortar la carga y navegar a un archivo estático local `offline.html` ("Ups, estás sin conexión") ante cualquier micro-latencia de red o resolución DNS. Esto destruía la sesión activa y el estado de la aplicación. Su eliminación permite que el Service Worker y el caché mantengan la aplicación viva sin interrupciones.
+- **Supresión de Modales de Recarga y Bucles Infinitos**:
+  - Eliminados los modales bloqueantes "Actualizando la conexión..." y los temporizadores automáticos de `window.location.reload()` en `app/error.tsx` y `components/GlobalErrorBoundary.tsx`.
+  - Eliminado el modal invasivo "La conexión va lenta... Recargar" en `components/SessionSplash.tsx`.
+- **Caché Instantáneo Offline en el Armario (`store/wardrobeStore.ts`)**:
+  - Las prendas del usuario se persisten e hidratan de forma instantánea en 0ms desde `localStorage` (`klozet_wardrobe_items_${userId}`). Al abrir la app sin conexión o con red débil, el armario muestra inmediatamente las prendas guardadas.
+- **Esqueleto Puro y Botón "Reintentar" No Invasivo**:
+  - Si la conexión falla y no hay prendas en caché, la app permanece en esqueleto nativo (shimmer) sin modales. A los 5 segundos de espera sin respuesta, aparece un botón inline integrado ("Reintentar") para permitir al usuario reconectar de forma manual sin recargas forzadas.
+
+### 3. Protección Absoluta del Notch y Dynamic Island
+- **Pantalla de Autenticación (`app/(public)/auth/page.tsx`)**:
+  - El botón `< Inicio` cuenta con un margen superior reforzado de `max(4.25rem, calc(env(safe-area-inset-top, 54px) + 1rem))` y margen izquierdo `max(1.25rem, calc(env(safe-area-inset-left, 0px) + 1rem))`.
+  - Queda 100% blindado por debajo del reloj (13:31) y de la isla dinámica / notch en todos los modelos de iPhone (iPhone 12 a iPhone 16 Pro).
+  - El contenedor principal de login inicia a `pt-[max(6rem,calc(env(safe-area-inset-top,54px)+2.5rem))]`, evitando cualquier solapamiento visual con la cabecera.
+- **Cabecera del Carrusel iOS (`components/native/IosNativeLanding.tsx`)**:
+  - Padding superior `max(4.25rem, calc(env(safe-area-inset-top, 54px) + 1rem))` asegurando que el logo Klozet y el botón de inicio de sesión queden perfectamente situados en zona segura visible.
