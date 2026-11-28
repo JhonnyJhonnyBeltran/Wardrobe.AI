@@ -57,7 +57,16 @@ export async function middleware(request: NextRequest) {
   // Only refresh session if we are navigating protected routes AND there is a potential session cookie
   const hasAuthCookie = request.cookies.getAll().some(c => c.name.includes('wardrobe-auth') || c.name.includes('sb-'));
 
-  if (!isPublicRoute && hasAuthCookie) {
+  // Client-side navigations (RSC payloads & prefetches) must NEVER wait on a Supabase
+  // network round-trip: that blocked every tab tap for up to 3s ("hay que pulsar 2 veces").
+  // Session refresh only runs on full document loads; the browser client keeps tokens fresh.
+  const isClientNavigation =
+    request.headers.get('rsc') === '1' ||
+    request.headers.has('next-router-prefetch') ||
+    request.headers.has('next-router-state-tree') ||
+    request.nextUrl.searchParams.has('_rsc');
+
+  if (!isPublicRoute && hasAuthCookie && !isClientNavigation) {
     try {
       await Promise.race([
         supabase.auth.getUser(),

@@ -316,24 +316,31 @@ export function UserProvider({ children }: { children: ReactNode }) {
       // we must ensure the app doesn't get stuck loading forever.
       setIsLoading(false);
       
-      // If we got SIGNED_OUT or initialized without a session, force a refresh and clear state completely
-      if (event === 'SIGNED_OUT' || event === 'USER_DELETED' || (event === 'INITIAL_SESSION' && !session)) {
+      // If we got SIGNED_OUT or USER_DELETED, clear state completely.
+      // NEVER wipe the user on INITIAL_SESSION if there is a cached profile in localStorage,
+      // as Supabase in iOS WKWebView takes a moment to hydrate the session.
+      if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
         userIdRef.current = null;
         setUser(null);
         if (typeof window !== 'undefined') localStorage.removeItem('wardrobe_user_profile');
-        if (event !== 'INITIAL_SESSION') {
-          router.refresh();
-        } else {
-          // Only redirect on INITIAL_SESSION with no session if there was NO cached user.
-          // If there WAS a cached user, it means the token might be refreshing — don't kick
-          // the user out. The middleware + Supabase client will handle real expired sessions.
-          if (typeof window !== 'undefined' && !hadCachedUserRef.current) {
-            const publicRoutes = ['/login', '/', '/terms', '/privacy', '/cookies', '/about', '/contact', '/contacto', '/trends'];
-            const isPublicRoute = publicRoutes.includes(window.location.pathname) || window.location.pathname.startsWith('/auth') || window.location.pathname.startsWith('/onboarding') || window.location.pathname.startsWith('/trends');
-            if (!isPublicRoute) {
-              router.push('/auth');
-            }
+        router.refresh();
+      } else if (event === 'INITIAL_SESSION' && !session) {
+        if (!hadCachedUserRef.current) {
+          userIdRef.current = null;
+          setUser(null);
+          if (typeof window !== 'undefined') localStorage.removeItem('wardrobe_user_profile');
+          const publicRoutes = ['/login', '/', '/terms', '/privacy', '/cookies', '/about', '/contact', '/contacto', '/trends', '/auth'];
+          const isPublicRoute = publicRoutes.some(p => window.location.pathname === p || window.location.pathname.startsWith(p));
+          if (!isPublicRoute) {
+            router.push('/auth');
           }
+        } else {
+          // Re-verify session in background without dropping user state
+          supabase.auth.getSession().then(({ data: { session: asyncSession } }: any) => {
+            if (asyncSession?.user) {
+              handleSession(asyncSession, 'TOKEN_REFRESHED');
+            }
+          }).catch(() => {});
         }
       }
     }

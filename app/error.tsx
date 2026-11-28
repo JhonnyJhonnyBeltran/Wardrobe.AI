@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { RefreshCw } from 'lucide-react';
+import { Home, Search, Heart, UserRound, RotateCw } from 'lucide-react';
 
 export default function ErrorBoundary({
   error,
@@ -11,18 +11,21 @@ export default function ErrorBoundary({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  const [showRetry, setShowRetry] = useState(false);
+  const [isReloading, setIsReloading] = useState(false);
 
   useEffect(() => {
     console.warn('[ErrorBoundary] Runtime error or offline state intercepted:', error);
-
-    // After 5 seconds of loading with no response, show the inline retry button
-    const timer = setTimeout(() => {
-      setShowRetry(true);
-    }, 5000);
-
-    return () => clearTimeout(timer);
   }, [error]);
+
+  const handleReload = () => {
+    setIsReloading(true);
+    try {
+      reset();
+    } catch {}
+    if (typeof window !== 'undefined') {
+      window.location.reload();
+    }
+  };
 
   return (
     <div
@@ -33,7 +36,7 @@ export default function ErrorBoundary({
       }}
       className="fixed inset-0 w-screen h-screen bg-white text-zinc-950 flex flex-col justify-between px-4 sm:px-6 z-[9999] overflow-hidden select-none"
     >
-      {/* 1. Native Header with official Klozet logo */}
+      {/* 1. Native Header with official Klozet logo and Embedded Reload Action */}
       <header className="w-full flex items-center justify-between py-2 border-b border-zinc-100 z-10">
         <Image
           src="/landing/klozet-nombre-grande.png"
@@ -43,18 +46,17 @@ export default function ErrorBoundary({
           className="h-7 w-auto object-contain"
           priority
         />
-        <div className="w-8 h-8 rounded-full bg-pink-50 flex items-center justify-center">
-          <Image
-            src="/kloe-avatar.png"
-            alt="Kloe"
-            width={20}
-            height={20}
-            className="object-contain"
-          />
-        </div>
+        <button
+          type="button"
+          onClick={handleReload}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-zinc-100 hover:bg-zinc-200 border border-zinc-200/90 text-xs font-bold text-zinc-800 transition-all active:scale-95 cursor-pointer"
+        >
+          <RotateCw className={`w-3.5 h-3.5 text-[var(--brand-pink,#FF66C4)] ${isReloading ? 'animate-spin' : ''}`} />
+          <span>Recargar</span>
+        </button>
       </header>
 
-      {/* 2. Embedded App Skeleton Background */}
+      {/* 2. Embedded App Skeleton Grid */}
       <div className="flex-1 w-full max-w-md mx-auto grid grid-cols-2 gap-3 py-4 overflow-hidden pointer-events-none">
         {[1, 2, 3, 4, 5, 6].map((idx) => (
           <div
@@ -70,31 +72,71 @@ export default function ErrorBoundary({
         ))}
       </div>
 
-      {/* 3. Inline Retry Button (Appears only after 5 seconds if nothing loads) */}
-      {showRetry && (
-        <div className="w-full max-w-xs mx-auto py-3 flex flex-col items-center gap-2 z-20 animate-in fade-in zoom-in-95 duration-300">
+      {/* 3. Real Bottom TabBar Structure (Home, Search, Klozet, Heart, Profile) */}
+      <nav
+        aria-label="Navegación principal"
+        className="w-full max-w-sm mx-auto z-10 select-none pb-[env(safe-area-inset-bottom)]"
+      >
+        <div className="relative flex justify-between items-center h-[58px] px-2 rounded-full bg-white/95 border border-black/[0.08] shadow-[0_8px_32px_rgba(0,0,0,0.12)]">
+          {/* Home */}
           <button
             type="button"
-            onClick={() => {
-              setShowRetry(false);
-              reset();
-            }}
-            className="w-full h-11 rounded-full bg-[#FF66C4] active:scale-[0.97] transition-all text-white font-bold text-xs flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(255,102,196,0.35)] cursor-pointer touch-manipulation"
+            onClick={handleReload}
+            className="flex-1 flex justify-center items-center h-full text-zinc-500 hover:text-black cursor-pointer"
+            aria-label="Inicio"
           >
-            <RefreshCw className="w-3.5 h-3.5 text-white" />
-            <span>Reintentar</span>
+            <Home className="w-[23px] h-[23px]" strokeWidth={1.8} />
+          </button>
+
+          {/* Search */}
+          <button
+            type="button"
+            onClick={handleReload}
+            className="flex-1 flex justify-center items-center h-full text-zinc-500 hover:text-black cursor-pointer"
+            aria-label="Buscar"
+          >
+            <Search className="w-[23px] h-[23px]" strokeWidth={1.8} />
+          </button>
+
+          {/* Center Klozet Logo Mark */}
+          <button
+            type="button"
+            onClick={handleReload}
+            className="flex-1 flex justify-center items-center h-full cursor-pointer"
+            aria-label="Armario"
+          >
+            <div className="w-[26px] h-[28px] relative flex items-center justify-center">
+              <Image
+                src="/klzt-pink.png"
+                alt="Klozet"
+                width={26}
+                height={28}
+                className="object-contain w-full h-full"
+              />
+            </div>
+          </button>
+
+          {/* Notifications */}
+          <button
+            type="button"
+            onClick={handleReload}
+            className="flex-1 flex justify-center items-center h-full text-zinc-500 hover:text-black cursor-pointer"
+            aria-label="Notificaciones"
+          >
+            <Heart className="w-[23px] h-[23px]" strokeWidth={1.8} />
+          </button>
+
+          {/* Profile */}
+          <button
+            type="button"
+            onClick={handleReload}
+            className="flex-1 flex justify-center items-center h-full text-zinc-500 hover:text-black cursor-pointer"
+            aria-label="Perfil"
+          >
+            <UserRound className="w-[23px] h-[23px]" strokeWidth={1.8} />
           </button>
         </div>
-      )}
-
-      {/* 4. Bottom TabBar Skeleton Placeholder */}
-      <footer className="w-full max-w-md mx-auto h-12 rounded-full bg-zinc-100 border border-zinc-200/80 flex items-center justify-around px-4 opacity-50 pointer-events-none mb-1">
-        <div className="w-5 h-5 rounded-md bg-zinc-300" />
-        <div className="w-5 h-5 rounded-md bg-zinc-300" />
-        <div className="w-7 h-7 rounded-full bg-[#FF66C4]/50" />
-        <div className="w-5 h-5 rounded-md bg-zinc-300" />
-        <div className="w-5 h-5 rounded-md bg-zinc-300" />
-      </footer>
+      </nav>
     </div>
   );
 }

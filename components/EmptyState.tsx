@@ -6,6 +6,7 @@ import { LucideIcon } from 'lucide-react';
 import Link from 'next/link';
 import Button from './Button';
 import KloeMascot, { KloeMood } from './KloeMascot';
+import { haptics } from '@/lib/haptic';
 
 interface EmptyStateProps {
   icon: LucideIcon;
@@ -73,7 +74,8 @@ export default function EmptyState({
       {actionLabel && actionHref && (
         <Link
           href={actionHref}
-          className="inline-flex items-center justify-center px-8 h-12 text-[15px] rounded-full font-bold kz-pink-surface text-white border border-white/25 hover:scale-[1.03] active:scale-[0.97] transition-all cursor-pointer shadow-md"
+          onClick={() => { try { haptics.tap(); } catch {} }}
+          className="inline-flex items-center justify-center px-8 h-12 text-[15px] rounded-full font-bold kz-pink-surface text-white border border-white/25 hover:opacity-95 transition-all cursor-pointer shadow-md"
         >
           {ActionIcon && <ActionIcon className="w-4 h-4 mr-2" />}
           {actionLabel}
@@ -82,8 +84,11 @@ export default function EmptyState({
 
       {actionLabel && actionOnClick && (
         <Button
-          onClick={actionOnClick}
-          className="px-8 h-12 text-[15px] rounded-full font-bold kz-pink-surface text-white border border-white/25 hover:scale-[1.03] active:scale-[0.97] transition-all"
+          onClick={() => {
+            try { haptics.tap(); } catch {}
+            actionOnClick();
+          }}
+          className="px-8 h-12 text-[15px] rounded-full font-bold kz-pink-surface text-white border border-white/25 hover:opacity-95 transition-all"
         >
           {ActionIcon && <ActionIcon className="w-4 h-4 mr-2" />}
           {actionLabel}

@@ -4496,3 +4496,48 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
 ### 7. Perfil en Escritorio: Supresión de Header Duplicado y Rueda Hover
 - En `app/(app)/profile/page.tsx`, se retiró el encabezado superior repetido que mostraba el nombre de usuario y el botón de configuración redundante.
 - El botón de configuración principal incluye ahora microinteracción con rotación suave de 45 grados (`group-hover:rotate-45 duration-300`) y cambio dinámico al rosa de marca (`group-hover:text-[var(--brand-pink,#FF66C4)]`).
+
+
+---
+
+## 112. Persistencia Total de Sesión en Reinicio de App, Réplica Exacta de Landing Web en Carrusel Móvil, Eliminación del Bug de Doble Pulsación y ErrorBoundary con TabBar Real (Noviembre 2026)
+
+### 1. Solución Definitiva a la Pérdida de Sesión al Reiniciar la App (`store/userStore.tsx` y `lib/hooks/useAuth.ts`)
+- **Causa Raíz Diagnosticada**:
+  - En `store/userStore.tsx` (antigua línea 320), la condición `(event === 'INITIAL_SESSION' && !session)` ejecutaba `localStorage.removeItem('wardrobe_user_profile')` y `setUser(null)`.
+  - En el arranque en frío de Capacitor WKWebView en iOS, GoTrue/Supabase dispara `INITIAL_SESSION` con `session: null` antes de terminar de leer las cookies o el almacenamiento local nativo. Esto borraba la sesión guardada y expulsaba al usuario a la landing en cada reapertura.
+  - Adicionalmente, en `lib/hooks/useAuth.ts`, la desestructuración de `response.data.session` arrojaba excepciones cuando `response.data` venía indefinido, y llamaba a `setUserStore(null)` en la primera comprobación vacía.
+- **Resolución Implementada**:
+  - El borrado de perfil en `localStorage` y `setUser(null)` queda restringido **exclusivamente** a eventos intencionados de `SIGNED_OUT` o `USER_DELETED`.
+  - Ante `INITIAL_SESSION` sin sesión síncrona: si existía un perfil en caché (`hadCachedUserRef.current = true`), se preserva el estado del usuario inmediatamente y se verifica en segundo plano con `supabase.auth.getSession()` sin interrumpir la sesión ni expulsar a la landing.
+  - Blindada la desestructuración de sesión en `lib/hooks/useAuth.ts` con encadenamiento opcional `response?.data?.session` y captura de excepciones.
+
+### 2. Réplica Exacta de la Landing Web en Carrusel Horizontal iOS (`components/native/IosNativeLanding.tsx` & `app/(public)/page.tsx`)
+- **Supresión Total del Header Antiguo y Redirección de Usuarios Logueados**:
+  - En `app/(public)/page.tsx`, si el usuario ya está autenticado (`user !== null`), se redirige de inmediato a `/closet` mediante `router.replace('/closet')`, impidiendo que un usuario con sesión vea la landing.
+  - En cualquier pantalla móvil o cliente iOS nativo (`isMobileOrIos`), se renderiza estrictamente `<IosNativeLanding />`, erradicando por completo el header antiguo con logo a la izquierda, selector de idioma y botón "Mi Armario".
+- **Fidelidad 1:1 con los Textos, Prendas y Efectos de la Web (`LANDING_TRANSLATIONS.es`)**:
+  - **Slide 0**: "ARMARIO LLENO / NADA QUE PONERTE", texto oficial, Top Halter Oliva, Chaqueta Militar girada, Denim Wide, Bailarinas Alaïa y prendas con escala +20%.
+  - **Slide 1**: "TODA TU ROPA / EN UN TOQUE", descripción oficial, Jersey de Rayas, Top Halter con barrido láser animado (`motion.div` resplandeciente en gradiente rosa), Zapatillas Margiela Replica y etiquetas de fondo eliminado por IA.
+  - **Slide 2**: "QUÉ ME PONGO / KLOE TE AYUDA", personaje Kloe de cuerpo completo (`/landing/kloe-grande-landing.png`), bocadillo de pregunta del usuario («¿Qué me pongo hoy para salir a cenar? Tengo una chaqueta militar y unos jeans.») y recomendación de Kloe («Póntelos con el top plisado y las bailarinas. Sofisticada sin esfuerzo.»).
+  - **Slide 3**: "MONTA TU FIT / LISTO PARA HOY", cuadrícula editorial con collage central de hombre militar y Margiela, outfit halter de mujer y outfit de rayas.
+  - **Slide 4**: "VÍSTETE MEJOR / DISFRUTA TU ROPA", logotipo oficial `klozet-nombre-grande.png`, botones de "Continuar con Google" nativo, "Empezar gratis" (registro a `/auth?mode=register`), "Iniciar sesión" directo (a `/auth?mode=login`) y enlaces a Términos y Privacidad.
+- **Botón de Avance Rápido**:
+  - Único elemento superior: botón "Deslizar" con icono giratorio (`RotateCw`) animado a 360 grados al pulsarse y feedback táctil elástico.
+
+### 3. Eliminación del Doble Tap y Parpadeo del Navbar (`components/TabBar.tsx` & `components/AppLayout.tsx`)
+- **Causa del Doble Tap**:
+  - La presencia de `active:scale-95 transition-transform duration-100` en la etiqueta `<Link>` de cada pestaña provocaba que en iOS Safari/WKWebView el elemento se encogiese bajo el dedo durante el `touchstart`, interpretando el sistema el toque como cancelado o arrastrado y descartando el evento `click` en la primera pulsación.
+  - La presencia de `prefetch={true}` en las 5 pestañas a la vez generaba peticiones de red simultáneas en segundo plano, saturando el canal de red del cliente móvil.
+- **Solución Aplicada**:
+  - Retirada la animación de deformación agresiva en el contenedor `<Link>`, trasladando el feedback visual y táctil al icono interior y la invocación inmediata de `triggerHaptic`.
+  - El prefetch masivo forzado se sustituye por el prefetch estándar inteligente de Next.js.
+  - Se eliminó `active:scale-[0.97]` en `components/EmptyState.tsx`, garantizando que botones como "Crear primer outfit" naveguen de forma instantánea al primer toque.
+- **Navbar 100% Fijo y Transición Suave**:
+  - Se reemplazó `mode="wait"` por `mode="popLayout"` en `components/AppLayout.tsx`, asegurando que la barra de navegación `<TabBar />` no se desvanezca ni parpadee jamás al alternar entre pestañas.
+
+### 4. Reconstrucción del ErrorBoundary y Pantalla de Fallo (`app/error.tsx` & `components/GlobalErrorBoundary.tsx`)
+- **Sustitución del Skeleton Roto**:
+  - Suprimida la barra de navegación simulada con cuadros grises y el botón tosco de "Reintentar".
+  - Integrada la barra de navegación real de la aplicación con los iconos Apple oficiales (Inicio, Buscar, logo central Klózet en rosa, Notificaciones y Perfil).
+  - Integrado botón de acción "Recargar" sutil en la cabecera superior junto al logo oficial de Klózet, que recarga la aplicación en un toque limpio mediante `window.location.reload()`.

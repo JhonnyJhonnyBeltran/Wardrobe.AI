@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowRight, 
@@ -20,6 +21,7 @@ import { Capacitor } from '@capacitor/core';
 import IosNativeLanding from '@/components/native/IosNativeLanding';
 
 export default function LandingPage() {
+  const router = useRouter();
   const { user } = useUser();
   const { language, setLanguage, initLanguage } = useLanguageStore();
   const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
@@ -40,6 +42,13 @@ export default function LandingPage() {
     }
   });
 
+  // If already logged in, redirect straight to closet (never stay on landing)
+  useEffect(() => {
+    if (user) {
+      router.replace('/closet');
+    }
+  }, [user, router]);
+
   useEffect(() => {
     initLanguage();
     try {
@@ -58,7 +67,13 @@ export default function LandingPage() {
     } catch {}
   }, [initLanguage]);
 
-  if (isMobileOrIos && !user) {
+  // Logged-in users should never see the landing
+  if (user) {
+    return null;
+  }
+
+  // On any mobile screen or native iOS shell, always render pure horizontal carousel
+  if (isMobileOrIos) {
     return <IosNativeLanding />;
   }
 

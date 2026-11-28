@@ -1,24 +1,28 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, Loader2, RotateCw, Sparkles } from 'lucide-react';
+import { ArrowRight, Loader2, RotateCw, Star } from 'lucide-react';
 import { haptics } from '@/lib/haptic';
 import { signInWithGoogleNativeOrWeb, initNativeOAuthListener } from '@/lib/auth/nativeOAuth';
 import { useRouter } from 'next/navigation';
-import KloeMascot from '@/components/KloeMascot';
+import { LANDING_TRANSLATIONS } from '@/lib/i18n/landingTranslations';
+import { useLanguageStore } from '@/store/languageStore';
 
 export default function IosNativeLanding() {
   const router = useRouter();
+  const { language } = useLanguageStore();
+  const t = LANDING_TRANSLATIONS[language] || LANDING_TRANSLATIONS.es;
+
   const [activeSlide, setActiveSlide] = useState(0);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [isSpinning, setIsSpinning] = useState(false);
   const totalSlides = 5;
 
   // Global deep link listener for OAuth return
-  React.useEffect(() => {
+  useEffect(() => {
     initNativeOAuthListener(
       () => {
         router.push('/closet');
@@ -84,19 +88,19 @@ export default function IosNativeLanding() {
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
       style={{
-        paddingTop: 'max(4.25rem, calc(env(safe-area-inset-top, 54px) + 1rem))',
+        paddingTop: 'max(3.75rem, calc(env(safe-area-inset-top, 48px) + 0.5rem))',
         paddingBottom: 'max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 0.5rem))',
         colorScheme: 'light',
       }}
       className="fixed inset-0 w-screen h-screen bg-white text-zinc-950 flex flex-col justify-between px-4 sm:px-6 z-[999] overflow-hidden select-none"
     >
-      {/* 1. TOP CONTROLS: Botón de giro para deslizar rápidamente el carrusel */}
-      <header className="w-full flex items-center justify-end py-1 z-20">
+      {/* 1. TOP HEADER: Únicamente botón de avance rápido con giro (SIN logo, SIN botón de login) */}
+      <header className="w-full flex items-center justify-end py-1.5 z-20">
         <motion.button
           type="button"
           onClick={handleQuickSlide}
-          whileTap={{ scale: 0.9 }}
-          className="flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-100 hover:bg-zinc-200 border border-zinc-200/90 shadow-xs text-xs font-bold text-zinc-900 transition-all cursor-pointer backdrop-blur-md active:scale-95"
+          whileTap={{ scale: 0.92 }}
+          className="flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-100 hover:bg-zinc-200/80 border border-zinc-200/90 shadow-xs text-xs font-bold text-zinc-900 transition-all cursor-pointer backdrop-blur-md active:scale-95"
           aria-label="Deslizar horizontalmente el carrusel"
         >
           <span>Deslizar</span>
@@ -111,7 +115,7 @@ export default function IosNativeLanding() {
 
       {/* 2. ATMOSPHERIC BACKDROP AURA */}
       <div
-        className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[380px] h-[380px] rounded-full blur-3xl pointer-events-none transition-all duration-700 -z-10 ${
+        className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[390px] h-[390px] rounded-full blur-3xl pointer-events-none transition-all duration-700 -z-10 ${
           activeSlide === 0 ? 'bg-pink-300/30' :
           activeSlide === 1 ? 'bg-purple-300/30' :
           activeSlide === 2 ? 'bg-rose-300/35' :
@@ -120,8 +124,8 @@ export default function IosNativeLanding() {
         }`}
       />
 
-      {/* 3. SLIDES CONTAINER (HORIZONTAL CAROUSEL - TEXTS & GARMENTS 20% LARGER) */}
-      <div className="flex-1 w-full flex items-center justify-center relative overflow-hidden py-2 my-auto">
+      {/* 3. SLIDES CONTAINER (HORIZONTAL CAROUSEL - TEXTS & GARMENTS +20% LARGER) */}
+      <div className="flex-1 w-full flex items-center justify-center relative overflow-hidden py-1 my-auto">
         <AnimatePresence mode="wait">
           {/* SLIDE 0: ARMARIO LLENO / NADA QUE PONERTE */}
           {activeSlide === 0 && (
@@ -130,54 +134,54 @@ export default function IosNativeLanding() {
               initial={{ opacity: 0, x: 45 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -45 }}
-              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
               className="w-full flex flex-col items-center text-center my-auto"
             >
               <div className="flex flex-col items-center">
                 <h1 className="text-4xl sm:text-5xl font-black tracking-tighter uppercase leading-[0.92] text-zinc-950">
-                  <span className="text-[1.25em] italic font-serif text-[var(--brand-pink,#FF66C4)] mr-0.5">A</span>RMARIO LLENO
+                  <span className="text-[1.25em] italic font-serif text-[var(--brand-pink,#FF66C4)] mr-0.5">{t.f0_title1_drop}</span>{t.f0_title1_rest}
                 </h1>
                 <h2 className="text-4xl sm:text-5xl font-black tracking-tighter uppercase leading-[0.92] bg-gradient-to-r from-[var(--brand-pink,#FF66C4)] via-pink-400 to-purple-500 bg-clip-text text-transparent mt-1">
-                  <span className="text-[1.25em] italic font-serif text-pink-400 mr-0.5">N</span>ADA QUE PONERTE
+                  <span className="text-[1.25em] italic font-serif text-pink-400 mr-0.5">{t.f0_title2_drop}</span>{t.f0_title2_rest}
                 </h2>
               </div>
 
-              <p className="mt-4 text-sm sm:text-base text-zinc-600 max-w-sm leading-relaxed font-normal">
-                Todas las mañanas el mismo lío frente al espejo. Klozet organiza tus prendas reales en un lookbook interactivo para que salgas con el fit clavado.
+              <p className="mt-3.5 text-sm sm:text-base text-zinc-600 max-w-sm leading-relaxed font-normal">
+                {t.f0_desc}
               </p>
 
               {/* Floating Real Garments (+20% Scale & Interactive) */}
-              <div className="w-full max-w-[360px] h-[265px] relative flex items-center justify-center my-4">
+              <div className="w-full max-w-[370px] h-[280px] relative flex items-center justify-center my-3">
                 {/* Left: Top Halter */}
                 <motion.div
-                  animate={{ y: [0, 9, 0], rotate: [-8, -6, -8] }}
+                  animate={{ y: [0, 8, 0], rotate: [-8, -6, -8] }}
                   transition={{ duration: 4.8, repeat: Infinity, ease: 'easeInOut' }}
-                  className="absolute left-0 top-1 w-24 drop-shadow-md z-10 cursor-pointer"
+                  className="absolute left-1 top-2 w-28 drop-shadow-md z-10 cursor-pointer"
                   onClick={() => { try { haptics.tap(); } catch {} }}
                 >
                   <Image
                     src="/landing/piezas/top-halter-oliva.png"
-                    alt="Top Halter"
+                    alt={t.tag_top_halter}
                     width={220}
                     height={260}
                     className="w-full h-auto object-contain -rotate-8"
                     priority
                   />
                   <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[10px] font-bold text-zinc-950 whitespace-nowrap">
-                    Top Halter
+                    {t.tag_top_halter}
                   </div>
                 </motion.div>
 
                 {/* Center Hero: Chaqueta Militar */}
                 <motion.div
-                  animate={{ y: [0, -9, 0], rotate: [2, 0, 2] }}
+                  animate={{ y: [0, -10, 0], rotate: [2, 0, 2] }}
                   transition={{ duration: 4.2, repeat: Infinity, ease: 'easeInOut' }}
-                  className="relative z-20 w-44 drop-shadow-[0_18px_36px_rgba(255,102,196,0.35)] cursor-pointer"
+                  className="relative z-20 w-48 drop-shadow-[0_18px_36px_rgba(255,102,196,0.32)] cursor-pointer"
                   onClick={() => { try { haptics.tap(); } catch {} }}
                 >
                   <Image
                     src="/landing/piezas/chaqueta-militar.png"
-                    alt="Chaqueta Militar"
+                    alt={t.tag_jacket_militar}
                     width={340}
                     height={340}
                     className="w-full h-auto object-contain rotate-2"
@@ -185,7 +189,7 @@ export default function IosNativeLanding() {
                   />
                   <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[10px] font-bold text-zinc-950 whitespace-nowrap flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-[var(--brand-pink,#FF66C4)]" />
-                    <span>Jacket Militar</span>
+                    <span>{t.tag_jacket_militar}</span>
                   </div>
                 </motion.div>
 
@@ -193,19 +197,19 @@ export default function IosNativeLanding() {
                 <motion.div
                   animate={{ y: [0, 8, 0], rotate: [8, 10, 8] }}
                   transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-                  className="absolute right-0 top-1 w-24 drop-shadow-md z-10 cursor-pointer"
+                  className="absolute right-1 top-2 w-28 drop-shadow-md z-10 cursor-pointer"
                   onClick={() => { try { haptics.tap(); } catch {} }}
                 >
                   <Image
                     src="/landing/piezas/jeans-wide-mujer.png"
-                    alt="Jeans Wide"
+                    alt={t.tag_denim_wide}
                     width={220}
                     height={300}
                     className="w-full h-auto object-contain rotate-8"
                     priority
                   />
                   <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[10px] font-bold text-zinc-950 whitespace-nowrap">
-                    Denim Wide
+                    {t.tag_denim_wide}
                   </div>
                 </motion.div>
 
@@ -213,77 +217,77 @@ export default function IosNativeLanding() {
                 <motion.div
                   animate={{ y: [0, -7, 0], rotate: [-4, -2, -4] }}
                   transition={{ duration: 4.4, repeat: Infinity, ease: 'easeInOut', delay: 0.2 }}
-                  className="absolute -bottom-3 right-5 w-20 drop-shadow-md z-15 cursor-pointer"
+                  className="absolute -bottom-2 right-6 w-24 drop-shadow-md z-25 cursor-pointer"
                   onClick={() => { try { haptics.tap(); } catch {} }}
                 >
                   <Image
-                    src="/landing/piezas/zapatos-alaia.png"
-                    alt="Alaïa Strass"
-                    width={170}
+                    src="/landing/piezas/bailarinas-alaia.png"
+                    alt={t.tag_alaia_strass}
+                    width={180}
                     height={190}
                     className="w-full h-auto object-contain -rotate-4"
                   />
-                  <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[9px] font-bold text-zinc-950 whitespace-nowrap">
-                    Alaïa Strass
+                  <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[9px] font-bold text-zinc-950 whitespace-nowrap">
+                    {t.tag_alaia_strass}
                   </div>
                 </motion.div>
               </div>
             </motion.div>
           )}
 
-          {/* SLIDE 1: TU ROPA / EN TU BOLSILLO */}
+          {/* SLIDE 1: TODA TU ROPA / EN UN TOQUE */}
           {activeSlide === 1 && (
             <motion.div
               key="slide-1"
               initial={{ opacity: 0, x: 45 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -45 }}
-              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
               className="w-full flex flex-col items-center text-center my-auto"
             >
               <div className="flex flex-col items-center">
                 <h2 className="text-4xl sm:text-5xl font-black tracking-tighter uppercase leading-[0.92] text-zinc-950">
-                  <span className="text-[1.25em] italic font-serif text-[var(--brand-pink,#FF66C4)] mr-0.5">T</span>U ROPA
+                  <span className="text-[1.25em] italic font-serif text-[var(--brand-pink,#FF66C4)] mr-0.5">{t.f1_title1_drop}</span>{t.f1_title1_rest}
                 </h2>
                 <h3 className="text-4xl sm:text-5xl font-black tracking-tighter uppercase leading-[0.92] text-[var(--brand-pink,#FF66C4)] mt-1">
-                  <span className="text-[1.25em] italic font-serif text-purple-400 mr-0.5">E</span>N TU BOLSILLO
+                  <span className="text-[1.25em] italic font-serif text-purple-400 mr-0.5">{t.f1_title2_drop}</span>{t.f1_title2_rest}
                 </h3>
               </div>
 
-              <p className="mt-4 text-sm sm:text-base text-zinc-600 max-w-sm leading-relaxed font-normal">
-                Sube fotos de tus prendas. Nuestra IA elimina el fondo automáticamente y clasifica colores, tipos y tejidos en segundos.
+              <p className="mt-3.5 text-sm sm:text-base text-zinc-600 max-w-sm leading-relaxed font-normal">
+                {t.f1_desc}
               </p>
 
               {/* Laser Scanner Visual (+20% Scale) */}
-              <div className="w-full max-w-[360px] h-[265px] relative flex items-center justify-center my-4">
+              <div className="w-full max-w-[370px] h-[280px] relative flex items-center justify-center my-3">
                 {/* Top-Left: Jersey Punto */}
                 <motion.div
                   animate={{ y: [0, -7, 0] }}
                   transition={{ duration: 4.4, repeat: Infinity, ease: 'easeInOut' }}
-                  className="absolute left-0 top-2 w-24 drop-shadow-md z-10"
+                  className="absolute left-1 top-2 w-28 drop-shadow-md z-10"
                 >
                   <Image
                     src="/landing/piezas/jersey-rayas-hombre.png"
-                    alt="Jersey"
+                    alt={t.tag_jersey_punto}
                     width={220}
                     height={200}
                     className="w-full h-auto object-contain -rotate-8"
                   />
                   <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[10px] font-bold text-zinc-950 whitespace-nowrap">
-                    Jersey Rayas
+                    {t.tag_jersey_punto}
                   </div>
                 </motion.div>
 
                 {/* Center Hero with Glowing Laser Sweep Line */}
                 <motion.div
-                  animate={{ y: [0, 7, 0] }}
+                  animate={{ y: [0, 8, 0] }}
                   transition={{ duration: 4.2, repeat: Infinity, ease: 'easeInOut' }}
-                  className="relative z-20 w-44 drop-shadow-[0_18px_36px_rgba(255,102,196,0.35)]"
+                  className="relative z-20 w-48 drop-shadow-[0_18px_36px_rgba(255,102,196,0.32)]"
                 >
                   <div className="relative overflow-hidden rounded-2xl p-1 bg-white/40 backdrop-blur-xs">
                     <Image
                       src="/landing/piezas/top-halter-oliva.png"
-                      alt="Top Halter"
+                      alt={t.tag_top_plisado}
                       width={340}
                       height={340}
                       className="w-full h-auto object-contain rotate-2"
@@ -298,7 +302,7 @@ export default function IosNativeLanding() {
                   </div>
                   <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[10px] font-bold text-zinc-950 whitespace-nowrap flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                    <span>Fondo Eliminado IA</span>
+                    <span>{t.tag_top_plisado}</span>
                   </div>
                 </motion.div>
 
@@ -306,182 +310,207 @@ export default function IosNativeLanding() {
                 <motion.div
                   animate={{ y: [0, -7, 0] }}
                   transition={{ duration: 4.6, repeat: Infinity, ease: 'easeInOut' }}
-                  className="absolute right-0 top-3 w-24 drop-shadow-md z-10"
+                  className="absolute right-1 top-2 w-28 drop-shadow-md z-10"
                 >
                   <Image
                     src="/landing/piezas/zapatillas-margiela.png"
-                    alt="Margiela Replica"
+                    alt={t.tag_replica_gat}
                     width={200}
                     height={220}
                     className="w-full h-auto object-contain rotate-8"
                   />
                   <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[10px] font-bold text-zinc-950 whitespace-nowrap">
-                    Sneakers GAT
+                    {t.tag_replica_gat}
                   </div>
                 </motion.div>
               </div>
             </motion.div>
           )}
 
-          {/* SLIDE 2: KLOE / TU ESTILISTA */}
+          {/* SLIDE 2: QUÉ ME PONGO / KLOE TE AYUDA */}
           {activeSlide === 2 && (
             <motion.div
               key="slide-2"
               initial={{ opacity: 0, x: 45 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -45 }}
-              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
               className="w-full flex flex-col items-center text-center my-auto"
             >
               <div className="flex flex-col items-center">
                 <h2 className="text-4xl sm:text-5xl font-black tracking-tighter uppercase leading-[0.92] text-zinc-950">
-                  <span className="text-[1.25em] italic font-serif text-pink-400 mr-0.5">K</span>LOE:
+                  <span className="text-[1.25em] italic font-serif text-pink-400 mr-0.5">{t.f2_title1_drop}</span>{t.f2_title1_rest}
                 </h2>
                 <h3 className="text-4xl sm:text-5xl font-black tracking-tighter uppercase leading-[0.92] bg-gradient-to-r from-[var(--brand-pink,#FF66C4)] via-pink-400 to-purple-500 bg-clip-text text-transparent mt-1">
-                  <span className="text-[1.25em] italic font-serif text-[var(--brand-pink,#FF66C4)] mr-0.5">T</span>U ESTILISTA
+                  <span className="text-[1.25em] italic font-serif text-[var(--brand-pink,#FF66C4)] mr-0.5">{t.f2_title2_drop}</span>{t.f2_title2_rest}
                 </h3>
               </div>
 
-              <p className="mt-4 text-sm sm:text-base text-zinc-600 max-w-sm leading-relaxed font-normal">
-                No necesitas mil prendas, necesitas saber combinarlas. Pídele ideas según tu estilo, ocasión o el tiempo que hace hoy.
+              <p className="mt-3.5 text-sm sm:text-base text-zinc-600 max-w-sm leading-relaxed font-normal">
+                {t.f2_desc}
               </p>
 
-              {/* Kloe Mascot & Interactive Apple Bubble (+25% Scale) */}
-              <div className="w-full max-w-[360px] h-[265px] relative flex flex-col items-center justify-center my-4">
-                {/* Central Kloe Mascot */}
-                <div className="relative z-10 mb-2">
-                  <div className="w-32 h-32 rounded-full bg-pink-100/60 flex items-center justify-center p-3 shadow-inner">
-                    <KloeMascot mood="happy" size="lg" interactive />
-                  </div>
-                </div>
-
-                {/* Floating Apple Speech Bubble */}
+              {/* Kloe Mascot & Apple Dialogue Speech Bubbles */}
+              <div className="w-full max-w-[370px] h-[280px] relative flex flex-col items-center justify-center my-3">
+                {/* Central Kloe Character (+20% Scale) */}
                 <motion.div
-                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ delay: 0.15 }}
-                  className="bg-white/95 backdrop-blur-md border border-zinc-200/90 rounded-2xl px-5 py-3 shadow-[0_10px_28px_rgba(0,0,0,0.08)] max-w-[320px]"
+                  animate={{ y: [0, -8, 0] }}
+                  transition={{ duration: 4.2, repeat: Infinity, ease: 'easeInOut' }}
+                  className="relative z-10 w-36 h-36 flex items-center justify-center drop-shadow-[0_16px_36px_rgba(255,102,196,0.35)]"
                 >
-                  <p className="text-[13px] font-bold text-zinc-950 leading-tight">
-                    «Ponte la chaqueta militar con denim wide y zapatillas blancas.»
+                  <Image
+                    src="/landing/kloe-grande-landing.png"
+                    alt="Kloe Estilista"
+                    width={280}
+                    height={280}
+                    className="w-full h-auto object-contain"
+                    priority
+                  />
+                </motion.div>
+
+                {/* Speech Bubble 1: User Question */}
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="absolute top-1 left-1 bg-white/95 backdrop-blur-md border border-zinc-200/90 rounded-2xl rounded-bl-xs px-3.5 py-2 shadow-md max-w-[210px] text-left z-20"
+                >
+                  <p className="text-[11px] font-semibold text-zinc-800 leading-snug">
+                    {t.f2_chat_user}
                   </p>
-                  <p className="text-[11px] font-medium text-[var(--brand-pink,#FF66C4)] mt-1.5">
-                    Perfecto para hoy: 19°C soleado en Madrid
+                </motion.div>
+
+                {/* Speech Bubble 2: Kloe Suggestion */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="absolute bottom-2 right-1 bg-[var(--brand-pink,#FF66C4)] text-white rounded-2xl rounded-tr-xs px-4 py-2.5 shadow-md max-w-[220px] text-left z-20"
+                >
+                  <div className="flex items-center gap-1 mb-0.5">
+                    <Star className="w-3 h-3 text-white" />
+                    <span className="text-[9px] font-bold uppercase tracking-wider">Kloe</span>
+                  </div>
+                  <p className="text-[11px] font-medium text-white/95 leading-snug">
+                    {t.f2_chat_kloe}
                   </p>
                 </motion.div>
               </div>
             </motion.div>
           )}
 
-          {/* SLIDE 3: INSPÍRATE / CON LOOKS REALES */}
+          {/* SLIDE 3: MONTA TU FIT / LISTO PARA HOY */}
           {activeSlide === 3 && (
             <motion.div
               key="slide-3"
               initial={{ opacity: 0, x: 45 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -45 }}
-              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
               className="w-full flex flex-col items-center text-center my-auto"
             >
               <div className="flex flex-col items-center">
                 <h2 className="text-4xl sm:text-5xl font-black tracking-tighter uppercase leading-[0.92] text-zinc-950">
-                  <span className="text-[1.25em] italic font-serif text-purple-400 mr-0.5">I</span>NSPÍRATE
+                  <span className="text-[1.25em] italic font-serif text-purple-400 mr-0.5">{t.f3_title1_drop}</span>{t.f3_title1_rest}
                 </h2>
                 <h3 className="text-4xl sm:text-5xl font-black tracking-tighter uppercase leading-[0.92] text-[var(--brand-pink,#FF66C4)] mt-1">
-                  <span className="text-[1.25em] italic font-serif text-[var(--brand-pink,#FF66C4)] mr-0.5">C</span>ON LOOKS REALES
+                  <span className="text-[1.25em] italic font-serif text-[var(--brand-pink,#FF66C4)] mr-0.5">{t.f3_title2_drop}</span>{t.f3_title2_rest}
                 </h3>
               </div>
 
-              <p className="mt-4 text-sm sm:text-base text-zinc-600 max-w-sm leading-relaxed font-normal">
-                Explora lo que visten personas como tú, guarda combinaciones y descubre cómo llevar las tendencias a tu día a día.
+              <p className="mt-3.5 text-sm sm:text-base text-zinc-600 max-w-sm leading-relaxed font-normal">
+                {t.f3_desc}
               </p>
 
-              {/* Moodboard Real Editorial Cards (+20% Scale) */}
-              <div className="w-full max-w-[360px] h-[265px] relative flex items-center justify-center my-4">
+              {/* Moodboard Real Editorial Outfits (+20% Scale) */}
+              <div className="w-full max-w-[370px] h-[280px] relative flex items-center justify-center my-3">
                 {/* Look 1: Mujer Halter */}
                 <motion.div
                   animate={{ y: [0, 7, 0], rotate: [-8, -6, -8] }}
                   transition={{ duration: 4.8, repeat: Infinity, ease: 'easeInOut' }}
-                  className="absolute left-2 w-34 aspect-[3/4] rounded-2xl overflow-hidden bg-white border border-zinc-200/90 shadow-lg -rotate-8 p-1 z-10"
+                  className="absolute left-2 w-36 aspect-[3/4] rounded-2xl overflow-hidden bg-white border border-zinc-200/90 shadow-lg -rotate-8 p-1 z-10"
                 >
                   <Image
                     src="/landing/outfits/mujer-halter-alaia.jpg"
-                    alt="Look Mujer"
+                    alt={t.tag_look_mujer}
                     fill
                     className="object-contain p-1"
                   />
                   <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white border border-zinc-200 shadow-xs text-[10px] font-bold text-zinc-950 whitespace-nowrap">
-                    Summer Fit
+                    {t.tag_look_mujer}
                   </div>
                 </motion.div>
 
-                {/* Look 2: Hombre CP Company */}
+                {/* Hero Centerpiece: Hombre Militar Collage */}
                 <motion.div
-                  animate={{ y: [0, -8, 0], rotate: [8, 6, 8] }}
-                  transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-                  className="absolute right-2 w-34 aspect-[3/4] rounded-2xl overflow-hidden bg-white border border-zinc-200/90 shadow-lg rotate-8 p-1 z-15"
+                  animate={{ y: [0, -8, 0] }}
+                  transition={{ duration: 4.2, repeat: Infinity, ease: 'easeInOut' }}
+                  className="relative z-20 w-44 aspect-[3/4] rounded-2xl overflow-hidden bg-white border border-zinc-200/90 shadow-xl p-1.5"
                 >
                   <Image
-                    src="/landing/outfits/hombre-cpcompany-cartier.png"
-                    alt="Look Hombre"
+                    src="/landing/outfits/hombre-militar-margiela.png"
+                    alt={t.tag_lienzo_hoy}
+                    fill
+                    className="object-contain p-1"
+                  />
+                  <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-white border border-zinc-200/90 shadow-sm text-[10px] font-bold text-zinc-950 whitespace-nowrap flex items-center gap-1">
+                    <Star className="w-3 h-3 text-[var(--brand-pink,#FF66C4)]" />
+                    <span>{t.tag_lienzo_hoy}</span>
+                  </div>
+                </motion.div>
+
+                {/* Look 3: Mujer Rayas */}
+                <motion.div
+                  animate={{ y: [0, 7, 0], rotate: [8, 6, 8] }}
+                  transition={{ duration: 4.6, repeat: Infinity, ease: 'easeInOut' }}
+                  className="absolute right-2 w-36 aspect-[3/4] rounded-2xl overflow-hidden bg-white border border-zinc-200/90 shadow-lg rotate-8 p-1 z-15"
+                >
+                  <Image
+                    src="/landing/outfits/mujer-rayas-miumiu-byredo.jpg"
+                    alt={t.tag_look_diario}
                     fill
                     className="object-contain p-1"
                   />
                   <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full bg-white border border-zinc-200 shadow-xs text-[10px] font-bold text-[var(--brand-pink,#FF66C4)] whitespace-nowrap">
-                    Street Clean
+                    {t.tag_look_diario}
                   </div>
-                </motion.div>
-
-                {/* Floating Gafas Miu Miu */}
-                <motion.div
-                  animate={{ y: [0, -9, 0], rotate: [12, 10, 12] }}
-                  transition={{ duration: 4.2, repeat: Infinity, ease: 'easeInOut' }}
-                  className="absolute top-2 w-20 drop-shadow-md z-25"
-                >
-                  <Image
-                    src="/landing/piezas/gafas-miumiu.png"
-                    alt="Gafas"
-                    width={150}
-                    height={100}
-                    className="w-full h-auto object-contain rotate-12"
-                  />
                 </motion.div>
               </div>
             </motion.div>
           )}
 
-          {/* SLIDE 4: EMPIEZA HOY / GRATIS (Conversion Final Step) */}
+          {/* SLIDE 4: VÍSTETE MEJOR / DISFRUTA TU ROPA (Conversion Final Step) */}
           {activeSlide === 4 && (
             <motion.div
               key="slide-4"
               initial={{ opacity: 0, x: 45 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -45 }}
-              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
               className="w-full flex flex-col items-center text-center my-auto"
             >
-              <div className="mb-4">
+              <div className="mb-3">
                 <Image
                   src="/landing/klozet-nombre-grande.png"
                   alt="Klozet"
-                  width={180}
-                  height={55}
-                  className="h-10 w-auto object-contain mx-auto"
+                  width={200}
+                  height={60}
+                  className="h-11 w-auto object-contain mx-auto"
                   priority
                 />
               </div>
 
               <div className="flex flex-col items-center">
                 <h2 className="text-4xl sm:text-5xl font-black tracking-tighter uppercase leading-[0.92] text-zinc-950">
-                  <span className="text-[1.25em] italic font-serif text-[var(--brand-pink,#FF66C4)] mr-0.5">E</span>MPIEZA HOY
+                  <span className="text-[1.25em] italic font-serif text-[var(--brand-pink,#FF66C4)] mr-0.5">{t.f4_title1_drop}</span>{t.f4_title1_rest}
                 </h2>
                 <h3 className="text-4xl sm:text-5xl font-black tracking-tighter uppercase leading-[0.92] bg-gradient-to-r from-[var(--brand-pink,#FF66C4)] to-purple-500 bg-clip-text text-transparent mt-1">
-                  <span className="text-[1.25em] italic font-serif text-pink-400 mr-0.5">G</span>RATIS
+                  <span className="text-[1.25em] italic font-serif text-pink-400 mr-0.5">{t.f4_title2_drop}</span>{t.f4_title2_rest}
                 </h3>
               </div>
 
-              <p className="mt-4 text-sm sm:text-base text-zinc-600 max-w-sm leading-relaxed font-normal mb-5">
-                Tu armario digital te está esperando. Crea tu cuenta en menos de un minuto.
+              <p className="mt-3 text-sm sm:text-base text-zinc-600 max-w-sm leading-relaxed font-normal mb-5">
+                {t.f4_desc}
               </p>
 
               {/* Action Buttons Stack */}
@@ -528,7 +557,7 @@ export default function IosNativeLanding() {
                   <ArrowRight className="w-4 h-4" />
                 </Link>
 
-                {/* Iniciar sesión (Login direct) */}
+                {/* Iniciar sesión (Login directo) */}
                 <Link
                   href="/auth?mode=login"
                   onClick={() => { try { haptics.tap(); } catch {} }}
@@ -548,7 +577,7 @@ export default function IosNativeLanding() {
         </AnimatePresence>
       </div>
 
-      {/* 4. BOTTOM NAVIGATION & DOTS */}
+      {/* 4. BOTTOM NAVIGATION: 5 DOTS & CONTINUAR BUTTON */}
       <footer className="w-full flex flex-col items-center gap-3 z-20">
         {/* Slide Dots */}
         <div className="flex items-center gap-1.5">
@@ -560,7 +589,7 @@ export default function IosNativeLanding() {
                 try { haptics.selection(); } catch {}
                 setActiveSlide(idx);
               }}
-              className={`h-2 rounded-full transition-all duration-300 ${
+              className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
                 activeSlide === idx
                   ? 'w-7 bg-[var(--brand-pink,#FF66C4)]'
                   : 'w-2 bg-zinc-200 hover:bg-zinc-300'

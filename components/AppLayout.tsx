@@ -57,13 +57,13 @@ export default function AppLayout({ children }: AppLayoutProps) {
       {/* Main Content */}
       <main className={`flex-1 min-w-0 relative overflow-x-hidden ${hideTabBar ? 'pb-0' : 'pb-28 md:pb-0'}`}>
         <AuthGuard>
-          <AnimatePresence mode="wait" initial={false}>
+          <AnimatePresence initial={false} mode="popLayout">
             <motion.div
               key={pathname}
-              initial={{ opacity: 0.9, x: 12 }}
+              initial={{ opacity: 0.96, x: 16 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0.9, x: -12 }}
-              transition={{ duration: 0.18, ease: [0.32, 0.72, 0, 1] }}
+              exit={{ opacity: 0.96, x: -16 }}
+              transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
               className="w-full min-h-full"
             >
               {children}

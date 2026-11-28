@@ -26,13 +26,14 @@ export function useAuth(): UseAuthReturn {
   const { setUser: setUserStore } = useUser();
 
   useEffect(() => {
-    // Get initial session
+    // Get initial session safely
     supabase.auth.getSession().then((response: any) => {
-      const { data: { session }, error } = response;
+      const session = response?.data?.session;
+      const error = response?.error;
       if (error) {
         console.warn('Session init error:', error.message);
-        if (error.message.includes('Refresh Token')) {
-          supabase.auth.signOut(); // Clear invalid tokens
+        if (error.message?.includes('Refresh Token')) {
+          supabase.auth.signOut().catch(() => {});
         }
       }
 
@@ -41,14 +42,18 @@ export function useAuth(): UseAuthReturn {
         updateUserStore(session.user);
       }
       setLoading(false);
+    }).catch((err: any) => {
+      console.warn('[useAuth] getSession catch:', err);
+      setLoading(false);
     });
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: string, session: any) => {
       setUser(session?.user ?? null);
       if (session?.user) {
         updateUserStore(session.user);
-      } else {
+      } else if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+        // ONLY clear store on explicit sign out, NOT on initial empty session!
         setUserStore(null);
       }
     });

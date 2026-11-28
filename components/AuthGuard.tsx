@@ -68,20 +68,17 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
   // No user confirmed yet.
   if (isLoading || !readyToRedirect) {
-    // Still loading or in grace period — show spinner
     return (
-      <div className="min-h-[100dvh] w-full flex flex-col items-center justify-center p-4 bg-[var(--background)]">
-        <Image src="/klozet-logo-dark.png" className="hidden dark:block object-contain animate-pulse" width={120} height={120} alt="Cargando..." priority />
-        <Image src="/klozet-logo.png" className="dark:hidden block object-contain animate-pulse" width={120} height={120} alt="Cargando..." priority />
+      <div className="min-h-[100dvh] w-full flex flex-col items-center justify-center p-4 bg-white dark:bg-zinc-950">
+        <Image src="/landing/klozet-nombre-grande.png" className="object-contain animate-pulse" width={140} height={44} alt="Cargando..." priority />
       </div>
     );
   }
 
   // readyToRedirect=true but user is still null — show brief redirect state
   return (
-    <div className="min-h-[100dvh] w-full flex flex-col items-center justify-center p-4 bg-[var(--background)]">
-      <Image src="/klozet-logo-dark.png" className="hidden dark:block object-contain animate-pulse" width={120} height={120} alt="Redirigiendo..." priority />
-      <Image src="/klozet-logo.png" className="dark:hidden block object-contain animate-pulse" width={120} height={120} alt="Redirigiendo..." priority />
+    <div className="min-h-[100dvh] w-full flex flex-col items-center justify-center p-4 bg-white dark:bg-zinc-950">
+      <Image src="/landing/klozet-nombre-grande.png" className="object-contain animate-pulse" width={140} height={44} alt="Redirigiendo..." priority />
     </div>
   );
 }
