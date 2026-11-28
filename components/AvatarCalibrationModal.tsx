@@ -200,7 +200,7 @@ export default function AvatarCalibrationModal({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 pt-[max(env(safe-area-inset-top,0px),1rem)] pb-[max(env(safe-area-inset-bottom,0px),1rem)]">
         {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}

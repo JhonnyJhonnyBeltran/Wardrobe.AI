@@ -84,6 +84,7 @@ export default function TabBar() {
             <Link
               key={tab.href}
               href={tab.href}
+              prefetch={true}
               aria-label={t.nav[tab.labelKey]}
               onClick={() => {
                 triggerHaptic('light');
@@ -91,7 +92,7 @@ export default function TabBar() {
                   triggerHaptic('medium');
                 }
               }}
-              className="flex-1 flex justify-center items-center h-full group touch-manipulation z-10 active:scale-95 transition-transform duration-100"
+              className="flex-1 flex justify-center items-center h-full group touch-manipulation z-10 active:scale-95 transition-transform duration-100 cursor-pointer"
             >
               <div
                 className="relative flex flex-col items-center justify-center p-2 rounded-full"

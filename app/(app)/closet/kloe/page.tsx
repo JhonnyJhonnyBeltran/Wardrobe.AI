@@ -1194,7 +1194,7 @@ export default function KloePage() {
         </button>
 
         {/* Center: Static Kloe Logo */}
-        <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center pointer-events-none">
+        <div className="flex-1 flex items-center justify-center pointer-events-none">
           <KloeAnimatedLogo />
         </div>
 
@@ -1232,7 +1232,7 @@ export default function KloePage() {
       {/* Messages Container */}
       <div 
         onScroll={handleMessagesScroll}
-        className="flex-1 overflow-y-auto px-4 md:px-6 pt-16 md:pt-20 pb-36 md:pb-28 space-y-6 no-scrollbar"
+        className="flex-1 overflow-y-auto px-4 md:px-6 pt-[calc(4.5rem+env(safe-area-inset-top,0px))] md:pt-20 pb-36 md:pb-28 space-y-6 no-scrollbar"
       >
         {/* Free Tier Upgrade Banner - Only shown when limit has been reached */}
         {!isPremium() && remainingToday <= 0 && (
@@ -1917,7 +1917,7 @@ export default function KloePage() {
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed inset-y-0 left-0 md:left-[72px] w-full max-w-xs sm:max-w-sm bg-[var(--card-bg)] border-r border-[var(--border-color)] z-[60] p-5 flex flex-col justify-between shadow-2xl"
+              className="fixed inset-y-0 left-0 md:left-[72px] w-full max-w-xs sm:max-w-sm bg-[var(--card-bg)] border-r border-[var(--border-color)] z-[60] p-5 pt-[max(env(safe-area-inset-top,0px),1.5rem)] pb-[max(env(safe-area-inset-bottom,0px),1rem)] flex flex-col justify-between shadow-2xl"
             >
               <div className="space-y-4 overflow-y-auto no-scrollbar">
                 <div className="flex items-center justify-between pb-3 border-b border-[var(--border-color)]">
@@ -1988,7 +1988,7 @@ export default function KloePage() {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed inset-y-0 right-0 w-[85%] max-w-sm bg-[var(--card-bg)] border-l border-[var(--border-color)] z-[100000] p-5 flex flex-col justify-between shadow-2xl"
+              className="fixed inset-y-0 right-0 w-[85%] max-w-sm bg-[var(--card-bg)] border-l border-[var(--border-color)] z-[100000] p-5 pt-[max(env(safe-area-inset-top,0px),1.5rem)] pb-[max(env(safe-area-inset-bottom,0px),1rem)] flex flex-col justify-between shadow-2xl"
             >
               <div className="space-y-4 overflow-y-auto flex-1 no-scrollbar">
                 <div className="flex items-center justify-between pb-3 border-b border-[var(--border-color)]">
@@ -2083,7 +2083,7 @@ export default function KloePage() {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed inset-y-0 right-0 w-[85%] max-w-sm bg-[var(--card-bg)] border-l border-[var(--border-color)] z-[100000] p-5 flex flex-col justify-between shadow-2xl"
+              className="fixed inset-y-0 right-0 w-[85%] max-w-sm bg-[var(--card-bg)] border-l border-[var(--border-color)] z-[100000] p-5 pt-[max(env(safe-area-inset-top,0px),1.5rem)] pb-[max(env(safe-area-inset-bottom,0px),1rem)] flex flex-col justify-between shadow-2xl"
             >
               <div className="space-y-4 overflow-y-auto flex-1 no-scrollbar">
                 <div className="flex items-center justify-between pb-3 border-b border-[var(--border-color)]">

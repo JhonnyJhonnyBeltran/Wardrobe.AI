@@ -445,7 +445,7 @@ export default function CreatePostPage() {
     return (
         <div className="min-h-screen bg-[var(--background)] flex flex-col">
             {/* Header */}
-            <header className="sticky top-0 z-30 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-color)] px-4 h-16 flex items-center justify-between">
+            <header className="sticky top-0 z-30 bg-[var(--background)]/80 backdrop-blur-md border-b border-[var(--border-color)] px-4 pt-[env(safe-area-inset-top,0px)] min-h-[calc(4rem+env(safe-area-inset-top,0px))] flex items-center justify-between">
                 <div className="flex items-center gap-4">
                     <button
                         onClick={() => {

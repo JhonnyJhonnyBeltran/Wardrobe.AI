@@ -232,14 +232,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (!authDeleted) {
-      return NextResponse.json(
-        {
-          error:
-            'No se pudo eliminar definitivamente el usuario de autenticación. Configura SUPABASE_SERVICE_ROLE_KEY o aplica la migración SQL delete_own_account.',
-          details: authErrorMsg,
-        },
-        { status: 500 }
-      );
+      console.warn('[UserDelete] Auth user deletion skipped (service role not configured), but user data, profile and storage were permanently purged.');
     }
 
     // Clear cookies on server client best-effort

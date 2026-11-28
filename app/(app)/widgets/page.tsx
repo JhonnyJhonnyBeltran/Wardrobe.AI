@@ -80,8 +80,8 @@ export default function WidgetsPage() {
   return (
     <div className="min-h-screen bg-[var(--background)] pb-28">
       {/* Apple Glass Header */}
-      <header className="sticky top-0 z-30 apple-glass-bar border-b border-[var(--border-color)]">
-        <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
+      <header className="sticky top-0 z-30 apple-glass-bar border-b border-[var(--border-color)] pt-safe">
+        <div className="max-w-3xl mx-auto px-4 min-h-14 flex items-center justify-between">
           <button
             type="button"
             onClick={() => router.back()}

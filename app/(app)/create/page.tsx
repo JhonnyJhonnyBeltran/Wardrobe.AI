@@ -656,7 +656,7 @@ function CreateOutfitContent() {
     return (
         <div className="min-h-screen bg-[var(--background)] flex flex-col">
             {/* Header */}
-            <header className="sticky top-0 z-30 bg-[var(--background)]/90 backdrop-blur-md border-b border-[var(--border-color)] w-full px-4 lg:px-8 h-16 flex items-center justify-between">
+            <header className="sticky top-0 z-30 bg-[var(--background)]/90 backdrop-blur-md border-b border-[var(--border-color)] w-full px-4 lg:px-8 pt-[env(safe-area-inset-top,0px)] min-h-[calc(4rem+env(safe-area-inset-top,0px))] flex items-center justify-between">
                 {/* Mobile Step 1: Selection Header */}
                 <div className={`w-full flex items-center justify-between lg:hidden ${mobileStep !== 'selection' ? 'hidden' : ''}`}>
                     <div className="flex items-center gap-3">
@@ -774,7 +774,7 @@ function CreateOutfitContent() {
             </header>
 
             {/* Main Content */}
-            <main className="flex-1 flex flex-col lg:flex-row w-full px-4 lg:px-8 py-5 lg:gap-8 overflow-hidden h-[calc(100vh-4rem)]">
+            <main className="flex-1 flex flex-col lg:flex-row w-full px-4 lg:px-8 py-5 lg:gap-8 overflow-hidden h-[calc(100vh-4rem-env(safe-area-inset-top,0px))]">
 
                 {/* MOBILE: 3-Step Flow */}
                 <div className="flex-1 flex flex-col lg:hidden relative h-full">

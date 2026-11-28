@@ -4447,3 +4447,52 @@ Para no ensuciar ni comitear artefactos pesados de vídeo dentro del repositorio
   - El contenedor principal de login inicia a `pt-[max(6rem,calc(env(safe-area-inset-top,54px)+2.5rem))]`, evitando cualquier solapamiento visual con la cabecera.
 - **Cabecera del Carrusel iOS (`components/native/IosNativeLanding.tsx`)**:
   - Padding superior `max(4.25rem, calc(env(safe-area-inset-top, 54px) + 1rem))` asegurando que el logo Klozet y el botón de inicio de sesión queden perfectamente situados en zona segura visible.
+
+---
+
+## 111. Auditoría Exhaustiva de Notch, Landing Móvil 20% Mayor con Botón de Giro, Transición Fluida Instagram/TikTok y Fix de Cierre de Sesión (Noviembre 2026)
+
+### 1. Orientación y Adaptabilidad (iPhone vs iPad/Tablets)
+- **Bloqueo Portrait en iPhone (`ios/App/App/Info.plist`)**:
+  - `UISupportedInterfaceOrientations` configurado exclusivamente con `UIInterfaceOrientationPortrait`. Queda deshabilitado el modo horizontal en iPhone para evitar deformaciones en la interfaz nativa.
+  - `UISupportedInterfaceOrientations~ipad` conserva soporte completo para orientaciones vertical y horizontal (`Portrait`, `LandscapeLeft`, `LandscapeRight`), empleando la barra lateral (Sidebar) y el layout de escritorio a partir del breakpoint tablet (`md:` / 768px).
+
+### 2. Eliminación del Congelamiento de Caché en Vercel (`next.config.ts`)
+- **Diagnóstico**: Una regla con `has: [{ type: 'pathname', value: '/_next/static' }]` en `next.config.ts` estaba inyectando `Cache-Control: public, max-age=31536000, immutable` de forma errónea a las rutas dinámicas bajo `/(.*)`, provocando que el proxy edge de Vercel sirviese la versión antigua de `https://klozet.es` con más de 6 horas de antigüedad a los clientes móviles.
+- **Solución**: Eliminada la cabecera errónea. Las rutas de la aplicación se sirven ahora en tiempo real con revalidación inmediata en cada despliegue.
+
+### 3. Rediseño del Carrusel Móvil: Escala +20% y Botón de Deslizamiento Rápido con Giro
+- **Escala Visual Ampliada (+20%)**:
+  - Títulos principales incrementados a `text-4xl sm:text-5xl font-black`.
+  - Párrafos narrativos aumentados a `text-sm sm:text-base`.
+  - Contenedores de prendas flotantes aumentados en un 22% (`h-[265px]` con prendas escaladas a `w-24`, `w-44` y `w-34`).
+  - Mascota Kloe ampliada a `w-32 h-32` (+33%) y bocadillos de diálogo con tipografía `text-[13px]`.
+- **Botón de Avance Rápido con Animación de Giro**:
+  - Suprimidos el logo superior izquierdo y el botón de inicio de sesión de la cabecera.
+  - Integrado un botón flotante "Deslizar" con icono giratorio (`RotateCw`) que ejecuta una rotación elástica de 360 grados (`rotate: 360`) al pulsarse, acompañado de feedback háptico (`impactMedium`) y salto rápido al siguiente slide.
+
+### 4. Navbar Fijo y Transición Deslizante Suave (Estilo Instagram / TikTok)
+- **Persistencia Inmune al Parpadeo (`components/AppLayout.tsx` & `components/TabBar.tsx`)**:
+  - El `<TabBar />` y el `<Sidebar />` quedan anclados fuera de la zona de renderizado dinámico, permaneciendo 100% estables e inmóviles entre cambios de pestaña.
+  - Se añadió `prefetch={true}` a cada pestaña del `TabBar`, permitiendo navegación instantánea en 1 solo toque en cualquier dispositivo.
+- **Transición de Pantalla Deslizante**:
+  - `children` encapsulado en `<AnimatePresence mode="wait" initial={false}>` con animación horizontal suave `x: [12, 0]` y curva cúbica de Apple `[0.32, 0.72, 0, 1]` (180ms), emulando la sensación nativa de navegación de Instagram o TikTok.
+
+### 5. Auditoría Integral del Notch y Dynamic Island
+- **`/create` (Lienzo Móvil)**: Cabecera con `pt-[env(safe-area-inset-top,0px)]` y altura mínima `min-h-[calc(4rem+env(safe-area-inset-top,0px))]`. El lienzo y las opciones de paso 1, 2 y 3 quedan totalmente protegidos por debajo de la isla dinámica y del reloj.
+- **`/create-post` y `/widgets`**: Cabeceras actualizadas con `pt-[env(safe-area-inset-top,0px)]` y altura compensada.
+- **Pantalla de Kloe (`/closet/kloe`)**:
+  - Padding superior del contenedor de mensajes ajustado a `pt-[calc(4.5rem+env(safe-area-inset-top,0px))]`, impidiendo que los primeros mensajes se monten bajo la cabecera.
+  - Cajones deslizantes (Historial de conversaciones, Looks Guardados y Armario) provistos de `pt-[max(env(safe-area-inset-top,0px),1.5rem)]` y `pb-[max(env(safe-area-inset-bottom,0px),1rem)]` para salvaguardar botones de cierre y títulos del notch y home bar.
+- **Modales Globales**: `AvatarCalibrationModal`, `ExportStoryModal`, `KloeProModal` y `ProductModal` blindados con márgenes seguros top y bottom.
+
+### 6. Cierre de Sesión Limpio y Eliminación de Cuenta
+- **Cierre de Sesión (`app/(app)/profile/settings/page.tsx`)**:
+  - Vaciado instantáneo de `localStorage` y `sessionStorage`, descarte de estado de usuario y redirección directa mediante `window.location.replace('/auth?mode=login')`.
+  - Eliminado el retraso de 3 segundos y el logotipo intermitente antiguo en `AuthGuard`.
+- **Eliminación de Cuenta**:
+  - `app/api/user/delete/route.ts` purga posts, outfits, prendas, archivos de storage y registros de perfil de forma segura, garantizando respuesta afirmativa `{ success: true, dataPurged: true }` y redirección inmediata a `/auth?mode=login`.
+
+### 7. Perfil en Escritorio: Supresión de Header Duplicado y Rueda Hover
+- En `app/(app)/profile/page.tsx`, se retiró el encabezado superior repetido que mostraba el nombre de usuario y el botón de configuración redundante.
+- El botón de configuración principal incluye ahora microinteracción con rotación suave de 45 grados (`group-hover:rotate-45 duration-300`) y cambio dinámico al rosa de marca (`group-hover:text-[var(--brand-pink,#FF66C4)]`).

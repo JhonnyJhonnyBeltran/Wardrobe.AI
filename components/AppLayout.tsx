@@ -55,9 +55,20 @@ export default function AppLayout({ children }: AppLayoutProps) {
       <Sidebar />
 
       {/* Main Content */}
-      <main className={`flex-1 min-w-0 relative ${hideTabBar ? 'pb-0' : 'pb-28 md:pb-0'}`}>
+      <main className={`flex-1 min-w-0 relative overflow-x-hidden ${hideTabBar ? 'pb-0' : 'pb-28 md:pb-0'}`}>
         <AuthGuard>
-          {children}
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={pathname}
+              initial={{ opacity: 0.9, x: 12 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0.9, x: -12 }}
+              transition={{ duration: 0.18, ease: [0.32, 0.72, 0, 1] }}
+              className="w-full min-h-full"
+            >
+              {children}
+            </motion.div>
+          </AnimatePresence>
         </AuthGuard>
       </main>
 

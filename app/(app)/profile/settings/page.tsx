@@ -141,8 +141,15 @@ export default function SettingsPage() {
     }, [user, loadNotifFromDb]);
 
     const handleLogout = async () => {
-        await signOut();
-        router.push('/auth');
+        if (typeof window !== 'undefined') {
+            try {
+                localStorage.clear();
+                sessionStorage.clear();
+            } catch {}
+        }
+        setUser(null);
+        await signOut().catch(() => {});
+        window.location.replace('/auth?mode=login');
     };
 
     const [deleteError, setDeleteError] = useState<string | null>(null);

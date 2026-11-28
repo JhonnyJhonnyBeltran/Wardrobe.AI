@@ -569,7 +569,7 @@ export default function ExportStoryModal({
   return createPortal(
     <AnimatePresence>
       {/* Root Portal Container with high z-index (100000) so desktop sidebar z-5001 and tabbar z-5000 are completely dimmed */}
-      <div className="fixed inset-0 z-[100000] flex items-center justify-center p-3 sm:p-5 bg-black/85 backdrop-blur-md overflow-hidden">
+      <div className="fixed inset-0 z-[100000] flex items-center justify-center p-3 sm:p-5 pt-[max(env(safe-area-inset-top,0px),1rem)] pb-[max(env(safe-area-inset-bottom,0px),1rem)] bg-black/85 backdrop-blur-md overflow-hidden">
         {/* Backdrop dismiss */}
         <div className="fixed inset-0" onClick={onClose} />
 
